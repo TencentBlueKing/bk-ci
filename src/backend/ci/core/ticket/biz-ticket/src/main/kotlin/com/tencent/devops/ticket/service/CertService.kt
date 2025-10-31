@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -179,26 +179,45 @@ interface CertService {
 
     fun getTls(projectId: String, certId: String): CertTlsInfo
 
-    fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS
+    fun queryIos(
+        projectId: String,
+        buildId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertIOS
 
     fun queryEnterprise(
         projectId: String,
         buildId: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CertEnterprise
 
-    fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise
+    fun queryEnterpriseByProject(
+        projectId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertEnterprise
 
-    fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid
+    fun queryAndroid(
+        projectId: String,
+        buildId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertAndroid
 
     fun queryAndroidByProject(
         projectId: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CertAndroidWithCredential
 
-    fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls
+    fun queryTlsByProject(projectId: String, certId: String, publicKey: String, padding: Boolean): CertTls
 
     fun getCertByIds(
         projectId: String? = null,

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMER_TRIGGER_SVN_BRANCH_NOT_EMPTY
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -46,7 +48,8 @@ import org.slf4j.LoggerFactory
 @ElementBiz
 class TimerTriggerElementBizPlugin constructor(
     private val pipelineTimerService: PipelineTimerService,
-    private val timerTriggerTaskService: PipelineTimerTriggerTaskService
+    private val timerTriggerTaskService: PipelineTimerTriggerTaskService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : ElementBizPlugin<TimerTriggerElement> {
 
     override fun elementClass(): Class<TimerTriggerElement> {
@@ -66,7 +69,7 @@ class TimerTriggerElementBizPlugin constructor(
         container: Container,
         yamlInfo: PipelineYamlVo?
     ) {
-        val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
+        val params = pipelineRepositoryService.getTriggerParams((container as TriggerContainer))
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.elementEnabled()}")
         val crontabExpressions = timerTriggerTaskService.getCrontabExpressions(
             params = params,
@@ -91,6 +94,12 @@ class TimerTriggerElementBizPlugin constructor(
             userId = userId,
             taskId = ""
         )
+        // 参数使用变量时，解析变量
+        val finalBranches = element.branches
+                ?.filter { it.isNotBlank() }
+                ?.map { EnvUtils.parseEnv(it, params) }
+                ?.toSet()
+
         if (crontabExpressions.isNotEmpty()) {
             val result = pipelineTimerService.saveTimer(
                 projectId = projectId,
@@ -99,7 +108,7 @@ class TimerTriggerElementBizPlugin constructor(
                 crontabExpressions = crontabExpressions,
                 channelCode = channelCode,
                 repoHashId = repo?.repoHashId,
-                branchs = element.branches?.toSet(),
+                branchs = finalBranches,
                 noScm = element.noScm,
                 taskId = element.id ?: "",
                 startParam = element.convertStartParams()
@@ -120,7 +129,11 @@ class TimerTriggerElementBizPlugin constructor(
         if (param.pipelineId.isNotBlank()) {
             with(param) {
                 val taskId = element.id ?: ""
-                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
+                // 直接删除定时触发器，需兼容旧数据（taskId为空）
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, "")
+                pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                    logger.info("beforeDelete|$pipelineId|delete [${element.id}] timer|result=$it")
+                }
                 pipelineTimerService.deleteTimerBranch(
                     projectId = projectId,
                     pipelineId = pipelineId,

@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -63,6 +64,11 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(60, TimeUnit.MINUTES)
         .build<String/*userId*/, ProjectOrgInfo?>()
 
+    private val user2ESignStatus = CacheBuilder.newBuilder()
+        .maximumSize(50000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*platform:userId*/, Boolean>()
+
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
         userId: String,
@@ -72,10 +78,16 @@ class ManagerService @Autowired constructor(
     ): Boolean {
         logger.info("isManagerPermission $userId| $projectId| ${resourceType.value} | ${authPermission.value}")
         // 需要签订保密协议的项目，不允许超管和reporter直接查看，需要走正常权限校验逻辑
-        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-        if (projectsOfSignature.contains(projectId)) {
+        if (needESignVerification(projectId)) {
             logger.info("This project requires a contract to be signed before visit. $userId|$projectId")
             return false
+        }
+        // 新老版本兼容，旧版本项目访问权限为project_view，新版本为project_visit,兼容
+        val fixAuthPermission = if (resourceType == AuthResourceType.PROJECT &&
+            authPermission == AuthPermission.VISIT) {
+            AuthPermission.VIEW
+        } else {
+            authPermission
         }
         // 从缓存内获取用户管理员信息，若缓存击穿，调用auth服务获取源数据，并刷入内存
         val manageInfo = if (userPermissionMap.getIfPresent(userId) == null) {
@@ -105,9 +117,9 @@ class ManagerService @Autowired constructor(
                 null
             } else {
                 val remoteProjectOrgInfo = ProjectOrgInfo(
-                    bgId = projectVo!!.data?.bgId ?: "0",
-                    deptId = projectVo!!.data?.deptId,
-                    centerId = projectVo!!.data?.centerId
+                    bgId = projectVo.data?.bgId ?: "0",
+                    deptId = projectVo.data?.deptId,
+                    centerId = projectVo.data?.centerId
                 )
                 projectInfoMap.put(projectId, remoteProjectOrgInfo)
                 remoteProjectOrgInfo
@@ -130,9 +142,9 @@ class ManagerService @Autowired constructor(
                 val managerPermission = manageInfo[orgId] ?: return@orgForEach
                 val isOrgEqual =
                     when (managerPermission.organizationLevel) {
-                        1 -> projectOrgInfo!!.bgId == managerPermission.organizationId.toString()
-                        2 -> projectOrgInfo!!.deptId == managerPermission.organizationId.toString()
-                        3 -> projectOrgInfo!!.centerId == managerPermission.organizationId.toString()
+                        1 -> projectOrgInfo.bgId == managerPermission.organizationId.toString()
+                        2 -> projectOrgInfo.deptId == managerPermission.organizationId.toString()
+                        3 -> projectOrgInfo.centerId == managerPermission.organizationId.toString()
                         else -> false
                     }
                 if (!isOrgEqual) {
@@ -146,13 +158,13 @@ class ManagerService @Autowired constructor(
                     if (resourceKey == resourceType) {
                         // 资源类型一致的情况下，匹配action是否一致
                         val orgManagerPermissionList = orgManagerPermissionMap[resourceKey]
-                        if (orgManagerPermissionList == null || orgManagerPermissionList.isEmpty()) {
+                        if (orgManagerPermissionList.isNullOrEmpty()) {
                             return@resourceForEach
                         }
 
-                        if (orgManagerPermissionList.contains(authPermission)) {
+                        if (orgManagerPermissionList.contains(fixAuthPermission)) {
                             logger.info(
-                                "$userId has $projectId ${resourceType.value} ${authPermission.value} " +
+                                "$userId has $projectId ${resourceType.value} ${fixAuthPermission.value} " +
                                     "$projectOrgInfo manager permission"
                             )
                             isManagerPermission = true
@@ -165,29 +177,99 @@ class ManagerService @Autowired constructor(
         return isManagerPermission
     }
 
-    fun checkUserSignatureStatus(
+    fun checkUserESignStatus(
         projectId: String,
         userId: String
     ) {
-        val projectsOfSignature = redisOperation.get(PROJECTS_OF_SIGNATURE)?.split(",") ?: emptyList()
-        // 未签署保密合同的用户不允许访问
-        if (projectsOfSignature.contains(projectId)) {
-            val isUserSigned = redisOperation.get(USER_SIGNATURE_STATUS_CHECK.plus(userId))?.toBoolean()
-            if (isUserSigned != true) {
+        if (needESignPreCheck(projectId)) {
+            if (!isUserSigned(projectId, userId)) {
+                logger.warn(
+                    "Pre-process | The user cannot access the project " +
+                        "because the contract has not been signed.$projectId|$userId"
+                )
+            } else {
+                logger.info("Pre-process | The user has signed the contract.$projectId|$userId")
+            }
+            return
+        }
+        if (needESignVerification(projectId)) {
+            if (!isUserSigned(projectId, userId)) {
                 logger.warn(
                     "The user cannot access the project because the contract has not been signed.$projectId|$userId"
                 )
                 throw ErrorCodeException(
                     errorCode = ERROR_USER_CONTRACT_NOT_SIGNED,
-                    params = arrayOf("${config.devopsHostGateway}/console/pipeline/$projectId")
+                    params = arrayOf(userId, "${config.devopsHostGateway}/console/pipeline/$projectId")
                 )
             }
         }
     }
 
+    private fun needESignVerification(projectId: String): Boolean {
+        val eSignControl = try {
+            redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
+        } catch (ex: Exception) {
+            logger.error("e Sign Control failed!")
+            false
+        }
+        return eSignControl && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+    }
+
+    private fun needESignPreCheck(projectId: String): Boolean {
+        return redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, projectId)
+    }
+
+    private fun isUserSigned(
+        projectId: String,
+        userId: String
+    ): Boolean {
+        val platform = getPlatformByProjectId(projectId) ?: return true
+        val localCacheKey = "$platform:$userId"
+        //  优先查询本地缓存
+        val localCacheValue = user2ESignStatus.getIfPresent(localCacheKey)
+        if (localCacheValue != null) {
+            return localCacheValue
+        }
+        // 2. 本地缓存未命中，查询Redis
+        val redisValue = isUserSignedInRedisCache(platform, userId)
+        if (redisValue) {
+            user2ESignStatus.put(localCacheKey, true) // 回填本地缓存
+            return true
+        }
+
+        // 3. Redis未命中，调用第三方接口
+        return runCatching {
+            client.get(ServiceSignatureManageResource::class)
+                .fetchLiveSignatureStatus(
+                    projectId = projectId,
+                    userId = userId
+                ).data?.signed ?: false
+        }.onSuccess { signed ->
+            user2ESignStatus.put(localCacheKey, signed)
+        }.onFailure { e ->
+            logger.error("查询用户[$userId]签署状态失败: ${e.message}", e)
+            user2ESignStatus.put(localCacheKey, false) // 降级：异常时缓存false防穿透
+        }.getOrDefault(false)
+    }
+
+    private fun isUserSignedInRedisCache(platform: String, userId: String): Boolean {
+        return redisOperation.isMember(USER_SIGNATURE_STATUS_CACHE_KEY.format(platform), userId)
+    }
+
+    private fun getPlatformByProjectId(projectId: String): String? {
+        return redisOperation.get(PROJECT_SIGNATURE_PLATFORM_KEY.format(projectId)).also {
+            if (it == null) {
+                logger.error("get platform by project id failed $projectId")
+            }
+        }
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(ManagerService::class.java)
-        private const val PROJECTS_OF_SIGNATURE = "projects.signature.check"
-        private const val USER_SIGNATURE_STATUS_CHECK = "user.signature.status.check."
+        private val logger = LoggerFactory.getLogger(ManagerService::class.java)
+        private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
+        private const val E_SIGNATURE_VERIFICATION_CONTROL = "e:signature:verification:control"
+        private const val PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK = "projects:signature:pre:check"
+        private const val PROJECT_SIGNATURE_PLATFORM_KEY = "projects:signature:%s:platform"
+        private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:%s:cache"
     }
 }

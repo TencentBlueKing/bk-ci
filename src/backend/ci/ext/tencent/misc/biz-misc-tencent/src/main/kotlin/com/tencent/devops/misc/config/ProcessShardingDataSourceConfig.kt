@@ -27,281 +27,138 @@
 
 package com.tencent.devops.misc.config
 
-import com.mysql.jdbc.Driver
+import com.mysql.cj.jdbc.Driver
+import com.tencent.devops.common.web.jasypt.DefaultEncryptor
+import com.tencent.devops.misc.pojo.DataSourceConfig
+import com.tencent.devops.misc.pojo.ProcessShardingDataSourceProperties
 import com.zaxxer.hikari.HikariDataSource
+import org.jasypt.encryption.StringEncryptor
+import org.jooq.DSLContext
 import org.jooq.SQLDialect
+import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.beans.factory.support.BeanDefinitionBuilder
+import org.springframework.beans.factory.support.BeanDefinitionRegistry
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.context.properties.bind.Binder
+import org.springframework.context.EnvironmentAware
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.core.env.Environment
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
-class ProcessShardingDataSourceConfig {
+@EnableConfigurationProperties(ProcessShardingDataSourceProperties::class)
+class ProcessShardingDataSourceConfig : BeanDefinitionRegistryPostProcessor, EnvironmentAware {
 
-    @Bean
-    fun p1DataSource(
-        @Value("\${spring.datasource.process.sharding.p1.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p1.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p1.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p1.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p1.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P1",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
+    private val logger = LoggerFactory.getLogger(ProcessShardingDataSourceConfig::class.java)
 
-    @Bean
-    fun p1JooqConfiguration(
-        @Qualifier("p1DataSource")
-        p1DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p1DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p1DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
+    private lateinit var environment: Environment
+
+    override fun postProcessBeanDefinitionRegistry(registry: BeanDefinitionRegistry) {
+        // 使用 Environment 绑定配置属性
+        val binder = Binder.get(environment)
+        val properties =
+            binder.bind("spring.datasource.process", ProcessShardingDataSourceProperties::class.java)
+                .orElseThrow { IllegalStateException("Missing spring.datasource.process configuration") }
+        val shardingMap = properties.sharding
+        // 执行Bean注册逻辑
+        val stringEncryptor = createDirectEncryptor()
+        shardingMap.forEach { (shardId, config) ->
+            registerShardBeans(
+                registry = registry,
+                shardId = shardId,
+                config = config,
+                stringEncryptor = stringEncryptor
+            )
         }
     }
 
-    @Bean
-    fun p2DataSource(
-        @Value("\${spring.datasource.process.sharding.p2.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p2.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p2.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p2.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p2.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P2",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
-    fun p2JooqConfiguration(
-        @Qualifier("p2DataSource")
-        p2DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p2DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p2DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
+    private fun registerShardBeans(
+        registry: BeanDefinitionRegistry,
+        shardId: String,
+        config: DataSourceConfig,
+        stringEncryptor: StringEncryptor
+    ) {
+        if (config.url.isBlank()) {
+            throw IllegalStateException("DataSource URL cannot be blank for shard $shardId")
         }
-    }
-
-    @Bean
-    fun p3DataSource(
-        @Value("\${spring.datasource.process.sharding.p3.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p3.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p3.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p3.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p3.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P3",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
-    fun p3JooqConfiguration(
-        @Qualifier("p3DataSource")
-        p3DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p3DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p3DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
-        }
-    }
-
-    @Bean
-    fun p4DataSource(
-        @Value("\${spring.datasource.process.sharding.p4.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p4.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p4.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p4.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p4.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P4",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
-    fun p4JooqConfiguration(
-        @Qualifier("p4DataSource")
-        p4DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p4DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p4DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
-        }
-    }
-
-    @Bean
-    fun p5DataSource(
-        @Value("\${spring.datasource.process.sharding.p5.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p5.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p5.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p5.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p5.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P5",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
-    fun p5JooqConfiguration(
-        @Qualifier("p5DataSource")
-        p5DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p5DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p5DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
-        }
-    }
-
-    @Bean
-    fun p6DataSource(
-        @Value("\${spring.datasource.process.sharding.p6.url:}")
-        datasourceUrl: String = "",
-        @Value("\${spring.datasource.process.sharding.p6.username:}")
-        datasourceUsername: String = "",
-        @Value("\${spring.datasource.process.sharding.p6.password:}")
-        datasourcePassword: String = "",
-        @Value("\${spring.datasource.process.sharding.p6.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.sharding.p6.leakDetectionThreshold:#{0}}")
-        datasourceLeakDetectionThreshold: Long = 0
-    ): DataSource? {
-        return createDataSource(
-            datasourcePoolName = "DBPool-Process-P6",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
-    fun p6JooqConfiguration(
-        @Qualifier("p6DataSource")
-        p6DataSource: DataSource?
-    ): DefaultConfiguration? {
-        return if (p6DataSource != null) {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(p6DataSource)
-            configuration.settings().isRenderSchema = false
-            configuration
-        } else {
-            null
-        }
-    }
-
-    private fun createDataSource(
-        datasourcePoolName: String,
-        datasourceUrl: String,
-        datasourceUsername: String,
-        datasourcePassword: String,
-        datasourceInitSql: String?,
-        datasourceLeakDetectionThreshold: Long
-    ): HikariDataSource? {
-        if (datasourceUrl.isNotBlank()) {
-            return HikariDataSource().apply {
-                poolName = datasourcePoolName
-                jdbcUrl = datasourceUrl
-                username = datasourceUsername
-                password = datasourcePassword
-                driverClassName = Driver::class.java.name
-                minimumIdle = 1
-                maximumPoolSize = 5
-                idleTimeout = 60000
-                connectionInitSql = datasourceInitSql
-                leakDetectionThreshold = datasourceLeakDetectionThreshold
+        // 1. 注册数据源 Bean
+        val dataSourceBeanName = "${shardId}DataSource"
+        val dataSourceDefinition = BeanDefinitionBuilder
+            .genericBeanDefinition(DataSource::class.java) {
+                createDataSource("DBPool-Process-$shardId", config, stringEncryptor)
             }
-        } else {
-            return null
+            .setDestroyMethodName("close")
+            .beanDefinition
+        registry.registerBeanDefinition(dataSourceBeanName, dataSourceDefinition)
+
+        // 2. 注册 DSLContext Bean
+        val dslContextBeanName = "${shardId}DSLContext"
+        val dslContextDefinition = BeanDefinitionBuilder
+            .genericBeanDefinition(DSLContext::class.java) {
+                // 将registry转换为ConfigurableBeanFactory
+                val beanFactory = registry as? ConfigurableBeanFactory ?: throw IllegalStateException(
+                    "Registry must be an instance of ConfigurableBeanFactory to get DataSource bean"
+                )
+                // 通过转换后的beanFactory获取数据源
+                val dataSource = beanFactory.getBean(dataSourceBeanName, DataSource::class.java)
+
+                DSL.using(
+                    DefaultConfiguration().apply {
+                        set(dataSource)
+                        set(SQLDialect.MYSQL)
+                    }
+                )
+            }
+            .beanDefinition
+        registry.registerBeanDefinition(dslContextBeanName, dslContextDefinition)
+
+        logger.info("Registered beans for shard $shardId: $dataSourceBeanName, $dslContextBeanName")
+    }
+
+    fun createDataSource(
+        poolName: String,
+        config: DataSourceConfig,
+        stringEncryptor: StringEncryptor
+    ): HikariDataSource {
+        return HikariDataSource().apply {
+            this.poolName = poolName
+            jdbcUrl = config.url
+            username = decryptWithJasypt(stringEncryptor, config.username)
+            password = decryptWithJasypt(stringEncryptor, config.password)
+            driverClassName = Driver::class.java.name
+            minimumIdle = 1
+            maximumPoolSize = 5
+            idleTimeout = 60000
+            connectionInitSql = config.initSql
+            leakDetectionThreshold = config.leakDetectionThreshold
         }
+    }
+
+    private fun decryptWithJasypt(stringEncryptor: StringEncryptor, value: String): String {
+        return if (value.startsWith("ENC(")) {
+            stringEncryptor.decrypt(value.substring(4, value.length - 1))
+        } else {
+            value
+        }
+    }
+
+    private fun createDirectEncryptor(): StringEncryptor {
+        val key = environment.getProperty("enc.key", "")
+        return DefaultEncryptor(key).apply {
+            logger.info("Created direct StringEncryptor with key: ${key.take(3)}***")
+        }
+    }
+
+    override fun setEnvironment(environment: Environment) {
+        this.environment = environment
     }
 }

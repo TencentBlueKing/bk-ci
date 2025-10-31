@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,54 +27,40 @@
 
 package com.tencent.devops.common.pipeline.utils
 
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_END
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_JOB_END
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_JOB_START
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_STAGE_END
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_STAGE_START
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_START
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_TASK_END
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_TASK_PAUSE
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType.BUILD_TASK_START
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.MetricsEvent
 
 @Suppress("ComplexMethod")
 object EventUtils {
-    private val callBackEventMap = CallBackEvent.values().associateBy { it.name }
+    private val metricsEventMap = MetricsEvent.values().associateBy { it.name }
     fun PipelineBuildStatusBroadCastEvent.toEventType(): CallBackEvent? {
-        if (type != null && callBackEventMap[type!!.name] != null) {
-            return callBackEventMap[type!!.name]
+        return when (type) {
+            BUILD_START -> CallBackEvent.BUILD_START
+            BUILD_END -> CallBackEvent.BUILD_END
+            BUILD_STAGE_START -> CallBackEvent.BUILD_STAGE_START
+            BUILD_STAGE_END -> CallBackEvent.BUILD_STAGE_END
+            BUILD_JOB_START -> CallBackEvent.BUILD_JOB_START
+            BUILD_JOB_END -> CallBackEvent.BUILD_JOB_END
+            BUILD_TASK_START -> CallBackEvent.BUILD_TASK_START
+            BUILD_TASK_END -> CallBackEvent.BUILD_TASK_END
+            BUILD_TASK_PAUSE -> CallBackEvent.BUILD_TASK_PAUSE
+            else -> null
         }
-        if (!taskId.isNullOrBlank()) {
-            if (actionType == ActionType.START) {
-                return CallBackEvent.BUILD_TASK_START
-            }
-            if (actionType == ActionType.REFRESH) {
-                return CallBackEvent.BUILD_TASK_PAUSE
-            }
-            if (actionType == ActionType.END) {
-                return CallBackEvent.BUILD_TASK_END
-            }
-        }
+    }
 
-        if (!containerHashId.isNullOrBlank()) {
-            if (actionType == ActionType.START) {
-                return CallBackEvent.BUILD_JOB_START
-            }
-            if (actionType == ActionType.END) {
-                return CallBackEvent.BUILD_JOB_END
-            }
-        }
-
-        if (!stageId.isNullOrBlank()) {
-            if (actionType == ActionType.START) {
-                return CallBackEvent.BUILD_STAGE_START
-            }
-            if (actionType == ActionType.END) {
-                return CallBackEvent.BUILD_STAGE_END
-            }
-        }
-
-        if (taskId.isNullOrBlank() && containerHashId.isNullOrBlank() && stageId.isNullOrBlank()) {
-            if (actionType == ActionType.START) {
-                return CallBackEvent.BUILD_START
-            }
-            if (actionType == ActionType.END) {
-                return CallBackEvent.BUILD_END
-            }
+    fun PipelineBuildStatusBroadCastEvent.toMetricsEventType(): MetricsEvent? {
+        if (type != null && metricsEventMap[type!!.name] != null) {
+            return metricsEventMap[type!!.name]
         }
         return null
     }

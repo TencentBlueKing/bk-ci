@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,10 @@ enum class NodeType(val typeName: String) {
 
         fun getTypeName(nodeType: String): String {
             return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
+        }
+
+        fun get(nodeType: String): NodeType {
+            return values().find { it.name == nodeType } ?: UNKNOWN
         }
 
         fun parseByTypeName(typeName: String): NodeType {

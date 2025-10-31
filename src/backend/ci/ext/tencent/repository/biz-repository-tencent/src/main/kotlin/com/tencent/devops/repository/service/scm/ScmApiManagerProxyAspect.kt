@@ -64,7 +64,7 @@ class ScmApiManagerProxyAspect @Autowired constructor(
         val properties = parameterValues.find { it is ScmProviderProperties }?.let { it as ScmProviderProperties }
             ?: throw ErrorCodeException(errorCode = "")
         return try {
-            if (properties.proxyEnabled) {
+            if (properties.proxyEnabled == true) {
                 proxy(pjp)
             } else {
                 pjp.proceed()

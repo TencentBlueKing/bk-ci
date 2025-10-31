@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,11 +37,15 @@ import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.dao.AuthResourceSyncDao
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
 import com.tencent.devops.auth.pojo.enum.ApplyToGroupStatus
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
 import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
@@ -49,11 +53,13 @@ import com.tencent.devops.auth.service.lock.SyncGroupAndMemberLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupApplyRecord
@@ -81,7 +87,9 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     private val authResourceSyncDao: AuthResourceSyncDao,
     private val authResourceGroupApplyDao: AuthResourceGroupApplyDao,
     private val resourceGroupPermissionService: PermissionResourceGroupPermissionService,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val syncDataTaskDao: AuthSyncDataTaskDao
 ) : PermissionResourceGroupSyncService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupSyncService::class.java)
@@ -95,18 +103,40 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
         logger.info("start to migrate project by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         syncExecutorService.submit {
-            MDC.put(TraceTag.BIZID, traceId)
             var offset = 0
             val limit = PageUtil.MAX_PAGE_SIZE / 2
+            val uuid = UUIDUtil.generate()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+            )
+            val result = mutableListOf<CompletableFuture<*>>()
             do {
                 val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
                     projectConditionDTO = projectConditionDTO,
                     limit = limit,
                     offset = offset
                 ).data ?: break
-                batchSyncGroupAndMember(projectCodes = projectCodes.map { it.englishName })
+                projectCodes.forEach {
+                    result.add(
+                        CompletableFuture.supplyAsync(
+                            {
+                                MDC.put(TraceTag.BIZID, traceId)
+                                syncGroupAndMember(projectCode = it.englishName)
+                            },
+                            syncProjectsExecutorService
+                        )
+                    )
+                }
                 offset += limit
             } while (projectCodes.size == limit)
+            CompletableFuture.allOf(*result.toTypedArray()).join()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.GROUP_AND_MEMBER_SYNC_TASK_TYPE.type
+            )
         }
     }
 
@@ -181,6 +211,13 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                             iamGroupId = groupId,
                             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(verifyResult.expiredAt),
                             memberId = memberId
+                        )
+                        BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, memberId)
+                        traceEventDispatcher.dispatch(
+                            AuthProjectLevelPermissionsSyncEvent(
+                                projectCode = projectCode,
+                                iamGroupIds = listOf(groupId)
+                            )
                         )
                     }
                 }
@@ -313,46 +350,42 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
     }
 
     override fun syncGroupAndMember(projectCode: String) {
-        val traceId = MDC.get(TraceTag.BIZID)
-        syncProjectsExecutorService.submit {
-            MDC.put(TraceTag.BIZID, traceId)
-            SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
-                if (!lock.tryLock()) {
-                    logger.info("sync group and member|running:$projectCode")
-                    return@use
-                }
-                val startEpoch = System.currentTimeMillis()
-                try {
-                    logger.info("sync group and member|start:$projectCode")
-                    authResourceSyncDao.createOrUpdate(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        status = AuthMigrateStatus.PENDING.value
-                    )
-                    // 同步项目下的组信息
-                    syncProjectGroup(projectCode = projectCode)
-                    // 同步组成员
-                    syncResourceGroupMember(projectCode = projectCode)
-                    // 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
-                    fixResourceGroupMember(projectCode = projectCode)
-                    // 记录完成状态
-                    authResourceSyncDao.updateStatus(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        status = AuthMigrateStatus.SUCCEED.value,
-                        totalTime = System.currentTimeMillis() - startEpoch
-                    )
-                    logger.info(
-                        "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
-                            "project group and members $projectCode"
-                    )
-                } catch (ex: Exception) {
-                    handleException(
-                        exception = ex,
-                        projectCode = projectCode,
-                        totalTime = System.currentTimeMillis() - startEpoch
-                    )
-                }
+        SyncGroupAndMemberLock(redisOperation, projectCode).use { lock ->
+            if (!lock.tryLock()) {
+                logger.info("sync group and member|running:$projectCode")
+                return@use
+            }
+            val startEpoch = System.currentTimeMillis()
+            try {
+                logger.info("sync group and member|start:$projectCode")
+                authResourceSyncDao.createOrUpdate(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    status = AuthMigrateStatus.PENDING.value
+                )
+                // 同步项目下的组信息
+                syncProjectGroup(projectCode = projectCode)
+                // 同步组成员
+                syncResourceGroupMember(projectCode = projectCode)
+                // 防止出现用户组表的数据已经删了，但是用户组成员表的数据未删除，导致出现不同步，调用iam接口报错问题。
+                fixResourceGroupMember(projectCode = projectCode)
+                // 记录完成状态
+                authResourceSyncDao.updateStatus(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    status = AuthMigrateStatus.SUCCEED.value,
+                    totalTime = System.currentTimeMillis() - startEpoch
+                )
+                logger.info(
+                    "It take(${System.currentTimeMillis() - startEpoch})ms to sync " +
+                        "project group and members $projectCode"
+                )
+            } catch (ex: Exception) {
+                handleException(
+                    exception = ex,
+                    projectCode = projectCode,
+                    totalTime = System.currentTimeMillis() - startEpoch
+                )
             }
         }
     }
@@ -553,12 +586,27 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
                     projectCode = projectCode,
                     iamGroupIds = resourceMemberGroupIds.map { it.toString() }
                 )
-                val unsyncGroupIds = resourceMemberGroupIds.filterNot { resourceGroupIds.contains(it) }
-                if (unsyncGroupIds.isNotEmpty()) {
+                val unSyncGroupIds = resourceMemberGroupIds.filterNot { resourceGroupIds.contains(it) }
+                if (unSyncGroupIds.isNotEmpty()) {
+                    val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        iamGroupIds = unSyncGroupIds
+                    ).map { it.memberId }.distinct()
+                    BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                        projectCode = projectCode,
+                        userIds = memberIds
+                    )
                     authResourceGroupMemberDao.deleteByIamGroupIds(
                         dslContext = dslContext,
                         projectCode = projectCode,
-                        iamGroupIds = unsyncGroupIds
+                        iamGroupIds = unSyncGroupIds
+                    )
+                    traceEventDispatcher.dispatch(
+                        AuthProjectLevelPermissionsSyncEvent(
+                            projectCode = projectCode,
+                            iamGroupIds = unSyncGroupIds
+                        )
                     )
                 }
                 offset += limit
@@ -663,6 +711,18 @@ class RbacPermissionResourceGroupSyncService @Autowired constructor(
             authResourceGroupMemberDao.batchCreate(transactionContext, toAddMembers)
             authResourceGroupMemberDao.batchUpdate(transactionContext, toUpdateMembers)
         }
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(toAddMembers, toDeleteMembers, toUpdateMembers)
+                .flatMap { list -> list.map { it.memberId } }
+                .distinct()
+        )
+        traceEventDispatcher.dispatch(
+            AuthProjectLevelPermissionsSyncEvent(
+                projectCode = projectCode,
+                iamGroupIds = listOf(iamGroupId)
+            )
+        )
     }
 
     /**

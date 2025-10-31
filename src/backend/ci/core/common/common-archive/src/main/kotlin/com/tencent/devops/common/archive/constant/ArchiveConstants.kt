@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -52,6 +52,7 @@ const val ARCHIVE_PROPS_BK_CI_APP_STAGE = "BK-CI-APP-STAGE"
 const val ARCHIVE_PROPS_APP_DEPENDENCIES = "appDependencies"
 const val ARCHIVE_PROPS_APP_DEVICE_TYPES = "appDeviceTypes"
 const val ARCHIVE_PROPS_APP_MODULE_TYPE = "appModuleType"
+const val ARCHIVE_PROPS_APP_NAME_I18N = "appNameI18n"
 
 const val REPO_PIPELINE = "pipeline"
 const val REPO_CUSTOM = "custom"

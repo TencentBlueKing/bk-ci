@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.SVN_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.ScmSvnRepository
@@ -67,7 +68,7 @@ class ScmSvnRepositoryService @Autowired constructor(
     override fun create(projectId: String, userId: String, repository: ScmSvnRepository): Long {
         repositoryCheckService.checkSvnCredential(
             projectId = projectId,
-            authRepository = AuthRepository(repository)
+            authRepository = AuthRepository(repository.copy(projectId = projectId))
         )
         var repositoryId = 0L
         dslContext.transaction { configuration ->
@@ -223,6 +224,42 @@ class ScmSvnRepositoryService @Autowired constructor(
         repositoryId: Long,
         repository: ScmSvnRepository
     ) = Unit
+
+    override fun listByCondition(
+        repoCondition: RepoCondition,
+        limit: Int,
+        offset: Int
+    ): List<Repository>? {
+        return repositoryCodeSvnDao.listByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition,
+            limit = limit,
+            offset = offset
+        ).map {
+            ScmSvnRepository(
+                aliasName = it.aliasName,
+                url = it.url,
+                credentialId = it.credentialId,
+                region = it.region,
+                projectName = it.projectName,
+                userName = it.userName,
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                svnType = it.svnType,
+                enablePac = it.enablePac,
+                yamlSyncStatus = it.yamlSyncStatus,
+                scmCode = it.scmCode,
+                credentialType = it.credentialType
+            )
+        }
+    }
+
+    override fun countByCondition(repoCondition: RepoCondition): Long {
+        return repositoryCodeSvnDao.countByCondition(
+            dslContext = dslContext,
+            repoCondition = repoCondition
+        )
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmSvnRepositoryService::class.java)

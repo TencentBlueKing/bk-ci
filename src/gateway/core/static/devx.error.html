@@ -1,0 +1,735 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title></title>
+    <style>
+        html {
+            font-family: 'PingFangSC-Regular', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, "Hiragino Sans GB", "Microsoft Yahei", "PingFangSC-S0pxibold", sans-serif;
+            font-size: 16px;
+            word-spacing: 1px;
+            -ms-text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-font-smoothing: antialiased;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background-color: #fff;
+            font-size: 16px;
+            color: #000000;
+            background-color: #F4F7FC;
+            position: relative;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        li {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #app {
+            width: 100%;
+            height: 100%;
+            background-image: url('//cdn.m.tencent.com/oa/images/BG_desktop.png');
+            background-position-x: center;
+            background-repeat: no-repeat;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main .content {
+            background: #FFFFFF;
+            margin: 0 48px;
+            background: #FFFFFF;
+            padding: 20px 20px;
+            box-shadow: 0 6px 16px 0 rgba(218, 222, 235, 0.40);
+        }
+
+
+
+        .main .content .title #domainName {
+            padding-right: 2px;
+        }
+
+        .main .content .title .sign-icon {
+            display: inline-block;
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAAAXNSR0IArs4c6QAABXZJREFUaEPtWltrXFUU/tbeaWK8IUZEai1Kk0nVeHloEW3pTH0RpQkkk0n7IOofUF9En2ya+qT4ov4BFR/aJpNAUhRf7KTYqjQPSms1kxSlxiJipBQ1Js3eS/Y5+yQzk7mcW2o89sDAwNl7nfXt9a29vn0hJPyhhOPDdYDxRpjtgBLHa7e2tfWJ4CALTBYE0hmNIdJ1wQRpG2JU4gWYY+n4MEyqzJfMiSa0bpFousl9v/ynwsKcQmHvclm7Wv1DAPO6xACQCTmIMlC5C1ul1o8w9A5ifpBJbAPzHSDc7HyY8QeIfiPWF5joW4KYUkJ8g+FtF1ewGLDD0EA0OkcDaOh1HuSAy7Fs0bPPLGv9LBOeALAl4MDPEeN0kxAfLYr2jz2beADckOZ1PhQeoAFn8it3rlmqlh6QfpUZO534wJmdTe6Zn/kvavhg3pv25r35OX2JcAYs3lJycRzDXUvwvhVwxEzzcAAd+pBCb/F+KfA2Mz8FwOSXcdADZWz7tW/6eT8D1PRTRPSp0ngFY6nvDEPW5LYPwH4dsKaYMAgykZP908+xxjsAbjPTRkkUfHy2YRMv+k0ALpPAy2qk80M3kmYg/OdlAICrNUz0FQ8D/HpJxLxRb+h5gAYeG6xtekOPpg4CwWqpf4A2D0T/9LvQeLGCigH8Dtx0lboC7+mRzpeC5KQ/gJb/ond6CISDJj8sJf31D4xpTQcvmhKMw3qsc9BvTjZ20IKT2ennmfF+yMh5USj1PMgk5FZPO+MS4QWV7/zAD8j6AC0tm3tnu5ZJTQK4vaQMRI9LcAteCfq9iWV6aaz9XCO61gFoktmdrWS2OM7M3ZaartwK9iwC+KWiy10AWoKZcVqb9JBENKHyqR63/6qvlfZqA1yh5swAsz4aEpyZ7gWRmNok1ACUdoW3FOKqlseY9Q5L+VpCoBZ+C1LsV/mOY/WoWp+iOZZSF08x47GQjrgAQZ+rhzrSK5JrkIU8OzPJ4N2R7BK+UiK1q54AqA7Q5p7MznQz6/EIeWcjiNNq/lIahYy7ysgUpGzbPMnsaFanTQiqWlknelS+Y6JWLlYH6NGzb+YIQ+8PSU/js0fRU6qrfU9ZBM/NnmTWuyIAdGkKcVSNdhyoRdO1AG30bjjww71LS4uTAG2N4MR6ArSR54vNzS3pv4/c92O1KK4FaBanhb3Lsr+4jzVPRIjeekdwdUYV1K1GUsdhfa8stuX09yRZ3/QggENWSBvRG+ZZzwgaf4zIN74d0qOdQ/4iaGHI7PcjzJSNQM9rEUE7gJxX+e391SJQfZLJnGgSbXefAfOj/wWAIPpaz/+8c80eT80F6dMzLaJVz9ptB08ebUSKer7N6QXRjk86jGIqeyoiaCVP7qdWof+6BHYWsxsfIOGyFjduxvA9C5Wy7f8G0EY3dooaJZNKo+AIZSADKduKUZWMo7JtmvmlqAUY3yTjGmS6QoLOliYHMz8M8C1hErukj1vsA08yzhIpljIR0f+G3UOUiXgLveehoVL5Nr1boBvvKNTHGKLQxyvVGoYgYgNXcIeRajGJbTsJ0K9gHAexe2zGRCDsA/jOCGUopNg2DsS+XKKTKt+RWd2wZZLZmQIz74mglEIulwzAuBe8oC/UrZueRPO8WyaW2qS8cvUzBj8eAWCEBa+XGBt/y+JLJVK7g29ZlNI0u4E3nZgH1Nj24ZCbTknfNizJxYRu/NpETPTWfclkYxI5mYcvHshEH59Z+eFiJU7mAagHMrlH2CWyOLmXEEpArr1G8hozzGlRHNdIpsDizX/vGknpxJPYi0ArwUzyVa7K1WoyL+NVWZMHuSIZpG2I5X/UPZGAnwx2iSeg8arNrzHAOFwOZuM6wGDjtfFa/wMO/wB1/VdXGAAAAABJRU5ErkJggg==') no-repeat;
+            background-size: 100%;
+        }
+
+        .main .content .content-main {
+
+            letter-spacing: 0;
+        }
+
+        .main .content .content-main p {
+            font-family: PingFangSC-Regular;
+            color: #7A8499;
+        }
+
+        .main a {
+            color: #025DD9;
+        }
+
+
+        .main .content .title {
+            align-items: flex-start;
+            display: flex;
+
+        }
+
+
+        .main .head-title {
+            font-weight: 600;
+            font-family: PingFangSC-S0pxibold;
+        }
+
+        .one img {
+            width: 100%;
+            height: 100%;
+        }
+
+        #bottom {
+            font-family: PingFangSC-Regular;
+            font-weight: 400;
+            font-size: 16px;
+            color: #7A8499;
+            text-align: center;
+        }
+
+        @media screen and (max-width: 959px) {
+
+            #app {
+                background-size: 10rem 8.52rem;
+                background-position: center 0rem;
+                font-size: 0.28rem;
+            }
+
+            .main .head-title {
+
+                width: 100%;
+                height: 3.24rem;
+                font-size: 0.56rem;
+                color: #0252D9;
+                text-align: center;
+            }
+
+            .main .head-title span {
+                display: inline-block;
+                margin-top: 1rem;
+            }
+
+            .main .content {
+                margin: 0.48rem;
+                padding: 0.48rem 0.4rem;
+                margin-top: 0;
+            }
+
+            .main .content .title {
+                color: rgba(0, 0, 0, 0.90);
+                line-height: 0.48rem;
+            }
+
+
+            .main .content .title .sign-icon,
+            .com-ion {
+                padding: 0.2rem;
+                margin-right: 0.2rem;
+                margin-top: 0.08rem;
+            }
+
+            .one {
+                width: 2.88rem;
+                height: 2.88rem;
+                padding: 0.1rem;
+                background: #FFFFFF;
+                border: 0.02rem solid #DEDEDE;
+                margin: 0.24rem auto;
+            }
+
+            #bottom {
+                margin: 0.48rem;
+                padding: 0.48rem 0.28rem;
+                margin-top: 0.12rem;
+                font-size: 0.28rem;
+            }
+        }
+
+        @media screen and (min-width:960px) {
+
+            .main .head-title {
+                height: 44px;
+                font-size: 56px;
+                color: #0252D9;
+                text-align: center;
+                background-size: cover;
+                margin-top: 196px;
+            }
+
+            .main .content {
+                width: 580px;
+                margin-top: 64px;
+            }
+
+            .main .content .title {
+                font-weight: 500;
+                color: rgba(0, 0, 0, 0.90);
+                line-height: 28px;
+                align-items: center;
+                font-family: PingFangSC-Medium;
+            }
+
+            .main .content .title .sign-icon {
+                width: 20px;
+                height: 20px;
+                margin-right: 16px;
+            }
+
+            .one {
+                width: 144px;
+                height: 144px;
+                padding: 8px;
+                background: #FFFFFF;
+                border: 2px solid #DEDEDE;
+                margin: 24px auto;
+
+            }
+
+            #bottom {
+                margin-top: 48px;
+                width: 336px;
+            }
+
+
+        }
+    </style>
+<style data-id="immersive-translate-input-injected-css">.immersive-translate-input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 2147483647;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.immersive-translate-attach-loading::after {
+  content: " ";
+
+  --loading-color: #f78fb6;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+  margin: 12px auto;
+  position: relative;
+  color: white;
+  left: -100px;
+  box-sizing: border-box;
+  animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-2000%, -50%);
+  z-index: 100;
+}
+
+.immersive-translate-loading-spinner {
+  vertical-align: middle !important;
+  width: 10px !important;
+  height: 10px !important;
+  display: inline-block !important;
+  margin: 0 4px !important;
+  border: 2px rgba(221, 244, 255, 0.6) solid !important;
+  border-top: 2px rgba(0, 0, 0, 0.375) solid !important;
+  border-left: 2px rgba(0, 0, 0, 0.375) solid !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  -webkit-animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+  animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+}
+
+@-webkit-keyframes immersive-translate-loading-animation {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(359deg);
+  }
+}
+
+@keyframes immersive-translate-loading-animation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.immersive-translate-input-loading {
+  --loading-color: #f78fb6;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+  margin: 12px auto;
+  position: relative;
+  color: white;
+  left: -100px;
+  box-sizing: border-box;
+  animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+}
+
+@keyframes immersiveTranslateShadowRolling {
+  0% {
+    box-shadow: 0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  12% {
+    box-shadow: 100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  25% {
+    box-shadow: 110px 0 var(--loading-color), 100px 0 var(--loading-color),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  36% {
+    box-shadow: 120px 0 var(--loading-color), 110px 0 var(--loading-color),
+      100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  50% {
+    box-shadow: 130px 0 var(--loading-color), 120px 0 var(--loading-color),
+      110px 0 var(--loading-color), 100px 0 var(--loading-color);
+  }
+
+  62% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color),
+      120px 0 var(--loading-color), 110px 0 var(--loading-color);
+  }
+
+  75% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      130px 0 var(--loading-color), 120px 0 var(--loading-color);
+  }
+
+  87% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color);
+  }
+
+  100% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.immersive-translate-toast {
+  display: flex;
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  right: 0;
+  top: 1%;
+  width: fit-content;
+  padding: 12px 20px;
+  margin: auto;
+  overflow: auto;
+  background: #fef6f9;
+  box-shadow: 0px 4px 10px 0px rgba(0, 10, 30, 0.06);
+  font-size: 15px;
+  border-radius: 8px;
+  color: #333;
+}
+
+.immersive-translate-toast-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.immersive-translate-toast-hidden {
+  margin: 0 20px 0 72px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.immersive-translate-toast-close {
+  color: #666666;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-toast {
+    top: 0;
+    padding: 12px 0px 0 10px;
+  }
+  .immersive-translate-toast-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .immersive-translate-toast-hidden {
+    margin: 10px auto;
+  }
+}
+
+.immersive-translate-dialog {
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  top: 0;
+  display: flex;
+  width: 300px;
+  flex-direction: column;
+  align-items: center;
+  font-size: 15px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  height: fit-content;
+  border-radius: 20px;
+  background-color: #fff;
+}
+
+.immersive-translate-modal {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.4);
+  font-size: 15px;
+}
+
+.immersive-translate-modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 40px 24px 24px;
+  border-radius: 12px;
+  width: 350px;
+  font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
+    "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  position: relative;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-content {
+    margin: 25% auto !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .immersive-translate-modal-content {
+    width: 80vw !important;
+    margin: 20vh auto !important;
+    padding: 20px 12px 12px !important;
+  }
+
+  .immersive-translate-modal-title {
+    font-size: 14px !important;
+  }
+
+  .immersive-translate-modal-body {
+    font-size: 13px !important;
+    max-height: 60vh !important;
+  }
+
+  .immersive-translate-btn {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    margin: 0 4px !important;
+  }
+
+  .immersive-translate-modal-footer {
+    gap: 6px !important;
+    margin-top: 16px !important;
+  }
+}
+
+.immersive-translate-modal .immersive-translate-modal-content-in-input {
+  max-width: 500px;
+}
+.immersive-translate-modal-content-in-input .immersive-translate-modal-body {
+  text-align: left;
+  max-height: unset;
+}
+
+.immersive-translate-modal-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333333;
+}
+
+.immersive-translate-modal-body {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333333;
+  margin-top: 24px;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-body {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+}
+
+.immersive-translate-close {
+  color: #666666;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.immersive-translate-close:hover,
+.immersive-translate-close:focus {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.immersive-translate-modal-footer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.immersive-translate-btn {
+  width: fit-content;
+  color: #fff;
+  background-color: #ea4c89;
+  border: none;
+  font-size: 14px;
+  margin: 0 8px;
+  padding: 9px 30px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.immersive-translate-btn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.immersive-translate-btn:hover {
+  background-color: #f082ac;
+}
+.immersive-translate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.immersive-translate-btn:disabled:hover {
+  background-color: #ea4c89;
+}
+
+.immersive-translate-link-btn {
+  background-color: transparent;
+  color: #ea4c89;
+  border: none;
+  cursor: pointer;
+  height: 30px;
+  line-height: 30px;
+}
+
+.immersive-translate-cancel-btn {
+  /* gray color */
+  background-color: rgb(89, 107, 120);
+}
+
+.immersive-translate-cancel-btn:hover {
+  background-color: hsl(205, 20%, 32%);
+}
+
+.immersive-translate-action-btn {
+  background-color: transparent;
+  color: #ea4c89;
+  border: 1px solid #ea4c89;
+}
+
+.immersive-translate-btn svg {
+  margin-right: 5px;
+}
+
+.immersive-translate-link {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  text-decoration: none;
+  color: #ea4c89;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.immersive-translate-primary-link {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  text-decoration: none;
+  color: #ea4c89;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.immersive-translate-modal input[type="radio"] {
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.immersive-translate-modal label {
+  cursor: pointer;
+}
+
+.immersive-translate-close-action {
+  position: absolute;
+  top: 2px;
+  right: 0px;
+  cursor: pointer;
+}
+
+.imt-image-status {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
+}
+.imt-image-status img,
+.imt-image-status svg,
+.imt-img-loading {
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 0 8px 0 !important;
+  min-height: 28px !important;
+  min-width: 28px !important;
+  position: relative !important;
+}
+.imt-img-loading {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAtFBMVEUAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////oK74hAAAAPHRSTlMABBMIDyQXHwyBfFdDMSw+OjXCb+5RG51IvV/k0rOqlGRM6KKMhdvNyZBz9MaupmxpWyj437iYd/yJVNZeuUC7AAACt0lEQVRIx53T2XKiUBCA4QYOiyCbiAsuuGBcYtxiYtT3f6/pbqoYHVFO5r+iivpo6DpAWYpqeoFfr9f90DsYAuRSWkFnPO50OgR9PwiCUFcl2GEcx+N/YBh6pvKaefHlUgZd1zVe0NbYcQjGBfzrPE8Xz8aF+71D8gG6DHFPpc4a7xFiCDuhaWgKgGIJQ3d5IMGDrpS4S5KgpIm+en9f6PlAhKby4JwEIxlYJV9h5k5nee9GoxHJ2IDSNB0dwdad1NAxDJ/uXDHYmebdk4PdbkS58CIVHdYSUHTYYRWOJblWSyu2lmy3KNFVJNBhxcuGW4YBVCbYGRZwIooipHsNqjM4FbgOQqQqSKQQU9V8xmi1QlgHqQQ6DDBvRUVCDirs+EzGDGOQTCATgtYTnbCVLgsVgRE0T1QE0qHCFAht2z6dLvJQs3Lo2FQoDxWNUiBhaP4eRgwNkI+dAjVOA/kUrIDwf3CG8NfNOE0eiFotSuo+rBiq8tD9oY4Qzc6YJw99hl1wzpQvD7ef2M8QgnOGJfJw+EltQc+oX2yn907QB22WZcvlUpd143dqQu+8pCJZuGE4xCuPXJqqcs5sNpsI93Rmzym1k4Npk+oD1SH3/a3LOK/JpUBpWfqNySxWzCfNCUITuDG5dtuphrUJ1myeIE9bIsPiKrfqTai5WZxbhtNphYx6GEIHihyGFTI69lje/rxajdh0s0msZ0zYxyPLhYCb1CyHm9Qsd2H37Y3lugVwL9kNh8Ot8cha6fUNQ8nuXi5z9/ExsAO4zQrb/ev1yrCB7lGyQzgYDGuxq1toDN/JGvN+HyWNHKB7zEoK+PX11e12G431erGYzwmytAWU56fkMHY5JJnDRR2eZji3AwtIcrEV8Cojat/BdQ7XOwGV1e1hDjGGjXbdArm8uJZtCH5MbcctVX8A1WpqumJHwckAAAAASUVORK5CYII=");
+  background-size: 28px 28px;
+  animation: image-loading-rotate 1s linear infinite !important;
+}
+
+.imt-image-status span {
+  color: var(--bg-2, #fff) !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  font-weight: 500 !important;
+  font-family: "PingFang SC", Arial, sans-serif !important;
+}
+
+@keyframes image-loading-rotate {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+</style><style class="automa-element-selector">@font-face { font-family: "Inter var"; font-weight: 100 900; font-display: swap; font-style: normal; font-named-instance: "Regular"; src: url("chrome-extension://infppggnoaenmfagbfknfkancpbljcca/Inter-roman-latin.var.woff2") format("woff2") }
+.automa-element-selector { direction: ltr } 
+ [automa-isDragging] { user-select: none } 
+ [automa-el-list] {outline: 2px dashed #6366f1;}</style></head>
+
+<body>
+    <div id="app">
+        <div class="main">
+            <div class="head-title">
+                <span id="titleName">你正在尝试访问云研发站点</span></div>
+            <div class="content">
+                <div class="title"><span class="sign-icon"></span>
+                    <span id="domainName" style="font-size: 20px;">本站点仅限合作用户访问，内部用户请直接登录内部woa</span>
+                </div>
+                <div style="text-align: center; margin-top: 24px;">
+                    <button id="logoutBtn" style="
+                        margin-top: 16px;
+                        padding: 8px 16px;
+                        background-color: #025DD9;
+                        color: #fff;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 16px;
+                        cursor: pointer;
+                    ">返回登录</button>
+                </div>
+            </div>
+            <div id="bottom">
+                如有任何疑问，请企业微信联系您的项目管理员
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            window.location.href = 'https://login.devx.tencent.com/login/?c_url=https%3A%2F%2Fdev.devx.tencent.com%2Fconsole%2F&is_from_logout=1';
+        });
+
+        fnResize();
+        window.onresize = function () {
+            fnResize();
+        }
+
+        function fnResize() {
+            var deviceWidth = document.documentElement.clientWidth || window.innerWidth;
+            if (deviceWidth >= 750 && deviceWidth <= 959) {
+                deviceWidth = 750;
+            }
+            if (deviceWidth <= 320) {
+                deviceWidth = 320;
+            }
+            document.getElementById("titleName").innerHTML = `你正在尝试<br />访问云研发站点`
+            if (deviceWidth >= 960) {
+                document.getElementById("titleName").innerHTML = `你正在尝试访问云研发站点`
+                return
+            }
+            document.documentElement.style.fontSize = (deviceWidth / 7.5) + 'px';
+        }
+    </script>
+
+
+
+<div id="automa-palette"></div></body><div style="all: initial;"><div id="__hcfy__" style="all: initial;"></div></div><div id="immersive-translate-popup" style="all: initial"></div></html>

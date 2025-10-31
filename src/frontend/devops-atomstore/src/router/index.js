@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,6 +44,7 @@ const visibleSetting = () => import(/* webpackChunkName: 'visibleSetting' */ '@/
 const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
 const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
 const apiSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/api-setting.vue') // 研发商店管理页面
+const deptInfoSetting = () => import(/* webpackChunkName: 'deptInfoSetting' */ '@/views/manage/setting/deptInfo-setting.vue') // 研发商店管理页面
 const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
 const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
 const environment = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/environment.vue') // 研发商店管理页面
@@ -206,6 +207,11 @@ const routes = [
                                 path: 'api',
                                 name: 'api',
                                 component: apiSetting
+                            },
+                            {
+                                path: 'deptInfo',
+                                name: 'deptInfo',
+                                component: deptInfoSetting
                             }
                         ]
                     },

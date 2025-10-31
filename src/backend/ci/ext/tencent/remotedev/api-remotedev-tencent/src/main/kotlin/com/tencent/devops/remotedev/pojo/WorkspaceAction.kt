@@ -58,5 +58,6 @@ enum class WorkspaceAction {
     CLONING,
     CREATE_SUCCESS, // 交付成功
     DELETE_IN_INITIALIZING, // 交付时删除
-    CREATE_DISK
+    CREATE_DISK,
+    SYNC_VM
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -354,16 +354,16 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxStartTime: LocalDateTime? = null,
         archiveFlag: Boolean? = null
     ) {
-        val totalBuildCount = processMiscService.getTotalBuildCount(
+        val maxPipelineBuildNum = processMiscService.getMaxPipelineBuildNum(
             projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
             archiveFlag = archiveFlag
         )
-        logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
+        logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|maxPipelineBuildNum=$maxPipelineBuildNum")
         var totalHandleNum = processMiscService.getMinPipelineBuildNum(projectId, pipelineId, archiveFlag).toInt()
-        while (totalHandleNum < totalBuildCount) {
+        while (totalHandleNum <= maxPipelineBuildNum) {
             val cleanBuilds = mutableListOf<String>()
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
                 projectId = projectId,

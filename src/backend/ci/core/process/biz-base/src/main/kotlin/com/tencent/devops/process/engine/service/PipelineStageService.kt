@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,12 +29,15 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -67,6 +70,7 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
+import java.time.LocalDateTime
 import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -255,6 +259,21 @@ class PipelineStageService @Autowired constructor(
                 }
             }
 
+            pipelineEventDispatcher.dispatch(
+                // stage 审核
+                PipelineBuildStatusBroadCastEvent(
+                    source = "pauseStage", projectId = projectId, pipelineId = pipelineId,
+                    userId = "", buildId = buildId, stageId = stageId, actionType = ActionType.START,
+                    buildStatus = BuildStatus.REVIEWING.name, executeCount = executeCount,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_PAUSE,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp(),
+                        PipelineBuildStatusBroadCastEvent.Labels::stageSeq.name to
+                            seq
+                    )
+                )
+            )
             // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
         }
     }
@@ -345,6 +364,25 @@ class PipelineStageService @Autowired constructor(
                         pipelineId = pipelineId, buildId = buildId, userId = userId,
                         stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
                         status = BuildStatus.REVIEW_PROCESSED.name
+                    ),
+                    // stage 审核通过
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "stage($stageId) reviewed with PROCESSED",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        actionType = ActionType.START,
+                        stageId = stageId,
+                        executeCount = executeCount,
+                        buildStatus = BuildStatus.REVIEW_PROCESSED.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_PAUSE,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                                LocalDateTime.now().timestamp(),
+                            PipelineBuildStatusBroadCastEvent.Labels::stageSeq.name to
+                                seq
+                        )
                     )
                     // #3400 点Stage启动时处于DETAIL界面，以操作人视角，没有刷历史列表的必要
                 )
@@ -353,18 +391,16 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun cancelStageBySystem(
+    fun cancelQualityCheck(
         userId: String,
         buildInfo: BuildInfo,
         buildStage: PipelineBuildStage,
         timeout: Boolean? = false
     ) {
-
         val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
             true to buildStage.checkIn,
             false to buildStage.checkOut
         )
-
         checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是红线待审核状态则取消红线审核
             if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
@@ -381,8 +417,24 @@ class PipelineStageService @Autowired constructor(
                     timeout = timeout
                 )
             }
+        }
+    }
+
+    fun cancelStageBySystem(
+        userId: String,
+        buildInfo: BuildInfo,
+        buildStage: PipelineBuildStage,
+        timeout: Boolean? = false
+    ) {
+
+        val checkMap: Map<Boolean, StagePauseCheck?> = mapOf(
+            true to buildStage.checkIn,
+            false to buildStage.checkOut
+        )
+
+        checkMap.forEach { (inOrOut, pauseCheck) ->
             // #5654 如果是待人工审核则取消人工审核
-            else if (pauseCheck?.groupToReview() != null) {
+            if (pauseCheck?.groupToReview() != null) {
                 val pipelineInfo =
                     pipelineRepositoryService.getPipelineInfo(buildStage.projectId, buildStage.pipelineId)
                 cancelStage(
@@ -463,6 +515,25 @@ class PipelineStageService @Autowired constructor(
                     pipelineId = pipelineId, buildId = buildId, userId = userId,
                     stageId = stageId, taskId = null, reviewType = BuildReviewType.QUALITY_CHECK_IN,
                     status = BuildStatus.REVIEW_ABORT.name
+                ),
+                // stage 审核驳回
+                PipelineBuildStatusBroadCastEvent(
+                    source = "stage($stageId) reviewed with ABORT",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    executeCount = executeCount,
+                    buildStatus = BuildStatus.REVIEW_ABORT.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_PAUSE,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp(),
+                        PipelineBuildStatusBroadCastEvent.Labels::stageSeq.name to
+                            seq
+                    )
                 ),
                 PipelineBuildNotifyEvent(
                     notifyTemplateEnum = PipelineNotifyTemplateEnum
@@ -653,6 +724,7 @@ class PipelineStageService @Autowired constructor(
                     NotifyUtils.WEWORK_GROUP_KEY to (checkIn.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
                 position = ControlPointPosition.BEFORE_POSITION,
+                stageSeq = stage.seq,
                 stageId = stage.stageId,
                 notifyType = NotifyUtils.checkNotifyType(checkIn.notifyType),
                 markdownContent = checkIn.markdownContent,

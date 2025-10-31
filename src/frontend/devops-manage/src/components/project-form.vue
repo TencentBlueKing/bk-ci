@@ -1,31 +1,14 @@
 <script setup lang="ts">
-import {
-  EditLine,
-} from 'bkui-vue/lib/icon';
-import {
-  computed,
-  getCurrentInstance,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowRef,
-  watch,
-  h
-} from 'vue';
+import { onMounted, ref, watch, computed} from 'vue';
 import { useI18n } from 'vue-i18n';
-import IAMIframe from './IAM-Iframe';
-import { Message, Popover, InfoBox, Alert, Button } from 'bkui-vue';
 import http from '@/http/api';
-import DialectPopoverTable from "@/components/dialectPopoverTable.vue";
-import copyImg from "@/css/svg/copy.svg";
-import { copyToClipboard } from "@/utils/util.js"
-const {
-  t,
-} = useI18n();
-const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange']);
+import { BaseInfoContent, PermissionContent, PipelineContent } from "@/components/project-form-item/";
+import ProjectSettings from "./project-settings.vue"
 
-interface Dept {
+const { t } = useI18n();
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm', 'productIdChange', 'handleCancel', 'initProjectData', 'handleUpdate']);
+
+export interface Dept {
   id: string;
   name: string;
   type?: string;
@@ -33,40 +16,26 @@ interface Dept {
   children?: Dept[];
   [key: string]: any;
 }
-
 const props = defineProps({
   data: Object,
   type: String,
   isChange: Boolean,
+  btnLoading: Boolean
 });
 
-const logoFiles = computed(() => {
-  const { logoAddr } = projectData.value;
-  const files: {url: string}[] = [];
-  if (logoAddr) {
-    files.push({
-      url: logoAddr,
-    });
-  }
-  return files;
-});
-const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
-const inited = ref(false);
 const projectForm = ref<any>(null);
-const iframeRef = ref(null);
-const operationalList = ref([]);
-const vm = getCurrentInstance();
+const projectData = ref<any>(props.data);
 const rules = {
   englishName: [
     {
-      validator: value => props.type !== 'apply' || englishNameReg.test(value),
+      validator: value => props.type !== 'apply' || /^[a-z][a-z0-9-]{1,32}$/.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },
   ],
   bgId: [
     {
-      validator: () => projectData.value.bgId && projectData.value.deptId,
+      validator: () => !!(projectData.value.bgId && projectData.value.deptId),
       message: t('请选择项目所属组织'),
       trigger: 'blur',
     },
@@ -79,87 +48,26 @@ const rules = {
     },
   ],
 };
-
-const projectTypeList = [
-  {
-    id: 1,
-    name: t('手游'),
-  },
-  {
-    id: 2,
-    name: t('端游'),
-  },
-  {
-    id: 3,
-    name: t('页游'),
-  },
-  {
-    id: 4,
-    name: t('平台产品'),
-  },
-  {
-    id: 5,
-    name: t('支撑产品'),
-  },
-];
-
-const projectData = ref<any>(props.data);
-
-const orgValue = ref<string[]>([]);
-
-const deptLoading = ref({
-  dept: false,
-  center: false,
-  product: false,
-});
-
-const centerList = ref<Dept[]>([]);
-const deptMap = shallowRef(new Map());
-
-const showDialog = ref(false);
-
-const orgTree = shallowRef<Dept[]>([]);
-
-const bgName = ref('');
-
-const confirmSwitch = ref('');
-const pipelineSideslider = ref(false);
-const pipelineList = ref([]);
-const isLoading = ref(false);
-const pipelinePagination = ref({ count: 0, limit: 20, current: 1 });
 const initPipelineDialect = ref();
-const projectId = computed(() => projectData.value.englishName);
-const currentPipelineDialect = computed(() => projectData.value.properties.pipelineDialect);
-const infoBoxRef = ref();
-
-const getDepartment = async ({ id, type = 'dept' }: Partial<Dept>, resolve?) => {
-  try {
-    if (!id) return [];
-    const res = await http.getOrganizations({
-      type,
-      id,
-    });
-    const parent = deptMap.value.get(id);
-    res.forEach((i) => {
-      if (deptMap.value.has(i.id)) return;
-      deptMap.value.set(i.id, i);
-    });
-    if (parent) {
-      parent.children = res.map((i) => {
-        if (deptMap.value.has(i.id)) return deptMap.value.get(i.id);
-        return i;
-      });
-      deptMap.value.set(id, parent);
-    }
-    resolve?.(res);
-    return res;
-  } catch (err: any) {
-    Message({
-      message: err.message || err,
-      theme: 'danger',
-    });
-  }
-};
+const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
+const collapsePanels = computed(() => [
+  {
+    name: 'baseInfo',
+    title: '基础信息',
+    component: BaseInfoContent,
+  },
+  {
+    name: 'permission',
+    title: '权限',
+    component: PermissionContent,
+  },
+  // ...projectData.value.properties ? [{
+  //   name: 'pipeline',
+  //   title: '流水线',
+  //   isShow: projectData.value.properties,
+  //   component: PipelineContent,
+  // }] : [],
+]);
 
 const setProjectDeptProp = (dept: Dept) => {
   if (!dept) return;
@@ -168,303 +76,11 @@ const setProjectDeptProp = (dept: Dept) => {
   projectData.value[`${type}Name`] = name;
 };
 
-const handleChangeDept = async (deptPath) => {
-  if (!inited.value) return;  // 防止初始化时触发
-  [{
-    type: 'businessLine',
-    id: '',
-    name: '',
-  }, {
-    type: 'center',
-    id: '',
-    name: '',
-  }].forEach(setProjectDeptProp);
-
-  deptPath.forEach((deptId: string) => {
-    const dept = deptMap.value.get(deptId);
-    if (dept.type === 'bg') {
-      fetchOperationalList(dept.name);
-      projectData.value.productId = '';
-    }
-    setProjectDeptProp(deptMap.value.get(deptId));
-  });
-  handleChangeForm();
-  if (!deptPath.length) {
-    ['bg', 'businessLine', 'dept', 'center'].forEach((type) => {
-      projectData.value[`${type}Id`] = '';
-      projectData.value[`${type}Name`] = '';
-    });
-    return;
-  }
-  const deptId = deptPath[deptPath.length - 1];
-  const lastOne = deptMap.value.get(deptId);
-  if (Array.isArray(lastOne?.children) && lastOne?.children.length > 0) {
-    centerList.value = lastOne.children;
-  } else {
-    centerList.value = await getDepartment({
-      id: deptId,
-      type: 'center',
-    });
-  }
-};
-
-const handleChangeCenter = (id: any) => {
-  handleChangeForm();
-  const name = centerList.value.find(i => i.id === id)?.name;
-  projectData.value.centerName = name ?? '';
-};
-
-const fetchDepartmentList = async (deptInfos: Dept[]) => {
-  deptLoading.value.dept = true;
-  deptInfos.forEach((item, index) => {
-    deptMap.value.set(item.id, {
-      ...item,
-      parentId: index > 0 ? (deptInfos[index - 1]?.id ?? '0') : '-1',
-      ...(index < deptInfos.length - 1 ? {
-        children: [],
-      } : {
-        leaf: true,
-      }),
-    });
-  });
-  const depts = deptInfos.slice(0, -1);
-
-  await Promise.all(depts.map(dept => getDepartment({
-    id: dept.id,
-    type: 'dept',
-  })));
-  orgTree.value = Array.from(deptMap.value.values()).filter(i => i.parentId === '0');
-  orgValue.value = deptInfos.slice(1).map((i) => {
-    setProjectDeptProp(i);
-    return i.id;
-  });
-
-  nextTick(() => {
-    inited.value = true;
-  });
-  deptLoading.value.dept = false;
-};
-
 const handleChangeForm = () => {
   emits('change', true);
 };
 
-const handleUploadLogo = async (res: any) => {
-  handleChangeForm();
-  const { file } = res;
-  if (file) {
-    if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-      Message({
-        theme: 'danger',
-        message: t('只允许上传png、jpg'),
-      });
-    } else if (file.size > (2 * 1024 * 1024)) {
-      Message({
-        theme: 'danger',
-        message: t('大小不超过2M'),
-      });
-    } else {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        projectData.value.logoAddr = reader.result;
-      };
-    }
-    const formData = new FormData();
-    formData.append('logo', file);
-    await http.uploadProjectLogo({
-      formData,
-    }).then((res) => {
-      projectData.value.logoAddress = res;
-    });
-  }
-};
-
-const createAlertContent = (titleText, paragraphs) => {
-  return h(Alert, { theme: "warning" }, {
-    title: () => h('div', { style: { 'line-height': '20px' } }, [
-      h('p', { class: 'alarm' }, t(titleText)),
-      ...paragraphs
-    ])
-  });
-};
-
-const changeClassic = () => {
-  return createAlertContent('危险操作告警：', [
-    h('p', t('alarmTip1')),
-    h('p', { class: 'tip-script', style: { 'font-size': '12px' } }, [
-      h('p', { class: 'text-white' }, 'a=3'),
-      h('p', [
-        h('span', { class: 'text-echo' }, 'echo'),
-        h('span', { class: 'text-a' }, '$'),
-        h('span', '{'),
-        h('span', { class: 'text-a' }, 'a'),
-        h('span', '}'),
-      ]),
-    ]),
-    h('p', [
-      h('span', {
-        class: 'tip-blue',
-        onClick() {
-          pipelineSideslider.value = true;
-          fetchListViewPipelines()
-        },
-      }, t('X条', [pipelinePagination.value.count])),
-      h('span', t('alarmTip2'))
-    ]),
-  ]);
-};
-
-const changeConstrained = () => {
-  return createAlertContent(t('危险操作告警：'), [
-    h('p', [
-      h('span', t('alarmTip3')),
-      h('span', {
-        class: 'tip-blue',
-        onClick() {
-          pipelineSideslider.value = true;
-          fetchListViewPipelines()
-        },
-      }, t('X条', [pipelinePagination.value.count])),
-      h('span', t('alarmTip4'))
-    ]),
-  ]);
-};
-
-const getCountPipelineByDialect = async () => {
-  try {
-    const res = await http.countInheritedDialectPipeline(projectId.value);
-    pipelinePagination.value.count = res;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-const beforeChange = () => {
-  return new Promise(async (resolve) => {
-    if (props.type === 'edit' && initPipelineDialect.value === currentPipelineDialect.value) {
-      confirmSwitch.value = '';
-      await getCountPipelineByDialect();
-      const copyText = t('我已明确变更风险且已确认变更无影响');
-      const isClassic = currentPipelineDialect.value !== 'CLASSIC';
-      const title = isClassic ? t('确认切换成“传统风格？') : t('确认切换成“制约风格？');
-      const content = isClassic ? changeClassic() : changeConstrained();
-      infoBoxRef.value = InfoBox({
-        type: 'warning',
-        width: 640,
-        title: title,
-        content: h('div', [
-          content,
-          h('div', { class: 'confirm-switch' }, [
-            h('p', { class: 'confirm-tit' }, [
-              h('span', t('请输入')),
-              h('span', { style: { 'font-weight': 700 } }, ` "${copyText}" `),
-              h('img', {
-                src: copyImg,
-                style: { width: '12px', 'vertical-align': 'middle', margin: '4px' },
-                onClick() {
-                  copyToClipboard(copyText);
-                  Message({ theme: 'success', message: t('复制成功') });
-                },
-              }),
-              h('span', t('以确认切换'))
-            ]),
-            h('input', {
-              class: 'confirm-input',
-              placeholder: t('请输入'),
-              value: confirmSwitch.value,
-              onInput: (event: any) => {
-                confirmSwitch.value = event.target.value;
-              }
-            })
-          ])
-        ]),
-        footer: () => h('div',{}, [
-          h(Button, {
-            disabled: !confirmSwitch.value,
-            theme: 'danger' ,
-            onClick() {
-              if (confirmSwitch.value === copyText) {
-                resolve(true);
-              } else {
-                resolve(false);
-                Message({ theme: 'error', message: t('请输入：我已明确变更风险且已确认变更无影响') });
-              }
-              infoBoxRef.value.hide()
-            },
-          }, t('确认切换')),
-          h(Button, {
-            onClick() {
-              resolve(false);
-              infoBoxRef.value.hide()
-            },
-          }, t('取消'))
-        ])
-      });
-    } else {
-      resolve(true);
-    }
-  });
-};
-
-const fetchListViewPipelines = async ()=> {
-  try {
-    isLoading.value = true;
-    const params = {
-      page: pipelinePagination.value.current,
-      pageSize: pipelinePagination.value.limit,
-    };
-    const res = await http.listInheritedDialectPipelines(projectId.value, params);
-    pipelineList.value = res.records;
-    pipelinePagination.value.count = res.count;
-  } catch (error) {
-    console.log(error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-const pageLimitChange = (limit: number) => {
-  pipelinePagination.value.limit = limit;
-  fetchListViewPipelines();
-}
-
-const pageValueChange = (value:number) => {
-  pipelinePagination.value.current = value;
-  fetchListViewPipelines();
-}
-
-const handleToPipeline = (row) => {
-  window.open(`/console/pipeline/${projectId.value}/${row.pipelineId}/history/pipeline`, '__blank');
-}
-
-const handleMessage = (event: any) => {
-  const { data } = event;
-  if (data.type === 'IAM') {
-    switch (data.code) {
-      case 'success':
-        handleChangeForm();
-        projectData.value.subjectScopes = data.data.subject_scopes;
-        showDialog.value = false;
-        break;
-      case 'cancel':
-        showDialog.value = false;
-        break;
-      case 'load':
-        setTimeout(() => {
-          // 回显数据
-          (vm?.refs?.iframeRef as any)?.$el?.firstElementChild?.contentWindow?.postMessage?.(
-            JSON.parse(JSON.stringify({
-              subject_scopes: projectData.value.subjectScopes,
-            })),
-            window.BK_IAM_URL_PREFIX,
-          );
-        }, 0);
-        break;
-    }
-  }
-};
-
+const curDeptInfo = ref();
 const fetchUserDetail = async () => {
   let deptInfos: Dept[] = [];
   let centerId = '';
@@ -481,7 +97,7 @@ const fetchUserDetail = async () => {
       name: projectData.value.bgName,
       type: 'bg',
     }] : []),
-    ...(projectData.value.businessLineId ? [{
+    ...((projectData.value.businessLineId && projectData.value.businessLineName) ? [{
       id: projectData.value.businessLineId,
       name: projectData.value.businessLineName,
       type: 'businessLine',
@@ -492,6 +108,7 @@ const fetchUserDetail = async () => {
       type: 'dept',
     }] : []),
     ];
+    
     initPipelineDialect.value = projectData.value?.properties?.pipelineDialect
   } else { // 申请创建项目
     const res = await http.getUserDetail();
@@ -506,87 +123,30 @@ const fetchUserDetail = async () => {
       name: centerName,
     });
   }
-  centerList.value = await getDepartment({
-    id: deptInfos[deptInfos.length - 1].id,
-    type: 'center',
-  });
 
-  if (deptInfos.length && deptInfos[1].type === 'bg') {
-    fetchOperationalList(deptInfos[1].name);
-  }
-  return deptInfos;
+  curDeptInfo.value = deptInfos;
 };
 
-const showMemberDialog = () => {
-  showDialog.value = true;
-};
+const handleClearValidate = () => {
+  projectForm.value.clearValidate();
+}
 
-const fetchOperationalList = async (bgName) => {
-  if (!bgName) return;
-  deptLoading.value.product = true;
-  const res = await http.getOperationalList(bgName);
-  operationalList.value = res.map(i => ({
-    ...i,
-    value: i.ProductId,
-    label: i.ProductName,
-    id: i.ProductId,
-  }));
-  deptLoading.value.product = false;
-};
+const handleUpdate = (panel, params) => {
+  emits('handleUpdate', panel, params)
+}
 
-const validateProjectNameTips = ref('');
-watch(() => projectData.value.projectName, (val) => {
-  if (props.type === 'apply' && val) {
-    http.validateProjectName(val)
-      .then(() => {
-        validateProjectNameTips.value = '';
-      })
-      .catch(() => {
-        projectForm.value?.clearValidate();
-        validateProjectNameTips.value = t('项目名称已存在');
-      });
-  } else if (!val) {
-    validateProjectNameTips.value = '';
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
+  if (newValues[0] !== oldValues[0] || JSON.stringify(newValues[1]) !== JSON.stringify(oldValues[1])) {
+    projectForm.value.validate();
+    emits('approvedChange', true);
   }
 }, {
   deep: true,
 });
-
-const validateEnglishNameTips = ref('');
-watch(() => projectData.value.englishName, (val) => {
-  if (props.type === 'apply' && val && englishNameReg.test(val)) {
-    http.validateEnglishName(val)
-      .then(() => {
-        validateEnglishNameTips.value = '';
-      })
-      .catch(() => {
-        projectForm.value?.clearValidate();
-        validateEnglishNameTips.value = t('项目ID已存在');
-      });
-  } else if (!val || !englishNameReg.test(val)) {
-    validateEnglishNameTips.value = '';
-  }
-}, {
-  deep: true,
-});
-
-watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
-  projectForm.value.validate();
-  emits('approvedChange', true);
-}, {
-  deep: true,
-});
-
 
 onMounted(async () => {
-  const deptInfos = await fetchUserDetail();
-  await fetchDepartmentList(deptInfos);
+  await fetchUserDetail()
   emits('initProjectForm', projectForm.value);
-  window.addEventListener('message', handleMessage);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('message', handleMessage);
 });
 </script>
 
@@ -596,358 +156,95 @@ onBeforeUnmount(() => {
     :rules="rules"
     :model="projectData"
     :label-width="216"
+    class="project-form"
   >
-    <div class="project-tab advanced">
-      <p class="title">{{t('基础信息')}}</p>
-      <bk-form-item :label="t('项目名称')" property="projectName" :required="true">
-        <bk-input
-          v-model="projectData.projectName"
-          :placeholder="t('请输入1-32字符的项目名称')"
-          :maxlength="32"
-          @change="handleChangeForm"
-        ></bk-input>
-        <div class="error-tips" v-if="validateProjectNameTips">
-          {{ validateProjectNameTips }}
-        </div>
-      </bk-form-item>
-      <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
-        <bk-input
-          v-model="projectData.englishName"
-          :disabled="type === 'edit'"
-          :maxlength="32"
-          :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
-        ></bk-input>
-        <div class="error-tips" v-if="validateEnglishNameTips">
-          {{ validateEnglishNameTips }}
-        </div>
-      </bk-form-item>
-      <bk-form-item :label="t('项目描述')" property="description" :required="true">
-        <bk-input
-          v-model="projectData.description"
-          class="textarea"
-          type="textarea"
-          :rows="3"
-          :maxlength="255"
-          :placeholder="t('请输入项目描述')"
-          @change="handleChangeForm"
-        ></bk-input>
-      </bk-form-item>
-      <bk-form-item :label="t('项目LOGO')">
-        <bk-upload
-          theme="picture"
-          :files="logoFiles"
-          with-credentials
-          :multiple="false"
-          :custom-request="handleUploadLogo"
-        />
-        <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
-      </bk-form-item>
-      <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
-        <bk-select
-          v-model="projectData.projectType"
-          :placeholder="t('请选择项目类型')"
-          name="center"
-          searchable
-          @change="handleChangeForm"
-        >
-          <bk-option
-            v-for="projectType in projectTypeList"
-            :value="projectType.id"
-            :key="projectType.id"
-            :label="projectType.name"
-          />
-        </bk-select>
-      </bk-form-item>
-      <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
-        <div class="bk-dropdown-box">
-          <bk-cascader
-            :list="orgTree"
-            v-model="orgValue"
-            filterable
-            is-remote
-            :placeholder="t('请选择部门')"
-            :loading="deptLoading.dept"
-            :remote-method="getDepartment"
-            @change="handleChangeDept"
-          />
-        </div>
-        <div class="bk-dropdown-box">
-          <bk-select
-            v-model="projectData.centerId"
-            :placeholder="t('请选择中心')"
-            name="center"
-            :loading="deptLoading.center"
-            filterable
-            @change="handleChangeCenter"
-          >
-            <bk-option
-              v-for="center in centerList"
-              :value="center.id"
-              :key="center.id"
-              :label="center.name"
-            />
-          </bk-select>
-        </div>
-      </bk-form-item>
-      <bk-form-item
-        :label="t('项目所属运营产品')"
-        property="productId"
-        :required="true"
-        :description="t('公司OBS结算业务的运营产品，1个项目仅支持关联1个运营产品，多个项目可关联到同一运营产品')"
-      >
-        <bk-select
-          class="product-select"
-          v-model="projectData.productId"
-          :placeholder="t('请选择所属运营产品')"
-          :scroll-height="160"
-          name="center"
-          filterable
-          enable-virtual-render
-          :list="operationalList"
-          :input-search="false"
-          :loading="deptLoading.product"
-          searchable
-          @change="handleChangeForm"
-        >
-        </bk-select>
-      </bk-form-item>
-      <bk-form-item
-        :label="t('项目性质')"
-        property="authSecrecy"
-        :required="true"
-      >
-        <bk-radio-group
-          v-model="projectData.authSecrecy"
-          @change="handleChangeForm"
-        >
-          <bk-radio class="mr10" :label="0">
-            <Popover :content="t('`项目最大可授权人员范围`内的用户可以主动申请加入项目')">
-              <span class="authSecrecy-item">{{ t('私有项目') }}</span>
-            </Popover>
-          </bk-radio>
-          <bk-radio :label="1">
-            <Popover :content="t('拥有项目/资源管理权限的成员才可以主动添加用户')">
-              <span class="authSecrecy-item">{{ t('保密项目') }}</span>
-            </Popover>
-          </bk-radio>
-        </bk-radio-group>
-      </bk-form-item>
-    </div>
-    <div class="project-tab">
-      <p class="title">{{t('高级信息')}}</p>
-      <div>
-        <div class="sub-title">{{ t('权限')  }}</div>
-        <bk-form-item
-          :label="t('项目最大可授权人员范围')"
-          :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
-          property="subjectScopes"
-          :required="true">
-          <bk-tag
-            v-for="(subjectScope, index) in projectData.subjectScopes"
-            :key="index"
-          >
-            {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
-          </bk-tag>
-          <EditLine
-            class="edit-line ml5"
-            @click="showMemberDialog"
-          />
-        </bk-form-item>
-      </div>
-      <div v-if="projectData.properties">
-        <div class="sub-title">{{ t('流水线')  }}</div>
-        <bk-form-item
-          property="pipelineDialect"
-        >
-          <template #label>
-            <dialect-popover-table />
-          </template>
-          <bk-radio-group
-            v-model="projectData.properties.pipelineDialect"
-            @change="handleChangeForm"
-            :beforeChange="beforeChange"
-          >
-            <bk-radio label="CLASSIC">
-              <span>{{ t('CLASSIC') }}</span>
-            </bk-radio>
-            <bk-radio label="CONSTRAINED">
-              <span>{{ t('CONSTRAINED') }}</span>
-            </bk-radio>
-          </bk-radio-group>
-          <div v-if="type==='apply'">
-            <bk-alert theme="warning">
-              <template #title>
-                <div v-if="projectData.properties.pipelineDialect==='CONSTRAINED'">
-                  {{ t('CLASSICTIP') }}
-                </div>
-                <div v-else-if="projectData.properties.pipelineDialect==='CLASSIC'">
-                  <p>{{ t('CONSTRAINEDTIP') }}</p>
-                  <p>{{ t('示例，存在流水线变量 a=1，则如下脚本打印出的 a为1，而不是脚本中设置的 3') }}</p>
-                  <p class="tip-script">
-                    <p class="text-white">a=3</p>
-                    <p>
-                      <span class="text-echo">echo</span><span class="text-a">$</span>{<span class="text-a">a</span>}
-                    </p>
-                  </p>
-                  <p>{{ t('请知悉，编排流水线时， Bash 脚本中的局部变量请勿与流水线变量重名，避免出现同名赋值问题。') }}</p>
-                </div>
-              </template>
-            </bk-alert>
-          </div>
-        </bk-form-item>
-        <bk-form-item
-          :label="t('命名规范提示')"
-          :description="t('开启后，需填写流水线命名规范提示说明。规范提示说明将展示在「创建流水线」页面进行提示。')"
-        >
-          <bk-switcher
-            v-model="projectData.properties.enablePipelineNameTips"
-            size="large"
-            theme="primary"
-          />
-          <bk-input
-            class="textarea"
-            v-show="projectData.properties.enablePipelineNameTips"
-            v-model="projectData.properties.pipelineNameFormat"
-            :placeholder="t('请输入流水线命名规范提示说明。示例: 请遵循流水线命名规范，以\'模块名(一个/多个/场景等)_触发机制(premerge/trunk/daily等)_测试裂隙(UT/引流/DIFF等)\'的命名格式')"
-            :rows="3"
-            :maxlength="200"
-            type="textarea"
-          >
-          </bk-input>
-        </bk-form-item>
-        <bk-form-item
-          :label="t('构建日志归档阈值')"
-          property="loggingLineLimit"
-          :description="t('单个步骤(Step)日志达到阈值时，将压缩并归档到日志仓库。可下载日志文件到本地查看。')"
-        >
-          <bk-input
-            v-model="projectData.properties.loggingLineLimit"
-            class="log-line-limit-input"
-            type="number"
-            :showControl="false"
-            :min="1"
-            :max="100"
-            :suffix="t('万行')"
-            :placeholder="t('缺省时默认为10')"
-          >
-          </bk-input>
-        </bk-form-item>
-      </div>
-    </div>
-  </bk-form>
-
-  <bk-dialog
-    :title="t('设置项目最大可授权人员范围')"
-    width="900"
-    size="large"
-    dialog-type="show"
-    :is-show="showDialog"
-    @closed="() => showDialog = false"
-  >
-    <IAMIframe
-      ref="iframeRef"
-      class="member-iframe"
-      path="add-member-boundary"
-      :query="{
-        search_sence: 'add'
-      }"
-    />
-  </bk-dialog>
-  <bk-sideslider
-      v-model:isShow="pipelineSideslider"
-      :title="`${t('切换变量语法风格影响的流水线列表')}(${t('共X个', [pipelinePagination.count])})`"
-      :width="640"
-      renderDirective="if"
-      class="pipeline-sideslider"
+    <bk-collapse
+      v-if="props.type === 'apply'"
+      v-model="activeCollapse"
+      :hasHeaderHover="false"
     >
-      <bk-loading :loading="isLoading">
-        <bk-table
-          :max-height="600"
-          :data="pipelineList"
-          show-overflow-tooltip
-          :pagination="pipelinePagination"
-          remote-pagination
-          @page-limit-change="pageLimitChange"
-          @page-value-change="pageValueChange"
-          >
-          <bk-table-column
-            :label="t('流水线名称')"
-            prop="pipelineName"
-          >
-            <template #default="{row}">
-              <span class="text-link edit-line" @click="handleToPipeline(row)">{{ row.pipelineName }}</span>
-            </template>
-          </bk-table-column>
-        </bk-table>
-      </bk-loading>
-    </bk-sideslider>
+      <bk-collapse-panel
+        v-for="(panel, index) in collapsePanels"
+        :key="panel.name"
+        :name="panel.name"
+        icon="right-shape"
+      >
+          <span class="title">{{ t(panel.title) }}</span>
+          <template #content>
+            <div :class="['project-tab', { 'has-bottom-border': index !== collapsePanels.length - 1 }]">
+              <component
+                :is="panel.component"
+                :type="type"
+                :data="projectData"
+                :initPipelineDialect="initPipelineDialect"
+                :curDeptInfo="curDeptInfo"
+                @handle-change-form="handleChangeForm"
+                @clearValidate="handleClearValidate"
+                @setProjectDeptProp="setProjectDeptProp"
+              />
+            </div>
+          </template>
+      </bk-collapse-panel>
+    </bk-collapse>
+    <project-settings
+      v-else
+      :type="type"
+      :data="projectData"
+      :initPipelineDialect="initPipelineDialect"
+      :curDeptInfo="curDeptInfo"
+      :btnLoading="btnLoading"
+      @change="handleChangeForm"
+      @clearValidate="handleClearValidate"
+      @setProjectDeptProp="setProjectDeptProp"
+      @handleCancel="$emit('handleCancel')"
+      @handleUpdate="handleUpdate"
+      @initProjectData="$emit('initProjectData', $event)"
+    />
+  </bk-form>
 </template>
-
-<style lang="postcss" scoped>
+<style lang="scss">
   .textarea {
-    :deep(textarea) {
-        width: auto;
-    }
     margin-top: 10px;
+    
+    :deep(textarea) {
+      width: auto;
+    }
   }
   :deep(.bk-form-label) {
     font-size: 12px;
   }
-  .logo-upload-tip {
-    font-size: 12px;
-    color: #979BA5;
-  }
-  .edit-line {
-    cursor: pointer;
-  }
-  .member-iframe {
-    height: 600px;
-  }
-  .bk-dropdown-box {
-    width: 200px;
-    margin-right: 12px;
-    display: inline-block;
-    vertical-align: middle;
-  }
-  .authSecrecy-item {
-    border-bottom: 1px dashed #979ba5;
-  }
-  .error-tips {
-    color: #ff5656;
-    font-size: 12px;
-    position: absolute;
-    top: 26px;
-  }
-  .text-link {
-    font-size: 12px;
-    color: #3c96ff;
-  }
-  .log-line-limit-input {
-    width: 150px;
-  }
-</style>
-
-<style lang="postcss">
-  .dark {
-    background: #26323d !important;
+  .project-form {
+    .bk-collapse-header {
+      .bk-collapse-title {
+        margin-left: 12px;
+      }
+      .bk-collapse-icon {
+        left: 0;
+      }
+    }
+    .bk-collapse-content {
+      padding: 0;
+    }
+    .bk-collapse-item {
+      padding: 16px 32px 0 32px;
+      background-color: #fff;
+    }
+    .bk-form-item {
+      margin: 0 auto;
+      margin-bottom: 24px;
+    }
+    .title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #313238;
+    }
   }
   .bk-form-error {
     white-space: nowrap;
   }
   .project-tab {
     width: 100%;
-    padding: 20px 30px;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 #00000026;
-    &.advanced {
-      margin-bottom: 24px;
-    }
-    .title {
-      margin-bottom: 16px;
-      font-weight: 700;
-      font-size: 14px;
-      color: #63656E;
-    }
+    padding: 20px 0;
     .sub-title {
       font-size: 14px;
       border-bottom: 2px solid #DCDEE5;
@@ -958,67 +255,7 @@ onBeforeUnmount(() => {
       max-width: 1000px;
     }
   }
-  .alarm {
-    color: #4D4F56;
-    font-size: 12px;
-    font-weight: 700;
-  }
-  .tip-script {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 200px;
-    height: 60px;
-    line-height: 22px;
-    padding-left: 20px;
-    margin: 10px 0;
-    background: #313238;
-    font-size: 14px;
-    color: #F8B64F;
-  }
-  .text-white {
-    color: #F5F7FA;
-  }
-  .text-echo {
-    color: #699DF4;
-    margin-right: 10px;
-  }
-  .text-a {
-    color: #65B6C3;
-  }
-  .tip-blue {
-    cursor: pointer;
-    color: #3A84FF; 
-    font-weight: 700;
-  }
-  .confirm-switch {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    margin-top: 16px;
-  }
-  .confirm-tit {
-    color: #333333;
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-  .confirm-input {
-    width: 576px;
-    height: 32px;
-    color: #63656e;
-    font-size: 14px;
-    border: 1px solid #C4C6CC;
-    outline: none;
-    box-sizing: border-box;
-    padding: 5px;
-  }
-  .confirm-input:focus {
-    border-color: #3a84ff;
-  }
-  .confirm-input::placeholder {
-    color: #C4C6CC;
-  }
-  .pipeline-sideslider .bk-modal-content{
-    padding: 16px 24px;
+  .has-bottom-border {
+    border-bottom: 1px solid #DCDEE5;
   }
 </style>

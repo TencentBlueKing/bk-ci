@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -137,7 +137,8 @@ class RepositoryDao {
         repositoryTypes: List<ScmType>?,
         aliasName: String?,
         repositoryIds: Set<Long>?,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): Long {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectCount()
@@ -153,6 +154,9 @@ class RepositoryDao {
             }
             if (enablePac != null) {
                 step.and(ENABLE_PAC.eq(enablePac))
+            }
+            if (scmCode != null) {
+                step.and(SCM_CODE.eq(scmCode))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -351,7 +355,8 @@ class RepositoryDao {
         limit: Int,
         sortBy: String? = null,
         sortType: String? = null,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): Result<TRepositoryRecord> {
         with(TRepository.T_REPOSITORY) {
             val step = dslContext.selectFrom(this)
@@ -366,7 +371,9 @@ class RepositoryDao {
             if (enablePac != null) {
                 step.and(ENABLE_PAC.eq(enablePac))
             }
-
+            if (scmCode != null) {
+                step.and(SCM_CODE.eq(scmCode))
+            }
             when (repositoryTypes) {
                 null -> {
                 }
@@ -678,6 +685,7 @@ class RepositoryDao {
             dslContext.select(SCM_CODE, DSL.count())
                 .from(this)
                 .where(SCM_CODE.`in`(scmCodes))
+                .groupBy(SCM_CODE)
                 .fetch().map {
                     Pair(it.value1(), it.value2().toLong())
                 }.toMap()

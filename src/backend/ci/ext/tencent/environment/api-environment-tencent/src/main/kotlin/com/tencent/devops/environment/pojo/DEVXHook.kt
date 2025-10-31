@@ -38,9 +38,17 @@ data class DEVXHook(
     @get:Schema(title = "值", required = true)
     val enable: Boolean
 ) {
+    // 定义type最长32字符
     enum class HookType(vararg val executionType: ExecutionType) {
+        // 清理凭据，包括 Git/SVN 凭据、企微登录态
         CLEAN_CREDENTIALS(ExecutionType.LOG_IN, ExecutionType.LOG_OUT),
+        // 清理浏览器 Cookie，包括 Chrome、Microsoft Edge、QQ
+        CLEAN_COOKIE(ExecutionType.LOG_IN, ExecutionType.LOG_OUT),
+        // 清理浏览器历史记录，包括 Chrome、Microsoft Edge、QQ
+        CLEAN_WEB_HISTORY(ExecutionType.LOG_IN, ExecutionType.LOG_OUT),
+        // 登录 IOA
         IOA_LOGIN(ExecutionType.LOG_IN),
+        // IOA 注销登录
         IOA_LOGOUT(ExecutionType.LOG_OUT);
     }
 

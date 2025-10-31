@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.9
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_process 的数据库文档
 | 表名                  | 说明       |
@@ -11,6 +11,7 @@
 | T_PIPELINE_ATOM_REPLACE_BASE | 流水线插件替换基本信息表 |
 | T_PIPELINE_ATOM_REPLACE_HISTORY | 流水线插件替换历史信息表 |
 | T_PIPELINE_ATOM_REPLACE_ITEM | 流水线插件替换项信息表 |
+| T_PIPELINE_BUILD_CHECK_RUN | 构建任务关联检查项信息表 |
 | T_PIPELINE_BUILD_CONTAINER | 流水线构建容器环境表 |
 | T_PIPELINE_BUILD_DETAIL | 流水线构建详情表 |
 | T_PIPELINE_BUILD_HISTORY | 流水线构建历史表 |
@@ -155,6 +156,28 @@
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
+**表名：** <a>T_PIPELINE_BUILD_CHECK_RUN</a>
+
+**说明：** 构建任务关联检查项信息表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 蓝盾项目 ID  |
+|  2   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 流水线 ID  |
+|  3   | BUILD_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 构建任务 ID  |
+|  4   | BUILD_NUM |   int   | 10 |   0    |    N     |  N   |       | 构建编号  |
+|  5   | BUILD_STATUS |   varchar   | 32 |   0    |    N     |  N   |       | 构建状态  |
+|  6   | REPO_HASH_ID |   varchar   | 32 |   0    |    N     |  N   |       | 代码库 HASH_ID  |
+|  7   | CONTEXT |   varchar   | 255 |   0    |    N     |  N   |       | 检查项名称  |
+|  8   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 检查项关联版本  |
+|  9   | PULL_REQUEST_ID |   bigint   | 20 |   0    |    N     |  N   |   0    | 合并请求 ID  |
+|  10   | CHECK_RUN_STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 检查项状态  |
+|  11   | CHECK_RUN_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 检查项 ID  |
+|  12   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  13   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
 **表名：** <a>T_PIPELINE_BUILD_CONTAINER</a>
 
 **说明：** 流水线构建容器环境表
@@ -228,24 +251,25 @@
 |  18   | MATERIAL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 原材料  |
 |  19   | QUEUE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 排队开始时间  |
 |  20   | ARTIFACT_INFO |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构件列表信息  |
-|  21   | REMARK |   varchar   | 4096 |   0    |    Y     |  N   |       | 评论  |
-|  22   | EXECUTE_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 执行时间  |
-|  23   | BUILD_PARAMETERS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构建环境参数  |
-|  24   | WEBHOOK_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | WEBHOOK 类型  |
-|  25   | RECOMMEND_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | 推荐版本号  |
-|  26   | ERROR_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 错误类型  |
-|  27   | ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 错误码  |
-|  28   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
-|  29   | WEBHOOK_INFO |   text   | 65535 |   0    |    Y     |  N   |       | WEBHOOK 信息  |
-|  30   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否重试  |
-|  31   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 执行次数  |
-|  32   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
-|  33   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
-|  34   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
-|  35   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
-|  36   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  37   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
-|  38   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
+|  21   | ARTIFACT_QUALITY_INFO |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 制品质量分析结果  |
+|  22   | REMARK |   varchar   | 4096 |   0    |    Y     |  N   |       | 评论  |
+|  23   | EXECUTE_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 执行时间  |
+|  24   | BUILD_PARAMETERS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构建环境参数  |
+|  25   | WEBHOOK_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | WEBHOOK 类型  |
+|  26   | RECOMMEND_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | 推荐版本号  |
+|  27   | ERROR_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 错误类型  |
+|  28   | ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 错误码  |
+|  29   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
+|  30   | WEBHOOK_INFO |   text   | 65535 |   0    |    Y     |  N   |       | WEBHOOK 信息  |
+|  31   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否重试  |
+|  32   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 执行次数  |
+|  33   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  34   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
+|  35   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
+|  36   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
+|  37   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  38   | VERSION_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 正式版本名称  |
+|  39   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
 
 **表名：** <a>T_PIPELINE_BUILD_HISTORY_DEBUG</a>
 
@@ -275,26 +299,27 @@
 |  18   | MATERIAL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 原材料  |
 |  19   | QUEUE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 排队开始时间  |
 |  20   | ARTIFACT_INFO |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构件列表信息  |
-|  21   | REMARK |   varchar   | 4096 |   0    |    Y     |  N   |       | 评论  |
-|  22   | EXECUTE_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 执行时间  |
-|  23   | BUILD_PARAMETERS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构建环境参数  |
-|  24   | WEBHOOK_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | WEBHOOK 类型  |
-|  25   | RECOMMEND_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | 推荐版本号  |
-|  26   | ERROR_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 错误类型  |
-|  27   | ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 错误码  |
-|  28   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
-|  29   | WEBHOOK_INFO |   text   | 65535 |   0    |    Y     |  N   |       | WEBHOOK 信息  |
-|  30   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
-|  31   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
-|  32   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
-|  33   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
-|  34   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
-|  35   | REPO_TRIGGER_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 触发库信息  |
-|  36   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 最大执行次数  |
-|  37   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |       | 是否进行过重试  |
-|  38   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
-|  39   | RESOURCE_MODEL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 本次调试的编排备份  |
-|  40   | DELETE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 记录删除时间  |
+|  21   | ARTIFACT_QUALITY_INFO |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 制品质量分析结果  |
+|  22   | REMARK |   varchar   | 4096 |   0    |    Y     |  N   |       | 评论  |
+|  23   | EXECUTE_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 执行时间  |
+|  24   | BUILD_PARAMETERS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 构建环境参数  |
+|  25   | WEBHOOK_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | WEBHOOK 类型  |
+|  26   | RECOMMEND_VERSION |   varchar   | 64 |   0    |    Y     |  N   |       | 推荐版本号  |
+|  27   | ERROR_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 错误类型  |
+|  28   | ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 错误码  |
+|  29   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
+|  30   | WEBHOOK_INFO |   text   | 65535 |   0    |    Y     |  N   |       | WEBHOOK 信息  |
+|  31   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  32   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
+|  33   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
+|  34   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的 group  |
+|  35   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  36   | REPO_TRIGGER_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 触发库信息  |
+|  37   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 最大执行次数  |
+|  38   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |       | 是否进行过重试  |
+|  39   | YAML_VERSION |   varchar   | 34 |   0    |    Y     |  N   |       | YAML 的版本标记  |
+|  40   | RESOURCE_MODEL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 本次调试的编排备份  |
+|  41   | DELETE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 记录删除时间  |
 
 **表名：** <a>T_PIPELINE_BUILD_HIS_DATA_CLEAR</a>
 
@@ -865,6 +890,7 @@
 |  33   | VERSION |   int   | 10 |   0    |    Y     |  N   |   1    | 设置版本  |
 |  34   | SUCCESS_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 成功订阅设置  |
 |  35   | FAILURE_SUBSCRIPTION |   text   | 65535 |   0    |    Y     |  N   |       | 失败订阅设置  |
+|  36   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
 
 **表名：** <a>T_PIPELINE_SETTING_VERSION</a>
 
@@ -908,6 +934,7 @@
 |  32   | SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
 |  33   | FAIL_WECHAT_GROUP_MARKDOWN_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    |   |
 |  34   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |       | 并发构建数量限制,值为-1 时表示取系统默认值。  |
+|  35   | FAIL_IF_VARIABLE_INVALID |   bit   | 1 |   0    |    Y     |  N   |       | 是否配置流水线变量值超长时终止执行  |
 
 **表名：** <a>T_PIPELINE_STAGE_TAG</a>
 
@@ -958,13 +985,15 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  Y   |       | 项目 ID  |
 |  2   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 流水线 ID  |
-|  3   | CRONTAB |   varchar   | 2048 |   0    |    N     |  N   |       | 任务 ID  |
-|  4   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  5   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  6   | CHANNEL |   varchar   | 32 |   0    |    N     |  N   |   BS    | 项目渠道  |
-|  7   | REPO_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库 HASHID  |
-|  8   | BRANCHS |   text   | 65535 |   0    |    Y     |  N   |       | 分支列表  |
-|  9   | NO_SCM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 源代码未更新则不触发构建  |
+|  3   | TASK_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 插件 ID  |
+|  4   | CRONTAB |   varchar   | 2048 |   0    |    N     |  N   |       | 任务 ID  |
+|  5   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  6   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  7   | CHANNEL |   varchar   | 32 |   0    |    N     |  N   |   BS    | 项目渠道  |
+|  8   | REPO_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库 HASHID  |
+|  9   | BRANCHS |   text   | 65535 |   0    |    Y     |  N   |       | 分支列表  |
+|  10   | NO_SCM |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 源代码未更新则不触发构建  |
+|  11   | START_PARAM |   text   | 65535 |   0    |    Y     |  N   |       | 启动参数  |
 
 **表名：** <a>T_PIPELINE_TIMER_BRANCH</a>
 
@@ -976,11 +1005,12 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  Y   |       | 项目 ID  |
 |  2   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 流水线 ID  |
-|  3   | REPO_HASH_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 代码库 HASHID  |
-|  4   | BRANCH |   varchar   | 255 |   0    |    N     |  Y   |       | 分支  |
-|  5   | REVISION |   varchar   | 40 |   0    |    N     |  N   |       | 提交版本  |
-|  6   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-|  7   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+|  3   | TASK_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 插件 ID  |
+|  4   | REPO_HASH_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 代码库 HASHID  |
+|  5   | BRANCH |   varchar   | 255 |   0    |    N     |  Y   |       | 分支  |
+|  6   | REVISION |   varchar   | 40 |   0    |    N     |  N   |       | 提交版本  |
+|  7   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  8   | UPDATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a>T_PIPELINE_TRIGGER_DETAIL</a>
 
@@ -1050,7 +1080,7 @@
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键 ID  |
 |  2   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
-|  3   | NAME |   varchar   | 64 |   0    |    N     |  N   |       | 名称  |
+|  3   | NAME |   varchar   | 255 |   0    |    N     |  N   |       | 名称  |
 |  4   | FILTER_BY_PIPEINE_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 流水线名称过滤器,已废弃,统一到 filters 管理  |
 |  5   | FILTER_BY_CREATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 创建者过滤器,已废弃,统一到 filters 管理  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |

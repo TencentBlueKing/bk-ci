@@ -161,6 +161,12 @@ class WorkspaceCommon @Autowired constructor(
         if (status.checkException()) {
             val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)
             when {
+                fix == WorkspaceStatus.EXCEPTION_CDS_OFFLINE -> {
+                    logger.info("$workspaceName is EXCEPTION_CDS_OFFLINE, return error.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode
+                    )
+                }
                 fix.checkException() -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
@@ -264,8 +270,7 @@ class WorkspaceCommon @Autowired constructor(
             }
 
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
-                startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
-                return WorkspaceStatus.RUNNING
+                return startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
             }
 
             workspaceInfo.status == EnvStatusEnum.startFailed -> {
@@ -313,6 +318,10 @@ class WorkspaceCommon @Autowired constructor(
             workspaceInfo.status == EnvStatusEnum.expanding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXPANDING)
                 return WorkspaceStatus.EXPANDING
+            }
+            workspaceInfo.status == EnvStatusEnum.operating -> {
+                workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.OPERATING)
+                return WorkspaceStatus.OPERATING
             }
 
             else -> logger.warn(

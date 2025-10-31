@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,8 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.metrics.api.UserPipelineFailResource
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.checkDateInterval
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getEndDateTime
@@ -48,6 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPipelineFailResourceImpl @Autowired constructor(
     private val pipelineFailManageService: PipelineFailManageService
 ) : UserPipelineFailResource {
+
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineFailTrendInfo(
         projectId: String,
         userId: String,
@@ -64,6 +68,7 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineFailSumInfo(
         projectId: String,
         userId: String,
@@ -95,6 +100,7 @@ class UserPipelineFailResourceImpl @Autowired constructor(
         )
     }
 
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryPipelineFailDetailInfo(
         projectId: String,
         userId: String,

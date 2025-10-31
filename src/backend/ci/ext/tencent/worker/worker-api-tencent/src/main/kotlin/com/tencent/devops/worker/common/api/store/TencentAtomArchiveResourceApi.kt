@@ -64,9 +64,9 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_SE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import java.io.File
 
 @ApiPriority(priority = 9)
 class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
@@ -297,14 +297,14 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         )
         var request = buildGet(bkrepoUrl, headers)
         try {
-            download(request = request, destPath = file)
+            download(request = request, destPath = file, readTimeoutInSec = 180)
         } catch (ignored: RemoteServiceException) {
             val httpStatus = ignored.httpStatus
             if (httpStatus == HTTP_401 || httpStatus == HTTP_403) {
                 // 访问新域名请求的http状态码为401或403时，则降级访问原域名请求
                 headers.remove(AUTH_HEADER_BKREPO_MODE)
                 request = buildGet(bkrepoUrl, headers)
-                download(request = request, destPath = file)
+                download(request = request, destPath = file, readTimeoutInSec = 180)
             } else {
                 throw ignored
             }

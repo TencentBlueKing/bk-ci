@@ -20,7 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
-                build-only
+                :build-only="false"
             />
             <i
                 class="bk-icon icon-info-circle"
@@ -827,6 +827,9 @@ $header-height: 36px;
                 padding: 0 0 0 20px !important;
             }
         }
+    }
+    .pipeline-optional-model {
+        height: calc(100vh - 160px) !important;
     }
 }
 </style>

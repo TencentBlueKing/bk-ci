@@ -9,6 +9,7 @@
         :selected-list="value"
         :set-vaule="setVaule"
         :delete-item="deleteItem"
+        :project-id="projectId"
     />
 </template>
 

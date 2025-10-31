@@ -1,18 +1,34 @@
 package com.tencent.devops.experience.permission
 
 import com.tencent.bk.sdk.iam.util.AuthCacheUtil
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.auth.api.service.ServiceAuthApplyResource
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.api.service.ServiceResourceMemberResource
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.auth.utils.AuthCacheKeyUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.service.ExperiencePermissionService
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -20,7 +36,8 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val experienceDao: ExperienceDao,
-    val tokenService: ClientTokenService
+    val tokenService: ClientTokenService,
+    val bkRepoClient: BkRepoClient
 ) : ExperiencePermissionService {
     override fun validateTaskPermission(
         user: String,
@@ -244,6 +261,79 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK_NEW),
             resourceCode = HashUtil.encodeLongId(experienceId)
         )
+    }
+
+    override fun getApplyPermissionInformation(
+        user: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        artifactoryPath: String
+    ): AuthApplyRedirectInfoVo? {
+        return if (artifactoryType == ArtifactoryType.PIPELINE) {
+            val fileInfo = bkRepoClient.getFileDetail(
+                userId = user,
+                projectId = projectId,
+                repoName = artifactoryType.toBkrepoName(),
+                path = artifactoryPath
+            ) ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = FILE_NOT_EXIST,
+                    params = arrayOf(artifactoryPath)
+                )
+            )
+            val pipelineId = fileInfo.metadata[ARCHIVE_PROPS_PIPELINE_ID]?.toString() ?: throw BadRequestException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = METADATA_NOT_EXIST,
+                    params = arrayOf("pipelineId")
+                )
+            )
+            client.get(ServiceAuthApplyResource::class).getRedirectInformation(
+                userId = user,
+                projectId = projectId,
+                resourceType = ResourceTypeId.PIPELINE,
+                resourceCode = pipelineId,
+                action = ActionId.PIPELINE_DOWNLOAD
+            ).data
+        } else {
+            client.get(ServiceAuthApplyResource::class).getRedirectInformation(
+                userId = user,
+                projectId = projectId,
+                resourceType = ResourceTypeId.PROJECT,
+                resourceCode = projectId,
+                action = ActionId.PROJECT_VISIT
+            ).data.takeIf { it != null }?.let {
+                val visitorGroup = client.get(ServiceResourceGroupResource::class).getByGroupCode(
+                    projectCode = projectId,
+                    resourceType = ResourceTypeId.PROJECT,
+                    resourceCode = projectId,
+                    groupCode = BkAuthGroup.VISITOR
+                ).data ?: return null
+
+                val managers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = projectId,
+                    resourceType = ResourceTypeId.PROJECT,
+                    resourceCode = projectId,
+                    group = BkAuthGroup.MANAGER
+                ).data ?: return null
+
+                AuthApplyRedirectInfoVo(
+                    auth = it.auth,
+                    resourceTypeName = it.resourceTypeName,
+                    resourceName = it.resourceName,
+                    actionName = it.actionName,
+                    managers = managers,
+                    groupInfoList = listOf(
+                        AuthRedirectGroupInfoVo(
+                            url = "url",
+                            groupName = visitorGroup.groupName,
+                            groupId = visitorGroup.relationId.toString(),
+                            groupDesc = visitorGroup.description
+                        )
+                    )
+                )
+            }
+        }
     }
 
     override fun filterGroup(

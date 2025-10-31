@@ -1,11 +1,12 @@
 package third_components
 
 import (
+	"sync"
+	"time"
+
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"sync"
-	"time"
 )
 
 // 用来处理一些Agent使用的第三方组件信息

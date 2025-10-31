@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -64,7 +64,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -95,7 +94,6 @@ import kotlin.math.min
 @Service
 class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
@@ -179,17 +177,6 @@ class InitializeMatrixGroupStageCmd(
 
         val event = commandContext.event
         val variables = commandContext.variables
-        val modelStage = containerBuildDetailService.getBuildModel(
-            projectId = parentContainer.projectId,
-            buildId = parentContainer.buildId
-        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
-            "stage(${parentContainer.stageId}) cannot be found in model"
-        )
-        val modelContainer = modelStage.getContainer(
-            vmSeqId = parentContainer.seq.toString()
-        ) ?: throw DependNotFoundException(
-            "container(${parentContainer.containerId}) cannot be found in model"
-        )
         val recordContainer = containerBuildRecordService.getRecord(
             transactionContext = null,
             projectId = parentContainer.projectId,
@@ -197,6 +184,20 @@ class InitializeMatrixGroupStageCmd(
             buildId = parentContainer.buildId,
             containerId = parentContainer.containerId,
             executeCount = parentContainer.executeCount
+        )
+        val modelStage = containerBuildRecordService.getRecordModel(
+            projectId = parentContainer.projectId,
+            pipelineId = parentContainer.pipelineId,
+            version = recordContainer?.resourceVersion ?: 1,
+            buildId = parentContainer.buildId,
+            executeCount = parentContainer.executeCount
+        )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
+            "stage(${parentContainer.stageId}) cannot be found in model"
+        )
+        val modelContainer = modelStage.getContainer(
+            vmSeqId = parentContainer.seq.toString()
+        ) ?: throw DependNotFoundException(
+            "container(${parentContainer.containerId}) cannot be found in model"
         )
         val dialect = PipelineDialectUtil.getPipelineDialect(variables[PIPELINE_DIALECT])
         // #4518 待生成的分裂后container表和task表记录
@@ -233,7 +234,7 @@ class InitializeMatrixGroupStageCmd(
         when (modelContainer) {
             is VMBuildContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,
@@ -384,6 +385,9 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
                         }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -394,6 +398,7 @@ class InitializeMatrixGroupStageCmd(
                                 containerId = newContainer.containerId!!,
                                 containerType = recordContainer.containerType,
                                 executeCount = context.executeCount,
+                                containPostTaskFlag = newContainer.containPostTaskFlag,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
                                 containerVar = containerVar,
@@ -419,7 +424,7 @@ class InitializeMatrixGroupStageCmd(
             }
             is NormalContainer -> {
 
-                jobControlOption = modelContainer.jobControlOption!!.copy(
+                jobControlOption = (modelContainer.jobControlOption ?: JobControlOption()).copy(
                     dependOnType = null,
                     dependOnId = null,
                     dependOnName = null,
@@ -508,6 +513,9 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
                         }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -518,6 +526,7 @@ class InitializeMatrixGroupStageCmd(
                                 containerId = newContainer.containerId!!,
                                 containerType = recordContainer.containerType,
                                 executeCount = context.executeCount,
+                                containPostTaskFlag = newContainer.containPostTaskFlag,
                                 matrixGroupFlag = false,
                                 matrixGroupId = matrixGroupId,
                                 containerVar = containerVar,
@@ -690,20 +699,6 @@ class InitializeMatrixGroupStageCmd(
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId
             e.canRetry = false
-            val (interceptTask, interceptTaskName, reviewUsers) = when (e) {
-                is QualityGateInElement -> {
-                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
-                }
-                is QualityGateOutElement -> {
-                    Triple(e.interceptTask, e.interceptTaskName, e.reviewUsers)
-                }
-                is ManualReviewUserTaskElement -> {
-                    Triple(null, null, e.reviewUsers)
-                }
-                else -> {
-                    Triple(null, null, null)
-                }
-            }
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
@@ -711,11 +706,30 @@ class InitializeMatrixGroupStageCmd(
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
                 originAtomCode = e.getAtomCode(),
-                originTaskAtom = e.getTaskAtom(),
-                interceptTask = interceptTask,
-                interceptTaskName = interceptTaskName,
-                reviewUsers = reviewUsers?.toMutableList()
-            )
+                originTaskAtom = e.getTaskAtom()
+            ).apply {
+                when (e) {
+                    is QualityGateInElement -> {
+                        interceptTask = e.interceptTask
+                        interceptTaskName = e.interceptTaskName
+                        reviewUsers = e.reviewUsers?.toMutableList()
+                    }
+
+                    is QualityGateOutElement -> {
+                        interceptTask = e.interceptTask
+                        interceptTaskName = e.interceptTaskName
+                        reviewUsers = e.reviewUsers?.toMutableList()
+                    }
+
+                    is ManualReviewUserTaskElement -> {
+                        reviewUsers = e.reviewUsers.toMutableList()
+                        desc = e.desc
+                        params = e.params
+                    }
+
+                    else -> {}
+                }
+            }
         }
     }
 

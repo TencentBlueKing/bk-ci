@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,6 +51,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -60,12 +61,15 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -98,7 +102,6 @@ import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
@@ -137,6 +140,10 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.FIXVERSION
+import com.tencent.devops.process.utils.MAJORVERSION
+import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -146,10 +153,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -168,7 +175,6 @@ class PipelineBuildFacadeService(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
-    private val buildDetailService: PipelineBuildDetailService,
     private val buildRecordService: PipelineBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val jmxApi: ProcessJmxApi,
@@ -186,12 +192,10 @@ class PipelineBuildFacadeService(
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
     private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
-    @Value("\${pipeline.build.retry.limit_days:28}")
-    private var retryLimitDays: Int = 28
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
         private const val RETRY_THIRD_AGENT_ENV = "RETRY_THIRD_AGENT_ENV"
+        private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
     }
 
     private fun filterParams(
@@ -239,12 +243,14 @@ class PipelineBuildFacadeService(
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
+        var manualBuildMsg: String? = null
         run lit@{
             triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.elementEnabled()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
                     useLatestParameters = it.useLatestParameters ?: false
+                    manualBuildMsg = it.buildMsg
                     return@lit
                 }
             }
@@ -295,7 +301,8 @@ class PipelineBuildFacadeService(
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
-            debug = debug
+            debug = debug,
+            manualBuildMsg = manualBuildMsg
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -421,7 +428,10 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
             // 正式版本,必须使用最新版本执行
-            if (version != null && resource.status == VersionStatus.RELEASED && resource.version != version) {
+            if (version != null &&
+                resource.status == VersionStatus.RELEASED &&
+                readyToBuildPipelineInfo.version != version
+            ) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NON_LATEST_RELEASE_VERSION)
             }
 
@@ -585,7 +595,7 @@ class PipelineBuildFacadeService(
         userId: String,
         projectId: String,
         pipelineId: String,
-        parameters: Map<String, Any> = emptyMap(),
+        parameters: Map<String, String> = emptyMap(),
         checkPermission: Boolean = true,
         startType: StartType = StartType.WEB_HOOK,
         startValues: Map<String, String>? = null,
@@ -629,22 +639,30 @@ class PipelineBuildFacadeService(
              * 验证流水线参数构建启动参数
              */
             val triggerContainer = resource.model.getTriggerContainer()
-
+            val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                paramProperties = triggerContainer.params,
+                paramValues = parameters.plus(
+                    userParameters?.associateBy({ it.key }, { it.value.toString() }) ?: emptyMap()
+                )
+            )
             val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+            pipelineParamMap.putAll(paramMap)
             parameters.forEach { (key, value) ->
+                if (paramMap.containsKey(key)) {
+                    return@forEach
+                }
                 pipelineParamMap[key] = BuildParameters(key, value)
             }
 
             // 添加用户自定义参数
             userParameters?.forEach { param ->
-                pipelineParamMap[param.key] = param
-            }
-
-            triggerContainer.params.forEach {
-                if (pipelineParamMap.contains(it.id)) {
+                if (paramMap.containsKey(param.key)) {
                     return@forEach
                 }
-                pipelineParamMap[it.id] = BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly)
+                pipelineParamMap[param.key] = param
             }
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
@@ -749,7 +767,14 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
+        val model = buildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -767,56 +792,97 @@ class PipelineBuildFacadeService(
                     if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
                     if (el is ManualReviewUserTaskElement) {
                         trueElementId = el.id!!
-                        // Replace the review user with environment
-                        val reviewUser = mutableListOf<String>()
-                        el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(
-                                buildVariableService.replaceTemplate(projectId, buildId, user)
-                                    .split(",")
-                            )
-                        }
-                        params.params.forEach {
-                            when (it.valueType) {
-                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
-                                    it.value = it.value ?: false
-                                }
+                        checkReviewUser(
+                            reviewUsers = el.reviewUsers,
+                            projectId = projectId,
+                            buildId = buildId,
+                            userId = userId
+                        )
+                    }
+                }
 
-                                else -> {
-                                    it.value = buildVariableService.replaceTemplate(
-                                        projectId = projectId,
-                                        buildId = buildId,
-                                        template = it.value.toString()
-                                    )
-                                }
+                if (cc.matrixGroupFlag == true) {
+                    cc.fetchGroupContainers()?.forEach { gc ->
+                        gc.elements.forEach element@{ el ->
+                            if (!elementId.isNullOrBlank() && el.id != elementId) return@element
+                            if (!stepId.isNullOrBlank() && el.stepId != stepId) return@element
+                            if (el is MatrixStatusElement &&
+                                el.originClassType == ManualReviewUserTaskElement.classType
+                            ) {
+                                trueElementId = el.id!!
+                                checkReviewUser(
+                                    projectId = projectId,
+                                    buildId = buildId,
+                                    userId = userId,
+                                    reviewUsers = el.reviewUsers ?: emptyList()
+                                )
                             }
-                        }
-                        if (!reviewUser.contains(userId)) {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                params = arrayOf(userId)
-                            )
                         }
                     }
                 }
             }
         }
+
+        params.params.forEach {
+            when (it.valueType) {
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
+                    it.value = it.value ?: false
+                }
+
+                else -> {
+                    it.value = buildVariableService.replaceTemplate(
+                        projectId = projectId,
+                        buildId = buildId,
+                        template = it.value.toString()
+                    )
+                }
+            }
+        }
         logger.info("[$buildId]|buildManualReview|taskId=$trueElementId|userId=$userId|params=$params")
 
-        pipelineRuntimeService.manualDealReview(
-            taskId = trueElementId,
-            userId = userId,
-            params = params.apply {
-                this.projectId = projectId
-                this.pipelineId = pipelineId
-                this.buildId = buildId
-            }
-        )
+        if (!pipelineRuntimeService.manualDealReview(
+                taskId = trueElementId,
+                userId = userId,
+                params = params.apply {
+                    this.projectId = projectId
+                    this.pipelineId = pipelineId
+                    this.buildId = buildId
+                }
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING,
+                params = arrayOf(trueElementId)
+            )
+        }
         if (params.status == ManualReviewAction.ABORT) {
             buildRecordService.updateBuildCancelUser(
                 projectId = projectId,
                 buildId = buildId,
-                executeCount = buildInfo.executeCount ?: 1,
+                executeCount = buildInfo.executeCount,
                 cancelUserId = userId
+            )
+        }
+    }
+
+    private fun checkReviewUser(
+        reviewUsers: List<String>,
+        projectId: String,
+        buildId: String,
+        userId: String
+    ) {
+        // Replace the review user with environment
+        val reviewUser = mutableListOf<String>()
+        reviewUsers.forEach { user ->
+            reviewUser.addAll(
+                buildVariableService.replaceTemplate(projectId, buildId, user)
+                    .split(",")
+            )
+        }
+        if (!reviewUser.contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                params = arrayOf(userId)
             )
         }
     }
@@ -931,6 +997,14 @@ class PipelineBuildFacadeService(
             )
         }
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
+        if (!reviewRequest?.reviewParams.isNullOrEmpty()) {
+            reviewParamsCheck(
+                projectId = projectId,
+                buildId = buildId,
+                reviewRequest = reviewRequest!!,
+                pipelineId = pipelineId
+            )
+        }
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -951,9 +1025,11 @@ class PipelineBuildFacadeService(
                     runLockType = setting.runLockType,
                     waitQueueTimeMinute = setting.waitQueueTimeMinute,
                     maxQueueSize = setting.maxQueueSize,
-                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyGroup = buildInfo.concurrencyGroup,
                     concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
-                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX,
+                    // stage审核时暂不执行流水线并发组取消逻辑
+                    cancelAllowed = false
                 )
             )
 
@@ -990,6 +1066,31 @@ class PipelineBuildFacadeService(
             )
         } finally {
             runLock.unlock()
+        }
+    }
+
+    private fun reviewParamsCheck(
+        projectId: String,
+        buildId: String,
+        reviewRequest: StageReviewRequest,
+        pipelineId: String
+    ) {
+        // feat: 检测stage审核参数与入参之间的不规范写法 #11853
+        val variables = buildVariableService.getAllVariableWithType(projectId, buildId).associateBy { it.key }
+        reviewRequest.reviewParams.forEach {
+            val prefix = "[$projectId][$pipelineId][$buildId]"
+            variables[it.key]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|reviewParams|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|READ_ONLY|key=${it.key}|")
+                }
+            }
+            variables["variables.${it.key}"]?.let { check ->
+                logger.info("$prefix|11853_CHECK|STAGE|HAS_VARIABLES|key=${it.key}|")
+                if (check.readOnly == true) {
+                    logger.info("$prefix|11853_CHECK|STAGE|VARIABLES_READ_ONLY|key=${it.key}|")
+                }
+            }
         }
     }
 
@@ -1058,14 +1159,20 @@ class PipelineBuildFacadeService(
         elementId: String
     ): ReviewParam {
 
-        pipelineRuntimeService.getBuildInfo(projectId, buildId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                params = arrayOf(buildId)
-            )
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
+        )
 
-        val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
+        val model = buildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1077,52 +1184,91 @@ class PipelineBuildFacadeService(
             s.containers.forEach { cc ->
                 cc.elements.forEach { el ->
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
-                        val reviewUser = mutableListOf<String>()
-                        el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(
-                                buildVariableService.replaceTemplate(projectId, buildId, user)
-                                    .split(",")
-                            )
-                        }
-                        el.params.forEach { param ->
-                            when (param.valueType) {
-                                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
-                                    param.value = param.value ?: false
-                                }
-
-                                else -> {
-                                    param.value = buildVariableService.replaceTemplate(
-                                        projectId = projectId,
-                                        buildId = buildId,
-                                        template = param.value.toString()
-                                    )
-                                }
+                        return reviewParam(
+                            projectId = projectId,
+                            buildId = buildId,
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            reviewUsers = el.reviewUsers,
+                            params = el.params,
+                            desc = el.desc ?: ""
+                        )
+                    }
+                }
+                if (cc.matrixGroupFlag == true) {
+                    cc.fetchGroupContainers()?.forEach { gc ->
+                        gc.elements.forEach { el ->
+                            if (el is MatrixStatusElement &&
+                                el.originClassType == ManualReviewUserTaskElement.classType &&
+                                el.id == elementId
+                            ) {
+                                return reviewParam(
+                                    projectId = projectId,
+                                    buildId = buildId,
+                                    userId = userId,
+                                    pipelineId = pipelineId,
+                                    reviewUsers = el.reviewUsers ?: emptyList(),
+                                    params = el.params ?: mutableListOf(),
+                                    desc = el.desc ?: ""
+                                )
                             }
                         }
-                        el.desc = buildVariableService.replaceTemplate(projectId, buildId, el.desc)
-                        if (!reviewUser.contains(userId)) {
-                            throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                params = arrayOf(userId)
-                            )
-                        }
-                        val reviewParam = ReviewParam(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            reviewUsers = reviewUser,
-                            status = null,
-                            desc = el.desc,
-                            suggest = "",
-                            params = el.params
-                        )
-                        logger.info("reviewParam : $reviewParam")
-                        return reviewParam
                     }
                 }
             }
         }
         return ReviewParam()
+    }
+
+    private fun reviewParam(
+        projectId: String,
+        buildId: String,
+        userId: String,
+        pipelineId: String,
+        reviewUsers: List<String>,
+        params: MutableList<ManualReviewParam>,
+        desc: String,
+    ): ReviewParam {
+        val reviewUser = mutableListOf<String>()
+        reviewUsers.forEach { user ->
+            reviewUser.addAll(
+                buildVariableService.replaceTemplate(projectId, buildId, user)
+                    .split(",")
+            )
+        }
+        params.forEach { param ->
+            when (param.valueType) {
+                ManualReviewParamType.BOOLEAN, ManualReviewParamType.CHECKBOX -> {
+                    param.value = param.value ?: false
+                }
+
+                else -> {
+                    param.value = buildVariableService.replaceTemplate(
+                        projectId = projectId,
+                        buildId = buildId,
+                        template = param.value.toString()
+                    )
+                }
+            }
+        }
+        if (!reviewUser.contains(userId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
+                params = arrayOf(userId)
+            )
+        }
+        val reviewParam = ReviewParam(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            reviewUsers = reviewUser,
+            status = null,
+            desc = buildVariableService.replaceTemplate(projectId, buildId, desc),
+            suggest = "",
+            params = params
+        )
+        logger.info("reviewParam : $reviewParam")
+        return reviewParam
     }
 
     fun serviceShutdown(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode) {
@@ -1159,7 +1305,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = buildInfo.startUser,
-                    executeCount = buildInfo.executeCount ?: 1,
+                    executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.FAILED
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
@@ -1219,21 +1365,35 @@ class PipelineBuildFacadeService(
         buildId: String,
         channelCode: ChannelCode
     ): ModelDetail {
-        val newModel = buildDetailService.get(projectId, buildId) ?: throw ErrorCodeException(
+        val newModel = buildRecordService.getBuildRecord(projectId, pipelineId, buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
-        if (newModel.pipelineId != pipelineId) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
-        }
-
         pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
 
-        return newModel
+        return ModelDetail(
+            id = newModel.id,
+            pipelineId = newModel.pipelineId,
+            pipelineName = newModel.pipelineName,
+            userId = newModel.userId,
+            triggerUser = newModel.triggerUser,
+            trigger = newModel.trigger,
+            startTime = newModel.startTime ?: 0,
+            endTime = newModel.endTime ?: 0,
+            status = newModel.status,
+            model = newModel.model,
+            currentTimestamp = newModel.currentTimestamp,
+            buildNum = newModel.buildNum,
+            cancelUserId = newModel.cancelUserId ?: "",
+            curVersion = newModel.curVersion,
+            latestVersion = newModel.latestVersion,
+            latestBuildNum = newModel.latestBuildNum,
+            lastModifyUser = newModel.lastModifyUser,
+            executeTime = newModel.executeTime,
+            triggerReviewers = newModel.triggerReviewers,
+            debug = newModel.debug
+        )
     }
 
     @ActionAuditRecord(
@@ -1302,9 +1462,12 @@ class PipelineBuildFacadeService(
         buildNum: Int,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        debugVersion: Int?
+        debugVersion: Int? = null,
+        archiveFlag: Boolean? = false
     ): ModelRecord {
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1317,11 +1480,15 @@ class PipelineBuildFacadeService(
         )
         // 如果请求的参数是草稿版本的版本号，则用该版本查询调试记录，否则正常调用普通构建
         val targetDebugVersion = debugVersion?.takeIf {
-            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId)
+            val draftVersion = pipelineRepositoryService.getDraftVersionResource(projectId, pipelineId, archiveFlag)
             draftVersion?.version == debugVersion
         }
         val buildId = pipelineRuntimeService.getBuildIdByBuildNum(
-            projectId, pipelineId, buildNum, targetDebugVersion
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = buildNum,
+            debugVersion = targetDebugVersion,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1333,6 +1500,7 @@ class PipelineBuildFacadeService(
             buildId = buildId,
             executeCount = null,
             channelCode = channelCode,
+            archiveFlag = archiveFlag,
             encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -1343,6 +1511,7 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        userId: String? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -1369,10 +1538,11 @@ class PipelineBuildFacadeService(
             )
         }
         return buildRecordService.getBuildRecord(
+            userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
-            queryDslContext = queryDslContext,
-            encryptedFlag = encryptedFlag
+            encryptedFlag = encryptedFlag,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -1414,6 +1584,7 @@ class PipelineBuildFacadeService(
         }
 
         return getBuildRecord(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -1680,17 +1851,43 @@ class PipelineBuildFacadeService(
         endBeginTime: String?,
         checkPermission: Boolean
     ): List<BuildHistory> {
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+        return pipelineRuntimeService.getBuildHistoryByIds(
             buildIds = buildIdSet,
             startBeginTime = startBeginTime,
             endBeginTime = endBeginTime,
             projectId = projectId
         )
+    }
 
-        if (buildHistories.isEmpty()) {
-            return emptyList()
+    fun batchGetBuildStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIdSet: Set<String>,
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
+        checkPermission: Boolean
+    ): List<BuildHistory> {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = MessageUtil.getMessageByLocale(
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_STATUS))
+                )
+            )
         }
-        return buildHistories
+        return pipelineRuntimeService.getBuildHistoryByIds(
+            buildIds = buildIdSet,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            projectId = projectId
+        )
     }
 
     fun getBuilds(
@@ -1909,6 +2106,7 @@ class PipelineBuildFacadeService(
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 offset = offset,
@@ -2211,7 +2409,9 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
+                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(
+                        projectId = projectId, buildId = buildId, executeCount = buildInfo.executeCount
+                    )
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
@@ -2276,7 +2476,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
-                    executeCount = buildInfo.executeCount ?: 1,
+                    executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.CANCELED,
                     terminateFlag = finalTerminateFlag
                 )
@@ -2322,7 +2522,8 @@ class PipelineBuildFacadeService(
             val startUpVMTask = pipelineTaskService.getBuildTask(
                 projectId = projectCode,
                 buildId = buildId,
-                taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                executeCount = executeCount
             )
             if (startUpVMTask?.status?.isRunning() == true) {
                 msg = "$msg| ${
@@ -2350,7 +2551,8 @@ class PipelineBuildFacadeService(
                 val startUpVMTask = pipelineTaskService.getBuildTask(
                     projectId = projectCode,
                     buildId = buildId,
-                    taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                    taskId = VMUtils.genStartVMTaskId(vmSeqId),
+                    executeCount = executeCount
                 )
                 if (startUpVMTask?.status?.isRunning() == true) {
                     val taskParam = startUpVMTask.taskParams
@@ -2597,6 +2799,7 @@ class PipelineBuildFacadeService(
                 )!!
             )
         }
+
         else -> {
             buildManualStartup(
                 userId = userId,
@@ -2665,7 +2868,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
-                    executeCount = buildInfo.executeCount ?: 1,
+                    executeCount = buildInfo.executeCount,
                     buildStatus = BuildStatus.CANCELED
                 )
                 return buildRestartPipeline(
@@ -2690,12 +2893,29 @@ class PipelineBuildFacadeService(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         userId: String,
-        version: Int?
+        version: Int?,
+        isTemplate: Boolean?,
+        subModel: Model? = null
     ): List<PipelineBuildParamFormProp> {
-        val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
-        )
-        val model = resource.model
+        val model = if (isTemplate == true) {
+            // 模板触发器
+            val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
+                templateId = pipelineId,
+                version = version?.toLong()
+            ).template
+            try {
+                JsonUtil.to(templateModelStr, Model::class.java)
+            } catch (ignored: Exception) {
+                logger.error("parse process($pipelineId) model fail", ignored)
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                )
+            }
+        } else {
+            subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
+                projectId, pipelineId, version
+            ).second.model
+        }
         val triggerContainer = model.getTriggerContainer()
         val properties = getBuildManualParams(
             projectId = projectId,
@@ -2704,7 +2924,9 @@ class PipelineBuildFacadeService(
             debug = false,
             checkPermission = true,
             triggerParams = triggerContainer.params
-        )
+        ).toMutableList()
+        // 推荐版本号需额外处理
+        handleVersionParam(properties, triggerContainer.buildNo)
         val parameter = ArrayList<PipelineBuildParamFormProp>()
         val prop = properties.filter {
             val const = if (includeConst == false) {
@@ -2794,7 +3016,8 @@ class PipelineBuildFacadeService(
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
-        triggerParams: List<BuildFormProperty>
+        triggerParams: List<BuildFormProperty>,
+        manualBuildMsg: String? = null
     ): List<BuildFormProperty> {
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val permission = AuthPermission.EXECUTE
@@ -2819,8 +3042,8 @@ class PipelineBuildFacadeService(
                 id = PIPELINE_BUILD_MSG,
                 required = true,
                 type = BuildFormPropertyType.STRING,
-                defaultValue = "",
-                value = "",
+                defaultValue = manualBuildMsg ?: "",
+                value = manualBuildMsg ?: "",
                 options = null,
                 desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,
@@ -2942,6 +3165,38 @@ class PipelineBuildFacadeService(
                 return@forEach
             }
             checkManualReviewParamOut(item.valueType, item, value)
+        }
+    }
+
+    private fun handleVersionParam(pipelineProps: MutableList<BuildFormProperty>, buildNo: BuildNo?) {
+        buildNo?.let {
+            // 固定版本号且为入参则填入
+            if (it.required == true) {
+                pipelineProps.forEach { formProp ->
+                    if (VERSION_PARAMS.contains(formProp.id)) {
+                        formProp.required = true
+                        formProp.type = BuildFormPropertyType.LONG
+                    }
+                }
+                if (it.buildNoType == BuildNoType.CONSISTENT) {
+                    pipelineProps.add(
+                        BuildFormProperty(
+                            id = BUILD_NO,
+                            required = true,
+                            type = BuildFormPropertyType.LONG,
+                            defaultValue = it.buildNo,
+                            options = null,
+                            desc = null,
+                            repoHashId = null,
+                            relativePath = null,
+                            scmType = null,
+                            containerType = null,
+                            glob = null,
+                            properties = null
+                        )
+                    )
+                }
+            }
         }
     }
 }

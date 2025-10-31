@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -97,6 +97,34 @@ class GitTokenDao {
         with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.deleteFrom(this)
                 .where(USER_ID.eq(userId).and(TOKEN_TYPE.eq(tokenType)))
+                .execute()
+        }
+    }
+
+    fun listToken(dslContext: DSLContext, operator: String): List<TRepositoryGitTokenRecord> {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            return dslContext.selectFrom(this)
+                .where(OPERATOR.eq(operator))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listEmptyOperator(dslContext: DSLContext, limit: Int): List<TRepositoryGitTokenRecord> {
+        return with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            dslContext.selectFrom(this)
+                    .where(OPERATOR.isNull())
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(limit)
+                    .fetch()
+        }
+    }
+
+    fun updateOperator(dslContext: DSLContext, userIds: Set<String>) {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
+            dslContext.update(this)
+                .set(OPERATOR, USER_ID)
+                .where(USER_ID.`in`(userIds))
                 .execute()
         }
     }

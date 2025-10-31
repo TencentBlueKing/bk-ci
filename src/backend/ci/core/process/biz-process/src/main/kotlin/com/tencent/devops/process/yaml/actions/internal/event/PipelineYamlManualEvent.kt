@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,8 +35,11 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
  * 用户主动操作的事件
  */
 data class PipelineYamlManualEvent(
+    // 操作人
     val userId: String,
     val projectId: String,
     val repoHashId: String,
-    val scmType: ScmType
+    val scmType: ScmType,
+    // 代码库授权人
+    val authUserId: String
 ) : CodeWebhookEvent

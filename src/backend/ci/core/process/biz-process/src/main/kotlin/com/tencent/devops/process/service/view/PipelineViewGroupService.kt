@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -73,15 +73,15 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import java.text.Collator
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.Collator
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -108,9 +108,11 @@ class PipelineViewGroupService @Autowired constructor(
 
     fun getViewNameMap(
         projectId: String,
-        pipelineIds: MutableSet<String>
+        pipelineIds: MutableSet<String>,
+        queryDslContext: DSLContext? = null
     ): Map<String/*pipelineId*/, MutableList<String>/*viewNames*/> {
-        val pipelineViewGroups = pipelineViewGroupDao.listByPipelineIds(dslContext, projectId, pipelineIds)
+        val finalDslContext = queryDslContext ?: dslContext
+        val pipelineViewGroups = pipelineViewGroupDao.listByPipelineIds(finalDslContext, projectId, pipelineIds)
         if (pipelineViewGroups.isEmpty()) {
             return emptyMap()
         }
@@ -861,17 +863,17 @@ class PipelineViewGroupService @Autowired constructor(
                 )
             summaries.add(
                 0, PipelineNewViewSummary(
-                id = PIPELINE_VIEW_UNCLASSIFIED,
-                projectId = projectId,
-                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                projected = true,
-                createTime = LocalDateTime.now().timestamp(),
-                updateTime = LocalDateTime.now().timestamp(),
-                creator = "admin",
-                top = false,
-                viewType = PipelineViewType.UNCLASSIFIED,
-                pipelineCount = unclassifiedCount
-            )
+                    id = PIPELINE_VIEW_UNCLASSIFIED,
+                    projectId = projectId,
+                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                    projected = true,
+                    createTime = LocalDateTime.now().timestamp(),
+                    updateTime = LocalDateTime.now().timestamp(),
+                    creator = "admin",
+                    top = false,
+                    viewType = PipelineViewType.UNCLASSIFIED,
+                    pipelineCount = unclassifiedCount
+                )
             )
         }
         return summaries
@@ -881,9 +883,14 @@ class PipelineViewGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        viewType: Int? = null
+        viewType: Int? = null,
+        queryDslContext: DSLContext? = null
     ): List<PipelineNewViewSummary> {
-        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId)
+        val viewGroupRecords = pipelineViewGroupDao.listByPipelineId(
+            dslContext = queryDslContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         val viewRecords = pipelineViewDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -964,9 +971,10 @@ class PipelineViewGroupService @Autowired constructor(
             false
         )
         val deleteCount = pipelineInfos.count { it.delete }
+        val isPipelineListPermissionControl = pipelinePermissionService.isControlPipelineListPermission(projectId)
         return PipelineViewPipelineCount(
             normalCount = pipelineInfos.size - deleteCount,
-            deleteCount = deleteCount
+            deleteCount = if (isPipelineListPermissionControl) 0 else deleteCount
         )
     }
 

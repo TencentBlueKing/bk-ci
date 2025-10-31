@@ -41,6 +41,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.service.WorkspaceOperateCommonObject
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -54,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.WorkspaceHookService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
@@ -78,6 +80,8 @@ class RebuildWorkspaceHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl,
     private val softwareManageService: SoftwareManageService,
+    private val workspaceHookService: WorkspaceHookService,
+    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceSharedDao: WorkspaceSharedDao
 ) {
     @ActionAuditRecord(
@@ -110,7 +114,7 @@ class RebuildWorkspaceHandler @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to rebuild $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to rebuild $workspaceName")
             )
         }
         ActionAuditContext.current()
@@ -239,6 +243,15 @@ class RebuildWorkspaceHandler @Autowired constructor(
                     workspaceName = event.workspaceName
                 )
             }
+            if (workspace.ownerType.projectPublicUse()) {
+                val windowsInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspace.workspaceName)
+                windowsInfo?.nodeHashId?.let {
+                    workspaceHookService.hookLoad(workspace.createUserId, workspace.projectId, windowsInfo.nodeHashId)
+                } ?: kotlin.run {
+                    logger.warn("rebuildWorkspace|nodeHashId is null|${event.workspaceName}")
+                }
+            }
+
             if (options != null) {
                 WorkspaceOperateCommonObject.deleteRebuildOptions(redisOperation, event.taskUid!!)
             }

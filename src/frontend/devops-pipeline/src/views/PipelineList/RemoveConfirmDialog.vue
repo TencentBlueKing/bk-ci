@@ -178,7 +178,7 @@
                 return this.$t(this.isRemoveType ? 'removeFrom' : 'delete')
             },
             hasPermissionPipelines () {
-                return this.pipelineList.filter(pipeline => pipeline.permissions.canDelete)
+                return this.pipelineList.filter(pipeline => pipeline.permissions?.canDelete)
             },
             pacPipelines () {
                 return this.pipelineList.filter(pipeline => pipeline.yamlExist)
@@ -202,15 +202,16 @@
                     return {
                         id: pipeline.pipelineId,
                         name: pipeline.pipelineName,
-                        hasPermission: pipeline.permissions.canDelete,
+                        hasPermission: pipeline.permissions?.canDelete,
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
                         yamlExist: pipeline.yamlExist,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
-                        tooltips: (!pipeline.permissions.canDelete || pipeline.yamlExist)
+                        delete: pipeline.delete,
+                        tooltips: (!pipeline.permissions?.canDelete || pipeline.yamlExist)
                             ? {
-                                content: this.$t(pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
+                                content: this.$t(pipeline.delete ? 'deleteAlready' : pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
                                 placement: 'top',
                                 delay: [300, 0],
                                 allowHTML: false
@@ -312,24 +313,24 @@
                     const { width = 266 } = getComputedStyle(this.$refs.belongsGroupBox[0])
                     const groupNameBoxWidth = parseInt(width)
                     this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
-          const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
-          const moreTag = this.$refs.groupNameMore?.[index]?.$el
-          const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
-          const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
-          let sumTagWidth = 0
-          let tagVisbleCount = 0
+                    const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
+                    const moreTag = this.$refs.groupNameMore?.[index]?.$el
+                    const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+                    const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
+                    let sumTagWidth = 0
+                    let tagVisbleCount = 0
 
-          this.$refs[`groupName_${index}`]?.every((groupName) => {
-            sumTagWidth += groupName.$el.offsetWidth + tagMargin
-            console.log(index, sumTagWidth, groupName.$el.offsetWidth)
-            const isOverSize = sumTagWidth > viewPortWidth
-            if (!isOverSize) {
-              tagVisbleCount += 1
-            }
-            return !isOverSize
-          })
-          return tagVisbleCount
-        })
+                    this.$refs[`groupName_${index}`]?.every((groupName) => {
+                        sumTagWidth += groupName.$el.offsetWidth + tagMargin
+                        console.log(index, sumTagWidth, groupName.$el.offsetWidth)
+                        const isOverSize = sumTagWidth > viewPortWidth
+                        if (!isOverSize) {
+                        tagVisbleCount += 1
+                        }
+                        return !isOverSize
+                    })
+                    return tagVisbleCount
+                    })
                 }
             }
         }

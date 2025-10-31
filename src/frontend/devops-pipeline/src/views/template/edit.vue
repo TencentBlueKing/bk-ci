@@ -209,6 +209,7 @@
             ]),
             ...mapState('atom', [
                 'pipeline',
+                'pipelineSetting',
                 'template'
             ]),
             ...mapState([

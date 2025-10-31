@@ -11,6 +11,7 @@ data class EnvironmentOperateRsp(
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class EnvironmentOperateRspData(
         val taskUid: String,
-        val taskID: String
+        val taskID: String,
+        val environmentUid: String?
     )
 }

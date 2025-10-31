@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class UserAndDeptInfoVo(
     @get:Schema(title = "id")
     val id: Int,
-    @get:Schema(title = "名称")
+    @get:Schema(title = "名称（RTX）")
     val name: String,
-    @get:Schema(title = "别名")
+    @get:Schema(title = "中文名称")
     val displayName: String,
     @get:Schema(title = "信息类型")
     val type: ManagerScopesEnum,
@@ -24,5 +24,7 @@ data class UserAndDeptInfoVo(
     @get:Schema(title = "水印信息")
     val waterMark: String? = null,
     @get:Schema(title = "是否是项目成员")
-    val belongProjectMember: Boolean? = null
+    val belongProjectMember: Boolean? = null,
+    @get:Schema(title = "是否离职")
+    val departed: Boolean? = null
 )

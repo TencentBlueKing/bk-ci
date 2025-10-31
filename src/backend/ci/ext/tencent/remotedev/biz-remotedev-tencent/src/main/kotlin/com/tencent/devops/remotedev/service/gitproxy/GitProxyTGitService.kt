@@ -1313,12 +1313,12 @@ class GitProxyTGitService @Autowired constructor(
         return true
     }
 
-    private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
-
     private fun updateTGitLock(tGitId: Long): RedisLock =
         RedisLock(redisOperation, "$REDIS_REMOTEDEV_PROJECT_UPDATE_TGIT_ACL:$tGitId", 90)
 
     companion object {
+        fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
+
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
 
         // 获取工蜂ACL配置的锁，同一时间对同一个项目的配置只能有一个读写

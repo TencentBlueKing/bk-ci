@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,9 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
+import com.tencent.devops.auth.pojo.vo.BkDeptDetailsVo
+import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 
@@ -53,8 +56,13 @@ interface DeptService {
 
     fun getUserDeptInfo(userId: String): Set<String>
 
-    // 获取单个用户信息
+    @Deprecated("老接口，已废弃")
     fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
+
+    // 获取单个用户信息
+    fun getUserInfo(userId: String): UserAndDeptInfoVo?
+
+    fun getUserInfoFromExternal(userId: String): UserAndDeptInfoVo?
 
     // 获取成员信息
     fun getMemberInfo(
@@ -74,4 +82,10 @@ interface DeptService {
     ): List<String>
 
     fun isUserDeparted(userId: String): Boolean
+
+    fun listDeptInfos(searchUserEntity: SearchUserAndDeptEntity): DeptInfoVo
+
+    fun listUserInfos(searchUserEntity: SearchUserAndDeptEntity): BkUserInfoVo
+
+    fun getUserDeptDetails(userId: String): BkDeptDetailsVo?
 }

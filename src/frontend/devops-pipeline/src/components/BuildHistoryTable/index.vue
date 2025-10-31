@@ -22,47 +22,49 @@
                             {{ $t(row) }}
                         </p>
                     </div>
-                    <bk-button
-                        v-if="!isReleasePipeline && !isDebug"
-                        @click="goEdit"
-                        theme="primary"
-                        size="large"
-                        v-perm="{
-                            hasPermission: canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipelineId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
-                        }"
-                    >
-                        {{ $t('goEdit') }}
-                    </bk-button>
-                    <span
-                        v-else
-                        v-bk-tooltips="tooltip"
-                    >
+                    <template v-if="!archiveFlag">
                         <bk-button
-                            :disabled="!executable"
-                            @click="buildNow"
+                            v-if="!isReleasePipeline && !isDebug"
+                            @click="goEdit"
                             theme="primary"
                             size="large"
                             v-perm="{
-                                hasPermission: canExecute,
+                                hasPermission: canEdit,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
                                     resourceType: 'pipeline',
                                     resourceCode: pipelineId,
-                                    action: RESOURCE_ACTION.EXECUTE
+                                    action: RESOURCE_ACTION.EDIT
                                 }
                             }"
                         >
-                            {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            {{ $t('goEdit') }}
                         </bk-button>
-                    </span>
+                        <span
+                            v-else
+                            v-bk-tooltips="tooltip"
+                        >
+                            <bk-button
+                                :disabled="!executable"
+                                @click="buildNow"
+                                theme="primary"
+                                size="large"
+                                v-perm="{
+                                    hasPermission: canExecute,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: pipelineId,
+                                        action: RESOURCE_ACTION.EXECUTE
+                                    }
+                                }"
+                            >
+                                {{ $t(isDebug ? 'debugNow' : 'buildNow') }}
+                            </bk-button>
+                        </span>
+                    </template>
                 </div>
             </div>
         </bk-exception>
@@ -85,6 +87,19 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handleLimitChange"
             >
+                <bk-table-column
+                    :width="32"
+                    :resizable="false"
+                >
+                    <template v-slot="{ row }">
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length >= 3"
+                            @click.stop="toggleRowShowAll(row)"
+                        >
+                            <i :class="['devops-icon', 'shape-icon', row.showAll ? 'icon-down-shape' : 'icon-right-shape']" />
+                        </div>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     v-for="col in tableColumnFields"
                     v-bind="col"
@@ -244,6 +259,30 @@
                         <span v-else>--</span>
                     </template>
                     <template
+                        v-else-if="col.id === 'artifactQuality'"
+                        v-slot="{ row }"
+                    >
+                        <div
+                            v-if="row.artifactQuality && Object.keys(row.artifactQuality).length"
+                            class="artifact-quality"
+                        >
+                            <ArtifactQuality
+                                :data="row.showAll ? row.artifactQuality : getSlicedData(row)"
+                            />
+                            <div
+                                v-if="Object.keys(row.artifactQuality).length >= 3"
+                                class="more-btn"
+                                @click.stop="toggleRowShowAll(row)"
+                            >
+                                <span>
+                                    {{ row.showAll ? $t('settings.fold') : $t('totalArtifactCount', [Object.keys(row.artifactQuality).length]) }}
+                                    <i :class="['devops-icon', 'angle-icon', row.showAll ? 'icon-angle-up' : 'icon-angle-down']" />
+                                </span>
+                            </div>
+                        </div>
+                        <span v-else>--</span>
+                    </template>
+                    <template
                         v-else-if="col.id === 'startType'"
                         v-slot="props"
                     >
@@ -281,6 +320,7 @@
                                     ref="remarkInput"
                                     rows="3"
                                     :disabled="isChangeRemark"
+                                    :maxlength="4096"
                                     class="remark-input"
                                     v-model.trim="tempRemark"
                                 />
@@ -312,8 +352,14 @@
                                     {{ props.row.remark || "--" }}
                                 </span>
                                 <i
+                                    v-if="!archiveFlag"
                                     class="devops-icon icon-edit-line remark-entry"
                                     @click.stop="activeRemarkInput(props.row)"
+                                />
+                                <i
+                                    v-if="!archiveFlag && props.row.remark"
+                                    class="bk-icon icon-copy remark-entry"
+                                    @click.stop="coptRemark(props.row)"
                                 />
                             </template>
                         </div>
@@ -361,36 +407,38 @@
                         <span v-else>--</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column
-                    v-if="!isDebug"
-                    :label="$t('operate')"
-                    fixed="right"
-                    width="80"
-                >
-                    <template v-slot="props">
-                        <bk-button
-                            v-if="retryable(props.row)"
-                            text
-                            theme="primary"
-                            size="small"
-                            @click.stop="retry(props.row.id)"
-                        >
-                            {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
-                        </bk-button>
-                    </template>
-                </bk-table-column>
-                <bk-table-column
-                    type="setting"
-                    :tippy-options="{ zIndex: 3000 }"
-                >
-                    <TableColumnSetting
-                        ref="tableSetting"
-                        :selected-column-keys="tableColumnKeys"
-                        :all-table-column-map="allTableColumnMap"
-                        @change="handleColumnChange"
-                        @reset="handleColumnReset"
-                    />
-                </bk-table-column>
+                <template v-if="!archiveFlag">
+                    <bk-table-column
+                        v-if="!isDebug"
+                        :label="$t('operate')"
+                        fixed="right"
+                        width="80"
+                    >
+                        <template v-slot="props">
+                            <bk-button
+                                v-if="retryable(props.row)"
+                                text
+                                theme="primary"
+                                size="small"
+                                @click.stop="retry(props.row.id)"
+                            >
+                                {{ $t(isDebug ? 'reDebug' : 'history.reBuild') }}
+                            </bk-button>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        type="setting"
+                        :tippy-options="{ zIndex: 3000 }"
+                    >
+                        <TableColumnSetting
+                            ref="tableSetting"
+                            :selected-column-keys="tableColumnKeys"
+                            :all-table-column-map="allTableColumnMap"
+                            @change="handleColumnChange"
+                            @reset="handleColumnReset"
+                        />
+                    </bk-table-column>
+                </template>
                 <empty-exception
                     slot="empty"
                     type="search-empty"
@@ -470,15 +518,14 @@
                         </span>
                     </p>
                     <div class="build-artifactory-operation">
-                        <bk-button
+                        <artifact-download-button
+                            class="artifact-downLoad-button"
                             v-if="artifactory.artifactoryType !== 'IMAGE'"
-                            text
-                            size="small"
-                            theme="primary"
-                            @click.stop="downloadFile(artifactory)"
-                        >
-                            {{ $t('download') }}
-                        </bk-button>
+                            :output="artifactory"
+                            :has-permission="hasDownloadPermission"
+                            v-bind="artifactory"
+                            :artifactory-type="artifactory.artifactoryType"
+                        />
                         <bk-button
                             v-if="artifactory.artifactoryType === 'PIPELINE'"
                             text
@@ -566,13 +613,15 @@
     import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
+    import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
+    import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
         BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
         errorTypeMap,
         extForFile
     } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, flatSearchKey } from '@/utils/util'
+    import { convertFileSize, convertMStoString, convertTime, flatSearchKey, copyToClipboard } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
@@ -589,6 +638,8 @@
             MaterialItem,
             FilterBar,
             TableColumnSetting,
+            ArtifactQuality,
+            ArtifactDownloadButton,
             EmptyException
         },
         props: {
@@ -616,6 +667,7 @@
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
+                hasDownloadPermission: false,
                 dialogTopOffset: null
             }
         },
@@ -772,6 +824,7 @@
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories,
                         stageStatus,
+                        showAll: false,
                         errorInfoList:
                             (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
                                 ? item.errorInfoList.slice(0, 1)
@@ -811,6 +864,9 @@
             },
             dialogWidth () {
                 return window.innerWidth * 0.8
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         watch: {
@@ -852,6 +908,17 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
+            getSlicedData (row) {
+                const keys = Object.keys(row.artifactQuality)
+                const slicedKeys = keys.slice(0, 2)
+                return slicedKeys.reduce((obj, key) => {
+                    obj[key] = row.artifactQuality[key]
+                    return obj
+                }, {})
+            },
+            toggleRowShowAll (row) {
+                row.showAll = !row.showAll
+            },
             updateTableHeight () {
                 this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
@@ -878,12 +945,14 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        isDebug: this.isDebug
+                        isDebug: this.isDebug,
+                        archiveFlag: this.archiveFlag
                     })
                     this.setHistoryPageStatus({
                         count: res.count
                     })
                     this.buildHistories = res.records
+                    this.hasDownloadPermission = res.hasDownloadPermission
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true
@@ -960,6 +1029,16 @@
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
             },
+            coptRemark (row) {
+                if (row.remark) {
+                    copyToClipboard(row.remark)
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('copySuc'),
+                        limit: 1
+                    })
+                }
+            },
             retryable (row) {
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
@@ -1029,7 +1108,10 @@
                         buildNo,
                         ...(type ? { type } : {})
                     },
-                    hash: codelib ? `#${codelib}` : ''
+                    hash: codelib ? `#${codelib}` : '',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 }
             },
 
@@ -1190,7 +1272,7 @@
                 })
             },
             clearFilter () {
-                this.resetHistoryFilterCondition()
+                this.resetHistoryFilterCondition({ retainArchiveFlag: true })
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
@@ -1341,6 +1423,28 @@
                 pointer-events: auto;
             }
         }
+      }
+      .shape-icon {
+        color: #C4C6CC;
+      }
+      .angle-icon {
+        margin-left: 4px;
+        font-size: 10px;
+      }
+      .more-btn {
+        min-width: 80px;
+        max-width: 90px;
+        margin-top: 3px;
+        background: #FAFBFD;
+        text-align: center;
+        border: 1px solid #DCDEE5;
+        border-radius: 2px;
+        padding: 2px;
+        font-size: 12px;
+        color: #3A84FF;
+      }
+      .artifact-quality {
+        padding: 10px 0;
       }
       .trigger-cell {
         display: flex;
@@ -1553,6 +1657,12 @@
     .bk-dialog {
         top: 50% !important;
         transform: var(--dialog-top-translateY) !important;
+    }
+}
+.artifact-downLoad-button {
+    .bk-button-text {
+        font-size: 12px;
+        line-height: 26px;
     }
 }
 </style>

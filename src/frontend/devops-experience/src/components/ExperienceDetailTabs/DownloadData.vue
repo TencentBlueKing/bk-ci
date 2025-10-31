@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading }"
     >
         <div class="download-statics">
-            共 {{ downloadInfo.total }} 人下载 {{ downloadInfo.account }} 次
+            {{ $t('experience.download_statistics', { total: downloadInfo.total, account: downloadInfo.account }) }}
         </div>
         <bk-table
             v-if="list.length"
@@ -16,15 +16,15 @@
             @page-limit-change="handleLimitChange"
         >
             <bk-table-column
-                label="用户名"
+                :label="$t('experience.username')"
                 prop="userId"
             ></bk-table-column>
             <bk-table-column
-                label="下载次数"
+                :label="$t('experience.download_times')"
                 prop="times"
             ></bk-table-column>
             <bk-table-column
-                label="最近下载时间"
+                :label="$t('experience.latest_download_time')"
                 prop="latestTime"
                 :formatter="formatTime"
             ></bk-table-column>

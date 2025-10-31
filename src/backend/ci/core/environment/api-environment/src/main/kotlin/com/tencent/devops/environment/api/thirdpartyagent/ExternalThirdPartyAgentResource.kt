@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api.thirdpartyagent
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -69,9 +70,6 @@ interface ExternalThirdPartyAgentResource {
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @Parameter(description = "本地eTag标签", required = false)
-        @QueryParam("eTag")
-        eTag: String?,
         @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?
@@ -119,6 +117,18 @@ interface ExternalThirdPartyAgentResource {
         os: OS,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
-        zoneName: String?
+        zoneName: String?,
+        @Parameter(description = "登录账户名", required = false)
+        @QueryParam("loginName")
+        loginName: String?,
+        @Parameter(description = "登录账户密码", required = false)
+        @QueryParam("loginPassword")
+        loginPassword: String?,
+        @Parameter(description = "Agent安装模式", required = false)
+        @QueryParam("installType")
+        installType: TPAInstallType?,
+        @Parameter(description = "重装使用的AgentHashId", required = false)
+        @QueryParam("reInstallId")
+        reInstallId: String?
     ): Response
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -68,25 +68,39 @@ class PipelineBuildNotifyListener @Autowired constructor(
             PipelineNotifyTemplateEnum.PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE,
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE,
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE
-            -> {
+                -> {
                 if (event.notifyCompleteCheck) {
                     event.completeReviewNotify()
-                } else {
-                    event.sendReviewNotify(
-                        templateCode = notifyTemplateEnumType.templateCode,
-                        reviewUrl = pipelineUrlBean.genBuildDetailUrl(
-                            projectCode = event.projectId,
-                            pipelineId = event.pipelineId,
-                            buildId = event.buildId,
-                            position = event.position,
-                            stageId = event.stageId,
-                            needShortUrl = true
-                        ),
-                        reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
-                            projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
-                        )
+                    return
+                }
+                val reviewUrl = when (notifyTemplateEnumType) {
+                    PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
+                    PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
+                        -> pipelineUrlBean.genBuildReviewUrl(
+                        projectCode = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        stageSeq = event.stageSeq,
+                        taskId = event.taskId,
+                        needShortUrl = true
+                    )
+
+                    else -> pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        position = event.position,
+                        stageId = event.stageId,
+                        needShortUrl = true
                     )
                 }
+                event.sendReviewNotify(
+                    templateCode = notifyTemplateEnumType.templateCode,
+                    reviewUrl = reviewUrl,
+                    reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
+                        projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                    )
+                )
             }
 
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_REMINDER_NOTIFY_TEMPLATE -> {

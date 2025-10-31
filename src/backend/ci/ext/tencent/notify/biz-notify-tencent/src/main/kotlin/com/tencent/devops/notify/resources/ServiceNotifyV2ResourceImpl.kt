@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.ServiceNotifyV2Resource
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.pojo.BaseMessage
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
@@ -46,6 +47,7 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
     /**
      * 企业微信
      */
+    @BkCheckBlackListInterface
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         checkV2ExtInfo(message)
@@ -60,6 +62,7 @@ class ServiceNotifyV2ResourceImpl @Autowired constructor(
     /**
      * 邮件
      */
+    @BkCheckBlackListInterface
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         checkV2ExtInfo(message)

@@ -4,7 +4,7 @@
         width="800"
         ext-cls="version-package-wrapper"
         header-position="left"
-        title="请选择ipa或apk或hap文件"
+        :title="$t('experience.select_file')"
         :has-header="versionSelectConf.hasHeader"
         :close-icon="versionSelectConf.closeIcon"
         :quick-close="versionSelectConf.quickClose"
@@ -21,7 +21,7 @@
                 form-type="inline"
                 class="select-nav"
             >
-                <bk-form-item label="流水线">
+                <bk-form-item :label="$t('experience.pipeline')">
                     <bk-select
                         enable-scroll-load
                         searchable
@@ -42,7 +42,7 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item label="构建号">
+                <bk-form-item :label="$t('experience.build_number')">
                     <bk-select
                         ref="build"
                         searchable
@@ -68,10 +68,10 @@
                 v-bkloading="{ isLoading: listLoading.isLoading, title: listLoading.title }"
                 :max-height="400"
                 :data="fileList"
-                empty-text="暂无数据"
+                :empty-text="$t('experience.no_data')"
             >
                 <bk-table-column
-                    label="名称"
+                    :label="$t('name')"
                     prop="name"
                     width="250"
                 >
@@ -95,16 +95,16 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column
-                    label="路径"
+                    :label="$t('experience.path')"
                     prop="fullName"
                 ></bk-table-column>
                 <bk-table-column
-                    label="文件大小"
+                    :label="$t('experience.file_size')"
                     prop="size"
                     width="100"
                 ></bk-table-column>
                 <bk-table-column
-                    label="仓库类型"
+                    :label="$t('experience.repository_type')"
                     prop="artifactoryTypeDesc"
                 ></bk-table-column>
             </bk-table>
@@ -113,7 +113,6 @@
 </template>
 
 <script>
-
     export default {
         props: {
             versionSelectConf: Object,
@@ -156,8 +155,8 @@
             },
             artifactoryTypeMap () {
                 return {
-                    CUSTOM_DIR: '自定义仓库',
-                    PIPELINE: '流水线仓库'
+                    CUSTOM_DIR: this.$t('experience.custom_repo'),
+                    PIPELINE: this.$t('experience.pipeline_repo')
                 }
             }
         },
@@ -245,10 +244,6 @@
                     this.requestList(id)
                 }
             },
-            /**
-             获取文件列表
-             *
-             */
             async requestList (buildId) {
                 this.listLoading.isLoading = true
 
@@ -304,7 +299,7 @@
                         })
 
                         this.constructList.splice(0, this.constructList.length, ...res.records)
-                        this.constructList.unshift({ id: 'all', buildNum: '全部' })
+                        this.constructList.unshift({ id: 'all', buildNum: this.$t('experience.all') })
                     } catch (err) {
                         this.$bkMessage({
                             message: err.message || err,
@@ -328,7 +323,7 @@
                         })
 
                         this.constructList.splice(0, this.constructList.length, ...res.records)
-                        this.constructList.unshift({ id: 'all', buildNum: '全部' })
+                        this.constructList.unshift({ id: 'all', buildNum: this.$t('experience.all') })
                         if (this.constructList.length) {
                             this.selectInfo.constructId = this.constructList[0].id
                             this.changeBuildNo(this.constructList[0].id)

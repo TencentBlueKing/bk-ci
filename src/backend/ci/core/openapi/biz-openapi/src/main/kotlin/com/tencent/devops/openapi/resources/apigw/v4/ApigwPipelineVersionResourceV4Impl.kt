@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,22 +31,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwPipelineVersionResourceV4
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import jakarta.ws.rs.core.Response
 
 @RestResource
 class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
@@ -303,6 +304,22 @@ class ApigwPipelineVersionResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId
+        )
+    }
+
+    override fun exportPipelineAll(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        storageType: PipelineStorageType?,
+        page: Int?
+    ): Response {
+        return client.get(ServicePipelineVersionResource::class).exportPipelineAll(
+            userId = userId,
+            projectId = projectId,
+            storageType = storageType,
+            page = page
         )
     }
 }

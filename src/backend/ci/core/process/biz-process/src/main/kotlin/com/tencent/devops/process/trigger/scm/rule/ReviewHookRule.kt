@@ -28,7 +28,7 @@ class ReviewHookRule : WebhookRule {
             WebhookFactParam(
                 userId = userName,
                 eventType = eventType,
-                action = webhook.review.state.value
+                action = webhook.review.state?.value ?: ""
             )
         }
         val context = WebhookConditionContext(

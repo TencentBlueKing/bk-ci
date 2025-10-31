@@ -14,7 +14,7 @@ const routes = [
                 name: 'experienceList',
                 component: experienceList,
                 meta: {
-                    title: '移动端管理发布',
+                    title: 'mobileRelease',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'
@@ -25,7 +25,7 @@ const routes = [
                 name: 'experienceDetail',
                 component: experienceDetail,
                 meta: {
-                    title: '发布详情',
+                    title: 'releaseDetail',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'
@@ -36,7 +36,7 @@ const routes = [
                 name: 'createExperience',
                 component: createExperience,
                 meta: {
-                    title: '新增体验',
+                    title: 'addExp',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'
@@ -47,7 +47,7 @@ const routes = [
                 name: 'editExperience',
                 component: createExperience,
                 meta: {
-                    title: '编辑发布',
+                    title: 'editRelease',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'
@@ -58,7 +58,7 @@ const routes = [
                 name: 'setting',
                 component: setting,
                 meta: {
-                    title: '设置',
+                    title: 'setting',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,11 +39,11 @@ import com.tencent.devops.worker.common.env.AgentEnv
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
     override fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo> {
-        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}"
+        val path = "/ms/ticket/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}&padding=true"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = "GET",
-                url = "/api/build/credentials/$credentialId?publicKey=${encode(publicKey)}",
+                url = path.removePrefix("/ms/ticket"),
                 token = signToken
             )
         } else {
@@ -64,7 +64,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         signToken: String
     ): Result<CredentialInfo> {
         val path = "/ms/ticket/api/build/credentials/$credentialId/across" +
-            "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId"
+            "?publicKey=${encode(publicKey)}&targetProjectId=$targetProjectId&padding=true"
         val signHeaders = if (signToken.isNotBlank()) {
             ApiSignUtil.generateSignHeader(
                 method = "GET",

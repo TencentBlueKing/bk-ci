@@ -84,17 +84,10 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreMediaService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.service.dao.ExtItemServiceDao
-import com.tencent.devops.store.service.dao.ExtServiceDao
-import com.tencent.devops.store.service.dao.ExtServiceEnvDao
-import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.service.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.service.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.service.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
@@ -130,6 +123,14 @@ import com.tencent.devops.store.pojo.extservice.vo.ExtServiceRespItem
 import com.tencent.devops.store.pojo.extservice.vo.MyServiceVO
 import com.tencent.devops.store.pojo.extservice.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.extservice.vo.ServiceVersionVO
+import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.service.dao.ExtItemServiceDao
+import com.tencent.devops.store.service.dao.ExtServiceDao
+import com.tencent.devops.store.service.dao.ExtServiceEnvDao
+import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
+import com.tencent.devops.store.service.dao.ExtServiceItemRelDao
+import com.tencent.devops.store.service.dao.ExtServiceLableRelDao
+import com.tencent.devops.store.service.dao.ExtServiceVersionLogDao
 import java.time.LocalDateTime
 import java.util.regex.Pattern
 import okhttp3.Request
@@ -199,6 +200,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var redisOperation: RedisOperation
     @Autowired
     private lateinit var bkRepoConfig: BkRepoConfig
+    @Autowired
+    private lateinit var txStoreBelongDeptService: TxStoreBelongDeptService
 
     fun addExtService(
         userId: String,
@@ -307,6 +310,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(extensionInfo.extensionItemList)
+            txStoreBelongDeptService.initStoreBelongDept(
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE
+            )
         }
         return Result(true)
     }
@@ -1773,6 +1781,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
         }
     }
+
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)

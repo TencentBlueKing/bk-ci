@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,5 +49,7 @@ data class AtomRunInfo(
     @get:Schema(title = "输入字段类型信息数据", required = false)
     var inputTypeInfos: Map<String, String>?,
     @get:Schema(title = "敏感输入字段列表", required = false)
-    var sensitiveParams: String? = null
+    var sensitiveParams: String? = null,
+    @get:Schema(title = "插件是否允许执行前暂停", required = false)
+    var canPauseBeforeRun: Boolean? = null
 )

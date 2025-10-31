@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -254,13 +254,16 @@ interface OpAtomResource {
         atomCode: String?
     ): Result<Boolean>
 
-    @Operation(summary = "更新插件敏感参数配置")
+    @Operation(summary = "刷新插件配置缓存")
     @POST
-    @Path("/updateAtomSensitiveCacheConfig")
-    fun updateAtomSensitiveCacheConfig(
+    @Path("/updateAtomConfigCache")
+    fun updateAtomConfigCache(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "kProperty", required = false)
+        @QueryParam("kProperty")
+        kProperty: String,
         @Parameter(description = "atomCode", required = false)
         @QueryParam("atomCode")
         atomCode: String?

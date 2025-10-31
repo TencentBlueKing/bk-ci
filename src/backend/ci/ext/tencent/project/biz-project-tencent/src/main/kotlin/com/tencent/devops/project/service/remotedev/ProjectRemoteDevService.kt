@@ -57,6 +57,9 @@ class ProjectRemoteDevService @Autowired constructor(
     @Value("\${remoteDev.bkrepoDevxUrl:}")
     val bkrepoDevxUrl = ""
 
+    @Value("\${remoteDev.bkrepoDevxDnsIp:}")
+    val bkrepoDevxDnsIp = ""
+
     @Value("\${remoteDev.bkrepoCsigDevxUrl:}")
     val bkrepoCsigDevxUrl = ""
 
@@ -166,7 +169,16 @@ class ProjectRemoteDevService @Autowired constructor(
             .build()
         logger.debug("enableBkRepo|{}|{}", request.headers, body)
         try {
-            OkhttpUtils.doHttp(request).use {
+            if (bkrepoDevxDnsIp.isNotBlank()) {
+                val ips = bkrepoDevxDnsIp.split(";").filter { it.isNotBlank() }.map { it.trim() }.toSet()
+                val client = OkhttpUtils.genOkHttpClientSupDns(
+                    bkrepoDevxUrl.removePrefix("http://").removePrefix("https://"),
+                    ips
+                )
+                client.newCall(request).execute()
+            } else {
+                OkhttpUtils.doHttp(request)
+            }.use {
                 val responseStr = it.body!!.string()
                 if (!it.isSuccessful) {
                     logger.warn("enableBkRepo request failed, uri:($url)|response: ($responseStr)")

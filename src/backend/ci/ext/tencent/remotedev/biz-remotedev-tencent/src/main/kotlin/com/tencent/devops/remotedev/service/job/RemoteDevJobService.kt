@@ -272,7 +272,7 @@ class RemoteDevJobService @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, record.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project ${record.projectId}")
+                params = arrayOf("We're sorry but you don't have permission to access project ${record.projectId}")
             )
         }
         remoteDevJobExecRecordDao.updateStatus(dslContext, id, JobRecordStatus.RUNNING, null, null)

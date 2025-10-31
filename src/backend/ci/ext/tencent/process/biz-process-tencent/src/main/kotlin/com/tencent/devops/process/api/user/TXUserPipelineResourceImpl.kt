@@ -58,16 +58,37 @@ class TXUserPipelineResourceImpl @Autowired constructor(
         return Result(dockerBuildService.isEnable(userId, projectId))
     }
 
-    override fun exportPipelinePreCI(userId: String, projectId: String, pipelineId: String): Response {
+    override fun exportPipelinePreCI(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        return pipelineService.exportYaml(userId, projectId, pipelineId)
+        return pipelineService.exportYaml(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            archiveFlag = archiveFlag
+        )
     }
 
-    override fun exportPipelineGitCI(userId: String, projectId: String, pipelineId: String): Response {
+    override fun exportPipelineGitCI(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        archiveFlag: Boolean?
+    ): Response {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        return pipelineExportService.exportV2Yaml(userId, projectId, pipelineId, true)
+        return pipelineExportService.exportV2Yaml(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            isGitCI = true,
+            archiveFlag = archiveFlag
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

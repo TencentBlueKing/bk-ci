@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,33 +36,33 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.MarketTemplateRequest
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.dao.StoreReleaseDao
+import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
-import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.common.dao.StoreReleaseDao
-import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
-import com.tencent.devops.store.template.dao.MarketTemplateDao
-import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
-import com.tencent.devops.store.template.dao.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.PASS
-import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
-import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.template.dao.MarketTemplateDao
+import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
+import com.tencent.devops.store.template.dao.TemplateLabelRelDao
 import com.tencent.devops.store.template.service.TemplateNotifyService
 import com.tencent.devops.store.template.service.TemplateReleaseService
 import java.time.LocalDateTime
@@ -102,6 +102,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
 
     @Value("\${store.templateApproveSwitch}")
     protected lateinit var templateApproveSwitch: String
+
+    abstract fun handleTemplateExtend(
+        userId: String,
+        templateCode: String,
+        marketTemplateRelRequest: MarketTemplateRelRequest
+    )
 
     override fun addMarketTemplate(
         userId: String,
@@ -183,6 +189,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeFlag = true
             )
         }
+        handleTemplateExtend(userId, templateCode, marketTemplateRelRequest)
         return Result(true)
     }
 

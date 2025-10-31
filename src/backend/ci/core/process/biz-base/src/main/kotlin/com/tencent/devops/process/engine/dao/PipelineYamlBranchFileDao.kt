@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -102,19 +102,15 @@ class PipelineYamlBranchFileDao {
         projectId: String,
         repoHashId: String,
         branch: String,
-        filePath: String,
-        includeDeleted: Boolean = false
+        filePath: String
     ): TPipelineYamlBranchFileRecord? {
-        with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
-            val query = dslContext.selectFrom(this)
+        return with(TPipelineYamlBranchFile.T_PIPELINE_YAML_BRANCH_FILE) {
+            dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(BRANCH.eq(branch))
                 .and(FILE_PATH_MD5.eq(DigestUtils.md5Hex(filePath)))
-            if (!includeDeleted) {
-                query.and(DELETED.eq(false))
-            }
-            return query.fetchOne()
+                .fetchOne()
         }
     }
 

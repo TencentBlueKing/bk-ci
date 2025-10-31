@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -97,6 +97,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
     @Value("\${project.callback.secretParam.aes-key:project_callback_aes_key}")
     private val aesKey = ""
 
+    @Value("\${project.callback.black-ports:#{null}}")
+    private val blackPorts: List<Int> = listOf()
+
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
@@ -119,6 +122,15 @@ class ProjectPipelineCallBackService @Autowired constructor(
         if (!OkhttpUtils.validUrl(url)) {
             logger.warn("$projectId|callback url Invalid")
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        }
+        val port = OkhttpUtils.getPort(url) ?: -1
+        if (blackPorts.contains(port)) {
+            // url 存在高危端口号
+            logger.warn("url[$url] with high-risk port detected")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT,
+                params = arrayOf(port.toString())
+            )
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
             region = region,

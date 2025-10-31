@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -240,6 +240,23 @@ class PipelineSettingDao {
             return dslContext.select(PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE).from(this)
                 .where(conditions)
                 .fetch()
+        }
+    }
+
+    fun listPipelineNames(
+        dslContext: DSLContext,
+        pipelineIds: List<String>,
+        projectId: String?
+    ): Map<String, String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, NAME).from(this)
+                .where(conditions)
+                .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
         }
     }
 

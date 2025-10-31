@@ -75,13 +75,13 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.BadRequestException
+import jakarta.ws.rs.NotFoundException
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-import jakarta.ws.rs.BadRequestException
-import jakarta.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -272,7 +272,7 @@ class BkRepoService @Autowired constructor(
         ) {
             throw PermissionForbiddenException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId)
                 )
             )
@@ -284,7 +284,7 @@ class BkRepoService @Autowired constructor(
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    messageCode = ArtifactoryMessageCode.HANDOVER_TO_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId, targetPipelineId)
                 )
             )
@@ -339,19 +339,24 @@ class BkRepoService @Autowired constructor(
         buildId: String
     ): List<AppFileInfo> {
         logger.info(
-            "getBuildFileList, userId: $userId, projectId: $projectId," +
-                    " pipelineId: $pipelineId, buildId: $buildId"
+            "getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId"
         )
-        pipelineService.validatePermission(
-            userId,
-            projectId,
-            pipelineId,
-            AuthPermission.DOWNLOAD,
-            I18nUtil.getCodeLanMessage(
-                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(userId, projectId, pipelineId)
+        var downloadPermission = true
+        try {
+            pipelineService.validatePermission(
+                userId,
+                projectId,
+                pipelineId,
+                AuthPermission.DOWNLOAD,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    params = arrayOf(userId, projectId, pipelineId)
+                )
             )
-        )
+        } catch (e: Exception) {
+            logger.warn("user $userId download pipeline $pipelineId build $buildId failed, error: $e")
+            downloadPermission = false
+        }
 
         val startTimestamp = System.currentTimeMillis()
         try {
@@ -361,6 +366,7 @@ class BkRepoService @Autowired constructor(
                 repoNames = listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
                 fileNames = listOf(),
                 metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
+                qualityMetadata = emptyList(),
                 page = 0,
                 pageSize = 10000
             ).records
@@ -405,14 +411,10 @@ class BkRepoService @Autowired constructor(
                     }
                 }
 
-                var canDownload = false
                 var logoUrl: String? = null
                 var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
-                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID) {
-                            canDownload = true
-                        }
 
                         if (property.key == ARCHIVE_PROPS_APP_ICON) {
                             logoUrl = property.value
@@ -439,11 +441,12 @@ class BkRepoService @Autowired constructor(
                     modifiedTime = it.modifiedTime,
                     artifactoryType = it.artifactoryType,
                     show = show,
-                    canDownload = canDownload,
+                    canDownload = downloadPermission,
                     version = it.appVersion,
                     logoUrl = UrlUtil.toOuterPhotoAddr(logoUrl),
                     bundleIdentifier = bundleIdentifier,
-                    md5 = it.md5
+                    md5 = it.md5,
+                    nodeMetadata = it.nodeMetadata?.filter { metadata -> metadata.color != null }
                 )
             }
         } finally {
@@ -528,22 +531,21 @@ class BkRepoService @Autowired constructor(
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-                    val shortUrl = if (generateShortUrl && (PlatformEnum.isPackage(it.name))) {
-                        shortUrlService.createShortUrl(
-                            PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
-                            TimeUnit.DAYS.toSeconds(90L).toInt()
-                        )
-                    } else {
-                        ""
-                    }
 
-                    logger.info(
-                        "pipelineHasPermissionList.contains(pipelineId):" +
-                                " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}"
-                    )
-                    if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
-                        pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
+                    val hasPermission = !checkPermission || pipelineHasPermissionList.contains(pipelineId)
+                    logger.info("pipelineHasPermissionList.contains(pipelineId): $hasPermission")
+                    if (hasPermission &&
+                        pipelineIdToNameMap.containsKey(pipelineId) &&
+                        buildIdToNameMap.containsKey(buildId)
                     ) {
+                        val shortUrl = if (generateShortUrl && (PlatformEnum.isPackage(it.name))) {
+                            shortUrlService.createShortUrl(
+                                PathUtils.buildArchiveLink(projectId, pipelineId, buildId),
+                                TimeUnit.DAYS.toSeconds(90L).toInt()
+                            )
+                        } else {
+                            ""
+                        }
                         val pipelineName = pipelineIdToNameMap[pipelineId]!!
                         val buildName = buildIdToNameMap[buildId]!!
                         fileInfoList.add(
@@ -603,7 +605,8 @@ class BkRepoService @Autowired constructor(
                 properties = properties,
                 appVersion = appVersion,
                 shortUrl = shortUrl,
-                md5 = nodeInfo.md5
+                md5 = nodeInfo.md5,
+                nodeMetadata = nodeInfo.nodeMetadata
             )
         }
     }
@@ -629,7 +632,8 @@ class BkRepoService @Autowired constructor(
                 artifactoryType = RepoUtils.getTypeByRepo(nodeInfo.repoName),
                 properties = properties,
                 appVersion = appVersion,
-                md5 = nodeInfo.md5
+                md5 = nodeInfo.md5,
+                nodeMetadata = nodeInfo.nodeMetadata
             )
         }
     }
@@ -667,7 +671,8 @@ class BkRepoService @Autowired constructor(
                 ).timestamp(),
                 artifactoryType = ArtifactoryType.IMAGE,
                 properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) },
-                registry = dockerRegistry
+                registry = dockerRegistry,
+                nodeMetadata = nodeMetadata
             )
         }
     }
@@ -836,7 +841,8 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean? = false
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
@@ -848,8 +854,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-
-        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
+        val webPath = if (useWeb == true) "web/" else ""
+        return "${bkRepoClient.getRkRepoIdcHost()}/${webPath}repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

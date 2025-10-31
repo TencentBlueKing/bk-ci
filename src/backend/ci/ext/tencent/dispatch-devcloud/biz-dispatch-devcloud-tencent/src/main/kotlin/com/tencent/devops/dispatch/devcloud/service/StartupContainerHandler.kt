@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -47,6 +48,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_PROJECT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_DETECTSHELL
 import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_PATH
 import com.tencent.devops.dispatch.devcloud.pojo.DEVOPS_AGENTSLIM_WORKER_USER
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_CONTAINER_IMAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_CPU
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_DISK
@@ -101,6 +103,9 @@ abstract class StartupContainerHandler @Autowired constructor(
             if (customBuildEnv != null) {
                 envs.putAll(customBuildEnv)
             }
+
+            val (host, name, tag) = CiYamlUtils.parseImage(containerPool!!.container!!)
+
             envs.putAll(
                 mapOf(
                     ENV_KEY_PROJECT_ID to projectId,
@@ -114,6 +119,7 @@ abstract class StartupContainerHandler @Autowired constructor(
                     ENV_DEVCLOUD_CPU to cpu.toString(),
                     ENV_DEVCLOUD_MEM to memory,
                     ENV_DEVCLOUD_DISK to disk,
+                    ENV_CONTAINER_IMAGE to "$host/$name:$tag",
                     ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE to maxAtomFileCacheSize
                 )
             )
@@ -147,7 +153,8 @@ abstract class StartupContainerHandler @Autowired constructor(
                 "projectId" to projectId,
                 "pipelineId" to pipelineId,
                 "buildId" to buildId,
-                "vmSeqId" to vmSeqId
+                "vmSeqId" to vmSeqId,
+                "model" to performanceUid.ifBlank { "Standard-S" }
             )
 
             // 针对fuse插件优化

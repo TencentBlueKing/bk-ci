@@ -37,7 +37,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return Result(remoteDevJobService.getMachineTypes(projectId))
@@ -47,7 +47,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project $projectId")
+                params = arrayOf("We're sorry but you don't have permission to access project $projectId")
             )
         }
         return Result(remoteDevJobService.getOwners(projectId))
@@ -61,7 +61,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, data.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project ${data.projectId}")
+                params = arrayOf("We're sorry but you don't have permission to access project ${data.projectId}")
             )
         }
         // 参数校验
@@ -88,7 +88,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project ${search.projectId}")
+                params = arrayOf("We're sorry but you don't have permission to access project ${search.projectId}")
             )
         }
         return Result(remoteDevJobService.fetchJobRecord(search))
@@ -98,7 +98,7 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         if (!permissionService.checkUserVisitPermission(userId, search.projectId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You need permission to access project ${search.projectId}")
+                params = arrayOf("We're sorry but you don't have permission to access project ${search.projectId}")
             )
         }
         return Result(remoteDevJobService.fetchCronJob(search))

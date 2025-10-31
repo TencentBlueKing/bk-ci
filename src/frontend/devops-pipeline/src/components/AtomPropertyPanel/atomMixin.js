@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -60,6 +60,7 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 
 const atomMixin = {
     props: {
@@ -114,7 +115,8 @@ const atomMixin = {
         EnumButton,
         TipsSimple,
         Tips,
-        SubParameter
+        SubParameter,
+        MetadataNormal
     },
     computed: {
         ...mapGetters('atom', [

@@ -52,6 +52,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME_I18N
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BK_CI_APP_STAGE
@@ -115,12 +116,12 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.core.Response
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
-import jakarta.ws.rs.core.Response
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -271,7 +272,11 @@ class ExperienceService @Autowired constructor(
                 creator = it.creator,
                 expired = isExpired,
                 online = it.online,
-                permissions = ExperiencePermission(canExperience, canEdit, canDelete)
+                permissions = ExperiencePermission(canExperience, canEdit, canDelete),
+                repoCreateTime = if (it.repoCreateTime == null) {
+                    logger.warn("repoCreateTime is null, experienceId: ${it.id}")
+                    today.timestamp()
+                } else it.repoCreateTime.timestamp(),
             )
         }
     }
@@ -284,13 +289,16 @@ class ExperienceService @Autowired constructor(
         content = ActionAuditContent.EXPERIENCE_TASK_VIEW_CONTENT
     )
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
-
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
+        val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val experienceId = experienceRecord.id
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
-        val url = if (canExperience && online && !isExpired) getShortExternalUrl(experienceId) else null
+        val url = if (canExperience && online && !isExpired) getShortExternalUrl(
+            experienceId = experienceId,
+            isForPc = platform.isForPC()
+        ) else null
 
         val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
         val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
@@ -334,7 +342,7 @@ class ExperienceService @Autowired constructor(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
             artifactoryType = ArtifactoryType.valueOf(experienceRecord.artifactoryType),
-            platform = PlatformEnum.valueOf(experienceRecord.platform),
+            platform = platform,
             version = experienceRecord.version,
             remark = experienceRecord.remark ?: "",
             createDate = experienceRecord.createTime.timestamp(),
@@ -354,7 +362,8 @@ class ExperienceService @Autowired constructor(
             versionTitle = experienceRecord.versionTitle,
             categoryId = experienceRecord.category,
             productOwner = objectMapper.readValue(experienceRecord.productOwner),
-            classify = experienceRecord.classify
+            classify = experienceRecord.classify,
+            appNameI18n = experienceRecord.appNameI18n
         )
     }
 
@@ -375,16 +384,22 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = experience.path,
+            platform = experience.platform
+        )
 
         val experienceId = createExperience(
-            projectId,
-            experience,
-            propertyMap,
-            Source.WEB,
-            userId,
-            isPublic,
-            artifactoryType
+            projectId = projectId,
+            experience = experience,
+            propertyMap = propertyMap,
+            source = Source.WEB,
+            userId = userId,
+            isPublic = isPublic,
+            artifactoryType = artifactoryType
         )
         ActionAuditContext.current()
             .setInstanceId(experienceId.toString())
@@ -418,13 +433,19 @@ class ExperienceService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType,
-        path: String
+        path: String,
+        platform: String? = null
     ): MutableMap<String, String> {
         val properties =
             client.get(ServiceArtifactoryResource::class).properties(userId, projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
+        }
+        if (platform?.uppercase() == PlatformEnum.WIN.name) {
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] = ""
+            propertyMap[ARCHIVE_PROPS_APP_VERSION] = "1.0.0"
+            propertyMap[ARCHIVE_PROPS_APP_ICON] = ""
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
@@ -463,9 +484,32 @@ class ExperienceService @Autowired constructor(
         userId: String,
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-    ): Long {
+    ): Pair<Long/*体验ID*/, PlatformEnum> {
         experience.experienceName?.let {
             experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
+        }
+
+        val platform = if (experience.platform == null) {
+            PlatformEnum.ofTail(experience.path)
+        } else {
+            PlatformEnum.ofName(experience.platform!!).also {
+                for (t in it.tails) {
+                    if (experience.path.endsWith(t)) {
+                        return@also
+                    }
+                }
+                logger.warn("experience path not match platform")
+                throw RuntimeException("experience path not match platform")
+            }
+        }
+
+        if (platform == PlatformEnum.WIN) {
+            if (experience.experienceName.isNullOrBlank()) {
+                throw RuntimeException("windows experience name is empty")
+            }
+            if (experience.bundleIdentifier.isNullOrBlank()) {
+                throw RuntimeException("windows experience bundleIdentifier is empty")
+            }
         }
 
         val fileDetail =
@@ -476,7 +520,7 @@ class ExperienceService @Autowired constructor(
                 "null file detail , projectId:$projectId , " +
                         "artifactoryType:$artifactoryType , path:${experience.path}"
             )
-            return -1L
+            return Pair(-1L, PlatformEnum.UNKNOWN)
         }
 
         val encodePublicGroup = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP)
@@ -504,9 +548,16 @@ class ExperienceService @Autowired constructor(
             experience.outerUsers
         }
 
-        val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
-        val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
-        val platform = PlatformEnum.ofTail(experience.path)
+        val appBundleIdentifier = if (platform == PlatformEnum.WIN) {
+            experience.bundleIdentifier!!
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
+        }
+        val appVersion = if (platform == PlatformEnum.WIN) {
+            experience.version ?: "未知"
+        } else {
+            propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
+        }
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
@@ -528,6 +579,7 @@ class ExperienceService @Autowired constructor(
                 projectId
             }
         }
+        val appNameI18n = propertyMap[ARCHIVE_PROPS_APP_NAME_I18N]
 
         val endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault())
             .withHour(23)
@@ -564,7 +616,9 @@ class ExperienceService @Autowired constructor(
             scheme = scheme,
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: "",
-            classify = experience.classify ?: ""
+            classify = experience.classify ?: "",
+            repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime),
+            appNameI18n = appNameI18n
         )
         // IAM权限
         experiencePermissionService.createTaskResource(
@@ -598,7 +652,8 @@ class ExperienceService @Autowired constructor(
                 appBundleIdentifier = appBundleIdentifier,
                 logoUrl = logoUrl,
                 scheme = scheme,
-                version = appVersion
+                version = appVersion,
+                appNameI18n = appNameI18n
             )
         } else { // 内部体验
             if (experienceBaseService.isDefendProject(propertyMap[ARCHIVE_PROPS_BK_CI_APP_STAGE], projectId)) {
@@ -611,7 +666,7 @@ class ExperienceService @Autowired constructor(
             sendNotification(experienceId)
         }
 
-        return experienceId
+        return Pair(experienceId, platform)
     }
 
     private fun onlinePublicExperience(
@@ -625,7 +680,8 @@ class ExperienceService @Autowired constructor(
         appBundleIdentifier: String,
         logoUrl: String,
         scheme: String,
-        version: String
+        version: String,
+        appNameI18n: String?
     ) {
 
         experiencePublicDao.create(
@@ -640,7 +696,8 @@ class ExperienceService @Autowired constructor(
             size = size,
             logoUrl = logoUrl,
             scheme = scheme,
-            version = version
+            version = version,
+            appNameI18n = appNameI18n
         )
     }
 
@@ -731,7 +788,8 @@ class ExperienceService @Autowired constructor(
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
                 logoUrl = experienceRecord.logoUrl,
                 scheme = experienceRecord.scheme,
-                version = experienceRecord.version
+                version = experienceRecord.version,
+                appNameI18n = experienceRecord.appNameI18n
             )
         } else {
             experiencePublicDao.updateByRecordId(
@@ -868,7 +926,13 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
+        val propertyMap = getArtifactoryPropertiesMap(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            platform = experience.platform
+        )
 
         if (!experience.scheme.isNullOrBlank()) {
             propertyMap[ARCHIVE_PROPS_APP_SCHEME] = experience.scheme!!
@@ -909,10 +973,13 @@ class ExperienceService @Autowired constructor(
             categoryId = experience.categoryId,
             productOwner = experience.productOwner,
             sendNotification = experience.sendNotification,
-            classify = experience.classify
+            classify = experience.classify,
+            platform = experience.platform,
+            bundleIdentifier = experience.bundleIdentifier,
+            version = experience.version
         )
 
-        val experienceId = createExperience(
+        val (experienceId, platform) = createExperience(
             projectId,
             experienceCreate,
             propertyMap,
@@ -928,7 +995,7 @@ class ExperienceService @Autowired constructor(
             .setInstance(experience)
 
         return ExperienceCreateResp(
-            url = getShortExternalUrl(experienceId),
+            url = getShortExternalUrl(experienceId, platform.isForPC()),
             experienceHashId = HashUtil.encodeLongId(experienceId)
         )
     }
@@ -1029,8 +1096,8 @@ class ExperienceService @Autowired constructor(
 
             for (i in experienceRecords.indices) {
                 val e = experienceRecords[i]
-                val pcUrl = getPcUrl(e.projectId, e.id)
-                val appUrl = getShortExternalUrl(e.id)
+                val platform = PlatformEnum.valueOf(e.platform)
+                val appUrl = getShortExternalUrl(e.id, platform.isForPC())
                 messages.add(
                     Message(
                         name = e.name,
@@ -1046,7 +1113,7 @@ class ExperienceService @Autowired constructor(
                         projectName = projectName,
                         name = e.name,
                         version = e.version,
-                        url = pcUrl,
+                        url = appUrl,
                         receivers = innerReceivers.toSet()
                     )
                     client.get(ServiceNotifyResource::class).sendEmailNotify(message)
@@ -1108,6 +1175,7 @@ class ExperienceService @Autowired constructor(
     fun sendNotification(experienceId: Long) {
         threadPool.submit {
             val experienceRecord = experienceDao.get(dslContext, experienceId)
+            val platform = PlatformEnum.valueOf(experienceRecord.platform)
             if (DateUtil.isExpired(experienceRecord.endDate)) {
                 logger.info("experience($experienceId) is expired")
                 return@submit
@@ -1158,8 +1226,7 @@ class ExperienceService @Autowired constructor(
                     .get(experienceRecord.projectId).data!!.projectName,
                 innerReceivers = innerReceivers,
                 experienceRecord = experienceRecord,
-                pcUrl = getPcUrl(experienceRecord.projectId, experienceId),
-                appUrl = getShortExternalUrl(experienceId)
+                appUrl = getShortExternalUrl(experienceId, platform.isForPC())
             )
             sendMessageToOuterReceivers(outerReceivers, experienceRecord, notifyTypeList)
             sendMessageToSubscriber(subscribeUsers, experienceRecord, notifyTypeList)
@@ -1266,7 +1333,6 @@ class ExperienceService @Autowired constructor(
         projectName: String,
         innerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord,
-        pcUrl: String,
         appUrl: String
     ) {
         if (innerReceivers.size > BATCH_SEND_LIMIT) {
@@ -1287,7 +1353,7 @@ class ExperienceService @Autowired constructor(
                 projectName = projectName,
                 name = experienceRecord.name,
                 version = experienceRecord.version,
-                url = pcUrl,
+                url = appUrl,
                 receivers = innerReceivers.toSet()
             )
             client.get(ServiceNotifyResource::class).sendEmailNotify(message)
@@ -1362,17 +1428,12 @@ class ExperienceService @Autowired constructor(
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
 
-    fun getPcUrl(projectId: String, experienceId: Long): String {
+    fun getShortExternalUrl(experienceId: Long, isForPc: Boolean): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
-        return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
-    }
-
-    fun getShortExternalUrl(experienceId: Long): String {
-        val experienceHashId = HashUtil.encodeLongId(experienceId)
+        val html = if (isForPc) "download_desktop.html" else "devops_app_forward.html"
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                    "/app/download/$html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

@@ -1,14 +1,11 @@
 <template>
     <div style="height: 100%;">
         <content-header>
-            <div slot="left">{{ $route.meta.title }}</div>
+            <div slot="left">{{ $t(`experience.${$route.meta.title}`) }}</div>
         </content-header>
         <section
             class="create-experience-wrapper sub-view-port"
-            v-bkloading="{
-                isLoading: loading.isLoading,
-                title: loading.title
-            }"
+            v-bkloading="loading"
         >
             <template v-if="!loading.isLoading">
                 <bk-form
@@ -19,14 +16,14 @@
                     <template v-if="hasPermission">
                         <div class="version-name">
                             <bk-form-item
-                                label="ipa/apk/apks/hap 安装包"
+                                :label="$t('experience.package_type')"
                                 label-width="190"
                                 :required="true"
                                 property="name"
                             >
                                 <bk-input
                                     ref="releaseName"
-                                    placeholder="请从版本仓库中选择一个 ipa/apk/apks/hap 文件"
+                                    :placeholder="$t('experience.select_package_placeholder')"
                                     name="releaseName"
                                     disabled
                                     v-model="createReleaseForm.name"
@@ -36,69 +33,69 @@
                                 :class="{ 'prompt-tips': true, 'is-unedit': isEdit }"
                                 :disabled="isEdit"
                                 @click="toShowPackageList"
-                            >从版本仓库获取</span>
+                            >{{ $t('experience.get_from_repository') }}</span>
                         </div>
                         <bk-form-item
                             style="margin-top: 20px"
-                            label="应用名称"
+                            :label="$t('experience.app_name')"
                             label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
-                            desc="展示于蓝盾App上的应用名。如果为空，将自动获取ipa/apk/hap内置的应用名"
+                            :desc="$t('experience.app_name_tip')"
                             property="experienceName"
                         >
                             <bk-input
                                 v-model="createReleaseForm.experienceName"
-                                placeholder="请输入应用名称"
+                                :placeholder="$t('experience.enter_app_name')"
                                 maxlength="20"
                             />
                         </bk-form-item>
                         <bk-form-item
-                            label="版本标题"
+                            :label="$t('experience.version_title')"
                             :required="true"
                             label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
-                            desc="该体验版本的标志性说明"
+                            :desc="$t('experience.version_title_tip')"
                             property="versionTitle"
                         >
                             <bk-input
                                 v-model="createReleaseForm.versionTitle"
-                                placeholder="请输入版本标题"
+                                :placeholder="$t('experience.enter_version_title')"
                                 :rule="[{ required: true }]"
                                 maxlength="100"
                             />
                         </bk-form-item>
                         <bk-form-item
-                            label="版本号"
+                            :label="$t('experience.version_number')"
                             label-width="190"
                         >
                             <span class="version-number-info">{{ createReleaseForm.version_no || '--' }}</span>
                         </bk-form-item>
                         <bk-form-item
                             style="margin-top: 20px"
-                            label="分组标识"
+                            :label="$t('experience.group_identifier')"
                             label-width="190"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
-                            desc="指定后，体验列表将根据 BundleID和分组标识汇聚展示"
+                            :desc="$t('experience.group_identifier_tip')"
                             property="classify"
                         >
                             <bk-input
                                 v-model="createReleaseForm.classify"
-                                placeholder="请输入分组标识"
+                                :placeholder="$t('experience.enter_group_identifier')"
                                 maxlength="20"
                             />
                         </bk-form-item>
                         <bk-form-item
-                            label="版本描述"
+                            :label="$t('experience.version_description')"
                             property="desc"
                             label-width="190"
                             :required="true"
                         >
                             <bk-input
                                 type="textarea"
-                                placeholder="请填写版本描述"
+                                :placeholder="$t('experience.enter_version_description')"
                                 maxlength="2000"
                                 name="releaseDesc"
                                 v-model="createReleaseForm.desc"
@@ -107,7 +104,7 @@
                             </bk-input>
                         </bk-form-item>
                         <bk-form-item
-                            label="产品类别"
+                            :label="$t('experience.product_category')"
                             :required="true"
                             label-width="190"
                             property="categoryId"
@@ -123,7 +120,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item
-                            label="产品负责人"
+                            :label="$t('experience.product_owner')"
                             label-width="190"
                             :required="true"
                             property="productOwner"
@@ -131,17 +128,17 @@
                             <bk-member-selector
                                 v-model="createReleaseForm.productOwner"
                                 :rule="[{ required: true }]"
-                                placeholder="请输入英文名，多个产品负责人以英文逗号分隔"
+                                :placeholder="$t('experience.enter_product_owner')"
                             />
                         </bk-form-item>
                         <bk-form-item
-                            label="体验结束时间"
+                            :label="$t('experience.experience_end_time')"
                             label-width="190"
                             :required="true"
                             property="end_date"
                         >
                             <bk-date-picker
-                                placeholder="请选择体验结束时间"
+                                :placeholder="$t('experience.select_experience_end_time')"
                                 v-model="createReleaseForm.end_date"
                                 :start-date="query.beginDate"
                                 :quick-select="false"
@@ -149,7 +146,7 @@
                             </bk-date-picker>
                         </bk-form-item>
                         <bk-form-item
-                            label="体验范围"
+                            :label="$t('experience.experience_scope')"
                             label-width="190"
                             :required="true"
                         >
@@ -158,14 +155,14 @@
                                     value="internals"
                                     class="mr20"
                                 >
-                                    内部体验组
+                                    {{ $t('experience.internal_experience_group') }}
                                 </bk-radio>
-                                <bk-radio value="public">公开体验</bk-radio>
+                                <bk-radio value="public">{{ $t('experience.public_experience') }}</bk-radio>
                             </bk-radio-group>
                         </bk-form-item>
                         <bk-form-item
                             v-show="isInerExp"
-                            label="体验组"
+                            :label="$t('experience.experience_group')"
                             required
                             label-width="190"
                             property="experienceGroups"
@@ -195,7 +192,7 @@
                                                     :key="item.key"
                                                     class="exp-group-popup-item"
                                                 >
-                                                    <span>{{ item.typeLabel }}</span>
+                                                    <span>{{ item.typeLabel }}：</span>
                                                     <span>{{ col[item.key].join(', ') }}</span>
                                                 </p>
                                             </div>
@@ -208,27 +205,27 @@
                                 @click="toCreateGroup"
                             >
                                 <i class="devops-icon icon-plus-circle" />
-                                新增体验组
+                                {{ $t('experience.add_experience_group') }}
                             </span>
                         </bk-form-item>
                         <bk-form-item
                             v-show="isInerExp"
-                            label="临时体验人员（内部）"
+                            :label="$t('experience.temp_experience_personnel_internal')"
                             desc-type="icon"
                             desc-icon="icon-info-circle"
-                            desc="全公司人员有效"
+                            :desc="$t('experience.temp_experience_personnel_internal_tip')"
                             label-width="190"
                             property="internal_list"
                         >
                             <bk-member-selector
-                                placeholder="请输入英文名，多个体验人员以英文逗号分隔"
+                                :placeholder="$t('experience.enter_english_name')"
                                 name="internalList"
                                 v-model="createReleaseForm.internal_list"
                             ></bk-member-selector>
                         </bk-form-item>
                         <bk-form-item
                             v-show="isInerExp"
-                            label="临时体验人员（外部）"
+                            :label="$t('experience.temp_experience_personnel_external')"
                             label-width="190"
                             property="external_list"
                         >
@@ -250,7 +247,7 @@
                             </bk-select>
                         </bk-form-item>
                         <bk-form-item
-                            label="通知方式"
+                            :label="$t('experience.notification_method')"
                             label-width="190"
                             v-bind="notifyDesc"
                         >
@@ -276,7 +273,7 @@
                                 name="enableWechatGroups"
                                 v-model="createReleaseForm.enableWechatGroups"
                             >
-                                启用企业微信群通知
+                                {{ $t('experience.enable_enterprise_wechat_notification') }}
                                 <span
                                     v-bk-tooltips="groupIdDesc"
                                     class="top-start"
@@ -290,7 +287,7 @@
                             v-if="createReleaseForm.enableWechatGroups"
                             :handle-change="groupIdChange"
                             :value="createReleaseForm.wechatGroups"
-                            placeholder="请输入群ID，多个群ID以分号隔开"
+                            :placeholder="$t('experience.enter_group_id')"
                             icon-class="icon-question-circle"
                             desc-direction="top"
                         >
@@ -318,7 +315,7 @@
                         theme="default"
                         @click="cancel"
                     >
-                        取消
+                        {{ $t('experience.cancel') }}
                     </bk-button>
                 </div>
             </template>
@@ -326,10 +323,10 @@
                 class="metadata-box"
                 v-if="metaList.length"
             >
-                <div class="title">元数据</div>
+                <div class="title">{{ $t('experience.metadata') }}</div>
                 <div class="data-head">
-                    <div class="key-head">键</div>
-                    <div class="value-head">值</div>
+                    <div class="key-head">{{ $t('experience.key') }}</div>
+                    <div class="value-head">{{ $t('experience.value') }}</div>
                 </div>
                 <div
                     class="data-row"
@@ -389,25 +386,8 @@
                 hasPermission: true,
                 curPipelineId: '',
                 curPipelineName: '',
-                groupIdDesc: "可发通知至企业微信群。群ID获取方法：添加'DevOps-notice' 群机器人，手动@DevOps-notice并输入关键字'群ID', 发送后即可获取",
                 experienceGroup: [],
                 groupIdStorage: [],
-                categoryList: [
-                    { id: 1, name: '游戏' },
-                    { id: 2, name: '工具' },
-                    { id: 3, name: '生活' },
-                    { id: 4, name: '社交' }
-                ],
-                noticeTypeList: [
-                    {
-                        name: '蓝盾App Push消息',
-                        value: 'PUSH',
-                        isChecked: true,
-                        placeholder: '只有安装了蓝盾App的用户，Push消息才能触达。'
-                    },
-                    { name: '企业微信', value: 'RTX', isChecked: false },
-                    { name: '邮件', value: 'EMAIL', isChecked: false }
-                ],
                 metaList: [],
                 outersList: [],
                 loading: {
@@ -446,7 +426,7 @@
                     closeIcon: false,
                     hasHeader: false,
                     quickClose: false,
-                    confirmText: '确定'
+                    confirmText: this.$t('experience.confirm')
                 },
                 groupSideslider: {
                     title: '',
@@ -477,6 +457,32 @@
                 'getSelectedFile',
                 'getUserGroup'
             ]),
+            groupIdDesc () {
+                return {
+                    content: this.$t('experience.enable_group_tips'),
+                    maxWidth: 300
+                }
+            },
+            categoryList () {
+                return [
+                    { id: 1, name: this.$t('experience.game') },
+                    { id: 2, name: this.$t('experience.tool') },
+                    { id: 3, name: this.$t('experience.live') },
+                    { id: 4, name: this.$t('experience.social') }
+                ]
+            },
+            noticeTypeList () {
+                return [
+                    {
+                        name: this.$t('experience.app_push'),
+                        value: 'PUSH',
+                        isChecked: true,
+                        placeholder: this.$t('experience.app_push_placeholder')
+                    },
+                    { name: this.$t('experience.rtx'), value: 'RTX', isChecked: false },
+                    { name: this.$t('experience.mail'), value: 'EMAIL', isChecked: false }
+                ]
+            },
             pathName () {
                 return this.$route.name
             },
@@ -490,10 +496,10 @@
                 return this.$route.params.experienceId
             },
             innerTitle () {
-                return this.isEdit ? '编辑体验' : '新增体验'
+                return this.$t(`experience.${this.isEdit ? 'editExp' : 'addExp'}`)
             },
             submitText () {
-                return this.isEdit ? '更新体验' : '转体验'
+                return this.$t(`experience.${this.isEdit ? 'updateExp' : 'toExp'}`)
             },
             isInerExp () {
                 return this.experienceRange === 'internals'
@@ -503,13 +509,13 @@
             },
             expGroupPopupConf () {
                 return [{
-                    typeLabel: '内部人员：',
+                    typeLabel: this.$t('experience.innerMember'),
                     key: 'innerUsers'
                 }, {
-                    typeLabel: '内部组织：',
+                    typeLabel: this.$t('experience.innerOrgs'),
                     key: 'depts'
                 }, {
-                    typeLabel: '外部人员：',
+                    typeLabel: this.$t('experience.outerMember'),
                     key: 'outerUsers'
                 }]
             },
@@ -518,13 +524,13 @@
             },
             
             createInnerApkExpTips () {
-                return `${this.createReleaseForm.name}${this.isPublicExp ? '为开发测试版本，确定发起公开体验吗' : '为开发测试版本，准备体验包过程需要一段时间，请耐心等待'}`
+                return this.$t(`experience.${this.isPublicExp ? 'publicExpTips' : 'innerExpTips'}`, [this.createReleaseForm.name])
             },
             notifyDesc () {
                 return this.isPublicExp
                     ? {}
                     : {
-                        desc: '若选择的体验组人数去重后仍然超过了2000人，通知将会发送失败。',
+                        desc: this.$t('experience.over2000Tips'),
                         descType: 'icon',
                         descIcon: 'icon-info-circle'
                     }
@@ -709,7 +715,7 @@
             },
             cancel () {
                 this.$bkInfo({
-                    title: '离开后，新编辑的数据将会丢失',
+                    title: this.$t('experience.dialog.leave_warning'),
                     type: 'warning',
                     theme: 'warning',
                     confirmFn: () => {
@@ -737,7 +743,7 @@
                     members: [],
                     remark: ''
                 }
-                this.groupSideslider.title = '新增体验组'
+                this.groupSideslider.title = this.$t('experience.add_experience_group')
                 this.groupSideslider.visible = true
             },
             handleGroupFieldChange (name, value) {
@@ -778,7 +784,7 @@
                 if (!this.packageLoading.isLoading) {
                     if (this.getSelectedFile.name) {
                         this.packageLoading.isLoading = true
-                        this.versionSelectConf.confirmText = '提交中...'
+                        this.versionSelectConf.confirmText = this.$t('experience.submiting')
 
                         const obj = this.getSelectedFile
                         
@@ -824,7 +830,7 @@
                         } finally {
                             this.versionSelectConf.isShow = false
                             this.packageLoading.isLoading = false
-                            this.versionSelectConf.confirmText = '确定'
+                            this.versionSelectConf.confirmText = this.$t('experience.confirm')
                         }
                     }
                 }
@@ -833,7 +839,7 @@
                 if (!this.packageLoading.isLoading) {
                     this.versionSelectConf.isShow = false
                     this.packageLoading.isLoading = false
-                    this.versionSelectConf.confirmText = '确定'
+                    this.versionSelectConf.confirmText = this.$t('experience.confirm')
                 }
             },
             groupIdChange (name, value) {
@@ -888,14 +894,14 @@
                 let message
                 const theme = 'error'
                 if (!this.createReleaseForm.desc || !this.createReleaseForm.name || !this.createReleaseForm.end_date || !this.createReleaseForm.versionTitle || !this.createReleaseForm.categoryId || !this.createReleaseForm.productOwner.length || !this.createReleaseForm.experienceGroups.length) {
-                    if (!this.createReleaseForm.experienceGroups.length) message = '请选择体验组'
-                    if (!this.createReleaseForm.end_date) message = '请选择体验结束日期'
-                    if (this.createReleaseForm.categoryId === null) message = '请选择产品类别'
-                    if (!this.createReleaseForm.productOwner.length) message = '请填写产品负责人'
-                    if (!this.createReleaseForm.desc) message = '请填写版本描述'
-                    if (!this.createReleaseForm.versionTitle) message = '请填写版本标题'
+                    if (!this.createReleaseForm.experienceGroups.length) message = this.$t('experience.requiredExpGroup')
+                    if (!this.createReleaseForm.end_date) message = this.$t('experience.requiredEndDate')
+                    if (this.createReleaseForm.categoryId === null) message = this.$t('experience.requiredProduct')
+                    if (!this.createReleaseForm.productOwner.length) message = this.$t('experience.requiredResponser')
+                    if (!this.createReleaseForm.desc) message = this.$t('experience.requiredVersionDesc')
+                    if (!this.createReleaseForm.versionTitle) message = this.$t('experience.requiredVersionTitle')
                     // if (!this.createReleaseForm.experienceName) message = '请填写体验名称'
-                    if (!this.createReleaseForm.name) message = '请选择ipa/apk/hap文件'
+                    if (!this.createReleaseForm.name) message = this.$t('experience.requiredExpFile')
                     this.$bkMessage({
                         message,
                         theme
@@ -953,7 +959,7 @@
                                 params
                             })
             
-                            message = '编辑体验成功'
+                            message = this.$t('experience.editExpSuccess')
                             theme = 'success'
                         } else {
                             const payload = {
@@ -972,7 +978,7 @@
                                     params
                                 })
             
-                                message = '新增体验成功'
+                                message = this.$t('experience.addExpSuccess')
                                 theme = 'success'
                             } else {
                                 this.handleNoPermission({
@@ -1033,6 +1039,13 @@
                     align-items: center;
                     grid-template-columns: repeat(3, 1fr);
                     margin-bottom: 10px;
+                    .bk-form-checkbox {
+                        display: flex;
+                        .bk-checkbox-text {
+                            flex: 1;
+                            @include ellipsis();
+                        }
+                    }
                 }
                 
                 .exp-group-item {
@@ -1075,9 +1088,6 @@
                         color: $fontLighterColor;
                     }
                 }
-            }
-            .enable-wechat-group {
-                width: 250px;
             }
             .version-number-info {
                 line-height: 30px;

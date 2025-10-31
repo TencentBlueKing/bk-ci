@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -140,4 +141,22 @@ interface ServiceResourceGroupResource {
         @QueryParam("groupId")
         groupId: Int
     ): Result<Boolean>
+
+    @GET
+    @Path("/{projectCode}/getByGroupCode")
+    @Operation(summary = "根据GroupCode获取用户组")
+    fun getByGroupCode(
+        @Parameter(description = "项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+        @Parameter(description = "资源Code", required = true)
+        @QueryParam("resourceCode")
+        resourceCode: String,
+        @Parameter(description = "组Code", required = true)
+        @QueryParam("groupCode")
+        groupCode: BkAuthGroup
+    ): Result<AuthResourceGroup?>
 }

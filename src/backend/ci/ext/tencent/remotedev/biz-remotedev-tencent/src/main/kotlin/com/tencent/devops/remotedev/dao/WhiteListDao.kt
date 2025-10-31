@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TWhiteList
 import com.tencent.devops.model.remotedev.tables.records.TWhiteListRecord
+import com.tencent.devops.remotedev.pojo.ProjectAccessDeviceWhiteList
 import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import org.jooq.DSLContext
@@ -20,11 +21,13 @@ class WhiteListDao {
                 this,
                 NAME,
                 TYPE,
-                WINDOWS_GPU_LIMIT
+                WINDOWS_GPU_LIMIT,
+                CREATOR
             ).values(
                 limit.name,
                 limit.type.name,
-                limit.windowsGpuLimit
+                limit.windowsGpuLimit,
+                limit.creator
             ).onDuplicateKeyIgnore().execute()
         }
     }
@@ -38,14 +41,44 @@ class WhiteListDao {
                 this,
                 NAME,
                 TYPE,
-                WINDOWS_GPU_LIMIT
+                WINDOWS_GPU_LIMIT,
+                CREATOR
             ).values(
                 limit.name,
                 limit.type.name,
-                limit.windowsGpuLimit
+                limit.windowsGpuLimit,
+                limit.creator
             ).onDuplicateKeyUpdate()
                 .set(WINDOWS_GPU_LIMIT, limit.windowsGpuLimit)
+                .set(CREATOR, limit.creator)
                 .execute()
+        }
+    }
+
+    fun fetch(
+        dslContext: DSLContext,
+        type: WhiteListType
+    ): List<WhiteList> {
+        with(TWhiteList.T_WHITE_LIST) {
+            return dslContext.selectFrom(this).where(TYPE.eq(type.name)).fetch(mapper)
+        }
+    }
+
+    fun fetchProjectAccessDevice(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<ProjectAccessDeviceWhiteList> {
+        with(TWhiteList.T_WHITE_LIST) {
+            return dslContext.selectFrom(this).where(TYPE.eq(WhiteListType.PROJECT_ACCESS_DEVICE.name))
+                .and(NAME.like("$projectId::%")).fetch {
+                    val (_, userId) = it.name.split("::")
+                    ProjectAccessDeviceWhiteList(
+                        creator = it.creator,
+                        updateTime = it.updateTime,
+                        projectId = projectId,
+                        userId = userId
+                    )
+                }
         }
     }
 
@@ -84,7 +117,9 @@ class WhiteListDao {
                 WhiteList(
                     name = name,
                     type = WhiteListType.parse(type),
-                    windowsGpuLimit = windowsGpuLimit
+                    windowsGpuLimit = windowsGpuLimit,
+                    creator = creator ?: "",
+                    updateTime = updateTime
                 )
             }
         }

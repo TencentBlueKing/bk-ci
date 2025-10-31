@@ -54,3 +54,21 @@ export function deepMerge(...objectArray) {
 export function timeFormatter(val, format = 'YYYY-MM-DD HH:mm:ss') {
   return val ? dayjs(val).format(format) : '--';
 }
+
+
+// 获取 cookie object
+export function getCookies(strCookie = document.cookie): any {
+  if (!strCookie) {
+    return {};
+  }
+  const arrCookie = strCookie.split('; ');// 分割
+  const cookiesObj = {};
+  arrCookie.forEach((cookieStr) => {
+    const arr = cookieStr.split('=');
+    const [key, value] = arr;
+    if (key) {
+      cookiesObj[key] = value;
+    }
+  });
+  return cookiesObj;
+}

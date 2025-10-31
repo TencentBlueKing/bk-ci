@@ -86,4 +86,7 @@
             }
         }
     }
+    .bk-tab-header-setting {
+        border-left: none !important;
+    }
 </style>

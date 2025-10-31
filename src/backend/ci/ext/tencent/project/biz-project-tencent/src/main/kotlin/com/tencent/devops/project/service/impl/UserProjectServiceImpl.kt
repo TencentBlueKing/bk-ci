@@ -29,10 +29,13 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.ci.UserUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
@@ -50,6 +53,7 @@ import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.ServiceManageService
 import com.tencent.devops.project.service.tof.TOFService
+import jakarta.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -58,7 +62,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import jakarta.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED", "LongParameterList", "LongMethod", "ExplicitItLambdaParameter")
 @Service
@@ -73,7 +76,10 @@ class UserProjectServiceImpl @Autowired constructor(
     pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val tofService: TOFService,
     private val bkTag: BkTag,
-    private val apiPlatformApi: AuthPlatformApi
+    private val apiPlatformApi: AuthPlatformApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val tokenService: ClientTokenService,
+    private val client: Client
 ) : AbsUserProjectServiceServiceImpl(
     dslContext,
     serviceTypeDao,
@@ -83,7 +89,10 @@ class UserProjectServiceImpl @Autowired constructor(
     redisOperation,
     authProjectApi,
     pipelineAuthServiceCode,
-    apiPlatformApi
+    apiPlatformApi,
+    authPermissionApi,
+    tokenService,
+    client
 ) {
 
     @Value("\${project.container.url:#{null}}")

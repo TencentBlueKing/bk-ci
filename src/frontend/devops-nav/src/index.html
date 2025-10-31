@@ -2,7 +2,7 @@
 <!--
   ~ Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
   ~
-  ~ Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+  ~ Copyright (C) 2019 Tencent.  All rights reserved.
   ~
   ~ BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
   ~
@@ -307,6 +307,10 @@
           } else if (this.status == 401) {
             // 无登录，这里处理跳转逻辑
             window.location.href = window.getLoginUrl()
+          } else if (this.status == 417) {
+            // 无登录，这里处理跳转逻辑
+            var res = JSON.parse(xhr.responseText)
+            window.location.href = res.redirectUrl
           } else if (this.readyState == 4 && this.status > 400) {
             reject({
               status: this.status,

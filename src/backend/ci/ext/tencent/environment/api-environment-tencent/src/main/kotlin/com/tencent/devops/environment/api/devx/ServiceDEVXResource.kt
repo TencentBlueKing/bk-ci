@@ -94,6 +94,9 @@ interface ServiceDEVXResource {
         projectId: String,
         @Parameter(description = "环境hashId", required = false)
         @QueryParam("envHashId")
-        envHashId: String
+        envHashId: String?,
+        @Parameter(description = "节点hashId", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?
     ): Result<List<DEVXHook>>
 }

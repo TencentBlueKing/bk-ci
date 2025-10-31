@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwRepositoryCommitResourceV3
-import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,6 +53,6 @@ class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(
         buildId: String
     ): Result<List<CommitResponse>> {
         logger.info("OPENAPI_REPOSITORY_COMMIT_V3|$userId|get repository commit|$projectId|$pipelineId|$buildId")
-        return client.get(UserRepositoryResource::class).getCommit(buildId)
+        return client.get(ServiceRepositoryResource::class).getCommit(buildId)
     }
 }

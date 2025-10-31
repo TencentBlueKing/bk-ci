@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,17 +43,20 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_USER_SET_ERROR_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_VARIABLE_PARAM_MAX_LENGTH
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.SCRIPT_EXECUTION_FAIL
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
+import com.tencent.devops.worker.common.task.TaskDaemon.Companion.PARAM_MAX_LENGTH
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -98,6 +101,9 @@ open class ScriptTask : ITask() {
                 }.toMap()
             } else vars
         }
+        val failIfVariableInvalid = runtimeVariables["BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG"]
+            ?.toBooleanStrictOrNull() == true
+        var failIfVariableInvalidCheckFlag = true
         val projectId = buildVariables.projectId
 
         ScriptEnvUtils.cleanEnv(buildId, workspace)
@@ -161,6 +167,8 @@ open class ScriptTask : ITask() {
                 checkUrlDecoder = true
             )
 
+            val userSetError = ScriptEnvUtils.getSetError(buildId, workspace)
+            checkUserSetError(userSetError)
             throw TaskExecuteException(
                 errorMsg = errorMsg,
                 errorType = ErrorType.USER,
@@ -168,8 +176,12 @@ open class ScriptTask : ITask() {
             )
         } finally {
             // 成功失败都写入全局变量
-            addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
-            addEnv(ScriptEnvUtils.getContext(buildId, workspace))
+            val envs = ScriptEnvUtils.getEnv(buildId, workspace)
+            val context = ScriptEnvUtils.getContext(buildId, workspace)
+            failIfVariableInvalidCheckFlag = failIfVariableInvalidCheck(failIfVariableInvalid, envs) &&
+                failIfVariableInvalidCheck(failIfVariableInvalid, context)
+            addEnv(envs)
+            addEnv(context)
 
             // 增加操作系统类型的输出
             buildVariables.jobId?.let { addEnv(mapOf("jobs.$it.os" to AgentEnv.getOS().name)) }
@@ -180,6 +192,64 @@ open class ScriptTask : ITask() {
             // 清理所有执行的中间输出文件
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
         }
+
+        if (!failIfVariableInvalidCheckFlag) {
+            throw TaskExecuteException(
+                errorMsg = "[Finish task] status: false, errorType: ${ErrorType.USER.num}, " +
+                    "errorCode: ${ErrorCode.USER_INPUT_INVAILD}, message: variable length is illegal.",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD
+            )
+        }
+    }
+
+    private fun checkUserSetError(errors: Map<String, String>) {
+        var error: TaskExecuteException? = null
+        errors.forEach { (key, value) ->
+            if (!key.startsWith("8") ||
+                key.length != 6 ||
+                key.toIntOrNull() == null
+            ) {
+                LoggerService.addWarnLine(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_USER_SET_ERROR_FAILED,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = arrayOf(key)
+                    )
+                )
+                return@forEach
+            }
+            error = TaskExecuteException(
+                errorMsg = value,
+                errorType = ErrorType.USER,
+                errorCode = key.toInt()
+            )
+        }
+        if (error != null) {
+            throw error!!
+        }
+    }
+
+    private fun failIfVariableInvalidCheck(
+        failIfVariableInvalid: Boolean,
+        it: Map<String, String>
+    ): Boolean {
+        var res = true
+        if (failIfVariableInvalid) {
+            it.forEach { (key, value) ->
+                if (value.length > PARAM_MAX_LENGTH) {
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_VARIABLE_PARAM_MAX_LENGTH,
+                            language = AgentEnv.getLocaleLanguage(),
+                            params = arrayOf(key, PARAM_MAX_LENGTH.toString(), value.length.toString())
+                        )
+                    )
+                    res = false
+                }
+            }
+        }
+        return res
     }
 
     open fun takeBuildEnvs(

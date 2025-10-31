@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.NUM_ZERO
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -38,6 +39,8 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
@@ -59,8 +62,10 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.control.lock.PipelineReleaseLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -95,6 +100,7 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineVersionFacadeService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -129,16 +135,16 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun getPipelineDetailIncludeDraft(
         userId: String,
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        archiveFlag: Boolean? = false
     ): PipelineDetail {
-        val detailInfo = pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                params = arrayOf(pipelineId)
-            )
+        val detailInfo = pipelineListFacadeService.getPipelineDetail(
+            userId = userId, projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID, params = arrayOf(pipelineId)
+        )
         val draftResource = pipelineRepositoryService.getDraftVersionResource(
-            projectId = projectId,
-            pipelineId = pipelineId
+            projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
         )
         // 有草稿且不是空白的编排才可以发布
         val canRelease = draftResource != null && draftResource.model.stages.size > 1
@@ -147,12 +153,17 @@ class PipelineVersionFacadeService @Autowired constructor(
         val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = detailInfo.pipelineVersion
+            version = detailInfo.pipelineVersion,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
+        val yamlInfo = if (archiveFlag != true) {
+            pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseResource.version)
+        } else {
+            null
+        }
         var baseVersion: Int? = null
         var baseVersionName: String? = null
         var baseVersionStatus: VersionStatus? = null
@@ -161,19 +172,24 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    version = base
+                    version = base,
+                    archiveFlag = archiveFlag
                 )
             }
             baseResource?.let { baseVersion = it.version }
             baseResource?.status?.let { baseVersionStatus = it }
             baseResource?.versionName?.let { baseVersionName = it }
         }
-        val releaseSetting = pipelineSettingFacadeService.userGetSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            detailInfo = detailInfo
-        )
+        val releaseSetting = if (archiveFlag != true) {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                detailInfo = detailInfo
+            )
+        } else {
+            null
+        }
         /**
          * 获取最新版本和版本名称
          *
@@ -183,7 +199,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             // 分支版本,需要获取当前分支最新的激活版本
             VersionStatus.BRANCH -> {
                 val branchVersion = pipelineRepositoryService.getBranchVersionResource(
-                    projectId, pipelineId, releaseResource.versionName
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    branchName = releaseResource.versionName,
+                    archiveFlag = archiveFlag
                 )
                 Pair(branchVersion?.version ?: releaseResource.version, branchVersion?.versionName)
             }
@@ -199,11 +218,10 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(draftResource.version, null)
         }
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
-        val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        val yamlExist = archiveFlag.takeUnless { it == true }?.run {
+            pipelineRecentUseService.record(userId, projectId, pipelineId)
+            pipelineYamlFacadeService.yamlExistInDefaultBranch(projectId, pipelineId)
+        }
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
             pipelineName = detailInfo.pipelineName,
@@ -221,7 +239,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             updateTime = detailInfo.updateTime,
             viewNames = detailInfo.viewNames,
             latestVersionStatus = detailInfo.latestVersionStatus,
-            runLockType = releaseSetting.runLockType,
+            runLockType = releaseSetting?.runLockType,
             permissions = permissions,
             version = version,
             versionName = versionName,
@@ -696,13 +714,16 @@ class PipelineVersionFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionWithModel {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
-            )
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode, errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+        )
         val editPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -714,7 +735,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = version,
             includeDraft = true,
-            encryptedFlag = !editPermission
+            encryptedFlag = !editPermission,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
@@ -723,14 +745,16 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            version = resource.settingVersion ?: 0 // 历史没有关联过setting版本应该取正式版本
+            version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
+            archiveFlag = archiveFlag
         )
         val model = pipelineInfoFacadeService.getFixedModel(
             model = resource.model,
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
-            pipelineInfo = pipelineInfo
+            pipelineInfo = pipelineInfo,
+            archiveFlag = archiveFlag
         )
         /* 兼容存量数据 */
         model.desc = setting.desc
@@ -743,7 +767,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = it
+                version = it,
+                archiveFlag = archiveFlag
             )
         }
         val (yamlSupported, yamlPreview, msg) = try {
@@ -752,7 +777,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 resource = resource,
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
@@ -819,7 +845,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 data = TransferBody(
                     modelAndSetting = modelAndYaml.modelAndSetting,
                     oldYaml = modelAndYaml.yaml ?: ""
-                )
+                ),
+                aspects = AtomUtils.checkElementCanPauseBeforeRun(client, projectId)
             )
             model = transferResult.modelAndSetting?.model
             setting = transferResult.modelAndSetting?.setting
@@ -994,7 +1021,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         versionName: String? = null,
         creator: String? = null,
         description: String? = null,
-        buildOnly: Boolean? = false
+        buildOnly: Boolean? = false,
+        archiveFlag: Boolean? = false
     ): Page<PipelineVersionSimple> {
         var slqLimit: SQLLimit? = null
         if (pageSize != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
@@ -1007,11 +1035,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             limit -= 1
             pipelineRepositoryService.getDraftVersionResource(
                 projectId = projectId,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                archiveFlag = archiveFlag
             )?.toSimple()?.apply {
                 baseVersionName = baseVersion?.let {
                     repositoryVersionService.getPipelineVersionSimple(
-                        projectId, pipelineId, it
+                        projectId = projectId, pipelineId = pipelineId, version = it, archiveFlag = archiveFlag
                     )?.versionName
                 }
             }
@@ -1022,10 +1051,15 @@ class PipelineVersionFacadeService @Autowired constructor(
             repositoryVersionService.getPipelineVersionSimple(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = fromVersion
+                version = fromVersion,
+                archiveFlag = archiveFlag
             )
         } else null
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        )
         var (size, pipelines) = repositoryVersionService.listPipelineReleaseVersion(
             pipelineInfo = pipelineInfo,
             projectId = projectId,
@@ -1036,7 +1070,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             excludeVersion = fromVersion,
             offset = offset,
             limit = limit,
-            buildOnly = buildOnly
+            buildOnly = buildOnly,
+            archiveFlag = archiveFlag
         )
         draftResource?.let {
             size++
@@ -1058,12 +1093,14 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun getPipelineVersion(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        archiveFlag: Boolean? = false
     ): PipelineVersionSimple {
         return repositoryVersionService.getPipelineVersionSimple(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version
+            version = version,
+            archiveFlag = archiveFlag
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,

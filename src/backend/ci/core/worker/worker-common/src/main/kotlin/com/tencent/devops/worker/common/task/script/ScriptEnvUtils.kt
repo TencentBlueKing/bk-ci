@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,7 +34,9 @@ import java.io.File
 @Suppress("TooManyFunctions")
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
+    private const val FLAG_FILE = "flag.log"
     private const val CONTEXT_FILE = "context.log"
+    private const val ERROR_FILE = "setError.log"
     private const val QUALITY_GATEWAY_FILE = "gatewayValueFile.ini"
     private val keyRegex = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
     private val logger = LoggerFactory.getLogger(ScriptEnvUtils::class.java)
@@ -57,6 +59,10 @@ object ScriptEnvUtils {
         return readScriptContext(workspace, getContextFile(buildId))
     }
 
+    fun getSetError(buildId: String, workspace: File): Map<String, String> {
+        return readScriptContext(workspace, getSetErrorFile(buildId))
+    }
+
     fun getEnvFile(buildId: String): String {
         val randomNum = ExecutorUtil.getThreadLocal()
         return "$buildId-$randomNum-$ENV_FILE"
@@ -67,6 +73,31 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$CONTEXT_FILE"
     }
 
+    fun getSetErrorFile(buildId: String): String {
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$ERROR_FILE"
+    }
+    /*限定文件名*/
+    fun getFlagFile(buildId: String): String {
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$FLAG_FILE"
+    }
+
+    fun readFlagFile(buildId: String, workspace: File): String {
+        val flagFile = File(workspace, getFlagFile(buildId))
+        if (flagFile.exists()) {
+            val flag = flagFile.readText()
+            logger.info("Flag: ${flag.replace("\r", "").replace("\n", " ")}")
+            return flag
+        }
+        return ""
+    }
+
+    fun deleteFlagFile(buildId: String, workspace: File) {
+        val flagFile = getFlagFile(buildId)
+        deleteFile(flagFile, workspace)
+    }
+
     private fun getDefaultEnvFile(buildId: String): String {
         return "$buildId-$ENV_FILE"
     }
@@ -75,9 +106,13 @@ object ScriptEnvUtils {
         val defaultEnvFilePath = getDefaultEnvFile(buildId)
         val randomEnvFilePath = getEnvFile(buildId)
         val randomContextFilePath = getContextFile(buildId)
+        val randomSetErrorFilePath = getSetErrorFile(buildId)
+        val flagFile = getFlagFile(buildId)
         deleteFile(defaultEnvFilePath, workspace)
         deleteFile(randomEnvFilePath, workspace)
         deleteFile(randomContextFilePath, workspace)
+        deleteFile(randomSetErrorFilePath, workspace)
+        deleteFile(flagFile, workspace)
         ExecutorUtil.removeThreadLocal()
     }
 

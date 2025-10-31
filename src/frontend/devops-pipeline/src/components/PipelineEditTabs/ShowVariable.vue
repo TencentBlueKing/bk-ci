@@ -21,6 +21,7 @@
                     <div
                         v-for="(panel, index) in panels"
                         class="tab-item"
+                        v-bk-overflow-tips
                         :key="index"
                         :class="{ actived: active === panel.name }"
                         @click="selectTab(panel.name)"
@@ -246,6 +247,8 @@
         cursor: pointer;
         font-size: 14px;
         color: #63656e;
+        margin: 0 8px;
+        @include ellipsis();
         &.actived {
           color: #3a84ff;
           border-bottom: 2px solid #3a84ff;

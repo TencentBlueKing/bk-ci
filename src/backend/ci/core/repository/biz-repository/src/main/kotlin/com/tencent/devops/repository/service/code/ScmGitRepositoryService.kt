@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -96,7 +96,7 @@ class ScmGitRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: ScmGitRepository): Long {
-        val authRepository = AuthRepository(repository)
+        val authRepository = AuthRepository(repository.copy(projectId = projectId))
         repositoryCheckService.checkGitCredential(
             projectId = projectId,
             authRepository = authRepository
@@ -336,7 +336,8 @@ class ScmGitRepositoryService @Autowired constructor(
         )
         if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
             throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER
+                errorCode = RepositoryMessageCode.ERROR_MEMBER_LEVEL_LOWER_MASTER,
+                params = arrayOf(repository.userName)
             )
         }
         // 初始化应该新增push和mr事件
@@ -483,7 +484,24 @@ class ScmGitRepositoryService @Autowired constructor(
             repoCondition = repoCondition,
             limit = limit,
             offset = offset
-        )
+        ).map {
+            ScmGitRepository(
+                aliasName = it.aliasName,
+                url = it.url,
+                credentialId = it.credentialId,
+                projectName = it.projectName,
+                userName = it.userName,
+                authType = it.authType,
+                projectId = it.projectId,
+                repoHashId = it.repoHashId,
+                gitProjectId = it.gitProjectId,
+                atom = it.atom,
+                enablePac = it.enablePac,
+                yamlSyncStatus = it.yamlSyncStatus,
+                scmCode = it.scmCode,
+                credentialType = it.credentialType
+            )
+        }
     }
 
     override fun countByCondition(repoCondition: RepoCondition): Long {

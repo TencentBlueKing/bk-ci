@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,14 +30,17 @@ package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
+import com.tencent.devops.auth.provider.rbac.listener.AuthProjectLevelPermissionsSyncListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.auth.provider.rbac.listener.SyncGroupAndMemberListener
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthItsmCallbackEvent
+import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
 import com.tencent.devops.auth.provider.rbac.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.client.Client
@@ -63,16 +66,20 @@ class RbacMQConfiguration {
     @Bean
     fun syncGroupAndMemberListener(
         resourceGroupSyncService: PermissionResourceGroupSyncService,
-        resourceGroupPermissionService: PermissionResourceGroupPermissionService
+        resourceGroupPermissionService: PermissionResourceGroupPermissionService,
+        permissionMigrateService: PermissionMigrateService
     ) = SyncGroupAndMemberListener(
         resourceGroupSyncService = resourceGroupSyncService,
-        resourceGroupPermissionService = resourceGroupPermissionService
+        resourceGroupPermissionService = resourceGroupPermissionService,
+        permissionMigrateService = permissionMigrateService
     )
 
     @EventConsumer
     fun syncGroupAndMemberConsumer(
         @Autowired syncGroupAndMemberListener: SyncGroupAndMemberListener
-    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> { syncGroupAndMemberListener.execute(it) }
+    ) = ScsConsumerBuilder.build<ProjectEnableStatusBroadCastEvent> {
+        syncGroupAndMemberListener.execute(it)
+    }
 
     @Bean
     fun authItsmCallbackListener(
@@ -105,10 +112,26 @@ class RbacMQConfiguration {
         traceEventDispatcher = traceEventDispatcher
     )
 
+    @Bean
+    fun authProjectLevelPermissionsSyncListener(
+        permissionService: PermissionResourceGroupPermissionService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthProjectLevelPermissionsSyncListener(
+        permissionService = permissionService,
+        traceEventDispatcher = traceEventDispatcher
+    )
+
     @EventConsumer
     fun authResourceGroupCreateConsumer(
         @Autowired authResourceGroupCreateListener: AuthResourceGroupCreateListener
     ) = ScsConsumerBuilder.build<AuthResourceGroupCreateEvent> { authResourceGroupCreateListener.execute(it) }
+
+    @EventConsumer
+    fun authProjectLevelPermissionsSyncConsumer(
+        @Autowired authProjectLevelPermissionsSyncListener: AuthProjectLevelPermissionsSyncListener
+    ) = ScsConsumerBuilder.build<AuthProjectLevelPermissionsSyncEvent> {
+        authProjectLevelPermissionsSyncListener.execute(it)
+    }
 
     @Bean
     fun authResourceGroupModifyListener(

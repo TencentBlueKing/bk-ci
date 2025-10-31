@@ -3,7 +3,12 @@ package com.tencent.devops.dispatch.windows.listener
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.redis.RedisLock
@@ -31,6 +36,7 @@ import org.springframework.stereotype.Component
 @Component
 class WindowsBuildListener @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val devCloudWindowsService: DevCloudWindowsService,
     private val windowsBuildHistoryService: WindowsBuildHistoryService,
     private val profile: Profile,
@@ -39,8 +45,10 @@ class WindowsBuildListener @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsBuildListener::class.java)
         private const val LOCK_SHUTDOWN = "dispatcher:locker:windows:shutdown"
+
         // 未找到空闲的windows构建资源，等待20秒后重试。
         const val BK_NO_FREE_WINDOWS_BUILD_RESOURCE = "bkNoFreeWindowsBuildResource"
+
         // Windows资源紧缺，等待1分钟分配不到资源
         const val BK_WINDOWS_RESOURCE_SCARCITY = "bkWindowsResourceScarcity"
     }
@@ -96,6 +104,26 @@ class WindowsBuildListener @Autowired constructor(
         if (devCloudWindowsInfo != null) {
             startSuccess = true
             windowsBuildHistoryService.saveBuildHistory(dispatchMessage, devCloudWindowsInfo, resourceType)
+            with(dispatchMessage.event) {
+                pipelineEventDispatcher.dispatch(
+                    // devcloud windows 启动
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "devcloud-windows-start-${devCloudWindowsInfo.ip}", projectId = projectId,
+                        pipelineId = pipelineId, userId = "",
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = containerHashId, jobId = jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = BuildStatus.RUNNING.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                "DEVCLOUD_WINDOWS",
+                            PipelineBuildStatusBroadCastEvent.Labels::windowsIp.name to
+                                devCloudWindowsInfo.ip
+                        )
+                    )
+                )
+            }
         }
 
         if (!startSuccess) {
@@ -182,7 +210,8 @@ class WindowsBuildListener @Autowired constructor(
             )
             logger.info(
                 "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
-                    "|buildHistoryRecords|$buildHistoryRecords")
+                    "|buildHistoryRecords|$buildHistoryRecords"
+            )
 
             val projectId = event.projectId
             val creator = event.userId
@@ -228,6 +257,7 @@ class WindowsBuildListener @Autowired constructor(
 
                 logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
                 windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
+                endEventSend(event, buildHistory)
             } catch (e: SocketTimeoutException) {
                 logger.error(
                     "${event.projectId}|${event.pipelineId}|${event.buildId}" +
@@ -237,6 +267,7 @@ class WindowsBuildListener @Autowired constructor(
                     WindowsJobStatus.ShutDownError,
                     buildHistory.id
                 )
+                endEventSend(event, buildHistory)
             } catch (e: Throwable) {
                 logger.error(
                     "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
@@ -245,6 +276,27 @@ class WindowsBuildListener @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun endEventSend(event: PipelineAgentShutdownEvent, record: TBuildHistoryRecord) {
+        pipelineEventDispatcher.dispatch(
+            // devcloud windows 结束
+            PipelineBuildStatusBroadCastEvent(
+                source = "devcloud-macos-end-${record.vmIp}", projectId = event.projectId,
+                pipelineId = event.pipelineId, userId = "",
+                buildId = event.buildId, taskId = null, actionType = ActionType.START,
+                containerHashId = event.containerHashId, jobId = event.jobId, stageId = null,
+                stepId = null, atomCode = null, executeCount = event.executeCount,
+                buildStatus = BuildStatus.SUCCEED.name,
+                type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                        "DEVCLOUD_WINDOWS",
+                    PipelineBuildStatusBroadCastEvent.Labels::windowsIp.name to
+                        record.vmIp
+                )
+            )
+        )
     }
 
     private fun generateEnvs(dispatchMessage: DispatchMessage): Map<String, Any> {

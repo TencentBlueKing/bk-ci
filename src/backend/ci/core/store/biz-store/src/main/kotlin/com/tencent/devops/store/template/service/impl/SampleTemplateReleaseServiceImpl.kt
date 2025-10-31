@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.service.SampleTemplateReleaseService
 import org.slf4j.LoggerFactory
@@ -64,6 +65,14 @@ class SampleTemplateReleaseServiceImpl : SampleTemplateReleaseService, TemplateR
 
     override fun validateTemplateVisibleDept(templateCode: String) {
         // 开源版没有权限概念，无需校验
+    }
+
+    override fun handleTemplateExtend(
+        userId: String,
+        templateCode: String,
+        marketTemplateRelRequest: MarketTemplateRelRequest
+    ) {
+        return
     }
 
     /**

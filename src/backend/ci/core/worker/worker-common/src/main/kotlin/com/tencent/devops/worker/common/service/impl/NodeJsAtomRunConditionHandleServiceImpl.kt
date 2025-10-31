@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,8 +43,8 @@ import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
@@ -175,8 +175,12 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             pkgFile.delete()
         }
         try {
-            // 把指定的nodejs安装包下载到构建机上
-            OkhttpUtils.downloadFile(pkgDownloadPath, pkgFile)
+            // 把指定的nodejs安装包下载到构建机上, 下载超时时间配置180秒
+            OkhttpUtils.downloadFile(
+                url = pkgDownloadPath,
+                destPath = pkgFile,
+                readTimeoutInSec = 180
+            )
             logger.info("prepareRunEnv download [$pkgName] success")
             if (osType == OSType.WINDOWS) {
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -171,7 +172,7 @@ class BuildStartControl @Autowired constructor(
         watcher.stop()
 
         watcher.start("buildModel")
-        buildModel(buildInfo = buildInfo)
+        buildModel(buildInfo = buildInfo, executeCount = executeCount)
         watcher.stop()
 
         buildLogPrinter.addDebugLine(
@@ -309,7 +310,7 @@ class BuildStartControl @Autowired constructor(
                 )
                 broadcastStartEvent(buildInfo, setting)
             } else {
-                broadcastQueueEvent()
+                broadcastQueueEvent(buildInfo)
             }
         } finally {
             pipelineBuildLock.unlock()
@@ -521,16 +522,20 @@ class BuildStartControl @Autowired constructor(
                 buildStatus = BuildStatus.RUNNING.name,
                 type = PipelineBuildStatusBroadCastEventType.BUILD_START,
                 labels = mapOf(
-                    "startTime" to LocalDateTime.now().timestampmilli().toString(),
-                    "trigger" to buildInfo.trigger,
-                    "triggerUser" to buildInfo.triggerUser,
-                    "pipelineName" to (pipelineSetting?.pipelineName ?: "")
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        LocalDateTime.now().timestamp(),
+                    PipelineBuildStatusBroadCastEvent.Labels::trigger.name to
+                        buildInfo.trigger,
+                    PipelineBuildStatusBroadCastEvent.Labels::triggerUser.name to
+                        buildInfo.triggerUser,
+                    PipelineBuildStatusBroadCastEvent.Labels::pipelineName.name to
+                        (pipelineSetting?.pipelineName ?: "")
                 )
             )
         )
     }
 
-    private fun PipelineBuildStartEvent.broadcastQueueEvent() {
+    private fun PipelineBuildStartEvent.broadcastQueueEvent(buildInfo: BuildInfo) {
         /*暂不重复发送排队的PipelineBuildStatusBroadCastEvent，仅首次的时候发送即可。*/
         if (this.source == BuildMonitorControl.START_EVENT_SOURCE) {
             return
@@ -546,7 +551,15 @@ class BuildStartControl @Autowired constructor(
                 actionType = ActionType.START,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.QUEUE.name,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_QUEUE
+                type = PipelineBuildStatusBroadCastEventType.BUILD_QUEUE,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        LocalDateTime.now().timestamp(),
+                    PipelineBuildStatusBroadCastEvent.Labels::trigger.name to
+                        buildInfo.trigger,
+                    PipelineBuildStatusBroadCastEvent.Labels::triggerUser.name to
+                        buildInfo.triggerUser
+                )
             )
         )
     }
@@ -572,8 +585,6 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
@@ -774,8 +785,15 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo) {
-        val model = buildDetailService.getBuildModel(projectId, buildId) ?: run {
+    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo, executeCount: Int) {
+        val model = pipelineRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = executeCount,
+            debug = buildInfo.debug
+        ) ?: run {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
                     source = TAG, projectId = projectId, pipelineId = pipelineId,

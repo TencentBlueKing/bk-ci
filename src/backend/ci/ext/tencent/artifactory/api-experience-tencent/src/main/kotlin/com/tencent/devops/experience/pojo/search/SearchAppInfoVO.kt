@@ -60,5 +60,7 @@ data class SearchAppInfoVO(
     @get:Schema(title = "下载次数", required = false)
     val downloadTime: Int? = null,
     @get:Schema(title = "分类", required = false)
-    val classify: String? = null
+    val classify: String? = null,
+    @get:Schema(title = "APP名称I18n", required = false)
+    val appNameI18n: String?
 )

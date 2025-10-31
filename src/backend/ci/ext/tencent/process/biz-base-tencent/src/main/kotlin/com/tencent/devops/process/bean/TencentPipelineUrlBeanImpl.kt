@@ -42,6 +42,7 @@ class TencentPipelineUrlBeanImpl constructor(
         private val logger = org.slf4j.LoggerFactory.getLogger(TencentPipelineUrlBeanImpl::class.java)
         private const val TTL = 24 * 3600 * 15
     }
+
     override fun genBuildDetailUrl(
         projectCode: String,
         pipelineId: String,
@@ -70,6 +71,37 @@ class TencentPipelineUrlBeanImpl constructor(
             "?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
         return try {
             client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+        } catch (ignore: Throwable) {
+            logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
+            url
+        }
+    }
+
+    override fun genBuildReviewUrl(
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        stageSeq: Int?,
+        taskId: String?,
+        needShortUrl: Boolean
+    ): String {
+        val baseUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
+            "/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+
+        logger.info("[$buildId]|genBuildReviewUrl| baseUrl=$baseUrl")
+        val queryParams = mutableListOf<String>()
+        stageSeq?.let { queryParams.add("reviewStageSeq=$it") }
+        taskId?.let { queryParams.add("reviewTaskId=$it") }
+
+        val url = if (queryParams.isNotEmpty()) {
+            "$baseUrl?${queryParams.joinToString("&")}"
+        } else {
+            baseUrl
+        }
+        return try {
+            if (needShortUrl) {
+                client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, TTL)).data!!
+            } else url
         } catch (ignore: Throwable) {
             logger.warn("[$buildId]|genBuildDetailUrl| failed with:", ignore)
             url

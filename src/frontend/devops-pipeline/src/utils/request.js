@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -88,6 +88,9 @@ request.interceptors.response.use(response => {
         return Promise.reject(errorMsg)
     } else if (httpStatus === 400) {
         const errorMsg = { httpStatus, message: message ?? (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) ?? 'service is abnormal' }
+        return Promise.reject(errorMsg)
+    } else if (httpStatus === 451) {
+        const errorMsg = { httpStatus, message: response.data.message }
         return Promise.reject(errorMsg)
     } else if (httpStatus > 400) {
         const err = {

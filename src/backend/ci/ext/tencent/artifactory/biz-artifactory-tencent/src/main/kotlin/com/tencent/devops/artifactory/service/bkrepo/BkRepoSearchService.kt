@@ -81,6 +81,7 @@ class BkRepoSearchService @Autowired constructor(
                 listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO, RepoUtils.IMAGE_REPO),
                 fileNameSet.toList(),
                 props.associate { it },
+                searchProps.qualityMetadata.map { Pair(it.key, it.value) },
                 page,
                 pageSize
             )
@@ -128,6 +129,7 @@ class BkRepoSearchService @Autowired constructor(
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
             fileNameSet.toList(),
             props.associate { it },
+            emptyList(),
             page,
             pageSize
         )
@@ -163,6 +165,7 @@ class BkRepoSearchService @Autowired constructor(
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
             fileNameSet.toList(),
             props.associate { it },
+            searchProps.qualityMetadata.map { Pair(it.key, it.value) },
             0,
             10000
         )
@@ -242,6 +245,7 @@ class BkRepoSearchService @Autowired constructor(
             repoNames,
             fileNameSet.toList(),
             props.associate { it },
+            emptyList(),
             0,
             10000
         )

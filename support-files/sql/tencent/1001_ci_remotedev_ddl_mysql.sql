@@ -673,6 +673,24 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     UNIQUE KEY `IDX_ZONE_ID_CGS_IP` (`ZONE_ID`,`CGS_IP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 
+CREATE TABLE IF NOT EXISTS T_WORKSPACE_NOTIFY_READ_STATUS
+(
+    ID          bigint auto_increment comment '主键ID'
+        primary key,
+    USER_ID     varchar(64)                          not null comment '用户ID',
+    NOTIFY_ID   bigint                               not null comment '通知ID，关联T_WORKSPACE_NOTIFY_HISTORY.ID',
+    IS_READ     tinyint(1) default 0                 not null comment '是否已读，0-未读，1-已读',
+    READ_TIME   datetime                             null comment '已读时间',
+    CREATE_TIME datetime   default CURRENT_TIMESTAMP not null comment '创建时间',
+    UPDATE_TIME datetime   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    constraint uk_user_notify
+        unique (USER_ID, NOTIFY_ID),
+    KEY `idx_is_read` (`IS_READ`),
+    KEY `idx_notify_id` (`NOTIFY_ID`),
+    KEY `idx_user_id` (`USER_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作空间通知已读状态表';
+
+
 -- ----------------------------
 -- Table structure for T_WINDOWS_VM_POOL
 -- ----------------------------

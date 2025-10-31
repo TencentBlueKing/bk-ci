@@ -147,7 +147,7 @@
                 background-color: $successColor;
             }
             .step-icon {
-                fill: $successColor;
+                fill: $successColor !important;
             }
         }
         &.FAILED  {
@@ -155,7 +155,7 @@
                 background-color: $dangerColor;
             }
             .step-icon {
-                fill: $dangerColor;
+                fill: $dangerColor !important;
             }
         }
         &.RUNNING {
@@ -163,7 +163,7 @@
                 background-color: $primaryColor;
             }
             .step-icon {
-                fill: $primaryColor;
+                fill: $primaryColor !important;
             }
         }
         &.SKIP {
@@ -171,7 +171,7 @@
                 background-color: $borderLightColor;
             }
             .step-icon {
-                fill: $borderLightColor;
+                fill: $borderLightColor !important;
             }
         }
         &.PAUSE  {
@@ -179,7 +179,7 @@
                 background-color: $iconPrimaryColor;
             }
             .step-icon {
-                fill: $iconPrimaryColor;
+                fill: $iconPrimaryColor !important;
             }
         }
 

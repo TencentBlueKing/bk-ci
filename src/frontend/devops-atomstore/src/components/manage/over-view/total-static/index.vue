@@ -49,12 +49,17 @@
 
         methods: {
             initData () {
-                this.isLoading = true
+                
                 const methodGenerator = {
                     atom: this.getAtomData,
                     service: this.getServiceData
                 }
 
+                if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+                this.isLoading = true
                 const currentMethod = methodGenerator[this.type]
                 currentMethod().catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })

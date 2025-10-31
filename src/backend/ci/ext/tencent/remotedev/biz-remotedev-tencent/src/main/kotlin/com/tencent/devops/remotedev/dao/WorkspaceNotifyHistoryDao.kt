@@ -14,7 +14,42 @@ class WorkspaceNotifyHistoryDao {
     fun add(
         dslContext: DSLContext,
         operator: String,
-        userIds: String,
+        userIds: Set<String>,
+        type: RemoteDevNotifyType,
+        status: RemoteDevNotifyType.Status,
+        bodyParams: String
+    ) {
+        val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz().also {
+            MDC.put(TraceTag.BIZID, it)
+        }
+        with(TWorkspaceNotifyHistory.T_WORKSPACE_NOTIFY_HISTORY) {
+            dslContext.insertInto(
+                this,
+                BIZ_ID,
+                OPERATOR,
+                USER_IDS,
+                TYPE,
+                STATUS,
+                BODY_PARAMS
+            ).also {
+                userIds.forEach { user ->
+                    it.values(
+                        bizId,
+                        operator,
+                        user,
+                        type.name,
+                        status.name,
+                        bodyParams
+                    )
+                }
+            }.execute()
+        }
+    }
+
+    fun add(
+        dslContext: DSLContext,
+        operator: String,
+        userId: String,
         type: RemoteDevNotifyType,
         status: RemoteDevNotifyType.Status,
         bodyParams: String
@@ -22,8 +57,8 @@ class WorkspaceNotifyHistoryDao {
         val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz().also {
             MDC.put(TraceTag.BIZID, it)
         }
-        with(TWorkspaceNotifyHistory.T_WORKSPACE_NOTIFY_HISTORY) {
-            return dslContext.insertInto(
+        return with(TWorkspaceNotifyHistory.T_WORKSPACE_NOTIFY_HISTORY) {
+            dslContext.insertInto(
                 this,
                 BIZ_ID,
                 OPERATOR,
@@ -34,7 +69,7 @@ class WorkspaceNotifyHistoryDao {
             ).values(
                 bizId,
                 operator,
-                userIds,
+                userId,
                 type.name,
                 status.name,
                 bodyParams

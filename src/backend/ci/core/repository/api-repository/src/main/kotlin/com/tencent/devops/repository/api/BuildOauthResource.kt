@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -114,5 +114,38 @@ interface BuildOauthResource {
         buildId: String,
         @QueryParam("userId")
         userId: String
+    ): Result<String>
+
+    @Operation(summary = "获取accessToken信息[SCM_REPO]")
+    @GET
+    @Path("scm/repo/{repoHashId}")
+    fun scmRepoOauthToken(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "代码库HashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
+    ): Result<GitToken?>
+
+    @Operation(summary = "获取授权链接[SCM_REPO]")
+    @GET
+    @Path("/{scmCode}/oauthUrl")
+    fun scmRepoOauthUrl(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @Parameter(description = "代码库标识", required = true)
+        @PathParam("scmCode")
+        scmCode: String
     ): Result<String>
 }

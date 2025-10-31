@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,20 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         userId: String,
         action: String
     ): Boolean {
+        // stream场景下不会使用到此场景. 做默认实现
+        return false
+    }
+
+    override fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        // stream场景下不会使用到此场景. 做默认实现
+        return false
+    }
+
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
         // stream场景下不会使用到此场景. 做默认实现
         return false
     }
@@ -150,7 +164,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
                 action = action,
                 projectCode = projectCode,
                 resourceType = resourceType
-        )) {
+            )) {
             return arrayListOf("*")
         }
         return emptyList()
@@ -181,6 +195,14 @@ abstract class StreamPermissionServiceImpl : PermissionService {
             val authPermission = action.substringAfterLast("_")
             AuthPermission.get(authPermission) to resources.map { it.resourceCode }
         }
+    }
+
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String,
+        resourceType: String?
+    ): List<String> {
+        return emptyList()
     }
 
     override fun getUserResourceAndParentByPermission(

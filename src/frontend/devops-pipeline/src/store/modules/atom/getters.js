@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -17,6 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { VAR_MAX_LENGTH } from '@/store/constants'
 import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
@@ -65,6 +66,10 @@ export default {
     },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
+    },
+    failIfVariableInvalid: state => {
+        console.log(state?.pipelineSetting?.failIfVariableInvalid)
+        return state?.pipelineSetting?.failIfVariableInvalid ?? false
     },
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
@@ -191,7 +196,6 @@ export default {
         try {
             let codeccCount = 0
             let manualTriggerCount = 0
-            let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
             if (pipelineSetting && !pipelineSetting.pipelineName) {
@@ -224,7 +228,26 @@ export default {
                 throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.jobLimit') + state.pipelineLimit.jobLimit))
             }
 
+            
+
             const allContainers = getters.getAllContainers(stages)
+            if (allContainers.length > 0 && pipelineSetting?.failIfVariableInvalid) {
+                const invalidList = allContainers[0].params.filter(param => typeof param.defaultValue === 'string' && param.defaultValue.length > VAR_MAX_LENGTH)
+                if (invalidList.length) {
+                    invalidList.forEach(item => {
+                        Vue.set(item, 'isInvalid', true)
+                    })
+                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.paramLengthLimitTips', [invalidList[0].id, invalidList[0].defaultValue.length, VAR_MAX_LENGTH]))
+                }
+                
+            } else if (allContainers.length > 0) {
+                allContainers[0].params.forEach(item => {
+                    if (item.isInvalid) {
+                        Vue.set(item, 'isInvalid', false)
+                    }
+                })
+            }
+
 
             // 当前所有插件element
             const elementsMap = allContainers.reduce(function (prev, cur) {
@@ -254,18 +277,15 @@ export default {
                 atomCode === 'linuxPaasCodeCCScript' && codeccCount++
                 atomCode === 'CodeccCheckAtom' && codeccCount++
                 atomCode === 'manualTrigger' && manualTriggerCount++
-                atomCode === 'timerTrigger' && timerTriggerCount++
                 atomCode === 'remoteTrigger' && remoteTriggerCount++
 
-                return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
+                return codeccCount > 1 || manualTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })
 
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
-            } else if (timerTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {
@@ -295,9 +315,16 @@ export default {
         return allElements
     },
     getAllContainers: state => stages => {
-        const allContainers = []
-        stages.map(stage => allContainers.splice(0, 0, ...stage.containers))
-        return allContainers
+        if (!Array.isArray(stages)) {
+            return []
+        }
+        return stages.reduce((acc, stage) => {
+            acc = [
+                ...acc,
+                ...stage.containers
+            ]
+            return acc
+        }, [])
     },
     getStage: state => (stages, stageIndex) => {
         const stage = Array.isArray(stages) ? stages[stageIndex] : null

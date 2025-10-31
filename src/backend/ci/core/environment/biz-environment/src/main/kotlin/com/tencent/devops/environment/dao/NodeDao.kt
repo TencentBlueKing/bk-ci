@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
+import com.tencent.devops.model.environment.tables.TNodeTags
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -84,11 +85,15 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
-            val query = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
+            val dsl = dslContext.select(*TNode.T_NODE.fields()).from(this)
+            if (!tagValueIds.isNullOrEmpty()) {
+                dsl.leftJoin(TNodeTags.T_NODE_TAGS).on(NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID))
+            }
+            val query = dsl.where(PROJECT_ID.eq(projectId))
             conditions(
                 keywords = keywords,
                 query = query,
@@ -104,10 +109,11 @@ class NodeDao {
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                tagValueIds = tagValueIds
             )
             query.limit(limit).offset(offset)
-                .fetch()
+                .fetchInto(this)
         }
     }
 
@@ -126,7 +132,8 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ) {
         if (!keywords.isNullOrEmpty()) {
             query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
@@ -167,6 +174,9 @@ class NodeDao {
         }
         if (latestBuildTimeEnd != null && latestBuildTimeEnd > 0) {
             query.and(LAST_BUILD_TIME.le(Timestamp(latestBuildTimeEnd).toLocalDateTime()))
+        }
+        if (!tagValueIds.isNullOrEmpty()) {
+            query.and(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID.`in`(tagValueIds))
         }
         when (sortType) {
             /*别名*/"displayName" -> query.orderBy(DISPLAY_NAME.transferOrder(collation))
@@ -211,12 +221,15 @@ class NodeDao {
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        tagValueIds: Set<Long>?
     ): Int {
         with(TNode.T_NODE) {
-            val query = dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(PROJECT_ID.eq(projectId))
+            val dsl = dslContext.selectCount().from(TNode.T_NODE)
+            if (!tagValueIds.isNullOrEmpty()) {
+                dsl.leftJoin(TNodeTags.T_NODE_TAGS).on(NODE_ID.eq(TNodeTags.T_NODE_TAGS.NODE_ID))
+            }
+            val query = dsl.where(PROJECT_ID.eq(projectId))
             conditions(
                 keywords = keywords,
                 query = query,
@@ -232,7 +245,9 @@ class NodeDao {
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                tagValueIds = tagValueIds
+
             )
             return query.fetchOne(0, Int::class.java)!!
         }
@@ -389,7 +404,7 @@ class NodeDao {
         userId: String,
         agentVersion: String?
     ): Long
-        /** Node ID **/
+            /** Node ID **/
     {
         var nodeId = 0L
         with(TNode.T_NODE) {
@@ -506,13 +521,29 @@ class NodeDao {
         }
     }
 
-    fun updateDisplayName(dslContext: DSLContext, nodeId: Long, nodeName: String, userId: String): Int {
+    fun batchUpdateNodeCreatedUser(dslContext: DSLContext, nodeIdList: List<Long>, userId: String) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(CREATED_USER, userId)
+                .where(NODE_ID.`in`(nodeIdList))
+                .execute()
+        }
+    }
+
+    fun updateDisplayName(
+        dslContext: DSLContext,
+        nodeId: Long,
+        nodeName: String,
+        userId: String,
+        projectId: String
+    ): Int {
         with(TNode.T_NODE) {
             return dslContext.update(this)
                 .set(DISPLAY_NAME, nodeName)
                 .set(LAST_MODIFY_USER, userId)
                 .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_ID.eq(nodeId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
@@ -648,6 +679,23 @@ class NodeDao {
                 .where(NODE_ID.eq(id))
                 .and(NODE_HASH_ID.isNull)
                 .execute()
+        }
+    }
+
+    fun fetchProjectNodeCount(dslContext: DSLContext, projectId: String): Map<NodeType, Int> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_TYPE, DSL.count().`as`("COUNT"))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .groupBy(NODE_TYPE)
+                .fetch().map { NodeType.get(it[NODE_TYPE] as String) to it["COUNT"] as Int }.toMap()
+        }
+    }
+
+    fun fetchNodeProject(dslContext: DSLContext): Set<String> {
+        with(TNode.T_NODE) {
+            return dslContext.select(PROJECT_ID).from(this).where(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
+                .groupBy(PROJECT_ID).fetch().map { it[PROJECT_ID] }.toSet()
         }
     }
 }

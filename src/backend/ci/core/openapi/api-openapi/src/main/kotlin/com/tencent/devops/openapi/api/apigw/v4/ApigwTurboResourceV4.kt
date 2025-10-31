@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
@@ -56,10 +57,11 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwTurboResourceV4 {
 
     @GET
-    @Operation(summary = "获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
+    @Operation(summary = "新版编译加速获取加速方案列表", tags = ["v4_app_turbo_new_plan_list", "v4_user_turbo_new_plan_list"])
     @Path("/projectId/{projectId}/turbo_plan_list")
     fun getTurboPlanByProjectIdAndCreatedDate(
         @Parameter(description = "项目ID(项目英文名)", required = true)
@@ -83,7 +85,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Page<TurboPlanStatRowVO>>
 
     @POST
-    @Operation(summary = "获取加速历史列表", tags = ["v4_app_turbo_history_list", "v4_user_turbo_history_list"])
+    @Operation(summary = "新版编译加速获取加速历史列表", tags = ["v4_app_turbo_new_record_list", "v4_user_turbo_new_record_list"])
     @Path("/projectId/{projectId}/history_list")
     fun getTurboRecordHistoryList(
         @Parameter(description = "页数", required = false)
@@ -109,7 +111,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Page<TurboRecordHistoryVO>>
 
     @GET
-    @Operation(summary = "获取加速方案详情", tags = ["v4_app_turbo_plan_detail", "v4_user_turbo_plan_detail"])
+    @Operation(summary = "新版编译加速获取方案详情", tags = ["v4_app_turbo_new_plan", "v4_user_turbo_new_plan"])
     @Path("/projectId/{projectId}/turbo_plan_detail")
     fun getTurboPlanDetailByPlanId(
         @Parameter(description = "方案id", required = true)

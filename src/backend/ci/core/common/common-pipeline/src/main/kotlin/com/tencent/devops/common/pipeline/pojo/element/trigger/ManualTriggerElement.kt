@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,7 +42,9 @@ data class ManualTriggerElement(
     @get:Schema(title = "是否可跳过插件", required = false)
     var canElementSkip: Boolean? = false,
     @get:Schema(title = "是否使用最近一次的参数进行构建", required = false)
-    var useLatestParameters: Boolean? = false
+    var useLatestParameters: Boolean? = false,
+    @get:Schema(title = "手动触发默认构建信息", required = false)
+    var buildMsg: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "manualTrigger"

@@ -1,11 +1,14 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ELEMENT_NAMESPACE_NOT_SUPPORT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
@@ -206,8 +209,10 @@ object PipelineTransferAspectLoader {
         return aspects
     }
 
+    // MODEL2YAML 时使用
     fun checkInvalidElement(
         invalidElement: MutableList<String>,
+        invalidNameSpaceElement: MutableList<String>,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
         aspects.add(
@@ -216,6 +221,29 @@ object PipelineTransferAspectLoader {
                     if (jp.yamlPreStep() == null) {
                         invalidElement.add("${jp.modelElement()?.getClassType()}(${jp.modelElement()?.name})")
                     }
+                }
+            }
+        )
+
+        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
+        aspects.add(
+            object : IPipelineTransferAspectElement {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.modelElement() != null &&
+                        jp.modelElement() is MarketBuildAtomElement
+                    ) {
+                        val element = jp.modelElement() as MarketBuildAtomElement
+                        val namespace = element.data["namespace"] as String? ?: return null
+                        if (namespace.isNotBlank()) {
+                            invalidNameSpaceElement.add(
+                                I18nUtil.getCodeLanMessage(
+                                    BK_ELEMENT_NAMESPACE_NOT_SUPPORT,
+                                    params = arrayOf("${element.name}[${element.stepId}]")
+                                )
+                            )
+                        }
+                    }
+                    return null
                 }
             }
         )

@@ -13,7 +13,9 @@ data class ClientUpgradeVersions(
     @get:Schema(title = "MACOS系统,START客户端升级的版本信息")
     val macosStartVersion: UpgradeVersionsData,
     @get:Schema(title = "WINDOWS系统,START客户端升级的版本信息")
-    val winStartVersion: UpgradeVersionsData
+    val winStartVersion: UpgradeVersionsData,
+    @get:Schema(title = "ANDR系统，客户端升级版本信息")
+    val andrClientVersion: UpgradeVersionsData
 )
 
 data class UpgradeVersionsData(

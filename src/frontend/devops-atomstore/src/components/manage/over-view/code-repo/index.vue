@@ -69,6 +69,11 @@
                     service: this.getServiceData
                 }
 
+                if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+
                 const currentMethod = methodGenerator[this.type]
                 currentMethod()
             },
@@ -87,8 +92,8 @@
                             tool: {
                                 show: true,
                                 copilot: true,
-                                label: this.$t('store.体验工蜂 Copilot'),
-                                click: () => this.goToLink('https://git.woa.com/help/menu/solutions/copilot.html')
+                                label: this.$t('store.CodeBuddy（内网版）'),
+                                click: () => this.goToLink('https://codebuddy.woa.com')
                             }
                         },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },
@@ -118,8 +123,8 @@
                             tool: {
                                 show: true,
                                 copilot: true,
-                                label: this.$t('store.体验工蜂 Copilot'),
-                                click: () => this.goToLink('https://git.woa.com/help/menu/solutions/copilot.html')
+                                label: this.$t('store.CodeBuddy（内网版）'),
+                                click: () => this.goToLink('https://codebuddy.woa.com')
                             }
                         },
                         { label: this.$t('store.代码库：'), value: this.detail.codeSrc, tool: { show: true, label: this.$t('store.复制'), click: () => copyString(this.detail.codeSrc) } },

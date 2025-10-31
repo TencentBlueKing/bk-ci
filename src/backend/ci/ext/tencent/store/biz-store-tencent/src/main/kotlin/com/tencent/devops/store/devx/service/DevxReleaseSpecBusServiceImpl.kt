@@ -76,6 +76,7 @@ import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.constant.StoreConstants.KEY_FRAMEWORK_CODE
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
@@ -105,13 +106,13 @@ import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_HTTP_URL
 import com.tencent.devops.store.pojo.devx.constants.KEY_REPOSITORY_ID
 import com.tencent.devops.store.pojo.devx.constants.KEY_SOURCE_TYPE
 import com.tencent.devops.store.pojo.devx.enums.SourceCodeEnum
+import java.io.File
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Primary
 @Service("DEVX_RELEASE_SPEC_BUS_SERVICE")
@@ -125,7 +126,8 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
     private val storeCommonService: StoreCommonService,
     private val storeArchiveService: StoreArchiveService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig,
-    private val client: Client
+    private val client: Client,
+    private val txStoreBelongDeptService: TxStoreBelongDeptService
 ) : StoreReleaseSpecBusService {
 
     companion object {
@@ -192,6 +194,18 @@ class DevxReleaseSpecBusServiceImpl @Autowired constructor(
         if (sourceType == SourceCodeEnum.OFFICIAL_HOSTING.name) {
             extBaseFeatureInfo[KEY_REPOSITORY_AUTHORIZER] = userId
         }
+    }
+
+    override fun doStoreCreatePostBus(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        txStoreBelongDeptService.initStoreBelongDept(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
     }
 
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {

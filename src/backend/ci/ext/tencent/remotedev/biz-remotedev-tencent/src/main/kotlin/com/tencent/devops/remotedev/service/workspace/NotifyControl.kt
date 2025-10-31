@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceNotifyHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -57,10 +58,12 @@ import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.StartWorkspaceService
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import java.nio.charset.StandardCharsets
@@ -87,7 +90,9 @@ class NotifyControl @Autowired constructor(
     private val workspaceSharedDao: WorkspaceSharedDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val permissionService: PermissionService,
-    private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao
+    private val workspaceNotifyHistoryDao: WorkspaceNotifyHistoryDao,
+    private val notificationCenterService: NotificationCenterService,
+    private val configCacheService: ConfigCacheService
 ) {
 
     companion object {
@@ -134,7 +139,8 @@ class NotifyControl @Autowired constructor(
 
     fun notifyWorkspaceInfo(
         userId: String,
-        notifyData: WorkspaceNotifyData
+        notifyData: WorkspaceNotifyData,
+        bodyParams: MutableMap<String, String>
     ) {
         val workspace = workspaceJoinDao.fetchWindowsWorkspaces(
             dslContext = dslContext,
@@ -149,7 +155,6 @@ class NotifyControl @Autowired constructor(
                 TWorkspace.T_WORKSPACE.CREATOR
             )
         )
-        val messageContent = "${notifyData.title}: ${notifyData.desc}"
 
         notifyDao.add(dslContext, userId, notifyData)
 
@@ -175,15 +180,15 @@ class NotifyControl @Autowired constructor(
             notifyData.notifyType?.contains(RemoteDevNotifyType.CLIENT_PUSH) == true
         ) {
             workspace.forEach { ws ->
+                bodyParams[UserNotifyInfo::operator.name] = userId
+                bodyParams["workspaceName"] = ws.workspaceName
+                bodyParams[UserNotifyInfo::title.name] = notifyData.title
+                bodyParams[UserNotifyInfo::body.name] = notifyData.desc ?: ""
+                bodyParams["projectId"] = ws.projectId
                 notify4User(
                     userIds = permissionService.getWorkspaceOwner(ws.workspaceName).toSet(),
                     notifyType = setOf(RemoteDevNotifyType.CLIENT_PUSH),
-                    bodyParams = mutableMapOf(
-                        "operator" to userId,
-                        "workspaceName" to ws.workspaceName,
-                        "clientMsg" to messageContent,
-                        "projectId" to ws.projectId
-                    )
+                    bodyParams = bodyParams
                 )
             }
         }
@@ -192,10 +197,12 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.DESKTOP_MARQUEE) == true
         ) {
+            bodyParams[UserNotifyInfo::operator.name] = userId
+            bodyParams["messageContent"] = "${notifyData.title}: ${notifyData.desc}"
             notify4User(
                 userIds = userList,
                 notifyType = mutableSetOf(RemoteDevNotifyType.DESKTOP_MARQUEE),
-                bodyParams = mutableMapOf("operator" to userId, "messageContent" to messageContent)
+                bodyParams = bodyParams
             )
         }
 
@@ -203,15 +210,14 @@ class NotifyControl @Autowired constructor(
         if (notifyData.notifyType == null ||
             notifyData.notifyType?.contains(RemoteDevNotifyType.EMAIL) == true
         ) {
+            bodyParams[UserNotifyInfo::operator.name] = userId
+            bodyParams[UserNotifyInfo::title.name] = notifyData.title
+            bodyParams[UserNotifyInfo::body.name] = (notifyData.desc ?: "")
+            bodyParams["notifyTemplateCode"] = "REMOTEDEV_NOTIFY"
             notify4User(
                 userIds = userList,
                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                bodyParams = mutableMapOf(
-                    "operator" to userId,
-                    "title" to notifyData.title,
-                    "body" to (notifyData.desc ?: ""),
-                    "notifyTemplateCode" to "REMOTEDEV_NOTIFY"
-                )
+                bodyParams = bodyParams
             )
         }
     }
@@ -348,7 +354,7 @@ class NotifyControl @Autowired constructor(
         logger.info("notify4User DESKTOP|$dataType|$userIds|$bodyParams")
         kotlin.runCatching {
             startWorkspaceService.sendMessage(
-                operator = checkNotNull(bodyParams["operator"]),
+                operator = checkNotNull(bodyParams[UserNotifyInfo::operator.name]),
                 userIdList = userIds,
                 dataType = dataType,
                 messageContent = Base64.getEncoder().encodeToString(
@@ -362,8 +368,8 @@ class NotifyControl @Autowired constructor(
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = userIds.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -371,8 +377,8 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = userIds.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = userIds,
                 type = dataType,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -399,8 +405,8 @@ class NotifyControl @Autowired constructor(
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -408,8 +414,8 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = receivers,
                 type = RemoteDevNotifyType.RTX,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -422,11 +428,13 @@ class NotifyControl @Autowired constructor(
         userIds: Set<String>
     ) {
         val notifyTemplateCode = bodyParams["notifyTemplateCode"]
-        val res = bodyParams["clientMsg"]?.ifBlank { null } ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
-        ?: kotlin.run {
-            logger.warn("notifyClient fail with null body|$notifyTemplateCode")
-            return
-        }
+        val res = bodyParams[UserNotifyInfo::body.name]?.ifBlank { null }
+            ?: getMsgFromTemplate(notifyTemplateCode, bodyParams)
+                ?.also { bodyParams[UserNotifyInfo::body.name] = it }
+            ?: kotlin.run {
+                logger.warn("notifyClient fail with null body|$notifyTemplateCode")
+                return
+            }
         logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
         val bodyJson = JsonUtil.toJson(bodyParams)
         userIds.forEach { user ->
@@ -443,11 +451,11 @@ class NotifyControl @Autowired constructor(
                 ownerType = null,
                 projectId = bodyParams["projectId"] ?: ""
             ) { result ->
-                if (result) {
+                val id = if (result) {
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
-                        operator = bodyParams["operator"] ?: "null",
-                        userIds = user,
+                        operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                        userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.SUCCESS,
                         bodyParams = bodyJson
@@ -455,13 +463,14 @@ class NotifyControl @Autowired constructor(
                 } else {
                     workspaceNotifyHistoryDao.add(
                         dslContext = dslContext,
-                        operator = bodyParams["operator"] ?: "null",
-                        userIds = user,
+                        operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                        userId = user,
                         type = RemoteDevNotifyType.CLIENT_PUSH,
                         status = RemoteDevNotifyType.Status.FAIL,
                         bodyParams = bodyJson
                     )
                 }
+                notificationCenterService.createNotification(user, id)
             }
         }
     }
@@ -480,7 +489,7 @@ class NotifyControl @Autowired constructor(
         }, { user ->
             user.accountEmail
         })
-        val receivers = userIds.map { taiInfos[it] ?: it }
+        val receivers = userIds.map { taiInfos[it] ?: it }.toMutableSet()
         val notifyTemplateCode = checkNotNull(bodyParams["notifyTemplateCode"])
         logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
         kotlin.runCatching {
@@ -488,15 +497,15 @@ class NotifyControl @Autowired constructor(
                 notifyTemplateCode = notifyTemplateCode,
                 bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
-                receivers = receivers.toMutableSet(),
+                receivers = receivers,
                 cc = cc,
                 markdownContent = false
             )
         }.onFailure {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.FAIL,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -504,8 +513,8 @@ class NotifyControl @Autowired constructor(
         }.onSuccess {
             workspaceNotifyHistoryDao.add(
                 dslContext = dslContext,
-                operator = bodyParams["operator"] ?: "null",
-                userIds = receivers.joinToString(),
+                operator = bodyParams[UserNotifyInfo::operator.name] ?: "null",
+                userIds = receivers,
                 type = RemoteDevNotifyType.EMAIL,
                 status = RemoteDevNotifyType.Status.SUCCESS,
                 bodyParams = JsonUtil.toJson(bodyParams)
@@ -546,6 +555,11 @@ class NotifyControl @Autowired constructor(
                 userIds.filter { !it.contains("@tai") }
             )
         bodyParams.putIfAbsent("receiversNameWithCN", receiversNameWithCN.joinToString())
+        val operator = bodyParams[UserNotifyInfo::operator.name]
+        if (!operator.isNullOrBlank()) {
+            val userNameCN = configCacheService.getUserName(operator)
+            bodyParams.putIfAbsent(UserNotifyInfo::operatorCN.name, userNameCN)
+        }
         return taiUserNames
     }
 

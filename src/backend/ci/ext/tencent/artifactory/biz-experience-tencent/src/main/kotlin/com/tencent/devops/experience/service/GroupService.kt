@@ -32,6 +32,7 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -414,6 +415,7 @@ class GroupService @Autowired constructor(
             }
 
             val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
+            val platform = PlatformEnum.ofName(experienceRecord.platform)
             when (userType) {
                 NEW_ADD_OUTER_USERS -> {
                     experienceService.sendMessageToOuterReceivers(
@@ -428,7 +430,10 @@ class GroupService @Autowired constructor(
                         Message(
                             name = experienceRecord.name,
                             version = experienceRecord.version,
-                            outerUrl = experienceService.getShortExternalUrl(experienceRecord.id)
+                            outerUrl = experienceService.getShortExternalUrl(
+                                experienceId = experienceRecord.id,
+                                isForPc = platform.isForPC()
+                            )
                         )
                     )
                 }

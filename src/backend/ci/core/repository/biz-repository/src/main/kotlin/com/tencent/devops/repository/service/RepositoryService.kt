@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -89,10 +89,13 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
+import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
+import com.tencent.devops.repository.utils.RepositoryUtils
+import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
@@ -100,8 +103,7 @@ import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.LocalDateTime
-import java.util.Base64
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -109,6 +111,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Base64
 
 @Service
 @Suppress("ALL")
@@ -124,7 +128,8 @@ class RepositoryService @Autowired constructor(
     private val githubService: IGithubService,
     private val client: Client,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val repositoryScmConfigDao: RepositoryScmConfigDao
+    private val repositoryScmConfigDao: RepositoryScmConfigDao,
+    private val oauth2TokenStoreManager: Oauth2TokenStoreManager
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -508,8 +513,6 @@ class RepositoryService @Autowired constructor(
         content = ActionAuditContent.REPERTORY_CREATE_CONTENT
     )
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
-        // 指定oauth的用户名字只能是登录用户。
-        repository.userName = userId
         validatePermission(
             userId,
             projectId,
@@ -548,6 +551,14 @@ class RepositoryService @Autowired constructor(
                 params = arrayOf(repository.aliasName)
             )
         }
+        // OAUTH 关联是需校验操作人是否有权限使用OAUTH账号
+        val (isOauth, oauthUserId) = RepositoryUtils.getOauthUser(repository)
+        if (isOauth) {
+            val operator = oauth2TokenStoreManager.get(userId = oauthUserId, scmCode = repository.scmCode)?.operator
+            if (userId != operator) {
+                logger.warn("user [$userId] does not have permission to use the OAUTH account [$oauthUserId]")
+            }
+        }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
@@ -557,6 +568,9 @@ class RepositoryService @Autowired constructor(
             .setInstance(repository)
         createResource(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
         enablePac(userId = userId, projectId = projectId, repositoryId = repositoryId, repository = repository)
+        // 新接入的代码源需额外手动设置webhook触发白名单，后续完全灰度完成后，移除此部分逻辑
+        // 参考: com.tencent.devops.process.trigger.scm.PipelineWebHookEventListener.onEvent
+        enableWebhookTrigger(repository)
         return repositoryId
     }
 
@@ -846,7 +860,8 @@ class RepositoryService @Autowired constructor(
         offset: Int,
         limit: Int,
         aliasName: String? = null,
-        enablePac: Boolean? = null
+        enablePac: Boolean? = null,
+        scmCode: String? = null
     ): SQLPage<RepositoryInfo> {
         val hasPermissionList = repositoryPermissionService.filterRepository(userId, projectId, authPermission)
         val repositoryTypes = repositoryType?.split(",")?.map { ScmType.valueOf(it) }
@@ -857,7 +872,8 @@ class RepositoryService @Autowired constructor(
             repositoryTypes = repositoryTypes,
             aliasName = aliasName,
             repositoryIds = hasPermissionList.toSet(),
-            enablePac = enablePac
+            enablePac = enablePac,
+            scmCode = scmCode
         )
         val repositoryRecordList =
             repositoryDao.listByProject(
@@ -868,7 +884,8 @@ class RepositoryService @Autowired constructor(
                 repositoryIds = hasPermissionList.toSet(),
                 enablePac = enablePac,
                 offset = offset,
-                limit = limit
+                limit = limit,
+                scmCode = scmCode
             )
         val repositoryList = repositoryRecordList.map {
             RepositoryInfo(
@@ -1250,10 +1267,10 @@ class RepositoryService @Autowired constructor(
                 scmType = repository.getScmType()
             )
             // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
-            client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+            addGrayRepoWhite(
                 scmCode = repository.scmCode,
                 pac = true,
-                serverRepoNames = listOf(repository.projectName)
+                projectNames = listOf(repository.projectName)
             )
         } catch (exception: Exception) {
             logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
@@ -1646,6 +1663,54 @@ class RepositoryService @Autowired constructor(
 
             else -> 0L
         }
+    }
+
+    fun enableWebhookTrigger(repository: Repository) {
+        val scmCode = repository.scmCode
+        val scmConfig = repositoryScmConfigDao.get(dslContext, scmCode) ?: return
+        // 仅有新接入的仓库需要手动加入白名单
+        val needAddWhitelist = !ScmType.values().any { it.name == scmCode } && listOf(
+            ScmProviderCodes.TSVN.name,
+            ScmProviderCodes.GITEE.name
+        ).contains(scmConfig.providerCode)
+        if (needAddWhitelist) {
+            addGrayRepoWhite(
+                scmCode = scmConfig.scmCode,
+                projectNames = listOf(getRelProjectName(repository.getScmType(), repository.getFormatURL())),
+                pac = false
+            )
+        }
+    }
+
+    /**
+     * 获取仓库名
+     */
+    fun getRelProjectName(scmType: ScmType, url: String) = when (scmType) {
+        ScmType.CODE_GIT, ScmType.CODE_TGIT, ScmType.CODE_GITLAB, ScmType.GITHUB, ScmType.SCM_GIT -> {
+            GitUtils.getProjectName(url)
+        }
+
+        ScmType.CODE_SVN, ScmType.SCM_SVN -> {
+            SvnUtils.getSvnProjectName(url)
+        }
+
+        else -> url
+    }
+
+    /**
+     * 添加灰度仓库，webhook触发时执行新的触发解析逻辑
+     * 参考:  com.tencent.devops.process.webhook.WebhookRequestService.handleRequest
+     */
+    fun addGrayRepoWhite(scmCode: String, projectNames: List<String>, pac: Boolean) {
+        // TODO 后续需要删除 开启PAC时，将代码库加入灰度库白名单
+        client.get(ServiceScmWebhookResource::class).addGrayRepoWhite(
+            scmCode = scmCode,
+            pac = pac,
+            serverRepoNames = projectNames
+        )
+        logger.info(
+            "successfully added gray repo to whitelist|$scmCode|${projectNames.joinToString(",")}|$pac"
+        )
     }
 
     companion object {

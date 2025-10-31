@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,12 +29,17 @@ package com.tencent.devops.process.service.app
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.service.PipelineArtifactQualityService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,7 +50,9 @@ class AppBuildService @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineGroupService: PipelineGroupService,
-    private val client: Client
+    private val client: Client,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AppBuildService::class.java)
@@ -57,7 +64,7 @@ class AppBuildService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
     ): AppModelDetail {
         // 查web端数据
         var beginTime = System.currentTimeMillis()
@@ -68,7 +75,7 @@ class AppBuildService @Autowired constructor(
                 pipelineId,
                 buildId,
                 channelCode,
-                checkPermission
+                checkPermission,
             )
         val buildStatusWithVars =
             pipelineBuildFacadeService.getBuildStatusWithVars(
@@ -77,7 +84,7 @@ class AppBuildService @Autowired constructor(
                 pipelineId,
                 buildId,
                 channelCode,
-                checkPermission
+                checkPermission,
             )
         logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
@@ -88,7 +95,7 @@ class AppBuildService @Autowired constructor(
             projectId = projectId,
             page = null,
             pageSize = null,
-            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
+            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
         ).data
         val packageVersion = StringBuilder()
         files?.records?.filterNot { it.appVersion.isNullOrBlank() }?.forEach {
@@ -106,9 +113,17 @@ class AppBuildService @Autowired constructor(
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
         logger.info("Query the collection pipeline ${System.currentTimeMillis() - beginTime} ms")
 
+        val buildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = projectId,
+            buildId = buildId,
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId),
+        )
         return AppModelDetail(
             buildId = modelDetail.id,
-            userId = modelDetail.userId,
+            userId = modelDetail.triggerUser ?: modelDetail.userId,
             trigger = modelDetail.trigger,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime,
@@ -127,7 +142,12 @@ class AppBuildService @Autowired constructor(
             material = buildStatusWithVars.material,
             remark = buildStatusWithVars.remark,
             executeTime = buildStatusWithVars.executeTime,
-            buildMsg = buildStatusWithVars.buildMsg
+            buildMsg = buildStatusWithVars.buildMsg,
+            artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
+                userId = userId,
+                projectId = projectId,
+                artifactQualityList = buildInfo.artifactQualityList,
+            ),
         )
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,11 +32,12 @@ import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.pojo.common.STORE_HONOR_ID
-import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.honor.StoreHonorRel
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record10
+import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
@@ -75,7 +76,7 @@ class StoreHonorDao {
         honorIds: List<String>
     ): List<String> {
         with(TStoreHonorRel.T_STORE_HONOR_REL) {
-            return dslContext.select(HONOR_ID)
+            return dslContext.selectDistinct(HONOR_ID)
                 .from(this)
                 .where(HONOR_ID.`in`(honorIds))
                 .fetchInto(String::class.java)
@@ -226,5 +227,18 @@ class StoreHonorDao {
                 .and(HONOR_ID.eq(honorId))
                 .execute()
         }
+    }
+
+    fun getHonorStoreInfos(
+        dslContext: DSLContext,
+        honorTitle: String
+    ): Result<Record3<String, String, Byte>> {
+        val info = TStoreHonorInfo.T_STORE_HONOR_INFO
+        val rel = TStoreHonorRel.T_STORE_HONOR_REL
+        return dslContext.select(rel.HONOR_ID, rel.STORE_CODE, rel.STORE_TYPE)
+            .from(info)
+            .join(rel).on(info.ID.eq(rel.HONOR_ID))
+            .where(info.HONOR_TITLE.eq(honorTitle))
+            .fetch()
     }
 }

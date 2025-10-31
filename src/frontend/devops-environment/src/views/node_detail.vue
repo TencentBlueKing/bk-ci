@@ -90,11 +90,12 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import { bus } from '@/utils/bus'
-    import { copyText } from '@/utils/util'
     import nodeDetailTab from '@/components/devops/node-detail-tab'
     import nodeOverviewChart from '@/components/devops/node-overview-chart'
+    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
+    import { bus } from '@/utils/bus'
+    import { copyText } from '@/utils/util'
+    import { mapState } from 'vuex'
 
     export default {
         components: {
@@ -103,6 +104,8 @@
         },
         data () {
             return {
+                ENV_ACTIVE_NODE_TYPE,
+                ALLNODE,
                 showContent: false,
                 editable: false,
                 basePrototypeList: [
@@ -154,7 +157,11 @@
         },
         methods: {
             toNodeList () {
-                this.$router.push({ name: 'nodeList' })
+                const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
+                this.$router.push({
+                    name: 'nodeList',
+                    params: { nodeType }
+                })
             },
             async requestNodeDetail () {
                 this.loading.isLoading = true
@@ -244,7 +251,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import './../scss/conf';
     .node-detail-wrapper {
         height: 100%;
@@ -321,6 +328,11 @@
                 position: relative;
                 top: 2px;
             }
+        }
+        .sub-view-port {
+            height: calc(100vh - 158px);
+            overflow: auto;
+            padding: 20px;
         }
     }
 </style>

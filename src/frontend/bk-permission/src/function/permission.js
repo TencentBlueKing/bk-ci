@@ -271,7 +271,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       columns
         .filter(column => data[column.prop])
         .map(column => h(
-          ui.TableColumn,
+          ui.Table.Column,
           {
             showOverflowTooltip: true,
             label: column.label,
@@ -403,14 +403,15 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
   const showDialog = (data) => {
     infoBoxRef = ui.InfoBox({
       title: '',
+      footerAlign: 'right',
       subTitle: h(
         'section',
         [
           renderException(),
           renderTable(data),
-          renderFooter(data),
         ],
       ),
+      footer: ()=> renderFooter(data),
       extCls: 'permission-dialog-v3',
       width: 640,
       dialogType: 'show',

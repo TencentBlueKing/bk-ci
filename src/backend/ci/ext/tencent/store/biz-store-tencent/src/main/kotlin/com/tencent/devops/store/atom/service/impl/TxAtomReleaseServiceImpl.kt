@@ -91,6 +91,7 @@ import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.service.StorePipelineService
+import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.common.service.TxStoreCodeccService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -162,6 +163,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     @Autowired
     lateinit var storePipelineService: StorePipelineService
+
+    @Autowired
+    private lateinit var txStoreBelongDeptService: TxStoreBelongDeptService
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -256,6 +260,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
+    }
+
+    override fun handleAtomExtend(marketAtomCreateRequest: MarketAtomCreateRequest, userId: String, atomCode: String) {
+        txStoreBelongDeptService.initStoreBelongDept(
+            userId = userId,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM
+        )
     }
 
     override fun getFileStr(

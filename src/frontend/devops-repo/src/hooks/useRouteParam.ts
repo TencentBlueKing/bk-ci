@@ -2,7 +2,7 @@
 * Tencent is pleased to support the open source community by making
 * 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
 *
-* Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2021 Tencent.  All rights reserved.
 *
 * 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) is licensed under the MIT License.
 *
@@ -38,7 +38,7 @@ export default function useRouteParams() {
     packageName: route.query.packageName as string,
     property: route.query.property as string,
     direction: route.query.direction as string,
-    packageDisplayName: (route.query.package as string ?? '').replace(/^.*:\/\/(?:.*:)*([^:]+)$/, '$1') || '<PACKAGE_NAME>',
+    packageDisplayName: (route.query.package as string ?? '').split(':').pop() || '<PACKAGE_NAME>',
     userName: store.state.currentUser?.username ?? '<USERNAME>',
     repoUrl: `${location.origin}/${route.params.repoType}/${route.params.projectId}/${route.query.repoName}`,
     versionLabel: route.query.version || '<PACKAGE_VERSION>',

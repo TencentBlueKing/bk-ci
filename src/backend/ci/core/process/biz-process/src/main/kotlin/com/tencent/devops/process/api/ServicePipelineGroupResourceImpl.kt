@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
+import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -67,5 +68,17 @@ class ServicePipelineGroupResourceImpl @Autowired constructor(private val pipeli
 
     override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
         return Result(pipelineGroupService.updateLabel(userId, projectId, pipelineLabel))
+    }
+
+    override fun getLabel(
+        projectId: String,
+        labelId: String
+    ): Result<PipelineLabel?> {
+        return Result(
+            pipelineGroupService.getLabel(
+                projectId = projectId,
+                labelId = labelId
+            )
+        )
     }
 }

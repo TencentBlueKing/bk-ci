@@ -20,6 +20,8 @@ object TencentActionId {
     const val CGS_SHARE = "cgs_share"
     const val CGS_EDIT = "cgs_edit"
     const val CGS_TOKEN_GENERATE = "cgs_token_generate"
+    const val CGS_MOA_2FA = "cgs_moa_2fa"
+    const val CGS_SYNC_VM = "cgs_sync-vm"
     // 代理仓库
     const val TGIT_LINK_CREATE = "tgit_link_create"
     const val TGIT_LINK_LIST = "tgit_link_list"

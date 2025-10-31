@@ -264,6 +264,9 @@ spring:
       - index: 67
         name: T_PIPELINE_SUB_REF
         databaseShardingStrategy: SHARDING
+      - index: 68
+        name: T_PIPELINE_BUILD_CHECK_RUN
+        broadcastFlag: true
 
 endpoints:
   metrics:
@@ -370,9 +373,10 @@ bkci:
   security:
     public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
     private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
-    enable: false
+    enable: "__BK_CI_JWT_ENABLE__"
   defaultLocale: __BK_CI_DEFAULT_LOCALE__
   supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
+  rabbitQuorumEnable: __BK_CI_RABBIT_QUORUM_ENABLE__
 
 process:
   clearBaseBuildData: true  # 是否开启清理【被彻底删除的流水线】的基础构建流水数据（建议开启）5672
@@ -431,3 +435,11 @@ sm4:
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__
+
+scm:
+  webhook:
+    url:
+      # 外部hookUrl
+      outerUrl: /outUrl
+      # 内部hookUrl
+      innerUrl: /inUrl

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -44,11 +45,12 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -76,13 +78,13 @@ class TaskBuildRecordService(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResourceVersionDao: PipelineResourceVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -96,16 +98,13 @@ class TaskBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResourceVersionDao = pipelineResourceVersionDao
 ) {
 
     fun updateTaskStatus(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        stageId: String,
-        containerId: String,
         taskId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
@@ -350,8 +349,6 @@ class TaskBuildRecordService(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
             taskId = taskId,
             executeCount = executeCount,
             buildStatus = BuildStatus.QUEUE,
@@ -363,20 +360,33 @@ class TaskBuildRecordService(
         )
     }
 
-    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): Pair<List<PipelineTaskStatusInfo>, BuildRecordTask?> {
 
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
         val buildId = taskBuildEndParam.buildId
         val taskId = taskBuildEndParam.taskId
+        val executeCount = taskBuildEndParam.executeCount
+        val recordTask = recordTaskDao.getRecord(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = executeCount
+        ) ?: run {
+            logger.warn(
+                "ENGINE|$buildId|taskEnd| get task($taskId) record failed."
+            )
+            return Pair(emptyList(), null)
+        }
         // #7983 将RETRY中间态过滤，不体现在详情页面
         val buildStatus = taskBuildEndParam.buildStatus.let {
             if (it == BuildStatus.RETRY) null else it
         }
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
-        val executeCount = taskBuildEndParam.executeCount
-
+        var recordTaskReturn: BuildRecordTask? = null
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
@@ -385,19 +395,7 @@ class TaskBuildRecordService(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val now = LocalDateTime.now()
-                val recordTask = recordTaskDao.getRecord(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    executeCount = executeCount
-                ) ?: run {
-                    logger.warn(
-                        "ENGINE|$buildId|taskEnd| get task($taskId) record failed."
-                    )
-                    return@transaction
-                }
+                recordTaskReturn = recordTask
                 // 插件存在自动重试，永远更新一次当前时间为结束时间
                 recordTask.endTime = now
                 val taskVar = mutableMapOf<String, Any>()
@@ -439,6 +437,7 @@ class TaskBuildRecordService(
                     taskVar[Element::retryCountAuto.name] =
                         (recordTask.taskVar[Element::retryCountAuto.name] as Int?)?.plus(1) ?: 1
                 }
+                recordTask.taskVar.putAll(taskVar)
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -446,7 +445,7 @@ class TaskBuildRecordService(
                     buildId = buildId,
                     taskId = taskId,
                     executeCount = executeCount,
-                    taskVar = recordTask.taskVar.plus(taskVar),
+                    taskVar = recordTask.taskVar,
                     buildStatus = buildStatus,
                     startTime = null,
                     endTime = now,
@@ -454,8 +453,158 @@ class TaskBuildRecordService(
                 )
             }
         }
+        taskBuildDetailService.taskEnd(taskBuildEndParam)
+        if (buildStatus?.isCancel() != true && buildStatus?.isSkip() != true) {
+            // 如果状态不是取消状态或者跳过状态，无需处理后续更新task状态的逻辑
+            return Pair(emptyList(), recordTaskReturn)
+        }
+        val pipelineTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = taskBuildEndParam.containerId,
+            executeCount = executeCount
+        )
+        buildRecordContainer?.let {
+            val buildTask = pipelineBuildTaskDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                stepId = null,
+                executeCount = executeCount
+            ) ?: return@let
+            val runCondition = buildTask.additionalOptions?.runCondition
+            val containPostTaskFlag = buildRecordContainer.containPostTaskFlag
+            val containerId = buildRecordContainer.containerId
+            // 判断取消的task任务对应的container是否包含post任务
+            val cancelTaskPostFlag = buildStatus == BuildStatus.CANCELED && containPostTaskFlag == true
+            val currentTaskSeq = recordTask.taskSeq
+            if (cancelTaskPostFlag) {
+                val postTaskFlag = recordTask.elementPostInfo != null
+                // 判断当前取消的任务是否是post任务
+                if (!postTaskFlag && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                    // 查询post任务列表
+                    val recordPostTasks = recordTaskDao.getRecords(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        executeCount = executeCount,
+                        containerId = containerId,
+                        queryPostTaskFlag = true
+                    )
+                    val startTaskSeq = currentTaskSeq + 1
+                    var endTaskSeq = startTaskSeq
+                    recordPostTasks.forEach { recordPostTask ->
+                        // 计算post父任务序号
+                        val parentElementJobIndex =
+                            recordPostTask.elementPostInfo?.parentElementJobIndex ?: return@forEach
+                        val parentTaskSeq = parentElementJobIndex + 2
+                        // 判断父任务的序号是否在取消任务之后
+                        if (parentTaskSeq <= currentTaskSeq) {
+                            endTaskSeq = recordPostTask.taskSeq - 1
+                        }
+                    }
+                    addCancelTaskStatusInfo(
+                        taskBuildEndParam = taskBuildEndParam,
+                        startTaskSeq = startTaskSeq,
+                        endTaskSeq = endTaskSeq,
+                        pipelineTaskStatusInfos = pipelineTaskStatusInfos
+                    )
+                }
+            } else if (buildStatus.isCancel() && runCondition != RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
+                val startTaskSeq = currentTaskSeq + 1
+                val endTaskSeq = VMUtils.genVMTaskSeq(containerId.toInt(), 0) - 1
+                addCancelTaskStatusInfo(
+                    taskBuildEndParam = taskBuildEndParam,
+                    startTaskSeq = startTaskSeq,
+                    endTaskSeq = endTaskSeq,
+                    pipelineTaskStatusInfos = pipelineTaskStatusInfos
+                )
+            } else if (buildStatus.isSkip()) {
+                pipelineTaskStatusInfos.add(
+                    PipelineTaskStatusInfo(
+                        taskId = taskId,
+                        containerHashId = containerId,
+                        buildStatus = buildStatus,
+                        executeCount = executeCount,
+                        message = taskBuildEndParam.errorMsg,
+                        stepId = buildTask.stepId
+                    )
+                )
+                updateTaskStatus(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    buildStatus = buildStatus,
+                    operation = "taskSkip#$taskId"
+                )
+            }
+        }
+        return Pair(pipelineTaskStatusInfos, recordTaskReturn)
+    }
 
-        return taskBuildDetailService.taskEnd(taskBuildEndParam)
+    private fun addCancelTaskStatusInfo(
+        taskBuildEndParam: TaskBuildEndParam,
+        startTaskSeq: Int,
+        endTaskSeq: Int,
+        pipelineTaskStatusInfos: MutableList<PipelineTaskStatusInfo>
+    ) {
+        if (endTaskSeq < startTaskSeq) return
+
+        val projectId = taskBuildEndParam.projectId
+        val containerId = taskBuildEndParam.containerId
+        val buildId = taskBuildEndParam.buildId
+        val executeCount = taskBuildEndParam.executeCount
+        val pipelineId = taskBuildEndParam.pipelineId
+
+        // 获取范围内的任务
+        val buildTasks = pipelineBuildTaskDao.getTasksInCondition(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            statusSet = null,
+            startTaskSeq = startTaskSeq,
+            endTaskSeq = endTaskSeq
+        )
+
+        // 筛选需要取消的任务
+        val tasksToCancel = buildTasks.filter { task ->
+            !task.status.isFinish() && task.additionalOptions?.elementPostInfo == null
+        }
+
+        if (tasksToCancel.isEmpty()) return
+
+        // 准备任务状态信息和ID集合
+        val (unExecTaskIds, statusInfos) = tasksToCancel.map { task ->
+            task.taskId to PipelineTaskStatusInfo(
+                taskId = task.taskId,
+                containerHashId = containerId,
+                buildStatus = BuildStatus.UNEXEC,
+                executeCount = executeCount,
+                message = "Do not meet the run conditions, ignored.",
+                stepId = task.stepId
+            )
+        }.unzip()
+
+        // 添加状态信息到结果列表
+        pipelineTaskStatusInfos.addAll(statusInfos)
+
+        // 更新数据库记录
+        recordTaskDao.updateRecordStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.UNEXEC,
+            taskIds = unExecTaskIds.toSet()
+        )
     }
 
     fun updateTaskRecord(

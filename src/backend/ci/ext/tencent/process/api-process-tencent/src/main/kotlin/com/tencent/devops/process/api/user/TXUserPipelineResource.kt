@@ -39,6 +39,7 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 
@@ -74,7 +75,10 @@ interface TXUserPipelineResource {
         projectId: String,
         @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 
     @Operation(summary = "导出流水线yaml,gitci")
@@ -90,6 +94,9 @@ interface TXUserPipelineResource {
         projectId: String,
         @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "归档库标识", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Response
 }

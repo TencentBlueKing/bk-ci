@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,11 +27,14 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryConfigResource
+import com.tencent.devops.repository.pojo.RepositoryConfigVisibility
 import com.tencent.devops.repository.pojo.RepositoryConfigLogoInfo
 import com.tencent.devops.repository.pojo.RepositoryScmConfigReq
 import com.tencent.devops.repository.pojo.RepositoryScmConfigVo
@@ -48,9 +51,9 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
     private val repositoryScmConfigService: RepositoryScmConfigService
 ) : UserRepositoryConfigResource {
 
-    override fun list(userId: String): Result<List<ScmConfigBaseInfo>> {
+    override fun list(userId: String, scmType: ScmType?): Result<List<ScmConfigBaseInfo>> {
         return Result(
-            repositoryScmConfigService.listConfigBaseInfo(userId)
+            repositoryScmConfigService.listConfigBaseInfo(userId, scmType)
         )
     }
 
@@ -134,5 +137,73 @@ class UserRepositoryConfigResourceImpl @Autowired constructor(
                 disposition = disposition
             )
         )
+    }
+
+    override fun supportEvents(userId: String, scmCode: String): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEvents(
+                userId = userId,
+                scmCode = scmCode
+            )
+        )
+    }
+
+    override fun supportEventActions(userId: String, scmCode: String, eventType: String): Result<List<IdValue>> {
+        return Result(
+            repositoryScmConfigService.supportEventActions(
+                userId = userId,
+                scmCode = scmCode,
+                eventType = eventType
+            )
+        )
+    }
+
+    override fun supportDept(
+        userId: String,
+        scmCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepositoryConfigVisibility>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            repositoryScmConfigService.listDept(
+                userId = userId,
+                scmCode = scmCode,
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
+            )
+        )
+    }
+
+    override fun addDept(
+        userId: String,
+        scmCode: String,
+        deptList: List<RepositoryConfigVisibility>?
+    ): Result<Boolean> {
+        deptList?.let {
+            repositoryScmConfigService.addDept(
+                userId = userId,
+                scmCode = scmCode,
+                deptList = it
+            )
+        }
+        return Result(true)
+    }
+
+    override fun deleteDept(
+        userId: String,
+        scmCode: String,
+        deptList: List<Int>?
+    ): Result<Boolean> {
+        deptList?.let {
+            repositoryScmConfigService.deleteDept(
+                userId = userId,
+                scmCode = scmCode,
+                deptList = it
+            )
+        }
+        return Result(true)
     }
 }

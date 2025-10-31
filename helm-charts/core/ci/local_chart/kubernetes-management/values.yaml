@@ -173,7 +173,7 @@ kubernetesManager:
     image: 
       registry: "docker.io"
       repository: docker
-      tag: 24.0.1-dind
+      tag: 28.3.1-dind
     resources:
       requests:
         cpu: 50m

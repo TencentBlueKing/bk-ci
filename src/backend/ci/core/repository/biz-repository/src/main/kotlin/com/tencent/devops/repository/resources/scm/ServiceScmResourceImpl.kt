@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,9 +40,11 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -348,6 +350,44 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 )
             )
         }
+    }
+
+    override fun getTagInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): Result<GitTagInfo?> {
+        return Result(
+            scmService.getTag(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                tagName = tagName
+            )
+        )
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return Result(
+            scmService.getTapdWorkItems(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                refType = refType,
+                iid = iid
+            )
+        )
     }
 
     companion object {

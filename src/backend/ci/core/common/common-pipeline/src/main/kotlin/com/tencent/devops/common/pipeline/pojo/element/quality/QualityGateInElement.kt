@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,8 @@ data class QualityGateInElement(
     override var status: String? = null,
     @get:Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
+    @get:Schema(title = "拦截原子id", required = false)
+    var interceptTaskId: String? = null,
     @get:Schema(title = "拦截原子名称", required = false)
     var interceptTaskName: String? = null,
     @get:Schema(title = "审核人", required = false)
@@ -64,6 +66,9 @@ data class QualityGateInElement(
         taskVar[KEY_ELEMENT_ENABLE] = elementEnabled()
         interceptTask?.let {
             taskVar[QualityGateInElement::interceptTask.name] = it
+        }
+        interceptTaskId?.let {
+            taskVar[QualityGateInElement::interceptTaskId.name] = it
         }
         interceptTaskName?.let {
             taskVar[QualityGateInElement::interceptTaskName.name] = it

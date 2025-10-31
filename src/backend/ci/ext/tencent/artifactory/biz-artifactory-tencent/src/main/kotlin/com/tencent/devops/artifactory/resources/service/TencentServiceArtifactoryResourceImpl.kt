@@ -51,10 +51,10 @@ import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
-import java.time.LocalDateTime
 import kotlin.math.ceil
 
 @Primary
@@ -149,27 +149,6 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
     ): Result<Url> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path))
-    }
-
-    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
-    override fun downloadUrl(
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        userId: String,
-        path: String,
-        ttl: Int,
-        directed: Boolean?
-    ): Result<Url> {
-        checkParam(projectId)
-        return Result(
-            bkRepoDownloadService.innerDownloadUrlByToken(
-                userId = userId,
-                projectId = projectId,
-                artifactoryType = artifactoryType,
-                argPath = path,
-                ttl = ttl
-            )
-        )
     }
 
     override fun show(
@@ -300,13 +279,11 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
     ): Result<String> {
         val content = archiveFileService.getFileContent(
-            userId = userId,
             projectId = projectId,
             repoName = repoName,
             filePath = filePath
@@ -315,13 +292,11 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
     ): Result<List<String>> {
         val fileNames = archiveFileService.listFileNamesByPath(
-            userId = userId,
             projectId = projectId,
             repoName = repoName,
             filePath = filePath

@@ -58,8 +58,11 @@ import com.tencent.devops.remotedev.pojo.op.OpDiskOperator
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorData
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDataResp
 import com.tencent.devops.remotedev.pojo.op.OpDiskOperatorDiskType
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
@@ -119,7 +122,10 @@ class ExpertSupportService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission to " +
+                        "apply for assistance in ${record.workspaceName}"
+                )
             )
         }
         if (record.status.checkDeleted() || record.status.checkInProcess()) {
@@ -287,7 +293,10 @@ class ExpertSupportService @Autowired constructor(
         if (!permissionService.hasManagerOrViewerPermission(userId, record.projectId, record.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to apply for assistance in ${record.workspaceName}")
+                params = arrayOf(
+                    "We're sorry but you don't have permission" +
+                        " to apply for assistance in ${record.workspaceName}"
+                )
             )
         }
         if (record.status.checkDeleted()) {
@@ -677,7 +686,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
         ActionAuditContext.current()
@@ -821,7 +830,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
         ActionAuditContext.current()
@@ -907,7 +916,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to expand disk in $workspaceName")
+                params = arrayOf("We're sorry but you don't have permission to expand disk in $workspaceName")
             )
         }
 
@@ -945,7 +954,7 @@ class ExpertSupportService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
-                params = arrayOf("You do not have permission to delete disk in ${data.workspaceName}")
+                params = arrayOf("We're sorry but you don't have permission to delete disk in ${data.workspaceName}")
             )
         }
 
@@ -997,10 +1006,132 @@ class ExpertSupportService @Autowired constructor(
         return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).taskStatus(taskId)
     }
 
+    @ActionAuditRecord(
+        actionId = TencentActionId.CGS_SYNC_VM,
+        instance = AuditInstanceRecord(
+            resourceType = TencentResourceTypeId.CGS,
+            instanceNames = "#data.sourceWorkspaceName",
+            instanceIds = "#data.targetWorkspaceName"
+        ),
+        content = TencentActionAuditContent.CGS_SYNC_VM_CONTENT
+    )
     fun syncVm(
+        userId: String,
         data: SyncVmData
     ): SyncVmResp? {
-        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(data)
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = data.sourceWorkspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(data.sourceWorkspaceName)
+            )
+        // 校验权限要涉及两个机器
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = workspace.workspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "We're sorry but you don't have permission to" +
+                        " sync vm in source ${data.sourceWorkspaceName}"
+                )
+            )
+        }
+        if (!permissionService.hasManagerOrOwnerPermission(
+                userId = userId,
+                projectId = workspace.projectId,
+                workspaceName = data.targetWorkspaceName,
+                ownerType = workspace.ownerType
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                params = arrayOf(
+                    "We're sorry but you don't have permission " +
+                        "to sync vm in target ${data.targetWorkspaceName}"
+                )
+            )
+        }
+
+        ActionAuditContext.current()
+            .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
+            .scopeId = workspace.projectId
+
+        val res = remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).syncVm(
+            SyncVmInfo(
+                userId = userId,
+                syncOnly = data.syncOnly,
+                targetWorkspaceName = data.targetWorkspaceName,
+                sourceWorkspaceName = data.sourceWorkspaceName
+            )
+        ) ?: return null
+
+        // 状态和记录也是两台机器都要
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = data.sourceWorkspaceName,
+            status = WorkspaceStatus.OPERATING
+        )
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = data.targetWorkspaceName,
+            status = WorkspaceStatus.OPERATING
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = data.sourceWorkspaceName,
+            operator = userId,
+            action = WorkspaceAction.SYNC_VM,
+            actionMessage = "sync vm target workspace: ${data.targetWorkspaceName}"
+        )
+
+        workspaceOpHistoryDao.createWorkspaceHistory(
+            dslContext = dslContext,
+            workspaceName = data.targetWorkspaceName,
+            operator = userId,
+            action = WorkspaceAction.SYNC_VM,
+            actionMessage = "sync vm source workspace: ${data.sourceWorkspaceName}"
+        )
+
+        return res
+    }
+
+    fun syncVmCallback(
+        taskId: String,
+        workspaceName: String,
+        operator: String
+    ) {
+        val targetWorkspace = workspaceOpHistoryDao.fetchLastOp(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            action = WorkspaceAction.SYNC_VM
+        )?.actionMsg?.split(":")?.last()?.trim() ?: run {
+            logger.error("syncVmCallback $taskId|$workspaceName|$operator targetWorkspace not found")
+            ""
+        }
+
+        workspaceDao.updateWorkspaceStatus(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            status = WorkspaceStatus.RUNNING
+        )
+        if (targetWorkspace.isNotBlank()) {
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = targetWorkspace,
+                status = WorkspaceStatus.RUNNING
+            )
+        }
+    }
+
+    fun createCvm(
+        data: CreateCvmData
+    ): CreateCvmResp? {
+        return remoteDevServiceFactory.loadRemoteDevService(WorkspaceMountType.BCS).createCvm(data)
     }
 
     companion object {

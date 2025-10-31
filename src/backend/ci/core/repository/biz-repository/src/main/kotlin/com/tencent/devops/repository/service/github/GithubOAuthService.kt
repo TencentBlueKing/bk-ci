@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -73,10 +73,12 @@ class GithubOAuthService @Autowired constructor(
         popupTag: String? = "#popupGithub",
         resetType: String? = "",
         specRedirectUrl: String? = "",
-        redirectUrlTypeEnum: RedirectUrlTypeEnum? = null
+        redirectUrlTypeEnum: RedirectUrlTypeEnum? = null,
+        operator: String? = ""
     ): GithubOauth {
         val repoId = if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId).toString() else ""
-        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}},{{跳转链接}},{{跳转类型}}
+        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},
+        // {{重置类型}},{{跳转链接}},{{跳转类型}},{{操作人}}
         val state = listOf(
             userId,
             projectId,
@@ -85,7 +87,8 @@ class GithubOAuthService @Autowired constructor(
             popupTag,
             resetType,
             specRedirectUrl,
-            redirectUrlTypeEnum?.type
+            redirectUrlTypeEnum?.type,
+            operator
         ).joinToString(separator = OAUTH_URL_STATE_SEPARATOR)
         val encodeState = URLEncoder.encode(state, "UTF-8")
         val redirectUrl = "$GITHUB_URL/login/oauth/authorize" +
@@ -141,7 +144,8 @@ class GithubOAuthService @Autowired constructor(
         val sourceState = URLDecoder.decode(state, "UTF-8")
         // 回调状态信息
         // @see com.tencent.devops.repository.service.github.GithubOAuthService.getGithubOauth
-        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},{{重置类型}},{{跳转链接}},{{跳转类型}}
+        // 格式：{{授权用户Id}},{{蓝盾项目Id}},{{蓝盾代码库Id}},{{回调标识}},{{弹框标识位}},
+        // {{重置类型}},{{跳转链接}},{{跳转类型}},{{操作人}}
         val arrays = sourceState.split(OAUTH_URL_STATE_SEPARATOR)
         val userId = arrays[0]
         val projectId = arrays[1]
@@ -155,13 +159,15 @@ class GithubOAuthService @Autowired constructor(
         val specRedirectUrl = arrays.getOrNull(6) ?: ""
         // 重定向类型
         val redirectUrlTypeEnum = RedirectUrlTypeEnum.getRedirectUrlType(arrays.getOrNull(7) ?: "")
+        // 操作人, 获取授权server端用户信息（蓝盾平台用户名可能跟github用户名不一致）
+        val operator = (arrays.getOrNull(8) ?: "").ifBlank { userId }
         githubTokenService.createAccessToken(
             userId = userId,
             accessToken = githubToken.accessToken,
             tokenType = githubToken.tokenType,
             scope = githubToken.scope,
             githubTokenType = githubTokenType,
-            operator = userId
+            operator = operator
         )
         return GithubOauthCallback(
             userId = userId,

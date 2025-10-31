@@ -1,0 +1,89 @@
+{
+   "AttemptToRestoreFailed": {
+      "other": "\n{{.filename}} 実行ファイルの復元に失敗しました。{{.dir}} ディレクトリで install.sh を実行するか agent.zip を解凍しインストールディレクトリを復元してください"
+   },
+   "ExecutableFileMissing": {
+      "other": "\n{{.filename}} 実行ファイルが欠損しています。{{.dir}} ディレクトリで install.sh を実行するか agent.zip を再解凍しインストールディレクトリを復元してください"
+   },
+   "CreateTmpDirectory极Failed": {
+      "other": "一時ディレクトリ作成失敗: {{.err}}"
+   },
+   "StartWorkerProcessFailed": {
+      "other": "ビルドプロセス起動失敗: {{.err}}"
+   },
+   "CreateStartScriptFailed": {
+      "other": "ビルドスクリプト生成失敗: {{.err}}"
+   },
+   "BuilderProcessWasKilled": {
+      "other": "ビルドプロセス異常終了。OS/他プロセスによる強制終止の可能性あり。負荷低減後再試行、または agent.zip 解凍→復元→再起動"
+   },
+   "BuildProcessErr": {
+      "other": "ビルドプロセス実行エラー, プロセスID: {{.pid}}, エラー: {{.err}}."
+   },
+   "WorkerExit": {
+      "other": "ビルドプロセス {{.pid}} 終了"
+   },
+   "DockerOnlySupportLinux": {
+      "other": "現在LinuxシステムでのみDockerビルドエージェント利用可"
+   },
+   "DownloadDockerInitScriptError": {
+      "other": "Docker初期化スクリプト取得失敗|{{.err}}"
+   },
+   "StatDockerInitScriptError": {
+      "other": "Docker初期化スクリプト状態取得失敗|{{.err}}"
+   },
+   "CheckDockerInitScriptAuthError": {
+      "other": "Docker起動スクリプト権限検証失敗|{{.err}}"
+   },
+   "GetDockerCertError": {
+      "other": "dockerクレデンシャル取得エラー|{{.err}}"
+   },
+   "LinkDockerError": {
+      "other": "dockerクライアント接続エラー|{{.err}}"
+   },
+   "GetDockerImagesError": {
+      "other": "dockerイメージリスト取得エラー|{{.err}}"
+   },
+   "PullLatest": {
+      "other": "latestバージョン: 最新版自動取得"
+   },
+   "StartPullImage": {
+      "other": "イメージ取得開始，イメージ名：{{.name}}"
+   },
+   "FirstPullTips": {
+      "other": "[注意]イメージサイズ大の場合，初回取得時間長。ビルドエージェント事前取得でパイプライン起動速度向上可"
+   },
+   "PullImageError": {
+      "other": "イメージ取得失敗 {{.name}} |{{.err}}"
+   },
+   "GetPullImageLogError": {
+      "other": "イメージ取得情報ログ取得失敗：{{.err}}"
+   },
+   "LocalExistImage": {
+      "other": "ローカルイメージ検出。ビルド環境起動準備中..."
+   },
+   "CreateDockerTmpDirError": {
+      "other": "Docker一時ディレクトリ作成失敗: {{.err}}"
+   },
+   "CreateContainerError": {
+      "other": "コンテナ作成失敗 {{.name}} |{{.err}}"
+   },
+   "StartContainerError": {
+      "other": "コンテナ起動失敗 {{.name}} |{{.err}}"
+   },
+   "WaitContainerError": {
+      "other": "コンテナ終了待機エラー {{.name}} |{{.err}}"
+   },
+   "ContainerExitCodeNotZero": {
+      "other": "コンテナ終了状態コード {{.code}} (0以外) \n {{.msg}}"
+   },
+   "ReadDockerMountsError": {
+      "other": "Dockerマウントディレクトリ準備失敗: {{.err}}"
+   },
+   "DockerContainerLog": {
+      "other": "Dockerコンテナログ: \n"
+   },
+   "DockerImageDebugError": {
+      "other": "dockerログイン・デバッグ起動失敗: {{.err}}"
+   }
+}

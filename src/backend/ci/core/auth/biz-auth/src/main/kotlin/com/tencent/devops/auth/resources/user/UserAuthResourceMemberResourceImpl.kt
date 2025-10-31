@@ -4,6 +4,8 @@ import com.tencent.devops.auth.api.user.UserAuthResourceMemberResource
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -246,6 +248,21 @@ class UserAuthResourceMemberResourceImpl(
     }
 
     @BkManagerCheck
+    override fun batchRemoveMemberFromProject(
+        userId: String,
+        projectId: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): Result<BatchRemoveMemberFromProjectResponse> {
+        return Result(
+            permissionManageFacadeService.batchRemoveMemberFromProject(
+                userId = userId,
+                projectCode = projectId,
+                removeMemberFromProjectReq = removeMemberFromProjectReq
+            )
+        )
+    }
+
+    @BkManagerCheck
     override fun removeMemberFromProjectCheck(
         userId: String,
         projectId: String,
@@ -256,6 +273,21 @@ class UserAuthResourceMemberResourceImpl(
                 userId = userId,
                 projectCode = projectId,
                 removeMemberFromProjectReq = removeMemberFromProjectReq
+            )
+        )
+    }
+
+    @BkManagerCheck
+    override fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectId: String,
+        targetMembers: List<ResourceMemberInfo>
+    ): Result<Boolean> {
+        return Result(
+            permissionManageFacadeService.batchRemoveMemberFromProjectCheck(
+                userId = userId,
+                projectCode = projectId,
+                targetMembers = targetMembers
             )
         )
     }

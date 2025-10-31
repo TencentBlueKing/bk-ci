@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,7 +36,10 @@ import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.service.NotifyUserBlackListService
+import com.tencent.devops.notify.filter.NotifyBlackListAspect
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
@@ -70,4 +73,9 @@ class ListenerConfiguration {
     fun voiceNotifyConsumer(
         @Autowired listener: NotifyMessageConsumer
     ) = ScsConsumerBuilder.build<VoiceNotifyMessageWithOperation> { listener.onReceiveVoiceMessage(it) }
+
+    @Bean
+    fun notifyBlackListAspect(
+        notifyUserBlackListService: NotifyUserBlackListService
+    ) = NotifyBlackListAspect(notifyUserBlackListService)
 }

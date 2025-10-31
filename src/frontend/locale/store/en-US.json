@@ -766,5 +766,10 @@
   "离开": "Leave",
   "无该项目的模板安装权限": "No permission to install the project template",
   "体验工蜂 Copilot": "Experience Worker Bee Copilot",
-  "历史大版本下的小版本更新": "Minor version update under historical major version"
+  "历史大版本下的小版本更新": "Minor version update under historical major version",
+  "CodeBuddy（内网版）": "CodeBuddy (internal version)",
+  "请选择中心": "Please select a center",
+  "请选择归属部门": "Please select an affiliated department",
+  "归属信息": "Affiliation Information",
+  "typeError": "Type Error"
 }

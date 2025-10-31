@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,4 +42,7 @@ const (
 
 	// WinCommandNewConsole windwos启动进程时打开新的console窗口
 	WinCommandNewConsole = 0x00000010
+
+	// DevopsAgentTimeoutExitTime 设置一个次数，达到超时次数 Agent 进程退出
+	DevopsAgentTimeoutExitTime = "DEVOPS_AGENT_TIMEOUT_EXIT_TIME"
 )

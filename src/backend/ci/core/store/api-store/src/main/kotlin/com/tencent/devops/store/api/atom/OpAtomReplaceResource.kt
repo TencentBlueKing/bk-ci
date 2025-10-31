@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,9 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.store.pojo.common.honor.I18nHonorInfoDTO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -72,5 +73,16 @@ interface OpAtomReplaceResource {
         userId: String,
         @Parameter(description = "插件回滚请求报文", required = true)
         atomReplaceRollBack: AtomReplaceRollBack
+    ): Result<Boolean>
+
+    @Operation(summary = "补全线上存量荣誉国际化信息")
+    @POST
+    @Path("i18n/fillTranslations")
+    fun batchFillHonorTranslations(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "荣誉信息", required = true)
+        honorI18nDTOList: List<I18nHonorInfoDTO>
     ): Result<Boolean>
 }

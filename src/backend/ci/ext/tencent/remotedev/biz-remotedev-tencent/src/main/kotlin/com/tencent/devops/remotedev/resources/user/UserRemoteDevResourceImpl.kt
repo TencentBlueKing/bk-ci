@@ -28,8 +28,10 @@
 package com.tencent.devops.remotedev.resources.user
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.ClientTips
@@ -76,6 +78,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
 
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
+    }
+
+    override fun getFileGateway(userId: String): Result<Map<String, String>> {
+        return Result(remoteDevSettingService.getFileGateway())
     }
 
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
@@ -156,8 +162,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(clientTipsService.fetchTips(projectId = projectId, userId = userId))
     }
 
-    override fun remoteManagers(userId: String, projectId: String): Result<List<String>> {
-        return Result(permissionService.managers(projectId))
+    override fun remoteAuditManagers(userId: String, projectId: String): Result<List<String>> {
+        return Result(permissionService.auditManagers(projectId))
     }
 
     override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
@@ -186,5 +192,17 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             )
         }
         return Result(res.randomOrNull())
+    }
+
+    override fun getUserLocale(userId: String): Result<LocaleInfo> {
+        return Result(workspaceService.getUserLocale(userId))
+    }
+
+    override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
+        return Result(workspaceService.updateUserLocale(userId, localeInfo.language))
+    }
+
+    override fun getSignatureStatus(userId: String, projectId: String): Result<UserSignatureStatusResponse> {
+        return Result(workspaceService.getSignatureStatus(userId, projectId))
     }
 }

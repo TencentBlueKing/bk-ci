@@ -21,8 +21,8 @@
 </template>
 
 <script>
-import ajax from '../../../ajax/index';
 import { useI18n } from 'vue-i18n';
+import ajax from '../../../ajax/index';
 
 export default {
   props: {
@@ -72,7 +72,7 @@ export default {
     openManage() {
       this.isOpenManageLoading = true;
       return ajax
-        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${this.projectCode}/${this.resourceType}/${this.resourceCode}/enable`)
+        .put(`${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.projectCode)}/${this.resourceType}/${this.resourceCode}/enable`)
         .then(() => {
           this.$emit('open-manage');
         })

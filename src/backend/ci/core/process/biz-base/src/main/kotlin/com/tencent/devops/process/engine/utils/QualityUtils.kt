@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -62,11 +62,21 @@ object QualityUtils {
             val id = "T-${UUIDUtil.generate()}"
             if (isBefore) {
                 QualityGateInElement(
-                    I18nUtil.getCodeLanMessage(BK_QUALITY_IN), id, null, element.getAtomCode(), element.name
+                    name = I18nUtil.getCodeLanMessage(BK_QUALITY_IN),
+                    id = id,
+                    status = null,
+                    interceptTask = element.getAtomCode(),
+                    interceptTaskId = element.id,
+                    interceptTaskName = element.name
                 )
             } else {
                 QualityGateOutElement(
-                    I18nUtil.getCodeLanMessage(BK_QUALITY_OUT), id, null, element.getAtomCode(), element.name
+                    name = I18nUtil.getCodeLanMessage(BK_QUALITY_OUT),
+                    id = id,
+                    status = null,
+                    interceptTask = element.getAtomCode(),
+                    interceptTaskId = element.id,
+                    interceptTaskName = element.name
                 )
             }
         } else {

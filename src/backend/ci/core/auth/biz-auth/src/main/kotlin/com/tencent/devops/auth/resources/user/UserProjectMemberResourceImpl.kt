@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,8 @@
 package com.tencent.devops.auth.resources.user
 
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
+import com.tencent.devops.auth.pojo.DepartmentUserCount
+import com.tencent.devops.auth.service.iam.PermissionManageFacadeService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -36,11 +38,25 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val permissionManageFacadeService: PermissionManageFacadeService
 ) : UserProjectMemberResource {
     override fun checkManager(userId: String, projectId: String): Result<Boolean> {
         val result = permissionProjectService.checkProjectManager(userId, projectId) ||
             permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
         return Result(result)
+    }
+
+    override fun getProjectUserDepartmentDistribution(
+        userId: String,
+        projectId: String,
+        parentDepartmentId: Int
+    ): Result<List<DepartmentUserCount>> {
+        return Result(
+            permissionManageFacadeService.getProjectUserDepartmentDistribution(
+                projectCode = projectId,
+                parentDepartmentId = parentDepartmentId
+            )
+        )
     }
 }

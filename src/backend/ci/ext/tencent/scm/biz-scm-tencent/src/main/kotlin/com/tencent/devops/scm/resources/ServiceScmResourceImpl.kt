@@ -33,6 +33,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CheckPrivateKeyAndTokenReq
+import com.tencent.devops.scm.pojo.CheckUsernameAndPasswordReq
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -40,9 +42,11 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmService
 import org.slf4j.LoggerFactory
@@ -166,6 +170,29 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         )
     }
 
+    override fun checkPrivateKeyAndTokenNew(
+        request: CheckPrivateKeyAndTokenReq
+    ): Result<TokenCheckResult> {
+        with(request) {
+            logger.info(
+                "Start to check the private key and token of " +
+                        "(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)"
+            )
+            return Result(
+                scmService.checkPrivateKeyAndToken(
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
+                    token = token,
+                    region = region,
+                    userName = userName
+                )
+            )
+        }
+    }
+
     override fun checkUsernameAndPassword(
         projectName: String,
         url: String,
@@ -192,6 +219,30 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 repoUsername = repoUsername
             )
         )
+    }
+
+    override fun checkUsernameAndPasswordNew(
+        request: CheckUsernameAndPasswordReq
+    ): Result<TokenCheckResult> {
+        with(request) {
+            logger.info(
+                "Start to check the username and password of " +
+                        "(projectName=$projectName, url=$url, type=$type, username=$username, " +
+                        "region=$region, repoUsername=$repoUsername)"
+            )
+            return Result(
+                scmService.checkUsernameAndPassword(
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    username = username,
+                    password = password,
+                    token = token,
+                    region = region,
+                    repoUsername = repoUsername
+                )
+            )
+        }
     }
 
     override fun addWebHook(
@@ -424,6 +475,44 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 )
             )
         }
+    }
+
+    override fun getTagInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): Result<GitTagInfo?> {
+        return Result(
+            scmService.getTag(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                tagName = tagName
+            )
+        )
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return Result(
+            scmService.getTapdWorkItems(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                refType = refType,
+                iid = iid
+            )
+        )
     }
 
     companion object {

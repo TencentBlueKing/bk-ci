@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,14 +43,16 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         scmCode: String,
-        search: String?
+        search: String?,
+        oauthUserId: String?
     ): Result<AuthorizeResult> {
         return Result(
             repositoryApiService.listRepoBaseInfo(
                 userId = userId,
                 projectId = projectId,
                 scmCode = scmCode,
-                search = search
+                search = search,
+                oauthUserId = oauthUserId
             )
         )
     }

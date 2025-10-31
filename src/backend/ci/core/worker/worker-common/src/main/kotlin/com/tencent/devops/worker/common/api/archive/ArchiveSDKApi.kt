@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,16 +47,29 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param destPath 要上传的文件而指定的自定义路径
      * @param buildVariables 构建变量
      * @param token 令牌
+     * @param metadata 元数据
      */
-    fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String? = null)
+    fun uploadCustomize(
+        file: File,
+        destPath: String,
+        buildVariables: BuildVariables,
+        token: String? = null,
+        metadata: Map<String, String> = emptyMap()
+    )
 
     /**
      * 归档构件到流水线仓库
      * @param file 构件
      * @param buildVariables 构建变量
      * @param token 令牌
+     * @param metadata 元数据
      */
-    fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String? = null)
+    fun uploadPipeline(
+        file: File,
+        buildVariables: BuildVariables,
+        token: String? = null,
+        metadata: Map<String, String> = emptyMap()
+    )
 
     /**
      * 上传日志文件

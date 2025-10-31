@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,17 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
@@ -112,13 +117,37 @@ class UpdateStateForStageCmdFinally(
     private fun sendStageEndCallBack(commandContext: StageContext) {
         val event = commandContext.event
         val stage = commandContext.stage
+        val record = stageBuildRecordService.getRecord(
+            transactionContext = null, projectId = stage.projectId, pipelineId = stage.pipelineId,
+            buildId = stage.buildId, stageId = stage.stageId, executeCount = stage.executeCount
+        ) ?: return
+        val timeCost = JsonUtil.anyToOrNull(
+            record.stageVar[Stage::timeCost.name],
+            object : TypeReference<BuildRecordTimeCost>() {})
+
         pipelineEventDispatcher.dispatch(
             // stage 结束
             PipelineBuildStatusBroadCastEvent(
                 source = "UpdateStateForStageCmdFinally", projectId = stage.projectId, pipelineId = stage.pipelineId,
                 userId = event.userId, buildId = stage.buildId, stageId = stage.stageId, actionType = ActionType.END,
                 buildStatus = commandContext.buildStatus.name, executeCount = stage.executeCount,
-                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_END
+                type = PipelineBuildStatusBroadCastEventType.BUILD_STAGE_END,
+                labels = mapOf(
+                    PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                        record.startTime?.timestamp(),
+                    PipelineBuildStatusBroadCastEvent.Labels::duration.name to
+                        timeCost?.totalCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::executeDuration.name to
+                        timeCost?.executeCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::systemDuration.name to
+                        timeCost?.systemCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::queueDuration.name to
+                        timeCost?.queueCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::reviewDuration.name to
+                        timeCost?.waitCost,
+                    PipelineBuildStatusBroadCastEvent.Labels::stageSeq.name to
+                        stage.seq
+                )
             )
         )
     }

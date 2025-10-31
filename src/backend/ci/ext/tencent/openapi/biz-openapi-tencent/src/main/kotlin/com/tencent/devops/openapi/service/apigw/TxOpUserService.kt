@@ -21,7 +21,7 @@ class TxOpUserService @Autowired constructor(
     override fun checkUser(userId: String): Boolean {
         return userCache.getIfPresent(userId) ?: let {
             val result =
-                client.get(ServiceDeptResource::class).getUserInfo(userId = "admin", name = userId).data != null
+                client.get(ServiceDeptResource::class).getUserInfo(userId = userId, name = userId).data != null
             userCache.put(userId, result)
             return result
         }

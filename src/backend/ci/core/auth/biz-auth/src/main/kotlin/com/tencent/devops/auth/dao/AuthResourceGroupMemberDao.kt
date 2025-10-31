@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,13 +32,17 @@ import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.ProjectMembersQueryConditionDTO
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthResourceAuthorization
 import com.tencent.devops.model.auth.tables.TAuthResourceGroupMember
+import com.tencent.devops.model.auth.tables.TUserInfo
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupMemberRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Table
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL.coalesce
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.field
@@ -319,19 +323,31 @@ class AuthResourceGroupMemberDao {
         projectCode: String,
         resourceType: String? = null,
         resourceCode: String? = null,
+        excludeResourceType: String? = null,
         memberId: String? = null,
+        memberIds: List<String>? = null,
         memberName: String? = null,
         memberType: String? = null,
         iamGroupId: Int? = null,
+        iamGroupIds: List<Int>? = null,
         maxExpiredTime: LocalDateTime? = null,
         minExpiredTime: LocalDateTime? = null,
-        groupCode: String? = null
+        groupCode: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
     ): List<AuthResourceGroupMember> {
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
             resourceType?.let { select.and(RESOURCE_TYPE.eq(resourceType)) }
+            excludeResourceType?.let { select.and(RESOURCE_TYPE.notEqual(excludeResourceType)) }
             memberId?.let { select.and(MEMBER_ID.eq(memberId)) }
+            if (!memberIds.isNullOrEmpty()) {
+                select.and(MEMBER_ID.`in`(memberIds))
+            }
+            if (!iamGroupIds.isNullOrEmpty()) {
+                select.and(IAM_GROUP_ID.`in`(iamGroupIds))
+            }
             memberName?.let { select.and(MEMBER_NAME.eq(memberName)) }
             memberType?.let { select.and(MEMBER_TYPE.eq(memberType)) }
             iamGroupId?.let { select.and(IAM_GROUP_ID.eq(iamGroupId)) }
@@ -339,7 +355,13 @@ class AuthResourceGroupMemberDao {
             minExpiredTime?.let { select.and(EXPIRED_TIME.ge(minExpiredTime)) }
             resourceCode?.let { select.and(RESOURCE_CODE.eq(resourceCode)) }
             groupCode?.let { select.and(GROUP_CODE.eq(groupCode)) }
-            select.fetch().map { convert(it) }
+            select.let {
+                if (limit != null && offset != null) {
+                    it.limit(limit).offset(offset)
+                } else {
+                    it
+                }
+            }.fetch().map { convert(it) }
         }
     }
 
@@ -365,21 +387,31 @@ class AuthResourceGroupMemberDao {
         memberType: String?,
         userName: String?,
         deptName: String?,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?
     ): List<ResourceMemberInfo> {
+        val tUserInfo = TUserInfo.T_USER_INFO
+
         val resourceMemberUnionAuthorizationMember = createResourceMemberUnionAuthorizationMember(
             dslContext = dslContext,
             projectCode = projectCode
         )
 
+        val memberIdField = field(MEMBER_ID, String::class.java)
+        val memberNameField = field(MEMBER_NAME, String::class.java)
+        val memberTypeField = field(MEMBER_TYPE, String::class.java)
+
         return dslContext
             .select(
-                field(MEMBER_ID, String::class.java),
-                field(MEMBER_NAME, String::class.java),
-                field(MEMBER_TYPE, String::class.java)
+                memberIdField,
+                memberNameField,
+                memberTypeField,
+                DSL.`when`(memberTypeField.eq(MemberType.DEPARTMENT.type), false)
+                    .otherwise(coalesce(tUserInfo.DEPARTED, true))
+                    .`as`(IS_DEPARTED)
             )
             .from(resourceMemberUnionAuthorizationMember)
+            .leftJoin(tUserInfo).on(memberIdField.eq(tUserInfo.USER_ID))
             .where(
                 buildResourceMemberConditions(
                     memberType = memberType,
@@ -387,14 +419,24 @@ class AuthResourceGroupMemberDao {
                     deptName = deptName
                 )
             )
-            .groupBy(
-                field(MEMBER_ID)
-            )
-            .orderBy(field(MEMBER_ID))
-            .offset(offset).limit(limit)
+            .groupBy(memberIdField, memberNameField, memberTypeField)
+            // 排序逻辑：离职的在前，然后按ID排序
+            .orderBy(field(IS_DEPARTED).desc(), memberIdField.asc())
+            .let {
+                if (offset != null && limit != null) {
+                    it.offset(offset).limit(limit)
+                } else {
+                    it
+                }
+            }
             .skipCheck()
             .fetch().map {
-                ResourceMemberInfo(id = it.value1(), name = it.value2(), type = it.value3())
+                ResourceMemberInfo(
+                    id = it.value1(),
+                    name = it.value2(),
+                    type = it.value3(),
+                    departed = it.value4()
+                )
             }
     }
 
@@ -402,11 +444,21 @@ class AuthResourceGroupMemberDao {
         dslContext: DSLContext,
         conditionDTO: ProjectMembersQueryConditionDTO
     ): List<ResourceMemberInfo> {
+        val tUserInfo = TUserInfo.T_USER_INFO
+
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
-            dslContext.select(MEMBER_ID, MEMBER_NAME, MEMBER_TYPE).from(this)
+            dslContext.select(
+                MEMBER_ID,
+                MEMBER_NAME,
+                MEMBER_TYPE,
+                DSL.`when`(MEMBER_TYPE.eq(MemberType.DEPARTMENT.type), false)
+                    .otherwise(coalesce(tUserInfo.DEPARTED, true))
+                    .`as`(IS_DEPARTED)
+            ).from(this)
+                .leftJoin(tUserInfo).on(MEMBER_ID.eq(tUserInfo.USER_ID))
                 .where(buildProjectMembersByComplexConditions(conditionDTO))
-                .groupBy(MEMBER_ID)
-                .orderBy(MEMBER_ID)
+                .groupBy(MEMBER_ID, MEMBER_NAME, MEMBER_TYPE)
+                .orderBy(DSL.field(IS_DEPARTED).desc(), MEMBER_ID)
                 .let {
                     if (conditionDTO.limit != null && conditionDTO.offset != null) {
                         it.offset(conditionDTO.offset).limit(conditionDTO.limit)
@@ -418,7 +470,8 @@ class AuthResourceGroupMemberDao {
                     ResourceMemberInfo(
                         id = it.value1(),
                         name = it.value2(),
-                        type = it.value3()
+                        type = it.value3(),
+                        departed = it.value4()
                     )
                 }
         }
@@ -656,16 +709,39 @@ class AuthResourceGroupMemberDao {
         return conditions
     }
 
+    fun checkResourceManager(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        memberId: String
+    ): Boolean {
+        return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(MEMBER_ID.eq(memberId))
+                .and(GROUP_CODE.eq(DefaultGroupType.MANAGER.value))
+                .and(EXPIRED_TIME.gt(LocalDateTime.now()))
+                .fetchOne(0, Int::class.java) != 0
+        }
+    }
+
     fun listMemberGroupIdsInProject(
         dslContext: DSLContext,
         projectCode: String,
         memberId: String,
-        iamTemplateIds: List<String>
+        iamTemplateIds: List<String>,
+        memberDeptInfos: List<String>,
     ): List<Int> {
         val conditions = buildMemberGroupCondition(
             projectCode = projectCode,
             memberId = memberId,
-            iamTemplateIds = iamTemplateIds
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos,
+            minExpiredAt = LocalDateTime.now()
         )
         return with(TAuthResourceGroupMember.T_AUTH_RESOURCE_GROUP_MEMBER) {
             dslContext.select(IAM_GROUP_ID).from(this)
@@ -807,5 +883,6 @@ class AuthResourceGroupMemberDao {
         private const val MEMBER_ID = "$TABLE_NAME.MEMBER_ID"
         private const val MEMBER_NAME = "$TABLE_NAME.MEMBER_NAME"
         private const val MEMBER_TYPE = "$TABLE_NAME.MEMBER_TYPE"
+        private const val IS_DEPARTED = "is_departed"
     }
 }

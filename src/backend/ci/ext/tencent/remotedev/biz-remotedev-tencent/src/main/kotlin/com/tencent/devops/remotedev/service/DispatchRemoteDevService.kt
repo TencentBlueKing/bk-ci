@@ -5,6 +5,7 @@ import com.tencent.devops.remotedev.interfaces.ServiceRemoteDevInterface
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.pojo.exception.RetryMQException
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
 import com.tencent.devops.remotedev.service.projectworkspace.MakeWorkspaceImageHandler
 import com.tencent.devops.remotedev.service.projectworkspace.RebuildWorkspaceHandler
@@ -83,6 +84,9 @@ class DispatchRemoteDevService(
             }
         }.onFailure {
             logger.warn("RemoteDevUpdateEvent call back error", it)
+            if (it is RetryMQException) {
+                throw it
+            }
         }
     }
 
@@ -92,5 +96,9 @@ class DispatchRemoteDevService(
 
     override fun workspaceDeleteDiskCallback(taskId: String, workspaceName: String, operator: String) {
         return expertSupportService.deleteDiskCallback(taskId, workspaceName, operator)
+    }
+
+    override fun workspaceSyncVmCallback(taskId: String, workspaceName: String, operator: String) {
+        return expertSupportService.syncVmCallback(taskId, workspaceName, operator)
     }
 }

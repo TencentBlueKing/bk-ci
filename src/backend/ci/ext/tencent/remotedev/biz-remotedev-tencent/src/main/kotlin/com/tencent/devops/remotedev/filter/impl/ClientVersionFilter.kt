@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -14,6 +13,7 @@ import com.tencent.devops.remotedev.dao.ClientVersionDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
@@ -114,7 +114,7 @@ class ClientVersionFilter constructor(
             recordClientVersion(
                 ip = requestContext.headers[HEADER_IP]?.get(0).toString(),
                 user = user,
-                version = version.toString(),
+                version = version,
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
                 startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: "",
                 os = requestContext.headers[HEADER_MAC_OS]?.get(0) ?: ""
@@ -183,7 +183,7 @@ class ClientVersionFilter constructor(
                 .associateByTo(mutableMapOf(), { "${it.first}-${it.second}" }, { it.third })
         }
         val recordVersion = clientVersion["$ip-$user"]
-        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion")
+        logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$os")
         if (macAddress.format().isNotBlank()) {
             val currentWorkspaceNames = workspaceJoinDao.limitFetchProjectWorkspace(
                 dslContext = dslContext,
@@ -202,7 +202,7 @@ class ClientVersionFilter constructor(
                 startVersion = startVersion.format(),
                 currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user),
                 currentWorkspaceNames = currentWorkspaceNames.toSet(),
-                os = OS.parse(os)
+                os = ClientOS.parse(os)
             )
         } else {
             logger.warn("recordClientVersion macAddress is null")

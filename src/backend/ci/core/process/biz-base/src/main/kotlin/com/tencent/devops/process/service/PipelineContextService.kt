@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,8 +41,8 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TIME_TRIGGER_KIND
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -62,7 +62,7 @@ import org.springframework.stereotype.Service
 )
 @Service
 class PipelineContextService @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val containerBuildRecordService: ContainerBuildRecordService
 ) {
@@ -79,7 +79,9 @@ class PipelineContextService @Autowired constructor(
         model: Model? = null,
         executeCount: Int? = 1
     ): MutableMap<String, String> {
-        val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return mutableMapOf()
+        val modelDetail = model ?: pipelineBuildRecordService.getBuildRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        )?.model ?: return mutableMapOf()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
@@ -156,7 +158,9 @@ class PipelineContextService @Autowired constructor(
         buildId: String,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildRecordService.getBuildRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        ) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
@@ -241,13 +245,14 @@ class PipelineContextService @Autowired constructor(
         variables: Map<String, String>
     ): String? {
         if (containerId == null || executeCount == null) return null
+        val fixedExecuteCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
         return containerBuildRecordService.getRecord(
             transactionContext = null,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = containerId,
-            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+            executeCount = fixedExecuteCount
         )?.containerVar?.getOrDefault(JOB_RETRY_TASK_ID, null)?.toString() ?: kotlin.run {
             // 兼容通过BK_CI_RETRY_TASK_ID的老方式，如果 BK_CI_RETRY_TASK_ID 有值
             // 并且其对应的container id是当前运行的，就正常返回
@@ -257,7 +262,7 @@ class PipelineContextService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     taskId = taskId,
-                    executeCount = executeCount
+                    executeCount = fixedExecuteCount
                 )?.containerId == containerId
             ) {
                 return taskId
@@ -358,6 +363,8 @@ class PipelineContextService @Autowired constructor(
                 e.retryCountManual?.takeIf { it > 0 }?.let {
                     contextMap["steps.$stepId.retry-count-manual"] = it.toString()
                 }
+                e.errorMsg?.let { contextMap["steps.$stepId.error_message"] = it }
+                e.errorCode?.let { contextMap["steps.$stepId.error_code"] = it.toString() }
                 e.retryCountAuto?.let { contextMap["steps.$stepId.retry-count-auto"] = it.toString() }
             }
             val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
@@ -368,6 +375,8 @@ class PipelineContextService @Autowired constructor(
             e.retryCountManual?.takeIf { it > 0 }?.let {
                 contextMap["jobs.$jobId.steps.$stepId.retry-count-manual"] = it.toString()
             }
+            e.errorMsg?.let { contextMap["jobs.$jobId.steps.$stepId.error_message"] = it }
+            e.errorCode?.let { contextMap["jobs.$jobId.steps.$stepId.error_code"] = it.toString() }
             e.retryCountAuto?.let { contextMap["jobs.$jobId.steps.$stepId.retry-count-auto"] = it.toString() }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.Charset
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
@@ -49,6 +50,11 @@ import org.slf4j.LoggerFactory
 @Suppress("LongParameterList")
 object CommandLineUtils {
 
+    /*OUTPUT_ERROR_CODE 正则匹配规则*/
+    private val OUTPUT_ERROR_CODE = Pattern.compile("error_code=([^,:=\\s]*)")
+
+    /*OUTPUT_ERROR_MESSAGE 正则匹配规则*/
+    private val OUTPUT_ERROR_MESSAGE = Pattern.compile("error_message=(.*)")
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
 
     private val lineParser = listOf(OauthCredentialLineParser())
@@ -75,6 +81,7 @@ object CommandLineUtils {
             executor.workingDirectory = workspace
         }
         val contextLogFile = buildId?.let { ScriptEnvUtils.getContextFile(buildId) }
+        val setErrorFile = buildId?.let { ScriptEnvUtils.getSetErrorFile(buildId) }
 
         val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
             CharsetType.UTF_8 -> "UTF-8"
@@ -108,6 +115,7 @@ object CommandLineUtils {
                 )
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
+                    appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
                     appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
                     LoggerService.addNormalLine(tmpLine)
                 } else {
@@ -138,6 +146,7 @@ object CommandLineUtils {
                 }
                 if (print2Logger) {
                     appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
+                    appendSetErrorToFile(tmpLine, executor.workingDirectory, setErrorFile)
                     LoggerService.addErrorLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -269,6 +278,27 @@ object CommandLineUtils {
         return null
     }
 
+    fun appendSetErrorToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String?
+    ): String? {
+        if (resultLogFile == null) {
+            return null
+        }
+        val pattenError = "[\"]?::set-error\\s(.*)"
+        val prefixError = "::set-error "
+        if (Pattern.matches(pattenError, tmpLine)) {
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixError)
+            val code = getOutputMarcher(OUTPUT_ERROR_CODE.matcher(value)) ?: ""
+            val message = getOutputMarcher(OUTPUT_ERROR_MESSAGE.matcher(value)) ?: ""
+            val res = "$code=$message\n"
+            File(workspace, resultLogFile).appendText(res)
+            return res
+        }
+        return null
+    }
+
     fun appendGateToFile(
         tmpLine: String,
         workspace: File?,
@@ -305,5 +335,14 @@ object CommandLineUtils {
         }
         logger.info("Executing command($command) in workspace($workspace)")
         return execute(command, workspace, print2Logger, prefix)
+    }
+
+    private fun getOutputMarcher(matcher: Matcher): String? {
+        return with(matcher) {
+            /*只返回匹配到的第一个，否则返回null*/
+            if (this.find()) {
+                this.group(1)
+            } else null
+        }
     }
 }

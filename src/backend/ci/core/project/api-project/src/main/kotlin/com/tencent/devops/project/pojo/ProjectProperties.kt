@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,7 +66,9 @@ data class ProjectProperties(
     @get:Schema(title = "流水线命名格式")
     var pipelineNameFormat: String? = null,
     @get:Schema(title = "构建日志归档阈值(单位:万)")
-    var loggingLineLimit: Int? = null
+    var loggingLineLimit: Int? = null,
+    @get:Schema(title = "是否启用观察员模式", required = false)
+    val remotedevObserver: Boolean? = null
 ) {
     /**
      * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改

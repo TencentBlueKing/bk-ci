@@ -41,7 +41,7 @@ data class AppExperience(
     val source: Source,
     @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @get:Schema(title = "版本名称", required = true)
+    @get:Schema(title = "文件名称", required = true)
     val name: String,
     @get:Schema(title = "版本体验版本号", required = true)
     val version: String,
@@ -70,5 +70,7 @@ data class AppExperience(
     @get:Schema(title = "是否展示红点", required = false)
     val redPointEnabled: Boolean = false,
     @get:Schema(title = "分类标签", required = false)
-    val classify: String = ""
+    val classify: String = "",
+    @get:Schema(title = "APP名字I18n", required = false)
+    val appNameI18n: String?
 )

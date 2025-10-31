@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -57,8 +57,11 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.AGENT_VERS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.OS_TYPE
@@ -66,10 +69,12 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -104,7 +109,9 @@ class NodeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val slaveGatewayDao: SlaveGatewayDao
+    private val slaveGatewayDao: SlaveGatewayDao,
+    private val nodeTagDao: NodeTagDao,
+    private val nodeTagService: NodeTagService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
@@ -153,6 +160,8 @@ class NodeService @Autowired constructor(
             existNodeIdList.forEach {
                 environmentPermissionService.deleteNode(projectId, it)
             }
+            // 删除节点相关标签
+            nodeTagDao.deleteByNodes(dslContext, existNodeIdList)
         }
     }
 
@@ -201,11 +210,21 @@ class NodeService @Autowired constructor(
         latestBuildTimeStart: Long?,
         latestBuildTimeEnd: Long?,
         sortType: String?,
-        collation: String?
+        collation: String?,
+        data: NodeFetchReq?
     ): Page<NodeWithPermission> {
+        val tagValues = if (data?.tags.isNullOrEmpty()) {
+            null
+        } else {
+            val t = mutableSetOf<Long>()
+            data?.tags?.forEach { tag ->
+                t.addAll(tag.tagValues ?: return@forEach)
+            }
+            t
+        }
         val nodeRecordList =
             if (-1 != page) {
-                val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+                val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(page ?: 1, pageSize ?: 20, 200)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -224,7 +243,8 @@ class NodeService @Autowired constructor(
                     latestBuildTimeStart = latestBuildTimeStart,
                     latestBuildTimeEnd = latestBuildTimeEnd,
                     sortType = sortType,
-                    collation = collation
+                    collation = collation,
+                    tagValueIds = tagValues
                 )
             } else {
                 nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
@@ -248,7 +268,8 @@ class NodeService @Autowired constructor(
             latestBuildTimeStart = latestBuildTimeStart,
             latestBuildTimeEnd = latestBuildTimeEnd,
             sortType = sortType,
-            collation = collation
+            collation = collation,
+            tagValueIds = tagValues
         ).toLong()
         val nodes = formatNodeWithPermissions(userId, projectId, nodeRecordList)
         if (-1 != page) {
@@ -288,6 +309,10 @@ class NodeService @Autowired constructor(
         )
     }
 
+    fun fetchNodesCount(projectId: String): Map<NodeType, Int> {
+        return nodeDao.fetchProjectNodeCount(dslContext, projectId)
+    }
+
     fun listNewExport(
         userId: String,
         projectId: String,
@@ -305,6 +330,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
         var page = 1
@@ -330,7 +356,8 @@ class NodeService @Autowired constructor(
                 latestBuildTimeStart = latestBuildTimeStart,
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
-                collation = collation
+                collation = collation,
+                data = data
             )
             count = res.count
             page++
@@ -412,6 +439,11 @@ class NodeService @Autowired constructor(
         } else {
             emptyMap()
         }
+        val tagMaps = if (thirdPartyAgentNodeIds.isNotEmpty()) {
+            nodeTagService.fetchNodeTags(projectId, thirdPartyAgentNodeIds.toSet())
+        } else {
+            emptyMap()
+        }
 
         val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
         val envInfos = envDao.listServerEnvByIdsAllType(
@@ -472,9 +504,35 @@ class NodeService @Autowired constructor(
                     ""
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
-                }
+                },
+                tags = tagMaps[it.nodeId]
             )
         }
+    }
+
+    fun getNodeStatus(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
+    ): NodeWithPermission {
+        val hashId = when {
+            nodeHashId != null -> nodeHashId
+            nodeName != null -> nodeDao.getByDisplayName(dslContext, projectId, nodeName, null)
+                .firstOrNull()?.nodeHashId
+
+            agentHashId != null -> thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentHashId))
+                ?.nodeId?.let { HashUtil.encodeLongId(it) }
+
+            else -> null
+        } ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NAME_OR_ID_INVALID
+        )
+        return listByHashIds(userId, projectId, listOf(hashId)).firstOrNull() ?: throw ErrorCodeException(
+            errorCode = ERROR_NODE_NOT_EXISTS,
+            params = arrayOf(hashId)
+        )
     }
 
     fun listByHashIds(userId: String, projectId: String, hashIds: List<String>): List<NodeWithPermission> {
@@ -687,6 +745,76 @@ class NodeService @Autowired constructor(
         return node.displayName
     }
 
+    fun batchChangeCreateUser(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): List<Pair<String, String>> {
+        val nodeList = nodeDao.listAllByIds(
+            dslContext,
+            projectId,
+            nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        )
+        checkNodesExists(nodeList, nodeHashIds)
+        checkNodesTypeCmdb(nodeList)
+        checkNodesImportPermission(userId, nodeList)
+
+        val toChangeNodeIds = nodeList.map { it.nodeId }
+        // 分批更新，以免单次where in 大列表
+        val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
+        nodeIdsInBatch.forEach { it ->
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
+        }
+
+        return nodeList.map { Pair(it.nodeHashId, it.displayName) }
+    }
+
+    private fun checkNodesExists(existedNodeList: List<TNodeRecord>, toChangeNodeHashIds: List<String>) {
+        val existNodeHashIdSet = existedNodeList.map { it.nodeHashId }.toSet()
+        val noExistNodeHashIdSet = toChangeNodeHashIds.toSet().minus(existNodeHashIdSet)
+        if (noExistNodeHashIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(noExistNodeHashIdSet.joinToString(","))
+            )
+        }
+    }
+
+    private fun checkNodesTypeCmdb(nodeList: List<TNodeRecord>) {
+        val invalidTypeNodeIps: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (it.nodeType != NodeType.CMDB.name) {
+                invalidTypeNodeIps.add(it.nodeIp)
+            }
+        }
+        if (invalidTypeNodeIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB,
+                params = arrayOf(invalidTypeNodeIps.joinToString(","))
+            )
+        }
+    }
+
+    private fun checkNodesImportPermission(userId: String, nodeList: List<TNodeRecord>) {
+        val noPermissionNodeIps: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (!(it.bakOperator.split(";").contains(userId) || it.operator == userId)) {
+                noPermissionNodeIps.add(it.nodeIp)
+            }
+        }
+        if (noPermissionNodeIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                params = arrayOf(noPermissionNodeIps.joinToString(",")),
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                    params = arrayOf(noPermissionNodeIps.joinToString(",")),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+    }
+
     fun checkCmdbOperator(
         userId: String,
         projectId: String,
@@ -766,7 +894,13 @@ class NodeService @Autowired constructor(
             .setInstance(displayName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.updateDisplayName(dslContext = context, nodeId = nodeId, nodeName = displayName, userId = userId)
+            nodeDao.updateDisplayName(
+                dslContext = context,
+                nodeId = nodeId,
+                nodeName = displayName,
+                userId = userId,
+                projectId = projectId
+            )
             if (nodeInDb.displayName != displayName) {
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }

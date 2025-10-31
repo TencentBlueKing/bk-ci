@@ -2,12 +2,6 @@ package com.tencent.devops.auth.provider.rbac.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.SubjectDTO
-import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
-import com.tencent.bk.sdk.iam.dto.action.ActionDTO
-import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
-import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
@@ -15,16 +9,12 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.AuthGroupConfigAction
 import com.tencent.devops.auth.pojo.enum.HandoverType
-import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -35,10 +25,7 @@ class RbacCommonService(
     private val dslContext: DSLContext,
     private val authResourceTypeDao: AuthResourceTypeDao,
     private val authActionDao: AuthActionDao,
-    private val policyService: PolicyService,
-    private val iamConfiguration: IamConfiguration,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authUserDailyService: AuthProjectUserMetricsService
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     companion object {
@@ -139,15 +126,6 @@ class RbacCommonService(
         )
     }
 
-    fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        // TODO 开启管理员缓存，会存在当把用户从管理员移除，用户还是能够进入用户管理界面，但是iam那边会报错，所以先不缓存，后期优化
-        return validateUserProjectPermission(
-            userId = userId,
-            projectCode = projectCode,
-            permission = AuthPermission.MANAGE
-        )
-    }
-
     fun getGroupConfigAction(resourceType: String): List<AuthGroupConfigAction> {
         if (groupConfigActionsCache.getIfPresent(resourceType) == null) {
             val groupConfigActions =
@@ -164,58 +142,14 @@ class RbacCommonService(
                             actions = JsonUtil.to(
                                 actions,
                                 object : TypeReference<List<String>>() {}
-                            )
+                            ),
+                            desc = description
                         )
                     }
                 }
             groupConfigActionsCache.put(resourceType, groupConfigActions)
         }
         return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedByDescending { it.id }
-    }
-
-    fun validateUserProjectPermission(
-        userId: String,
-        projectCode: String,
-        permission: AuthPermission
-    ): Boolean {
-        logger.info("[rbac] validate user project permission|userId = $userId|permission=$permission")
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val actionDTO = ActionDTO()
-            val action = RbacAuthUtils.buildAction(
-                authPermission = permission,
-                authResourceType = AuthResourceType.PROJECT
-            )
-            actionDTO.id = action
-            val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
-                .type(AuthResourceType.PROJECT.value)
-                .id(projectCode)
-                .build()
-
-            val subject = SubjectDTO.builder()
-                .id(userId)
-                .type(MemberType.USER.type)
-                .build()
-            val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
-                .subject(subject)
-                .action(actionDTO)
-                .resources(listOf(resourceNode))
-                .build()
-
-            val result = policyService.verifyPermissions(queryPolicyDTO)
-            if (result) {
-                authUserDailyService.save(
-                    projectId = projectCode,
-                    userId = userId,
-                    operate = action
-                )
-            }
-            return result
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"
-            )
-        }
     }
 
     fun convertResourceType2Count(

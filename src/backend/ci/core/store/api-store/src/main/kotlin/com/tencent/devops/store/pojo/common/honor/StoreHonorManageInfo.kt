@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.common.honor
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -42,9 +44,11 @@ data class StoreHonorManageInfo(
     val honorId: String,
     @get:Schema(title = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val honorTitle: String,
     @get:Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val honorName: String,
     @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,

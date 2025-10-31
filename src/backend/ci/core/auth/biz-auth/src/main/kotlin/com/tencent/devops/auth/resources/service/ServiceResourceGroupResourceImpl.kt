@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceResourceGroupResource
+import com.tencent.devops.auth.pojo.AuthResourceGroup
 import com.tencent.devops.auth.pojo.dto.GroupAddDTO
 import com.tencent.devops.auth.pojo.request.CustomGroupCreateReq
 import com.tencent.devops.auth.pojo.vo.GroupDetailsInfoVo
@@ -115,6 +116,22 @@ class ServiceResourceGroupResourceImpl(
                 projectId = projectCode,
                 groupId = groupId,
                 resourceType = resourceType
+            )
+        )
+    }
+
+    override fun getByGroupCode(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: BkAuthGroup
+    ): Result<AuthResourceGroup?> {
+        return Result(
+            permissionResourceGroupService.getByGroupCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = groupCode
             )
         )
     }

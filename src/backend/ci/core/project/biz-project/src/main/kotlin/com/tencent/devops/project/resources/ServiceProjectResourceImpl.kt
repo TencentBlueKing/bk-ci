@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,6 +44,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -80,8 +81,24 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun list(userId: String, productIds: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, productIds))
+    override fun list(
+        userId: String,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.list(
+                userId = userId,
+                productIds = productIds,
+                channelCodes = channelCodes,
+                sort = sort,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getAllProject(): Result<List<ProjectVO>> {
@@ -95,6 +112,20 @@ class ServiceProjectResourceImpl @Autowired constructor(
     ): Result<List<ProjectByConditionDTO>> {
         return Result(
             projectService.listProjectsByCondition(
+                projectConditionDTO = projectConditionDTO,
+                limit = limit,
+                offset = offset
+            )
+        )
+    }
+
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): Result<List<ProjectVO>> {
+        return Result(
+            projectService.listProjectDetailsByCondition(
                 projectConditionDTO = projectConditionDTO,
                 limit = limit,
                 offset = offset

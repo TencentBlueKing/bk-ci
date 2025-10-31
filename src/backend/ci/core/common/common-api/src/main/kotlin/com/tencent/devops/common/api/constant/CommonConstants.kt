@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.common.api.constant
 
 const val BCI_CODE_PREFIX = "BCI_CODE_"
 const val DEVOPS = "DevOps"
+const val NUM_ZERO = 0
 const val NUM_ONE = 1
 const val NUM_TWO = 2
 const val NUM_THREE = 3
@@ -74,6 +75,7 @@ const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
 const val MESSAGE = "message" // 提示信息
 const val STATIC = "static" // 静态资源
 const val NAME = "name" // 名称
+const val SUCCESS_NUM = "successNum" // 成功数量
 const val FAIL_NUM = "failNum" // 失败数量
 const val VERSION = "version" // 版本号
 const val TYPE = "type" // 类型
@@ -90,6 +92,7 @@ const val LABEL = "label" // 标签
 const val NO_LABEL = "noLabel" // 无标题
 const val URL = "url" // url链接
 const val PATH = "path" // 路径
+const val META_DATA = "metadata" // 制品元数据
 const val ARTIFACTORY_TYPE = "artifactoryType" // 归档仓库类型
 const val REPORT_TYPE = "reportType" // 报告类型
 const val DATA = "data" // 数据
@@ -127,6 +130,11 @@ const val REQUEST_IP = "X-Forwarded-For" // 请求IP
 const val BK_CREATE = "bkCreate" // 创建
 const val BK_REVISE = "bkRevise" // 修改
 const val FAIL_MSG = "failMsg" // 失败信息
+const val BATCH_ID = "batchId" // 批次ID
+const val PARAM = "param" // 参数
+const val ERROR = "error" // 错误
+const val OPERATE = "operate" // 操作
+const val SENSITIVE = "isSensitive"
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -168,6 +176,9 @@ const val KEY_TASK_ATOM = "taskAtom"
 const val KEY_ELEMENT_ENABLE = "elementEnable"
 const val KEY_SHA_CONTENT = "shaContent"
 const val KEY_FILE_SHA_CONTENT = "fileShaContent"
+const val KEY_USER_ID = "userId"
+const val KEY_CANCEL_FLAG = "cancelFlag"
+const val KEY_SEND_MSG_FLAG = "sendMsgFlag"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -70,6 +70,7 @@ include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
 include(":core:common:common-stream")
+include(":core:common:common-task")
 include(":core:common:common-expression")
 include(":core:common:common-test")
 include(":core:common:common-auth")
@@ -255,6 +256,7 @@ include(":ext:tencent:log:biz-log-tencent")
 include(":ext:tencent:log:boot-log-tencent")
 
 include(":ext:tencent:misc")
+include(":ext:tencent:misc:api-misc-tencent")
 include(":ext:tencent:misc:api-image-tencent")
 include(":ext:tencent:misc:api-support-tencent")
 include(":ext:tencent:misc:api-monitoring-tencent")
@@ -394,6 +396,7 @@ include(":ext:tencent:sign:boot-sign-tencent")
 include(":ext:tencent:sign:model-sign-tencent")
 
 include(":ext:tencent:metrics")
+include(":ext:tencent:metrics:api-metrics-tencent")
 include(":ext:tencent:metrics:biz-metrics-tencent")
 include(":ext:tencent:metrics:boot-metrics-tencent")
 

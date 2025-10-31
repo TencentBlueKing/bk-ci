@@ -41,7 +41,9 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmOauthService
 import org.slf4j.LoggerFactory
@@ -353,6 +355,44 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 type = type,
                 token = token,
                 crId = crId
+            )
+        )
+    }
+
+    override fun getTagInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        tagName: String
+    ): Result<GitTagInfo?> {
+        return Result(
+            scmOauthService.getTag(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                tagName = tagName
+            )
+        )
+    }
+
+    override fun getTapdWorkItems(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        refType: String,
+        iid: Long
+    ): Result<List<TapdWorkItem>> {
+        return Result(
+            scmOauthService.getTapdWorkItems(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                refType = refType,
+                iid = iid
             )
         )
     }

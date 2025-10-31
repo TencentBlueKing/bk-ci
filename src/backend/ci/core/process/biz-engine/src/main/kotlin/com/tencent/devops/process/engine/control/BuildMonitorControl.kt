@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,13 +31,16 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
@@ -53,13 +56,13 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -83,7 +86,7 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val redisOperation: RedisOperation
 ) {
@@ -448,7 +451,7 @@ class BuildMonitorControl @Autowired constructor(
                 ) + ". Cancel build!"),
                 tag = VMUtils.genStartVMTaskId(jobId),
                 containerHashId = jobId,
-                executeCount = 1,
+                executeCount = event.executeCount,
                 jobId = null,
                 stepId = VMUtils.genStartVMTaskId(jobId)
             )
@@ -484,14 +487,20 @@ class BuildMonitorControl @Autowired constructor(
                 }
             }
             if (canStart) {
-                val buildId = event.buildId
+                val buildId = buildInfo.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(event.projectId, buildInfo.buildId)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                        params = arrayOf(buildInfo.buildId)
-                    )
-                val triggerContainer = model.getTriggerContainer()
+                val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    containerId = "0",
+                    executeCount = buildInfo.executeCount
+                ) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
+                )
+                val buildNoMap =
+                    triggerRecordContainer.containerVar[TriggerContainer::buildNo.name] as? Map<*, *>
+                val buildNoTypeStr = buildNoMap?.get(BuildNo::buildNoType.name)?.toString()
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = START_EVENT_SOURCE,
@@ -503,7 +512,7 @@ class BuildMonitorControl @Autowired constructor(
                         status = BuildStatus.RUNNING,
                         actionType = ActionType.START,
                         executeCount = buildInfo.executeCount,
-                        buildNoType = triggerContainer.buildNo?.buildNoType
+                        buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
                     )
                 )
             }

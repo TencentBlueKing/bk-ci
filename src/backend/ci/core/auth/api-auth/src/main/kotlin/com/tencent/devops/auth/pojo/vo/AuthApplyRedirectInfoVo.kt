@@ -13,5 +13,7 @@ data class AuthApplyRedirectInfoVo(
     @get:Schema(title = "动作名称")
     val actionName: String? = null,
     @get:Schema(title = "用户组信息列表")
-    val groupInfoList: List<AuthRedirectGroupInfoVo>
+    val groupInfoList: List<AuthRedirectGroupInfoVo>,
+    @get:Schema(title = "管理员列表")
+    val managers: List<String> = emptyList()
 )

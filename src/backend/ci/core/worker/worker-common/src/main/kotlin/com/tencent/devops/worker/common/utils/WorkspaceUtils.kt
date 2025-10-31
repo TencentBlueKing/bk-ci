@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -79,6 +79,7 @@ object WorkspaceUtils {
 
                 return workspaceDir
             }
+
             BuildType.AGENT -> {
                 val replaceWorkspace = if (workspace.isNotBlank()) {
                     ReplacementUtils.replace(
@@ -116,6 +117,7 @@ object WorkspaceUtils {
 
                 return workspaceDir
             }
+
             else -> {
                 throw IllegalArgumentException(
                     MessageUtil.getMessageByLocale(
@@ -127,21 +129,54 @@ object WorkspaceUtils {
         }
     }
 
-    fun getPipelineLogDir(pipelineId: String): File {
-        val prefix = "DEVOPS_BUILD_LOGS_${pipelineId}_"
-        var tmpDir = System.getProperty("java.io.tmpdir")
-        val errorMsg = try {
-            val dir = File.createTempFile(prefix, null, null)
-            dir.delete()
-            if (dir.mkdir()) {
-                return dir
+    /**
+     * 在临时目录下生成一个目录名DEVOPS_BUILD_LOGS_[pipelineId]_{{System.nanoTime}}_{{attempt}}的文件夹并返回。
+     * 当发生错误时，每隔10 * attempt毫秒进行重试，以3次重试为例，则间隔10、20、30毫秒
+     *
+     * attempt 代表重试了多少次。最大3次重试
+     * System.nanoTime 代表当前时间戳纳秒，出错时每次重试都会重新获取最新时间以尽可能避免因时间相同导致的冲突失败。
+     *
+     * @return File
+     * @throws IOException 当无权限创建失败等情况
+     *
+     */
+    @Suppress("MagicNumber", "NestedBlockDepth")
+    fun getPipelineLogDir(pipelineId: String, maxRetries: Int = 3): File {
+        val tmpDir = System.getProperty("java.io.tmpdir")
+        var errorMsg = ""
+        repeat(times = maxRetries) { attempt ->
+            try {
+                val dir = File(tmpDir, "DEVOPS_BUILD_LOGS_${pipelineId}_${System.nanoTime()}_$attempt")
+                // 如果不是文件夹，则先做删除
+                if (dir.exists() && !dir.isDirectory && !dir.delete()) {
+                    errorMsg = "temporary file delete failed [${dir.absolutePath}]"
+                    if (attempt < maxRetries - 1) {
+                        Thread.sleep(/* millis = */ 10L * (attempt + 1))
+                    }
+                    return@repeat
+                }
+                // 如果文件夹创建成功或者已经存在，则直接返回
+                if (dir.mkdir() || dir.exists()) {
+                    return dir
+                }
+
+                errorMsg = "temporary directory create failed [${dir.absolutePath}]"
+                if (attempt < maxRetries - 1) {
+                    Thread.sleep(/* millis = */ 10L * (attempt + 1))
+                }
+            } catch (ise: Exception) {
+                when (ise) {
+                    is IOException,
+                    is SecurityException -> {
+                        errorMsg = ise.message ?: "temporary directory create failed"
+                        if (attempt < maxRetries - 1) {
+                            Thread.sleep(/* millis = */ 10L * (attempt + 1))
+                        }
+                    }
+
+                    else -> throw ise
+                }
             }
-            if (!dir.startsWith(tmpDir)) { // #5046 做一次修正
-                tmpDir = dir.parent
-            }
-            "temporary directory create failed"
-        } catch (ioe: IOException) {
-            ioe.message
         }
         throw IOException("$tmpDir: $errorMsg")
     }

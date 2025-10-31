@@ -16,12 +16,12 @@
             :rules="groupRules"
         >
             <bk-form-item
-                label="体验组名称"
+                :label="$t('experience.group_name')"
                 required
                 property="name"
             >
                 <bk-input
-                    placeholder="最长不超过20个字符"
+                    :placeholder="$t('experience.group_name_placeholder')"
                     maxlength="20"
                     name="groupName"
                     :input-style="inputStyle"
@@ -29,18 +29,18 @@
                 />
             </bk-form-item>
             <bk-form-item
-                label="描述"
+                :label="$t('experience.description')"
                 property="remark"
             >
                 <bk-input
                     type="textarea"
-                    placeholder="请输入"
+                    :placeholder="$t('experience.description_placeholder')"
                     :maxlength="200"
                     name="groupDesc"
                     v-model.trim="createGroupForm.remark"
                 />
             </bk-form-item>
-            <bk-form-item label="人员">
+            <bk-form-item :label="$t('experience.members')">
                 <section class="group-importer">
                     <bk-tab
                         :label-height="32"
@@ -55,7 +55,7 @@
                         </bk-tab-panel>
                         <header class="group-importer-header">
                             <bk-select
-                                placeholder="请选择"
+                                :placeholder="$t('experience.select_placeholder')"
                                 :value="importType"
                                 @selected="handleImportTypeSelected"
                                 :loading="loadingGroup"
@@ -82,7 +82,7 @@
                                 :icon="adding ? 'loading' : ''"
                                 @click="handleAddUser"
                             >
-                                添加
+                                {{ $t('experience.add_button') }}
                             </bk-button>
                         </header>
                     </bk-tab>
@@ -100,23 +100,23 @@
                             type="search-empty"
                             scene="part"
                         >
-                            <p class="memeber-search-empty-title">搜索结果为空</p>
+                            <p class="memeber-search-empty-title">{{ $t('experience.search_empty_title') }}</p>
                             <p class="memeber-search-empty-desc">
-                                可以尝试
-                                <span>调整关键词</span>
-                                或
+                                {{ $t('experience.search_empty_desc') }}
+                                <span>{{ $t('experience.adjust_keyword') }}</span>
+                                {{ $t('experience.or') }}
                                 <bk-button
                                     text
                                     theme="primary"
                                     @click="clearFilter"
                                 >
-                                    清空筛选条件
+                                    {{ $t('experience.clear_filter') }}
                                 </bk-button>
                             </p>
                         </bk-exception>
                         
                         <bk-table-column
-                            label="名称"
+                            :label="$t('experience.name_column')"
                             prop="name"
                             column-key="name"
                             sortable
@@ -126,13 +126,13 @@
                             :filters="nameFilter"
                         />
                         <bk-table-column
-                            label="内部/外部"
+                            :label="$t('experience.type_column')"
                             prop="typeLabel"
                             column-key="type"
                             :filters="typeFilters"
                         />
                         <bk-table-column
-                            label="所属组织架构"
+                            :label="$t('experience.org_column')"
                             prop="deptFullName"
                             column-key="deptFullName"
                             show-overflow-tooltip
@@ -140,7 +140,7 @@
                             :filters="orgFilters"
                         />
                         <bk-table-column
-                            label="操作"
+                            :label="$t('experience.action_column')"
                             width="80"
                         >
                             <template slot-scope="props">
@@ -149,7 +149,7 @@
                                     text
                                     @click="remove(props.row)"
                                 >
-                                    移除
+                                    {{ $t('experience.remove_button') }}
                                 </bk-button>
                             </template>
                         </bk-table-column>
@@ -167,13 +167,13 @@
                 theme="primary"
                 @click="handleSubmit"
             >
-                提交
+                {{ $t('experience.submit_button') }}
             </bk-button>
             <bk-button
                 :disabled="isLoading || submitting"
                 @click="beforeClose"
             >
-                取消
+                {{ $t('experience.cancel_button') }}
             </bk-button>
         </footer>
     </bk-sideslider>
@@ -231,7 +231,7 @@
                 return {
                     name: [{
                         required: true,
-                        message: '用户组名称不能为空',
+                        message: this.$t('experience.validation.group_name_required'),
                         trigger: 'blur'
                     }]
                 }
@@ -239,25 +239,25 @@
             panels () {
                 return [{
                     name: 'manual',
-                    label: '手动添加'
+                    label: this.$t('experience.labels.manual_add')
                 }, {
                     name: 'import',
-                    label: '从用户组导入'
+                    label: this.$t('experience.labels.import_from_group')
                 }]
             },
             manualOptions () {
                 return [
                     {
                         id: 1,
-                        name: '内部人员'
+                        name: this.$t('experience.innerMember')
                     },
                     {
                         id: 3,
-                        name: '内部组织'
+                        name: this.$t('experience.innerOrgs')
                     },
                     {
                         id: 2,
-                        name: '外部人员'
+                        name: this.$t('experience.outerMember')
                     }
                 ]
             },
@@ -340,7 +340,7 @@
                     default:
                         return {
                             props: {
-                                placeholder: !this.isManual ? '请从左侧选择已有用户组' : '请输入',
+                                placeholder: this.$t(`experience.${!this.isManual ? 'selectGroupFromLeft' : 'description_placeholder'}`),
                                 key: this.isManual,
                                 disabled: !this.isManual,
                                 value: this.innerUsers,
@@ -373,13 +373,20 @@
                 })).slice(start, start + this.pagination.limit)
             },
             memberNames () {
-                return this.createGroupForm.members.map(item => item.name)
+                return this.createGroupForm.members.map(item => item.id)
             },
             nameFilter () {
-                return this.memberNames.map(item => ({
-                    text: item,
-                    value: item
-                }))
+                const nameSet = new Set()
+                return this.createGroupForm.members.reduce((acc, item) => {
+                    if (!nameSet.has(item.name)) {
+                        nameSet.add(item.name)
+                        acc.push({
+                            text: item.name,
+                            value: item.name
+                        })
+                    }
+                    return acc
+                }, [])
             },
             userSet () {
                 return new Set(this.memberNames)
@@ -475,12 +482,12 @@
                     switch (this.importType) {
                         case 3: {
                             if (!this.innerOrg) return
-                            if (this.userSet.has(this.innerOrg.name)) {
+                            if (this.userSet.has(this.innerOrg.id)) {
                                 this.$bkMessage({
-                                    message: `内部组织${this.innerOrg.name}已存在`,
+                                    message: this.$t('experience.messages.org_exists', { name: this.innerOrg.name }),
                                     theme: 'error'
                                 })
-                            this.$refs.inputComp?.clear?.()
+                                this.$refs.inputComp?.clear?.()
                                 this.innerOrg = null
                                 return
                             }
@@ -497,8 +504,9 @@
                                     ...this.createGroupForm.members
                                 ]
                             )
-                        this.$refs.inputComp?.clear?.()
+                            this.$refs.inputComp?.clear?.()
                             this.innerOrg = null
+                            this.clearFilter()
                             break
                         }
                         
@@ -531,7 +539,7 @@
                                     )
                                 } else if (this.innerUsers.filter(item => item.indexOf('@tai') === -1).length > 0) {
                                     this.$bkMessage({
-                                        message: `内部体验人员${this.innerUsers.join(',')}已存在`,
+                                        message: this.$t('experience.messages.member_exists', { names: this.innerUsers.join(',') }),
                                         theme: 'error'
                                     })
                                 }
@@ -586,7 +594,7 @@
                         params: createGroupForm
                     })
 
-                    message = '保存成功'
+                    message = this.$t('experience.save_success')
                     theme = 'success'
                     this.$emit('after-submit')
                 } catch (e) {
@@ -607,12 +615,12 @@
                 const conflictUserIds = legalUserIds
                     .filter(item => this.userSet.has(item))
                 this.$bkNotify({
-                    title: '添加外部用户结果',
+                    title: this.$t('experience.messages.external_user_result'),
                     limit: 1,
                     message: this.$createElement('div', {}, [
-                        list.length > 0 ? this.$createElement('p', {}, `${list.join(',')}用户添加成功`) : null,
-                        illegalUserIds.length > 0 ? this.$createElement('p', {}, `${illegalUserIds.join(',')}用户添加失败`) : null,
-                        conflictUserIds.length > 0 ? this.$createElement('p', {}, `${conflictUserIds.join(',')}用户已存在`) : null
+                        list.length > 0 ? this.$createElement('p', {}, this.$t('experience.messages.add_success', { users: list.join(',') })) : null,
+                        illegalUserIds.length > 0 ? this.$createElement('p', {}, this.$t('experience.messages.add_failed', { users: illegalUserIds.join(',') })) : null,
+                        conflictUserIds.length > 0 ? this.$createElement('p', {}, this.$t('experience.messages.already_exists', { users: conflictUserIds.join(',') })) : null
                     ]),
                     theme: illegalUserIds.length > 0 ? 'error' : conflictUserIds.length > 0 ? 'warning' : 'success'
                 })
@@ -634,9 +642,11 @@
             },
             beforeClose () {
                 this.$bkInfo({
-                    title: '离开后，新编辑的数据将会丢失',
+                    title: this.$t('experience.dialog.leave_warning'),
                     type: 'warning',
                     theme: 'warning',
+                    okText: this.$t('experience.confirm'),
+                    cancelText: this.$t('experience.cancel'),
                     confirmFn: () => {
                         this.cancelFn()
                     }
@@ -675,51 +685,54 @@
         max-height: 360px;
         overflow: auto;
     }
-    .group-form-content {
-        padding: 24px;
-        height: calc(100vh - 114px);
-        
-        .group-importer {
-            height: 100%;
-            background-color: #F5F7FA;
-            border-radius: 2px;
-            padding: 16px;
-            .bk-tab {
-                margin-bottom: 16px;
-            }
-            .bk-tab.bk-tab-border-card>.bk-tab-header {
-                background-color: transparent;
-                border: 0;
-                background-image: none !important;
-                .bk-tab-label-item {
-                    background: #EAEBF0;
+    .bk-sideslider-wrapper {
+        top: 50px;
+        .group-form-content {
+            padding: 24px;
+            height: calc(100vh - 150px);
+            
+            .group-importer {
+                height: 100%;
+                background-color: #F5F7FA;
+                border-radius: 2px;
+                padding: 16px;
+                .bk-tab {
+                    margin-bottom: 16px;
+                }
+                .bk-tab.bk-tab-border-card>.bk-tab-header {
+                    background-color: transparent;
                     border: 0;
-                    margin-right: 8px;
-                    border-radius: 4px 4px 0 0;
-                    &:active {
-                        background: white;
+                    background-image: none !important;
+                    .bk-tab-label-item {
+                        background: #EAEBF0;
+                        border: 0;
+                        margin-right: 8px;
+                        border-radius: 4px 4px 0 0;
+                        &:active {
+                            background: white;
+                        }
                     }
                 }
-            }
-            .memeber-search-empty-title {
-                font-size: 12px;
-            }
-            .memeber-search-empty-desc {
-                font-size: 12px;
-                > span {
-                    color: #979BA5;
+                .memeber-search-empty-title {
+                    font-size: 12px;
                 }
-            }
-            .bk-tab-section {
-                border: 0;
-                padding: 8px 16px;
-                background-color: white;;
-            }
-            .group-importer-header {
-                display: grid;
-                grid-template-columns: minmax(120px, auto) minmax(300px, auto) minmax(min-content, auto);
-                grid-gap: 10px;
-                align-items: flex-start;
+                .memeber-search-empty-desc {
+                    font-size: 12px;
+                    > span {
+                        color: #979BA5;
+                    }
+                }
+                .bk-tab-section {
+                    border: 0;
+                    padding: 8px 16px;
+                    background-color: white;;
+                }
+                .group-importer-header {
+                    display: grid;
+                    grid-template-columns: minmax(120px, auto) minmax(300px, auto) minmax(min-content, auto);
+                    grid-gap: 10px;
+                    align-items: flex-start;
+                }
             }
         }
     }

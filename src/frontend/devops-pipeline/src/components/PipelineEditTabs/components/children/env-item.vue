@@ -1,12 +1,20 @@
 <template>
     <div class="param-env-item">
         <div class="var-con">
-            <div
-                class="var-names"
-                :class="{ 'desc-param': desc }"
-                v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }"
-            >
-                <span>{{ name }}</span>
+            <div class="var-names-wrapper">
+                <div
+                    class="var-names"
+                    :class="{ 'desc-param': desc }"
+                    v-bk-tooltips="{ content: desc, disabled: !desc, allowHTML: true }"
+                >
+                    <span>{{ name }}</span>
+                </div>
+                <span
+                    v-if="remark"
+                    v-bk-tooltips="{ content: remark, placements: ['top'] }"
+                >
+                    <i class="bk-icon icon-info-circle"></i>
+                </span>
             </div>
             <div
                 class="var-operate"
@@ -53,6 +61,10 @@
                 default: false
             },
             disabledCopyTips: {
+                type: String,
+                default: ''
+            },
+            remark: {
                 type: String,
                 default: ''
             }
@@ -111,6 +123,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            .var-names-wrapper {
+                display: flex;
+                align-items: center;
+            }
             .var-names {
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -120,6 +136,7 @@
                 font-size: 12px;
                 letter-spacing: 0;
                 line-height: 20px;
+                margin-right: 5px;
             }
             .desc-param {
                 border-bottom: 1px dashed #979BA5;

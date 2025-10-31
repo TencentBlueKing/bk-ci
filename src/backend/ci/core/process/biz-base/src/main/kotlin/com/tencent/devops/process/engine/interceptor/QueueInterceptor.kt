@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -72,6 +72,11 @@ class QueueInterceptor @Autowired constructor(
     }
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        if (task.retryOnRunningBuild) {
+            // perf：流水线运行中、重试失败的步骤时提示队列满问题跟进和优化 #11807
+            // 运行中重试不进行构建流程判断
+            return Response(BuildStatus.RUNNING)
+        }
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
         val runLockType = task.runLockType
@@ -178,6 +183,9 @@ class QueueInterceptor @Autowired constructor(
         latestStartUser: String?,
         task: InterceptData
     ) {
+        if (!task.cancelAllowed) {
+            return
+        }
         // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"
         val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(
             projectId = projectId,
@@ -215,6 +223,9 @@ class QueueInterceptor @Autowired constructor(
         latestStartUser: String?,
         task: InterceptData
     ) {
+        if (!task.cancelAllowed) {
+            return
+        }
         // 因为排队队列是流水线级别，所以是取消当前流水线下同一并发组最早排队的构建，不一定是项目级别下同一并发组最早的构建。
         val buildInfo = ConcurrencyGroupLock(redisOperation, projectId, groupName).use { pipelineLock ->
             pipelineLock.lock()
@@ -272,66 +283,65 @@ class QueueInterceptor @Autowired constructor(
         val projectId = task.pipelineInfo.projectId
         val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
         return when {
-            concurrencyGroup.isNotBlank() -> {
-                if (task.concurrencyCancelInProgress) {
-                    val detailUrl = pipelineUrlBean.genBuildDetailUrl(
-                        projectCode = projectId,
-                        pipelineId = task.pipelineInfo.pipelineId,
-                        buildId = task.buildId,
-                        position = null,
-                        stageId = null,
-                        needShortUrl = false
-                    )
-                    // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
-                    // status 取所有没有完成的状态
-                    val status = BuildStatus.values().filterNot { it.isFinish() }
-                    val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                        projectId = projectId,
-                        concurrencyGroup = concurrencyGroup,
-                        status = status
-                    ).toMutableList()
-                    // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
-                    if (concurrencyGroup == task.pipelineInfo.pipelineId) {
-                        builds.addAll(
-                            0,
-                            pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
-                                projectId = projectId,
-                                pipelineId = task.pipelineInfo.pipelineId,
-                                status = status
-                            )
-                        )
-                    }
-                    builds.forEach { (pipelineId, buildId) ->
-                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
+            concurrencyGroup.isNotBlank() && task.concurrencyCancelInProgress && task.cancelAllowed -> {
+                val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                    projectCode = projectId,
+                    pipelineId = task.pipelineInfo.pipelineId,
+                    buildId = task.buildId,
+                    position = null,
+                    stageId = null,
+                    needShortUrl = false
+                )
+                // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
+                // status 取所有没有完成的状态
+                val status = BuildStatus.values().filterNot { it.isFinish() }
+                val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                    projectId = projectId,
+                    concurrencyGroup = concurrencyGroup,
+                    status = status
+                ).toMutableList()
+                // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
+                if (concurrencyGroup == task.pipelineInfo.pipelineId) {
+                    builds.addAll(
+                        0,
+                        pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                             projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            userId = latestStartUser ?: task.pipelineInfo.creator,
-                            groupName = concurrencyGroup,
-                            detailUrl = detailUrl
+                            pipelineId = task.pipelineInfo.pipelineId,
+                            status = status
                         )
-                    }
-                    Response(data = BuildStatus.RUNNING)
-                } else {
-                    // cancel-in-progress: false时，保持原有single逻辑
-                    checkRunLockWithSingleType(
-                        task = task,
-                        latestBuildId = latestBuildId,
-                        latestStartUser = latestStartUser,
-                        runningCount = runningCount,
-                        // #7681 在history表中取出当前流水线下相同并发组排队的数量。
-                        queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                            projectId = projectId,
-                            concurrencyGroup = concurrencyGroup,
-                            status = listOf(BuildStatus.QUEUE)
-                        ).count { it.first == task.pipelineInfo.pipelineId },
-                        groupName = concurrencyGroup
                     )
                 }
+                builds.forEach { (pipelineId, buildId) ->
+                    pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        userId = latestStartUser ?: task.pipelineInfo.creator,
+                        groupName = concurrencyGroup,
+                        detailUrl = detailUrl
+                    )
+                }
+                Response(data = BuildStatus.RUNNING)
+            }
+
+            concurrencyGroup.isNotBlank() && !task.concurrencyCancelInProgress -> {
+                // cancel-in-progress: false时，保持原有single逻辑
+                checkRunLockWithSingleType(
+                    task = task,
+                    latestBuildId = latestBuildId,
+                    latestStartUser = latestStartUser,
+                    runningCount = runningCount,
+                    // #7681 在history表中取出当前流水线下相同并发组排队的数量。
+                    queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                        projectId = projectId,
+                        concurrencyGroup = concurrencyGroup,
+                        status = listOf(BuildStatus.QUEUE)
+                    ).count { it.first == task.pipelineInfo.pipelineId },
+                    groupName = concurrencyGroup
+                )
             }
             // 满足条件
-            else ->
-                Response(data = BuildStatus.RUNNING)
+            else -> Response(data = BuildStatus.RUNNING)
         }
     }
 }

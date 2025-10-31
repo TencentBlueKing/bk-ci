@@ -201,7 +201,9 @@ class ExperienceDao {
         scheme: String,
         buildId: String,
         pipelineId: String,
-        classify: String
+        classify: String,
+        repoCreateTime: LocalDateTime,
+        appNameI18n: String?,
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -238,7 +240,9 @@ class ExperienceDao {
                 SCHEME,
                 BUILD_ID,
                 PIPELINE_ID,
-                CLASSIFY
+                CLASSIFY,
+                REPO_CREATE_TIME,
+                APP_NAME_I18N
             ).values(
                 projectId,
                 name,
@@ -271,7 +275,9 @@ class ExperienceDao {
                 scheme,
                 buildId,
                 pipelineId,
-                classify
+                classify,
+                repoCreateTime,
+                appNameI18n
             )
                 .returning(ID)
                 .fetchOne()!!
@@ -611,5 +617,24 @@ class ExperienceDao {
             .fetch(0, Long::class.java)
 
         return result
+    }
+
+    fun listNullRepoCreateTime(dslContext: DSLContext, minId: Long, pageSize: Int): List<TExperienceRecord> {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.selectFrom(this)
+                .where(REPO_CREATE_TIME.isNull())
+                .and(ID.gt(minId))
+                .limit(pageSize)
+                .fetch()
+        }
+    }
+
+    fun updateRepoCreateTime(dslContext: DSLContext, id: Long, repoCreateTime: LocalDateTime): Int {
+        return with(TExperience.T_EXPERIENCE) {
+            dslContext.update(this)
+                .set(REPO_CREATE_TIME, repoCreateTime)
+                .where(ID.eq(id))
+                .execute()
+        }
     }
 }

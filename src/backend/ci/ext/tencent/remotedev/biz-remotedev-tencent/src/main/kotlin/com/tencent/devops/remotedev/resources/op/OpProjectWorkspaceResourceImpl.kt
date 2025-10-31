@@ -4,63 +4,46 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
-import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.TencentActionAuditContent
 import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.pojo.UpdateRemotedevBody
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
-import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.config.async.AsyncExecute
+import com.tencent.devops.remotedev.pojo.NotifyCategory
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
-import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
-import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
-import com.tencent.devops.remotedev.pojo.async.AsyncPipelineEvent
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
-import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
-import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
-import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
-import com.tencent.devops.remotedev.service.redis.ConfigCacheService
-import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeliverControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
-import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
 
 @Suppress("ALL")
 @RestResource
 class OpProjectWorkspaceResourceImpl @Autowired constructor(
-    private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
     private val workspaceService: WorkspaceService,
-    private val windowsResourceConfigService: WindowsResourceConfigService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val workspaceRecordService: WorkspaceRecordService,
-    private val client: Client,
     private val notifyControl: NotifyControl,
-    private val streamBridge: StreamBridge,
-    private val configCacheService: ConfigCacheService,
-    private val deliverControl: DeliverControl
+    private val deliverControl: DeliverControl,
+    private val notificationCenterService: NotificationCenterService
 ) : OpProjectWorkspaceResource {
     @AuditEntry(
         actionId = TencentActionId.CGS_ASSIGN,
@@ -75,169 +58,12 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     )
     override fun assignWorkspace(
         userId: String,
-        zoneType: WindowsResourceZoneConfigType?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
         logger.info("op assignWorkspace|$userId|$data")
         // 分配之前先同步下最新的数据
-        val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
-        when {
-            data.type.projectUse() -> assignProjectWorkspace(
-                data = data,
-                userId = userId,
-                cgsData = cgsData,
-                zoneType = zoneType
-            )
-
-            else -> assignPersonalWorkspace(data = data, cgsData = cgsData)
-        }
-
-        // 启动流水线完成剩下的分配工作
-        if (data.repoId.isNullOrBlank() || data.localDriver.isNullOrBlank()) {
-            return Result(true)
-        }
-
-        try {
-            val infoS = configCacheService.get(PIPELINE_CONFIG_INFO) ?: return Result(true)
-            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-
-            val cgsIps = data.cgsIds?.map {
-                val hostIdSub = it.split(".")
-                hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-            }?.toSet()
-            val resIps = mutableSetOf<String>()
-            resIps.addAll(cgsIps ?: emptySet())
-            resIps.addAll(data.ips ?: emptySet())
-
-            val newParam = mutableMapOf<String, String>()
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    "repoId" -> newParam[k] = data.repoId ?: ""
-                    "localDriver" -> newParam[k] = data.localDriver ?: ""
-                    else -> newParam[k] = v
-                }
-            }
-            AsyncExecute.dispatch(
-                streamBridge, AsyncPipelineEvent(
-                    userId = info.userId ?: userId,
-                    projectId = info.projectId,
-                    pipelineId = info.pipelineId,
-                    values = newParam
-                )
-            )
-        } catch (e: Exception) {
-            logger.warn("execute assignWorkspace pipeline error", e)
-        }
-
+        createControl.assignWorkspace(userId, data)
         return Result(true)
-    }
-
-    private fun assignProjectWorkspace(
-        data: OpProjectWorkspaceAssignData,
-        userId: String,
-        cgsData: List<EnvironmentResourceData>,
-        zoneType: WindowsResourceZoneConfigType?
-    ) {
-        val projectId = checkNotNull(data.projectId)
-        // 增加可以分配的配额
-        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
-            client.get(ServiceTxProjectResource::class).updateRemotedev(
-                userId = userId,
-                projectCode = projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null,
-                data = UpdateRemotedevBody(null)
-            )
-        }
-        // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
-        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-        val allowSpecSize = windowsResourceConfigService.fetchSpec(
-            projectId = data.projectId,
-            machineType = null,
-            page = 1,
-            pageSize = 1000
-        ).records.associate { it.size to it.quota }
-        cgsData.forEach { cgs ->
-            // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
-            if (cgs.machineType in allSpecSize) {
-                windowsResourceConfigService.createOrUpdateSpec(
-                    WindowsSpecResInfo(
-                        projectId = projectId,
-                        size = cgs.machineType.trim(),
-                        quota = ((allowSpecSize[cgs.machineType.trim()] ?: 0) + 1)
-                    )
-                )
-            }
-            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
-            // 先校验该cgsId是否已被申领分配并运行中
-            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
-            // 审计
-            ActionAuditContext.current()
-                .addInstanceInfo(
-                    cgs.cgsId,
-                    cgs.cgsId,
-                    null,
-                    null
-                )
-                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
-                .scopeId = data.projectId
-            // 再根据机型和地域获取硬件资源配置
-            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
-                machineType = cgs.machineType
-            ) ?: return
-            // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.projectCreateWorkspace(
-                pmUserId = userId,
-                projectId = projectId,
-                cgsId = cgs.cgsId,
-                workspaceCreate = WindowsWorkspaceCreate(
-                    windowsType = windowsResourceConfigId.size,
-                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
-                    baseImageId = 0,
-                    count = 1
-                ),
-                zoneType = zoneType
-            )
-            Thread.sleep(200)
-        }
-    }
-
-    private fun assignPersonalWorkspace(
-        data: OpProjectWorkspaceAssignData,
-        cgsData: List<EnvironmentResourceData>
-    ) {
-        val owner = checkNotNull(data.owner)
-        cgsData.forEach { cgs ->
-            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
-            // 先校验该cgsId是否已被申领分配并运行中
-            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
-            // 审计
-            ActionAuditContext.current()
-                .addInstanceInfo(
-                    cgs.cgsId,
-                    cgs.cgsId,
-                    null,
-                    null
-                )
-                .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
-                .scopeId = data.projectId
-            // 再根据机型和地域获取硬件资源配置
-            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
-                machineType = cgs.machineType
-            ) ?: return
-            createControl.loadWorkspaceWithPersonalWindows(
-                userId = owner,
-                workspaceCreate = WindowsWorkspaceCreate(
-                    windowsType = windowsResourceConfigId.size,
-                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
-                    baseImageId = 0,
-                    count = 1
-                ),
-                cgsId = cgs.cgsId
-            )
-            Thread.sleep(200)
-        }
     }
 
     override fun getProjectWorkspaceList(
@@ -256,9 +82,11 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
+        // 保持现有历史记录创建逻辑
         notifyControl.notifyWorkspaceInfo(
             userId = userId,
-            notifyData = notifyData
+            notifyData = notifyData,
+            bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.SYSTEM.name)
         )
         return Result(true)
     }
@@ -275,7 +103,11 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun assignUser(userId: String, workspaceName: String, assigns: List<ProjectWorkspaceAssign>): Result<Boolean> {
+    override fun assignUser(
+        userId: String,
+        workspaceName: String,
+        assigns: List<ProjectWorkspaceAssign>
+    ): Result<Boolean> {
         deliverControl.assignUser2Workspace(
             userId = userId,
             workspaceName = workspaceName,
@@ -284,6 +116,17 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         )
 
         return Result(true)
+    }
+
+    override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = WorkspaceProperty(displayName)
+            )
+        )
     }
 
     companion object {

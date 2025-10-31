@@ -70,5 +70,5 @@ data class UserInfoAuthCheck(
     @get:Schema(title = "项目ID")
     val projectId: String,
     @get:Schema(title = "用户ID")
-    val userId: String
+    val userId: String?
 )

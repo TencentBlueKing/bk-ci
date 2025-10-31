@@ -131,7 +131,7 @@ class WorkspaceRecordService @Autowired constructor(
             userId = enableUser,
             workspaceName = workspaceName,
             projectId = null,
-            expiredInSecond = 24 * 3600
+            expiredInSecond = 7 * 24 * 3600
         )
         return Pair(
             true,
@@ -253,6 +253,11 @@ class WorkspaceRecordService @Autowired constructor(
                         field = "metadata.media.startTime",
                         value = stopTime,
                         operation = "LTE"
+                    ),
+                    NodeSearchRulesItem(
+                        field = "fullPath",
+                        value = "*.mp4",
+                        operation = "MATCH"
                     )
                 ),
                 relation = "AND"

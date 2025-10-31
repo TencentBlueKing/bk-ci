@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -343,21 +343,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 validate(ProjectValidateType.project_name, projectName)
                 validate(ProjectValidateType.english_name, englishName)
             }
-            validateProjectRelateProduct(
-                ProjectProductValidateDTO(
-                    englishName = englishName,
-                    userId = userId,
-                    projectOperation = ProjectOperation.CREATE,
-                    channelCode = projectChannel,
-                    productId = productId
-                )
-            )
             validateProjectOrganization(
                 projectChannel = projectChannel,
                 bgId = bgId,
                 bgName = bgName,
                 deptId = deptId,
                 deptName = deptName
+            )
+            validateProjectRelateProduct(
+                ProjectProductValidateDTO(
+                    englishName = englishName,
+                    userId = userId,
+                    projectOperation = ProjectOperation.CREATE,
+                    channelCode = projectChannel,
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId,
+                    bgName = bgName
+                )
             )
             validateProperties(properties)
         }
@@ -685,7 +688,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     englishName = englishName,
                     userId = userId,
                     projectOperation = ProjectOperation.UPDATE,
-                    productId = productId
+                    productId = productId,
+                    productName = productName,
+                    bgId = bgId,
+                    bgName = bgName
                 )
             )
             validateProjectOrganization(
@@ -999,23 +1005,54 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 获取所有项目信息
      */
-    override fun list(userId: String, productIds: String?): List<ProjectVO> {
+    override fun list(
+        userId: String,
+        productIds: String?,
+        channelCodes: String?,
+        sort: ProjectSortType?,
+        page: Int?,
+        pageSize: Int?
+    ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
+        val (offset, limit) = if (page != null && pageSize != null) {
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+            sqlLimit.offset to sqlLimit.limit
+        } else {
+            null to null
+        }
         try {
 
             val projects = getProjectFromAuth(userId, null)
+            val projectsWithManagePermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.MANAGE
+            )
+            val projectsWithViewPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.VIEW
+            )
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(
                 dslContext = dslContext,
                 englishNameList = projects,
-                offset = null,
-                limit = null,
+                offset = offset,
+                limit = limit,
                 searchName = null,
-                productIds = productIds?.split(",")?.map { it.toInt() }?.toSet() ?: setOf()
+                productIds = splitStr(productIds).map { it.toInt() }.toSet(),
+                channelCodes = splitStr(channelCodes).toSet(),
+                sortType = sort
             ).map {
-                list.add(ProjectUtils.packagingBean(it))
+                list.add(
+                    ProjectUtils.packagingBean(
+                        tProjectRecord = it,
+                        managePermission = projectsWithManagePermission?.contains(it.englishName),
+                        viewPermission = projectsWithViewPermission?.contains(it.englishName)
+                    )
+                )
             }
             success = true
             return list
@@ -1090,6 +1127,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }?.remotedevManager
             )
         }
+    }
+
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = projectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map { ProjectUtils.packagingBean(it) }
     }
 
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
@@ -1281,7 +1331,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         englishName = englishName,
                         userId = userId,
                         projectOperation = ProjectOperation.ENABLE,
-                        productId = projectInfo.productId
+                        productId = projectInfo.productId,
+                        bgId = projectInfo.bgId,
+                        bgName = projectInfo.bgName
                     )
                 )
             }
@@ -1303,7 +1355,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         try {
             projectExtService.enableProject(
-                userId = userId ?: "",
+                userId = userId ?: "system",
                 projectId = englishName,
                 enabled = enabled
             )
@@ -1699,6 +1751,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun splitStr(str: String?) = if (str.isNullOrBlank()) {
+        listOf()
+    } else {
+        str.split(",")
     }
 
     companion object {

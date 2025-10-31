@@ -27,18 +27,39 @@
 
 package com.tencent.devops.remotedev.resources.external
 
+import com.tencent.devops.common.api.constant.SYSTEM
+import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
+import com.tencent.devops.remotedev.pojo.WhiteList
+import com.tencent.devops.remotedev.pojo.WhiteListType
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
+import com.tencent.devops.remotedev.service.WhiteListService
+import com.tencent.devops.remotedev.service.WhiteListService.Companion.CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX
+import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
+import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    private val softwareManageService: SoftwareManageService
+    private val softwareManageService: SoftwareManageService,
+    private val configCacheService: ConfigCacheService,
+    private val whiteListService: WhiteListService,
+    private val workspaceService: WorkspaceService
 ) : ExternalResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
+    }
 
     /*请求合法性校验时使用的密钥*/
     @Value("\${externalKey:}")
@@ -60,6 +81,51 @@ class ExternalResourceImpl @Autowired constructor(
             userId = userId,
             softwareList = softwareList
         )
+        return Result(true)
+    }
+
+    override fun cdsMeshEnableAndDomain(
+        ts: String,
+        token: String,
+        ip: String,
+        enable: String,
+        domain: String
+    ): Result<Boolean> {
+        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|ts=$ts|token=$token")
+        // ts 10位时间戳需与当前时间相差小于10秒
+        if (LocalDateTime.now().timestamp() - ts.toLong() > 10) {
+            logger.warn("ts not match|ts=$ts")
+            return Result(false)
+        }
+        val sign = ShaUtils.sha256("$ts$externalKey$ip")
+        if (sign != token) {
+            logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|ip=$ip")
+            return Result(false)
+        }
+        val ws = workspaceService.limitFetchProjectWorkspace(
+            limit = SQLLimit(0, 1),
+            queryType = QueryType.OP,
+            search = WorkspaceSearch(sips = listOf(ip), onFuzzyMatch = false)
+        ).ifEmpty {
+            logger.warn("no workspace found|ip=$ip")
+            return Result(false)
+        }.first()
+        val cdsMesh = enable.toBooleanStrictOrNull()
+        if (cdsMesh == true) {
+            whiteListService.opCreateOrUpdateWhiteList(
+                SYSTEM,
+                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
+            )
+        }
+        if (cdsMesh == false) {
+            whiteListService.opDeleteWhiteList(
+                SYSTEM,
+                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
+            )
+        }
+        if (domain.isNotBlank()) {
+            configCacheService.opInsertOrUpdateConfig(CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + ws.workspaceName, domain)
+        }
         return Result(true)
     }
 }

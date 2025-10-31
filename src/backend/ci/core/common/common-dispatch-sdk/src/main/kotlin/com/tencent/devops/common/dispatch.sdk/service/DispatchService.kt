@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,9 +66,9 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import feign.RetryableException
-import org.slf4j.LoggerFactory
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class DispatchService constructor(
@@ -338,8 +338,10 @@ class DispatchService constructor(
             )
         } catch (e: RetryableException) {
             if (retryTimes > 0) {
-                logger.warn("[$buildId]|[$containerId]| getContainerStartupInfo failed, " +
-                        "retryTimes=$retryTimes", e.message)
+                logger.warn(
+                    "[$buildId]|[$containerId]| getContainerStartupInfo failed, " +
+                            "retryTimes=$retryTimes", e.message
+                )
                 Thread.sleep(1000)
                 return getContainerStartupInfoWithRetry(
                     projectId = projectId,
@@ -442,7 +444,7 @@ class DispatchService constructor(
         )
     }
 
-    private fun redisKey(hashId: String, secretKey: String) =
+    fun redisKey(hashId: String, secretKey: String) =
         "docker_build_key_${hashId}_$secretKey"
 
     private fun secretInfoRedisKey(buildId: String) =

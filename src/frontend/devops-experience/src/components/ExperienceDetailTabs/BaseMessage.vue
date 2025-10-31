@@ -2,19 +2,19 @@
     <section class="main-content">
         <div class="base-content">
             <div class="base-detail-item">
-                <label class="item-label">发布人：</label>
+                <label class="item-label">{{ $t('experience.publisher') }}</label>
                 <div class="item-content">{{ curReleaseDetail.publisher }}</div>
             </div>
             <div class="base-detail-item">
-                <label class="item-label">发布时间：</label>
+                <label class="item-label">{{ $t('experience.publish_time') }}</label>
                 <div class="item-content">{{ curReleaseDetail.publish_time }}</div>
             </div>
             <div class="base-detail-item">
-                <label class="item-label">体验结束时间：</label>
+                <label class="item-label">{{ $t('experience.experience_end_time') }}</label>
                 <div class="item-content">{{ curReleaseDetail.end_time }}</div>
             </div>
             <div class="base-detail-item installation-package">
-                <label class="item-label">安装包：</label>
+                <label class="item-label">{{ $t('experience.installation_package') }}</label>
                 <ArtifactDownloadButton
                     :experience-id="experienceHashId"
                     :name="curReleaseDetail.installation_package"
@@ -28,11 +28,11 @@
                     v-if="(curReleaseDetail.canExperience && !curReleaseDetail.expired && curReleaseDetail.online) && isApkOrIpa(curReleaseDetail) && isWindows && isMof"
                     @click="downloadInstallation(curReleaseDetail.canExperience, curReleaseDetail.expired, curReleaseDetail.online, 'MoF')"
                 >
-                    {{ curReleaseDetail.installation_package }}（魔方有线安装）
+                    {{ curReleaseDetail.installation_package }} {{ $t('experience.mof_wired_installation') }}
                 </div>
             </div>
             <div class="base-detail-item list-item">
-                <label class="item-label">体验名单：</label>
+                <label class="item-label">{{ $t('experience.experience_list_label') }}</label>
                 <div class="item-content">
                     <bk-tab :active.sync="curTab">
                         <bk-tab-panel
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="base-detail-item version-desc-item">
-                <label class="item-label">版本描述：</label>
+                <label class="item-label">{{ $t('experience.version_description') }}</label>
                 <div class="item-content">
                     <p
                         class="version-desc"
@@ -77,15 +77,15 @@
                     src="../../images/nopermission-qrcode.png"
                     class="qrcode-view"
                 >
-                <div class="bg-cover">无权限体验</div>
+                <div class="bg-cover">{{ $t('experience.no_permission_experience') }}</div>
             </div>
             <p v-if="curReleaseDetail.url">
-                扫一扫，下载体验<span
+                {{ $t('experience.scan_to_download') }}<span
                     class="refresh-btn"
                     @click="refreshUrl"
-                >刷新</span>
+                >{{ $t('experience.refresh') }}</span>
             </p>
-            <p v-else>如有需要，请联系<span>{{ curReleaseDetail.publisher }}</span></p>
+            <p v-else>{{ $t('experience.contact_if_needed', [curReleaseDetail.publisher]) }}</p>
         </div>
     </section>
 </template>
@@ -128,15 +128,15 @@
                 return [
                     {
                         name: 'experienceGroups',
-                        label: '体验组'
+                        label: this.$t('experience.experience_group')
                     },
                     {
                         name: 'internal_list',
-                        label: '附加内部人员'
+                        label: this.$t('experience.additional_internal_members')
                     },
                     {
                         name: 'external_list',
-                        label: '附加外部人员'
+                        label: this.$t('experience.additional_external_members')
                     }
                 ]
             }

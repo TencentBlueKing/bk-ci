@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,26 +27,22 @@
 
 package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.store.api.common.OpenStoreResource
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpenStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val storeCommonService: StoreCommonService,
-    private val clientTokenService: ClientTokenService,
     private val redisOperation: RedisOperation
 ) : OpenStoreResource {
 
@@ -61,14 +57,6 @@ class OpenStoreResourceImpl @Autowired constructor(
         if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
             // 如果从缓存中查出该组件是公共组件则无需权限校验
             return Result(true)
-        }
-        // 校验token是否合法
-        val validateTokenFlag = clientTokenService.checkToken(token)
-        if (!validateTokenFlag) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(token)
-            )
         }
         return Result(
             storeCommonService.getStorePublicFlagByCode(storeCode, storeType) ||

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.constant.BATCH_TOKEN_HEADER
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import java.net.URLEncoder
 
 /**
  * 蓝鲸企业版/开源版专用Url实现
@@ -71,22 +73,55 @@ class BluekingAgentUrlServiceImpl constructor(
         os: OS,
         zoneName: String?,
         gateway: String?,
-        token: String
+        token: String,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?,
+        reInstallId: String?
     ): String {
         val gw = fixGateway(gateway)
         if (os == OS.WINDOWS) {
-            return "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" }; " +
-                    "\$response = Invoke-WebRequest " +
-                    "-Uri \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall\" " +
-                    "-Headers \$headers; " +
-                    "\$ps = [System.Text.Encoding]::UTF8.GetString(\$response.Content);Invoke-Expression -Command \$ps"
+            var sc = "\$ProgressPreference = 'SilentlyContinue';" +
+                    "\$headers = @{ \"$BATCH_TOKEN_HEADER\" = \"$token\" };" +
+                    "\$uri = \"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+            var t = "?"
+            if (!zoneName.isNullOrBlank()) {
+                sc += "${t}zoneName=$zoneName"
+                t = "&"
+            }
+            if (!loginName.isNullOrBlank()) {
+                sc += "${t}loginName=${URLEncoder.encode(loginName, "UTF-8")}"
+                t = "&"
+            }
+            if (!loginPassword.isNullOrBlank()) {
+                sc += "${t}loginPassword=${URLEncoder.encode(loginPassword, "UTF-8")}"
+                t = "&"
+            }
+            if (installType != null) {
+                sc += "${t}installType=$installType"
+                t = "&"
+            }
+            if (reInstallId != null) {
+                sc += "${t}reInstallId=$reInstallId"
+                t = "&"
+            }
+            sc += "\";\$webClient = New-Object System.Net.WebClient;" +
+                    "foreach (\$key in \$headers.Keys) {\$webClient.Headers.Add(\$key, \$headers[\$key])};"
+            sc += "\$ps = \$webClient.DownloadString(\$uri);Invoke-Expression -Command \$ps"
+            return sc
         }
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" " +
-                "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+                "\"$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
+        var t = "?"
         if (!zoneName.isNullOrBlank()) {
-            url += "?zoneName=$zoneName"
+            url += "${t}zoneName=$zoneName"
+            t = "&"
         }
-        return "$url | bash"
+        if (reInstallId != null) {
+            url += "${t}reInstallId=$reInstallId"
+            t = "&"
+        }
+        return "$url\" | bash"
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {

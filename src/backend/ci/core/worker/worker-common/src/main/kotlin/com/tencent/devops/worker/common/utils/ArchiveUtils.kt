@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -58,7 +58,8 @@ object ArchiveUtils {
         destPath: String,
         workspace: File,
         buildVariables: BuildVariables,
-        token: String? = null
+        token: String? = null,
+        metadata: Map<String, String> = emptyMap()
     ): Int {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
@@ -70,7 +71,8 @@ object ArchiveUtils {
                     file = it,
                     destPath = destPath,
                     buildVariables = buildVariables,
-                    token = token
+                    token = token,
+                    metadata = metadata
                 )
             }
             LoggerService.addNormalLine("${index + 1}/$size file(s) finished")
@@ -82,7 +84,8 @@ object ArchiveUtils {
         filePath: String,
         workspace: File,
         buildVariables: BuildVariables,
-        token: String? = null
+        token: String? = null,
+        metadata: Map<String, String> = emptyMap()
     ): Int {
         val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
         fileList.forEachIndexed { index, it ->
@@ -93,7 +96,8 @@ object ArchiveUtils {
                 api.uploadPipeline(
                     file = it,
                     buildVariables = buildVariables,
-                    token = token
+                    token = token,
+                    metadata = metadata
                 )
             }
             LoggerService.addNormalLine("${index + 1}/$size file(s) finished")

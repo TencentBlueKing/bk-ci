@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@ package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.annotation.BkCheckBlackListInterface
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
@@ -40,6 +41,7 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
     private val notifyMessageTemplateService: NotifyMessageTemplateService
 ) : ServiceNotifyMessageTemplateResource {
 
+    @BkCheckBlackListInterface
     override fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         return notifyMessageTemplateService.sendNotifyMessageByTemplate(request)
     }
@@ -48,6 +50,7 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
         return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
     }
 
+    @BkCheckBlackListInterface
     override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         return notifyMessageTemplateService.completeNotifyMessageByTemplate(request)
     }

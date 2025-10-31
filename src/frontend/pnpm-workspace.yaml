@@ -1,6 +1,5 @@
 packages:
   - "devops-*"
-  - "!devops-codecc"
   - "!devops-repo"
   - bk-pipeline
   - bk-permission
@@ -18,4 +17,4 @@ catalogs:
   webpack5:
     webpack: "~5.76.1"
   bkMagicVue:
-    "@tencent/bk-magic-vue": "2.5.9-beta.6"
+    "@tencent/bk-magic-vue": "2.5.10-beta.14"

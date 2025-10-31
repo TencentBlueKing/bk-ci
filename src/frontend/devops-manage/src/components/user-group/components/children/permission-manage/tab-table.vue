@@ -168,7 +168,7 @@ const URL_TEMPLATES = {
   pipeline_group: (projectId, row) => `${location.origin}/console/pipeline/${projectId}/list/listAuth/${row.resourceCode}/${row.resourceName}?groupId=${row.groupId}`,
   codecc_task: (projectId, row) => `${location.origin}/console/codecc/${projectId}/task/${row.resourceCode}/settings/authority?groupId=${row.groupId}`,
   repertory: (projectId, row) => `${location.origin}/console/codelib/${projectId}/?searchName=${row.resourceName}&id=${row.resourceCode}`,
-  env_node: (projectId, row) => `${location.origin}/console/environment/${projectId}/nodeList`,
+  env_node: (projectId, row) => `${location.origin}/console/environment/${projectId}/node/allNode`,
 };
 const props = defineProps({
   isShowOperation: {

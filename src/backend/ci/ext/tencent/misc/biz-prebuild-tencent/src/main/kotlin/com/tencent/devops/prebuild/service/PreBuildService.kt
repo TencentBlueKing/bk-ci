@@ -599,11 +599,18 @@ class PreBuildService @Autowired constructor(
         val listPreAgentResult =
             client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
 
-        if (listPreAgentResult.isNotOk()) {
+        if (listPreAgentResult.isNotOk() || listPreAgentResult.data == null) {
             logger.error("list prebuild agent failed")
             throw OperationException("list prebuild agent failed")
         }
-        val preAgents = listPreAgentResult.data!!
+
+        val preAgents = listPreAgentResult.data!!.filter {
+            // 过滤掉被删除的 agent
+            it.status != AgentStatus.DELETE.status
+        }
+        if (preAgents.isEmpty()) {
+            return null
+        }
 
         // 优先按hostname查，查不到再按IP地址查
         preAgents.forEach {

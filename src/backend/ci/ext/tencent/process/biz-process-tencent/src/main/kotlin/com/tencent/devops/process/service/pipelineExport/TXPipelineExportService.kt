@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -50,6 +51,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE
@@ -73,6 +75,8 @@ import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.process.yaml.v2.models.export.ExportPreScriptBuildYaml
 import com.tencent.devops.repository.pojo.Repository
@@ -113,13 +117,20 @@ class TXPipelineExportService @Autowired constructor(
     }
 
     // 导出工蜂CI-2.0的yml
-    fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
+    fun exportV2Yaml(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean = false,
+        archiveFlag: Boolean? = false
+    ): Response {
         val pair = generateV2Yaml(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             isGitCI = isGitCI,
-            exportFile = true
+            exportFile = true,
+            archiveFlag = archiveFlag
         )
         return exportToFile(pair.first, pair.second.name)
     }
@@ -144,9 +155,12 @@ class TXPipelineExportService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         isGitCI: Boolean = false,
-        exportFile: Boolean = false
+        exportFile: Boolean = false,
+        archiveFlag: Boolean? = false
     ): Triple<String, Model, Map<String, List<List<PipelineExportV2YamlConflictMapItem>>>> {
-        pipelinePermissionService.validPipelinePermission(
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -157,15 +171,20 @@ class TXPipelineExportService @Autowired constructor(
                 params = arrayOf(userId, projectId)
             )
         )
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        )
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 params = arrayOf(pipelineId)
             )
 
-        val baseModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
-            ?.model ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId, pipelineId = pipelineId, archiveFlag = archiveFlag
+        )?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
@@ -181,7 +200,8 @@ class TXPipelineExportService @Autowired constructor(
         val groups = pipelineGroupService.getGroups(
             userId = userId,
             projectId = pipelineInfo.projectId,
-            pipelineId = pipelineInfo.pipelineId
+            pipelineId = pipelineInfo.pipelineId,
+            archiveFlag = archiveFlag
         )
         val labels = mutableListOf<String>()
         groups.forEach {

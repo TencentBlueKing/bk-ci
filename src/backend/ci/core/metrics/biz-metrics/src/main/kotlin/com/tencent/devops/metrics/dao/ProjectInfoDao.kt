@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -243,30 +243,6 @@ class ProjectInfoDao {
         }
     }
 
-    fun getAtomOverviewDataProjectAtomCount(
-        dslContext: DSLContext,
-        projectId: String
-    ): Int {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    fun projectAtomCount(
-        dslContext: DSLContext,
-        projectId: String
-    ): Int {
-        with(TProjectAtom.T_PROJECT_ATOM) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
     fun projectAtomRelationCountByAtomCode(
         dslContext: DSLContext,
         projectId: String,
@@ -280,24 +256,6 @@ class ProjectInfoDao {
                 .and(ATOM_CODE.eq(atomCode))
                 .and(ATOM_NAME.eq(atomName))
                 .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    fun queryProjectAtomNewNameInfo(
-        dslContext: DSLContext,
-        projectId: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Record3<String, String, LocalDateTime>> {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            return dslContext.select(
-                ATOM_CODE,
-                ATOM_NAME,
-                DSL.max(CREATE_TIME)
-            ).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .groupBy(ATOM_CODE)
-                .fetch()
         }
     }
 
@@ -331,56 +289,35 @@ class ProjectInfoDao {
         }
     }
 
-    fun saveProjectAtomInfo(
-        dslContext: DSLContext,
-        saveProjectAtomRelationPO: SaveProjectAtomRelationDataPO
-    ) {
-        with(TProjectAtom.T_PROJECT_ATOM) {
-            dslContext.insertInto(
-                this,
-                ID,
-                PROJECT_ID,
-                ATOM_CODE,
-                ATOM_NAME,
-                CREATOR,
-                MODIFIER
-            ).values(
-                saveProjectAtomRelationPO.id,
-                saveProjectAtomRelationPO.projectId,
-                saveProjectAtomRelationPO.atomCode,
-                saveProjectAtomRelationPO.atomName,
-                saveProjectAtomRelationPO.creator,
-                saveProjectAtomRelationPO.modifier
-            ).onDuplicateKeyUpdate()
-                .set(ATOM_NAME, saveProjectAtomRelationPO.atomName)
-                .execute()
-        }
-    }
-
     fun batchSaveProjectAtomInfo(
         dslContext: DSLContext,
         saveProjectAtomRelationPOs: List<SaveProjectAtomRelationDataPO>
     ) {
-        saveProjectAtomRelationPOs.forEach {
+        if (saveProjectAtomRelationPOs.isEmpty()) return
+        // 分批次处理（每批100条）
+        saveProjectAtomRelationPOs.chunked(100) { chunk ->
             with(TProjectAtom.T_PROJECT_ATOM) {
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    PROJECT_ID,
-                    ATOM_CODE,
-                    ATOM_NAME,
-                    CREATOR,
-                    MODIFIER
-                ).values(
-                    it.id,
-                    it.projectId,
-                    it.atomCode,
-                    it.atomName,
-                    it.creator,
-                    it.modifier
-                ).onDuplicateKeyUpdate()
-                    .set(ATOM_NAME, it.atomName)
-                    .execute()
+                dslContext.batch(
+                    chunk.map { po ->
+                        dslContext.insertInto(
+                            this,
+                            ID,
+                            PROJECT_ID,
+                            ATOM_CODE,
+                            ATOM_NAME,
+                            CREATOR,
+                            MODIFIER
+                        ).values(
+                            po.id,
+                            po.projectId,
+                            po.atomCode,
+                            po.atomName,
+                            po.creator,
+                            po.modifier
+                        ).onDuplicateKeyUpdate()
+                            .set(ATOM_NAME, po.atomName)
+                    }
+                ).execute()
             }
         }
     }

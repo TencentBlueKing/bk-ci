@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CheckPrivateKeyAndTokenReq
+import com.tencent.devops.scm.pojo.CheckUsernameAndPasswordReq
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
@@ -38,13 +40,15 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
@@ -191,6 +195,13 @@ interface ServiceScmResource {
     ): Result<TokenCheckResult>
 
     @Operation(summary = "Check if the svn private key and passphrase legal")
+    @POST
+    @Path("tokenCheckNew")
+    fun checkPrivateKeyAndTokenNew(
+        request: CheckPrivateKeyAndTokenReq
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
     @GET
     @Path("usernameAndPasswordCheck")
     fun checkUsernameAndPassword(
@@ -218,6 +229,13 @@ interface ServiceScmResource {
         @Parameter(description = "仓库对应的用户名", required = false)
         @QueryParam("repoUsername")
         repoUsername: String
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
+    @POST
+    @Path("usernameAndPasswordCheckNew")
+    fun checkUsernameAndPasswordNew(
+        request: CheckUsernameAndPasswordReq
     ): Result<TokenCheckResult>
 
     @Operation(summary = "添加Git或者Gitlab WEB hook")
@@ -497,4 +515,49 @@ interface ServiceScmResource {
     fun getLoginSession(
         reposSessionRequest: RepoSessionRequest
     ): Result<LoginSession?>
+
+    @Operation(summary = "获取指定 TAG")
+    @GET
+    @Path("getTagInfo")
+    fun getTagInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "tagName", required = true)
+        @QueryParam("tagName")
+        tagName: String
+    ): Result<GitTagInfo?>
+
+    @Operation(summary = "获取mr关联的tapd单")
+    @GET
+    @Path("getTapdWorkItems")
+    fun getTapdWorkItems(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "类型,可选mr,cr,issue")
+        @QueryParam("refType")
+        refType: String,
+        @Parameter(description = "iid,类型对应的iid")
+        @QueryParam("iid")
+        iid: Long
+    ): Result<List<TapdWorkItem>>
 }

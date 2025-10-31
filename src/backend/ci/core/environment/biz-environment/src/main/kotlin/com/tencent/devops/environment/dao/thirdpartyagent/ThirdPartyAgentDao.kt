@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,11 +30,14 @@ package com.tencent.devops.environment.dao.thirdpartyagent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.UpdateConditionStep
 import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -326,7 +329,7 @@ class ThirdPartyAgentDao {
         dslContext: DSLContext,
         projectId: String,
         nodeIds: Set<Long>,
-        os: OS?,
+        os: OS?
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
@@ -373,7 +376,9 @@ class ThirdPartyAgentDao {
     }
 
     fun saveAgentEnvs(dslContext: DSLContext, agentIds: Set<Long>, envStr: String) {
-        if (agentIds.isEmpty()) { throw IllegalArgumentException("The agent IDs must be non-empty") }
+        if (agentIds.isEmpty()) {
+            throw IllegalArgumentException("The agent IDs must be non-empty")
+        }
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(AGENT_ENVS, envStr)
@@ -422,6 +427,70 @@ class ThirdPartyAgentDao {
                 }
                 from
             }.fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun fetchByProjectId(dslContext: DSLContext, projectId: String): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+        }
+    }
+
+    fun updateAgentInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: Long?,
+        nodeId: Long?,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?,
+        envs: List<EnvVar>?
+    ) {
+        if (agentId == null && nodeId == null) {
+            return
+        }
+        if (parallelTaskCount == null && dockerParallelTaskCount == null && envs.isNullOrEmpty()) {
+            return
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.update(this)
+            if (parallelTaskCount != null) {
+                dsl.set(PARALLEL_TASK_COUNT, parallelTaskCount)
+            }
+            if (dockerParallelTaskCount != null) {
+                dsl.set(DOCKER_PARALLEL_TASK_COUNT, dockerParallelTaskCount)
+            }
+            if (!envs.isNullOrEmpty()) {
+                dsl.set(AGENT_ENVS, JsonUtil.toJson(envs, false))
+            }
+            if (agentId != null) {
+                (dsl as UpdateSetMoreStep<*>).where(ID.eq(agentId))
+            } else {
+                (dsl as UpdateSetMoreStep<*>).where(NODE_ID.eq(nodeId))
+            }
+            (dsl as UpdateConditionStep<*>).and(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
+    fun batchUpdateParallelTaskCount(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: Set<Long>,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
+        if (parallelTaskCount == null && dockerParallelTaskCount == null) {
+            return
+        }
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            val dsl = dslContext.update(this)
+            if (parallelTaskCount != null) {
+                dsl.set(PARALLEL_TASK_COUNT, parallelTaskCount)
+            }
+            if (dockerParallelTaskCount != null) {
+                dsl.set(DOCKER_PARALLEL_TASK_COUNT, dockerParallelTaskCount)
+            }
+            (dsl as UpdateSetMoreStep<*>).where(PROJECT_ID.eq(projectId))
+                .and(ID.`in`(ids)).execute()
         }
     }
 }

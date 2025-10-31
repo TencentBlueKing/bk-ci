@@ -1,10 +1,10 @@
 package com.tencent.devops.remotedev.dao
 
-import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TClient
 import com.tencent.devops.model.remotedev.tables.records.TClientRecord
+import com.tencent.devops.remotedev.pojo.clientupgrade.ClientOS
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.springframework.stereotype.Repository
@@ -20,7 +20,7 @@ class ClientDao {
         currentWorkspaceNames: Set<String>,
         version: String,
         startVersion: String,
-        os: OS?
+        os: ClientOS?
     ) {
         with(TClient.T_CLIENT) {
             dslContext.insertInto(

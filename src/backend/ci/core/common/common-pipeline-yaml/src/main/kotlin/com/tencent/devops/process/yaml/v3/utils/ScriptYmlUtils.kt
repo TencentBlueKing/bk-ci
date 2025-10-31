@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -493,6 +493,8 @@ object ScriptYmlUtils {
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
             retryTimes = preStep.retryTimes,
+            canPauseBeforeRun = preStep.canPauseBeforeRun,
+            pauseNoticeReceivers = preStep.pauseNoticeReceivers,
             env = preStep.env,
             run = preStep.run,
             runAdditionalOptions = mapOf("shell" to preStep.shell),
@@ -663,6 +665,7 @@ object ScriptYmlUtils {
 
         if (preTriggerOn is PreTriggerOnV3) {
             res.repoName = preTriggerOn.repoName
+            res.scmCode = preTriggerOn.scmCode
         }
 
         return res

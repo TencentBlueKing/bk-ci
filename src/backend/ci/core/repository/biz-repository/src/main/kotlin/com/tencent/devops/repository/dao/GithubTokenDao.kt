@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -100,12 +100,9 @@ class GithubTokenDao {
         userId: String,
         githubTokenType: GithubTokenType?
     ): TRepositoryGithubTokenRecord? {
-        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return getByOperator(
-                dslContext = dslContext,
-                operator = userId,
-                githubTokenType = githubTokenType
-            ) ?: dslContext.selectFrom(this).where(USER_ID.eq(userId))
+        return with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
                 .let {
                     if (githubTokenType != null) {
                         it.and(TYPE.eq(githubTokenType.name))
@@ -122,15 +119,15 @@ class GithubTokenDao {
     ): TRepositoryGithubTokenRecord? {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             return dslContext.selectFrom(this)
-                .where(OPERATOR.eq(operator))
-                .let {
-                    if (githubTokenType != null) {
-                        it.and(TYPE.eq(githubTokenType.name))
-                    } else it
-                }
-                .orderBy(CREATE_TIME.desc())
-                .fetch()
-                .firstOrNull()
+                    .where(OPERATOR.eq(operator))
+                    .let {
+                        if (githubTokenType != null) {
+                            it.and(TYPE.eq(githubTokenType.name))
+                        } else it
+                    }
+                    .orderBy(CREATE_TIME.desc())
+                    .fetch()
+                    .firstOrNull()
         }
     }
 
@@ -139,10 +136,50 @@ class GithubTokenDao {
      */
     fun delete(
         dslContext: DSLContext,
-        userId: String
+        oauthUserId: String
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            dslContext.deleteFrom(this).where(USER_ID.eq(userId))
+            dslContext.deleteFrom(this).where(USER_ID.eq(oauthUserId)).execute()
+        }
+    }
+
+    fun listToken(
+        dslContext: DSLContext,
+        operator: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): List<TRepositoryGithubTokenRecord> {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(
+                        (OPERATOR.eq(operator).or(USER_ID.eq(operator).and(OPERATOR.isNull)))
+                                .and(TYPE.eq(githubTokenType.name))
+                    )
+                    .fetch()
+        }
+    }
+
+    fun listEmptyOperator(
+        dslContext: DSLContext,
+        limit: Int
+    ): List<TRepositoryGithubTokenRecord> {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            return dslContext.selectFrom(this)
+                    .where(OPERATOR.isNull)
+                    .orderBy(CREATE_TIME.desc())
+                    .limit(limit)
+                    .fetch()
+        }
+    }
+
+    fun updateOperator(
+        dslContext: DSLContext,
+        userIds: Set<String>
+    ) {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
+            dslContext.update(this)
+                    .set(OPERATOR, USER_ID)
+                    .where(USER_ID.`in`(userIds))
+                    .execute()
         }
     }
 }

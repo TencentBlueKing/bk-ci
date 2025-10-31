@@ -1,5 +1,7 @@
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 
@@ -77,4 +79,11 @@ interface ExperiencePermissionService {
     ): List<Long>
 
     fun deleteExperienceResource(projectId: String, experienceId: Long)
+
+    fun getApplyPermissionInformation(
+        user: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        artifactoryPath: String
+    ): AuthApplyRedirectInfoVo?
 }

@@ -41,7 +41,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateCreateDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateDeleteDisk
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateExpandDisk
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentOperateSyncVm
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.pojo.expert.CreateDiskDataClass
@@ -54,8 +54,10 @@ import com.tencent.devops.remotedev.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.remotedev.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmResp
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
-import com.tencent.devops.remotedev.pojo.remotedev.SyncVmData
+import com.tencent.devops.remotedev.pojo.remotedev.SyncVmInfo
 import com.tencent.devops.remotedev.pojo.remotedev.SyncVmResp
 import com.tencent.devops.remotedev.pojo.remotedev.TaskCommonResp
 import com.tencent.devops.remotedev.pojo.remotedev.VmDiskInfo
@@ -92,7 +94,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         }
 
         // 生产创建start资源的订单号
-        val orderId = checkNotNull(event.appName) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val orderId = event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
         val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
             event.devFile.zoneId
         } else {
@@ -210,7 +212,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 uid = getEnvironmentUid(workspaceName),
                 appName = appName,
                 userId = userId,
-                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
+                force = true
             )
         )
         return resp.taskUid
@@ -374,14 +377,28 @@ class StartCloudRemoteDevService @Autowired constructor(
         return workspaceBcsClient.deleteImage(imageId, delaySeconds)?.taskID
     }
 
-    override fun syncVm(data: SyncVmData): SyncVmResp? {
-        val req = SyncVmReq(
+    override fun syncVm(data: SyncVmInfo): SyncVmResp? {
+        val req = EnvironmentOperateSyncVm(
             syncOnly = data.syncOnly,
             uid = getEnvironmentUid(data.sourceWorkspaceName),
             targetEnvID = getEnvironmentUid(data.targetWorkspaceName)
         )
-        val res = workspaceBcsClient.syncVm(req) ?: return null
+        val resp = workspaceBcsClient.startOperateWorkspace(
+            userId = data.userId,
+            action = EnvironmentAction.SYNC_VM,
+            workspaceName = data.sourceWorkspaceName,
+            environmentOperate = req
+        )
         return SyncVmResp(
+            taskID = resp.taskID,
+            environmentUid = resp.environmentUid,
+            taskUid = resp.taskUid
+        )
+    }
+
+    override fun createCvm(data: CreateCvmData): CreateCvmResp? {
+        val res = workspaceBcsClient.createCvm(data) ?: return null
+        return CreateCvmResp(
             taskID = res.taskID,
             environmentUid = res.environmentUid,
             taskUid = res.taskUid

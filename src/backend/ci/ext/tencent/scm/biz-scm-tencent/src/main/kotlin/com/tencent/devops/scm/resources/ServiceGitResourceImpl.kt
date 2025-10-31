@@ -247,7 +247,7 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
         val token = gitService.getTokenFromCache(gitProjectId.toString())
-        return Result(GitToken(accessToken = token))
+        return Result(GitToken(accessToken = token, oauthUserId = ""))
     }
 
     override fun getUserInfoByToken(

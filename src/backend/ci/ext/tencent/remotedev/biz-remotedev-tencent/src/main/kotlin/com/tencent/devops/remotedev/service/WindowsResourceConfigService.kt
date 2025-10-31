@@ -69,8 +69,7 @@ class WindowsResourceConfigService @Autowired constructor(
     private val client: Client,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao,
-    private val permissionService: PermissionService
+    private val windowsGpuResourceDao: WindowsGpuResourceDao
 ) {
 
     companion object {
@@ -480,6 +479,19 @@ class WindowsResourceConfigService @Autowired constructor(
             windowsSpecResourceDao.createOrUpdateSpecRes(dslContext, projectId, machineType, count + res)
         }
         return windowsSpecResourceDao.fetchAllQuota(dslContext, projectId)
+    }
+
+    fun fetchSpec(
+        projectId: String,
+        machineType: String?
+    ): List<WindowsSpecResInfo> {
+        return windowsSpecResourceDao.fetchSpec(projectId, machineType, dslContext, null).map {
+            WindowsSpecResInfo(
+                projectId = it.projectId,
+                size = it.size,
+                quota = it.quota
+            )
+        }
     }
 
     fun fetchSpec(

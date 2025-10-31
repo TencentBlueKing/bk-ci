@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -48,6 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
@@ -105,6 +107,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                 TriggerType.CODE_SVN -> triggerTransfer.yaml2TriggerSvn(it.second, elements)
                 TriggerType.CODE_P4 -> triggerTransfer.yaml2TriggerP4(it.second, elements)
                 TriggerType.CODE_GITLAB -> triggerTransfer.yaml2TriggerGitlab(it.second, elements)
+                TriggerType.SCM_GIT -> triggerTransfer.yaml2TriggerScmGit(it.second, elements)
+                TriggerType.SCM_SVN -> triggerTransfer.yaml2TriggerScmSvn(it.second, elements)
             }
             yamlInput.aspectWrapper.setModelElement4Model(
                 elements.last(),
@@ -300,6 +304,34 @@ class ElementTransfer @Autowired(required = false) constructor(
             )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
+
+        val scmGitElement = fix[CodeScmGitWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            WebHookTriggerElementChanger(it as CodeScmGitWebHookTriggerElement)
+        }
+        if (!scmGitElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = scmGitElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "ScmGit"
+            )
+            res.putAll(gitTrigger.groupBy { ScmType.SCM_GIT })
+        }
+
+        val scmSvnElement = fix[CodeScmSvnWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            WebHookTriggerElementChanger(it as CodeScmSvnWebHookTriggerElement)
+        }
+        if (!scmSvnElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = scmSvnElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "SVN"
+            )
+            res.putAll(gitTrigger.groupBy { ScmType.SCM_SVN })
+        }
         return res
     }
 
@@ -363,6 +395,8 @@ class ElementTransfer @Autowired(required = false) constructor(
             retryWhenFailed = step.retryTimes != null && step.retryTimes > 0,
             retryCount = step.retryTimes ?: VariableDefault.DEFAULT_RETRY_COUNT,
             runCondition = runCondition,
+            pauseBeforeExec = step.canPauseBeforeRun,
+            subscriptionPauseUser = step.pauseNoticeReceivers?.joinToString(","),
             customCondition = if (runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
                 step.ifField?.expression
             } else {
@@ -375,8 +409,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             } else {
                 null
             },
-            manualRetry = step.manualRetry ?: false,
-            subscriptionPauseUser = userId
+            manualRetry = step.manualRetry ?: false
         )
 
         // bash
@@ -592,6 +625,12 @@ class ElementTransfer @Autowired(required = false) constructor(
                 element.additionalOptions?.retryCount
             } else null
             this.manualRetry = element.additionalOptions?.manualRetry?.nullIfDefault(false)
+            this.canPauseBeforeRun = element.additionalOptions?.pauseBeforeExec?.nullIfDefault(false)
+            this.pauseNoticeReceivers = if (this.canPauseBeforeRun == true) {
+                element.additionalOptions?.subscriptionPauseUser?.split(",")?.ifEmpty { null }
+            } else {
+                null
+            }
             this.env = element.customEnv?.associateBy({ it.key ?: "" }) {
                 it.value
             }?.ifEmpty { null }

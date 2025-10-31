@@ -27,7 +27,8 @@ class TxPipelineOutputService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        option: PipelineOutputSearchOption?
+        option: PipelineOutputSearchOption?,
+        archiveFlag: Boolean?
     ): List<PipelineOutput> {
         val artifacts = mutableListOf<FileInfo>()
         val reports = mutableListOf<TaskReport>()
@@ -37,7 +38,8 @@ class TxPipelineOutputService(
                 props = mapOf(
                     "pipelineId" to pipelineId,
                     "buildId" to buildId
-                )
+                ),
+                qualityMetadata = option?.qualityMetadata ?: emptyList()
             )
             artifacts.addAll(
                 bkRepoSearchService.search(
@@ -56,7 +58,8 @@ class TxPipelineOutputService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                needPermission = true
+                needPermission = true,
+                archiveFlag = archiveFlag
             )
             reports.addAll(client.get(ServiceReportResource::class).get(reportListDTO).data!!)
         }

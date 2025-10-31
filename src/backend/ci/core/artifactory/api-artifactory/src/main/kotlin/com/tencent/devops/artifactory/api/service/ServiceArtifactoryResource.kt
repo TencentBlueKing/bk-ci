@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,9 +40,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -187,31 +187,6 @@ interface ServiceArtifactoryResource {
         path: String
     ): Result<Url>
 
-    @Operation(summary = "创建内部链接")
-    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
-    @Path("/{projectId}/{artifactoryType}/downloadUrl")
-    @GET
-    fun downloadUrl(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @Parameter(description = "下载用户", required = true)
-        @QueryParam("userId")
-        userId: String,
-        @Parameter(description = "路径", required = true)
-        @QueryParam("path")
-        path: String,
-        @Parameter(description = "有效时间(s)", required = true)
-        @QueryParam("ttl")
-        ttl: Int,
-        @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
-        @QueryParam("directed")
-        directed: Boolean?
-    ): Result<Url>
-
     @Operation(summary = "获取文件信息")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/show")
     @Path("/{projectId}/{artifactoryType}/show")
@@ -339,9 +314,6 @@ interface ServiceArtifactoryResource {
     @GET
     @Path("/file/content")
     fun getFileContent(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "仓库项目", required = true)
         @QueryParam("projectId")
         projectId: String,
@@ -357,9 +329,6 @@ interface ServiceArtifactoryResource {
     @GET
     @Path("/fileNames/list")
     fun listFileNamesByPath(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @Parameter(description = "仓库项目", required = true)
         @QueryParam("projectId")
         projectId: String,

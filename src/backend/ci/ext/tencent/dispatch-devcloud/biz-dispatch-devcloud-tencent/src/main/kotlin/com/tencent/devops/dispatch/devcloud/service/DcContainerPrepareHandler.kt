@@ -32,7 +32,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Credential
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -66,6 +71,7 @@ class DcContainerPrepareHandler @Autowired constructor(
     private val dcContainerCreateHandler: DcContainerCreateHandler,
     private val dcContainerStartHandler: DcContainerStartHandler,
     private val dcContainerPersistenceHandler: DcContainerPersistenceHandler,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     commonConfig: CommonConfig,
     buildLogPrinter: BuildLogPrinter
 ) : StartupContainerHandler(commonConfig, buildLogPrinter, dispatchDevCloudClient) {
@@ -95,6 +101,14 @@ class DcContainerPrepareHandler @Autowired constructor(
             "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>" +
                 "【DevCloud容器问题FAQ】</a>"
         private const val BUILD_POOL_SIZE = 100000 // 单个流水线可同时执行的任务数量
+
+        private const val STANDARD_M = "Standard-M"
+        private const val HIGH_IO_L = "HighIO-L"
+        private const val STANDARD_S = "Standard-S"
+
+        private const val CONFIG_ID_ZERO = "0"
+        private const val HIGH_IO_M_CODE = "2"
+        private const val HIGH_IO_L_CODE = "10000"
     }
 
     override fun handlerRequest(handlerContext: DcStartupHandlerContext) {
@@ -116,7 +130,11 @@ class DcContainerPrepareHandler @Autowired constructor(
                 )
 
                 // 根据项目负载配置设置当前构建容器负载
-                setContainerPerformance(containerPool?.performanceConfigId ?: "0", this)
+                setContainerPerformance(
+                    performanceConfigId = containerPool?.performanceConfigId ?: "0",
+                    performanceUid = containerPool?.performanceUid ?: "",
+                    handlerContext = this
+                )
 
                 // 获取容器池空闲poolNo，如果poolNo绑定了container，则设置对应containerName
                 // 对poolNo, containerName, containerChanged赋值
@@ -136,6 +154,27 @@ class DcContainerPrepareHandler @Autowired constructor(
                     logger.info("$buildLogKey start idle container, poolNo: $poolNo, containerName: $containerName")
                     dcContainerStartHandler.handlerRequest(handlerContext)
                 }
+
+                pipelineEventDispatcher.dispatch(
+                    // devcloud docker 启动
+                    PipelineBuildStatusBroadCastEvent(
+                        source = "devcloud-docker-start-$containerName", projectId = projectId,
+                        pipelineId = pipelineId, userId = "",
+                        buildId = buildId, taskId = null, actionType = ActionType.START,
+                        containerHashId = containerHashId, jobId = jobId, stageId = null,
+                        stepId = null, atomCode = null, executeCount = executeCount,
+                        buildStatus = BuildStatus.RUNNING.name,
+                        type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
+                        labels = mapOf(
+                            PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
+                                "DEVCLOUD_DOCKER",
+                            PipelineBuildStatusBroadCastEvent.Labels::dockerContainerName.name to
+                                containerName,
+                            PipelineBuildStatusBroadCastEvent.Labels::dockerImage.name to
+                                (containerPool?.container ?: "")
+                        )
+                    )
+                )
             } catch (e: BuildFailureException) {
                 logger.error("$buildLogKey create devCloud failed. msg:${e.message}. \n$DEVCLOUD_HELP_URL")
                 throw BuildFailureException(
@@ -167,10 +206,12 @@ class DcContainerPrepareHandler @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
-                        messageCode = DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE) +
+                        messageCode = DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE
+                    ) +
                         ":${e.message}. \n" +
                         I18nUtil.getCodeLanMessage(
-                            messageCode = DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS) +
+                            messageCode = DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS
+                        ) +
                         "：$DEVCLOUD_HELP_URL"
                 )
             }
@@ -195,7 +236,7 @@ class DcContainerPrepareHandler @Autowired constructor(
         if (containerPool.third != null && !containerPool.third!!) {
             val containerPoolFixed = if (containerPool.container!!.startsWith(registryHost!!)) {
                 Pool(
-                    containerPool.container,
+                    container = containerPool.container,
                     Credential(registryUser!!, registryPwd!!),
                     containerPool.performanceConfigId,
                     containerPool.third
@@ -217,9 +258,15 @@ class DcContainerPrepareHandler @Autowired constructor(
 
     private fun setContainerPerformance(
         performanceConfigId: String?,
+        performanceUid: String,
         handlerContext: DcStartupHandlerContext
     ) {
-        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != "0") {
+        if (performanceUid.isNotBlank()) {
+            handlerContext.performanceUid = performanceUid
+            return
+        }
+
+        if (!performanceConfigId.isNullOrBlank() && performanceConfigId != CONFIG_ID_ZERO) {
             val performanceOption =
                 dcPerformanceOptionsDao.get(dslContext, performanceConfigId.toLong())
             if (performanceOption != null) {
@@ -231,6 +278,22 @@ class DcContainerPrepareHandler @Autowired constructor(
             handlerContext.cpu = cpu
             handlerContext.memory = memory
             handlerContext.disk = disk
+        }
+
+        // 根据performanceConfigId设置性能配置类型标识
+        // "2" → Standard-M (中等高性能配置)
+        // "10000" → HighIO-L (高等高性能配置)
+        // 其他情况(包括null/空字符串/"0"等) → Standard-S (标准配置)
+        when (performanceConfigId) {
+            HIGH_IO_M_CODE -> {
+                handlerContext.performanceUid = STANDARD_M
+            }
+            HIGH_IO_L_CODE -> {
+                handlerContext.performanceUid = HIGH_IO_L
+            }
+            else -> {
+                handlerContext.performanceUid = STANDARD_S
+            }
         }
     }
 
@@ -301,6 +364,7 @@ class DcContainerPrepareHandler @Autowired constructor(
 
                 true
             }
+
             OriginContainerStatus.exception.name -> {
                 clearExceptionContainer(containerInfo.containerName, handlerContext)
                 resetBuildPool(handlerContext)
@@ -311,6 +375,7 @@ class DcContainerPrepareHandler @Autowired constructor(
                 resetBuildPool(handlerContext)
                 true
             }
+
             else -> false
         }
     }
@@ -397,7 +462,8 @@ class DcContainerPrepareHandler @Autowired constructor(
         // 查看构建性能配置是否变更
         if (handlerContext.cpu != containerInfo.cpu ||
             handlerContext.disk != containerInfo.disk ||
-            handlerContext.memory != containerInfo.memory) {
+            handlerContext.memory != containerInfo.memory
+        ) {
             containerChanged = true
             logger.info("${handlerContext.buildLogKey} performanceConfig changed.")
         }
@@ -435,7 +501,8 @@ class DcContainerPrepareHandler @Autowired constructor(
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
             if (lastContainerPool.container != containerPool.container ||
-                lastContainerPool.credential != containerPool.credential) {
+                lastContainerPool.credential != containerPool.credential
+            ) {
                 logger.info(
                     "${handlerContext.buildLogKey} image changed. " +
                         "old image: $lastContainerPool, new image: $containerPool"
@@ -452,8 +519,10 @@ class DcContainerPrepareHandler @Autowired constructor(
             }
         } else {
             if (containerPool.container != images && handlerContext.dispatchMessage != images) {
-                logger.info("${handlerContext.buildLogKey} image changed. " +
-                                "old image: $images, new image: ${handlerContext.dispatchMessage}")
+                logger.info(
+                    "${handlerContext.buildLogKey} image changed. " +
+                        "old image: $images, new image: ${handlerContext.dispatchMessage}"
+                )
                 return true
             }
         }

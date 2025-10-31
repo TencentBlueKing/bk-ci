@@ -144,7 +144,7 @@
                             v-if="formData.authType === 'PASSWORD'"
                             class="password-tips"
                         >
-                            {{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}
+                            {{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}@10.0.0.1 -p 22 > password
                         </div>
                     </bk-form-item>
                     <bk-form-item
@@ -167,7 +167,7 @@
                             v-if="formData.authType === 'PASSWORD'"
                             class="keyFile-tips"
                         >
-                            {{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}
+                            {{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}@10.0.0.1 -p 22 -i mykeypair.pem
                         </div>
                     </bk-form-item>
                     <bk-form-item

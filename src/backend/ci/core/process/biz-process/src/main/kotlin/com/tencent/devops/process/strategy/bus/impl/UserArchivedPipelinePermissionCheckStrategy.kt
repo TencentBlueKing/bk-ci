@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -44,17 +44,18 @@ class UserArchivedPipelinePermissionCheckStrategy : IUserPipelinePermissionCheck
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        message: String?
     ) {
         val pipelinePermissionService = SpringContextUtil.getBean(PipelinePermissionService::class.java)
-        val language = I18nUtil.getLanguage()
+        val language = I18nUtil.getLanguage(userId)
         if (permission == AuthPermission.ARCHIVE) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = permission,
-                message = I18nUtil.getCodeLanMessage(
+                message = message ?: I18nUtil.getCodeLanMessage(
                     messageCode = CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language = language,
                     params = arrayOf(userId, projectId, permission.getI18n(language), pipelineId)

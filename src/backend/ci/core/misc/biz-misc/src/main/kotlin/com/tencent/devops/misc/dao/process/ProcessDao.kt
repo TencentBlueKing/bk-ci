@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,17 +29,22 @@ package com.tencent.devops.misc.dao.process
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.misc.pojo.project.PipelineVersionSimple
-import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineBuildHistoryDebug
 import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
+import com.tencent.devops.model.process.tables.TPipelineOperationLog
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.pojo.PipelineOperationLog
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -172,7 +177,7 @@ class ProcessDao {
         }
     }
 
-    fun getTotalBuildCount(
+    fun getMaxPipelineBuildNum(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -272,6 +277,29 @@ class ProcessDao {
         }
     }
 
+    fun getHistoryDebugInfoList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        limit: Int,
+        offset: Int,
+        statusList: List<BuildStatus>? = null
+    ): Result<out Record>? {
+        with(TPipelineBuildHistoryDebug.T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val conditions = mutableListOf<Condition>().apply {
+                add(PROJECT_ID.eq(projectId))
+                add(PIPELINE_ID.eq(pipelineId))
+                if (!statusList.isNullOrEmpty()) {
+                    add(STATUS.`in`(statusList.map { it.ordinal }))
+                }
+            }
+            return dslContext.select(BUILD_ID, CHANNEL, START_USER)
+                .from(this)
+                .where(conditions)
+                .orderBy(BUILD_NUM).limit(limit).offset(offset).fetch()
+        }
+    }
+
     fun getClearDeletePipelineIdList(
         dslContext: DSLContext,
         projectId: String,
@@ -295,11 +323,11 @@ class ProcessDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Int {
-        with(Tables.T_PIPELINE_BUILD_HISTORY) {
+    ): Int? {
+        with(T_PIPELINE_BUILD_HISTORY) {
             return dslContext.select(VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId))))
-                .fetchOne(0, Int::class.java)!!
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -336,7 +364,7 @@ class ProcessDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val baseStep = dslContext.update(this)
                 .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, UPDATE_TIME)
+                .set(UPDATE_TIME, DSL.field(UPDATE_TIME.name, LocalDateTime::class.java))
             referFlag?.let { baseStep.set(REFER_FLAG, referFlag) }
             baseStep.where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version))).execute()
         }
@@ -348,7 +376,7 @@ class ProcessDao {
         pipelineId: String,
         version: Int
     ): Int {
-        return with(Tables.T_PIPELINE_BUILD_HISTORY) {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
@@ -356,6 +384,57 @@ class ProcessDao {
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countAllBuildWithStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        status: Set<BuildStatus>
+    ): Int {
+        val tPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+        fun queryTableCount(table: Table<*>): Int {
+            // 构造通用查询条件
+            val conditions = listOf(
+                table.field(tPipelineBuildHistory.PROJECT_ID.name, String::class.java)!!.eq(projectId),
+                table.field(tPipelineBuildHistory.PIPELINE_ID.name, String::class.java)!!.eq(pipelineId),
+                table.field(tPipelineBuildHistory.STATUS.name, Int::class.java)!!.`in`(status.map { it.ordinal }),
+            )
+
+            return dslContext.selectCount()
+                .from(table)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+        return queryTableCount(T_PIPELINE_BUILD_HISTORY) + queryTableCount(T_PIPELINE_BUILD_HISTORY_DEBUG)
+    }
+
+    fun addPipelineOperationLog(
+        dslContext: DSLContext,
+        pipelineOperationLog: PipelineOperationLog
+    ) {
+        with(TPipelineOperationLog.T_PIPELINE_OPERATION_LOG) {
+            dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                VERSION,
+                OPERATOR,
+                OPERATION_TYPE,
+                PARAMS,
+                DESCRIPTION
+            ).values(
+                pipelineOperationLog.id,
+                pipelineOperationLog.projectId,
+                pipelineOperationLog.pipelineId,
+                pipelineOperationLog.version,
+                pipelineOperationLog.operator,
+                pipelineOperationLog.operationLogType.name,
+                pipelineOperationLog.params,
+                pipelineOperationLog.description
+            ).execute()
         }
     }
 }

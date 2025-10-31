@@ -144,7 +144,11 @@ class DEVXService @Autowired constructor(
         return res
     }
 
-    fun getEnvHook(userId: String, projectId: String, envHashId: String): List<DEVXHook> {
+    fun getEnvHook(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): List<DEVXHook> {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(
                 userId = userId,
@@ -163,8 +167,26 @@ class DEVXService @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId))
             )
         }
-
         return getEnvHook(envHashId)
+    }
+
+    fun getEnvHookByNode(
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): List<DEVXHook> {
+        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        val envId = envNodeDao.listNodeIds(dslContext, projectId, listOf(nodeId)).firstOrNull()?.envId
+            ?: return emptyList()
+        val check = envDao.getOrNull(dslContext, projectId, envId)
+        if (check == null || check.envType != TXEnvType.DEVX.name) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_ENV_NOT_EXISTS, params = arrayOf(HashUtil.encodeLongId(envId))
+                )
+            )
+        }
+        return getEnvHook(HashUtil.encodeLongId(envId))
     }
 
     private fun getEnvHook(envHashId: String): List<DEVXHook> {

@@ -290,7 +290,7 @@ class TencentAgentMetricService @Autowired constructor(
         if (!checkAgentProject(projectId)) {
             return super.queryHostInfo(projectId, agentHashId)
         }
-        return bkMonitorMetricsService.queryHostInfo("$projectId:$agentHashId")
+        return bkMonitorMetricsService.queryHostInfo(projectId, agentHashId)
     }
 
     private fun getAgentRecord(

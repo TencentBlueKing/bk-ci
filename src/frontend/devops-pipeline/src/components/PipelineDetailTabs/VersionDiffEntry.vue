@@ -110,7 +110,8 @@
             disabled: {
                 type: Boolean,
                 default: false
-            }
+            },
+            archiveFlag: Boolean
         },
         data () {
             return {
@@ -133,7 +134,8 @@
                     const res = await this.fetchPipelineByVersion({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
-                        version
+                        version,
+                        archiveFlag: this.archiveFlag
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml

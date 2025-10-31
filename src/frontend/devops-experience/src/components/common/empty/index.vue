@@ -1,7 +1,15 @@
 <template>
     <div class="paas-ci-empty">
-        <p class="code-check-title" v-if="isCodeCheck">{{ emptyTitle }}</p>
-        <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+        <p
+            class="code-check-title"
+            v-if="isCodeCheck"
+        >
+            {{ emptyTitle }}
+        </p>
+        <img
+            :src="calcSrc"
+            class="empty-pic"
+        >
     </div>
 </template>
 
@@ -35,11 +43,11 @@
             switch (type) {
                 case 'no-result':
                     this.calcSrc = noResult
-                    this.calcAlt = '未搜索到任何的结果'
+                    this.calcAlt = this.$t('experience.no_result')
                     break
                 default:
                     this.calcSrc = noData
-                    this.calcAlt = '暂无数据'
+                    this.calcAlt = this.$t('experience.no_data')
             }
         }
     }

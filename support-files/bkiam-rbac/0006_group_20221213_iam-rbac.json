@@ -124,6 +124,54 @@
                   "id": "codecc_ignore_type_manage"
                 }
               ]
+            },
+            {
+              "name": "SCC扫描方案",
+              "name_en": "SCC Scan Schema Permissions",
+              "actions": [
+                {
+                  "id": "scc_scan_schema_create"
+                },
+                {
+                  "id": "scc_scan_schema_list"
+                }
+              ]
+            },
+            {
+              "name": "SCC任务",
+              "name_en": "SCC Task Permissions",
+              "actions": [
+                {
+                  "id": "scc_task_create"
+                },
+                {
+                  "id": "scc_task_list"
+                },
+                {
+                  "id": "scc_task_view"
+                },
+                {
+                  "id": "scc_task_edit"
+                },
+                {
+                  "id": "scc_task_delete"
+                },
+                {
+                  "id": "scc_task_execute"
+                },
+                {
+                  "id": "scc_task_enable"
+                },
+                {
+                  "id": "scc_task_manage"
+                },
+                {
+                  "id": "scc_task_manage-defect"
+                },
+                {
+                  "id": "scc_task_view-defect"
+                }
+              ]
             }
           ]
         },

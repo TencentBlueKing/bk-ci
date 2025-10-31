@@ -135,8 +135,8 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -221,7 +221,10 @@
                     image: this.getImageDetail,
                     service: this.getServiceDetail
                 }
-
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 return methods[this.type]()
             },
 
@@ -323,6 +326,10 @@
                     template: this.installTemplate,
                     image: this.installImage,
                     service: this.installService
+                }
+                if (!Object.keys(methods).includes(this.type) || typeof methods[this.type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
                 }
 
                 this.isLoading = true

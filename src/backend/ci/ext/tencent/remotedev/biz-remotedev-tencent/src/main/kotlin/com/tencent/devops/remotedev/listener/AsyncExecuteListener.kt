@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.remotedev.config.async.AsyncExecute
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEvent
 import com.tencent.devops.remotedev.config.async.AsyncExecuteEventType
+import com.tencent.devops.remotedev.pojo.NotifyCategory
+import com.tencent.devops.remotedev.pojo.UserNotifyInfo
 import com.tencent.devops.remotedev.pojo.async.AsyncJobEndEvent
 import com.tencent.devops.remotedev.pojo.async.AsyncJobPipeline
 import com.tencent.devops.remotedev.pojo.async.AsyncNotify
@@ -20,8 +23,10 @@ import com.tencent.devops.remotedev.service.job.RemoteDevJobActionService
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.NotificationCenterService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 
 @Service
@@ -33,12 +38,21 @@ class AsyncExecuteListener @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService,
     private val jobActionService: RemoteDevJobActionService,
     private val notifyControl: NotifyControl,
-    private val userInfoCertService: UserInfoCertService
+    private val userInfoCertService: UserInfoCertService,
+    private val notificationCenterService: NotificationCenterService,
+    private val streamBridge: StreamBridge
 ) {
+    class RetryEventException(val delayMills: Int) : RuntimeException()
+
     fun listenAsyncExecuteEvent(event: AsyncExecuteEvent) {
-        logger.debug("listenAsyncExecuteEvent|$event")
+        logger.info("listenAsyncExecuteEvent|$event")
         try {
             doExecute(event)
+        } catch (e: RetryEventException) {
+            AsyncExecute.dispatch(
+                streamBridge = streamBridge,
+                event = event.copy(delayMills = e.delayMills, retryTime = event.retryTime + 1)
+            )
         } catch (e: Throwable) {
             logger.error("listenAsyncExecuteEvent|${event.type}|${event.eventStr}|error", e)
         }
@@ -102,7 +116,8 @@ class AsyncExecuteListener @Autowired constructor(
                 val data = objectMapper.readValue<AsyncNotify>(event.eventStr)
                 notifyControl.notifyWorkspaceInfo(
                     userId = data.operator,
-                    notifyData = data.notifyData
+                    notifyData = data.notifyData,
+                    bodyParams = mutableMapOf(UserNotifyInfo::category.name to NotifyCategory.BUSINESS.name)
                 )
             }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatri
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
@@ -72,7 +71,6 @@ class ContainerBuildRecordService(
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResourceVersionDao: PipelineResourceVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -86,25 +84,54 @@ class ContainerBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResourceVersionDao = pipelineResourceVersionDao
 ) {
 
     fun getRecord(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
         containerId: String,
-        executeCount: Int
+        executeCount: Int? = null
     ): BuildRecordContainer? {
+        val finalExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = transactionContext
+        )
         return recordContainerDao.getRecord(
             transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = containerId,
-            executeCount = executeCount
+            executeCount = finalExecuteCount
+        )
+    }
+
+    fun getLatestRecord(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int? = null
+    ): BuildRecordContainer? {
+        val finalExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = transactionContext
+        )
+        return recordContainerDao.getLatestRecord(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = finalExecuteCount
         )
     }
 

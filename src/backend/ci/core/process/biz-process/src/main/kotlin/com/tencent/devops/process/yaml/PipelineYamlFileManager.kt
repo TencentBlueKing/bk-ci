@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,8 +27,12 @@
 
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
@@ -94,7 +98,7 @@ class PipelineYamlFileManager @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineYamlRepositoryService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineYamlFileManager::class.java)
     }
 
     fun syncYamlFile(
@@ -147,8 +151,8 @@ class PipelineYamlFileManager @Autowired constructor(
                         commit = FileCommit(
                             commitId = commit.sha,
                             commitMsg = commit.message,
-                            commitTime = commit.commitTime,
-                            committer = commit.committer.name
+                            commitTime = commit.commitTime ?: LocalDateTime.now(),
+                            committer = commit.committer?.name ?: ""
                         )
                     )
                     yamlFileEvents.add(yamlFileEvent)
@@ -160,7 +164,7 @@ class PipelineYamlFileManager @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = repository.projectName,
+                    aliasName = repository.aliasName,
                     directoryList = directories
                 )
 
@@ -289,6 +293,7 @@ class PipelineYamlFileManager @Autowired constructor(
      * 发布流水线
      *
      */
+    @Suppress("CyclomaticComplexMethod")
     fun releaseYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
             logger.info(
@@ -304,17 +309,6 @@ class PipelineYamlFileManager @Autowired constructor(
                 errorCode = ProcessMessageCode.GIT_NOT_FOUND,
                 params = arrayOf(repoHashId)
             )
-            val authRepository = AuthRepository(repository)
-            val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data
-            if (serverRepository !is GitScmServerRepository) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-                )
-            }
-
             val lock = PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
                 projectId = projectId,
@@ -323,8 +317,25 @@ class PipelineYamlFileManager @Autowired constructor(
                 expiredTimeInSeconds = 180
             )
             return try {
+                val authRepository = AuthRepository(repository)
+                val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = authRepository
+                ).data
+                if (serverRepository !is GitScmServerRepository) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
+                    )
+                }
+                pipelineYamlViewService.createYamlViewIfAbsent(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    aliasName = repository.aliasName,
+                    directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
+                )
                 lock.lock()
-                val defaultBranch = serverRepository.defaultBranch
+                val defaultBranch = serverRepository.defaultBranch!!
                 val ref = when {
                     targetAction == CodeTargetAction.COMMIT_TO_MASTER -> defaultBranch
                     targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch == defaultBranch -> defaultBranch
@@ -371,6 +382,20 @@ class PipelineYamlFileManager @Autowired constructor(
                     branch = ref,
                     mrUrl = pullRequest?.link
                 )
+            } catch (ignored: RemoteServiceException) {
+                throw when (ignored.errorCode) {
+                    // 目标仓库被删除
+                    HTTP_404 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                        params = arrayOf(repository.projectName)
+                    )
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
+                    )
+
+                    else -> ignored
+                }
             } catch (ignored: Exception) {
                 logger.error(
                     "[PAC_PIPELINE]|Failed to release yaml pipeline|projectId:$projectId|pipelineId:$pipelineId|" +
@@ -497,7 +522,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 blobId = content.blobId!!,
                 ref = ref,
                 commitId = commit.sha,
-                commitTime = commit.commitTime,
+                commitTime = commit.commitTime ?: LocalDateTime.now(),
                 pipelineId = pipelineId,
                 status = if (ref == defaultBranch) {
                     PipelineYamlStatus.OK.name
@@ -507,6 +532,13 @@ class PipelineYamlFileManager @Autowired constructor(
                 version = version,
                 userId = userId
             )
+            pipelineViewGroupService.updateGroupAfterPipelineUpdate(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                creator = userId,
+                userId = userId
+            )
         } else {
             pipelineYamlService.update(
                 projectId = projectId,
@@ -514,7 +546,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 filePath = filePath,
                 blobId = content.blobId,
                 commitId = commit.sha,
-                commitTime = commit.commitTime,
+                commitTime = commit.commitTime ?: LocalDateTime.now(),
                 ref = ref,
                 defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
@@ -534,8 +566,7 @@ class PipelineYamlFileManager @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 branch = defaultBranch,
-                filePath = filePath,
-                includeDeleted = true
+                filePath = filePath
             )?.deleted ?: false
             if (defaultBranchDeleted) {
                 throw ErrorCodeException(
@@ -817,6 +848,14 @@ class PipelineYamlFileManager @Autowired constructor(
             "[PAC_PIPELINE]|delete pipeline or branch version|eventId:$eventId|" +
                     "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
         )
+        // 先删除分支文件信息
+        pipelineYamlFileService.deleteBranchFile(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            branch = ref,
+            filePath = filePath,
+            softDelete = ref == defaultBranch
+        )
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -856,16 +895,6 @@ class PipelineYamlFileManager @Autowired constructor(
                 "[PAC_PIPELINE]|branch version has deleted|eventId:$eventId|" +
                         "projectId:$projectId|repoHashId:$repoHashId|filePath:$filePath|ref:$ref"
             }
-        }
-        if (shouldDeletePipeline || shouldDeleteVersion) {
-            // 默认分支软删除,为了判断默认分支删除后,流水线已被删除,其他分支又修改,导致又创建新的流水线
-            pipelineYamlFileService.deleteBranchFile(
-                projectId = projectId,
-                repoHashId = repoHashId,
-                branch = ref,
-                filePath = filePath,
-                softDelete = ref == defaultBranch
-            )
         }
     }
 
@@ -982,11 +1011,22 @@ class PipelineYamlFileManager @Autowired constructor(
             repoHashId = repoHashId,
             filePath = filePath
         )
+        val isTemplate = GitActionCommon.isTemplateFile(filePath)
         pipelineYamlResourceManager.deletePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            isTemplate = GitActionCommon.isTemplateFile(filePath)
+            isTemplate = isTemplate
         )
+        // 删除流水线,如果关联的流水线组下流水线已经为空,应该删除
+        if (!isTemplate) {
+            val directory = GitActionCommon.getCiDirectory(filePath)
+            pipelineYamlViewService.deleteEmptyYamlView(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                directory = directory
+            )
+        }
     }
 }

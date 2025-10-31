@@ -1,7 +1,7 @@
 <template>
     <span
         v-bk-tooltips="{
-            content: disabledTips || '你没有该流水线的下载构件权限，无法下载',
+            content: disabledTips || $t('experience.no_download_permission'),
             disabled: !disabled,
             allowHTML: false
         }"
@@ -20,16 +20,16 @@
         >
             <b class="signing-tips">
                 <i class="devops-icon icon-circle-2-1 spin-icon" />
-                {{ name }}为内部测试版本，正在准备下载，请稍等
+                {{ $t('experience.preparing_download', { name }) }}
             </b>
             <span class="signing-duration-tips">
-                仅首次下载需等待，准备时长和包大小有关，大约 5s 内完成准备。
+                {{ $t('experience.download_wait_time') }}
             </span>
             <footer slot="footer">
                 <bk-button
                     @click="cancelDownloading"
                 >
-                    稍后再下载
+                    {{ $t('experience.download_later') }}
                 </bk-button>
             </footer>
         </bk-dialog>
@@ -100,7 +100,7 @@
                             this.setVisible(false)
                             this.$bkMessage({
                                 theme: 'success',
-                                message: `${this.name}已经准备完成，开始下载`
+                                message: this.$t('experience.download_ready', { name: this.name })
                             })
                             
                             window.location.href = url

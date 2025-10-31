@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,6 +37,7 @@ data class PipelineBuildContainer(
     val stageId: String,
     val containerId: String, // 与seq id同值
     val containerHashId: String?, // 与model中的container.containerHashId同值
+    val containPostTaskFlag: Boolean?,
     val jobId: String?,
     val matrixGroupFlag: Boolean?,
     val matrixGroupId: String?,

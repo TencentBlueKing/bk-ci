@@ -2,7 +2,7 @@
 * Tencent is pleased to support the open source community by making
 * 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
 *
-* Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
+* Copyright (C) 2021 Tencent.  All rights reserved.
 *
 * 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) is licensed under the MIT License.
 *
@@ -41,9 +41,9 @@ import {
   SCAN,
   SHARE_ARTIFACTORY,
 } from '@/store/constants';
-import {  getPath } from '@/utils';
+import { getPath } from '@/utils';
 import { LEVEL_ENUM, MAVEN_REPO } from '@/utils/conf';
-import { OperateName, Operation, RepoTreeParam, Artifact, PromiseOr, RepoItem } from '@/utils/vue-ts';
+import { Artifact, OperateName, Operation, PromiseOr, RepoItem, RepoTreeParam } from '@/utils/vue-ts';
 import { Message } from 'bkui-vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -57,7 +57,7 @@ export function useArtifactOperation(artifact: Artifact, isSearching = false) {
   const repoParams = useRouteParams();
   const { t } = useI18n();
   const { permission } = store.state;
-  const isApp = !artifact.folder && /\.(ipa)|(apk)|(jar)$/.test(artifact.name);
+  const isApp = !artifact.folder && /\.[ipa|apk|jar]$/.test(artifact.name);
   const isPipelineRepo = computed(() => repoParams.value.repoName === PIPELINE);
 
   function renameArtifact({

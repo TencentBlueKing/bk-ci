@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,6 +66,8 @@ import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -216,27 +218,18 @@ class PipelineSettingFacadeService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int = 0,
         checkPermission: Boolean = false,
-        detailInfo: PipelineDetailInfo? = null
+        detailInfo: PipelineDetailInfo? = null,
+        archiveFlag: Boolean? = false
     ): PipelineSetting {
 
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
-            val permission = AuthPermission.VIEW
-            pipelinePermissionService.validPipelinePermission(
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(language),
-                        pipelineId
-                    )
-                )
+                permission = AuthPermission.VIEW
             )
         }
         return pipelineSettingVersionService.getPipelineSetting(
@@ -245,7 +238,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             userId = userId,
             detailInfo = detailInfo,
             channelCode = channelCode,
-            version = version
+            version = version,
+            archiveFlag = archiveFlag
         )
     }
 

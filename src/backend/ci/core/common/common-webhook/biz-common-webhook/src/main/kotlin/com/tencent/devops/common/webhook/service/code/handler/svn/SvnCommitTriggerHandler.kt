@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code.handler.svn
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
@@ -45,6 +44,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
@@ -96,6 +96,17 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
         return event.rep_name
     }
 
+    override fun getCompatibilityRepoName(event: SvnCommitEvent): Set<String> {
+        return event.repository?.svnHttpUrl?.let {
+            val svnProjectName = SvnUtils.getSvnProjectName(it)
+            if (svnProjectName != getRepoName(event)) {
+                setOf(svnProjectName)
+            } else {
+                setOf()
+            }
+        } ?: setOf()
+    }
+
     override fun getWebhookFilters(
         event: SvnCommitEvent,
         projectId: String,
@@ -107,7 +118,7 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
             val projectNameFilter = ProjectNameFilter(
                 pipelineId = pipelineId,
                 projectName = repository.projectName,
-                triggerOnProjectName = event.rep_name
+                triggerOnProjectNames = getCompatibilityRepoName(event).plus(getRepoName(event))
             )
             val userId = getUsername(event)
             val userFilter = UserFilter(
@@ -136,7 +147,7 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
                             relativeSubPath = path
                         )
                     },
-                    includedPaths = getIncludePaths(projectRelativePath),
+                    includedPaths = WebhookUtils.getSvnIncludePaths(webHookParams, projectRelativePath),
                     includedFailedReason = I18Variable(
                         code = WebhookI18nConstants.PATH_NOT_MATCH,
                         params = listOf()
@@ -150,34 +161,6 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
     }
-
-    private fun WebHookParams.getIncludePaths(projectRelativePath: String) =
-        // 如果没有配置包含路径，则需要跟代码库url做对比
-        if (relativePath.isNullOrBlank()) {
-            // 模糊匹配需要包含整个路径
-            if (pathFilterType == PathFilterType.NamePrefixFilter) {
-                listOf(
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = ""
-                    )
-                )
-            } else {
-                listOf(
-                    WebhookUtils.getFullPath(
-                        projectRelativePath = projectRelativePath,
-                        relativeSubPath = "**"
-                    )
-                )
-            }
-        } else {
-            WebhookUtils.convert(relativePath).map { path ->
-                WebhookUtils.getFullPath(
-                    projectRelativePath = projectRelativePath,
-                    relativeSubPath = path
-                )
-            }
-        }
 
     override fun retrieveParams(
         event: SvnCommitEvent,

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -123,17 +123,6 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
-    override fun downloadUrl(
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        userId: String,
-        path: String,
-        ttl: Int,
-        directed: Boolean?
-    ): Result<Url> {
-        TODO("not implemented")
-    }
-
     override fun show(
         userId: String,
         projectId: String,
@@ -211,13 +200,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
     ): Result<String> {
         val content = archiveFileService.getFileContent(
-            userId = userId,
             projectId = projectId,
             repoName = repoName,
             filePath = filePath
@@ -226,13 +213,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
     ): Result<List<String>> {
         val fileNames = archiveFileService.listFileNamesByPath(
-            userId = userId,
             projectId = projectId,
             repoName = repoName,
             filePath = filePath

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,6 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4.environment
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -36,14 +35,15 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchFetchAgentData
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateAgentEnvVar
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.utils.ApigwParamUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,21 +69,18 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        nodeHashId: String
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
     ): Result<NodeWithPermission?> {
         logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node status|$projectId|$nodeHashId")
         logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
-        val nodeList = client.get(ServiceNodeResource::class).listByHashIds(
+        return client.get(ServiceNodeResource::class).getNodeStatus(
             userId = userId,
             projectId = projectId,
-            nodeHashIds = arrayListOf(nodeHashId)
-        ).data
-        if (nodeList != null && nodeList.isNotEmpty()) {
-            return Result(nodeList[0])
-        }
-        throw ErrorCodeException(
-            errorCode = OpenAPIMessageCode.ERROR_NODE_NOT_EXISTS,
-            params = arrayOf(nodeHashId)
+            nodeHashId = nodeHashId,
+            nodeName = nodeName,
+            agentHashId = agentHashId
         )
     }
 
@@ -170,6 +167,29 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             data = data
+        )
+    }
+
+    override fun updateAgentInfo(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        data: UpdateAgentInfo
+    ): Result<Boolean> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|updateAgentInfo|$projectId|$data")
+        return client.get(ServiceThirdPartyAgentResource::class).updateAgentInfo(
+            userId = userId,
+            projectId = projectId,
+            data = data
+        )
+    }
+
+    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|fetchTag|$projectId")
+        return client.get(ServiceThirdPartyAgentResource::class).fetchTag(
+            userId = userId,
+            projectId = projectId
         )
     }
 

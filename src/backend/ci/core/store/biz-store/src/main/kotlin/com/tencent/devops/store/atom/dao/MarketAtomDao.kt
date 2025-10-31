@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -790,17 +790,6 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun updateAtomInfoByCode(dslContext: DSLContext, userId: String, atomCode: String, updateAtomInfo: UpdateAtomInfo) {
-        with(TAtom.T_ATOM) {
-            val baseStep = dslContext.update(this)
-            setUpdateAtomInfo(updateAtomInfo, baseStep)
-            baseStep.set(MODIFIER, userId)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ATOM_CODE.eq(atomCode))
-                .execute()
-        }
-    }
-
     private fun TAtom.setUpdateAtomInfo(updateAtomInfo: UpdateAtomInfo, baseStep: UpdateSetFirstStep<TAtomRecord>) {
         val atomStatus = updateAtomInfo.atomStatus
         if (null != atomStatus) {
@@ -844,9 +833,7 @@ class MarketAtomDao : AtomBaseDao() {
         userId: String,
         atomId: String,
         atomStatus: Byte,
-        approveReq: ApproveReq,
-        latestFlag: Boolean? = null,
-        pubTime: LocalDateTime? = null
+        approveReq: ApproveReq
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
@@ -854,24 +841,11 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(ATOM_STATUS_MSG, approveReq.message)
                 .set(ATOM_TYPE, approveReq.atomType.type.toByte())
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
-                .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
                 .set(SERVICE_SCOPE, JsonUtil.toJson(approveReq.serviceScope, formatted = false))
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-            val weight = approveReq.weight
-            if (null != weight) {
-                baseStep.set(WEIGHT, weight)
-            }
-            val buildLessRunFlag = approveReq.buildLessRunFlag
-            if (null != buildLessRunFlag) {
-                baseStep.set(BUILD_LESS_RUN_FLAG, buildLessRunFlag)
-            }
-            if (null != latestFlag) {
-                baseStep.set(LATEST_FLAG, latestFlag)
-            }
-            if (null != pubTime) {
-                baseStep.set(PUB_TIME, pubTime)
-            }
+            approveReq.weight?.let { baseStep.set(WEIGHT, it) }
+            approveReq.buildLessRunFlag?.let { baseStep.set(BUILD_LESS_RUN_FLAG, it) }
             baseStep.where(ID.eq(atomId)).execute()
         }
     }
@@ -884,19 +858,6 @@ class MarketAtomDao : AtomBaseDao() {
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
-        }
-    }
-
-    fun getReleaseAtomsByCode(dslContext: DSLContext, atomCode: String, num: Int? = null): Result<TAtomRecord>? {
-        return with(TAtom.T_ATOM) {
-            val baseStep = dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                .orderBy(CREATE_TIME.desc())
-            if (null != num) {
-                baseStep.limit(num)
-            }
-            baseStep.fetch()
         }
     }
 

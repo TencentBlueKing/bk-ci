@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,9 +35,11 @@ import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.META_DATA
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
+import com.tencent.devops.common.api.constant.SENSITIVE
 import com.tencent.devops.common.api.constant.STRING
 import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
@@ -46,6 +48,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -117,10 +120,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -161,7 +164,7 @@ open class MarketAtomTask : ITask() {
         val namespace: String? = map["namespace"] as String?
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                    "|workspace=$workspacePath"
+                "|workspace=$workspacePath"
         )
 
         // 获取插件基本信息
@@ -366,6 +369,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     OSType.LINUX, OSType.MAC_OS -> {
                         val script = runCmds.joinToString(
                             separator = "\n"
@@ -383,6 +387,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     else -> {
                     }
                 }
@@ -625,6 +630,7 @@ open class MarketAtomTask : ITask() {
                     executeCount = buildTask.executeCount ?: 1
                 )
             }
+
             BuildType.WORKER -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
@@ -728,6 +734,15 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 对windows市场插件bat启动脚本执行失败进行监控
+        if (BatScriptUtil.retryTimes() > 0) {
+            val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
+                JsonUtil.toMutableMap(it)
+            } ?: mutableMapOf()
+            extData["market-atom-start-bat-auto-retry-times"] = BatScriptUtil.retryTimes()
+            addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
+            BatScriptUtil.retryClean()
+        }
         // 校验插件对接平台错误码信息失败
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
@@ -766,6 +781,7 @@ open class MarketAtomTask : ITask() {
             LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
+                val isSensitive = output[SENSITIVE] as? Boolean ?: false
                 val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
@@ -802,6 +818,7 @@ open class MarketAtomTask : ITask() {
                         buildVariables = buildVariables,
                         atomWorkspace = bkWorkspace
                     )
+
                     ARTIFACT -> env[key] = archiveArtifact(
                         buildTask = buildTask,
                         varKey = varKey,
@@ -822,7 +839,7 @@ open class MarketAtomTask : ITask() {
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
                     if (
-                        // TODO 暂时只对stream进行拦截原key
+                    // TODO 暂时只对stream进行拦截原key
                         buildVariables.variables[BK_CI_RUN] == "true" &&
                         buildVariables.pipelineAsCodeSettings?.enable == true
                     ) env.remove(key)
@@ -832,13 +849,13 @@ open class MarketAtomTask : ITask() {
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
-                    if (sensitiveFlag) {
+                    if (sensitiveFlag || isSensitive) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=$value")
+                    LoggerService.addWarnLine("output(except): $key=${if (isSensitive) "******" else value}")
                 }
             }
 
@@ -923,6 +940,7 @@ open class MarketAtomTask : ITask() {
         )
         try {
             val artifacts = output[VALUE] as List<String>
+            val metadata = output[META_DATA]?.let { it as Map<String, String> } ?: emptyMap()
             artifacts.forEach { artifact ->
                 oneArtifact = artifact
                 if (artifactoryType == ArtifactoryType.PIPELINE.name) {
@@ -930,7 +948,8 @@ open class MarketAtomTask : ITask() {
                         filePath = artifact,
                         workspace = atomWorkspace,
                         buildVariables = buildVariables,
-                        token = token
+                        token = token,
+                        metadata = metadata
                     )
                 } else if (artifactoryType == ArtifactoryType.CUSTOM_DIR.name) {
                     output[PATH] ?: throw TaskExecuteException(
@@ -944,7 +963,8 @@ open class MarketAtomTask : ITask() {
                         destPath = destPath,
                         workspace = atomWorkspace,
                         buildVariables = buildVariables,
-                        token = token
+                        token = token,
+                        metadata = metadata
                     )
                 }
             }

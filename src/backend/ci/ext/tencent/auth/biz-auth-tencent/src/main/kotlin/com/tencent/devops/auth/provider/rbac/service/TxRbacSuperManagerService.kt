@@ -16,7 +16,7 @@ class TxRbacSuperManagerService(
         action: String,
         resourceType: String
     ): Boolean {
-        managerService.checkUserSignatureStatus(
+        managerService.checkUserESignStatus(
             projectId = projectCode,
             userId = userId
         )

@@ -24,7 +24,6 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.ResourceEstimateByVmRequest
-import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.SyncVmReq
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import com.tencent.devops.remotedev.pojo.expert.WorkspaceTaskStatus
 import com.tencent.devops.remotedev.pojo.image.ListImagesData
@@ -32,6 +31,7 @@ import com.tencent.devops.remotedev.pojo.image.ListImagesResp
 import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.remotedev.BcsResp
+import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
 import com.tencent.devops.remotedev.pojo.remotedev.ExpandDiskValidateResp
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceEstimateByVmResponse
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
@@ -159,7 +159,7 @@ class WorkspaceBcsClient @Autowired constructor(
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
-                        environmentUid = environmentOperate.uid,
+                        environmentUid = environmentOpRsp.data?.environmentUid ?: environmentOperate.uid,
                         operator = userId,
                         uid = environmentOpRsp.data!!.taskUid,
                         action = action,
@@ -449,20 +449,6 @@ class WorkspaceBcsClient @Autowired constructor(
         return OkhttpUtils.doHttp(request).resolveResponse<BcsResp<List<VmDiskInfo>>>().data
     }
 
-    fun syncVm(
-        data: SyncVmReq
-    ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
-        val url = "$bcsCloudUrl/api/v1/remotedevenv/sync/vm"
-        val body = JsonUtil.toJson(data, false)
-        val request = Request.Builder()
-            .url(url)
-            .headers(makeHeaders().toHeaders())
-            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
-            .build()
-        return OkhttpUtils.doHttp(request)
-            .resolveResponse<BcsResp<EnvironmentCreateRsp.EnvironmentCreateRspData>>().data
-    }
-
     fun getTaskStatus(
         taskId: String
     ): WorkspaceTaskStatus? {
@@ -511,6 +497,21 @@ class WorkspaceBcsClient @Autowired constructor(
             .build()
         return OkhttpUtils.doHttp(request)
             .resolveResponse<EnvironmentOperateRsp>().data
+    }
+
+    fun createCvm(
+        data: CreateCvmData
+    ): EnvironmentCreateRsp.EnvironmentCreateRspData? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/cvms"
+
+        val body = JsonUtil.toJson(data, false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        return OkhttpUtils.doHttp(request)
+            .resolveResponse<BcsResp<EnvironmentCreateRsp.EnvironmentCreateRspData>>().data
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(): T {

@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_project
 
-**文档版本：** 1.0.9
+**文档版本：** 1.0.13
 
 **文档描述：** devops_ci_project 的数据库文档
 | 表名                  | 说明       |
@@ -174,7 +174,10 @@
 |  3   | PLAN_PRODUCT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 规划产品名称  |
 |  4   | DEPT_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 部门名称  |
 |  5   | BG_NAME |   varchar   | 64 |   0    |    N     |  N   |       | BG 名称  |
-|  6   | CREATED_AT |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  6   | ICOS_PRODUCT_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 财务 ID  |
+|  7   | ICOS_PRODUCT_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 财务名称  |
+|  8   | CROS_CHECk |   bit   | 1 |   0    |    Y     |  N   |       | 是否有效  |
+|  9   | CREATED_AT |   timestamp   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_PROJECT</a>
 

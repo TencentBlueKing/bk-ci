@@ -38,9 +38,11 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_PIPELINE", description = "服务-流水线资源")
@@ -72,4 +74,31 @@ interface ServiceTXPipelineResource {
         @Parameter(description = "流水线自增id", required = true)
         id: Long
     ): Result<SimplePipeline>
+
+    @Operation(summary = "启用/禁用流水线（修改流水线的并发设置）")
+    @POST
+    @Path("/projects/{projectId}/pipeline/lock")
+    fun lockPipeline(
+        @Parameter(description = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID列表", required = true)
+        pipelineIds: List<String>,
+        @Parameter(description = "开启true/锁定false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
+
+    @Operation(summary = "根据项目ID获取已禁用的流水线ID列表")
+    @GET
+    @Path("/projects/{projectId}/pipeline/disabled")
+    fun listDisabledPipelines(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
 }

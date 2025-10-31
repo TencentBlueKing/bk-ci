@@ -294,7 +294,10 @@ interface UserWorkspaceResource {
         userId: String,
         @Parameter(description = "MAC地址", required = true)
         @QueryParam("macAddress")
-        macAddress: String
+        macAddress: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>
 
     @Operation(summary = "校验是否需要moa 2fa二次验证，true：需求；false：不需要")
@@ -316,6 +319,9 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "实例ID", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @Parameter(description = "发起的验证数据", required = true)
         moa2faReqData: Moa2faReqData
     ): Result<Moa2faRespData>

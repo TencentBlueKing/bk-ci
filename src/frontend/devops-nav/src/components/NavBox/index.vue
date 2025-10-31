@@ -208,6 +208,7 @@
                         font-size: 20px;
                         margin-right: 12px;
                         color: #6b798e;
+                        flex-shrink: 0;
                     }
                     .service-url-icon {
                         margin-right: 12px;

@@ -1,6 +1,6 @@
 {
   "name": "bk-permission",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "",
   "main": "./dist/main.js",
   "scripts": {
@@ -49,6 +49,6 @@
   },
   "peerDependencies": {
     "vue": "~2.7.16",
-    "axios": "0.28.0"
+    "axios": "0.30.0"
   }
 }

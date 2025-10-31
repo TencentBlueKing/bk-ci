@@ -12,6 +12,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
+import com.tencent.devops.remotedev.pojo.WhiteList
+import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
 import com.tencent.devops.remotedev.service.MakeMoneyService
@@ -19,6 +21,7 @@ import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
@@ -37,11 +40,12 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val dslContext: DSLContext,
     private val windowsResourceConfigService: WindowsResourceConfigService,
-    private val makeMoneyService: MakeMoneyService
+    private val makeMoneyService: MakeMoneyService,
+    private val configCacheService: ConfigCacheService
 ) : OpRemoteDevResource {
     override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
         data.forEach {
-            remoteDevSettingService.updateSetting4Op(it)
+            remoteDevSettingService.updateSetting4Op(userId, it)
         }
         return Result(true)
     }
@@ -74,7 +78,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     override fun addGPUWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
         return Result(
             whiteListService.addGPUWhiteListUser(
-                userId = userId,
+                operator = userId,
                 whiteListUser = whiteListUser,
                 override = true
             )
@@ -177,5 +181,38 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun bills(userId: String, year: Int, month: Int, push: Boolean): Response {
         return makeMoneyService.bills(year, month, push)
+    }
+
+    override fun configs(userId: String): Result<Map<String, String>> {
+        return Result(configCacheService.opFetchAllConfig())
+    }
+
+    override fun updateConfigs(userId: String, key: String, value: String): Result<Boolean> {
+        return Result(configCacheService.opInsertOrUpdateConfig(key, value))
+    }
+
+    override fun deleteConfigs(userId: String, key: String): Result<Boolean> {
+        return Result(configCacheService.opDeleteConfig(key))
+    }
+
+    override fun whiteList(userId: String, whiteListType: WhiteListType): Result<List<WhiteList>> {
+        return Result(whiteListService.opFetch(userId, whiteListType))
+    }
+
+    override fun updateWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
+        return Result(whiteListService.opCreateOrUpdateWhiteList(userId, whiteList))
+    }
+
+    override fun deleteWhiteList(userId: String, whiteList: WhiteList): Result<Boolean> {
+        return Result(whiteListService.opDeleteWhiteList(userId, whiteList))
+    }
+
+    override fun reduceWorkspaceBills(
+        userId: String,
+        startDate: String,
+        endDate: String,
+        workspaceNames: List<String>
+    ): Result<Boolean> {
+        return Result(makeMoneyService.reduceWorkspaceBills(workspaceNames, startDate, endDate))
     }
 }

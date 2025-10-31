@@ -97,7 +97,12 @@ const  createdTimeAgo = (name: string, ts: any) => {
 const fetchRelSourceList = () => {
   try {
     isLoading.value = true;
-    http.getOauthRelSource(scmCode.value, page.value, pageSize.value).then(res => {
+    http.getOauthRelSource({
+      scmCode: scmCode.value,
+      page: page.value,
+      pageSize: pageSize.value,
+      oauthUserId: props.oauth?.username
+    }).then(res => {
       relSourceList.value = [...relSourceList.value, ...res.records];
       hasLoadEnd.value = relSourceList.value.length === res.count;
     })
@@ -122,7 +127,7 @@ const handleCancelDelete = () => {
 const handleConfirmDelete = () => {
   try {
     isLoading.value = true;
-    http.deleteOauth(scmCode.value).then(res => {
+    http.deleteOauth(scmCode.value, props.oauth?.username).then(res => {
       if (res) {
         Message({
           theme: 'success',
@@ -166,7 +171,7 @@ const handleConfirmRefresh = () => {
   try {
     isLoading.value = true;
     const url = encodeURIComponent(window.location.href.replace('com/permission', `com/console/permission`));
-    http.refreshOauth(scmCode.value, url).then(res => {
+    http.refreshOauth(scmCode.value, props.oauth?.username, url).then(res => {
       if (res.url) {
         window.top.open(res.url, '_self')
       }
@@ -251,18 +256,12 @@ const handleAuthorize = () => {
       <div class="content">
         <div class="title">{{ t(' OAUTH授权') }}</div>
         <div class="oauth-tips">
-          <template v-if="oauth.scmCode === 'GITHUB'">
-            <p>{{ t('此授权用于平台和 Github 进行交互，用于如下场景：') }}</p>
-            <p>1.{{ t('回写 Commit statuses 到 Github') }}</p>
-            <p>2.{{ t('流水线中 Checkout 代码') }}</p>
-            <p>{{ t('需拥有代码库 Push 权限') }}</p>
-          </template>
-          <template v-else>
-            <p>{{ t('此授权用于平台和工蜂进行交互，用于如下场景：') }}</p>
-            <p>1.{{ t('注册 Webhook 到工蜂') }}</p>
-            <p>2.{{ t('回写提交检测状态到工蜂') }}</p>
+          <template>
+            <p>{{ t('此授权用于平台和代码库进行交互，涉及如下功能：') }}</p>
+            <p>1.{{ t('注册 Webhook 到代码库，用于事件触发场景') }}</p>
+            <p>2.{{ t('回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景"') }}</p>
             <p>3.{{ t('流水线中 Checkout 代码') }}</p>
-            <p>{{ t('需拥有代码库 Devloper 及以上权限，建议使用公共账号授权') }}</p>
+            <p>{{ t('拥有代码库注册 Webhook 权限') }}</p>
           </template>
         </div>
         <bk-button

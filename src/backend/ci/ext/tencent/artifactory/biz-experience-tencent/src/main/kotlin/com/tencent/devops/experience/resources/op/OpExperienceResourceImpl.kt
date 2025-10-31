@@ -28,11 +28,13 @@
 package com.tencent.devops.experience.resources.op
 
 import ExperiencePublicExternalAdd
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.op.OpExperienceResource
@@ -43,33 +45,29 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_UPDATED_S
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_UPDATED_SUCCESSFULLY_AND_SET
 import com.tencent.devops.experience.constant.ExperienceMessageCode.RECORD_COULD_NOT_FOUND
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceExtendBannerDao
-import com.tencent.devops.experience.dao.ExperienceGroupDao
-import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
-import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
 import com.tencent.devops.experience.pojo.ExperienceClean
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import com.tencent.devops.experience.service.ExperienceService
-import java.time.LocalDateTime
 import jakarta.ws.rs.NotFoundException
+import java.time.LocalDateTime
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpExperienceResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val experienceGroupDao: ExperienceGroupDao,
-    private val experienceInnerDao: ExperienceInnerDao,
-    private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
-    private val redisOperation: RedisOperation,
     private val experienceExtendBannerDao: ExperienceExtendBannerDao,
-    private val experienceService: ExperienceService
+    private val experienceService: ExperienceService,
+    private val experienceDao: ExperienceDao,
+    private val client: Client
 ) : OpExperienceResource {
     override fun switchNecessary(userId: String, id: Long): Result<String> {
         val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
@@ -181,6 +179,49 @@ class OpExperienceResourceImpl @Autowired constructor(
         )
     }
 
+    @SuppressWarnings("NestedBlockDepth")
+    override fun syncRepoCreateTime(): Result<Boolean> {
+        var minId = 0L
+        val pageSize = 1000
+        while (true) {
+            val records = experienceDao.listNullRepoCreateTime(dslContext, minId, pageSize)
+
+            for (r in records) {
+                try {
+                    val fileDetail = client.get(ServiceArtifactoryResource::class).show(
+                        userId = r.creator,
+                        projectId = r.projectId,
+                        artifactoryType = ArtifactoryType.valueOf(r.artifactoryType),
+                        path = r.artifactoryPath
+                    ).data
+                    if (fileDetail == null) {
+                        logger.warn("file detail is null, experience id: ${r.id}")
+                        continue
+                    }
+                    val updateResult = experienceDao.updateRepoCreateTime(
+                        dslContext = dslContext,
+                        id = r.id,
+                        repoCreateTime = DateTimeUtil.convertTimestampToLocalDateTime(fileDetail.createdTime)
+                    )
+                    if (updateResult <= 0) {
+                        logger.warn("update repo create time failed, experience id: ${r.id}")
+                    } else {
+                        logger.info("update repo create time success, experience id: ${r.id}")
+                    }
+                } catch (e: Exception) {
+                    logger.error("sync repo create time failed, experience id: ${r.id}", e)
+                }
+            }
+
+            if (records.size < pageSize) {
+                break
+            }
+            minId = records.maxOf { it.id }
+        }
+
+        return Result(true)
+    }
+
     override fun addRecommend(userId: String, content: String, platform: PlatformEnum): Result<String> {
         experienceSearchRecommendDao.add(dslContext, content, platform.name)
         return Result(
@@ -216,7 +257,8 @@ class OpExperienceResourceImpl @Autowired constructor(
             type = ExperiencePublicType.FROM_EXTERNAL_URL.id,
             externalUrl = externalAdd.externalLink,
             scheme = "",
-            version = ""
+            version = "",
+            appNameI18n = null
         )
 
         return Result(
@@ -252,5 +294,9 @@ class OpExperienceResourceImpl @Autowired constructor(
 
     override fun clean(userId: String, experienceClean: ExperienceClean): Result<Boolean> {
         return Result(experienceService.clean(experienceClean))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpExperienceResourceImpl::class.java)
     }
 }

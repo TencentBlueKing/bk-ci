@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -56,10 +56,10 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -93,7 +93,7 @@ import javax.net.ssl.X509TrustManager
 @Suppress("ALL")
 @Service
 class CallBackControl @Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectPipelineCallBackService: ProjectPipelineCallBackService,
     private val client: Client,
@@ -252,9 +252,10 @@ class CallBackControl @Autowired constructor(
             return
         }
 
-        val modelDetail = pipelineBuildDetailService.get(
+        val modelDetail = pipelineBuildRecordService.getBuildRecord(
             projectId = projectId,
-            buildId = event.buildId,
+            pipelineId = pipelineId,
+            buildId = buildId,
             refreshStatus = false
         ) ?: return
 
@@ -266,7 +267,7 @@ class CallBackControl @Autowired constructor(
             triggerUser = modelDetail.triggerUser,
             cancelUserId = modelDetail.cancelUserId,
             status = modelDetail.status,
-            startTime = modelDetail.startTime,
+            startTime = modelDetail.startTime ?: 0,
             endTime = modelDetail.endTime ?: 0,
             model = SimpleModel(parseModel(modelDetail.model)),
             projectId = event.projectId,

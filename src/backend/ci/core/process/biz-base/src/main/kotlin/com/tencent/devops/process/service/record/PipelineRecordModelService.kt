@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -426,6 +426,7 @@ class PipelineRecordModelService @Autowired constructor(
             (containerBaseMap[Container::elements.name] as List<Map<String, Any>>)[parentElementJobIndex]
         val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
         finalTaskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
+        finalTaskVarMap[Element::stepId.name] = "" // 为了避免影响父插件，post任务stepId需置为空
         finalTaskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), finalTaskVarMap)
         return finalTaskVarMap
     }

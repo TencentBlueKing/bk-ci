@@ -54,5 +54,7 @@ data class ExperienceSummaryWithPermission(
     @get:Schema(title = "是否在线", required = true)
     val online: Boolean,
     @get:Schema(title = "权限", required = true)
-    val permissions: ExperiencePermission
+    val permissions: ExperiencePermission,
+    @get:Schema(title = "构件创建时间", required = true)
+    val repoCreateTime: Long
 )

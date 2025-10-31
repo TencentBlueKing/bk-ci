@@ -1,5 +1,5 @@
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
--- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
 -- A copy of the MIT License is included in this file.
 -- Terms of the MIT License:
@@ -16,6 +16,94 @@
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
+
+-- 外部认证API调用通用函数
+function _M:call_external_auth_api(auth_type, params)
+    local max_retries = 3
+    local timeout = 3000 -- 3秒超时
+
+    -- 构建请求URL
+    local base_url = config.external_auth.base_url
+    local api_path = "/ms/dispatch/api/external/auth/" .. auth_type
+    local query_params = {}
+
+    -- 添加参数到查询字符串
+    for key, value in pairs(params) do
+        if value ~= nil then
+            table.insert(query_params, key .. "=" .. ngx.escape_uri(tostring(value)))
+        end
+    end
+
+    local query_string = ""
+    if #query_params > 0 then
+        query_string = "?" .. table.concat(query_params, "&")
+    end
+
+    local full_url = base_url .. api_path .. query_string
+
+    -- 重试逻辑
+    for attempt = 1, max_retries do
+        local httpc = http.new()
+        httpc:set_timeout(timeout)
+
+        -- 发送HTTP请求
+        local res, err = httpc:request_uri(full_url, {
+            method = "GET",
+            headers = {
+                ["Accept"] = "application/json",
+                ["Content-Type"] = "application/json",
+                ["X-DEVOPS-PROJECT-ID"] = ngx.var.project_id
+            },
+            ssl_verify = false
+        })
+
+        httpc:set_keepalive(60000, 5)
+
+        if not res then
+            ngx.log(ngx.ERR, "failed to request external auth API (attempt ", attempt, "/", max_retries, "): ", err)
+
+            -- 如果不是最后一次尝试，直接重试
+            if attempt < max_retries then
+                -- 继续下一次循环
+            else
+                return nil, err
+            end
+        else
+            if res.status ~= 200 then
+                ngx.log(ngx.ERR, "external auth API returned status (attempt ", attempt, "/", max_retries, "): ",
+                    res.status, ", body: ", res.body)
+
+                -- 对于HTTP错误状态码，如果不是最后一次尝试则重试
+                if attempt < max_retries then
+                    -- 继续下一次循环
+                else
+                    return nil, "HTTP " .. res.status
+                end
+            else
+                -- 请求成功，解析响应
+                local response_data = json.decode(res.body)
+                if not response_data then
+                    ngx.log(ngx.ERR, "failed to decode external auth API response (attempt ", attempt, "/", max_retries,
+                        ")")
+
+                    if attempt < max_retries then
+                        -- 继续下一次循环
+                    else
+                        return nil, "invalid response"
+                    end
+                else
+                    if response_data.status ~= 0 then
+                        ngx.log(ngx.ERR, "external auth API returned error: ", response_data.message or "unknown error")
+                        return nil, response_data.message or "auth failed"
+                    end
+
+                    return response_data.data, nil
+                end
+            end
+        end
+    end
+end
+
 -- 校验第三方构建机
 --[[
 -- {
@@ -51,39 +139,65 @@ function _M:auth_agent()
     local reqBuildId = ngx.var.http_x_devops_build_id
     local reqVmSid = ngx.var.http_x_devops_vm_sid
 
-    local auth_cache = ngx.shared.auth_build_agent
-    local cache_key = "third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid
-    local cache_value = auth_cache:get(cache_key)
+    local obj = nil
 
-    -- 如果没有缓存 , 则从redis里面拿
-    if cache_value == nil then
-        local red = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "failed to new redis ", err)
-            ngx.exit(500)
+    -- 检查是否启用外部认证
+    if buildExternalAuthUtil:enable() == true then
+        -- 使用外部认证API
+        local auth_token = config.external_auth.token
+        local params = {
+            secretKey = reqSecretKey,
+            agentId = reqAgentId,
+            buildId = reqBuildId,
+            vmSeqId = reqVmSid,
+            token = auth_token
+        }
+
+        local auth_result, err = self:call_external_auth_api("agent", params)
+        if not auth_result then
+            ngx.log(ngx.ERR, "external auth failed: ", err)
+            ngx.exit(401)
             return
-        else
-            --- 获取对应的buildId
-            local redRes, err = red:get(cache_key)
-            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-            if not redRes then
-                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+        end
+
+        obj = auth_result
+    else
+        -- 使用原来的Redis校验逻辑
+        local auth_cache = ngx.shared.auth_build_agent
+        local cache_key = "third_party_agent_" ..
+            reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid
+        local cache_value = auth_cache:get(cache_key)
+
+        -- 如果没有缓存 , 则从redis里面拿
+        if cache_value == nil then
+            local red = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "failed to new redis ", err)
                 ngx.exit(500)
                 return
             else
-                if redRes == ngx.null then
-                    ngx.log(ngx.ERR, "redis result is null")
-                    ngx.exit(401)
+                --- 获取对应的buildId
+                local redRes, err = red:get(cache_key)
+                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+                if not redRes then
+                    ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                    ngx.exit(500)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 60)
-                    cache_value = redRes
+                    if redRes == ngx.null then
+                        ngx.log(ngx.ERR, "redis result is null")
+                        ngx.exit(401)
+                        return
+                    else
+                        auth_cache:set(cache_key, redRes, 60)
+                        cache_value = redRes
+                    end
                 end
             end
         end
-    end
 
-    local obj = cjson.decode(cache_value)
+        obj = cjson.decode(cache_value)
+    end
 
     -- parameter check
     if obj.projectId == nil then
@@ -148,6 +262,7 @@ function _M:auth_agent()
 
     ngx.exit(200)
 end
+
 -- Docker构建机
 --[[
 -- {
@@ -174,38 +289,61 @@ function _M:auth_docker()
     local reqSecretKey = ngx.var.http_x_devops_agent_secret_key
     local reqAgentId = ngx.var.http_x_devops_agent_id
 
-    local auth_cache = ngx.shared.auth_build_docker
-    local cache_key = "docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey
-    local cache_value = auth_cache:get(cache_key)
+    local obj = nil
 
-    -- 如果没有缓存 , 则从redis里面拿
-    if cache_value == nil then
-        local red = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "failed to new redis ", err)
-            ngx.exit(500)
+    -- 检查是否启用外部认证
+    if buildExternalAuthUtil:enable() == true then
+        -- 使用外部认证API
+        local auth_token = config.external_auth.token
+        local params = {
+            secretKey = reqSecretKey,
+            agentId = reqAgentId,
+            token = auth_token
+        }
+
+        local auth_result, err = self:call_external_auth_api("docker", params)
+        if not auth_result then
+            ngx.log(ngx.ERR, "external auth failed: ", err)
+            ngx.exit(401)
             return
-        else
-            local redRes, err = red:get(cache_key)
-            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-            if not redRes then
-                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+        end
+
+        obj = auth_result
+    else
+        -- 使用原来的Redis校验逻辑
+        local auth_cache = ngx.shared.auth_build_docker
+        local cache_key = "docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey
+        local cache_value = auth_cache:get(cache_key)
+
+        -- 如果没有缓存 , 则从redis里面拿
+        if cache_value == nil then
+            local red = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "failed to new redis ", err)
                 ngx.exit(500)
                 return
             else
-                if redRes == ngx.null then
-                    ngx.log(ngx.ERR, "redis result is null")
-                    ngx.exit(401)
+                local redRes, err = red:get(cache_key)
+                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+                if not redRes then
+                    ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                    ngx.exit(500)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 60)
-                    cache_value = redRes
+                    if redRes == ngx.null then
+                        ngx.log(ngx.ERR, "redis result is null")
+                        ngx.exit(401)
+                        return
+                    else
+                        auth_cache:set(cache_key, redRes, 60)
+                        cache_value = redRes
+                    end
                 end
             end
         end
-    end
 
-    local obj = cjson.decode(cache_value)
+        obj = cjson.decode(cache_value)
+    end
     -- parameter check
     if obj.projectId == nil then
         ngx.log(ngx.ERR, "projectId is null: ")
@@ -290,37 +428,60 @@ function _M:auth_plugin_agent()
     local reqSecretKey = ngx.var.http_x_devops_agent_secret_key
     local reqAgentId = ngx.var.http_x_devops_agent_id
 
-    local auth_cache = ngx.shared.auth_build_plugin
-    local cache_key = "plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey
-    local cache_value = auth_cache:get(cache_key)
+    local obj = nil
 
-    if cache_value == nil then
-        local red = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "failed to new redis ", err)
-            ngx.exit(500)
+    -- 检查是否启用外部认证
+    if buildExternalAuthUtil:enable() == true then
+        -- 使用外部认证API
+        local auth_token = config.external_auth.token
+        local params = {
+            secretKey = reqSecretKey,
+            agentId = reqAgentId,
+            token = auth_token
+        }
+
+        local auth_result, err = self:call_external_auth_api("plugin", params)
+        if not auth_result then
+            ngx.log(ngx.ERR, "external auth failed: ", err)
+            ngx.exit(401)
             return
-        else
-            local redRes, err = red:get(cache_key)
-            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-            if not redRes then
-                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+        end
+
+        obj = auth_result
+    else
+        -- 使用原来的Redis校验逻辑
+        local auth_cache = ngx.shared.auth_build_plugin
+        local cache_key = "plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey
+        local cache_value = auth_cache:get(cache_key)
+
+        if cache_value == nil then
+            local red = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "failed to new redis ", err)
                 ngx.exit(500)
                 return
             else
-                if redRes == ngx.null then
-                    ngx.log(ngx.ERR, "redis result is null")
-                    ngx.exit(401)
+                local redRes, err = red:get(cache_key)
+                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+                if not redRes then
+                    ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                    ngx.exit(500)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 60)
-                    cache_value = redRes
+                    if redRes == ngx.null then
+                        ngx.log(ngx.ERR, "redis result is null")
+                        ngx.exit(401)
+                        return
+                    else
+                        auth_cache:set(cache_key, redRes, 60)
+                        cache_value = redRes
+                    end
                 end
             end
         end
-    end
 
-    local obj = cjson.decode(cache_value)
+        obj = cjson.decode(cache_value)
+    end
 
     -- parameter check
     if obj.projectId == nil then
@@ -389,45 +550,68 @@ function _M:auth_macos(checkVersion)
         return
     end
 
-    local auth_cache = ngx.shared.auth_build_macos
-    local cache_key = nil
-    if checkVersion == true then
-        cache_key = "dispatcher:devops_macos_" .. client_ip
-    else
-        cache_key = "devops_macos_" .. client_ip
-    end
-    local cache_value = auth_cache:get(cache_key)
+    local obj = nil
 
-    if cache_value == nil then
-        --- redis获取IP对应的buildID
-        local red = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "failed to new redis ", err)
-            ngx.exit(500)
+    -- 检查是否启用外部认证
+    if buildExternalAuthUtil:enable() == true then
+        -- 使用外部认证API
+        local auth_token = config.external_auth.token
+        local params = {
+            clientIp = client_ip,
+            checkVersion = checkVersion or false,
+            token = auth_token
+        }
+
+        local auth_result, err = self:call_external_auth_api("macos", params)
+        if not auth_result then
+            ngx.log(ngx.ERR, "external auth failed: ", err)
+            ngx.exit(401)
             return
+        end
+
+        obj = auth_result
+    else
+        -- 使用原来的Redis校验逻辑
+        local auth_cache = ngx.shared.auth_build_macos
+        local cache_key = nil
+        if checkVersion == true then
+            cache_key = "dispatcher:devops_macos_" .. client_ip
         else
-            --- 获取对应的buildId
-            local redRes, err = red:get(cache_key)
-            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-            --- 处理获取到的buildID
-            if not redRes then
-                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            cache_key = "devops_macos_" .. client_ip
+        end
+        local cache_value = auth_cache:get(cache_key)
+
+        if cache_value == nil then
+            --- redis获取IP对应的buildID
+            local red = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "failed to new redis ", err)
                 ngx.exit(500)
                 return
             else
-                if redRes == ngx.null then
-                    ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
-                    ngx.exit(401)
+                --- 获取对应的buildId
+                local redRes, err = red:get(cache_key)
+                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+                --- 处理获取到的buildID
+                if not redRes then
+                    ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                    ngx.exit(500)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 30)
-                    cache_value = redRes
+                    if redRes == ngx.null then
+                        ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
+                        ngx.exit(401)
+                        return
+                    else
+                        auth_cache:set(cache_key, redRes, 30)
+                        cache_value = redRes
+                    end
                 end
             end
         end
-    end
 
-    local obj = cjson.decode(cache_value)
+        obj = cjson.decode(cache_value)
+    end
     -- parameter check
     if obj.projectId == nil then
         ngx.log(ngx.ERR, "projectId is null: ")
@@ -512,41 +696,64 @@ function _M:auth_other()
         ngx.exit(401)
         return
     end
-    local auth_cache = ngx.shared.auth_build_other
-    local cache_key = client_ip
-    local cache_value = auth_cache:get(cache_key)
 
-    if cache_value == nil then
-        --- redis获取IP对应的buildID
-        local red = redisUtil:new()
-        if not red then
-            ngx.log(ngx.ERR, "failed to new redis ", err)
-            ngx.exit(500)
+    local obj = nil
+
+    -- 检查是否启用外部认证
+    if buildExternalAuthUtil:enable() == true then
+        -- 使用外部认证API
+        local auth_token = config.external_auth.token
+        local params = {
+            clientIp = client_ip,
+            token = auth_token
+        }
+
+        local auth_result, err = self:call_external_auth_api("other", params)
+        if not auth_result then
+            ngx.log(ngx.ERR, "external auth failed: ", err)
+            ngx.exit(401)
             return
-        else
-            --- 获取对应的buildId
-            local redRes, err = red:get(cache_key)
-            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-            --- 处理获取到的buildID
-            if not redRes then
-                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+        end
+
+        obj = auth_result
+    else
+        -- 使用原来的Redis校验逻辑
+        local auth_cache = ngx.shared.auth_build_other
+        local cache_key = client_ip
+        local cache_value = auth_cache:get(cache_key)
+
+        if cache_value == nil then
+            --- redis获取IP对应的buildID
+            local red = redisUtil:new()
+            if not red then
+                ngx.log(ngx.ERR, "failed to new redis ", err)
                 ngx.exit(500)
                 return
             else
-                if redRes == ngx.null then
-                    ngx.log(ngx.ERR, "client ip: ", client_ip)
-                    ngx.log(ngx.ERR, "redis result is null: ")
-                    ngx.exit(401)
+                --- 获取对应的buildId
+                local redRes, err = red:get(cache_key)
+                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+                --- 处理获取到的buildID
+                if not redRes then
+                    ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                    ngx.exit(500)
                     return
                 else
-                    auth_cache:set(cache_key, redRes, 60)
-                    cache_value = redRes
+                    if redRes == ngx.null then
+                        ngx.log(ngx.ERR, "client ip: ", client_ip)
+                        ngx.log(ngx.ERR, "redis result is null: ")
+                        ngx.exit(401)
+                        return
+                    else
+                        auth_cache:set(cache_key, redRes, 60)
+                        cache_value = redRes
+                    end
                 end
             end
         end
-    end
 
-    local obj = cjson.decode(cache_value)
+        obj = cjson.decode(cache_value)
+    end
 
     -- parameter check
     if obj.projectId == nil then
