@@ -54,7 +54,7 @@ class WorkspaceThumbnailService @Autowired constructor(
         logger.info("batch get thumbnails: userId=$userId, workspaceNames=$workspaceNames")
 
         // 步骤1: 批量查询Redis缓存
-        val cacheKeys = workspaceNames.map { ThumbnailCacheKey(it).toDownloadRedisKey() }
+        val cacheKeys = workspaceNames.map { ThumbnailCacheKey(userId, it).toDownloadRedisKey() }
         val cachedResults = mutableMapOf<String, String>()
 
         cacheKeys.forEachIndexed { index, key ->
@@ -123,7 +123,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 更新缓存
-                    val cacheKey = ThumbnailCacheKey(workspaceName).toDownloadRedisKey()
+                    val cacheKey = ThumbnailCacheKey(userId, workspaceName).toDownloadRedisKey()
                     redisOperation.set(
                         key = cacheKey,
                         value = downloadUrl,
@@ -210,7 +210,7 @@ class WorkspaceThumbnailService @Autowired constructor(
                     )
 
                     // 生成上传Token
-                    val cacheKey = ThumbnailCacheKey(workspaceName).toUploadRedisKey()
+                    val cacheKey = ThumbnailCacheKey(userId, workspaceName).toUploadRedisKey()
                     val uploadToken = redisOperation.get(cacheKey)
                         ?: remotedevBkRepoClient.createTemporaryAccessToken(
                             region = region,
@@ -454,13 +454,14 @@ private data class ZoneConfigs(
  * 缓存Key数据类
  */
 data class ThumbnailCacheKey(
+    val userId: String,
     val workspaceName: String
 ) {
     /**
      * 生成Redis Key格式
      */
     fun toDownloadRedisKey(): String {
-        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_PREFIX}$workspaceName"
+        return "${ThumbnailRedisKeys.THUMBNAIL_DOWNLOAD_PREFIX}$workspaceName:$userId"
     }
 
     /**
