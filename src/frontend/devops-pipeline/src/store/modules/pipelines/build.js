@@ -310,7 +310,7 @@ const actions = {
         })
     },
     requestPipelineRePlayStatus ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
-        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replayByBuild`).then(response => {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replay/status`).then(response => {
             return response.data
         }).catch(e => {
             return e

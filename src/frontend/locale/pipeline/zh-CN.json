@@ -637,7 +637,8 @@
     "rePlayInfo2": "2. 重放时，跳过触发器检测，有可能不满足最新版本的触发条件",
     "reBuildInfo1": "1. 重新构建，是在之前的构建基础上重新执行",
     "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致",
-    "rePlayFailed": "重放事件失败，请重试"
+    "rePlayFailed": "重放事件失败，请重试",
+    "canNotReplayTips": "触发事件缓存过期已清理。若需重放，请到代码库操作。"
   },
   "preview": {
     "build": "构建",

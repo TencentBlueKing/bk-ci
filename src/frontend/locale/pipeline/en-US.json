@@ -642,8 +642,9 @@
     "rePlayInfo2": "2. When replaying, skip trigger detection, and it may not meet the trigger conditions of the latest version.",
     "reBuildInfo1": "1. Rebuilding is to re-execute on the basis of the previous build.",
     "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time.",
-    "rePlayFailed": "Replay failed, Please try again."
-  },
+    "rePlayFailed": "Replay failed, Please try again.",
+    "canNotReplayTips": "The event trigger cache has expired and been cleared. If replay is required, please perform the operation in the code repository."
+  },    
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",

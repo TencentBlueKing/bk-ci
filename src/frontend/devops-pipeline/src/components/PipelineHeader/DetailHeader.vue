@@ -74,8 +74,12 @@
                         </li>
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked
+                                'disabled': loading || isCurPipelineLocked || !canReplay
                             }]"
+                            v-bk-tooltips="{
+                                content: this.$t('history.canNotReplayTips'),
+                                disabled: canReplay
+                            }"
                             v-perm="{
                                 hasPermission: canExecute,
                                 disablePermissionApi: true,
@@ -91,6 +95,7 @@
                             {{ $t("history.rePlay") }}
                             <bk-popover
                                 :z-index="3000"
+                                :disabled="!canReplay"
                             >
                                 <i class="bk-icon icon-info-circle" />
                                 <template slot="content">
@@ -181,7 +186,8 @@
         data () {
             return {
                 loading: false,
-                timesNum: 1
+                timesNum: 1,
+                canReplay: true
             }
         },
         computed: {
@@ -397,6 +403,7 @@
                         pipelineId: this.pipelineId,
                         buildId: this.$route.params.buildNo
                     })
+                    this.canReplay = res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY
                 } catch (err) {
                     console.error(err)
                 }
