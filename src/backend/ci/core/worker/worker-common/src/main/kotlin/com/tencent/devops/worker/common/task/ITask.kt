@@ -156,7 +156,7 @@ abstract class ITask {
         return environment
     }
 
-    protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
+    fun addMonitorData(monitorDataMap: Map<String, Any>) {
         monitorData.putAll(monitorDataMap)
     }
 

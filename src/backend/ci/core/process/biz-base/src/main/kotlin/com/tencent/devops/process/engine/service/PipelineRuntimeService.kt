@@ -47,6 +47,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -993,6 +994,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.executeCount = context.executeCount
                                 it.checkIn = stage.checkIn
                                 it.checkOut = stage.checkOut
+                                it.name = stage.name
                                 updateExistsStage.add(it)
                                 return@findHistoryStage
                             }
@@ -1016,7 +1018,8 @@ class PipelineRuntimeService @Autowired constructor(
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
                         checkOut = stage.checkOut,
-                        stageIdForUser = stage.stageIdForUser
+                        stageIdForUser = stage.stageIdForUser,
+                        name = stage.name
                     )
                 )
             }
@@ -1304,6 +1307,9 @@ class PipelineRuntimeService @Autowired constructor(
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
             containerVar[Container::startVMTaskSeq.name] = detail.startVMTaskSeq ?: 1
+            detail.jobId?.let { jobId ->
+                containerVar[Container::jobId.name] = jobId
+            }
             build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
@@ -1349,7 +1355,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = build.projectId, pipelineId = build.pipelineId,
                     resourceVersion = resourceVersion, buildId = build.buildId,
                     stageId = build.stageId, stageSeq = build.seq,
-                    executeCount = build.executeCount, stageVar = mutableMapOf(),
+                    executeCount = build.executeCount, stageVar = mutableMapOf(Stage::name.name to (build.name ?: "")),
                     timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
                 )
             )
