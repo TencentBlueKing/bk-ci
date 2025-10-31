@@ -459,7 +459,10 @@ class StageTransfer @Autowired(required = false) constructor(
                 projectId = yamlInput.projectCode,
                 buildType = transferCreator.defaultLinuxDispatchType()
             )?.dockerResourceOptionsMaps?.find { it.dockerResourceOptionsShow.description == job.runsOn.hwSpec }
-            job.runsOn.hwSpec = hw?.id
+            // 如果找到对应的资源，设置job.runsOn.hwSpec为对应资源的id, 否则保留原值
+            if (hw != null) {
+                job.runsOn.hwSpec = hw.id
+            }
         }
     }
 }
