@@ -1,6 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "1.0.0"
-    detektCheck
+    id("com.tencent.devops.boot") version "1.1.0-SNAPSHOT"
     nexusPublishing
     licenseReport // 检查License合规
 }
