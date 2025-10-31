@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.remotedev.common.Constansts.BAK_FLAG
 import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -212,6 +211,13 @@ class MakeMoneyService @Autowired constructor(
         logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
 
         use.chunked(99).forEach { chunk ->
+            // 批量更新COMMISSION_DATE字段（如果为空）
+            // 1. 更新已删除的实例
+            batchUpdateCommissionDateFromRecords(chunk, cmdbAssetMap)
+            // 快照昨天在使用的实例
+            aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
+                snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
+            }
             val filter = chunk.filter { name -> name !in a }
             val workspaces = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
@@ -230,14 +236,6 @@ class MakeMoneyService @Autowired constructor(
                     machineType = ""
                 )
             })
-
-            // 批量更新COMMISSION_DATE字段（如果为空）
-            // 1. 更新已删除的实例
-            batchUpdateCommissionDateFromRecords(workspaces, cmdbAssetMap)
-            // 快照昨天在使用的实例
-            aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
-                snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
-            }
             // 快照昨天用户删除的实例
             res.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
@@ -250,9 +248,14 @@ class MakeMoneyService @Autowired constructor(
      * 直接使用已查询的工作空间记录，避免重复查询
      */
     private fun batchUpdateCommissionDateFromRecords(
-        workspaces: List<TWorkspaceRecord>,
+        chunk: List<String>,
         cmdbAssetMap: Map<String, String>
     ) {
+        val workspaces = workspaceDao.limitFetchWorkspace(
+            dslContext = dslContext,
+            limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
+            workspaceName = chunk.toSet()
+        )
         if (workspaces.isEmpty()) {
             return
         }
