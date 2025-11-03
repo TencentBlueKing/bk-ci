@@ -131,6 +131,8 @@ allprojects {
                 entry("devops-scm-api")
                 entry("devops-scm-spring-boot-starter")
             }
+            // lettuce 6.4.1 有BUG
+            dependency("io.lettuce:lettuce-core:6.4.2.RELEASE")
         }
     }
 
