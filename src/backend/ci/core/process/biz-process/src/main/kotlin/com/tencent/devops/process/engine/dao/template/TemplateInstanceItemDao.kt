@@ -218,6 +218,7 @@ class TemplateInstanceItemDao {
                 .and(PROJECT_ID.eq(projectId))
                 .let { if (!statusList.isNullOrEmpty()) it.and(STATUS.`in`(statusList)) else it }
                 .let { if (!excludeStatusList.isNullOrEmpty()) it.and(STATUS.notIn(excludeStatusList)) else it }
+                .orderBy(ID.desc())
                 .let { if (page != null && pageSize != null) it.limit((page - 1) * pageSize, pageSize) else it }
                 .fetch()
                 .map { it.convert() }

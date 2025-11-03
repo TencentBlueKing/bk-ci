@@ -143,10 +143,6 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 baseIds = listOf(baseId),
-                excludeStatusList = listOf(
-                    TemplateInstanceStatus.SUCCESS.name,
-                    TemplateInstanceStatus.WAIT_MERGE.name
-                ),
                 page = page,
                 pageSize = PageUtil.MAX_PAGE_SIZE
             )
@@ -259,7 +255,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         if (instanceBase.status == TemplateInstanceStatus.SUCCESS) {
             logger.warn(
                 "The template instance task has been completed." +
-                        "${instanceBase.projectId}|${instanceBase.baseId}|${instanceBase.type}"
+                    "${instanceBase.projectId}|${instanceBase.baseId}|${instanceBase.type}"
             )
         }
         if (templateInstanceItemCount < 1) {
@@ -279,7 +275,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     ) {
         logger.info(
             "success to template instance item|$baseId|$projectId|$pipelineId|" +
-                    "${deployPipelineResult.version}|${deployPipelineResult.versionName}"
+                "${deployPipelineResult.version}|${deployPipelineResult.versionName}"
         )
         val record = PipelineTemplateInstanceItemUpdate(
             status = TemplateInstanceStatus.SUCCESS,

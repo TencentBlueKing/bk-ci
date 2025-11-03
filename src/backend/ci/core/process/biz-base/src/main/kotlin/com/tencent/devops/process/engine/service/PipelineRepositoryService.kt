@@ -2434,8 +2434,6 @@ class PipelineRepositoryService constructor(
         dslContext = dslContext,
         templateId = templateId,
         version = version
-    ) ?: throw ErrorCodeException(
-        errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
     )
 
     /**
