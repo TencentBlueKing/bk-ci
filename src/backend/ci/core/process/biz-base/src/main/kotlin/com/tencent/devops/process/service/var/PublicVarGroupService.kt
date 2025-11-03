@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.`var`
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -580,7 +581,10 @@ class PublicVarGroupService @Autowired constructor(
      */
     private fun parseYamlToPublicVarGroupVO(yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
         val parserVO = try {
-            TransferMapper.to<PublicVarGroupYamlParser>(yaml.yaml)
+            TransferMapper.getObjectMapper().readValue(
+                yaml.yaml,
+                object : TypeReference<PublicVarGroupYamlParser>() {}
+            )
         } catch (e: Throwable) {
             logger.warn("Failed to parse YAML for public variable group", e)
             throw e
