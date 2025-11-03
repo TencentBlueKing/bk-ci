@@ -46,4 +46,7 @@ tasks.named("startShadowScripts") {
     mustRunAfter(rootProject.allprojects.mapNotNull { 
         it.tasks.findByName("copyToRelease") 
     })
+    mustRunAfter(rootProject.allprojects.mapNotNull {
+        it.tasks.findByName("shadowJar")
+    })
 }
