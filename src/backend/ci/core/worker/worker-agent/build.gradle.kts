@@ -38,3 +38,12 @@ dependencies {
     api(project(":core:worker:worker-common"))
     api(project(":core:worker:worker-api-sdk"))
 }
+
+// 解决任务依赖问题：startShadowScripts 需要等待所有 copyToRelease 任务完成
+// 所有 boot-* 模块都有 copyToRelease 任务，它们都会输出到 release/ 目录
+tasks.named("startShadowScripts") {
+    // 动态查找所有 copyToRelease 任务并声明执行顺序
+    mustRunAfter(rootProject.allprojects.mapNotNull { 
+        it.tasks.findByName("copyToRelease") 
+    })
+}
