@@ -248,26 +248,40 @@ class ReportArchiveTask : ITask() {
         allFileList: List<File>,
         buildTask: BuildTask
     ) {
-        val result = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
+        val pipelineBuildInfo = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         try {
             val token = api.getRepoToken(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                projectId = result.projectId,
+                projectId = pipelineBuildInfo.projectId,
                 repoName = "report",
-                path = "/${result.pipelineId}/${result.buildId}",
+                path = "/${pipelineBuildInfo.pipelineId}/${pipelineBuildInfo.buildId}",
                 type = TokenType.UPLOAD,
                 expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
             )
 
             if (allFileList.size <= 10) {
                 allFileList.forEach { file ->
-                    uploadSingleFile(file, fileDirPath, elementId, buildVariables, token)
+                    uploadSingleFile(
+                        file = file,
+                        fileDirPath = fileDirPath,
+                        elementId = elementId,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
                 }
                 return
             }
 
             allFileList.forEach { file ->
-                executor.execute { uploadSingleFile(file, fileDirPath, elementId, buildVariables, token) }
+                executor.execute {
+                    uploadSingleFile(
+                        file = file,
+                        fileDirPath = fileDirPath,
+                        elementId = elementId,
+                        buildVariables = buildVariables,
+                        token = token
+                    )
+                }
             }
             if (!executor.awaitTermination(buildVariables.timeoutMills, TimeUnit.MILLISECONDS)) {
                 LoggerService.addNormalLine("parallel upload to parent report timeout")
@@ -383,9 +397,10 @@ class ReportArchiveTask : ITask() {
         val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
         val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
         val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
+        val pipelineBuildInfo = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data
         return "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE) &&
                 parentProjectId != null &&
                 parentPipelineId != null &&
-                parentBuildId != null
+                parentBuildId != null && pipelineBuildInfo != null
     }
 }

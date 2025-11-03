@@ -88,6 +88,15 @@ interface BuildFileResource {
         @Parameter(description = "buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
+        @Parameter(description = "projectId", required = true)
+        @QueryParam("parentProjectId")
+        parentProjectId: String? = null,
+        @Parameter(description = "pipelineId", required = true)
+        @QueryParam("parentPipelineId")
+        parentPipelineId: String? = null,
+        @Parameter(description = "buildId", required = true)
+        @QueryParam("parentBuildId")
+        parentBuildId: String? = null,
         @Parameter(description = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
@@ -144,31 +153,4 @@ interface BuildFileResource {
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
-
-    @Operation(summary = "归档文件到父流水线")
-    @POST
-    @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/file/archiveToParentPipeline")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun archiveFileToParentPipeline(
-        @Parameter(description = "projectId", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "pipelineId", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "buildId", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @Parameter(description = "文件类型", required = true)
-        @QueryParam("fileType")
-        fileType: FileTypeEnum,
-        @Parameter(description = "自定义文件路径", required = false)
-        @QueryParam("customFilePath")
-        customFilePath: String?,
-        @Parameter(description = "文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<String?>
 }

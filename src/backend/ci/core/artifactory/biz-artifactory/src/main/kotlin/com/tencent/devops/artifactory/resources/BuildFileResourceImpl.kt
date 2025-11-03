@@ -69,17 +69,20 @@ class BuildFileResourceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        parentProjectId: String?,
+        parentPipelineId: String?,
+        parentBuildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getLastModifyUser(parentProjectId ?: projectCode, parentBuildId ?: pipelineId)
         val url = archiveFileService.archiveFile(
             userId = userId,
-            projectId = projectCode,
-            pipelineId = pipelineId,
-            buildId = buildId,
+            projectId = parentProjectId ?: projectCode,
+            pipelineId = parentPipelineId ?: pipelineId,
+            buildId = parentBuildId ?: buildId,
             fileType = fileType,
             customFilePath = customFilePath,
             inputStream = inputStream,
@@ -127,30 +130,6 @@ class BuildFileResourceImpl @Autowired constructor(
             fileChannelType = FileChannelTypeEnum.BUILD
         )
         return Result(urls)
-    }
-
-    override fun archiveFileToParentPipeline(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        fileType: FileTypeEnum,
-        customFilePath: String?,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?> {
-        val userId = getLastModifyUser(projectCode, pipelineId)
-        val url = archiveFileService.archiveFile(
-            userId = userId,
-            projectId = projectCode,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            fileType = fileType,
-            customFilePath = customFilePath,
-            inputStream = inputStream,
-            disposition = disposition,
-            fileChannelType = FileChannelTypeEnum.BUILD
-        )
-        return Result(url)
     }
 
     private fun getLastModifyUser(projectId: String, pipelineId: String): String {

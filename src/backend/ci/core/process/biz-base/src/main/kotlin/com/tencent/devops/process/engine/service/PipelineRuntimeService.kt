@@ -2282,27 +2282,17 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getTopParentPipelineByBuildId(buildId: String, projectId: String): BuildBasicInfo? {
-
         val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-
         val currentBuildInfo =
             pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = buildId, projectId = projectId)
                 ?: return null
 
-        val webhookInfoJson = currentBuildInfo[pipelineBuildHistory.WEBHOOK_INFO]
-        val webhookInfo = webhookInfoJson?.takeIf { it.isNotBlank() }?.let { json ->
-            try {
-                JsonUtil.to(json, WebhookInfo::class.java)
-            } catch (ignore: Throwable) {
-                logger.warn("Fail to parse webhookInfoJson: $json", ignore)
-                null
-            }
-        }
-
-        return if (webhookInfo != null &&
-            !webhookInfo.parentBuildId.isNullOrBlank() && !webhookInfo.parentProjectId.isNullOrBlank()
+        val parentBuild = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
+        return if (parentBuild != null
         ) {
-            getTopParentPipelineByBuildId(webhookInfo.parentBuildId!!, webhookInfo.parentProjectId!!)
+            val pipelineBuildInfo =
+                pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = parentBuild)
+            getTopParentPipelineByBuildId(parentBuild, pipelineBuildInfo!!.get(pipelineBuildHistory.PROJECT_ID))
         } else {
             BuildBasicInfo(
                 buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],

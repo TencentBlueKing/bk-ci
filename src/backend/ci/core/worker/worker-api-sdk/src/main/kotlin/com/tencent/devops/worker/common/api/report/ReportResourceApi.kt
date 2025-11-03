@@ -109,10 +109,9 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     ) {
         val result = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         val purePath = "$taskId/${purePath(relativePath)}".removeSuffix("/${file.name}")
-        val url = "/ms/artifactory/api/build/artifactories/projects" +
-                "/${result.projectId}/pipelines/${result.pipelineId}" +
-                "/builds/${result.buildId}/file/archiveToParentPipeline" +
-                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath"
+        val url = "/ms/artifactory/api/build/artifactories/file/archive" +
+                "?fileType=${FileTypeEnum.BK_REPORT}&customFilePath=$purePath&parentProjectId=" +
+                "${result.projectId}&parentPipelineId=${result.pipelineId}&parentBuildId=${result.buildId}"
 
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
@@ -151,9 +150,9 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         reportType: String?,
         token: String?
     ): Result<Boolean> {
-        val result = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
+        val pipelineBuildInfo = getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data!!
         val path =
-            "/ms/process/api/build/reports/${result.projectId}/${result.pipelineId}/${result.buildId}/$taskId?indexFile=${
+            "/ms/process/api/build/reports/$taskId?indexFile=${
                 encode(
                     indexFile
                 )
@@ -161,7 +160,10 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 encode(
                     name
                 )
-            }&reportType=$reportType"
+            }&reportType=$reportType"+
+                    "&parentProjectId=${pipelineBuildInfo.projectId}" +
+                    "&parentPipelineId=${pipelineBuildInfo.pipelineId}" +
+                    "&parentPipelineBuildId=${pipelineBuildInfo.buildId}"
         val request = buildPost(path)
         val responseContent = request(
             request,

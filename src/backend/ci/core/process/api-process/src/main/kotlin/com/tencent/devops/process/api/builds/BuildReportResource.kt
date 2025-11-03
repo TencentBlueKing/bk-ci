@@ -76,6 +76,15 @@ interface BuildReportResource {
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
+        @Parameter(description = "父项目英文名，或者叫projectCode", required = true)
+        @QueryParam("parentProjectId")
+        parentProjectId: String? = null,
+        @Parameter(description = "父流水线ID", required = true)
+        @QueryParam("parentPipelineId")
+        parentPipelineId: String? = null,
+        @Parameter(description = "父构建ID", required = true)
+        @QueryParam("parentPipelineBuildId")
+        parentPipelineBuildId: String? = null,
         @Parameter(description = "构建机名称", required = true)
         @PathParam("taskId")
         taskId: String,
@@ -106,31 +115,4 @@ interface BuildReportResource {
         @PathParam("taskId")
         taskId: String
     ): Result<String>
-
-    @Operation(summary = "创建自定义报告并关联父流水线")
-    @Path("/{parentProjectId}/{parentPipelineId}/{parentPipelineBuildId}/{taskId}")
-    @POST
-    fun createReportBindParentPipeline(
-        @Parameter(description = "项目英文名，或者叫projectCode", required = true)
-        @PathParam("parentProjectId")
-        parentProjectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("parentPipelineId")
-        parentPipelineId: String,
-        @Parameter(description = "构建ID", required = true)
-        @PathParam("parentPipelineBuildId")
-        parentPipelineBuildId: String,
-        @Parameter(description = "构建机名称", required = true)
-        @PathParam("taskId")
-        taskId: String,
-        @Parameter(description = "构建机名称", required = true)
-        @QueryParam("indexFile")
-        indexFile: String,
-        @Parameter(description = "报告名称", required = true)
-        @QueryParam("name")
-        name: String,
-        @Parameter(description = "报告类型", required = true)
-        @QueryParam("reportType")
-        reportType: ReportTypeEnum,
-    ): Result<Boolean>
 }

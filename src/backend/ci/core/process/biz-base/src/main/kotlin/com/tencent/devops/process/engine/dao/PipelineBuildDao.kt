@@ -60,7 +60,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Record2
-import org.jooq.Record6
+import org.jooq.Record5
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
@@ -2081,12 +2081,16 @@ class PipelineBuildDao {
     fun getPipelineBuildInfo(
         dslContext: DSLContext,
         buildId: String,
-        projectId: String
-    ): Record6<String, String, String, String, Int, Int>? {
+        projectId: String? = null
+    ): Record5<String, String, String, Int, Int>? {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, WEBHOOK_INFO, VERSION, STATUS).from(this)
-                .where((BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId))))
-                .fetchOne()
+            val query = dslContext.select(BUILD_ID, PROJECT_ID, PIPELINE_ID, VERSION, STATUS).from(this)
+                .where(BUILD_ID.eq(buildId))
+
+            if (projectId != null) {
+                query.and(PROJECT_ID.eq(projectId))
+            }
+            query.fetchOne()
         }
     }
 }
