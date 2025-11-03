@@ -310,19 +310,15 @@ class ContainerTransfer @Autowired(required = false) constructor(
         }
 
         /*修正docker配额数据*/
-        if (hwSpec != null
-            && (hwSpec == "0" || hwSpec == "1" || hwSpec == "2" || hwSpec == "10000")
-            && buildType != null
-        ) {
-            val res = transferCache.getDockerResource(userId, projectId, buildType)
+        if (hwSpec != null && buildType != null && isSpecialHwSpec(hwSpec)) {
+            val dockerResource = transferCache.getDockerResource(userId, projectId, buildType)
+            
             // hwSpec为0和1时为特殊值，表示默认配置Basic
-            if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
+            if (isDefaultHwSpec(hwSpec, dockerResource?.default)) {
                 hwSpec = null
             } else {
-                val hw = res?.dockerResourceOptionsMaps?.find {
-                    it.id == hwSpec
-                }
-                hwSpec = hw?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
+                val matchedResource = dockerResource?.dockerResourceOptionsMaps?.find { it.id == hwSpec }
+                hwSpec = matchedResource?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("jobId:$jobId resource type not support transfer.[poolName:$poolName,hwSpec:$hwSpec]")
                 )
@@ -333,6 +329,26 @@ class ContainerTransfer @Autowired(required = false) constructor(
             return null
         }
         return this
+    }
+
+    /**
+     * 判断是否为旧版本的 hwSpec 值
+     * 旧版本值说明：
+     * - "0", "1": 默认配置 Basic
+     * - "2": Premium
+     * - "10000": High
+     */
+    private fun isSpecialHwSpec(hwSpec: String?): Boolean {
+        return hwSpec in setOf("0", "1", "2", "10000")
+    }
+
+    /**
+     * 判断是否为默认的 hwSpec 配置
+     * @param hwSpec 当前的 hwSpec 值
+     * @param defaultSpec 资源的默认配置值
+     */
+    private fun isDefaultHwSpec(hwSpec: String?, defaultSpec: String?): Boolean {
+        return hwSpec == defaultSpec || hwSpec == "0" || hwSpec == "1"
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {
