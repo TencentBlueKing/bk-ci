@@ -453,11 +453,11 @@ class StageTransfer @Autowired(required = false) constructor(
         if (job.runsOn.hwSpec != null) {
             // 针对旧的hwSpec字段内容做强制转换
             if (job.runsOn.hwSpec.equals("Basic")) {
-                job.runsOn.hwSpec = "1"
+                job.runsOn.hwSpec = "Standard-S"
             } else if (job.runsOn.hwSpec.equals("Premium")) {
-                job.runsOn.hwSpec = "2"
+                job.runsOn.hwSpec = "Standard-M"
             } else if (job.runsOn.hwSpec.equals("High")) {
-                job.runsOn.hwSpec = "1000  0"
+                job.runsOn.hwSpec = "HighIO-L"
             }
         }
     }
