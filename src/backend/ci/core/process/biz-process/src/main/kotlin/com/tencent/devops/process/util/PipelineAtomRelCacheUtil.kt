@@ -2,8 +2,6 @@ package com.tencent.devops.process.util
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import java.util.concurrent.TimeUnit
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.process.pojo.PipelineAtomRel
 
 /**
  * 插件被流水线使用情况的缓存工具类
@@ -12,44 +10,50 @@ import com.tencent.devops.process.pojo.PipelineAtomRel
 object PipelineAtomRelCacheUtil {
 
     private val commonCache = Caffeine.newBuilder()
-        .maximumSize(100)
+        .maximumSize(8000)
         .expireAfterWrite(30, TimeUnit.MINUTES)
-        .build<String, Any?>()
+        .build<String, String?>()
 
     /**
      * 获取分页数据
      */
-    fun getPipelineAtomRelPageList(
+    fun getPipelineAtomRelVersions(
         atomCode: String,
-        version: String?,
-        page: Int,
-        pageSize: Int,
-        dbFetcher: () -> Page<PipelineAtomRel>?
-    ): Page<PipelineAtomRel>? {
+        pipelineId: String
+    ): String? {
         val cacheKey = buildCacheKey(
-            dataType = "page",
             atomCode = atomCode,
-            version = version,
-            page = page,
-            pageSize = pageSize
+            pipelineId = pipelineId
         )
-        return getFromCacheOrDb(cacheKey, dbFetcher)
+        return getFromCacheOrDb(cacheKey)
     }
 
     /**
-     * 获取Excel导出数据
+     * 批量存储缓存：同一插件下，多流水线的版本号数据
+     * @param atomCode 插件标识
+     * @param pipelineVersionMap 流水线ID到版本号集合的映射
      */
-    fun getPipelineAtomRelExcelList(
+    fun batchPutPipelineAtomRelVersions(
         atomCode: String,
-        version: String?,
-        dbFetcher: () -> List<Array<String?>>?
-    ): List<Array<String?>>? {
-        val cacheKey = buildCacheKey(
-            dataType = "excel",
-            atomCode = atomCode,
-            version = version
-        )
-        return getFromCacheOrDb(cacheKey, dbFetcher)
+        pipelineVersionMap: Map<String, MutableSet<String>>
+    ) {
+        val cacheMap = mutableMapOf<String, String?>()
+        pipelineVersionMap.forEach { (pipelineId, versionSet) ->
+            val cacheKey = buildCacheKey(atomCode, pipelineId)
+            val versionStr = versionSet.joinToString(",")
+            cacheMap[cacheKey] = versionStr
+        }
+        commonCache.putAll(cacheMap)
+    }
+
+
+
+    /**
+     * 判断指定key是否存在于缓存中
+     */
+    fun containsKey(atomCode: String, pipelineId: String): Boolean {
+        val cacheKey = buildCacheKey(atomCode, pipelineId)
+        return commonCache.getIfPresent(cacheKey) != null
     }
 
     /**
@@ -57,17 +61,8 @@ object PipelineAtomRelCacheUtil {
      * @param dbFetcher 数据库查询逻辑（函数类型参数）
      * @return 缓存或数据库查询结果
      */
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> getFromCacheOrDb(cacheKey: String, dbFetcher: () -> T?): T? {
-        val cachedData = commonCache.getIfPresent(cacheKey)
-        if (cachedData != null) {
-            return cachedData as T
-        }
-        val dbData = dbFetcher()
-        if (dbData != null) {
-            commonCache.put(cacheKey, dbData)
-        }
-        return dbData
+    private fun getFromCacheOrDb(cacheKey: String): String? {
+        return commonCache.getIfPresent(cacheKey)
     }
 
     /**
@@ -78,21 +73,13 @@ object PipelineAtomRelCacheUtil {
      * @param pageSize 每页条数
      */
     private fun buildCacheKey(
-        dataType: String,
         atomCode: String,
-        version: String?,
-        page: Int? = null,
-        pageSize: Int? = null
+        pipelineId: String
     ): String {
         val keyParts = mutableListOf(
-            "dataType=$dataType",
+            "pipelineId=$pipelineId",
             "atomCode=$atomCode",
-            "version=${version ?: "null"}"
         )
-        if (page != null && pageSize != null) {
-            keyParts.add("page=$page")
-            keyParts.add("pageSize=$pageSize")
-        }
         return keyParts.joinToString(separator = ":")
     }
 }
