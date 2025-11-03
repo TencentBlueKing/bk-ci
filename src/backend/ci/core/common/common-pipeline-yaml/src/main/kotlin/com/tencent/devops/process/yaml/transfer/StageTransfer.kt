@@ -194,7 +194,7 @@ class StageTransfer @Autowired(required = false) constructor(
                 yamlJob = job,
                 aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
             )
-            preCheckJob(job, yamlInput)
+            preCheckJob(job)
             val elementList = elementTransfer.yaml2Elements(
                 job = job,
                 yamlInput = yamlInput
@@ -449,19 +449,15 @@ class StageTransfer @Autowired(required = false) constructor(
         return params
     }
 
-    private fun preCheckJob(
-        job: Job,
-        yamlInput: YamlTransferInput
-    ) {
+    private fun preCheckJob(job: Job) {
         if (job.runsOn.hwSpec != null) {
-            val hw = transferCacheService.getDockerResource(
-                userId = yamlInput.userId,
-                projectId = yamlInput.projectCode,
-                buildType = transferCreator.defaultLinuxDispatchType()
-            )?.dockerResourceOptionsMaps?.find { it.dockerResourceOptionsShow.description == job.runsOn.hwSpec }
-            // 如果找到对应的资源，设置job.runsOn.hwSpec为对应资源的id, 否则保留原值
-            if (hw != null) {
-                job.runsOn.hwSpec = hw.id
+            // 针对旧的hwSpec字段内容做强制转换
+            if (job.runsOn.hwSpec.equals("Basic")) {
+                job.runsOn.hwSpec = "1"
+            } else if (job.runsOn.hwSpec.equals("Premium")) {
+                job.runsOn.hwSpec = "2"
+            } else if (job.runsOn.hwSpec.equals("High")) {
+                job.runsOn.hwSpec = "1000  0"
             }
         }
     }
