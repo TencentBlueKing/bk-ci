@@ -78,6 +78,7 @@ class BuildFileResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String?> {
         val userId = getLastModifyUser(parentProjectId ?: projectCode, parentPipelineId ?: pipelineId)
+
         val url = archiveFileService.archiveFile(
             userId = userId,
             projectId = parentProjectId ?: projectCode,
