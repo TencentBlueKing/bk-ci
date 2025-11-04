@@ -23,7 +23,7 @@ on:
 jobs:
   backend-jar:
     name: Build backend -- JAR
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:5.7
@@ -44,7 +44,7 @@ jobs:
       with:
         distribution: "temurin"
         java-version: "8"
-    - uses: actions/cache@v3
+    - uses: actions/cache@@v4
       with:
         path: |
           ~/.gradle/caches
@@ -63,7 +63,7 @@ jobs:
 
   backend-docker:
     name: Build backend -- Docker
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:5.7
@@ -84,7 +84,7 @@ jobs:
       with:
         distribution: "temurin"
         java-version: "8"
-    - uses: actions/cache@v3
+    - uses: actions/cache@@v4
       with:
         path: |
           ~/.gradle/caches
