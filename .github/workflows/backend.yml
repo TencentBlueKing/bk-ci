@@ -23,7 +23,7 @@ on:
 jobs:
   backend-jar:
     name: Build backend -- JAR
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:5.7
@@ -33,7 +33,7 @@ jobs:
         - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: init mysql
       run: |
         export MYSQL_PWD=root
@@ -44,7 +44,7 @@ jobs:
       with:
         distribution: "temurin"
         java-version: "8"
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -63,7 +63,7 @@ jobs:
 
   backend-docker:
     name: Build backend -- Docker
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:5.7
@@ -73,7 +73,7 @@ jobs:
         - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: init mysql
       run: |
         export MYSQL_PWD=root
@@ -84,7 +84,7 @@ jobs:
       with:
         distribution: "temurin"
         java-version: "8"
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
