@@ -25,7 +25,7 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: 'project',
+                                resourceType: RESOURCE_TYPE.PROJECT,
                                 resourceCode: projectId,
                                 action: PROJECT_RESOURCE_ACTION.MANAGE
                             }
@@ -42,7 +42,7 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: 'project',
+                                resourceType: RESOURCE_TYPE.PROJECT,
                                 resourceCode: projectId,
                                 action: PROJECT_RESOURCE_ACTION.MANAGE
                             }
@@ -127,13 +127,13 @@
                                     text
                                     class="mr10"
                                     v-perm="{
-                                        hasPermission: isManage,
+                                        hasPermission: row.permission.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: 'project',
-                                            resourceCode: projectId,
-                                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                                            resourceType: RESOURCE_TYPE.VARIABLE,
+                                            resourceCode: row.groupName,
+                                            action: VARIABLE_RESOURCE_ACTION.EDIT
                                         }
                                     }"
                                     @click="handleEditGroup(row)"
@@ -203,7 +203,9 @@
         OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
     import {
+        RESOURCE_TYPE,
         PROJECT_RESOURCE_ACTION,
+        VARIABLE_RESOURCE_ACTION
     } from '@/utils/permission'
     import UseInstance from '@/hook/useInstance'
     import SearchSelect from '@blueking/search-select'
@@ -279,7 +281,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId.value,
-                            resourceType: 'project',
+                            resourceType: RESOURCE_TYPE.PROJECT,
                             resourceCode: projectId.value,
                             action: PROJECT_RESOURCE_ACTION.MANAGE
                         }
@@ -287,41 +289,41 @@
                     {
                         text: proxy.$t('publicVar.export'),
                         handler: handleExportGroup,
-                        data: row,
-                        hasPermission: isManage.value,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'project',
-                            resourceCode: projectId.value,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
-                        }
+                        data: row
+                        // hasPermission: isManage.value,
+                        // disablePermissionApi: true,
+                        // permissionData: {
+                        //     projectId: projectId.value,
+                        //     resourceType: 'project',
+                        //     resourceCode: projectId.value,
+                        //     action: PROJECT_RESOURCE_ACTION.MANAGE
+                        // }
                     },
-                    {
-                        text: proxy.$t('publicVar.offline'),
-                        handler: handleOfflineGroup,
-                        data: row,
-                        hasPermission: isManage.value,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'project',
-                            resourceCode: projectId.value,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
-                        }
-                    },
+                    // {
+                    //     text: proxy.$t('publicVar.offline'),
+                    //     handler: handleOfflineGroup,
+                    //     data: row,
+                    //     hasPermission: isManage.value,
+                    //     disablePermissionApi: true,
+                    //     permissionData: {
+                    //         projectId: projectId.value,
+                    //         resourceType: 'project',
+                    //         resourceCode: projectId.value,
+                    //         action: PROJECT_RESOURCE_ACTION.MANAGE
+                    //     }
+                    // },
                     {
                         text: proxy.$t('delete'),
                         handler: handleDeleteGroup,
                         data: row,
-                        hasPermission: isManage.value,
+                        hasPermission: row.permission.canDelete,
                         disablePermissionApi: true,
                         disable: row.referCount > 0,
                         permissionData: {
-                            projectId: projectId.value,
-                            resourceType: 'project',
-                            resourceCode: projectId.value,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                            projectId: projectId,
+                            resourceType: RESOURCE_TYPE.VARIABLE,
+                            resourceCode: row.groupName,
+                            action: VARIABLE_RESOURCE_ACTION.DELETE
                         }
                     },
                 ]
