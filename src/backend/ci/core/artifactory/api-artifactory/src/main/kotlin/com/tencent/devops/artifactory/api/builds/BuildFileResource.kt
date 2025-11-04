@@ -88,13 +88,13 @@ interface BuildFileResource {
         @Parameter(description = "buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "父流水线项目id", required = true)
+        @Parameter(description = "父流水线项目id", required = false)
         @QueryParam("parentProjectId")
         parentProjectId: String? = null,
-        @Parameter(description = "父流水线id", required = true)
+        @Parameter(description = "父流水线id", required = false)
         @QueryParam("parentPipelineId")
         parentPipelineId: String? = null,
-        @Parameter(description = "父流水线构建id", required = true)
+        @Parameter(description = "父流水线构建id", required = false)
         @QueryParam("parentBuildId")
         parentBuildId: String? = null,
         @Parameter(description = "文件类型", required = true)

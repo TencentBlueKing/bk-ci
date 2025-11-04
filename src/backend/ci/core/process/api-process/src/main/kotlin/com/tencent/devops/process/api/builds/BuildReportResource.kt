@@ -76,13 +76,13 @@ interface BuildReportResource {
         @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(description = "父项目英文名，或者叫projectCode", required = true)
+        @Parameter(description = "父项目英文名，或者叫projectCode", required = false)
         @QueryParam("parentProjectId")
         parentProjectId: String? = null,
-        @Parameter(description = "父流水线ID", required = true)
+        @Parameter(description = "父流水线ID", required = false)
         @QueryParam("parentPipelineId")
         parentPipelineId: String? = null,
-        @Parameter(description = "父构建ID", required = true)
+        @Parameter(description = "父构建ID", required = false)
         @QueryParam("parentPipelineBuildId")
         parentPipelineBuildId: String? = null,
         @Parameter(description = "构建机名称", required = true)
