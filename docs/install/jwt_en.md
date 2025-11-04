@@ -112,9 +112,10 @@ The system supports multiple key configurations, enabling key rotation without s
 
    **5.2 Update Gateway Configuration (support-files/templates/gateway#core#lua#init.lua)**
    
-   Update gateway's private key:
+   Update gateway's private key and kid:
    ```lua
    jwtPrivateKey = "NEW_PRIVATE_KEY",
+   jwtKid= "devops-new",
    ```
 
 6. **Service Restart Order**
