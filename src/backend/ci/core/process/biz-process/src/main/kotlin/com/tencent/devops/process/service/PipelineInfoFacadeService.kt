@@ -603,10 +603,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.stop()
 
             var pipelineId: String? = null
+            val triggerContainer = model.getTriggerContainer()
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -708,6 +708,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
+
                 ActionAuditContext.current()
                     .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true
@@ -1576,7 +1577,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
-            model.latestVersion = pipelineInfo.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
