@@ -202,7 +202,21 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
+        val sensitiveKeys = buildInfo.buildParameters
+            ?.filter { it.sensitive == true }
+            ?.map { it.key }
+            ?.toSet()
+            ?: emptySet()
+        val variablesWithType = buildVariableService.getAllVariableWithType(
+            projectId = projectId,
+            buildId = buildId
+        ).map { variable ->
+            if (sensitiveKeys.contains(variable.key)) {
+                variable.copy(sensitive = true)
+            } else {
+                variable
+            }
+        }.toMutableList()
         val model = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,

@@ -715,7 +715,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        editMode: Boolean? = false
     ): PipelineVersionWithModel {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -756,6 +757,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineInfo = pipelineInfo,
             archiveFlag = archiveFlag
         )
+
+        // 在正常查看编排时，调用该接口，需要对敏感字段加密。在编辑状态且用户有编辑权限的情况下，不需要加密。
+        val isEncryptParamsValue = editMode == null || editMode == false || !editPermission
+        if (isEncryptParamsValue) {
+            resource.model.encryptParamsValue()
+            model.encryptParamsValue()
+        }
         /* 兼容存量数据 */
         model.desc = setting.desc
         // 后端主动填充前端展示的标签名称
@@ -778,17 +786,18 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 resource = resource,
                 editPermission = editPermission,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                isEncryptParamsValue = isEncryptParamsValue
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
             Triple(
                 false, null, I18nUtil.getCodeLanMessage(
-                    messageCode = e.errorCode,
-                    params = e.params,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    defaultMessage = e.defaultMessage
-                )
+                messageCode = e.errorCode,
+                params = e.params,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = e.defaultMessage
+            )
             )
         }
         return PipelineVersionWithModel(

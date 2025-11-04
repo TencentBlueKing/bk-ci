@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -229,4 +230,13 @@ data class Model(
     }
 
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    fun encryptParamsValue() {
+        (stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
+    }
 }
