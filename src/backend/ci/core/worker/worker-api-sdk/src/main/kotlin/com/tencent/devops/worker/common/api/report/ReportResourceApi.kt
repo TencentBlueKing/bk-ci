@@ -160,7 +160,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 encode(
                     name
                 )
-            }&reportType=$reportType"+
+            }&reportType=$reportType" +
                     "&parentProjectId=${pipelineBuildInfo.projectId}" +
                     "&parentPipelineId=${pipelineBuildInfo.pipelineId}" +
                     "&parentPipelineBuildId=${pipelineBuildInfo.buildId}"

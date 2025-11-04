@@ -397,10 +397,23 @@ class ReportArchiveTask : ITask() {
         val parentProjectId = buildVariables.variables[VariableType.BK_CI_PARENT_PROJECT_ID.name]
         val parentPipelineId = buildVariables.variables[VariableType.BK_CI_PARENT_PIPELINE_ID.name]
         val parentBuildId = buildVariables.variables[VariableType.BK_CI_PARENT_BUILD_ID.name]
-        val pipelineBuildInfo = api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data
-        return "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE) &&
-                parentProjectId != null &&
-                parentPipelineId != null &&
-                parentBuildId != null && pipelineBuildInfo != null
+
+        // 先进行基础判断 是否设置归档标记和是否存在父构建信息
+        val shouldArchive = "true" == buildTask.params?.get(SHOULD_ARCHIVE_TO_PARENT_PIPELINE) &&
+                !parentProjectId.isNullOrBlank() &&
+                !parentPipelineId.isNullOrBlank() &&
+                !parentBuildId.isNullOrBlank()
+
+        if (shouldArchive) {
+            // 基于上面的基础判断通过 然后再调用接口来获取顶级构建信息
+            val topParentBuildInfo =
+                api.getParentPipelineBuildInfo(buildVariables.buildId, buildVariables.projectId).data ?: return false
+
+            // 再判断顶级构建信息是否是当前构建信息 如果是 就不用归档了 否则就归档
+            val isTopParentSelf = topParentBuildInfo.buildId == buildVariables.buildId &&
+                    topParentBuildInfo.projectId == buildVariables.projectId
+            return !isTopParentSelf
+        }
+        return false
     }
 }

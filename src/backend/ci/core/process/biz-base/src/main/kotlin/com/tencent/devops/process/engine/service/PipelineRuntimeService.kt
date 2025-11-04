@@ -36,8 +36,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
@@ -124,7 +124,6 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.app.StartBuildContext
-import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -2283,18 +2282,16 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getTopParentPipelineByBuildId(buildId: String, projectId: String): BuildBasicInfo? {
         val pipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-        val currentBuildInfo =
-            pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = buildId, projectId = projectId)
-                ?: return null
+        val currentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(
+            dslContext = dslContext,
+            buildId = buildId,
+            projectId = projectId
+        ) ?: return null
 
-        val parentBuild = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
-        return if (parentBuild != null
-        ) {
-            val pipelineBuildInfo =
-                pipelineBuildDao.getPipelineBuildInfo(dslContext = dslContext, buildId = parentBuild)
-            getTopParentPipelineByBuildId(parentBuild, pipelineBuildInfo!!.get(pipelineBuildHistory.PROJECT_ID))
-        } else {
-            BuildBasicInfo(
+        val parentBuildId = currentBuildInfo[pipelineBuildHistory.PARENT_BUILD_ID]
+
+        if (parentBuildId.isNullOrBlank()) {
+            return BuildBasicInfo(
                 buildId = currentBuildInfo[pipelineBuildHistory.BUILD_ID],
                 projectId = currentBuildInfo[pipelineBuildHistory.PROJECT_ID],
                 pipelineId = currentBuildInfo[pipelineBuildHistory.PIPELINE_ID],
@@ -2302,6 +2299,16 @@ class PipelineRuntimeService @Autowired constructor(
                 status = null
             )
         }
+
+        val parentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(
+            dslContext = dslContext,
+            buildId = parentBuildId
+        ) ?: return null
+
+        val parentProjectId = parentBuildInfo[pipelineBuildHistory.PROJECT_ID]
+            ?: return null
+
+        return getTopParentPipelineByBuildId(parentBuildId, parentProjectId)
     }
 
     fun transferWebhookType(webhookType: String?) = when (webhookType) {

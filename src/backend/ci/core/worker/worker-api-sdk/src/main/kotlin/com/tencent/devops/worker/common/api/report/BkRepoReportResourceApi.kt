@@ -208,7 +208,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 relativePath = relativePath,
                 file = file,
                 buildVariables = buildVariables,
-                requestErrorMessage = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage()),
+                requestErrorMessage = MessageUtil.getMessageByLocale(
+                    UPLOAD_CUSTOM_REPORT_FAILURE,
+                    AgentEnv.getLocaleLanguage()
+                ),
                 failArchiveMessage = "report archive fail"
             )
         }
