@@ -2084,8 +2084,9 @@ class PipelineBuildDao {
         projectId: String? = null
     ): Record6<String, String, String, String, Int, Int>? {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            val query = dslContext.select(PARENT_BUILD_ID,BUILD_ID, PROJECT_ID, PIPELINE_ID, VERSION, STATUS).from(this)
-                .where(BUILD_ID.eq(buildId))
+            val query =
+                dslContext.select(PARENT_BUILD_ID, BUILD_ID, PROJECT_ID, PIPELINE_ID, VERSION, STATUS).from(this)
+                    .where(BUILD_ID.eq(buildId))
 
             if (projectId != null) {
                 query.and(PROJECT_ID.eq(projectId))
