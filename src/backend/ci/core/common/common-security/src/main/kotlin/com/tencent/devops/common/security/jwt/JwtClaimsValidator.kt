@@ -260,7 +260,7 @@ class JwtClaimsValidator(
             val keyConfig = if (parsedHeader.keyId != null) {
                 keyConfigManager.getKeyConfigByKid(parsedHeader.keyId)
             } else {
-                keyConfigManager.getDefaultKeyConfig() ?: keyConfigManager.getActiveKeyConfig()
+                keyConfigManager.getActiveKeyConfig()
             }
 
             if (keyConfig == null) {
