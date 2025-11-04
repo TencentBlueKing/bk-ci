@@ -197,9 +197,10 @@ class WebhookTriggerBuildService @Autowired constructor(
         } finally {
             requestTime?.let {
                 recordWebhookExecuteTime(
-                    name = MeasureConstant.PIPELINE_WEBHOOK_NEW_EXECUTE_TIME,
-                    tags = Tags.of(TAG_STATUS, status.name)
-                        .and(TAG_YAML, isYaml.toString())
+                    name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
+                    tags = Tags.of(MeasureConstant.TAG_STATUS, status.name)
+                        .and(MeasureConstant.TAG_YAML, isYaml.toString())
+                        .and("old", "false")
                         .toList(),
                     requestTime = requestTime
                 )
@@ -362,7 +363,5 @@ class WebhookTriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
-        private const val TAG_STATUS = "status"
-        private const val TAG_YAML = "yaml"
     }
 }
