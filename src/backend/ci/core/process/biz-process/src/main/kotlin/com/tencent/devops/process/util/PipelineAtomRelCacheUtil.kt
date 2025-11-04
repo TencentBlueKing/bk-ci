@@ -14,9 +14,6 @@ object PipelineAtomRelCacheUtil {
         .expireAfterWrite(30, TimeUnit.MINUTES)
         .build<String, String?>()
 
-    /**
-     * 获取分页数据
-     */
     fun getPipelineAtomRelVersions(
         atomCode: String,
         pipelineId: String
@@ -45,8 +42,6 @@ object PipelineAtomRelCacheUtil {
         }
         commonCache.putAll(cacheMap)
     }
-
-
 
     /**
      * 判断指定key是否存在于缓存中
