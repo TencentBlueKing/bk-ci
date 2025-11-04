@@ -90,7 +90,7 @@ enum class PoolType {
         }
 
         override fun validatePool(pool: Pool) {
-            if (null == pool.container && pool.image    == null) {
+            if (null == pool.container && pool.image == null) {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
