@@ -33,8 +33,7 @@ import java.util.regex.Pattern
  *
  */
 object ModelVarRefUtils {
-
-    /** 日志记录器，用于记录解析过程中的调试信息和错误日志 */
+    
     private val logger = LoggerFactory.getLogger(ModelVarRefUtils::class.java)
 
     /**
