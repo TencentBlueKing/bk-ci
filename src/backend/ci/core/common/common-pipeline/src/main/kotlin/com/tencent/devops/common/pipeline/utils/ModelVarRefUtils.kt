@@ -1002,7 +1002,7 @@ object ModelVarRefUtils {
         if (text.isEmpty()) return emptySet()
         val variables = mutableSetOf<String>()
         // 匹配不带$的variables.xxx格式，匹配 variables.xxx，确保它是独立的单词（前面是边界或空格，后面是边界或空格）
-        val plainPattern = Pattern.compile("(?:^|[^\\w.])(variables\\.([a-zA-Z_][a-zA-Z0-9_]*))(?=$|[^\\w.])")
+        val plainPattern = Pattern.compile("(?:^|[^\\w.])(variables\\.(\\S+))(?=$|[^\\w.])")
         val plainMatcher = plainPattern.matcher(text)
 
         while (plainMatcher.find()) {
@@ -1055,7 +1055,7 @@ object ModelVarRefUtils {
      * - 资源类型和ID：标识变量引用的资源（流水线/模板）
      * - 阶段/容器/任务ID：标识变量引用的具体位置
      * - 参数变量集合：需要查找的目标变量集合
-     * 
+     *
      */
     private data class ParseContext(
         val projectId: String,
