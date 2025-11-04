@@ -33,7 +33,7 @@ import java.util.regex.Pattern
  *
  */
 object ModelVarRefUtils {
-    
+
     private val logger = LoggerFactory.getLogger(ModelVarRefUtils::class.java)
 
     /**
@@ -139,10 +139,9 @@ object ModelVarRefUtils {
             logger.info("parseVarReferences completed in ${cost}ms, found ${references.size} references")
 
             return references
-        } catch (e: Exception) {
+        } catch (ignored: Throwable) {
             // 异常处理：记录错误日志并返回空列表，确保方法不会抛出异常
-            // 避免因解析失败影响整体流程
-            logger.error("parseTriggerContainerVarReferences failed", e)
+            logger.error("parseModelVarReferences failed", ignored)
             return emptyList()
         }
     }
