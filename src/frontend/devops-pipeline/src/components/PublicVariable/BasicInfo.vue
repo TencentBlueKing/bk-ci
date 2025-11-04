@@ -52,21 +52,24 @@
                                 :label="$t('publicVar.paramGroupId')"
                                 :required="true"
                             >
-                                <vuex-input
-                                    :value="groupData.groupName"
+                                <bk-input
+                                    v-model="groupData.groupName"
                                     :disabled="!!groupData.groupName && isEditPage"
                                     name="groupName"
-                                    :handle-change="(name, val) => handleChangeGroupData(name, val)"
+                                    :max-length="64"
+                                    @change="(val) => handleChangeGroupData('groupName', val)"
                                 />
                             </bk-form-item>
                             <bk-form-item
                                 :label="$t('publicVar.paramGroupDesc')"
                             >
-                                <vuex-textarea
+                                <bk-input
+                                    v-model="groupData.desc"
                                     type="textarea"
                                     name="desc"
-                                    :value="groupData.desc"
-                                    :handle-change="(name, val) => handleChangeGroupData(name, val)"
+                                    :maxlength="256"
+                                    :rows="6"
+                                    @change="(val) => handleChangeGroupData('desc', val)"
                                 />
                             </bk-form-item>
                         </bk-form>
@@ -274,12 +277,13 @@
     })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .public-var-basic-info-main {
         height: 100%;
         .header-wrapper {
             display: flex;
             align-items: center;
+            margin-bottom: 0;
             padding: 0 20px;
             height: 65px;
             background: #FAFBFD;
