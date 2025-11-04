@@ -365,6 +365,19 @@ class PipelineWebhookService @Autowired constructor(
         ) ?: emptyList()
     }
 
+    fun countTriggerPipeline(
+        projectId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): Long {
+        return pipelineWebhookDao.countTriggerPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            eventType = eventType
+        )
+    }
+
     fun getProjectName(projectName: String): String {
         // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
         val repoSplit = projectName.split("/")
