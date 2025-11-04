@@ -47,9 +47,18 @@ class PublicVarReferInfoDao {
         with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
             var insertQuery = dslContext.insertInto(
                 this,
-                ID, PROJECT_ID, GROUP_NAME, VAR_NAME, VERSION,
-                REFER_ID, REFER_TYPE, REFER_VERSION_NAME,
-                CREATOR, MODIFIER, CREATE_TIME, UPDATE_TIME
+                ID, PROJECT_ID,
+                GROUP_NAME,
+                VAR_NAME,
+                VERSION,
+                REFER_ID,
+                REFER_TYPE,
+                REFER_VERSION,
+                REFER_VERSION_NAME,
+                CREATOR,
+                MODIFIER,
+                CREATE_TIME,
+                UPDATE_TIME
             )
             
             pipelinePublicVarReferPOs.forEach { po ->
@@ -61,6 +70,7 @@ class PublicVarReferInfoDao {
                     po.version,
                     po.referId,
                     po.referType.name,
+                    po.referVersion,
                     po.referVersionName,
                     po.creator,
                     po.modifier,
@@ -68,7 +78,6 @@ class PublicVarReferInfoDao {
                     po.updateTime
                 )
             }
-            
             insertQuery.execute()
         }
     }

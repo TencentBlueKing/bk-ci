@@ -149,7 +149,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         try {
             // 计算实际引用数
             val actualReferCount = if (latestFlag) {
-                // latestFlag = true：最新版本，统计动态引用（version=-1）+ 明确指定该版本号的引用
+                // latestFlag = true：最新版本，统计动态引用（version=-1）
                 val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,
@@ -166,7 +166,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 )
                 dynamicReferCount + specificReferCount
             } else {
-                // latestFlag = false：固定版本，只统计明确指定该版本号的引用
                 publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,
@@ -176,22 +175,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 )
             }
 
-            // 直接更新为实际引用数，而不是增量更新
+            // 直接更新为实际引用数
             publicVarGroupDao.updateReferCount(
                 dslContext = context,
                 projectId = projectId,
                 groupName = groupName,
-                version = version, // 更新的是传入的版本号
+                version = version,
                 referCount = actualReferCount
-            )
-
-            // 更新变量引用计数
-            updateVarReferCounts(
-                context = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version, // 更新的是传入的版本号
-                countChange = actualReferCount
             )
         } catch (e: Throwable) {
             logger.warn("Failed to update single group refer count for group: $groupName, version: $version", e)
@@ -737,30 +727,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 createTime = currentTime,
                 updateTime = currentTime
             )
-        }
-    }
-
-    /**
-     * 更新变量引用计数
-     */
-    private fun updateVarReferCounts(
-        context: DSLContext = dslContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int
-    ) {
-        try {
-            publicVarDao.updateReferCountByGroup(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                countChange = countChange
-            )
-        } catch (e: Throwable) {
-            logger.warn("Failed to update variable refer counts for group: $groupName, version: $version", e)
-            throw e
         }
     }
 
