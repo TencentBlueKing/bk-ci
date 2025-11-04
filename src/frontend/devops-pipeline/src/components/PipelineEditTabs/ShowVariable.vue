@@ -132,7 +132,7 @@
                 return this.container?.buildNo || {}
             },
             publicVarGroups () {
-                return this.$store?.state?.atom?.pipeline?.publicVarGroups
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups || []
             },
             isRemoveParamsList () {
                 // 已经被删除的公共变量组变量

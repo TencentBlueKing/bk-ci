@@ -216,7 +216,7 @@
         },
         computed: {
             publicVarGroups () {
-                return this.$store?.state?.atom?.pipeline?.publicVarGroups
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups || []
             }
         },
         watch: {

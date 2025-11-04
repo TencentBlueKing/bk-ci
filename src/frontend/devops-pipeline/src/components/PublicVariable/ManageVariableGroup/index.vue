@@ -166,7 +166,7 @@
     const projectId = computed(() => proxy.$route.params?.projectId)
     // const pipelineId = computed(() => proxy.$route.params?.pipelineId)
     // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
-    const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups)
+    const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups || [])
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量
         const requiredParam = selectedVariableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
