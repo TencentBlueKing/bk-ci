@@ -14,6 +14,12 @@ object PipelineAtomRelCacheUtil {
         .expireAfterWrite(30, TimeUnit.MINUTES)
         .build<String, String?>()
 
+    /**
+     * 获取缓存数据：同一插件下，指定流水线的版本号数据
+     * @param atomCode 插件标识
+     * @param pipelineId 流水线ID
+     * @return 缓存数据
+     */
     fun getPipelineAtomRelVersions(
         atomCode: String,
         pipelineId: String
@@ -45,6 +51,9 @@ object PipelineAtomRelCacheUtil {
 
     /**
      * 判断指定key是否存在于缓存中
+     * @param atomCode 插件标识
+     * @param pipelineId 流水线ID
+     * @return 是否存在
      */
     fun containsKey(atomCode: String, pipelineId: String): Boolean {
         val cacheKey = buildCacheKey(atomCode, pipelineId)
@@ -53,19 +62,18 @@ object PipelineAtomRelCacheUtil {
 
     /**
      * @param cacheKey 唯一缓存键
-     * @param dbFetcher 数据库查询逻辑（函数类型参数）
      * @return 缓存或数据库查询结果
      */
     private fun getFromCacheOrDb(cacheKey: String): String? {
         return commonCache.getIfPresent(cacheKey)
     }
 
+
     /**
-     * @param dataType 数据类型（如page/excel，必传，避免不同类型数据冲突）
+     * 构建缓存键
      * @param atomCode 插件标识
-     * @param version 版本
-     * @param page 页码
-     * @param pageSize 每页条数
+     * @param pipelineId 流水线ID
+     * @return 缓存键
      */
     private fun buildCacheKey(
         atomCode: String,
