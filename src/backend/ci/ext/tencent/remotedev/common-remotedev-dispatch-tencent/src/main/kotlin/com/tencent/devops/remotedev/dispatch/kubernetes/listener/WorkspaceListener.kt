@@ -83,7 +83,7 @@ class WorkspaceListener @Autowired constructor(
 
                 UpdateEventType.RESTART -> {
                     remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-                        .restartWorkspace(event.userId, event.workspaceName)
+                        .restartWorkspace(event.userId, event.workspaceName, event.force)
                 }
 
                 UpdateEventType.REBUILD -> {

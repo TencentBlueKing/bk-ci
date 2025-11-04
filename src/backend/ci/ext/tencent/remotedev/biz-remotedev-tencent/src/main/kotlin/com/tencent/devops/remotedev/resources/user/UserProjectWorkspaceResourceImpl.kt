@@ -168,8 +168,8 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = TencentActionId.CGS_RESTART)
-    override fun restartWorkspace(userId: String, projectId: String, workspaceName: String): Result<Boolean> {
-        restartWorkspaceHandler.restartWorkspace(userId, workspaceName)
+    override fun restartWorkspace(userId: String, projectId: String, workspaceName: String, force: Boolean?): Result<Boolean> {
+        restartWorkspaceHandler.restartWorkspace(userId, workspaceName, force)
         return Result(true)
     }
 
