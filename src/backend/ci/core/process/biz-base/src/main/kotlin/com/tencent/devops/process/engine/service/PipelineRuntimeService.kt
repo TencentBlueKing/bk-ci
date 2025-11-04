@@ -2299,7 +2299,6 @@ class PipelineRuntimeService @Autowired constructor(
                 status = null
             )
         }
-
         val parentBuildInfo = pipelineBuildDao.getPipelineBuildInfo(
             dslContext = dslContext,
             buildId = parentBuildId
