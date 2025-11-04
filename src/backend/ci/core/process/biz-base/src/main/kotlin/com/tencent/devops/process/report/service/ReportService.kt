@@ -252,6 +252,17 @@ class ReportService @Autowired constructor(
         return reportList
     }
 
+    fun listReportUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<String> {
+        val reportRecordList = reportDao.list(dslContext, projectId, pipelineId, buildId)
+        return reportRecordList.map {
+            buildReport(projectId, pipelineId, buildId, it).indexFileUrl
+        }
+    }
+
     private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
         return "/$projectId/report/$pipelineId/$buildId/$taskId/"
     }
