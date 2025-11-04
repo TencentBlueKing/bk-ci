@@ -1056,7 +1056,6 @@ object ModelVarRefUtils {
      * - 阶段/容器/任务ID：标识变量引用的具体位置
      * - 参数变量集合：需要查找的目标变量集合
      * 
-     * 使用copy()方法可以方便地创建包含新上下文信息的新实例
      */
     private data class ParseContext(
         val projectId: String,
