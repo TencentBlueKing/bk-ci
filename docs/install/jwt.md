@@ -114,6 +114,7 @@ JWT 在 BK-CI 中的流转路径为：**网关 ➡ 微服务 ⬅➡ Turbo（如�
    更新网关使用的私钥：
    ```lua
    jwtPrivateKey = "NEW_PRIVATE_KEY",
+   jwtKid= "devops-new",
    ```
 
 6. **重启服务顺序**
