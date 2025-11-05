@@ -5,28 +5,34 @@
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
-                <span>{{ $t('versionNum') }}</span>
+                <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
             </label>
             <div class="execute-build-version">
-                <span
+                <form-field
+                    :hide-colon="true"
                     class="execute-build-version-input"
                     v-for="v in renderVersionParamList"
-                    :key="v"
+                    :key="v.id"
+                    :required="v.required"
+                    :is-error="errors.has(v.id)"
                 >
                     <vuex-input
-                        :disabled="disabled"
+                        :disabled="disabled || isFollowTemplate"
                         input-type="number"
                         :name="v.id"
                         :class="{
-                            'is-diff-param': highlightChangedParam && v.isChanged
+                            'is-diff-param': highlightChangedParam && v.isChanged,
+                            'is-change-param': v.isChange,
+                            'is-new-param': v.isNew,
+                            'is-delete-param': v.isDelete
                         }"
                         :placeholder="v.placeholder"
                         v-validate.initial="'required|numeric'"
                         :value="versionParamValues[v.id]"
                         :handle-change="handleVersionChange"
                     />
-                </span>
+                </form-field>
             </div>
         </bk-form-item>
         <template v-if="showBaseline">
@@ -94,6 +100,7 @@
                     <bk-checkbox
                         v-if="isInstance && !isInitInstance"
                         class="instance_reset"
+                        :disabled="disabled"
                         :value="resetBuildNo"
                         @change="handleCheckChange"
                     >
@@ -114,7 +121,7 @@
                             v-else
                         >
                             <vuex-input
-                                :disabled="isPreviewAndLockedNo"
+                                :disabled="isPreviewAndLockedNo || isFollowTemplate || disabled"
                                 input-type="number"
                                 name="buildNo"
                                 placeholder="BK_CI_BUILD_NO"
@@ -141,7 +148,6 @@
                         <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
                         <p>
                             <vuex-input
-                                class="build-value"
                                 :disabled="(isLockedNo && !isInstance) || isInstance || disabled"
                                 input-type="number"
                                 name="currentBuildNo"
@@ -149,17 +155,12 @@
                                 v-validate.initial="'required|numeric'"
                                 :value="buildNo.currentBuildNo"
                                 :handle-change="handleBuildNoChange"
+                                :class="{
+                                    'is-diff-param': highlightChangedParam && buildNo.isChanged,
+                                    'is-change-param': resetBuildNo
+                                }"
                             />
                             <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
-                            <span
-                                v-if="resetBuildNo && isInstance"
-                                class="reset-build-no"
-                            >
-                                <Logo
-                                    size="14"
-                                    name="arrow-right"
-                                />
-                            </span>
                         </p>
                     </div>
                 </div>
@@ -215,6 +216,7 @@
             isInitInstance: Boolean,
             resetBuildNo: Boolean,
             highlightChangedParam: Boolean,
+            isFollowTemplate: Boolean,
             versionParamList: {
                 type: Array,
                 default: () => []
@@ -275,6 +277,12 @@
             },
             isPreviewAndLockedNo () {
                 return (this.isLockedNo && this.isPreview) || this.disabled
+            },
+            isDelete () {
+                return this.versionParamList.every(i => i?.isDelete)
+            },
+            isNew () {
+                return this.versionParamList.every(i => i?.isNew)
             }
         }
     }
@@ -291,7 +299,10 @@
         align-items: center;
         font-size: 12px;
         font-weight: 700;
-
+        .deleted {
+            color: #a7a9ac !important;
+            text-decoration: line-through;
+        }
         .desc-text {
             font-weight: normal;
             color: #979ba5;
@@ -301,6 +312,23 @@
             font-weight: normal;
             margin-left: 18px;
         }
+        .status-tag {
+            padding: 0 8px;
+            border-radius: 2px;
+            margin-right: 40px;
+            font-size: 12px;
+            height: 16px;
+            line-height: 16px;
+            font-weight: 400;
+            &.success {
+                color: #299E56;
+                background: #DAF6E5;
+            }
+            &.danger {
+                color: #E71818;
+                background: #FFEBEB;
+            }
+        }
     }
 
     .execute-build-version {
@@ -309,6 +337,7 @@
         grid-gap: 16px;
         width: 222px;
         margin-right: 20px;
+
         .execute-build-version-input:not(:last-child) {
             position: relative;
 
@@ -339,12 +368,12 @@
         margin-left: 0;
         .preview-buildno-params {
             display: flex;
-            
+
             .build {
                 display: grid;
                 grid-template-columns: auto auto;
                 column-gap: 0;
-                
+
                 .build-label,
                 .build-value {
                     font-size: 12px;
@@ -398,5 +427,9 @@
 
 .is-not-Preview {
     display: grid;
+}
+
+.is-change-param {
+    background: #FDF4E8 !important;
 }
 </style>

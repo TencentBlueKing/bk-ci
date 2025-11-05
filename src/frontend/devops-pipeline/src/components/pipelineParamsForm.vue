@@ -1,13 +1,7 @@
 <template>
     <section>
         <slot name="versionParams"></slot>
-        <bk-form
-            form-type="vertical"
-            :class="{
-                'pipeline-execute-params-form': true,
-                'is-category': sortCategory
-            }"
-        >
+        <bk-form form-type="vertical">
             <template v-if="sortCategory">
                 <renderSortCategoryParams
                     v-for="key in sortedCategories"
@@ -16,102 +10,55 @@
                     :vertical="sortCategoryVertical"
                 >
                     <template slot="content">
-                        <form-field
+                        <div
                             v-for="param in paramsListMap[key]"
                             :key="param.id"
-                            v-if="param.show"
-                            :required="param.required"
-                            :is-error="errors.has(param.fieldName)"
-                            :error-msg="errors.first(param.fieldName)"
-                            :label="param.label || param.id"
                         >
-                            <section class="component-row">
-                                <component
-                                    :is="param.component"
-                                    v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
-                                    :click-unfold="true"
-                                    :show-select-all="true"
-                                    :handle-change="handleParamUpdate"
-                                    flex
-                                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
-                                    :class="{
-                                        'is-diff-param': highlightChangedParam && param.isChanged
-                                    }"
-                                    :disabled="disabled"
-                                    :placeholder="param.placeholder"
-                                    :is-diff-param="highlightChangedParam && param.isChanged"
-                                    :enable-version-control="param.enableVersionControl"
-                                    :random-sub-path="param.latestRandomStringInPath"
-                                />
-                                <span
-                                    v-if="isInParamSet"
-                                    class="devops-icon icon-minus-circle remove-param-item-icon"
-                                    v-bk-tooltips="$t('removeInputParam')"
-                                    @click="handleRemoveParamItem(param.id)"
-                                ></span>
-                            </section>
-                            <span
-                                v-if="!errors.has(param.fieldName)"
-                                :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
-                                :title="param.desc"
-                            >
-                                {{ param.desc }}
-                            </span>
-                        </form-field>
+                            <render-param
+                                v-bind="param"
+                                :param="param"
+                                ref="categoryRenderParam"
+                                :is-in-param-set="isInParamSet"
+                                :is-exec-preview="isExecPreview"
+                                :disabled="disabled || param.isFollowTemplate"
+                                :show-operate-btn="showOperateBtn"
+                                :handle-set-parma-required="handleSetParmaRequired"
+                                :handle-use-default-value="handleUseDefaultValue"
+                                :highlight-changed-param="highlightChangedParam"
+                                :handle-param-update="handleParamUpdate"
+                                :handle-follow-template="(id) => handleFollowTemplate(followTemplateKey, id)"
+                                @remove-param="handleRemoveParamItem"
+                            />
+                        </div>
                     </template>
                 </renderSortCategoryParams>
             </template>
             <template v-else>
-                <form-field
+                <div
                     v-for="param in paramList"
                     :key="param.id"
-                    :required="param.required"
-                    :is-error="errors.has(param.fieldName)"
-                    :error-msg="errors.first(param.fieldName)"
-                    :label="param.label || param.id"
                 >
-                    <section class="component-row">
-                        <component
-                            :is="param.component"
-                            v-validate="{ required: param.required, objectRequired: isObject(param.value) }"
-                            :click-unfold="true"
-                            :show-select-all="true"
-                            :handle-change="handleParamUpdate"
-                            flex
-                            v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
-                            :class="{
-                                'is-diff-param': highlightChangedParam && param.isChanged
-                            }"
-                            :disabled="disabled"
-                            :placeholder="param.placeholder"
-                            :is-diff-param="highlightChangedParam && param.isChanged"
-                            :enable-version-control="param.enableVersionControl"
-                            :random-sub-path="param.latestRandomStringInPath"
-                        />
-                    </section>
-                    <span
-                        v-if="!errors.has(param.fieldName)"
-                        :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
-                        :title="param.desc"
-                    >
-                        {{ param.desc }}
-                    </span>
-                </form-field>
+                    <render-param
+                        v-bind="param"
+                        :param="param"
+                        ref="renderParam"
+                        :is-exec-preview="isExecPreview"
+                        :disabled="disabled || param.isFollowTemplate"
+                        :show-operate-btn="showOperateBtn"
+                        :handle-set-parma-required="handleSetParmaRequired"
+                        :handle-use-default-value="handleUseDefaultValue"
+                        :highlight-changed-param="highlightChangedParam"
+                        :handle-param-update="handleParamUpdate"
+                        :handle-follow-template="handleFollowTemplate"
+                    />
+                </div>
             </template>
         </bk-form>
     </section>
 </template>
 
 <script>
-    import CascadeRequestSelector from '@/components/atomFormField/CascadeRequestSelector'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import FileParamInput from '@/components/atomFormField/FileParamInput'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
-    import Selector from '@/components/atomFormField/Selector'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import metadataList from '@/components/common/metadata-list'
+    import renderParam from '@/components/renderParam'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import {
         BOOLEAN,
@@ -138,21 +85,12 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { COMMON_PARAM_PREFIX, isObject } from '@/utils/util'
+    import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
 
     export default {
-
         components: {
-            Selector,
-            RequestSelector,
-            EnumInput,
-            VuexInput,
-            VuexTextarea,
-            FormField,
-            metadataList,
-            FileParamInput,
-            CascadeRequestSelector,
-            renderSortCategoryParams
+            renderSortCategoryParams,
+            renderParam
         },
         props: {
             disabled: {
@@ -183,6 +121,40 @@
             isInParamSet: {
                 type: Boolean,
                 default: false
+            },
+            showOperateBtn: {
+                type: Boolean,
+                default: false
+            },
+            hideDeleted: {
+                type: Boolean,
+                default: false
+            },
+            handleUseDefaultValue: {
+                type: Function,
+                default: () => () => {}
+            },
+            handleSetParmaRequired: {
+                type: Function,
+                default: () => () => {}
+            },
+            followTemplateKey: {
+                type: String,
+                default: ''
+            },
+            handleFollowTemplate: {
+                type: Function,
+                default: () => () => {}
+            },
+            isExecPreview: {
+                // 是否为执行预览页面
+                type: Boolean,
+                default: true
+            }
+        },
+        data () {
+            return {
+                prevAffectedValues: {}
             }
         },
         computed: {
@@ -194,11 +166,22 @@
                     let restParam = {}
                     if (param.type !== STRING || param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
+                            const isMultiple = param.type === 'MULTIPLE'
+                            const val = (isMultiple && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
+                            const affected = this.getAffectedBy(param.payload.url)
+                            const affectedChanged = this.detectChanged(this.prevAffectedValues?.[param.id], affected)
+                            this.prevAffectedValues[param.id] = affected
+
                             restParam = {
                                 ...restParam,
                                 ...param.payload,
-                                multiSelect: isMultipleParam(param.type),
-                                value: isMultipleParam(param.type) && typeof this.paramValues?.[param.id] === 'string' ? this.paramValues?.[param.id]?.split(',') : this.paramValues[param.id]
+                                multiSelect: isMultiple,
+                                value: isMultiple && !Array.isArray(val) ? [] : val,
+                                allIdString: true,
+                                paramValues: this.paramValues,
+                                affected,
+                                affectedChanged,
+                                affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
                             }
                         } else {
                             restParam = {
@@ -275,7 +258,8 @@
                 })
             },
             paramsListMap () {
-                return getParamsGroupByLabel(this.paramList)?.listMap ?? {}
+                const list = this.hideDeleted ? this.paramList.filter(i => !i.isDelete) : this.paramList
+                return getParamsGroupByLabel(list)?.listMap ?? {}
             },
             sortedCategories () {
                 return getParamsGroupByLabel(this.paramList)?.sortedCategories ?? []
@@ -350,69 +334,39 @@
             },
             handleRemoveParamItem (id)  {
                 this.$emit('remove-param', id)
+            },
+            getAffectedBy (originUrl) {
+                try {
+                    const PLUGIN_URL_PARAM_REG = /\{(.*?)(\?){0,1}\}/g
+                    return originUrl.match(PLUGIN_URL_PARAM_REG).map(item => item.replace(/\{(\S+)\}/, '$1')).reduce((acc, key) => {
+                        if (Object.hasOwnProperty.call(this.paramValues, key)) {
+                            acc[key] = this.paramValues[key]
+                        }
+                        return acc
+                    }, {})
+                } catch (error) {
+                    return {}
+                }
+            },
+            detectChanged (prev, current) {
+                if (prev && current) {
+                    return !isShallowEqual(prev, current)
+                }
+                return false
+            },
+            async validateAll () {
+                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                for (let i = 0; i < refsList.length; i++) {
+                    const ref = refsList[i]
+                    const res = await ref.$validator?.validateAll?.()
+                    console.log(res, 'validate res')
+                    if (!res) {
+                        return false
+                    }
+                    
+                }
+                return true
             }
         }
     }
 </script>
-
-<style lang="scss" scoped>
-    @import '@/scss/conf';
-    @import '@/scss/mixins/ellipsis';
-    .pipeline-execute-params-form {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(200px, 1fr));
-        grid-gap: 0 24px;
-        &.is-category {
-            grid-template-columns: repeat(1, minmax(200px, 1fr));
-        }
-        &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
-            margin-top: 0 !important;
-        }
-
-        .component-row {
-            display: flex;
-            position: relative;
-            .remove-param-item-icon {
-                position: absolute;
-                right: 0px;
-                top: -20px;
-                font-size: 14px;
-                cursor: pointer;
-            }
-            .metadata-box {
-                position: relative;
-                display: none;
-            }
-
-            .bk-select {
-                &:not(.is-disabled) {
-                    background: white;
-                }
-                width: 100%;
-            }
-            .meta-data {
-                align-self: center;
-                margin-left: 10px;
-                font-size: 12px;
-                color: $primaryColor;
-                white-space: nowrap;
-                cursor: pointer;
-            }
-            .meta-data:hover {
-                .metadata-box {
-                    display: block;
-                }
-            }
-        }
-    }
-    .preview-params-desc {
-        color: #999;
-        width: 100%;
-        font-size: 12px;
-        @include ellipsis();
-    }
-    .params-desc-styles {
-        margin-top: 32px;
-    }
-    
-</style>

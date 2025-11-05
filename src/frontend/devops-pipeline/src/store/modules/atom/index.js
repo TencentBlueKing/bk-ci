@@ -89,7 +89,8 @@ export default {
         switchingVersion: false,
         isElementModified: false,
         isGetPluginHeadTab: false,
-        paramSets: []
+        paramSets: [],
+        storeStatus: ''
     },
     mutations,
     actions,

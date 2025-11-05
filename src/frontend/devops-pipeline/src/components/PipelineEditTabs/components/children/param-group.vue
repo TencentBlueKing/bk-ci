@@ -50,8 +50,7 @@
                             <div
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
-                                :class="['variable-item', {
-                                    'variable-item-editable': editable,
+                                :class="['variable-item variable-item-editable', {
                                     'variable-item-invalid': param.isInvalid
                                 }]"
                                 @click="handleEdit(param.id)"
@@ -245,7 +244,6 @@
         }
     }
     .bk-param-container {
-        margin-bottom: 16px;
         .var-header {
             display: flex;
             align-items: center;
@@ -452,6 +450,10 @@
                     }
                 }
             }
+        }
+
+        &:not(:last-child) {
+            margin-bottom: 16px;
         }
     }
 

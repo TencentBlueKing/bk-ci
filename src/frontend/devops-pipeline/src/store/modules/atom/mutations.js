@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 import Vue from 'vue'
 import {
     diffAtomVersions,
@@ -89,6 +89,8 @@ import {
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
+    UPDATE_STORESTATUS,
+    UPDATE_TEMPLATE_CONSTRAINT,
     UPDATE_WHOLE_ATOM_INPUT
 } from './constants'
 
@@ -140,17 +142,19 @@ export default {
      */
     [SET_PIPELINE_INFO]: (state, obj) => {
         Vue.set(state, 'pipelineInfo', obj)
-        console.log(obj, 'set123')
     },
     [UPDATE_PIPELINE_INFO]: (state, partOfInfo) => {
         const pipelineInfo = {
             ...(state.pipelineInfo ?? {})
         }
         Object.assign(pipelineInfo, partOfInfo)
-        console.log(pipelineInfo, 123, partOfInfo)
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
+        if (pipeline && !pipeline.overrideTemplateField) {
+            Object.assign(pipeline, { overrideTemplateField: {} })
+        }
+
         if (!state.pipeline || !pipeline) {
             Vue.set(state, 'pipeline', pipeline)
             return state
@@ -263,8 +267,6 @@ export default {
             const canPause = atomModal.props.config?.canPauseBeforeRun === true
 
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 version,
@@ -289,11 +291,7 @@ export default {
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
-            console.log(atomModal)
             atom = {
-                id: `e-${hashID(32)}`,
-                '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
-                atomCode,
                 version,
                 name: isChangeAtom ? atomModal.name : preVerEle.name,
                 ...getAtomDefaultValue(atomModal.props),
@@ -308,6 +306,10 @@ export default {
         }, 5000)
         container.elements.splice(atomIndex, 1, {
             ...atom,
+            atomCode,
+            id: `e-${hashID(32)}`,
+            '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
+            stepId: randomString(6, true),
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
             logoUrl: atomModal.logoUrl,
@@ -515,5 +517,17 @@ export default {
         return Object.assign(state, {
             paramSets
         })
-    }
+    },
+    [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {
+        Object.assign(state.pipeline, { overrideTemplateField: {
+            ...state.pipeline.overrideTemplateField,
+            [classify]: constraintList
+        } })
+        return state
+    },
+    [UPDATE_STORESTATUS]: (state, storeStatus) => {
+        return Object.assign(state, {
+            storeStatus
+        })
+    },
 }
