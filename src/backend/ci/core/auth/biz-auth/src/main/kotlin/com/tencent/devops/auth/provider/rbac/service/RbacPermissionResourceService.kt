@@ -74,6 +74,18 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val resource = authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resource != null) {
+            logger.info(
+                "This resource has been registered. no need to register again" +
+                    ":$projectCode|$resourceType$resourceCode"
+            )
+            return true
+        }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode

@@ -13,7 +13,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
-import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SubPipelineRef
 import com.tencent.devops.process.pojo.pipeline.SubPipelineTaskParam
@@ -35,8 +34,7 @@ class SubPipelineTaskService @Autowired constructor(
     private val pipelineResDao: PipelineResourceDao,
     @Lazy
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val subPipelineRefService: SubPipelineRefService,
-    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+    private val subPipelineRefService: SubPipelineRefService
 ) {
     /**
      * 支持的元素

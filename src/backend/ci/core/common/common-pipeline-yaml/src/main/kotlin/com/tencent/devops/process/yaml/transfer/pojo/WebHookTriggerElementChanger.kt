@@ -42,6 +42,8 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebHookTriggerElementChanger(
+    @get:Schema(title = "触发器step id", required = false)
+    val id: String? = null,
     @get:Schema(title = "任务名称", required = true)
     val name: String = "Git变更触发",
     @get:Schema(title = "仓库ID", required = true)
@@ -110,6 +112,7 @@ data class WebHookTriggerElementChanger(
     val scmCode: String? = null
 ) {
     constructor(data: CodeGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -145,6 +148,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeTGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         branchName = data.data.input.branchName,
@@ -178,6 +182,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeGithubWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -209,6 +214,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeSVNWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         pathFilterType = data.pathFilterType,
@@ -223,6 +229,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeP4WebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         includePaths = data.data.input.includePaths,
@@ -234,6 +241,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeGitlabWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.repositoryHashId,
         branchName = data.branchName,
@@ -257,6 +265,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeScmGitWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         branchName = data.data.input.branchName,
@@ -287,6 +296,7 @@ data class WebHookTriggerElementChanger(
     )
 
     constructor(data: CodeScmSvnWebHookTriggerElement) : this(
+        id = data.stepId,
         name = data.name,
         repositoryHashId = data.data.input.repositoryHashId,
         pathFilterType = data.data.input.pathFilterType,

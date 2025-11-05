@@ -30,13 +30,13 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.pojo.YamlVersionParser
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
-import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 
 /**
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
@@ -47,12 +47,12 @@ interface PreScriptBuildYamlIParser : YamlVersionParser {
     var name: String?
     var label: List<String>?
     var variables: Map<String, Variable>?
-    var stages: List<PreStage>?
-    var jobs: LinkedHashMap<String, PreJob>?
-    var steps: List<PreStep>?
-    var extends: Extends?
+    var stages: List<IPreStage>?
+    var jobs: LinkedHashMap<String, IPreJob>?
+    var steps: List<IPreStep>?
+    var extends: PreExtends?
     var resources: Resources?
-    var finally: LinkedHashMap<String, PreJob>?
+    var finally: LinkedHashMap<String, IPreJob>?
     val concurrency: Concurrency?
     val disablePipeline: Boolean?
     val recommendedVersion: RecommendedVersion?
@@ -75,13 +75,13 @@ data class PreScriptBuildYamlParser(
     @JsonProperty("on")
     var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
-    override var stages: List<PreStage>? = null,
-    override var jobs: LinkedHashMap<String, PreJob>? = null,
-    override var steps: List<PreStep>? = null,
-    override var extends: Extends? = null,
+    override var stages: List<IPreStage>? = null,
+    override var jobs: LinkedHashMap<String, IPreJob>? = null,
+    override var steps: List<IPreStep>? = null,
+    override var extends: PreExtends? = null,
     override var resources: Resources?,
     var notices: List<GitNotices>?,
-    override var finally: LinkedHashMap<String, PreJob>? = null,
+    override var finally: LinkedHashMap<String, IPreJob>? = null,
     override val concurrency: Concurrency? = null,
     override val disablePipeline: Boolean? = null,
     override val recommendedVersion: RecommendedVersion? = null,

@@ -29,8 +29,12 @@ package com.tencent.devops.process.yaml.v3.models.step
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.process.yaml.v3.models.IfField
 import io.swagger.v3.oas.annotations.media.Schema
+
+interface IStep
 
 data class Step(
     val enable: Boolean? = null,
@@ -62,7 +66,7 @@ data class Step(
     // 在系统内唯一标识step唯一性，不参与yaml打印
     @JsonIgnore
     val taskId: String? = null
-) {
+) : IStep {
     enum class ContinueOnErrorType(val alis: String) {
         AUTO_SKIP("auto"),
         MANUAL_SKIP("manual");
@@ -79,3 +83,11 @@ data class Step(
         }
     }
 }
+
+data class StepTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : IStep, CodeTemplate
