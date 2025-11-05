@@ -428,7 +428,7 @@ class OpAtomServiceImpl @Autowired constructor(
             // 如果接口query参数的版本号不为空，发布者以接口query参数的版本号为准
             versionInfo.version = version
         }
-        val tenantId = TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
+        val tenantId = tenantId ?: TenantUtils.getTenantIdByEnglishName(releaseInfo.projectId)
         if (versionInfo.releaseType == ReleaseTypeEnum.NEW && atomDao.getPipelineAtom(
                 dslContext = dslContext,
                 atomCode = atomCode,

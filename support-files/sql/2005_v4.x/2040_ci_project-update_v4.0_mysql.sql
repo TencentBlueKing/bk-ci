@@ -17,7 +17,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PROJECT'
                         AND COLUMN_NAME = 'tenant_english_name') THEN
        ALTER TABLE T_PROJECT
-          ADD COLUMN `tenant_english_name` varchar(32) DEFAULT (english_name) COMMENT '租户英文名';
+          ADD COLUMN `tenant_english_name` varchar(32) COMMENT '租户英文名';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -59,7 +59,7 @@ BEGIN
                         AND TABLE_NAME = 'T_PROJECT_APPROVAL'
                         AND COLUMN_NAME = 'TENANT_ENGLISH_NAME') THEN
        ALTER TABLE T_PROJECT_APPROVAL
-          ADD COLUMN `TENANT_ENGLISH_NAME` varchar(32) DEFAULT (ENGLISH_NAME) COMMENT '租户英文名';
+          ADD COLUMN `TENANT_ENGLISH_NAME` varchar(32) COMMENT '租户英文名';
     END IF;
 
     IF NOT EXISTS(SELECT 1
