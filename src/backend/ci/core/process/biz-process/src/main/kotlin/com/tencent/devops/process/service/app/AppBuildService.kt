@@ -39,10 +39,10 @@ import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -52,7 +52,7 @@ class AppBuildService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineArtifactQualityService: PipelineArtifactQualityService
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AppBuildService::class.java)
@@ -64,7 +64,7 @@ class AppBuildService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
     ): AppModelDetail {
         // 查web端数据
         var beginTime = System.currentTimeMillis()
@@ -75,7 +75,7 @@ class AppBuildService @Autowired constructor(
                 pipelineId,
                 buildId,
                 channelCode,
-                checkPermission
+                checkPermission,
             )
         val buildStatusWithVars =
             pipelineBuildFacadeService.getBuildStatusWithVars(
@@ -84,7 +84,7 @@ class AppBuildService @Autowired constructor(
                 pipelineId,
                 buildId,
                 channelCode,
-                checkPermission
+                checkPermission,
             )
         logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
@@ -95,7 +95,7 @@ class AppBuildService @Autowired constructor(
             projectId = projectId,
             page = null,
             pageSize = null,
-            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
+            searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
         ).data
         val packageVersion = StringBuilder()
         files?.records?.filterNot { it.appVersion.isNullOrBlank() }?.forEach {
@@ -115,15 +115,15 @@ class AppBuildService @Autowired constructor(
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(
             projectId = projectId,
-            buildId = buildId
+            buildId = buildId,
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(buildId)
+            params = arrayOf(buildId),
         )
         return AppModelDetail(
             buildId = modelDetail.id,
-            userId = modelDetail.userId,
+            userId = modelDetail.triggerUser ?: modelDetail.userId,
             trigger = modelDetail.trigger,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime,
@@ -146,8 +146,8 @@ class AppBuildService @Autowired constructor(
             artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
                 projectId = projectId,
-                artifactQualityList = buildInfo.artifactQualityList
-            )
+                artifactQualityList = buildInfo.artifactQualityList,
+            ),
         )
     }
 }

@@ -553,7 +553,8 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean?
     ): Url {
         logger.info(
             "innerBkrepoDownloadUrl, userId: $userId, projectId: $projectId, " +
@@ -567,7 +568,14 @@ open class BkRepoDownloadService(
             artifactoryType = artifactoryType,
             path = normalizedPath
         )
-        val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
+        val url = bkRepoService.internalDownloadUrl(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = normalizedPath,
+            ttl = ttl,
+            useWeb = useWeb
+        )
         return Url(url)
     }
 
@@ -707,7 +715,7 @@ open class BkRepoDownloadService(
                     "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
         )
         val path = getNormalizePath(argPath, artifactoryType, userId, projectId)
-        val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
+        val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl,)
         val fileDetail = bkRepoClient.getFileDetail(
             userId,
             projectId,
@@ -1000,8 +1008,36 @@ open class BkRepoDownloadService(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ip: String
+        ip: String,
+        checkDownload: Boolean
     ): AllowDownload {
+        if (checkDownload) {
+            val properties = bkRepoService.getProperties(userId, projectId, artifactoryType, path)
+            val propertyMap = mutableMapOf<String, String>()
+            properties.forEach {
+                propertyMap[it.key] = it.value
+            }
+            val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]
+            try {
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    pipelineId,
+                    AuthPermission.DOWNLOAD,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId, pipelineId ?: "")
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warn("user $userId download project $projectId pipeline $pipelineId failed, error: $e")
+                return AllowDownload(
+                    false,
+                    "用户没有下载该构件的权限,请联系项目管理员处理"
+                )
+            }
+        }
+
         val (allow, _) = bkRepoClient.allowDownload(
             userId = userId,
             projectId = projectId,

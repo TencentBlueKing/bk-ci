@@ -24,31 +24,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v4
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:common:common-quality"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":core:stream:api-stream"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:sign:api-sign-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":ext:tencent:dispatch-devcloud:api-dispatch-devcloud-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
+
+@Tag(name = "OPENAPI_NOTIFY_V4", description = "OPENAPI-通知资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/notify")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
+interface ApigwNotifyResourceV4 {
+
+    @Operation(
+        summary = "发送企微机器人信息",
+        tags = ["v4_app_wework_robot_notify"]
+    )
+    @POST
+    @Path("/wework_robot")
+    fun sendWeworkRobotNotify(
+        @Parameter(description = "企微机器人信息内容", required = true)
+        weworkRobotNotifyMessage: WeworkRobotNotifyMessage
+    ): Result<Boolean>
 }

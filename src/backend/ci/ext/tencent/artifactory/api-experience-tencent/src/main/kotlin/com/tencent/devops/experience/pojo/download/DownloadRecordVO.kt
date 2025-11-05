@@ -52,5 +52,7 @@ data class DownloadRecordVO(
     @get:Schema(title = "是否过期", required = true)
     val expired: Boolean,
     @get:Schema(title = "上次下载的体验ID", required = true)
-    val lastDownloadHashId: String
+    val lastDownloadHashId: String,
+    @get:Schema(title = "APP名称I18n", required = false)
+    val appNameI18n: String?
 )

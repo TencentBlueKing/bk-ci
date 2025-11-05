@@ -91,7 +91,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         userId: String,
         path: String,
         ttl: Int,
-        directed: Boolean?
+        directed: Boolean?,
+        useWeb: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
         return Result(
@@ -100,7 +101,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 argPath = path,
-                ttl = ttl
+                ttl = ttl,
+                useWeb = useWeb
             )
         )
     }
@@ -155,7 +157,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         realIP: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String
+        path: String,
+        checkDownload: Boolean
     ): Result<AllowDownload> {
         return Result(
             bkRepoDownloadService.allowDownload(
@@ -163,7 +166,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 path = path,
-                ip = realIP
+                ip = realIP,
+                checkDownload = checkDownload
             )
         )
     }

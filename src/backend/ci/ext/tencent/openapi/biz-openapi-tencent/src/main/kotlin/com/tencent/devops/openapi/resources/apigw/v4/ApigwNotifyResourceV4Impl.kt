@@ -24,31 +24,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v4
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-util"))
-    api(project(":core:common:common-quality"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:common:common-codecc"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:openapi:api-openapi"))
-    api(project(":core:store:api-store"))
-    api(project(":core:store:api-store"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":core:process:api-process"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":core:stream:api-stream"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:sign:api-sign-tencent"))
-    api(project(":core:auth:api-auth"))
-    api(project(":ext:tencent:artifactory:api-experience-tencent"))
-    api(project(":ext:tencent:dispatch-devcloud:api-dispatch-devcloud-tencent"))
-    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import com.tencent.devops.openapi.api.apigw.v4.ApigwNotifyResourceV4
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwNotifyResourceV4Impl @Autowired constructor(
+    private val client: Client
+) : ApigwNotifyResourceV4 {
+
+    override fun sendWeworkRobotNotify(weworkRobotNotifyMessage: WeworkRobotNotifyMessage): Result<Boolean> {
+        logger.info("OPENAPI_NOTIFY_V4|send wework robot notify|$weworkRobotNotifyMessage")
+        return client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(
+            weworkRobotNotifyMessage = weworkRobotNotifyMessage
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwNotifyResourceV4Impl::class.java)
+    }
 }

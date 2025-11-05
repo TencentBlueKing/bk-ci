@@ -15,13 +15,13 @@ class DcPerformanceConfigServiceV2 constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        templateId: String
+        templateId: String?
     ): UserPerformanceOptionsV2 {
         val performanceDataList = devCloudPerformanceClient.getPerformanceList(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            templateId = templateId
+            templateId = templateId ?: ""
         )
         if (performanceDataList.isEmpty()) {
             return UserPerformanceOptionsV2(DEFAULT_CONFIG_UID, listOf(PerformanceData(

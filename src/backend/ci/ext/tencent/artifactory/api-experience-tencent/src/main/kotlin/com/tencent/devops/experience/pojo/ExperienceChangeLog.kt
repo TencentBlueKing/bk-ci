@@ -58,5 +58,7 @@ data class ExperienceChangeLog(
     @get:Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
     @get:Schema(title = "版本标题", required = true)
-    val versionTitle: String
+    val versionTitle: String,
+    @get:Schema(title = "APP名称I18n", required = false)
+    val appNameI18n: String?
 )

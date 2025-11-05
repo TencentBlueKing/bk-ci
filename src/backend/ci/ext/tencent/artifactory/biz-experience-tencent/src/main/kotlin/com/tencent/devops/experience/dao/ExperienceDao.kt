@@ -202,7 +202,8 @@ class ExperienceDao {
         buildId: String,
         pipelineId: String,
         classify: String,
-        repoCreateTime: LocalDateTime
+        repoCreateTime: LocalDateTime,
+        appNameI18n: String?,
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -240,7 +241,8 @@ class ExperienceDao {
                 BUILD_ID,
                 PIPELINE_ID,
                 CLASSIFY,
-                REPO_CREATE_TIME
+                REPO_CREATE_TIME,
+                APP_NAME_I18N
             ).values(
                 projectId,
                 name,
@@ -274,7 +276,8 @@ class ExperienceDao {
                 buildId,
                 pipelineId,
                 classify,
-                repoCreateTime
+                repoCreateTime,
+                appNameI18n
             )
                 .returning(ID)
                 .fetchOne()!!
