@@ -20,7 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
-                :build-only="false"
+                :unique-id="pipelineId"
             />
             <i
                 class="bk-icon icon-info-circle"
@@ -280,12 +280,12 @@
     import Pipeline from '@/components/Pipeline'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import VersionSelector from '../../components/PipelineDetailTabs/VersionSelector.vue'
-    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
 
     export default {
         components: {
@@ -436,6 +436,7 @@
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
+
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: isObject(p.defaultValue)
@@ -503,6 +504,17 @@
                             ...this.versionParamValues
                         }
                     })
+                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
+                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
+                        this.buildNo.isChanged = true
+
+                        this.setExecuteParams({
+                            pipelineId: this.pipelineId,
+                            params: {
+                                buildNo: this.buildNo
+                            }
+                        })
+                    }
                 }
             },
             async handleValidate () {
@@ -520,12 +532,12 @@
                     case 'versionParamForm':
                         return await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
                     case 'paramsForm':
-                        return await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        return await this.$refs?.paramsForm?.validateAll?.() ?? true
                     case 'buildForm':
                         return await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                     default: {
                         const versionValid = await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
-                        const paramsFormValid = await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        const paramsFormValid = await this.$refs?.paramsForm?.validateAll() ?? true
                         const buildFormValid = await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                         return versionValid && paramsFormValid && buildFormValid
                     }

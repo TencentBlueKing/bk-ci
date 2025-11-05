@@ -40,6 +40,7 @@ class assetsPlugin {
             HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
                 'assetsPlugin', // <-- Set a meaningful name here for stacktraces
                 (data, cb) => {
+                    console.log('beforeEmit assets', HtmlWebpackPlugin.version, assets)
                     // Manipulate the content
                     const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
                     if (assetsPos > -1) {
