@@ -15,6 +15,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgent
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
+import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -22,11 +23,11 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.image.response.ImageDetail
-import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class TransferCacheService @Autowired constructor(
@@ -84,6 +85,17 @@ class TransferCacheService @Autowired constructor(
                     .getGroups(userId, projectId)
                     .data
             }.onFailure { logger.warn("get $key pipeline label value error.", it) }.getOrNull()
+        }
+    private val pipelineLabelIdCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, PipelineLabel?> { key ->
+            runCatching {
+                val (projectId, labelId) = key.split("@@")
+                client.get(ServicePipelineGroupResource::class)
+                    .getLabel(projectId, labelId)
+                    .data
+            }.onFailure { logger.warn("get $key pipeline label id value error.", it) }.getOrNull()
         }
     private val gitRepository = Caffeine.newBuilder()
         .maximumSize(1000)
@@ -157,6 +169,9 @@ class TransferCacheService @Autowired constructor(
     fun getProjectGroupAndUsers(projectId: String) = projectGroupAndUsersCache.get(projectId)
 
     fun getPipelineLabel(userId: String, projectId: String) = pipelineLabel.get("$userId@@$projectId")
+
+    fun getPipelineLabelById(projectId: String, labelId: String): PipelineLabel? =
+        pipelineLabelIdCache.get("$projectId@@$labelId")
 
     fun getGitRepository(projectId: String, repositoryType: RepositoryType, value: String) =
         gitRepository.get("$projectId@@${repositoryType.name}@@$value")

@@ -163,13 +163,36 @@ class BuildRecordContainerDao {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             return dslContext.selectFrom(this)
                 .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
+                    PROJECT_ID.eq(projectId)
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(BUILD_ID.eq(buildId))
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun getLatestRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int? = null
+    ): BuildRecordContainer? {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId),
+                BUILD_ID.eq(buildId),
+                CONTAINER_ID.eq(containerId)
+            )
+            executeCount?.let { conditions.add(EXECUTE_COUNT.le(it)) }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(EXECUTE_COUNT.desc())
+                .limit(1)
+                .fetchOne(mapper)
         }
     }
 

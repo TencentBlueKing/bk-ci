@@ -258,9 +258,9 @@ const handleAuthorize = () => {
         <div class="oauth-tips">
           <template>
             <p>{{ t('此授权用于平台和代码库进行交互，涉及如下功能：') }}</p>
-            <p>1.{{ t('1.注册 Webhook 到代码库，用于事件触发场景') }}</p>
-            <p>2.{{ t('2.回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景"') }}</p>
-            <p>3.{{ t('3.流水线中 Checkout 代码') }}</p>
+            <p>1.{{ t('注册 Webhook 到代码库，用于事件触发场景') }}</p>
+            <p>2.{{ t('回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景"') }}</p>
+            <p>3.{{ t('流水线中 Checkout 代码') }}</p>
             <p>{{ t('拥有代码库注册 Webhook 权限') }}</p>
           </template>
         </div>
