@@ -1478,4 +1478,33 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_MIGRATION` (
     PRIMARY KEY (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='模板迁移记录表';
 
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION`
+(
+    `ID`               bigint(11)                               NOT NULL COMMENT '主键',
+    `PROJECT_ID`       varchar(64)                              not null comment '项目ID',
+    `PIPELINE_ID`      varchar(64)                              not null comment '流水线ID',
+    `COMBINATION_NAME` varchar(64)                              not null comment '组合名称',
+    `CREATOR`          varchar(50)                              not null comment '创建者',
+    `MODIFIER`         varchar(50)                              not null comment '修改者',
+    `CREATE_TIME`      datetime(3) default CURRENT_TIMESTAMP(3) not null comment '创建时间',
+    `UPDATE_TIME`      datetime(3) default CURRENT_TIMESTAMP(3) not null comment '修改时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNI_PROJECT_PIPELINE_NAME` (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_NAME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合';
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL`
+(
+    `PROJECT_ID`          varchar(64)                              not null comment '项目ID',
+    `PIPELINE_ID`         varchar(64)                              not null comment '流水线ID',
+    `COMBINATION_ID`      bigint(11)                               NOT NULL comment '组合ID',
+    `VAR_NAME`            varchar(64)                              not null comment '变量名称',
+    `VAR_INDEX`           int                                      not null comment '变量顺序',
+    `BUILD_FORM_PROPERTY` mediumtext                               not null comment '变量构建模型',
+    `CREATOR`             varchar(50)                              not null comment '创建者',
+    `MODIFIER`            varchar(50)                              not null comment '修改者',
+    `CREATE_TIME`         datetime(3) default CURRENT_TIMESTAMP(3) not null comment '创建时间',
+    `UPDATE_TIME`         datetime(3) default CURRENT_TIMESTAMP(3) not null comment '修改时间',
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_ID`, `VAR_NAME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合值详情';
+
 SET FOREIGN_KEY_CHECKS = 1;
