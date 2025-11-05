@@ -164,6 +164,7 @@
     import {
         VARIABLE,
         CONSTANT,
+        OTHER,
         OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
     import { navConfirm } from '@/utils/util'
@@ -246,7 +247,13 @@
         proxy.$emit('update:isShow', false)
     }
     function handleBeforeClose () {
-        return true
+        return navConfirm(
+            {
+                content: proxy.$t('editPage.closeConfirmMsg'),
+                type: 'warning',
+                cancelText: proxy.$t('cancel')
+            }
+        )
     }
     async function validParamOptions () {
         let optionValid = true
@@ -323,13 +330,27 @@
         }
     }
     function handleAddParam (type = VARIABLE) {
+        const typeMap = {
+            VARIABLE: {
+                type: 'var',
+                title: proxy.$t('publicVar.addParam')
+            },
+            CONSTANT: {
+                type: 'constant',
+                title: proxy.$t('publicVar.addConst')
+            },
+            OTHER: {
+                type: 'other',
+                title: proxy.$t('publicVar.addParam')
+            }
+        }
         editIndex.value = -1
         showAddParamSlider.value = true
         published.value = false
         publicVarType.value = type
-        paramType.value = type === VARIABLE ? 'var' : 'constant'
         sliderEditItem.value = {}
-        paramTitle.value = type === VARIABLE ? proxy.$t('publicVar.addParam') : proxy.$t('publicVar.addConst')
+        paramType.value = typeMap[type]?.type
+        paramTitle.value = typeMap[type]?.title
     }
     function handleEditParam (type = VARIABLE, varName) {
         showAddParamSlider.value = true
@@ -376,7 +397,8 @@
         }
         const typeMap = {
             [VARIABLE]: proxy.$t('publicVar.params'),
-            [CONSTANT]: proxy.$t('publicVar.constant')
+            [CONSTANT]: proxy.$t('publicVar.constant'),
+            [OTHER]: proxy.$t('publicVar.params')
         }
         return `${operateMap[operate]}${typeMap[type]}`
     }

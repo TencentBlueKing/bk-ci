@@ -127,7 +127,7 @@
                                     text
                                     class="mr10"
                                     v-perm="{
-                                        hasPermission: row.permission.canDelete,
+                                        hasPermission: row?.permission?.canDelete,
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
@@ -316,7 +316,7 @@
                         text: proxy.$t('delete'),
                         handler: handleDeleteGroup,
                         data: row,
-                        hasPermission: row.permission.canDelete,
+                        hasPermission: row?.permission?.canDelete,
                         disablePermissionApi: true,
                         disable: row.referCount > 0,
                         permissionData: {

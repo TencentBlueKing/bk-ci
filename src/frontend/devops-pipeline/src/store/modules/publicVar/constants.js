@@ -6,6 +6,7 @@ export const EDIT_VARIABLE = 'EDIT_VARIABLE'
 export const UPDATE_OPERATE_TYPE = 'UPDATE_OPERATE_TYPE'
 export const CONSTANT = 'CONSTANT'
 export const VARIABLE = 'VARIABLE'
+export const OTHER = 'OTHER'
 
 export const OPERATE_TYPE = {
     CREATE: 'CREATE',

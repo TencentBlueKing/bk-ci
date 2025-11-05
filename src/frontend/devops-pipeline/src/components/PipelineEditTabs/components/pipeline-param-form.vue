@@ -190,6 +190,11 @@
                 default: -1
             },
             paramType: {
+                /**
+                 * var 入参
+                 * constant 常量
+                 * other 其他变量
+                 */
                 type: String,
                 default: 'var'
             },
@@ -288,6 +293,8 @@
                 this.param = deepCopy(DEFAULT_PARAM[STRING])
                 if (this.paramType === 'constant') {
                     Object.assign(this.param, { constant: true, required: false })
+                } else if (this.paramType === 'other') {
+                    Object.assign(this.param, { required: false })
                 }
                 this.resetEditItem(this.param)
             } else if(this.editIndex === -2) {

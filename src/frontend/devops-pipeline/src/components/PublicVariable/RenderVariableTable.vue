@@ -18,13 +18,14 @@
                     :row-class-name="rowClassName"
                 >
                     <bk-table-column
-                        :label="$t('publicVar.varId')"
+                        :label="$t('newui.pipelineParam.varName')"
                         prop="varName"
+                        show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
                             <span
                                 :class="['var-name', {
-                                    'is-required': row.buildFormProperty.required
+                                    'is-required': row.buildFormProperty.valueNotEmpty
                                 }]"
                             >
                                 {{ row?.varName }}
@@ -40,6 +41,7 @@
                     <bk-table-column
                         :label="$t('publicVar.varAlias')"
                         prop="alias"
+                        show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
                             {{ row.alias || '--' }}
@@ -48,6 +50,7 @@
                     <bk-table-column
                         :label="$t('desc')"
                         prop="desc"
+                        show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
                             {{ row.desc || '--' }}
@@ -64,6 +67,7 @@
                     <bk-table-column
                         :label="$t('publicVar.defaultValue')"
                         prop="defaultValue"
+                        show-overflow-tooltip
                     >
                         <template slot-scope="{ row }">
                             {{ row.defaultValue || '--' }}
@@ -83,6 +87,8 @@
                         v-if="!readOnly"
                         :label="$t('publicVar.operation')"
                         prop="operation"
+                        fixed="right"
+                        width="180"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
@@ -102,8 +108,8 @@
                             <bk-popconfirm
                                 ref="removePopConfirmRef"
                                 :popover-options="{ appendTo: 'parent' }"
-                                :title="$t('newui.pipelineParam.removeTitle')"
-                                :confirm-text="$t('newui.pipelineParam.remove')"
+                                :title="$t('publicVar.removeParamTitle')"
+                                :confirm-text="$t('delete')"
                                 :cancel-text="$t('cancel')"
                                 trigger="click"
                                 width="200"

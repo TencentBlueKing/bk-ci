@@ -588,6 +588,13 @@
                     this.handleChange('defaultValue', this.initParamItem.defaultValue)
                 }
                 
+            },
+            handleProperties (key, value, index) {
+                const properties = {}
+                value.forEach((val) => {
+                    properties[val.key] = val.value
+                })
+                this.handleChange(key, properties)
             }
         }
     }

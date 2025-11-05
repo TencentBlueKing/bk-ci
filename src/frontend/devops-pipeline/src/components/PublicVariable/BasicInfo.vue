@@ -130,7 +130,8 @@
     import {
         EDIT_VARIABLE,
         VARIABLE,
-        CONSTANT
+        CONSTANT,
+        OTHER
     } from '@/store/modules/publicVar/constants'
     import { OPERATE_TYPE } from '../../store/modules/publicVar/constants'
 
@@ -219,7 +220,7 @@
                 title: proxy.$t('newui.pipelineParam.otherVar'),
                 data: publicVars.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required),
                 emptyBtnText: proxy.$t('publicVar.addParam'),
-                emptyBtnFn: () => props?.handleAddParam(VARIABLE),
+                emptyBtnFn: () => props?.handleAddParam(OTHER),
                 handleEditParam: props.handleEditParam,
                 handleDeleteParam: props.handleDeleteParam,
                 handleCopyParam: props.handleCopyParam,

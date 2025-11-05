@@ -2093,6 +2093,7 @@
     "changeConstDefaultValueTips": "常量值变更后将影响流水线/模板执行逻辑",
     "paramRemoveByGroupTips": "此变量已从变量组：公共变量组 {0} 中删除",
     "removeParamInPipeline": "从流水线移出",
-    "beenCited": "是否已引用"
+    "beenCited": "是否已引用",
+    "removeParamTitle": "确认删除此变量吗？"
   }
 }

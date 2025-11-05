@@ -2095,6 +2095,7 @@
     "changeConstDefaultValueTips": "定数の値を変更すると、パイプライン/テンプレートの実行ロジックに影響します",
     "paramRemoveByGroupTips": "この変数は変数グループ「パブリック変数グループ {0}」から削除されました",
     "removeParamInPipeline": "パイプラインから削除",
-    "beenCited": "参照されているか"
+    "beenCited": "参照されているか",
+    "removeParamTitle": "この変数の削除を確認しますか？"
   }
 }
