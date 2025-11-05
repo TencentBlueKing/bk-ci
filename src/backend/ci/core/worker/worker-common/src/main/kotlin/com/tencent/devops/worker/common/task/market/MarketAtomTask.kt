@@ -121,7 +121,6 @@ import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -1076,16 +1075,14 @@ open class MarketAtomTask : ITask() {
      * - 防止恶意文件注入和传输过程中的数据损坏
      */
     private fun checkSha(file: File, sha: String): Boolean {
-        // 创建文件输入流用于计算SHA值
-        val fileInputStream = file.inputStream()
         
         // 根据SHA字符串长度选择算法：64位为SHA256，其他为SHA1
         val fileSha = if (sha.length == 64) {
             // 使用SHA256算法计算文件哈希值
-            fileInputStream.use { ShaUtils.sha256InputStream(it) }
+            file.inputStream().use { ShaUtils.sha256InputStream(it) }
         } else {
             // 使用SHA1算法计算文件哈希值
-            fileInputStream.use { ShaUtils.sha1InputStream(it) }
+            file.inputStream().use { ShaUtils.sha1InputStream(it) }
         }
 
         if (fileSha != sha) {
