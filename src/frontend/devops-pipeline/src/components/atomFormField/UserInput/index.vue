@@ -1,5 +1,6 @@
 <template>
     <BkUserSelector
+        class="devops-user-selector"
         :model-value="value"
         :api-base-url="apiBaseUrl"
         :tenant-id="tenantId"
@@ -7,9 +8,9 @@
         :disabled="disabled"
         draggable
         allow-create
+        free-paste
         :multiple="isMultiple"
         @change="handleUserChange"
-        @paste="handleUserPaste"
     />
 </template>
 
@@ -61,3 +62,12 @@
         }
     }
 </script>
+
+<style lang="scss">
+.devops-user-selector {
+    .user-tag.is-custom {
+        color: #63656e !important;
+        background-color: #f0f1f5 !important;
+}
+}
+</style>

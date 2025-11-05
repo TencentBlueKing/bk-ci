@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "dependencies": {
-    "@blueking/bk-user-selector": "0.0.38",
+    "@blueking/bk-user-selector": "0.0.39-beta.1",
     "lodash-es": "^4.17.21",
     "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
