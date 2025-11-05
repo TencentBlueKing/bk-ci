@@ -38,6 +38,43 @@ const projectData = ref({
 });
 const projectForm = ref(null);
 const btnLoading = ref(false);
+const handleConfirm = () => {
+  const confirmFn = async () => {
+    infoBoxInstance.value.hide();
+    btnLoading.value = true;
+    const result = await http.requestCreateProject({
+      projectData: projectData.value,
+    })
+      .catch(() => false)
+      .finally(() => {
+        btnLoading.value = false;
+      });
+    if (result) {
+      Message({
+        theme: 'success',
+        message: t('提交成功'),
+      });
+      router.push({
+        path: `${projectData.value.englishName}/show`,
+      });
+    }
+  };
+  const infoBoxInstance = ref();
+  projectForm.value?.validate().then(() => {
+    infoBoxInstance.value = InfoBox({
+      isShow: true,
+      infoType: 'warning',
+      title: t('创建项目需你的上级审批，确认提交吗'),
+      contentAlign: 'center',
+      headerAlign: 'center',
+      footerAlign: 'center',
+      confirmText: t('确认提交'),
+      cancelText: t('取消'),
+      onConfirm: confirmFn,
+      onClosed: () => true,
+    });
+  });
+};
 const initProjectForm = (value) => {
   projectForm.value = value;
 };
@@ -48,57 +85,6 @@ const productIdChange = ({ id, list }) => {
 const handleCancel = () => {
   router.back();
 };
-
-async function handleConfirm () {
-  try {
-    const infoBoxInstance = ref();
-    await projectForm.value?.validate()
-    infoBoxInstance.value = InfoBox({
-      isShow: true,
-      infoType: 'warning',
-      title: t('创建项目需你的上级审批，确认提交吗'),
-      contentAlign: 'center',
-      headerAlign: 'center',
-      footerAlign: 'center',
-      confirmText: t('确认提交'),
-      cancelText: t('取消'),
-      onConfirm: async () => {
-        await confirmFn();
-        infoBoxInstance.value.hide();
-      },
-      onClose: () => true,
-    });
-  } catch (error) {
-    Message({
-        theme: 'error',
-        message: error,
-      });
-  }
-}
-
-async function confirmFn () {
-  try {
-    btnLoading.value = true;
-    const { status, projectId } = await http.requestCreateProject({
-      projectData: projectData.value,
-    })
-    if (status) {
-      Message({
-        theme: 'success',
-        message: t('提交成功'),
-      });
-      router.push({
-        path: `${projectId}/show`,
-      });
-    }
-  } catch (error) {
-    console.log(error);
-  } finally {
-    btnLoading.value = false;
-  }
-};
-
-
 </script>
 
 <template>
