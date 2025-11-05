@@ -220,7 +220,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     fileId = fileId,
                     props = mapOf(
                         PackageFileInfo::shaContent.name to packageFileInfo.shaContent,
-                        PackageFileInfo::sha256Content.name to packageFileInfo.shaContent
+                        PackageFileInfo::sha256Content.name to packageFileInfo.sha256Content
                     )
                 )
             }
