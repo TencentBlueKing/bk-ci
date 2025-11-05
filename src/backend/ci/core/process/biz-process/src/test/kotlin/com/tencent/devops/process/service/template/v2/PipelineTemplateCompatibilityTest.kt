@@ -512,7 +512,6 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         latestVersionStatus = VersionStatus.RELEASED,
         creator = creator
     )
-
 }
 
 private fun stubTransfer(generator: PipelineTemplateGenerator) {

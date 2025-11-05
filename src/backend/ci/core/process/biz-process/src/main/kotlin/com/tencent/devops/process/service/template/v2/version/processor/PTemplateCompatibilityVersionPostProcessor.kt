@@ -33,6 +33,7 @@ class PTemplateCompatibilityVersionPostProcessor(
     @Value("\${process.template.dual-write.strict:#{true}}")
     private val strictMode: Boolean = true
 
+    @Suppress("NestedBlockDepth")
     override fun postProcessInTransactionVersionCreate(
         transactionContext: DSLContext,
         context: PipelineTemplateVersionCreateContext,
