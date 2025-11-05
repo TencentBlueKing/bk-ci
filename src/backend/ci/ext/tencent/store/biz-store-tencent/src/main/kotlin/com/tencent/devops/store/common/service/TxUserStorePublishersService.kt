@@ -4,7 +4,5 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface TxUserStorePublishersService {
 
-
-
-    fun updateComponentFirstPublisher(type:StoreTypeEnum)
+    fun updateComponentFirstPublisher(type: StoreTypeEnum)
 }

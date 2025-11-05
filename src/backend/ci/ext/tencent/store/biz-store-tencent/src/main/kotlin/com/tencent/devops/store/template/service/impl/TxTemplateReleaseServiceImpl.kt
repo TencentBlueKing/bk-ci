@@ -40,15 +40,18 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.template.service.TemplateVisibleDeptService
 import com.tencent.devops.store.template.service.TxTemplateReleaseService
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
@@ -65,6 +68,9 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
     private lateinit var templateVisibleDeptService: TemplateVisibleDeptService
 
     @Autowired
+    private lateinit var storeDeptRelDao: StoreDeptRelDao
+
+    @Autowired
     private lateinit var txStoreBelongDeptService: TxStoreBelongDeptService
 
     private val logger = LoggerFactory.getLogger(TxTemplateReleaseServiceImpl::class.java)
@@ -77,12 +83,15 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
             TemplateStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
+
             TemplateStatusEnum.AUDITING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
             }
+
             TemplateStatusEnum.AUDIT_REJECT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, FAIL)
             }
+
             TemplateStatusEnum.RELEASED.status -> {
                 val currStep = if (isNormalUpgrade) NUM_THREE else NUM_FOUR
                 storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
@@ -104,6 +113,62 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
         )
     }
 
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    ) {
+        val finalDeptInfos = if (fullScopeVisible == true) {
+            listOf(
+                DeptInfo(
+                    deptId = 0,
+                    deptName = "腾讯公司"
+                )
+            )
+        } else {
+            deptInfos
+        }
+        templateVisibleDeptService.validateTemplateVisibleDept(
+            templateCode = templateCode,
+            deptInfos = finalDeptInfos
+        )
+    }
+
+    override fun addTemplateVisibleDept(
+        userId: String,
+        templateCode: String,
+        fullScopeVisible: Boolean?,
+        deptInfos: List<DeptInfo>?
+    ) {
+        if (fullScopeVisible == null && deptInfos == null) {
+            throw IllegalArgumentException("fullScopeVisible and deptInfos cannot both be null at the same time")
+        }
+        val finalDeptInfos = if (fullScopeVisible == true) {
+            listOf(
+                DeptInfo(
+                    deptId = 0,
+                    deptName = "腾讯公司"
+                )
+            )
+        } else {
+            deptInfos!!
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeDeptRelDao.deleteByStoreCode(
+                dslContext = context,
+                storeCode = templateCode,
+                storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+            )
+            storeVisibleDeptService.addVisibleDept(
+                userId = userId,
+                storeCode = templateCode,
+                deptInfos = finalDeptInfos,
+                storeType = StoreTypeEnum.TEMPLATE
+            )
+        }
+    }
+
     override fun handleTemplateExtend(
         userId: String,
         templateCode: String,
@@ -121,18 +186,43 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BEGIN
+                ), BEGIN, NUM_ONE, SUCCESS
+            )
+        )
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = COMMIT
+                ), COMMIT, NUM_TWO, UNDO
+            )
+        )
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END), END, NUM_THREE, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = END
+                    ), END, NUM_THREE, UNDO
+                )
+            )
         } else {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = APPROVE), APPROVE, NUM_THREE, UNDO))
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END), END, NUM_FOUR, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = APPROVE
+                    ), APPROVE, NUM_THREE, UNDO
+                )
+            )
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = END
+                    ), END, NUM_FOUR, UNDO
+                )
+            )
         }
         return processInfo
     }
