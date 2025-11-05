@@ -1239,6 +1239,8 @@
       "paramKey": "Parameter key",
       "paramValue": "Parameter value",
       "inputTips": "Please enter",
+      "URLTips": "URLs support placeholder substitution with pipeline variables via {0}.",
+      "var": "var",
       "toArtifactory": "View artifact repository",
       "enableUpgrade": " Enable batch upgrade?",
       "otherChoices": "Other options",
@@ -2002,5 +2004,7 @@
   "refTemplate": "Referenced template",
   "preRef": "Previous version/Previous Commit",
   "currentRef": "Current version/Current Commit",
-  "noVariablesAvailable": "No Variables Available"
+  "noVariablesAvailable": "No Variables Available",
+  "showStageProgress": "Show Stage Progress",
+  "showBuildInfo": "Show Build Information"
 }

@@ -1238,6 +1238,8 @@
       "paramKey": "パラメータkey",
       "paramValue": "パラメータvalue",
       "inputTips": "入力してください",
+      "URLTips": "URL では、{0} の形式で現在のパイプラインに定義されているグローバル変数を参照できます",
+      "var": "変数名",
       "toArtifactory": "リポジトリを表示",
       "enableUpgrade": "バッチアップグレードを有効にするかどうか",
       "otherChoices": "その他のオプション",
@@ -2005,5 +2007,7 @@
   "refTemplate": "参照テンプレート",
   "preRef": "前のバージョン/前のコミット",
   "currentRef": "現在のバージョン/現在のコミット",
-  "noVariablesAvailable": "利用可能な変数がありません"
+  "noVariablesAvailable": "利用可能な変数がありません",
+  "showStageProgress": "ステージの進捗を表示",
+  "showBuildInfo": "ビルド情報を表示"
 }
