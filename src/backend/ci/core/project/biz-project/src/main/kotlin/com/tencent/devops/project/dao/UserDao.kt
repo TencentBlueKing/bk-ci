@@ -135,7 +135,8 @@ class UserDao {
             groupName = userRecord.groupName ?: "",
             groupId = userRecord.groypId?.toString() ?: "",
             businessLineId = userRecord.businessLineId?.toString(),
-            businessLineName = userRecord.businessLineName
+            businessLineName = userRecord.businessLineName,
+            name = userRecord.name
         )
     }
 

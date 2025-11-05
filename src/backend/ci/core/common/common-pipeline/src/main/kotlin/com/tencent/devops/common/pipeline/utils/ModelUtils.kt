@@ -41,6 +41,10 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.template.ITemplateModel
+import com.tencent.devops.common.pipeline.template.JobTemplateModel
+import com.tencent.devops.common.pipeline.template.StageTemplateModel
+import com.tencent.devops.common.pipeline.template.StepTemplateModel
 
 @Suppress("ComplexMethod")
 object ModelUtils {
@@ -287,5 +291,19 @@ object ModelUtils {
             }
         }
         return atomCodes
+    }
+
+    fun getTemplateModelAtoms(templateModel: ITemplateModel): MutableSet<String> = when (templateModel) {
+        is Model -> getModelAtoms(templateModel)
+        is StageTemplateModel -> templateModel.stages
+            .flatMap { it.containers }
+            .flatMap { it.elements }
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        is JobTemplateModel -> templateModel.containers
+            .flatMap { it.elements }
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        is StepTemplateModel -> templateModel.container.elements
+            .mapTo(mutableSetOf()) { it.getAtomCode() }
+        else -> mutableSetOf()
     }
 }
