@@ -15,7 +15,7 @@
                     :name="key"
                     :value="element[key]"
                     :element="element"
-                    :disabled="disabled"
+                    :disabled="disabled || !checkCanOverride(obj)"
                     :handle-change="handleChange"
                 />
             </form-field>
@@ -24,10 +24,10 @@
 </template>
 
 <script>
-    import validMixins from '../../validMixins'
-    import atomMixin from '../atomMixin'
     import TimerCronTab from '@/components/atomFormField/TimerCrontab/'
     import BranchParameterArray from '../../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../../validMixins'
+    import atomMixin from '../atomMixin'
     import CodelibSelector from './CodelibSelector'
     export default {
         components: {
@@ -36,6 +36,11 @@
             CodelibSelector
         },
         mixins: [atomMixin, validMixins],
+        computed: {
+            disabled () {
+                return this.element?.disabled ?? false
+            }
+        },
         methods: {
             updateProps (newParam) {
                 this.updateAtom({

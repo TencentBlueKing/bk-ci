@@ -157,6 +157,7 @@
                 this.$router.push({
                     name: 'install',
                     query: {
+                        name: this.detail.name,
                         code: this.detail.serviceCode,
                         type: 'service',
                         from: 'details'

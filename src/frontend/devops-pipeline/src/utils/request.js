@@ -36,7 +36,7 @@ const request = axios.create({
 })
 
 function errorHandler (error) {
-    if (typeof error.response === 'undefined') {
+    if (typeof error.response?.data === 'undefined' && !error.config?.signal?.aborted) {
         // HACK REDIRECT 302
         const err = dealLogin(401, error)
         return Promise.reject(err)

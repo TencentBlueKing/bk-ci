@@ -235,7 +235,7 @@ export const actions = {
     /**
      * 安装流水线插件
      */
-    installAtom ({ commit }, { params }) {
+    installAtom ({ commit }, params) {
         return vue.$ajax.post(`${prefix}/user/market/atom/install`, params)
     },
 
