@@ -61,6 +61,7 @@ import {
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
+    SET_PARAM_SET_LIST,
     SET_PIPELINE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
@@ -510,6 +511,11 @@ export default {
     [SET_PLUGIN_HEAD_TAB]: (state, { isGetPluginHeadTab }) => {
         return Object.assign(state, {
             isGetPluginHeadTab
+        })
+    },
+    [SET_PARAM_SET_LIST]: (state, paramSets) => {
+        return Object.assign(state, {
+            paramSets
         })
     },
     [UPDATE_TEMPLATE_CONSTRAINT]: (state, { classify, constraintList }) => {

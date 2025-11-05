@@ -26,8 +26,7 @@ import {
 } from '@/store/constants'
 import { CODE_MODE, UI_MODE } from '@/utils/pipelineConst'
 import request from '@/utils/request'
-import { hashID, randomString } from '@/utils/util'
-import { areDeeplyEqual } from '../../../utils/util'
+import { areDeeplyEqual, hashID, randomString } from '@/utils/util'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import {
     ADD_CONTAINER,
@@ -63,6 +62,7 @@ import {
     SET_GLOBAL_ENVS,
     SET_HIDE_SKIP_EXEC_TASK,
     SET_INSERT_STAGE_STATE,
+    SET_PARAM_SET_LIST,
     SET_PIPELINE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
@@ -1097,6 +1097,85 @@ export default {
             params: searchParams
         })
     },
+    async fetchParamSets ({ commit }, { projectId, pipelineId }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/listCombination`)
+            commit(SET_PARAM_SET_LIST, res.data.records)
+        } catch (error) {
+            throw error
+        }
+    },
+    async fetchParamSetDetail ({ commit, state }, { projectId, pipelineId, paramSetId }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination/${paramSetId}`)
+            const pos = state.paramSets.findIndex(item => item.id === paramSetId)
+            commit(SET_PARAM_SET_LIST, [
+                ...state.paramSets.slice(0, pos),
+                {
+                    ...state.paramSets[pos],
+                    params: Array.isArray(res.data) ? res.data : []
+                },
+                ...state.paramSets.slice(pos + 1)
+            ])
+            return res.data
+        } catch (error) {
+            throw error
+        }
+    },
+    addParamSet ({ commit, state }, paramSet) {
+        commit(SET_PARAM_SET_LIST, [
+            paramSet,
+            ...state.paramSets
+        ])
+    },
+    updateParamSet ({ commit, state }, { isNew, ...paramSet }) {
+        let index = state.paramSets.findIndex(item => item.id === paramSet.id)
+        if (isNew && index < 0) {
+            index = 0
+            paramSet.isNew = false
+        }
+        
+
+        if (index < 0) {
+            return
+        }
+        
+        commit(SET_PARAM_SET_LIST, [
+            ...state.paramSets.slice(0, index),
+            paramSet,
+            ...state.paramSets.slice(index + 1)
+        ])
+    },
+    async deleteParamSet ({ commit, state }, {paramSetId, projectId, pipelineId, isNew = false }) {
+        const index = state.paramSets.findIndex(item => item.id === paramSetId)
+        if (!isNew) {
+            const res = await request.delete(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination/${paramSetId}`)
+            if (res && !res.data) {
+                return
+            }
+        }
+        commit(SET_PARAM_SET_LIST, [
+            ...state.paramSets.slice(0, index),
+            ...state.paramSets.slice(index + 1)
+        ])
+    },
+    async saveParamSet ({ commit, state }, { projectId, pipelineId, paramSet }) {
+        try {
+            const method = paramSet.id ? 'put' : 'post'
+            const suffix = paramSet.id ? `/${paramSet.id}` : ''
+            return await request[method](`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/combination${suffix}`, paramSet)
+        } catch (error) {
+            throw error
+        }
+    },
+    async fetchBuildParamsByBuildId ({ commit }, { projectId, pipelineId, buildId }) {
+        try {
+            const result = await request.get(`/${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`)
+            return result.data
+        } catch (error) {
+            return []
+        }
+    },
     setTemplateStrategy (_, { projectId, templateId, ...strategy }) {
         return request.put(`/${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/updateUpgradeStrategy`, strategy)
     },
@@ -1110,5 +1189,4 @@ export default {
         })
         return res.data
     }
-
 }

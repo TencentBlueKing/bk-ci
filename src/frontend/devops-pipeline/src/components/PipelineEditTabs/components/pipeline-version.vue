@@ -68,12 +68,12 @@
                     <div class="value-row">
                         <span class="default-value">
                             <span v-if="param.isBuildNo">
-                                {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
+                                {{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
                                     v-if="pipelineModel && !isTemplate"
                                 >
-                                    {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
+                                    {{ `${$t('buildNoBaseline.currentValue')}${$t('colon')}${buildNo.currentBuildNo}` }}
                                     <span
                                         class="dafault-value-reset"
                                         @click="goResetBuildNo"
@@ -245,7 +245,7 @@
                 <h3>{{ $t('buildNoBaseline.isSureReset') }}</h3>
             </template>
             <div>
-                <p>{{ `${$t('buildNoBaseline.baselineValue')}${buildNo.buildNo}` }}</p>
+                <p>{{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${buildNo.buildNo}` }}</p>
                 <p class="reset-tips">
                     <i18n
                         :path="`buildNoBaseline.${buildNo.buildNoType}`"
