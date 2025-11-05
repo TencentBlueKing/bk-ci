@@ -29,15 +29,31 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
+import java.lang.reflect.Field
+import java.time.LocalDateTime
 
 @Repository
 class StoreBaseEnvManageDao {
 
+    /**
+     * 批量保存商店基础环境配置数据
+     * 
+     * 使用MySQL的INSERT ... ON DUPLICATE KEY UPDATE语法实现批量插入或更新操作
+     * 当主键冲突时自动更新现有记录，避免重复插入导致的异常
+     * 
+     * @param dslContext JOOQ数据库上下文
+     * @param storeBaseEnvDataPOs 商店基础环境数据对象列表
+     * 
+     * 字段更新策略：
+     * - 使用coalesce(excluded(field), field)逻辑：新值不为null则更新，否则保留原值
+     * - MODIFIER字段：总是使用新值
+     * - UPDATE_TIME字段：总是更新为当前时间
+     * - DEFAULT_FLAG字段：默认值为true（当原值为null时）
+     */
     fun batchSave(
         dslContext: DSLContext,
         storeBaseEnvDataPOs: List<StoreBaseEnvDataPO>
@@ -88,63 +104,38 @@ class StoreBaseEnvManageDao {
                 }
             }
                 .onDuplicateKeyUpdate()
-                .set(
-                    LANGUAGE,
-                    DSL.`when`(MySQLDSL.values(LANGUAGE).isNotNull, MySQLDSL.values(LANGUAGE)).otherwise(LANGUAGE)
-                )
-                .set(
-                    MIN_VERSION,
-                    DSL.`when`(MySQLDSL.values(MIN_VERSION).isNotNull, MySQLDSL.values(MIN_VERSION))
-                        .otherwise(MIN_VERSION)
-                )
-                .set(
-                    PKG_NAME,
-                    DSL.`when`(MySQLDSL.values(PKG_NAME).isNotNull, MySQLDSL.values(PKG_NAME)).otherwise(PKG_NAME)
-                )
-                .set(
-                    PKG_PATH,
-                    DSL.`when`(MySQLDSL.values(PKG_PATH).isNotNull, MySQLDSL.values(PKG_PATH)).otherwise(PKG_PATH)
-                )
-                .set(
-                    TARGET,
-                    DSL.`when`(MySQLDSL.values(TARGET).isNotNull, MySQLDSL.values(TARGET)).otherwise(TARGET)
-                )
-                .set(
-                    SHA_CONTENT,
-                    DSL.`when`(MySQLDSL.values(SHA_CONTENT).isNotNull, MySQLDSL.values(SHA_CONTENT))
-                        .otherwise(SHA_CONTENT)
-                )
-                .set(
-                    SHA_CONTENT,
-                    DSL.`when`(MySQLDSL.values(SHA256_CONTENT).isNotNull, MySQLDSL.values(SHA256_CONTENT))
-                        .otherwise(SHA256_CONTENT)
-                )
-                .set(
-                    PRE_CMD,
-                    DSL.`when`(MySQLDSL.values(PRE_CMD).isNotNull, MySQLDSL.values(PRE_CMD)).otherwise(PRE_CMD)
-                )
-                .set(
-                    OS_NAME,
-                    DSL.`when`(MySQLDSL.values(OS_NAME).isNotNull, MySQLDSL.values(OS_NAME)).otherwise(OS_NAME)
-                )
-                .set(
-                    OS_ARCH,
-                    DSL.`when`(MySQLDSL.values(OS_ARCH).isNotNull, MySQLDSL.values(OS_ARCH)).otherwise(OS_ARCH)
-                )
-                .set(
-                    RUNTIME_VERSION,
-                    DSL.`when`(MySQLDSL.values(RUNTIME_VERSION).isNotNull, MySQLDSL.values(RUNTIME_VERSION))
-                        .otherwise(RUNTIME_VERSION)
-                )
-                .set(
-                    DEFAULT_FLAG,
-                    DSL.`when`(MySQLDSL.values(DEFAULT_FLAG).isNotNull, MySQLDSL.values(DEFAULT_FLAG))
-                        .otherwise(DEFAULT_FLAG)
-                )
-                .set(MODIFIER, MySQLDSL.values(MODIFIER))
+                // 冲突更新策略：新值不为null则更新，否则保留原值
+                .set(LANGUAGE, DSL.coalesce(excluded(LANGUAGE), LANGUAGE))
+                .set(MIN_VERSION, DSL.coalesce(excluded(MIN_VERSION), MIN_VERSION))
+                .set(PKG_NAME, DSL.coalesce(excluded(PKG_NAME), PKG_NAME))
+                .set(PKG_PATH, DSL.coalesce(excluded(PKG_PATH), PKG_PATH))
+                .set(TARGET, DSL.coalesce(excluded(TARGET), TARGET))
+                .set(SHA_CONTENT, DSL.coalesce(excluded(SHA_CONTENT), SHA_CONTENT))
+                .set(SHA256_CONTENT, DSL.coalesce(excluded(SHA256_CONTENT), SHA256_CONTENT))
+                .set(PRE_CMD, DSL.coalesce(excluded(PRE_CMD), PRE_CMD))
+                .set(OS_NAME, DSL.coalesce(excluded(OS_NAME), OS_NAME))
+                .set(OS_ARCH, DSL.coalesce(excluded(OS_ARCH), OS_ARCH))
+                .set(RUNTIME_VERSION, DSL.coalesce(excluded(RUNTIME_VERSION), RUNTIME_VERSION))
+                .set(DEFAULT_FLAG, DSL.coalesce(excluded(DEFAULT_FLAG), DEFAULT_FLAG))
+                // 特殊字段：总是使用新值
+                .set(MODIFIER, excluded(MODIFIER))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
+    }
+
+    /**
+     * 辅助扩展函数，用于获取MySQL EXCLUDED伪表的字段值
+     * 
+     * 在INSERT ... ON DUPLICATE KEY UPDATE语句中，EXCLUDED表代表冲突时尝试插入的值
+     * 此函数提供类型安全的方式访问EXCLUDED表的字段
+     * 
+     * @param field 表字段对象
+     * @return 对应的EXCLUDED表字段引用
+     *
+     */
+    private fun <T> excluded(field: TableField<*, T>): Field<T> {
+        return DSL.field("EXCLUDED.${field.name}", field.dataType)
     }
 
     fun deleteStoreEnvInfo(dslContext: DSLContext, storeId: String) {
