@@ -28,6 +28,7 @@
             </summary>
             <div
                 :class="['collapse-content', {
+                    'collapse-content-vertical': vertical,
                     'default': defaultLayout
                 }]"
             >
@@ -54,6 +55,10 @@
             name: {
                 type: String,
                 default: ''
+            },
+            vertical: {
+                type: Boolean,
+                default: false
             },
             defaultLayout: {
                 type: Boolean,
@@ -144,6 +149,8 @@
         &:last-child {
             margin-bottom: 0px !important;
         }
+
+        
     }
     .category-collapse-trigger {
         .header {
@@ -171,6 +178,7 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
+        &.collapse-content-vertical,
         &.default {
             display: block;
         }
@@ -183,4 +191,6 @@
     details:not([open]) .category-collapse-trigger .icon-angle-down {
         transform: rotate(-90deg);
     }
+
+    
 </style>

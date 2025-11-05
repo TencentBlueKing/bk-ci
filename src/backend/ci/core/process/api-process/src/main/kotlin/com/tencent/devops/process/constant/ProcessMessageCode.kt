@@ -440,6 +440,9 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND = "2101333"
     const val ERROR_DELETE_YAML_TEMPLATE_IN_DEFAULT_BRANCH = "2101334" // 已开启PAC模式,不能删除默认分支yaml关联的模版
 
+    const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
+    const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
