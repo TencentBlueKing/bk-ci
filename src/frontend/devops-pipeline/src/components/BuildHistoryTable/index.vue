@@ -771,6 +771,7 @@
                     FAILED: 'close-circle-shape',
                     RUNNING: 'circle-2-1',
                     PAUSE: 'play-circle-shape',
+                    CANCELED: 'abort',
                     SKIP: 'redo-arrow'
                 }
             },
