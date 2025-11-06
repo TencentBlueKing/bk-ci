@@ -138,7 +138,7 @@ class WindowsBuildListener @Autowired constructor(
                     executeCount = dispatchMessage.event.executeCount,
                     jobId = dispatchMessage.event.jobId
                 )
-                retry(sleepTimeInMS = 20000, retryTimes = 3)
+                retry(sleepTimeInMS = 20000, retryTimes = 30)
             } catch (e: BuildFailureException) {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorType,

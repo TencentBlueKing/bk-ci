@@ -130,7 +130,8 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                 imageVersion = inner.defaultImageVersion,
                 imageType = ImageType.BKSTORE
             ),
-            performanceConfigId = job.runsOn.hwSpec
+            performanceConfigId = job.runsOn.hwSpec,
+            performanceUid = job.runsOn.hwSpec
         )
 
         if (job.runsOn.container != null) {
@@ -160,7 +161,8 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                         imageVersion = imageVersion,
                         imageType = imageType
                     ),
-                    performanceConfigId = job.runsOn.hwSpec
+                    performanceConfigId = job.runsOn.hwSpec,
+                    performanceUid = job.runsOn.hwSpec
                 )
             } catch (e: Exception) {
                 val container = YamlUtil.getObjectMapper().readValue(
@@ -194,7 +196,8 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
                         imageVersion = imageVersion,
                         imageType = imageType
                     ),
-                    performanceConfigId = job.runsOn.hwSpec
+                    performanceConfigId = job.runsOn.hwSpec,
+                    performanceUid = job.runsOn.hwSpec
                 )
             }
         }
