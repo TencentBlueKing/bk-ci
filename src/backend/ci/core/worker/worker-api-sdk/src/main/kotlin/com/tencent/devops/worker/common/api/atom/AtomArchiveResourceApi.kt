@@ -159,7 +159,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             destPath = destPath,
             buildVariables = buildVariables
         )
-        return file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        return file.inputStream().use { ShaUtils.sha256InputStream(it) }
     }
 
     override fun uploadAtomPkgFile(
