@@ -90,6 +90,19 @@ class WorkspaceThumbnailService @Autowired constructor(
 
         // 第三步: 为缓存未命中的工作空间生成临时链接
         val missedWorkspaceNames = workspace2Size.filter { !cachedResults.containsKey(it.key) }
+        val newResults = newDownloadLink(missedWorkspaceNames, userId, screenId)
+
+        // 第四步: 合并结果
+        val finalResults = cachedResults + newResults
+        logger.info("batch get thumbnails success: total=${finalResults.size}")
+        return finalResults
+    }
+
+    private fun newDownloadLink(
+        missedWorkspaceNames: Map<String, ScreenSize>,
+        userId: String,
+        screenId: Int
+    ): Map<String, String> {
         val newResults = mutableMapOf<String, String>()
 
         if (missedWorkspaceNames.isNotEmpty()) {
@@ -160,12 +173,7 @@ class WorkspaceThumbnailService @Autowired constructor(
             }
         }
 
-        // 步骤3: 合并结果
-        val finalResults = cachedResults + newResults
-
-        logger.info("batch get thumbnails success: total=${finalResults.size}")
-
-        return finalResults
+        return newResults
     }
 
     /**
@@ -391,7 +399,10 @@ class WorkspaceThumbnailService @Autowired constructor(
             )
 
             if (!exists) {
-                logger.info("repo not exists, create it: projectId=$projectId, repoName=$repoName, region=${region.name}")
+                logger.info(
+                    "repo not exists, create it: projectId=$projectId, " +
+                        "repoName=$repoName, region=${region.name}"
+                )
 
                 // 创建仓库
                 remotedevBkRepoClient.createRepo(
@@ -417,7 +428,10 @@ class WorkspaceThumbnailService @Autowired constructor(
                     userId = SYSTEM_USER
                 )
 
-                logger.info("repo created successfully: projectId=$projectId, repoName=$repoName, region=${region.name}")
+                logger.info(
+                    "repo created successfully: projectId=$projectId," +
+                        " repoName=$repoName, region=${region.name}"
+                )
             }
 
             // 返回true表示仓库已存在（或已创建）
