@@ -84,8 +84,4 @@ data class MarketBuildAtomElement(
     }
 
     override fun getClassType() = classType
-
-    override fun getInputParamMap(): Map<String, Map<String, Any>> {
-        return mapOf("data.input" to data["input"] as Map<String, Any>)
-    }
 }
