@@ -25,41 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.transfer
+package com.tencent.devops.process.pojo.`var`.po
 
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "变量引用详情")
-data class VarRefDetail(
-    @Schema(title = "主键ID")
-    val id: Long? = null,
-    @Schema(title = "项目ID")
+@Schema(title = "流水线公共变量组关联信息数据")
+data class ResourcePublicVarGroupReferPO(
+    @get:Schema(title = "主键ID")
+    val id: Long,
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @Schema(title = "变量名称")
-    val varName: String,
-    @Schema(title = "关联资源ID")
-    val resourceId: String = "",
-    @Schema(title = "关联资源类型")
-    val resourceType: String,
-    @Schema(title = "关联资源版本名称")
-    val resourceVersionName: String? = "",
-    @Schema(title = "关联资源版本号")
-    val referVersion: Int = 1,
-    @Schema(title = "步骤ID")
-    val stageId: String = "",
-    @Schema(title = "构建容器ID")
-    val containerId: String? = null,
-    @Schema(title = "任务ID")
-    val taskId: String? = null,
-    @Schema(title = "引用变量的参数路径")
-    val positionPath: String,
-    @Schema(title = "创建者")
-    val creator: String = "system",
-    @Schema(title = "修改者")
-    val modifier: String = "system",
-    @Schema(title = "修改时间")
-    val updateTime: LocalDateTime? = null,
-    @Schema(title = "创建时间")
-    val createTime: LocalDateTime? = null
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号")
+    val version: Int = -1,
+    @get:Schema(title = "关联ID")
+    val referId: String,
+    @get:Schema(title = "引用名称")
+    val referName: String,
+    @get:Schema(title = "关联类型")
+    val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "引用版本号")
+    val referVersion: Int,
+    @get:Schema(title = "引用的版本名称")
+    val referVersionName: String? = null,
+    @get:Schema(title = "变量位置信息")
+    val positionInfo: List<PublicVarPositionPO>? = null,
+    @get:Schema(title = "创建者")
+    val creator: String,
+    @get:Schema(title = "修改者")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
 )

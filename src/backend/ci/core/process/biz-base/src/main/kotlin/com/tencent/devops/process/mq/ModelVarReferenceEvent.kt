@@ -25,40 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.po
+package com.tencent.devops.process.mq
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量组关联信息数据")
-data class PipelinePublicVarGroupReferPO(
-    @get:Schema(title = "主键ID")
-    val id: Long,
-    @get:Schema(title = "项目ID")
+@Schema(title = "流水线资源变量引用事件")
+@Event(StreamBinding.MODEL_VAR_REFERENCE_FANOUT)
+data class ModelVarReferenceEvent(
+    @get:Schema(title = "用户ID", required = true)
+    val userId: String,
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
-    @get:Schema(title = "版本号")
-    val version: Int = -1,
-    @get:Schema(title = "关联ID")
-    val referId: String,
-    @get:Schema(title = "引用名称")
-    val referName: String,
-    @get:Schema(title = "关联类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "引用版本号")
-    val referVersion: Int,
-    @get:Schema(title = "引用的版本名称")
-    val referVersionName: String? = null,
-    @get:Schema(title = "变量位置信息")
-    val positionInfo: List<PublicVarPositionPO>? = null,
-    @get:Schema(title = "创建者")
-    val creator: String,
-    @get:Schema(title = "修改者")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime,
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime
-)
+    @get:Schema(title = "资源ID（流水线ID或模板ID）", required = true)
+    val resourceId: String,
+    @get:Schema(title = "资源类型（PIPELINE/TEMPLATE）", required = true)
+    val resourceType: String,
+    @get:Schema(title = "资源版本", required = true)
+    val resourceVersion: Int
+) : IEvent() {
+    @JsonIgnore
+    fun getEventKey(): String = "$projectId:$resourceType:$resourceId:$resourceVersion"
+}

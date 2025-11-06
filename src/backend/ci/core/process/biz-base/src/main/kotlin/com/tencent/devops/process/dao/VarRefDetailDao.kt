@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.pipeline.pojo.transfer.VarRefDetail
+import com.tencent.devops.common.pipeline.pojo.VarRefDetail
 import com.tencent.devops.model.process.tables.TVarRefDetail
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -64,9 +64,7 @@ class VarRefDetailDao {
                     TASK_ID,
                     POSITION_PATH,
                     CREATOR,
-                    MODIFIER,
-                    CREATE_TIME,
-                    UPDATE_TIME
+                    MODIFIER
                 )
                 .values(
                     detail.projectId,
@@ -80,14 +78,11 @@ class VarRefDetailDao {
                     detail.taskId,
                     detail.positionPath,
                     detail.creator,
-                    detail.modifier,
-                    detail.createTime,
-                    detail.updateTime
+                    detail.modifier
                 )
                 .onDuplicateKeyUpdate()
                 .set(POSITION_PATH, detail.positionPath)
                 .set(MODIFIER, detail.modifier)
-                .set(UPDATE_TIME, detail.updateTime)
                 .execute()
             }
         }
@@ -177,34 +172,6 @@ class VarRefDetailDao {
                 .from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    /**
-     * 根据变量名列表删除不在列表中的变量引用
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param resourceId 资源ID
-     * @param resourceType 资源类型
-     * @param referVersion 引用版本
-     * @param varNames 要保留的变量名列表
-     */
-    fun deleteByVarNamesNotIn(
-        dslContext: DSLContext,
-        projectId: String,
-        resourceId: String,
-        resourceType: String,
-        referVersion: Int,
-        varNames: Set<String>
-    ) {
-        with(TVarRefDetail.T_VAR_REF_DETAIL) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(RESOURCE_ID.eq(resourceId))
-                .and(RESOURCE_TYPE.eq(resourceType))
-                .and(REFER_VERSION.eq(referVersion))
-                .and(VAR_NAME.notIn(varNames))
-                .execute()
         }
     }
 }

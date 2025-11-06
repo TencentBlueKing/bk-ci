@@ -28,21 +28,21 @@
 package com.tencent.devops.process.mq
 
 import com.tencent.devops.common.event.listener.EventListener
-import com.tencent.devops.process.service.ModelHandleServiceImpl
+import com.tencent.devops.common.pipeline.ModelHandleService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProcessVarReferenceListener @Autowired constructor(
-    private val modelHandleService: ModelHandleServiceImpl
-) : EventListener<ProcrssVarReferenceEvent> {
+class ModelVarReferenceListener @Autowired constructor(
+    private val modelHandleService: ModelHandleService
+) : EventListener<ModelVarReferenceEvent> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ProcessVarReferenceListener::class.java)
+        private val logger = LoggerFactory.getLogger(ModelVarReferenceListener::class.java)
     }
 
-    override fun execute(event: ProcrssVarReferenceEvent) {
+    override fun execute(event: ModelVarReferenceEvent) {
         try {
             logger.info(
                 "Start processing variable reference event: userId=${event.userId}, " +
@@ -54,7 +54,6 @@ class ProcessVarReferenceListener @Autowired constructor(
             modelHandleService.handleModelVarReferences(
                 userId = event.userId,
                 projectId = event.projectId,
-                model = event.model,
                 resourceId = event.resourceId,
                 resourceType = event.resourceType,
                 resourceVersion = event.resourceVersion

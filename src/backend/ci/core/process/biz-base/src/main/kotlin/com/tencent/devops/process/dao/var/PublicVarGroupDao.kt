@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.dao.`var`
 
-import com.tencent.devops.model.process.tables.TPipelinePublicVarGroup
+import com.tencent.devops.model.process.tables.TResourcePublicVarGroup
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -42,19 +42,19 @@ class PublicVarGroupDao {
      */
     private fun mapRecordToPublicVarGroupPO(record: org.jooq.Record): PublicVarGroupPO {
         return PublicVarGroupPO(
-            id = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.ID),
-            projectId = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.PROJECT_ID),
-            groupName = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.GROUP_NAME),
-            version = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VERSION),
-            versionName = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VERSION_NAME),
-            latestFlag = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.LATEST_FLAG),
-            desc = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.DESC),
-            referCount = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.REFER_COUNT),
-            varCount = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.VAR_COUNT),
-            creator = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.CREATOR),
-            modifier = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.MODIFIER),
-            createTime = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.CREATE_TIME),
-            updateTime = record.getValue(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP.UPDATE_TIME)
+            id = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.ID),
+            projectId = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.PROJECT_ID),
+            groupName = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.GROUP_NAME),
+            version = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.VERSION),
+            versionName = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.VERSION_NAME),
+            latestFlag = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.LATEST_FLAG),
+            desc = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.DESC),
+            referCount = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.REFER_COUNT),
+            varCount = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.VAR_COUNT),
+            creator = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.CREATOR),
+            modifier = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.MODIFIER),
+            createTime = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.CREATE_TIME),
+            updateTime = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.UPDATE_TIME)
         )
     }
 
@@ -62,7 +62,7 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         publicVarGroupPO: PublicVarGroupPO
     ) {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             dslContext.insertInto(this)
                 .set(ID, publicVarGroupPO.id)
                 .set(PROJECT_ID, publicVarGroupPO.projectId)
@@ -86,7 +86,7 @@ class PublicVarGroupDao {
         projectId: String,
         groupName: String
     ): Int? {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -104,7 +104,8 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.`in`(groupNames))
@@ -120,7 +121,7 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         projectId: String
     ): List<PublicVarGroupPO> {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(LATEST_FLAG.eq(true))
@@ -132,7 +133,7 @@ class PublicVarGroupDao {
         dslContext: DSLContext,
         projectId: String
     ): List<String> {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(LATEST_FLAG.eq(true))
@@ -150,7 +151,7 @@ class PublicVarGroupDao {
         filterByUpdater: String? = null,
         groupNames: List<String>? = null
     ): List<Condition> {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(LATEST_FLAG.eq(true))
@@ -183,7 +184,7 @@ class PublicVarGroupDao {
         filterByUpdater: String? = null,
         groupNames: List<String>? = null
     ): List<PublicVarGroupPO> {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             val conditions = buildGroupQueryConditions(
                 projectId = projectId,
                 filterByGroupName = filterByGroupName,
@@ -209,7 +210,7 @@ class PublicVarGroupDao {
         filterByUpdater: String? = null,
         groupNames: List<String>? = null
     ): Long {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             val conditions = buildGroupQueryConditions(
                 projectId = projectId,
                 filterByGroupName = filterByGroupName,
@@ -232,7 +233,7 @@ class PublicVarGroupDao {
         version: Int? = null,
         versionName: String? = null
     ): PublicVarGroupPO? {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
@@ -257,7 +258,7 @@ class PublicVarGroupDao {
         groupName: String,
         version: Int? = null
     ): Int {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
@@ -277,7 +278,7 @@ class PublicVarGroupDao {
         projectId: String,
         groupName: String
     ) {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -292,7 +293,7 @@ class PublicVarGroupDao {
         version: Int,
         referCount: Int
     ) {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             dslContext.update(this)
                 .set(REFER_COUNT, referCount)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -319,7 +320,7 @@ class PublicVarGroupDao {
         version: Int,
         countChange: Int
     ): Int {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.update(this)
                 .set(REFER_COUNT, REFER_COUNT.plus(countChange))
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -337,7 +338,7 @@ class PublicVarGroupDao {
         groupName: String,
         latestFlag: Boolean
     ) {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             dslContext.update(this)
                 .set(LATEST_FLAG, latestFlag)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -354,7 +355,7 @@ class PublicVarGroupDao {
         groupName: String,
         referCount: Int
     ) {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             dslContext.update(this)
                 .set(REFER_COUNT, referCount)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -378,7 +379,7 @@ class PublicVarGroupDao {
         groupName: String,
         countChange: Int
     ): Int {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.update(this)
                 .set(REFER_COUNT, REFER_COUNT.plus(countChange))
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -402,7 +403,8 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -428,7 +430,8 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -453,7 +456,7 @@ class PublicVarGroupDao {
         projectId: String,
         groupVersions: List<Pair<String, Int>>
     ): Map<Pair<String, Int>, Int> {
-        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             if (groupVersions.isEmpty()) return emptyMap()
             val orCondition = groupVersions.map { (groupName, version) ->
                 GROUP_NAME.eq(groupName).and(VERSION.eq(version))

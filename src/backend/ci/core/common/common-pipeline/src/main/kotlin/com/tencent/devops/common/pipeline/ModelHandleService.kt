@@ -30,7 +30,6 @@ interface ModelHandleService {
     fun handleModelVarReferences(
         userId: String,
         projectId: String,
-        model: Model,
         resourceId: String,
         resourceType: String,
         resourceVersion: Int

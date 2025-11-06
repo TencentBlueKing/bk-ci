@@ -76,7 +76,7 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")

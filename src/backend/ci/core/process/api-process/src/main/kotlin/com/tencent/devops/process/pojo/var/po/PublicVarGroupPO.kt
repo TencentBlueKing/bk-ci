@@ -46,6 +46,8 @@ data class PublicVarGroupPO(
     val desc: String? = null,
     @get:Schema(title = "版本号")
     val version: Int,
+    @get:Schema(title = "版本号名称")
+    val versionName: String,
     @get:Schema(title = "是否为最新版本变量组 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
     @get:Schema(title = "创建人")

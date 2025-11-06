@@ -42,7 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
-import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_IS_EXIST
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
@@ -109,14 +109,13 @@ class PublicVarGroupService @Autowired constructor(
             val operateType = publicVarGroupDTO.operateType
             if (operateType == OperateTypeEnum.CREATE && version > 0) {
                 throw ErrorCodeException(
-                    errorCode = PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST,
+                    errorCode = ERROR_PUBLIC_VAR_GROUP_IS_EXIST,
                     params = arrayOf(groupName)
                 )
             }
             val newVersion = version + 1
             
-            // 计算新版本的初始引用计数（包含动态版本引用）
-            // 注意：只统计 version=-1 的动态引用，因为这是新版本
+            // 计算新版本的初始引用计数（只统计动态版本引用）
             val newVersionReferCount = if (version != 0) {
                 publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = dslContext,
@@ -131,7 +130,7 @@ class PublicVarGroupService @Autowired constructor(
             
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP").data ?: 0,
+                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0,
                 projectId = projectId,
                 groupName = groupName,
                 version = newVersion,
@@ -145,8 +144,7 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-            
-            // 在事务外部先更新旧版本的引用计数，避免事务内锁等待
+
             if (version != 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
                     context = dslContext,
@@ -161,7 +159,7 @@ class PublicVarGroupService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
-                    // 更新 latest 标志
+                    // 更新旧版本的 latest 标志
                     publicVarGroupDao.updateLatestFlag(
                         dslContext = context,
                         projectId = projectId,
@@ -184,7 +182,7 @@ class PublicVarGroupService @Autowired constructor(
             }
             
             // 事务提交后再更新新版本的引用计数
-            // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）的计数
+            // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）和固定版本引用
             if (newVersionReferCount > 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
                     context = dslContext,
@@ -589,7 +587,12 @@ class PublicVarGroupService @Autowired constructor(
             logger.warn("Failed to parse YAML for public variable group", e)
             throw e
         }
-
+        parserVO.variables.forEach { variable ->
+            if (variable.value.const == true) {
+                variable.value.readonly = true
+                variable.value.allowModifyAtStartup = null
+            }
+        }
         // 将variables转换为List<BuildFormProperty>
         val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
         val publicVars = buildFormProperties.map { property ->

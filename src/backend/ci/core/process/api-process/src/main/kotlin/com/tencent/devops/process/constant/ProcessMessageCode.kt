@@ -443,13 +443,14 @@ object ProcessMessageCode {
     const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
 
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101286" // 流水线公共变量组中变量名称重复
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101287" // 流水线公共变量组中变量名称格式错误
     const val PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST = "2101288" // 流水线公共变量组({0})已存在
-    const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2124007" // 流水线公共变量组({0})已被引用，无法删除
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101289" // 流水线配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
+    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101288" // 流水线公共变量组({0})已存在
+    // 流水线配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101289"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101290" // 变量组引用更新失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101291" // 变量组 {0} 不存在
-
+    const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2101292" // 流水线公共变量组({0})已被引用，无法删除
+    const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101292" // 流水线公共变量组({0})已被引用，无法删除
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

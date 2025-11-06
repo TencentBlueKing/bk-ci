@@ -27,30 +27,27 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量关联信息数据")
-data class PipelinePublicVarReferPO(
+@Schema(title = "流水线公共变量组发布记录数据")
+data class ResourcePublicVarGroupReleaseRecordPO(
     @get:Schema(title = "主键ID")
     val id: Long,
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
     @get:Schema(title = "项目ID")
     val projectId: String,
-    @get:Schema(title = "变量名称")
-    val varName: String,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
     @get:Schema(title = "版本号")
-    val version: Int? = null,
-    @get:Schema(title = "关联ID")
-    val referId: String,
-    @get:Schema(title = "关联类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "引用的版本")
-    val referVersion: Int,
-    @get:Schema(title = "引用的版本名称")
-    val referVersionName: String,
+    val version: Int,
+    @get:Schema(title = "发布人")
+    val publisher: String,
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime,
+    @get:Schema(title = "描述")
+    val desc: String? = null,
+    @get:Schema(title = "内容")
+    val content: String? = null,
     @get:Schema(title = "创建者")
     val creator: String,
     @get:Schema(title = "修改者")
