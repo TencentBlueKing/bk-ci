@@ -400,9 +400,8 @@
                         key: 'templateCode',
                         groupName: this.$t('store.按模板类型分类'),
                         data: [{
-                            id: '12345',
                             templateCode: 'PIPELINE',
-                            templateName: '流水线模板',
+                            templateName: this.$t('store.流水线模板'),
                             templateType: 'TEMPLATE'
                         }]
                     })
