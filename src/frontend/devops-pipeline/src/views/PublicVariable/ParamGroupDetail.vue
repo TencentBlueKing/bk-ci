@@ -232,7 +232,7 @@
     const paramTitle = ref('')
     const sliderEditItem = ref({})
     const releaseDisabled = computed(() => {
-        return !groupData.value?.groupName && !groupData.value?.publicVars?.length
+        return !/^[a-zA-Z][a-zA-Z0-9_]{2,31}$/.test(groupData.value?.groupName) || !groupData.value?.publicVars?.length
     })
     const sidesliderWidth = computed(() => {
         // 250 表格第一列宽度
