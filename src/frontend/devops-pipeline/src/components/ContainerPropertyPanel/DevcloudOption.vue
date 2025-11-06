@@ -117,6 +117,7 @@
             async getViewPageDeviceList () {
                 const uid = this.value && this.value !== '' ? this.value : 'Standard-S'
                 const res = await this.getHistoryDevcloudSettings({
+                    username: this.$userInfo.username,
                     projectId: this.projectId,
                     uid
                 })
