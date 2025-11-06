@@ -73,11 +73,19 @@ object StreamBinding {
 
     const val PIPELINE_BATCH_ARCHIVE_FINISH = "engine.pipeline.batch.archive.finish"
 
+    const val PIPELINE_TEMPLATE_INSTANCE = "engine.pipeline.template.instance"
+
+    const val PIPELINE_TEMPLATE_TRIGGER_UPDATES = "engine.pipeline.template.trigger.updates"
+
+    const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
+
     // 构建产生的审核通知类队列
     const val PIPELINE_BUILD_NOTIFY = "engine.pipeline.build.notify"
+
     // 构建状态Websocket推送解耦
     const val PIPELINE_BUILD_WEBSOCKET = "engine.pipeline.build.websocket"
 
@@ -175,6 +183,7 @@ object StreamBinding {
 
     // 蓝盾构建结束后metrics数据上报事件广播
     const val BUILD_END_METRICS_DATA_REPORT_FANOUT = "metrics.engine.build.end.data.report.fanout"
+
     // 流水线标签变化metrics数据同步广播
     const val PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
         "metrics.pipeline.label.change.data.sync.fanout"
@@ -225,4 +234,9 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
     const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
+
+    // yaml文件调度事件
+    const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
+    // yaml文件执行事件
+    const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
 }

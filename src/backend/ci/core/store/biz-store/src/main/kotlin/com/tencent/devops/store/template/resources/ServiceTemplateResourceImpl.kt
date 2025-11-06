@@ -34,12 +34,20 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
+import com.tencent.devops.store.pojo.template.TemplateDetail
+import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
+import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.template.service.MarketTemplatePublishedService
 import com.tencent.devops.store.template.service.MarketTemplateService
+import com.tencent.devops.store.template.service.TemplateInstallHistoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTemplateResourceImpl @Autowired constructor(
-    private val marketTemplateService: MarketTemplateService
+    private val marketTemplateService: MarketTemplateService,
+    private val templateInstallHistoryService: TemplateInstallHistoryService,
+    private val marketTemplatePublishedService: MarketTemplatePublishedService
 ) : ServiceTemplateResource {
     override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
         // 可见与可安装鉴权在marketTemplateService中实现
@@ -97,5 +105,92 @@ class ServiceTemplateResourceImpl @Autowired constructor(
             model = model,
             projectCodeList = projectCodeList
         )
+    }
+
+    override fun getTemplateDetailByCode(
+        userId: String,
+        templateCode: String
+    ): Result<TemplateDetail?> {
+        return marketTemplateService.getTemplateDetailByCode(userId, templateCode)
+    }
+
+    override fun getMarketTemplateStatus(templateCode: String): Result<TemplateStatusEnum> {
+        return Result(marketTemplateService.getMarketTemplateStatus(templateCode))
+    }
+
+    override fun createMarketTemplatePublishedVersion(
+        templatePublishedVersionInfo: TemplatePublishedVersionInfo
+    ): Result<Boolean> {
+        marketTemplatePublishedService.create(templatePublishedVersionInfo)
+        return Result(true)
+    }
+
+    override fun getLatestMarketPublishedVersion(
+        templateCode: String
+    ): Result<TemplatePublishedVersionInfo?> {
+        return Result(marketTemplatePublishedService.getLatest(templateCode))
+    }
+
+    override fun deleteMarketPublishedVersions(
+        templateCode: String,
+        versions: List<Long>
+    ): Result<Boolean> {
+        marketTemplatePublishedService.deleteVersions(
+            templateCode = templateCode,
+            versions = versions
+        )
+        return Result(true)
+    }
+
+    override fun deleteMarketPublishedHistory(templateCode: String): Result<Boolean> {
+        marketTemplatePublishedService.delete(templateCode = templateCode)
+        return Result(true)
+    }
+
+    override fun listLatestPublishedVersions(templateCodes: List<String>): Result<List<TemplatePublishedVersionInfo>> {
+        return Result(marketTemplatePublishedService.listLatestRecords(templateCodes))
+    }
+
+    override fun createTemplateInstallHistory(
+        installHistoryInfo: TemplateVersionInstallHistoryInfo
+    ): Result<Boolean> {
+        templateInstallHistoryService.create(installHistoryInfo)
+        return Result(true)
+    }
+
+    override fun deleteTemplateInstallHistory(templateCode: String): Result<Boolean> {
+        templateInstallHistoryService.delete(templateCode)
+        return Result(true)
+    }
+
+    override fun deleteTemplateInstallHistoryVersions(
+        srcTemplateCode: String,
+        templateCode: String,
+        versions: List<Long>
+    ): Result<Boolean> {
+        templateInstallHistoryService.deleteVersions(
+            templateCode = templateCode,
+            srcTemplateCode = srcTemplateCode,
+            versions = versions
+        )
+        return Result(true)
+    }
+
+    override fun getRecentlyInstalledVersion(
+        templateCode: String
+    ): Result<TemplateVersionInstallHistoryInfo?> {
+        return Result(templateInstallHistoryService.getRecently(templateCode))
+    }
+
+    override fun getLatestInstalledVersion(
+        templateCode: String
+    ): Result<TemplateVersionInstallHistoryInfo?> {
+        return Result(templateInstallHistoryService.getLatest(templateCode))
+    }
+
+    override fun listLatestInstalledVersions(
+        templateCodes: List<String>
+    ): Result<List<TemplateVersionInstallHistoryInfo>> {
+        return Result(templateInstallHistoryService.listLatestRecords(templateCodes))
     }
 }
