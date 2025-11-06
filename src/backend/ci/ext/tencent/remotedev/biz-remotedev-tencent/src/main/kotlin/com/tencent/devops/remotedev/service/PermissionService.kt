@@ -128,6 +128,18 @@ class PermissionService @Autowired constructor(
             }
         )
 
+    private val projectUserCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            object : CacheLoader<String, Boolean>() {
+                override fun load(name: String): Boolean {
+                    val (userId, projectId) = name.split("@@")
+                    return checkUserVisitPermission(userId, projectId)
+                }
+            }
+        )
+
     private val projectManagerCache = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -201,7 +213,7 @@ class PermissionService @Autowired constructor(
             )
         }
 
-        if (!checkUserVisitPermission(userId, projectId) && !redisCache.checkExpertSupportUser(userId)) {
+        if (!projectUserCache.get("$userId@@$projectId") && !redisCache.checkExpertSupportUser(userId)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to access project $projectId")
