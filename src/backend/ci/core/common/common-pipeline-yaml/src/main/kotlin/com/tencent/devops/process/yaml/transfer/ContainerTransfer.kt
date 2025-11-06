@@ -312,7 +312,6 @@ class ContainerTransfer @Autowired(required = false) constructor(
         /*修正docker配额数据*/
         if (hwSpec != null && buildType != null && isSpecialHwSpec(hwSpec)) {
             val dockerResource = transferCache.getDockerResource(userId, projectId, buildType)
-            
             // hwSpec为0和1时为特殊值，表示默认配置Basic
             if (isDefaultHwSpec(hwSpec, dockerResource?.default)) {
                 hwSpec = null
