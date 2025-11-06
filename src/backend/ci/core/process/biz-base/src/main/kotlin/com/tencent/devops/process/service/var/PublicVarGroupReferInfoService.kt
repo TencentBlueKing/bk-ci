@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -46,6 +47,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
@@ -72,7 +74,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val publicVarService: PublicVarService,
-    private val publicVarDao: PublicVarDao
+    private val publicVarDao: PublicVarDao,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) {
     private data class GroupKey(val groupName: String, val version: Int?)
 
@@ -524,19 +527,29 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             referType = publicVarGroupReferDTO.referType,
             referVersion = publicVarGroupReferDTO.referVersion
         )
-        logger.info("updateReferenceCountsAfterSave Success")
+
         model.handlePublicVarInfo()
         val publicVarGroups = model.publicVarGroups
         
         // 提取并处理动态变量组
         val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(publicVarGroupReferDTO, params)
 
-        // 异步更新引用计数和批量保存
+        // 更新引用计数和批量保存
         updateReferenceCountsAfterSave(
             projectId = publicVarGroupReferDTO.projectId,
             historicalReferInfos = historicalReferInfos,
             publicVarGroupNames = publicVarGroups?.map { it.groupName } ?: emptyList(),
             resourcePublicVarGroupReferPOS = pipelinePublicVarGroupReferPOs
+        )
+        logger.info("updateReferenceCountsAfterSave Success")
+        sampleEventDispatcher.dispatch(
+            ModelVarReferenceEvent(
+                userId = publicVarGroupReferDTO.userId,
+                projectId = publicVarGroupReferDTO.projectId,
+                resourceId = publicVarGroupReferDTO.referId,
+                resourceType = publicVarGroupReferDTO.referType.name,
+                resourceVersion = publicVarGroupReferDTO.referVersion
+            )
         )
     }
 
