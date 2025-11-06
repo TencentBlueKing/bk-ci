@@ -45,6 +45,10 @@ data class TriggerOn(
     var push: PushRule? = null,
     var tag: TagRule? = null,
     var mr: MrRule? = null,
+    // 对应MERGED_REQUEST_ACCEPT事件
+    @JsonProperty("mr-merged")
+    @get:Schema(title = "mr-merged")
+    var mrMerged: MrRule? = null,
     var schedules: List<SchedulesRule>? = null,
     var delete: DeleteRule? = null,
     var issue: IssueRule? = null,
