@@ -139,7 +139,7 @@ class PipelineOverviewDao {
         return conditions
     }
 
-    fun queryPipelineMonthlyExecCount(
+    fun queryPipelineByTimeRange(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,

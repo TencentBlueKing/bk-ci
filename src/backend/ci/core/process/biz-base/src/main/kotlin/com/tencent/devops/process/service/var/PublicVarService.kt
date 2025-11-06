@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
@@ -42,7 +44,7 @@ import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
@@ -71,19 +73,22 @@ class PublicVarService @Autowired constructor(
         val projectId = publicVarDTO.projectId
         val userId = publicVarDTO.userId
         val groupName = publicVarDTO.groupName
-        
+
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_PIPELINE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
         if (segmentIds.isNullOrEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs")
+            )
         }
-        
+
         var index = 0
         val publicVarPOs = publicVarDTO.publicVars.map {
             it.buildFormProperty.varGroupName = groupName
-            it.buildFormProperty.varGroupVersion= publicVarDTO.version
-            logger.info("buildFormProperty.varGroupName:${it.buildFormProperty.varGroupName}")
+            it.buildFormProperty.varGroupVersion = publicVarDTO.version
+
             PublicVarPO(
                 id = segmentIds[index++] ?: 0,
                 projectId = projectId,
@@ -208,7 +213,7 @@ class PublicVarService @Autowired constructor(
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int
     ) {
-        val publicVarGroups = model.publicVarGroups
+        val publicVarGroups = model.publicVarGroups?.toMutableList()
         if (publicVarGroups.isNullOrEmpty()) return
         // 筛选出需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter {
@@ -228,29 +233,35 @@ class PublicVarService @Autowired constructor(
             referVersion = referVersion
         )
         val params = model.getTriggerContainer().params
-        latestGroupVersionMap.keys.forEach { groupName ->
+        
+        // 为每个变量组处理并设置 variables
+        publicVarGroups.forEach { varGroup ->
+            val groupName = varGroup.groupName
             // 获取变量组最新版本的变量
             val latestGroupVars = latestVars[groupName] ?: emptyList()
             // 获取变量组保存时的版本的变量
             val groupReferInfo = groupReferInfos.find { it.groupName == groupName }
             val positionInfo = groupReferInfo?.positionInfo
             positionInfo?.let {
-                val latestGroupVarNames = latestGroupVars.map { it.id  }.toSet()
+                val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
                 val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
                 // 对比版本差异
                 val diffResult = compareVarGroupVersions(
                     savedGroupVarNames,
                     latestGroupVarNames
                 )
-                // 处理变量差异
-                processVarGroupDiff(
+                // 处理变量差异并获取已移除的变量
+                val removedVars = processVarGroupDiff(
                     diffResult = diffResult,
                     groupReferInfo = groupReferInfo,
                     latestGroupVars = latestGroupVars,
                     params = params
                 )
+                // 将已移除的变量设置到 variables 中
+                varGroup.variables = removedVars
             }
         }
+        model.publicVarGroups = publicVarGroups
     }
 
     /**
@@ -275,32 +286,99 @@ class PublicVarService @Autowired constructor(
         groupReferInfo: PipelinePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
         params: MutableList<BuildFormProperty>
-    ) {
+    ): List<BuildFormProperty> {
         val newVarMap = latestGroupVars.associateBy { it.id }
-        val positionInfo = groupReferInfo.positionInfo ?: return
+        val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 1. 更新已存在的变量（索引未被移除操作影响，优先处理）
+        // 1. 更新已存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
         diffResult.varsToUpdate.forEach { varName ->
             positionInfoMap[varName]?.let { pos ->
                 val newVar = newVarMap[varName]
-                if (pos.index >= 0 && pos.index < params.size && newVar != null) {
-                    params[pos.index] = newVar
+                if (newVar != null) {
+                    // 先检查positionInfo记录的索引位置是否是同一变量
+                    if (params[pos.index].id == varName) {
+                        // 索引位置匹配，直接更新
+                        params[pos.index] = newVar
+                    } else {
+                        // 索引位置不匹配（可能变量顺序被调整），在params中查找实际位置
+                        val actualIndex = params.indexOfFirst { it.id == varName }
+                        if (actualIndex >= 0) {
+                            params[actualIndex] = newVar
+                        }
+                    }
                 }
             }
         }
 
-        // 2. 移除不再存在的变量（按索引降序处理，避免索引偏移）
-        diffResult.varsToRemove.mapNotNull { positionInfoMap[it]?.index } // 过滤无效索引
-            .filter { it >= 0 && it < params.size } // 校验索引有效性
-            .sortedDescending() // 降序排序，确保先删序号大的索引
-            .forEach { params.removeAt(it) }
+        // 2. 移除不再存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
+        val indicesToRemove = diffResult.varsToRemove.mapNotNull { varName ->
+            val pos = positionInfoMap[varName]
+            if (pos != null) {
+                // 先检查positionInfo记录的索引位置是否是同一变量
+                if (pos.index >= 0 && pos.index < params.size && params[pos.index].id == varName) {
+                    logger.info("processVarGroupDiff will remove var: $varName at saved index: ${pos.index}")
+                    pos.index
+                } else {
+                    // 索引位置不匹配，在params中查找实际位置
+                    val actualIndex = params.indexOfFirst { it.id == varName }
+                    if (actualIndex >= 0) {
+                        logger.info("processVarGroupDiff will remove var: $varName at actual index: $actualIndex (saved index was ${pos.index})")
+                        actualIndex
+                    } else {
+                        logger.warn("processVarGroupDiff var to remove not found in params: $varName")
+                        null
+                    }
+                }
+            } else {
+                null
+            }
+        }.sortedDescending() // 降序排序，确保先删除索引大的
 
-        // 3. 添加新增的变量到末尾
-        diffResult.varsToAdd.mapNotNull { newVarMap[it] } // 过滤无效变量
-            .forEach { params.add(it) }
+        indicesToRemove.forEach { index ->
+            val removedVarName = params[index].id
+            params.removeAt(index)
+            logger.info("processVarGroupDiff removed var: $removedVarName from index: $index")
+        }
+
+        // 3. 添加新增的变量到末尾（先检查是否已存在，避免重复）
+        val currentParamVarIds = params.map { it.id }.toSet()
+        diffResult.varsToAdd
+            .mapNotNull { newVarMap[it] }
+            .filter { it.id !in currentParamVarIds } // 过滤已存在的变量
+            .forEach { newVar ->
+                params.add(newVar)
+                logger.info("processVarGroupDiff added new var: ${newVar.id}")
+            }
+
+        // 4. 使用diffResult.varsToRemove来构建已移除的变量列表
+        val removedVars = diffResult.varsToRemove.mapNotNull { varName ->
+            positionInfoMap[varName]?.let { pos ->
+                BuildFormProperty(
+                    id = pos.varName,
+                    required = pos.required,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = "",
+                    options = null,
+                    desc = "",
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null,
+                    varGroupName = groupReferInfo.groupName,
+                    varGroupVersion = groupReferInfo.version,
+                    constant = if (pos.type == PublicVarTypeEnum.CONSTANT) true else false,
+                ).apply {
+                    this.removeFlag = true
+                }
+            }
+        }
+
+        return removedVars
     }
-    
+
     /**
      * 批量获取多个组的最新版本
      */
@@ -313,16 +391,16 @@ class PublicVarService @Autowired constructor(
             projectId = projectId,
             groupNames = groupNames
         )
-        
+
         // 检查是否有组名不存在
         val missingGroups = groupNames.filter { it !in versionMap }
         if (missingGroups.isNotEmpty()) {
             throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
         }
-        
+
         return versionMap
     }
-    
+
     /**
      * 批量获取所有组的最新版本变量
      */
@@ -342,24 +420,5 @@ class PublicVarService @Autowired constructor(
                 }
             }
         }
-    }
-
-    /**
-     * 更新变量引用计数
-     * @param countChange 计数变化量（正数表示增加，负数表示减少）
-     */
-    fun updateVarReferCounts(
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int
-    ) {
-        publicVarDao.updateReferCountByGroup(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
-            version = version,
-            countChange = countChange
-        )
     }
 }

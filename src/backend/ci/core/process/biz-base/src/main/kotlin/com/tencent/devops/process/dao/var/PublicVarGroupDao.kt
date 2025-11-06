@@ -32,7 +32,6 @@ import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -69,6 +68,7 @@ class PublicVarGroupDao {
                 .set(PROJECT_ID, publicVarGroupPO.projectId)
                 .set(GROUP_NAME, publicVarGroupPO.groupName)
                 .set(VERSION, publicVarGroupPO.version)
+                .set(VERSION_NAME, publicVarGroupPO.versionName)
                 .set(LATEST_FLAG, publicVarGroupPO.latestFlag)
                 .set(DESC, publicVarGroupPO.desc)
                 .set(REFER_COUNT, publicVarGroupPO.referCount)
@@ -104,7 +104,6 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VERSION).from(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -141,6 +140,39 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 构建变量组查询的公共条件
+     */
+    private fun buildGroupQueryConditions(
+        projectId: String,
+        filterByGroupName: String? = null,
+        filterByGroupDesc: String? = null,
+        filterByUpdater: String? = null,
+        groupNames: List<String>? = null
+    ): List<Condition> {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(LATEST_FLAG.eq(true))
+
+            // 添加筛选条件
+            filterByGroupName?.let {
+                conditions.add(GROUP_NAME.like("%$it%"))
+            }
+            filterByGroupDesc?.let {
+                conditions.add(DESC.like("%$it%"))
+            }
+            filterByUpdater?.let {
+                conditions.add(MODIFIER.like("%$it%"))
+            }
+            if (!groupNames.isNullOrEmpty()) {
+                conditions.add(GROUP_NAME.`in`(groupNames))
+            }
+
+            return conditions
+        }
+    }
+
     fun listGroupsByProjectIdPage(
         dslContext: DSLContext,
         projectId: String,
@@ -152,23 +184,13 @@ class PublicVarGroupDao {
         groupNames: List<String>? = null
     ): List<PublicVarGroupPO> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(LATEST_FLAG.eq(true))
-
-            // 添加新的筛选条件
-            filterByGroupName?.let {
-                conditions.add(GROUP_NAME.like("%$it%"))
-            }
-            filterByGroupDesc?.let {
-                conditions.add(DESC.like("%$it%"))
-            }
-            filterByUpdater?.let {
-                conditions.add(MODIFIER.like("%$it%"))
-            }
-            if(!groupNames.isNullOrEmpty()) {
-                conditions.add(GROUP_NAME.`in`(groupNames))
-            }
+            val conditions = buildGroupQueryConditions(
+                projectId = projectId,
+                filterByGroupName = filterByGroupName,
+                filterByGroupDesc = filterByGroupDesc,
+                filterByUpdater = filterByUpdater,
+                groupNames = groupNames
+            )
 
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -188,27 +210,17 @@ class PublicVarGroupDao {
         groupNames: List<String>? = null
     ): Long {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
-            val condition = DSL.noCondition()
-                .and(PROJECT_ID.eq(projectId))
-                .and(LATEST_FLAG.eq(true))
-
-            // 添加新的筛选条件
-            filterByGroupName?.let {
-                condition.and(GROUP_NAME.like("%$it%"))
-            }
-            filterByGroupDesc?.let {
-                condition.and(DESC.like("%$it%"))
-            }
-            filterByUpdater?.let {
-                condition.and(MODIFIER.like("%$it%"))
-            }
-            if (!groupNames.isNullOrEmpty()) {
-                condition.and(GROUP_NAME.`in`(groupNames))
-            }
+            val conditions = buildGroupQueryConditions(
+                projectId = projectId,
+                filterByGroupName = filterByGroupName,
+                filterByGroupDesc = filterByGroupDesc,
+                filterByUpdater = filterByUpdater,
+                groupNames = groupNames
+            )
 
             return dslContext.selectCount()
                 .from(this)
-                .where(condition)
+                .where(conditions)
                 .fetchOne(0, Long::class.java) ?: 0
         }
     }
@@ -291,6 +303,34 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 原子增量更新引用计数（线程安全）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     * @return 更新的行数
+     */
+    fun incrementReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        countChange: Int
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
+                .execute()
+        }
+    }
+
     fun updateLatestFlag(
         dslContext: DSLContext,
         projectId: String,
@@ -325,6 +365,31 @@ class PublicVarGroupDao {
     }
 
     /**
+     * 原子增量更新变量组名称的引用计数（线程安全）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param countChange 计数变化量（正数表示增加，负数表示减少）
+     * @return 更新的行数
+     */
+    fun incrementVarGroupNameReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        countChange: Int
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
+                .execute()
+        }
+    }
+
+    /**
      * 批量获取变量组的VAR_COUNT
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
@@ -337,7 +402,6 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
@@ -364,7 +428,6 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
@@ -392,11 +455,9 @@ class PublicVarGroupDao {
     ): Map<Pair<String, Int>, Int> {
         with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
             if (groupVersions.isEmpty()) return emptyMap()
-            
             val orCondition = groupVersions.map { (groupName, version) ->
                 GROUP_NAME.eq(groupName).and(VERSION.eq(version))
             }.reduce { acc, condition -> acc.or(condition) }
-            
             return dslContext.select(GROUP_NAME, VERSION, VAR_COUNT)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))

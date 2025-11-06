@@ -9,25 +9,21 @@ import org.slf4j.LoggerFactory
 
 /**
  * Model对象的JSON反序列化器
- * 
  * 负责将JSON数据反序列化为Model对象，并处理相关的触发器容器逻辑
  * 主要用于CI/CD流水线配置的反序列化处理
  */
 class ModelDeserializer : JsonDeserializer<Model>() {
-
     companion object {
         private val logger = LoggerFactory.getLogger(ModelDeserializer::class.java)
     }
 
     /**
      * 反序列化JSON数据为Model对象
-     * 
      * @param p JSON解析器，用于读取JSON输入流
      * @param ctxt 反序列化上下文，提供反序列化过程中的上下文信息
      * @return 反序列化后的Model对象
      * @throws IllegalStateException 当反序列化返回null时抛出
      * @throws Throwable 反序列化过程中可能出现的任何异常
-     * 
      * 方法执行流程：
      * 1. 标记反序列化上下文，防止循环引用
      * 2. 转换为Model对象
@@ -38,15 +34,12 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         // 标记反序列化上下文，用于标识当前正在反序列化过程中(防止在反序列化过程中出现循环引用问题)
         ModelDeserializeMarker.markInside()
         logger.info("Start deserializing Model (thread: ${Thread.currentThread().name})")
-
         return try {
             // 转换为具体的Model对象
             val model = ctxt.readValue(p, Model::class.java)
                 ?: throw IllegalStateException("Model deserialization returned null")
-
             // 处理模型中的触发器容器，设置相关参数
             processTriggerContainers(model)
-
             // 返回反序列化完成的Model对象
             model
         } catch (ignored: Throwable) {
@@ -62,9 +55,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
 
     /**
      * 处理模型中的所有触发器容器
-     * 
      * @param model 需要处理的Model对象
-     * 
      * 处理逻辑：
      * - 检查模型是否包含公共变量组和项目ID
      * - 遍历所有阶段(stages)中的容器(containers)
@@ -75,10 +66,8 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         if (model.publicVarGroups.isNullOrEmpty() || model.projectId == null) {
             return
         }
-        
         // 获取ModelHandleService服务实例，用于处理模型参数
         val modelHandleService = SpringContextUtil.getBean(ModelHandleService::class.java)
-        
         // 遍历所有阶段和容器，查找并处理TriggerContainer
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
@@ -94,10 +83,8 @@ class ModelDeserializer : JsonDeserializer<Model>() {
 
     /**
      * 处理单个触发器容器
-     * 
      * @param model 包含触发器容器的Model对象
      * @param modelHandleService 模型处理服务，用于处理模型参数
-     * 
      * 处理逻辑：
      * - 根据pipelineId或templateId确定引用类型
      * - 调用ModelHandleService处理模型参数

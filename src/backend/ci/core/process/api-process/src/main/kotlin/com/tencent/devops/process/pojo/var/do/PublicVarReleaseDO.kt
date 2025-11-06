@@ -45,4 +45,3 @@ data class PublicVarReleaseDO(
     @get:Schema(title = "版本描述")
     val desc: String? = null
 )
-

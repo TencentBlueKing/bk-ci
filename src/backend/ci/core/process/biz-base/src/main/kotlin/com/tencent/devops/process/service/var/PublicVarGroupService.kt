@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.`var`
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -35,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
@@ -84,9 +83,9 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) {
-
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
         const val EXPIRED_TIME_IN_SECONDS = 5L
@@ -114,6 +113,21 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
             val newVersion = version + 1
+            
+            // 计算新版本的初始引用计数（包含动态版本引用）
+            // 注意：只统计 version=-1 的动态引用，因为这是新版本
+            val newVersionReferCount = if (version != 0) {
+                publicVarGroupReferInfoDao.countByGroupName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = null,
+                    version = -1 // 只统计动态版本引用
+                )
+            } else {
+                0
+            }
+            
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_PIPELINE_PUBLIC_VAR_GROUP").data ?: 0,
@@ -123,16 +137,30 @@ class PublicVarGroupService @Autowired constructor(
                 versionName = "v$newVersion",
                 latestFlag = true,
                 varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                referCount = 0,
+                referCount = newVersionReferCount,
                 desc = publicVarGroupDTO.publicVarGroup.desc,
                 creator = userId,
                 modifier = userId,
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
+            
+            // 在事务外部先更新旧版本的引用计数，避免事务内锁等待
+            if (version != 0) {
+                publicVarGroupReferInfoService.updateSingleGroupReferCount(
+                    context = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = version,
+                    latestFlag = false
+                )
+            }
+            
+            // 事务中只做数据插入和更新操作，不做复杂查询
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
+                    // 更新 latest 标志
                     publicVarGroupDao.updateLatestFlag(
                         dslContext = context,
                         projectId = projectId,
@@ -151,6 +179,18 @@ class PublicVarGroupService @Autowired constructor(
                         versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
+                )
+            }
+            
+            // 事务提交后再更新新版本的引用计数
+            // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）的计数
+            if (newVersionReferCount > 0) {
+                publicVarGroupReferInfoService.updateSingleGroupReferCount(
+                    context = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = newVersion,
+                    latestFlag = true
                 )
             }
         } catch (t: Throwable) {
@@ -240,7 +280,7 @@ class PublicVarGroupService @Autowired constructor(
                 referType = null,
                 version = null
             )
-            
+
             PublicVarGroupDO(
                 groupName = po.groupName,
                 referCount = actualReferCount,
@@ -320,8 +360,8 @@ class PublicVarGroupService @Autowired constructor(
     fun exportGroup(
         groupName: String,
         version: Int?,
-        projectId: String)
-    : Response {
+        projectId: String
+    ): Response {
         val yaml = getGroupYaml(groupName, version, projectId)
         return YamlCommonUtils.exportToFile(yaml, groupName)
     }
@@ -364,7 +404,7 @@ class PublicVarGroupService @Autowired constructor(
         publicVarGroup: PublicVarGroupVO
     ): List<PublicVarReleaseDO> {
         val groupName = publicVarGroup.groupName
-        
+
         // 获取数据库中最新版本的变量组信息
         val latestGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
@@ -374,7 +414,7 @@ class PublicVarGroupService @Autowired constructor(
             errorCode = ERROR_INVALID_PARAM_,
             params = arrayOf(groupName)
         )
-        
+
         // 获取最新版本的变量列表
         val latestVarPOs = publicVarService.getGroupPublicVar(
             projectId = projectId,
@@ -396,7 +436,7 @@ class PublicVarGroupService @Autowired constructor(
                 buildFormProperty = vo.buildFormProperty
             )
         }
-        
+
         val version = latestGroupRecord.version + 1
         val pubTime = LocalDateTime.now()
 
@@ -411,8 +451,6 @@ class PublicVarGroupService @Autowired constructor(
         )
     }
 
-
-
     fun getProjectPublicParamByRef(
         userId: String,
         projectId: String,
@@ -421,74 +459,115 @@ class PublicVarGroupService @Autowired constructor(
         if (varGroupRefs.isEmpty()) {
             return emptyList()
         }
-
         val publicVarGroupVariables = mutableListOf<PublicVarGroupVariable>()
         val processedVarNames = mutableSetOf<String>()
         var currentIndex = 0
-        
+
         varGroupRefs.forEach { varGroupRef ->
-            try {
-                val groupName = varGroupRef.groupName
-                val versionName = varGroupRef.versionName
-                val groupRecord = publicVarGroupDao.getRecordByGroupName(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    versionName = versionName
-                ) ?: run {
-                    logger.warn("Variable group $groupName not found in project $projectId")
-                    return@forEach
-                }
-
-                // 获取变量组中的变量
-                val varPOs = publicVarService.getGroupPublicVar(
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = groupRecord.version
-                )
-
-                // 转换为PublicVarGroupVariable并检查同名变量
-                varPOs.forEach { po ->
-                    if (processedVarNames.contains(po.varName)) {
-                        throw ErrorCodeException(
-                            errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
-                            params = arrayOf(groupName, po.varName)
-                        )
-                    }
-                    val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
-                    buildFormProperty.varGroupName = groupName
-                    buildFormProperty.varGroupVersion = groupRecord.version
-                    
-                    publicVarGroupVariables.add(
-                        PublicVarGroupVariable(
-                            groupName = groupName,
-                            groupVersion = groupRecord.version,
-                            buildFormProperty = buildFormProperty,
-                            originalIndex = currentIndex++
-                        )
-                    )
-                    processedVarNames.add(po.varName)
-                }
-            } catch (e: Throwable) {
-                logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
-                throw e
-            }
+            currentIndex = processVarGroupRef(
+                projectId = projectId,
+                varGroupRef = varGroupRef,
+                publicVarGroupVariables = publicVarGroupVariables,
+                processedVarNames = processedVarNames,
+                currentIndex = currentIndex
+            )
         }
-
         return publicVarGroupVariables
+    }
+
+    /**
+     * 处理单个变量组引用
+     */
+    private fun processVarGroupRef(
+        projectId: String,
+        varGroupRef: PublicVarGroupRef,
+        publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
+        processedVarNames: MutableSet<String>,
+        currentIndex: Int
+    ): Int {
+        try {
+            val groupName = varGroupRef.groupName
+            val versionName = varGroupRef.versionName
+            val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                versionName = versionName
+            ) ?: run {
+                logger.warn("Variable group $groupName not found in project $projectId")
+                return currentIndex
+            }
+
+            // 获取变量组中的变量
+            val varPOs = publicVarService.getGroupPublicVar(
+                projectId = projectId,
+                groupName = groupName,
+                version = groupRecord.version
+            )
+
+            // 转换为PublicVarGroupVariable并检查同名变量
+            return processVarPOs(
+                varPOs = varPOs,
+                groupName = groupName,
+                groupVersion = groupRecord.version,
+                publicVarGroupVariables = publicVarGroupVariables,
+                processedVarNames = processedVarNames,
+                currentIndex = currentIndex
+            )
+        } catch (e: Throwable) {
+            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
+            throw e
+        }
+    }
+
+    /**
+     * 处理变量PO列表，转换为PublicVarGroupVariable
+     */
+    private fun processVarPOs(
+        varPOs: List<*>,
+        groupName: String,
+        groupVersion: Int,
+        publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
+        processedVarNames: MutableSet<String>,
+        currentIndex: Int
+    ): Int {
+        var index = currentIndex
+        varPOs.forEach { po ->
+            val varName = (po as? com.tencent.devops.process.pojo.`var`.po.PublicVarPO)?.varName ?: return@forEach
+
+            if (processedVarNames.contains(varName)) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
+                    params = arrayOf(groupName, varName)
+                )
+            }
+
+            val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            buildFormProperty.varGroupName = groupName
+            buildFormProperty.varGroupVersion = groupVersion
+
+            publicVarGroupVariables.add(
+                PublicVarGroupVariable(
+                    groupName = groupName,
+                    groupVersion = groupVersion,
+                    buildFormProperty = buildFormProperty,
+                    originalIndex = index++
+                )
+            )
+            processedVarNames.add(varName)
+        }
+        return index
     }
 
     fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): String {
         val params = publicVarGroup.publicVars.map { it.buildFormProperty }
         val variables = variableTransfer.makeVariableFromBuildParams(params, false)
-
         val parserVO = PublicVarGroupYamlParser(
             version = "v3.0",
             name = publicVarGroup.groupName,
             desc = publicVarGroup.desc ?: "",
             variables = variables ?: emptyMap()
         )
-
         return TransferMapper.getObjectMapper().writeValueAsString(parserVO)
     }
 
@@ -501,10 +580,7 @@ class PublicVarGroupService @Autowired constructor(
      */
     private fun parseYamlToPublicVarGroupVO(yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
         val parserVO = try {
-            TransferMapper.getObjectMapper().readValue(
-                yaml.yaml,
-                object : TypeReference<PublicVarGroupYamlParser>() {}
-            )
+            TransferMapper.to<PublicVarGroupYamlParser>(yaml.yaml)
         } catch (e: Throwable) {
             logger.warn("Failed to parse YAML for public variable group", e)
             throw e
@@ -549,11 +625,11 @@ class PublicVarGroupService @Autowired constructor(
                 referType = referType,
                 referVersion = referVersion
             )
-            
+
             if (referInfos.isEmpty()) {
                 return Result(emptyList())
             }
-            
+
             // 转换为PipelinePublicVarGroupDO列表
             val pipelineVarGroups = referInfos.map { referInfo ->
                 val groupRecord = publicVarGroupDao.getRecordByGroupName(
@@ -562,7 +638,7 @@ class PublicVarGroupService @Autowired constructor(
                     groupName = referInfo.groupName,
                     version = referInfo.version
                 ) ?: return@map null
-                
+
                 PipelinePublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,
@@ -571,7 +647,7 @@ class PublicVarGroupService @Autowired constructor(
                     updateTime = groupRecord.updateTime
                 )
             }.filterNotNull()
-            
+
             return Result(pipelineVarGroups)
         } catch (e: Throwable) {
             logger.warn("[$projectId|$referId] Failed to get pipeline variables", e)
@@ -582,17 +658,17 @@ class PublicVarGroupService @Autowired constructor(
     fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
         try {
             logger.info("[$projectId] Get all public variable groups info")
-            
+
             // 获取项目中所有的公共变量组
             val varGroups = publicVarGroupDao.listGroupsByProjectId(
                 dslContext = dslContext,
                 projectId = projectId
             )
-            
+
             if (varGroups.isEmpty()) {
                 return Result(emptyList())
             }
-            
+
             // 转换为PipelinePublicVarGroupDO列表
             val pipelineVarGroups = varGroups.map { groupRecord ->
                 PipelinePublicVarGroupDO(
@@ -603,7 +679,7 @@ class PublicVarGroupService @Autowired constructor(
                     updateTime = groupRecord.updateTime
                 )
             }
-            
+
             return Result(pipelineVarGroups)
         } catch (e: Throwable) {
             logger.warn("[$projectId] Failed to get project variable groups info", e)

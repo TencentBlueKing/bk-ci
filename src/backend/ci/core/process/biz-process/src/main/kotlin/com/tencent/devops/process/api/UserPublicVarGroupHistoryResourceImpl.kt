@@ -25,36 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.po
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserPublicVarGroupHistoryResource
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "流水线公共变量关联信息数据")
-data class PipelinePublicVarReferPO(
-    @get:Schema(title = "主键ID")
-    val id: Long,
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
-    @get:Schema(title = "项目ID")
-    val projectId: String,
-    @get:Schema(title = "变量名称")
-    val varName: String,
-    @get:Schema(title = "版本号")
-    val version: Int? = null,
-    @get:Schema(title = "关联ID")
-    val referId: String,
-    @get:Schema(title = "关联类型")
-    val referType: PublicVerGroupReferenceTypeEnum,
-    @get:Schema(title = "引用的版本名称")
-    val referVersionName: String,
-    @get:Schema(title = "创建者")
-    val creator: String,
-    @get:Schema(title = "修改者")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime,
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime
-)
+@RestResource
+class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+) : UserPublicVarGroupHistoryResource {
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<PublicVarReleaseDO>> {
+        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        ))
+    }
+}

@@ -30,9 +30,11 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
-import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -45,16 +47,16 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_PUBLIC_VAR", description = "用户-公共变量")
-@Path("/user/public/var")
+@Tag(name = "USER_PUBLIC_VAR_GROUP_HISTORY", description = "用户-公共变量组历史管理")
+@Path("/user/public/var/groups/history")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPublicVarResource {
+interface UserPublicVarGroupHistoryResource {
 
-    @Operation(summary = "获取公共变量组变量视图")
+    @Operation(summary = "获取公共变量组版本历史")
     @GET
-    @Path("/group/{groupName}/list")
-    fun listGroupPublicVar(
+    @Path("/{groupName}/releaseHistory")
+    fun getReleaseHistory(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -64,26 +66,12 @@ interface UserPublicVarResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "变量组版本号", required = false)
-        @QueryParam("version")
-        version: Int? = null
-    ): Result<PublicVarGroupVO>
-
-    @Operation(summary = "获取变量组下的公共变量列表")
-    @GET
-    @Path("/group/{groupName}/variables")
-    fun getVariables(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "变量组版本号", required = false)
-        @QueryParam("version")
-        version: Int?
-    ): Result<List<PublicVarDO>>
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int
+    ): Result<Page<PublicVarReleaseDO>>
 }

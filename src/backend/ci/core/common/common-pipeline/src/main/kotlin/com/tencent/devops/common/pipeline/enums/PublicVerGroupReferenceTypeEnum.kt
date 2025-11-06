@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.enums
+package com.tencent.devops.common.pipeline.enums
 
 enum class PublicVerGroupReferenceTypeEnum {
     PIPELINE, // 流水线

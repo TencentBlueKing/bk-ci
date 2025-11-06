@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.dao.`var`
 
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TPipelinePublicVarReferInfo
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PipelinePublicVarReferPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -43,24 +43,33 @@ class PublicVarReferInfoDao {
         if (pipelinePublicVarReferPOs.isEmpty()) {
             return
         }
-        
+
         with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
-            val insertSteps = pipelinePublicVarReferPOs.map { po ->
-                dslContext.insertInto(this)
-                    .set(ID, po.id)
-                    .set(PROJECT_ID, po.projectId)
-                    .set(GROUP_NAME, po.groupName)
-                    .set(VAR_NAME, po.varName)
-                    .set(VERSION, po.version)
-                    .set(REFER_ID, po.referId)
-                    .set(REFER_TYPE, po.referType.name)
-                    .set(REFER_VERSION_NAME, po.referVersionName)
-                    .set(CREATOR, po.creator)
-                    .set(MODIFIER, po.modifier)
-                    .set(CREATE_TIME, po.createTime)
-                    .set(UPDATE_TIME, po.updateTime)
+            var insertQuery = dslContext.insertInto(
+                this,
+                ID, PROJECT_ID, GROUP_NAME, VAR_NAME, VERSION,
+                REFER_ID, REFER_TYPE, REFER_VERSION_NAME,
+                CREATOR, MODIFIER, CREATE_TIME, UPDATE_TIME
+            )
+            
+            pipelinePublicVarReferPOs.forEach { po ->
+                insertQuery = insertQuery.values(
+                    po.id,
+                    po.projectId,
+                    po.groupName,
+                    po.varName,
+                    po.version,
+                    po.referId,
+                    po.referType.name,
+                    po.referVersionName,
+                    po.creator,
+                    po.modifier,
+                    po.createTime,
+                    po.updateTime
+                )
             }
-            dslContext.batch(insertSteps).execute()
+            
+            insertQuery.execute()
         }
     }
 
@@ -141,6 +150,25 @@ class PublicVarReferInfoDao {
         }
     }
 
+    fun deleteByReferIdAndGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupName: String,
+        referVersion: Int
+    ) {
+        with(TPipelinePublicVarReferInfo.T_PIPELINE_PUBLIC_VAR_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
+                .and(GROUP_NAME.eq(groupName))
+                .and(REFER_VERSION.eq(referVersion))
+                .execute()
+        }
+    }
+
     /**
      * 计算指定引用的实际变量数量
      * @param dslContext 数据库上下文
@@ -172,6 +200,4 @@ class PublicVarReferInfoDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-
-
 }

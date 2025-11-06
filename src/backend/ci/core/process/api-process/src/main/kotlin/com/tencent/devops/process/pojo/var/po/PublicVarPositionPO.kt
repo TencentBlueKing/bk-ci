@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.po
 
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量位置信息数据")
@@ -39,4 +40,8 @@ data class PublicVarPositionPO(
     val varName: String,
     @get:Schema(title = "序号 ")
     val index: Int,
+    @get:Schema(title = "变量组件类型(常量/变量)")
+    val type: PublicVarTypeEnum,
+    @get:Schema(title = "是否必须（新前端的入参标识）")
+    var required: Boolean
 )

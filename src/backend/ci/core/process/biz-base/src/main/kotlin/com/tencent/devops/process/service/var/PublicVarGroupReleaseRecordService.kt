@@ -58,10 +58,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
-
         val oldVarDOs = convertPOToDO(oldVarPOs)
         val newVarDOs = convertPOToDO(newVarPOs)
-
         val releaseRecords = generateVarChangeRecords(
             oldVars = oldVarDOs,
             newVars = newVarDOs,
@@ -71,7 +69,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             pubTime = LocalDateTime.now(),
             versionDesc = publicVarGroupReleaseDTO.versionDesc
         )
-
         // 批量生成ID
         val segmentIds = if (releaseRecords.isNotEmpty()) {
             client.get(ServiceAllocIdResource::class)
@@ -79,12 +76,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         } else {
             emptyList()
         }
-        
         if (releaseRecords.isNotEmpty() && segmentIds.isNullOrEmpty()) {
             logger.warn("Failed to generate segment IDs for release records, size: ${releaseRecords.size}")
-            throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf("Failed to generate segment IDs"))
+            throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("Failed to generate segment IDs")
+            )
         }
-
         var index = 0
         val records = releaseRecords.map { releaseRecord ->
             PipelinePublicVarGroupReleaseRecordPO(
@@ -102,7 +100,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 updateTime = LocalDateTime.now()
             )
         }
-
         if (records.isNotEmpty()) {
             pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
         }
@@ -166,7 +163,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         versionDesc: String?
     ): List<PublicVarReleaseDO> {
         val releaseRecords = mutableListOf<PublicVarReleaseDO>()
-        
+
         // 1. 处理删除的变量
         val deletedVars = oldVars.filter { oldVar ->
             newVars.none { it.varName == oldVar.varName }
@@ -182,7 +179,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                     "type" to oldVar.type.name
                 )
             )
-            
+
             releaseRecords.add(
                 PublicVarReleaseDO(
                     groupName = groupName,
@@ -194,7 +191,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 )
             )
         }
-        
+
         // 2. 处理新增的变量
         val addedVars = newVars.filter { newVar ->
             newVar.varName !in oldVars.map { it.varName }
@@ -210,7 +207,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                     "type" to newVar.type.name
                 )
             )
-            
+
             releaseRecords.add(
                 PublicVarReleaseDO(
                     groupName = groupName,
@@ -222,7 +219,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 )
             )
         }
-        
+
         // 3. 处理修改的变量
         val modifiedVars = newVars.filter { newVar ->
             oldVars.any { oldVar ->
@@ -233,13 +230,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                                 !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty))
             }
         }
-        
+
         modifiedVars.forEach { newVar ->
             val oldVar = oldVars.first { it.varName == newVar.varName }
-            
+
             // 收集所有变更字段
             val changes = mutableMapOf<String, Map<String, Any?>>()
-            
+
             if (oldVar.alias != newVar.alias) {
                 changes["alias"] = mapOf("oldValue" to oldVar.alias, "newValue" to newVar.alias)
             }
@@ -249,11 +246,11 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             if (oldVar.defaultValue != newVar.defaultValue) {
                 changes["defaultValue"] = mapOf("oldValue" to oldVar.defaultValue, "newValue" to newVar.defaultValue)
             }
-            
+
             // 直接比较BuildFormProperty对象的属性
             val oldBuildFormProperty = oldVar.buildFormProperty
             val newBuildFormProperty = newVar.buildFormProperty
-            
+
             if (oldBuildFormProperty.required != newBuildFormProperty.required) {
                 changes["required"] =
                     mapOf("oldValue" to oldBuildFormProperty.required, "newValue" to newBuildFormProperty.required)
@@ -268,7 +265,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                     "newValue" to newBuildFormProperty.valueNotEmpty
                 )
             }
-            
+
             if (changes.isNotEmpty()) {
                 val content = JsonUtil.toJson(
                     mapOf(
@@ -281,7 +278,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                         "defaultValue" to newVar.defaultValue
                     )
                 )
-                
+
                 releaseRecords.add(
                     PublicVarReleaseDO(
                         groupName = groupName,
@@ -294,7 +291,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 )
             }
         }
-        
+
         return releaseRecords
     }
 
