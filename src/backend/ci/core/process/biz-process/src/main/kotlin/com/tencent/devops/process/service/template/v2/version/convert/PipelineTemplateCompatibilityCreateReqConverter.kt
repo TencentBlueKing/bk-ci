@@ -39,9 +39,10 @@ import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersi
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -57,7 +58,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer,
     private val templateDao: TemplateDao,
     private val dslContext: DSLContext,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val pipelineTemplateInfoService: PipelineTemplateInfoService
 ) : PipelineTemplateVersionReqConverter {
 
     override fun support(request: PipelineTemplateVersionReq): Boolean {
@@ -77,6 +79,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
+            val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) == null
+
             val transferResult = try {
                 pipelineTemplateGenerator.transfer(
                     userId = userId,
@@ -145,6 +149,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 creator = userId,
                 updater = userId
             )
+
             return PipelineTemplateVersionCreateContext(
                 userId = userId,
                 projectId = projectId,
@@ -154,7 +159,8 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
-                pTemplateSettingWithoutVersion = transferResult.templateSetting
+                pTemplateSettingWithoutVersion = transferResult.templateSetting,
+                newTemplate = isNewTemplate
             )
         }
     }
