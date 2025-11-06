@@ -23,8 +23,8 @@ In the `values.yaml` file, perform the following configurations:
 ### Background
 JWT flow in BK-CI: **Gateway ➡ Microservices ⬅➡ Turbo (if applicable)**
 - **Gateway**: Signs JWT tokens using the private key
-- **Microservices**: Validates JWT tokens using the public key
-- **Turbo**: Validates JWT tokens using the public key
+- **Microservices**: Signs & validates JWT tokens using the public key
+- **Turbo**: Signs & validates JWT tokens using the public key
 
 The system supports multiple key configurations, enabling key rotation without service interruption.
 
@@ -140,6 +140,10 @@ The system supports multiple key configurations, enabling key rotation without s
    - Confirm gateway signs tokens with new key
    - Confirm microservices validate tokens with new key
    - Confirm all business requests work normally
+   ```bash
+   # Service logs should not contain the following log message
+   logmessage :"jwt kid is not active!"
+   ```
 
 #### Phase 3: Remove Old Key (Optional)
 
@@ -179,6 +183,10 @@ The system supports multiple key configurations, enabling key rotation without s
      - Restart gateway and microservices
 
 2. **Validation Methods**
-   - Check gateway logs to confirm JWT signing is normal
+   - Check gateway logs to confirm JWT signing is normal, no error logs should exist
    - Check microservices logs to confirm JWT validation is normal
+   ```bash
+   # Service logs should not contain the following log message
+   logmessage :"Invalid request, jwt is invalid or expired!"
+   ```
    - Execute business operations to confirm end-to-end flow works

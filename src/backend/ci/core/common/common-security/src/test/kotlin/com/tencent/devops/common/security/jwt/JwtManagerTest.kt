@@ -64,7 +64,7 @@ class JwtManagerTest {
         // 生成并验证jwt token
         jwtManager.generateToken("start")
         val jwtToken = jwtManager.getToken()
-        val verifyResult = jwtManager.verifyJwt(jwtToken!!)
+        val verifyResult = jwtManager.verifyJwt(jwtToken!!).isValid
         Assertions.assertEquals(true, verifyResult)
     }
 
@@ -87,12 +87,12 @@ class JwtManagerTest {
         // 生成并验证jwt token
         jwtManager.generateToken("start")
         val jwtToken = jwtManager.getToken()
-        val verifyResult = jwtManager.verifyJwt(jwtToken!!)
+        val verifyResult = jwtManager.verifyJwt(jwtToken!!).isValid
         Assertions.assertEquals(true, verifyResult)
         jwtManager.generateToken("refresh")
         // 刷新并验证新jwt token
         val refreshJwtToken = jwtManager.getToken()
-        val refreshVerifyResult = jwtManager.verifyJwt(refreshJwtToken!!)
+        val refreshVerifyResult = jwtManager.verifyJwt(refreshJwtToken!!).isValid
         Assertions.assertEquals(true, refreshVerifyResult)
     }
 }

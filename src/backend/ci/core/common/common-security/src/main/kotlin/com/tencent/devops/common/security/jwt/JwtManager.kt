@@ -81,6 +81,8 @@ class JwtManager(
         }
     }
 
+    fun activeKeyConfig() = keyConfigManager.getActiveKeyConfig()
+
     /**
      * 添加新的密钥配置
      *
@@ -117,10 +119,9 @@ class JwtManager(
      * @param token jwt token
      * @return
      */
-    fun verifyJwt(token: String): Boolean {
+    fun verifyJwt(token: String): JwtValidationResult {
         // 使用增强的JWT验证逻辑，保持向后兼容
-        val result = verifyEnhancedJwt(token)
-        return result.isValid
+        return verifyEnhancedJwt(token)
     }
 
     /**

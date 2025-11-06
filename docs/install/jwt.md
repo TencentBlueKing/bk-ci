@@ -139,6 +139,10 @@ JWT 在 BK-CI 中的流转路径为：**网关 ➡ 微服务 ⬅➡ Turbo（如�
    - 确认网关使用新密钥签发 Token
    - 确认微服务使用新密钥验证 Token
    - 确认所有业务请求正常
+   ```bash
+   # 服务日志不应存在以下日志
+   logmessage :"jwt kid is not active!"
+   ```
 
 #### 阶段三：移除旧密钥（可选）
 
@@ -178,6 +182,10 @@ JWT 在 BK-CI 中的流转路径为：**网关 ➡ 微服务 ⬅➡ Turbo（如�
      - 重启网关和微服务
 
 2. **验证方法**
-   - 检查网关日志，确认 JWT 签发正常
+   - 检查网关日志，确认 JWT 签发正常，不存在error日志
    - 检查微服务日志，确认 JWT 验证正常
+   ```bash
+   # 服务日志不应存在以下日志
+   logmessage :"Invalid request, jwt is invalid or expired!"
+   ```
    - 执行业务操作，确认端到端流程正常
