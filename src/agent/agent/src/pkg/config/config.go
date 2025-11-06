@@ -496,7 +496,7 @@ func GetCpuAndGpuInfo() (string, string) {
 		}
 	}
 	gpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
 	return cpuInfo, gpuInfo
 }
 
