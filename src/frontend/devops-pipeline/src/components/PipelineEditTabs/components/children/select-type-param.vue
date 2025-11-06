@@ -19,6 +19,7 @@
         <div class="option-items">
             <section v-if="payloadValue.type !== 'remote'">
                 <key-options
+                    :disabled="disabled"
                     :options="param.options"
                     :handle-change-options="updateOptions"
                 />
@@ -29,27 +30,26 @@
                     class="new-ui-form"
                     :label-width="300"
                 >
-                    <template v-for="obj in remoteTypeOptions">
-                        <form-field
-                            :hide-colon="true"
-                            :key="obj.key"
-                            :desc="obj.tips"
-                            :required="obj.required"
-                            :label="obj.label"
-                            :is-error="errors.has(key)"
-                            :error-msg="errors.first(key)"
-                        >
-                            <bk-input
-                                :disabled="disabled"
-                                :name="obj.key"
-                                v-validate.initial="Object.assign({}, { required: !!obj.required })"
-                                @change="value => handleRemoteParamChange(obj.key, value)"
-                                :value="payloadValue[obj.key]"
-                                :placeholder="obj.placeholder"
-                                @blur="handleBlur"
-                            />
-                        </form-field>
-                    </template>
+                    <form-field
+                        v-for="obj in remoteTypeOptions"
+                        :hide-colon="true"
+                        :key="obj.key"
+                        :desc="obj.tips"
+                        :required="obj.required"
+                        :label="obj.label"
+                        :is-error="errors.has(key)"
+                        :error-msg="errors.first(key)"
+                    >
+                        <bk-input
+                            :disabled="disabled"
+                            :name="obj.key"
+                            v-validate.initial="Object.assign({}, { required: !!obj.required })"
+                            @change="value => handleRemoteParamChange(obj.key, value)"
+                            :value="payloadValue[obj.key]"
+                            :placeholder="obj.placeholder"
+                            @blur="handleBlur"
+                        />
+                    </form-field>
                 </bk-form>
             </section>
         </div>

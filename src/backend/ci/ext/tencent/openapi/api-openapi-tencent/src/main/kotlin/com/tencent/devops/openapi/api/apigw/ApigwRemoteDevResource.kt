@@ -605,7 +605,10 @@ interface ApigwRemoteDevResource {
         userId: String,
         @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "是否强制重启", required = false)
+        @QueryParam("force")
+        force: Boolean?
     ): Result<Boolean>
 
     @Operation(summary = "根据已存在的云桌面制作镜像", tags = ["v4_app_remotedev_image_make"])

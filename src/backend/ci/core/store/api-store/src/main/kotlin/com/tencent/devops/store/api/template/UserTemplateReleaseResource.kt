@@ -31,7 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateReleaseReq
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateV2Request
+import com.tencent.devops.store.pojo.template.TemplateOfflineReq
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -77,6 +80,28 @@ interface UserTemplateReleaseResource {
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?>
 
+    @Operation(summary = "上架模板-v2")
+    @PUT
+    @Path("/desk/template/v2/release")
+    fun releaseMarketTemplate(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "上架模板请求报文体", required = true)
+        request: MarketTemplateUpdateV2Request
+    ): Result<String>
+
+    @Operation(summary = "上架模板版本-v2")
+    @PUT
+    @Path("/desk/template/v2/release/versions")
+    fun releaseMarketTemplateVersions(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "上架模板版本请求报文体", required = true)
+        request: MarketTemplateReleaseReq
+    ): Result<Boolean>
+
     @Operation(summary = "根据模板版本ID获取模板版本进度")
     @GET
     @Path("/desk/template/release/process/{templateId}")
@@ -89,6 +114,18 @@ interface UserTemplateReleaseResource {
         templateId: String
     ): Result<StoreProcessInfo>
 
+    @Operation(summary = "根据模板版本ID获取模板版本进度-根据模板Code")
+    @GET
+    @Path("/desk/template/release/process/templateCodes/{templateCode}")
+    fun getProcessInfoByCode(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "templateCode", required = true)
+        @PathParam("templateCode")
+        templateCode: String
+    ): Result<StoreProcessInfo>
+
     @Operation(summary = "取消发布")
     @PUT
     @Path("/desk/template/release/cancel/templateIds/{templateId}")
@@ -99,6 +136,18 @@ interface UserTemplateReleaseResource {
         @Parameter(description = "templateId", required = true)
         @PathParam("templateId")
         templateId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "取消发布-根据Code")
+    @PUT
+    @Path("/desk/template/release/cancel/templateCodes/{templateCode}")
+    fun cancelReleaseByCode(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "templateCode", required = true)
+        @PathParam("templateCode")
+        templateCode: String
     ): Result<Boolean>
 
     @Operation(summary = "下架模板")
@@ -117,5 +166,19 @@ interface UserTemplateReleaseResource {
         @Parameter(description = "原因", required = false)
         @QueryParam("reason")
         reason: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "下架模板v2")
+    @PUT
+    @Path("/desk/template/v2/offline/templateCodes/{templateCode}/versions")
+    fun offlineTemplateV2(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "模版代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @Parameter(description = "请求体", required = false)
+        request: TemplateOfflineReq
     ): Result<Boolean>
 }

@@ -29,7 +29,7 @@ function errorHandler (error: AxiosError) {
     return Promise.reject(Error('网络出现问题，请检查你的网络是否正常'))
 }
 
-request.interceptors.request.use(config => {
+request.interceptors.request.use((config: any) => {
     if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
         return config
     }

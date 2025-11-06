@@ -173,6 +173,7 @@
                         desc: res.remark,
                         external_list: res.outerUsers,
                         internal_list: res.innerUsers,
+                        platform: res.platform,
                         url: res.url,
                         publisher: res.creator,
                         canExperience: res.canExperience,

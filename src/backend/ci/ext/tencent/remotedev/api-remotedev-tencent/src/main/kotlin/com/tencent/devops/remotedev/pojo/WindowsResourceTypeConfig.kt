@@ -62,7 +62,9 @@ data class WindowsResourceTypeConfig(
     @get:Schema(title = "描述")
     val description: String,
     @get:Schema(title = "是否是特殊机型")
-    val specModel: Boolean = false
+    val specModel: Boolean = false,
+    @get:Schema(title = "机型标识：高配开发机、高配美术机")
+    val machineFlag: String? = ""
 ) {
 
     companion object {

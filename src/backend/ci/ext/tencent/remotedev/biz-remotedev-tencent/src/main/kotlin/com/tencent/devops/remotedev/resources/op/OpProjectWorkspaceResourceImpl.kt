@@ -129,6 +129,21 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = workspaceProperty
+            )
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
     }

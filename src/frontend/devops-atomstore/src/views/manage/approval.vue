@@ -1,85 +1,81 @@
 <template>
     <article class="manage-approve">
-        <section class="version-content">
-            <div class="version-info-header">
-                <span class="info-title"> {{ $t('store.协作申请列表') }} </span>
-            </div>
-            <section
-                v-bkloading="{ isLoading }"
-                class="approval-table-contain g-scroll-pagination-table"
+        <section
+            v-bkloading="{ isLoading }"
+            class="version-content"
+        >
+            <bk-table
+                class="approval-table"
+                v-if="!isLoading"
+                :data="approveList"
+                height="100%"
+                :empty-text="$t('store.暂无申请者')"
+                :pagination="pagination"
+                @page-change="pageChanged"
+                @page-limit-change="pageCountChanged"
+                :outer-border="false"
+                :header-border="false"
+                :header-cell-style="{ background: '#fff' }"
             >
-                <bk-table
-                    class="approval-table"
-                    v-if="!isLoading"
-                    :data="approveList"
-                    :empty-text="$t('store.暂无申请者')"
-                    :pagination="pagination"
-                    @page-change="pageChanged"
-                    @page-limit-change="pageCountChanged"
-                    :outer-border="false"
-                    :header-border="false"
-                    :header-cell-style="{ background: '#fff' }"
+                <bk-table-column
+                    :label="$t('store.申请人')"
+                    prop="applicant"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.审批状态')"
+                    prop="approveStatus"
+                    :formatter="statusFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.申请原因')"
+                    show-overflow-tooltip
                 >
-                    <bk-table-column
-                        :label="$t('store.申请人')"
-                        prop="applicant"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.审批状态')"
-                        prop="approveStatus"
-                        :formatter="statusFormatter"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.申请原因')"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            <span
-                                class="table-text"
-                                :title="props.row.content"
-                            >{{ props.row.content }}</span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.审批结果说明')"
-                        show-overflow-tooltip
-                    >
-                        <template slot-scope="props">
-                            <span
-                                class="table-text"
-                                :title="props.row.approveMsg"
-                            >{{ props.row.approveMsg }}</span>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.创建日期')"
-                        prop="createTime"
-                        :formatter="timeFormatter"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.更新日期')"
-                        prop="updateTime"
-                        :formatter="timeFormatter"
-                        show-overflow-tooltip
-                    ></bk-table-column>
-                    <bk-table-column
-                        :label="$t('store.操作')"
-                        width="120"
-                        class-name="handler-btn"
-                    >
-                        <template slot-scope="props">
-                            <span
-                                class="update-btn"
-                                @click="approve(props.row)"
-                                v-if="props.row.approveStatus === 'WAIT'"
-                            > {{ $t('store.审批') }} </span>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
-            </section>
+                    <template slot-scope="props">
+                        <span
+                            class="table-text"
+                            :title="props.row.content"
+                        >{{ props.row.content }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    :label="$t('store.审批结果说明')"
+                    show-overflow-tooltip
+                >
+                    <template slot-scope="props">
+                        <span
+                            class="table-text"
+                            :title="props.row.approveMsg"
+                        >{{ props.row.approveMsg }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column
+                    :label="$t('store.创建日期')"
+                    prop="createTime"
+                    :formatter="timeFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.更新日期')"
+                    prop="updateTime"
+                    :formatter="timeFormatter"
+                    show-overflow-tooltip
+                ></bk-table-column>
+                <bk-table-column
+                    :label="$t('store.操作')"
+                    width="120"
+                    class-name="handler-btn"
+                >
+                    <template slot-scope="props">
+                        <span
+                            class="update-btn"
+                            @click="approve(props.row)"
+                            v-if="props.row.approveStatus === 'WAIT'"
+                        > {{ $t('store.审批') }} </span>
+                    </template>
+                </bk-table-column>
+            </bk-table>
         </section>
 
         <bk-sideslider
@@ -155,9 +151,9 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import { convertTime } from '@/utils/index'
     import formTips from '@/components/common/formTips/index'
+    import { convertTime } from '@/utils/index'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -276,17 +272,13 @@
         background: #fff;
     }
     .version-content {
-        padding: 3.2vh 3.2vh 1.7vh;
+        padding: 24px;
         height: 100%;
+        overflow: hidden;
         .version-info-header {
             line-height: 20px;
         }
-        .approval-table-contain {
-            height: calc(100% - 20px - 3.2vh);
-        }
-        .approval-table {
-            margin-top: 3.2vh;
-        }
+        
     }
     .approve-form {
         padding: 20px 30px;

@@ -258,6 +258,19 @@
             atomList: {
                 handler (val) {
                     this.curTabList = val
+                    if (this.category === 'TRIGGER') {
+                        const uniqueAtomMap = this.container.elements.reduce((acc, ele) => {
+                            const atomCode = ele.atomCode || ele['@type']
+                            if (atomCode === 'manualTrigger' || atomCode === 'remoteTrigger') {
+                                acc[atomCode] = true
+                            }
+                            return acc
+                        }, {})
+                        this.curTabList.forEach(atom => {
+                            atom.existed = uniqueAtomMap[atom.atomCode]
+                        })
+                    }
+
                     if (this.searchKey) {
                         this.uninstallArr = val.filter(item => !item.defaultFlag && !item.installed)
                         this.installArr = val.filter(item => item.defaultFlag || item.installed)
@@ -305,6 +318,7 @@
                         } else {
                             jobType = ['WINDOWS', 'MACOS', 'LINUX'].includes(this.baseOS) ? 'AGENT' : 'AGENT_LESS'
                         }
+
 
                         await this.fetchAtoms({
                             projectCode: this.projectCode,

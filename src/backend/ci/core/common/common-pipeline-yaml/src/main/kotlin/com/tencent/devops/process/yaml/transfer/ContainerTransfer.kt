@@ -63,6 +63,7 @@ import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.job.Container3
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -172,7 +173,6 @@ class ContainerTransfer @Autowired(required = false) constructor(
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ) {
-
         containerList.add(
             NormalContainer(
                 jobId = job.id,
@@ -191,7 +191,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
     fun addYamlNormalContainer(
         job: NormalContainer,
         steps: List<PreStep>?
-    ): PreJob {
+    ): IPreJob {
         return PreJob(
             enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
@@ -244,7 +244,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         projectId: String,
         job: VMBuildContainer,
         steps: List<PreStep>?
-    ): PreJob {
+    ): IPreJob {
         return PreJob(
             enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,

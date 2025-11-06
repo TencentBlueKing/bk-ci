@@ -28,6 +28,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -93,7 +94,7 @@ class ScmApiProxyHandlerService : BeanPostProcessor {
                 }
             } catch (ignored: ScmApiException) {
                 throw RemoteServiceException(
-                    errorCode = ignored.statusCode,
+                    httpStatus = ignored.statusCode ?: HttpStatus.INTERNAL_SERVER_ERROR.value,
                     errorMessage = ignored.message ?: ""
                 )
             }
