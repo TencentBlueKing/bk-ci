@@ -11,6 +11,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
@@ -21,11 +22,11 @@ import java.io.File
 
 
 @RestResource
-class TxStorePkgServiceImpl@Autowired constructor(
+class TxStorePkgServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val redisOperation: RedisOperation,
-): TxStorePkgService {
+) : TxStorePkgService {
 
 
     companion object {
@@ -220,13 +221,14 @@ class TxStorePkgServiceImpl@Autowired constructor(
             val result = client.get(ServiceArchiveComponentPkgResource::class)
                 .getComponentPkgDownloadUrl(
                     userId = userId,
-                    projectId = "public", // 使用公共项目ID
+                    projectId = "",
                     storeType = storeType,
                     storeCode = storeCode,
                     version = version,
                     instanceId = null,
                     osName = osName,
-                    osArch = osArch
+                    osArch = osArch,
+                    checkProjectId = false
                 )
             result.data
         } catch (e: Exception) {
@@ -246,9 +248,7 @@ class TxStorePkgServiceImpl@Autowired constructor(
      * 计算文件的 SHA256 值
      */
     private fun calculateSha256(file: File): String {
-        return file.inputStream().use { inputStream ->
-            inputStream.sha256()
-        }
+        return ShaUtils.sha256InputStream(file.inputStream())
     }
 
     /**
