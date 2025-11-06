@@ -232,7 +232,7 @@
     const paramTitle = ref('')
     const sliderEditItem = ref({})
     const releaseDisabled = computed(() => {
-        return !groupData.value?.groupName || !groupData.value?.publicVars?.length
+        return !groupData.value?.groupName && !groupData.value?.publicVars?.length
     })
     const sidesliderWidth = computed(() => {
         // 250 表格第一列宽度

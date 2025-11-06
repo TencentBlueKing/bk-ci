@@ -2095,6 +2095,7 @@
     "removeParamInPipeline": "从流水线移出",
     "beenCited": "是否已引用",
     "removeParamTitle": "确认删除此变量吗？",
-    "paramGroupIdRule": "由英文字母、数字、下划线组成，且以英文字母开头，3～32个字符"
+    "paramGroupIdRule": "由英文字母、数字、下划线组成，且以英文字母开头，3～32个字符",
+    "paramReferenceStatus": "变量引用情况"
   }
 }

@@ -78,7 +78,10 @@
                         prop="referCount"
                     >
                         <template slot-scope="{ row }">
-                            <bk-button text>
+                            <bk-button
+                                text
+                                @click="handleShowReference(row.varName)"
+                            >
                                 {{ row.referCount || 0 }}
                             </bk-button>
                         </template>
@@ -146,23 +149,43 @@
                 </bk-table>
             </div>
         </details>
+        
+        <!-- 变量引用弹窗 -->
+        <param-reference-dialog
+            :visible.sync="referenceDialogVisible"
+            :var-name="currentVarName"
+            :group-name="groupName"
+        />
     </section>
 </template>
 
 <script setup>
+    import { ref } from 'vue'
     import EmptyException from '@/components/common/exception'
+    import ParamReferenceDialog from './ParamReferenceDialog.vue'
     import {
         DEFAULT_PARAM
     } from '@/store/modules/atom/paramsConfig'
+    
     const props = defineProps({
         isShow: Boolean,
         data: Object,
         readOnly: Boolean,
-        newParamId: String
+        newParamId: String,
+        groupName: String
     })
+    
+    const referenceDialogVisible = ref(false)
+    const currentVarName = ref('')
+    
     function rowClassName ({ row }) {
         if (row.varName === props.newParamId) return 'is-new'
         return ''
+    }
+    
+    function handleShowReference (varName) {
+        currentVarName.value = varName
+        referenceDialogVisible.value = true
     }
 </script>
 

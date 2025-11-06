@@ -37,7 +37,10 @@
                                 <label class="info-label">
                                     {{ item.label }}
                                 </label>
-                                <div class="info-value">
+                                <div
+                                    class="info-value"
+                                    v-bk-overflow-tips
+                                >
                                     {{ item.value }}
                                 </div>
                             </div>
@@ -55,12 +58,13 @@
                                 :label="$t('publicVar.paramGroupId')"
                                 :required="true"
                                 property="groupName"
+                                error-display-type="normal"
                             >
                                 <bk-input
                                     v-model="groupData.groupName"
                                     :disabled="!!groupData.groupName && isEditPage"
                                     name="groupName"
-                                    :max-length="64"
+                                    :maxlength="32"
                                     @change="(val) => handleChangeGroupData('groupName', val)"
                                 />
                             </bk-form-item>
@@ -115,6 +119,7 @@
                             :read-only="readOnly"
                             :data="data"
                             :new-param-id="newParamId"
+                            :group-name="groupData?.groupName"
                         />
                     </div>
                 </section>
@@ -378,6 +383,8 @@
             .info-value {
                 color: #313238;
                 margin-top: 6px;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
     }

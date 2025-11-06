@@ -76,6 +76,7 @@
                     :label="$t('publicVar.paramGroupId')"
                     width="200"
                     prop="groupName"
+                    show-overflow-tooltip
                 >
                     <template slot-scope="{ row }">
                         <bk-button
@@ -94,6 +95,7 @@
                     <template slot-scope="{ row }">
                         <bk-button
                             text
+                            @click="handleViewRef(row)"
                         >
                             {{ row.referCount ?? '--' }}
                         </bk-button>
@@ -108,14 +110,17 @@
                     <bk-table-column
                         :label="$t('publicVar.paramGroupDesc')"
                         prop="desc"
+                        show-overflow-tooltip
                     />
                     <bk-table-column
                         :label="$t('publicVar.lastModifiedBy')"
                         prop="modifier"
+                        show-overflow-tooltip
                     />
                     <bk-table-column
                         :label="$t('publicVar.lastModifiedDate')"
                         prop="updateTime"
+                        show-overflow-tooltip
                     />
                     <bk-table-column
                         :label="$t('publicVar.operation')"
@@ -364,11 +369,7 @@
         readOnly.value = false
         detailTitle.value = proxy.$t('publicVar.addParamGroup')
         proxy.$store.dispatch('publicVar/updateGroupData', {
-            ...groupData.value,
-            groupName: '',
-            desc: '',
-            updateTime: '',
-            modifier: ''
+            ...groupData
         })
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.CREATE)
     }
@@ -461,8 +462,8 @@
             console.error(e)
         }
     }
-    function handleOfflineGroup () {
-        
+    function handleViewRef () {
+        // todo
     }
     function handleDeleteGroup (data, item) {
         const groupName = item.data.groupName

@@ -11,7 +11,7 @@
             <template slot-scope="{ row }">
                 <span
                     :class="['var-name', {
-                        'is-required': row.buildFormProperty.required
+                        'is-required': row.buildFormProperty.valueNotEmpty
                     }]"
                 >
                     {{ row?.varName }}
