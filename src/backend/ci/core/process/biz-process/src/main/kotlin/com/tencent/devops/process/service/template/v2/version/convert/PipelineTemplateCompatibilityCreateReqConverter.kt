@@ -79,7 +79,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
             if (templateId == null) {
                 throw IllegalArgumentException("templateId is null")
             }
-            val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) != null
+            val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) == null
 
             val transferResult = try {
                 pipelineTemplateGenerator.transfer(
