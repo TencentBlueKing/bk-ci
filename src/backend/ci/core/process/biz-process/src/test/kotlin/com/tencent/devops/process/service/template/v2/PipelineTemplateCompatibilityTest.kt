@@ -48,6 +48,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
 
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
@@ -85,7 +86,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
@@ -117,7 +119,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
-
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
 
@@ -140,7 +142,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
@@ -172,7 +175,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
-
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
 
@@ -197,7 +200,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
