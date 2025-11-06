@@ -247,7 +247,7 @@ interface UserPublicVarGroupResource {
 
     @Operation(summary = "获取流水线关联公共变量组信息")
     @GET
-    @Path("/refers/{referId}/group/info")
+    @Path("/refers/{referId}/referVersion/{referVersion}group/info")
     fun listPipelineVarGroupInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -297,6 +297,6 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<List<PublicVarReleaseDO>>
+    ): Result<Page<PublicVarReleaseDO>>
 
 }

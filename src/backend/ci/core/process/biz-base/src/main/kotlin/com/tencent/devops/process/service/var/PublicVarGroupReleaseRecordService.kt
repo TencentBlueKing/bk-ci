@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.`var`
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -105,13 +106,27 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         groupName: String,
         page: Int,
         pageSize: Int
-    ): List<PublicVarReleaseDO> {
-        return pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName,
+    ): Page<PublicVarReleaseDO> {
+        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
+        if (count == 0L) {
+            return Page(
+                page = page,
+                pageSize = pageSize,
+                count = count,
+                records = emptyList()
+            )
+        }
+        return Page(
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            count = count,
+            records = pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                page = page,
+                pageSize = pageSize
+            )
         )
     }
 
