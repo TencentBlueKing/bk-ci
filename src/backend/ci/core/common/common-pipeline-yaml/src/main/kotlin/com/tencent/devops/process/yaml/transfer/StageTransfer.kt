@@ -108,7 +108,6 @@ class StageTransfer @Autowired(required = false) constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
-
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
