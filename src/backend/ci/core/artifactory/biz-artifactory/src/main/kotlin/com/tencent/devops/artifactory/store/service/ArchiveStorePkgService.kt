@@ -66,6 +66,7 @@ interface ArchiveStorePkgService {
         version: String,
         instanceId: String? = null,
         osName: String? = null,
-        osArch: String? = null
+        osArch: String? = null,
+        checkProjectId: Boolean
     ): String
 }

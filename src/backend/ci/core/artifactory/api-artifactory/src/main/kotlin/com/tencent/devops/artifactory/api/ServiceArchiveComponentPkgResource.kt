@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
@@ -82,7 +83,11 @@ interface ServiceArchiveComponentPkgResource {
         osName: String? = null,
         @Parameter(description = "操作系统架构", required = false)
         @QueryParam("osArch")
-        osArch: String? = null
+        osArch: String? = null,
+        @Parameter(description = "是否校验组件项目id", required = false)
+        @QueryParam("checkProjectId")
+        @DefaultValue("true")
+        checkProjectId: Boolean
     ): Result<String>
 
     @Operation(summary = "删除组件包文件")

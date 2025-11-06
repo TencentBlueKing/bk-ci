@@ -47,7 +47,8 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkProjectId: Boolean
     ): Result<String> {
         return Result(
             archiveStorePkgService.getComponentPkgDownloadUrl(
@@ -58,7 +59,8 @@ class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
                 version = version,
                 instanceId = instanceId,
                 osName = osName,
-                osArch = osArch
+                osArch = osArch,
+                checkProjectId = checkProjectId
             )
         )
     }

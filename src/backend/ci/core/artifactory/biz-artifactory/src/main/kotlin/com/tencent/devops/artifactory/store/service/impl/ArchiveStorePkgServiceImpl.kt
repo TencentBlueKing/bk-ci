@@ -345,22 +345,25 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkProjectId: Boolean
     ): String {
-        val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
-            storeCode = storeCode,
-            storeType = storeType,
-            version = version,
-            projectCode = projectId,
-            userId = userId,
-            instanceId = instanceId
-        )
-        val storeBaseInfo = validateResult.data
-        if (validateResult.isNotOk() || storeBaseInfo == null) {
-            throw ErrorCodeException(
-                errorCode = validateResult.status.toString(),
-                defaultMessage = validateResult.message
+        if (checkProjectId) {
+            val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
+                projectCode = projectId,
+                userId = userId,
+                instanceId = instanceId
             )
+            val storeBaseInfo = validateResult.data
+            if (validateResult.isNotOk() || storeBaseInfo == null) {
+                throw ErrorCodeException(
+                    errorCode = validateResult.status.toString(),
+                    defaultMessage = validateResult.message
+                )
+            }
         }
         var finalOsName = osName
         if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
