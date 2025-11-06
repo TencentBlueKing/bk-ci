@@ -112,7 +112,7 @@ class StartCloudClient @Autowired constructor(
             return
         }
 
-        val url = "${config.apiUrl}/openapi/desktop_thumbnail/fetch"
+        val url = "${config.apiUrlSZ}/openapi/desktop_thumbnail/fetch"
         val body = JsonUtil.toJson(
             requests,
             false
