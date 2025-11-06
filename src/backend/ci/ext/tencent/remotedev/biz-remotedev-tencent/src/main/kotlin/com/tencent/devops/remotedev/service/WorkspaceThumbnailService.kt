@@ -105,71 +105,72 @@ class WorkspaceThumbnailService @Autowired constructor(
     ): Map<String, String> {
         val newResults = mutableMapOf<String, String>()
 
-        if (missedWorkspaceNames.isNotEmpty()) {
-            // 预加载zone配置，避免在循环中重复查询数据库
-            val zoneConfigs = loadZoneConfigs()
+        if (missedWorkspaceNames.isEmpty()) {
+            return newResults
+        }
+        // 预加载zone配置，避免在循环中重复查询数据库
+        val zoneConfigs = loadZoneConfigs()
 
-            // 批量查询工作空间信息（一次性查询所有需要的workspace）
-            val workspaceInfoMap = workspaceJoinDao.fetchWindowsWorkspaces(
-                dslContext = dslContext,
-                workspaceNames = missedWorkspaceNames.keys.toSet(),
-                checkField = listOf(
-                    TWorkspace.T_WORKSPACE.NAME,
-                    TWorkspace.T_WORKSPACE.PROJECT_ID,
-                    TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
-                )
-            ).associateBy { it.workspaceName }
+        // 批量查询工作空间信息（一次性查询所有需要的workspace）
+        val workspaceInfoMap = workspaceJoinDao.fetchWindowsWorkspaces(
+            dslContext = dslContext,
+            workspaceNames = missedWorkspaceNames.keys.toSet(),
+            checkField = listOf(
+                TWorkspace.T_WORKSPACE.NAME,
+                TWorkspace.T_WORKSPACE.PROJECT_ID,
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
+            )
+        ).associateBy { it.workspaceName }
 
-            missedWorkspaceNames.forEach { (workspaceName, size) ->
-                try {
-                    // 从批量查询结果中获取工作空间信息
-                    val workspaceInfo = workspaceInfoMap[workspaceName]
-                    if (workspaceInfo == null) {
-                        logger.warn("workspace not exist: workspaceName=$workspaceName")
-                        return@forEach
-                    }
-
-                    // 检查是否有查看权限
-                    if (!permissionService.hasViewerPermission(userId, workspaceName, workspaceInfo.projectId)) {
-                        logger.warn("user not viewer permission: userId=$userId, workspaceName=$workspaceName")
-                        return@forEach
-                    }
-
-                    val region = genRegion(workspaceInfo.hostIp, zoneConfigs)
-
-                    // 生成临时下载Token
-                    val token = remotedevBkRepoClient.createTemporaryAccessToken(
-                        region = region,
-                        projectId = workspaceInfo.projectId,
-                        repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
-                        fullPathSet = listOf("/screenshot/$workspaceName-${size.width}x${size.high}.jpg"),
-                        expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
-                        type = BkRepoConstants.TOKEN_TYPE_DOWNLOAD,
-                        userId = SYSTEM_USER
-                    )
-
-                    // 构建下载URL
-                    val downloadUrl = buildDownloadUrl(
-                        host = bkRepoConfig.getRegionConfig(region).url,
-                        projectId = workspaceInfo.projectId,
-                        repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
-                        workspaceName = workspaceName,
-                        token = token,
-                        size = size
-                    )
-
-                    // 更新缓存
-                    val cacheKey = ThumbnailCacheKey(workspaceName).toDownloadRedisKey(screenId, size)
-                    redisOperation.set(
-                        key = cacheKey,
-                        value = downloadUrl,
-                        expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS
-                    )
-
-                    newResults[workspaceName] = downloadUrl
-                } catch (e: Exception) {
-                    logger.error("generate thumbnail url failed: workspaceName=$workspaceName", e)
+        missedWorkspaceNames.forEach { (workspaceName, size) ->
+            try {
+                // 从批量查询结果中获取工作空间信息
+                val workspaceInfo = workspaceInfoMap[workspaceName]
+                if (workspaceInfo == null) {
+                    logger.warn("workspace not exist: workspaceName=$workspaceName")
+                    return@forEach
                 }
+
+                // 检查是否有查看权限
+                if (!permissionService.hasViewerPermission(userId, workspaceName, workspaceInfo.projectId)) {
+                    logger.warn("user not viewer permission: userId=$userId, workspaceName=$workspaceName")
+                    return@forEach
+                }
+
+                val region = genRegion(workspaceInfo.hostIp, zoneConfigs)
+
+                // 生成临时下载Token
+                val token = remotedevBkRepoClient.createTemporaryAccessToken(
+                    region = region,
+                    projectId = workspaceInfo.projectId,
+                    repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
+                    fullPathSet = listOf("/screenshot/$workspaceName-${size.width}x${size.high}.jpg"),
+                    expireSeconds = BkRepoConstants.TOKEN_EXPIRE_SECONDS,
+                    type = BkRepoConstants.TOKEN_TYPE_DOWNLOAD,
+                    userId = SYSTEM_USER
+                )
+
+                // 构建下载URL
+                val downloadUrl = buildDownloadUrl(
+                    host = bkRepoConfig.getRegionConfig(region).url,
+                    projectId = workspaceInfo.projectId,
+                    repoName = BkRepoConstants.REMOTE_DEV_REPO_NAME,
+                    workspaceName = workspaceName,
+                    token = token,
+                    size = size
+                )
+
+                // 更新缓存
+                val cacheKey = ThumbnailCacheKey(workspaceName).toDownloadRedisKey(screenId, size)
+                redisOperation.set(
+                    key = cacheKey,
+                    value = downloadUrl,
+                    expiredInSecond = ThumbnailRedisKeys.THUMBNAIL_TTL_SECONDS
+                )
+
+                newResults[workspaceName] = downloadUrl
+            } catch (e: Exception) {
+                logger.error("generate thumbnail url failed: workspaceName=$workspaceName", e)
             }
         }
 
