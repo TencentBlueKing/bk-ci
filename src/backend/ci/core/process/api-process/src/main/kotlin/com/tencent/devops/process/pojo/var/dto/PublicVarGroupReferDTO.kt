@@ -25,20 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.`do`
+package com.tencent.devops.process.pojo.`var`.dto
 
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
-@Schema(title = "公共变量组变更预览")
-data class PublicVarChangePreviewDO(
-    @get:Schema(title = "发布时间")
-    val pubTime: LocalDateTime,
-    @get:Schema(title = "发布人")
-    val publisher: String,
-    @get:Schema(title = "变更内容")
-    val content: String,
-    @get:Schema(title = "变更描述")
-    val desc: String? = null
+@Schema(title = "流水线公共变量组关联传输对象")
+data class PublicVarGroupReferDTO(
+    @get:Schema(title = "关联资源ID")
+    val referId: String,
+    @get:Schema(title = "流水线/模板类型")
+    val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "流水线/模板名称")
+    val referName: String,
+    @get:Schema(title = "流水线/模板版本名称")
+    val referVersionName: String,
+    @get:Schema(title = "编排参数", required = false)
+    val params: List<BuildFormProperty>? = emptyList(),
+    @get:Schema(title = "流水线/模板公共变量位置信息,key为变量名，value为变量序号")
+    var positionInfo: Map<String, Int?>? = null,
+    @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
+    var publicVarGroupRefs: Map<String, Int?> = emptyMap()
 )
-

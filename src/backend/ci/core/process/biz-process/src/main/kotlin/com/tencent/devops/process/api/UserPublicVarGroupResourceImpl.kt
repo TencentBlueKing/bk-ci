@@ -31,22 +31,27 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService
+    val publicVarGroupService: PublicVarGroupService,
+    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) : UserPublicVarGroupResource {
 
     override fun addGroup(
@@ -132,45 +137,38 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getTemplateReferences(
+    override fun listVarReferInfo(
         userId: String,
         projectId: String,
         groupName: String,
-        varName: String,
+        varName: String?,
+        referType: PublicVerGroupReferenceTypeEnum?,
         version: Int?,
         page: Int,
         pageSize: Int
-    ): Result<Page<PublicVarTemplateRefDO>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getReferences(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        version: Int?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicVarPipelineRefDO>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getReleaseHistory(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicVarReleaseDO>> {
-        return Result(publicVarGroupService.getReleaseHistory(
-            userId = userId,
-            queryReq = PublicVarGroupInfoQueryReqDTO(
+    ): Result<Page<PublicGroupVarRefDO>> {
+        return Result(publicVarGroupReferInfoService.listVarReferInfo(
+            PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
                 groupName = groupName,
+                varName = varName,
+                referType = referType,
+                version = version,
                 page = page,
                 pageSize = pageSize
             )
+        ))
+    }
+
+    override fun getChangePreview(
+        userId: String,
+        projectId: String,
+        publicVarGroup: PublicVarGroupVO
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupService.getChangePreview(
+            userId = userId,
+            projectId = projectId,
+            publicVarGroup = publicVarGroup
         ))
     }
 
@@ -191,6 +189,44 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             yaml = yaml
+        ))
+    }
+
+    override fun listPipelineVarGroupInfo(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersionName: String?
+    ): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listPipelineVariables(
+            userId = userId,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referVersionName = referVersionName
+        )
+    }
+
+    override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
+        return publicVarGroupService.listProjectVarGroupInfo(
+            userId = userId,
+            projectId = projectId
+        )
+    }
+
+    override fun getReleaseHistory(
+        userId: String,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): Result<List<PublicVarReleaseDO>> {
+        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
         ))
     }
 }

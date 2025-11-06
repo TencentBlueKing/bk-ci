@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.dto
 
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组信息分页查询请求传输对象")
@@ -39,6 +40,8 @@ data class PublicVarGroupInfoQueryReqDTO (
     val varName: String? = null,
     @get:Schema(description = "版本号")
     val version: Int? = null,
+    @get:Schema(title = "关联类型")
+    val referType: PublicVerGroupReferenceTypeEnum ? = null,
     @get:Schema(description = "按变量组名称过滤")
     val filterByGroupName: String? = null,
     @get:Schema(description = "按变量组描述过滤")

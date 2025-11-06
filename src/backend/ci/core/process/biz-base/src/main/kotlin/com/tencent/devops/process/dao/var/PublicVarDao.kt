@@ -42,44 +42,50 @@ class PublicVarDao {
         publicVarGroupPOs: List<PublicVarPO>
     ) {
         with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
-            val setup = publicVarGroupPOs.map {
-                dslContext.insertInto(this,
-                    ID,
-                    PROJECT_ID,
-                    VAR_NAME,
-                    ALIAS,
-                    TYPE,
-                    VALUE_TYPE,
-                    DEFAULT_VALUE,
-                    DESC,
-                    REFER_COUNT,
-                    GROUP_NAME,
-                    VERSION,
-                    BUILD_FORM_PROPERTY,
-                    CREATOR,
-                    MODIFIER,
-                    CREATE_TIME,
-                    UPDATE_TIME,
-                ).values(
-                        it.id,
-                        it.projectId,
-                        it.varName,
-                        it.alias,
-                        it.type.name,
-                        it.valueType.value,
-                        it.defaultValue?.toString(),
-                        it.desc,
-                        it.referCount,
-                        it.groupName,
-                        it.version,
-                        it.buildFormProperty,
-                        it.creator,
-                        it.modifier,
-                        it.createTime,
-                        it.updateTime,
-                    )
+            if (publicVarGroupPOs.isEmpty()) return
+            
+            val batchInsert = dslContext.insertInto(
+                this,
+                ID,
+                PROJECT_ID,
+                VAR_NAME,
+                ALIAS,
+                TYPE,
+                VALUE_TYPE,
+                DEFAULT_VALUE,
+                DESC,
+                REFER_COUNT,
+                GROUP_NAME,
+                VERSION,
+                BUILD_FORM_PROPERTY,
+                CREATOR,
+                MODIFIER,
+                CREATE_TIME,
+                UPDATE_TIME
+            )
+            
+            publicVarGroupPOs.forEach {
+                batchInsert.values(
+                    it.id,
+                    it.projectId,
+                    it.varName,
+                    it.alias,
+                    it.type.name,
+                    it.valueType.name,
+                    it.defaultValue?.toString(),
+                    it.desc,
+                    it.referCount,
+                    it.groupName,
+                    it.version,
+                    it.buildFormProperty,
+                    it.creator,
+                    it.modifier,
+                    it.createTime,
+                    it.updateTime
+                )
             }
-            dslContext.batch(setup).execute()
+            
+            batchInsert.execute()
         }
     }
 
@@ -125,7 +131,7 @@ class PublicVarDao {
         }
     }
 
-    fun listVarBygroupName(
+    fun listVarByGroupName(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
@@ -150,7 +156,7 @@ class PublicVarDao {
                     varName = it.varName,
                     alias = it.alias,
                     type = PublicVarTypeEnum.valueOf(it.type),
-                    valueType = BuildFormPropertyType.fromValue(it.valueType),
+                    valueType = BuildFormPropertyType.valueOf(it.valueType),
                     defaultValue = it.defaultValue,
                     desc = it.desc,
                     referCount = it.referCount,
@@ -175,12 +181,18 @@ class PublicVarDao {
         }
     }
 
-    fun queryVarNamesBygroupName(dslContext: DSLContext, projectId: String, groupName: String): List<String> {
+    fun queryVarNamesByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int
+    ): List<String> {
         with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
             with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
                 return dslContext.select(VAR_NAME).from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(GROUP_NAME.eq(groupName))
+                    .and(VERSION.eq(version))
                     .groupBy(VAR_NAME)
                     .fetch().map { it.value1() }
             }

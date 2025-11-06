@@ -74,6 +74,28 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 批量获取多个组的最新版本
+     */
+    fun getLatestVersionsByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+        
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(GROUP_NAME, VERSION).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+                .associate { record ->
+                    record.getValue(GROUP_NAME) to record.getValue(VERSION)
+                }
+        }
+    }
+
     fun listGroupsByProjectId(
         dslContext: DSLContext,
         projectId: String
@@ -88,6 +110,7 @@ class PublicVarGroupDao {
                         projectId = record.projectId,
                         groupName = record.groupName,
                         version = record.version,
+                        versionName = record.versionName,
                         latestFlag = record.latestFlag,
                         desc = record.desc,
                         referCount = record.referCount,
@@ -153,6 +176,7 @@ class PublicVarGroupDao {
                         projectId = record.projectId,
                         groupName = record.groupName,
                         version = record.version,
+                        versionName = record.versionName,
                         latestFlag = record.latestFlag,
                         desc = record.desc,
                         referCount = record.referCount,
@@ -211,13 +235,14 @@ class PublicVarGroupDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
-            if (version == null) {
+            if (version == null && versionName == null) {
                 conditions.add(LATEST_FLAG.eq(true))
             } else {
-                conditions.add(VERSION.eq(version))
-            }
-            if (versionName != null) {
-                conditions.add(VERSION_NAME.eq(versionName))
+                if (version != null) {
+                    conditions.add(VERSION.eq(version))
+                } else {
+                    conditions.add(VERSION_NAME.eq(versionName))
+                }
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -227,6 +252,7 @@ class PublicVarGroupDao {
                         projectId = record.projectId,
                         groupName = record.groupName,
                         version = record.version,
+                        versionName = record.versionName,
                         latestFlag = record.latestFlag,
                         desc = record.desc,
                         referCount = record.referCount,
@@ -237,6 +263,27 @@ class PublicVarGroupDao {
                         updateTime = record.updateTime
                     )
                 }
+        }
+    }
+
+    fun countRecordByGroupName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int? = null
+    ): Int {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            if (version == null) {
+                conditions.add(LATEST_FLAG.eq(true))
+            } else {
+                conditions.add(VERSION.eq(version))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 
@@ -284,6 +331,22 @@ class PublicVarGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .and(LATEST_FLAG.eq(true))
+                .execute()
+        }
+    }
+
+    fun updateVarGroupNameReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referCount: Int
+    ) {
+        with(TPipelinePublicVarGroup.T_PIPELINE_PUBLIC_VAR_GROUP) {
+            dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
                 .execute()
         }
     }

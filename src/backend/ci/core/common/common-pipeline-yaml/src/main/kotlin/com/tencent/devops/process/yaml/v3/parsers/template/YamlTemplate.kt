@@ -181,9 +181,14 @@ class YamlTemplate<T>(
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
             if (key == Constants.TEMPLATE_KEY) {
-                value as ArrayList<Map<String, String>>
-                if (!value.isEmpty()) {
-                    preYamlObject.variableTemplates = value.map { VariableTemplate(it["name"]!!) }
+                val templateList = when (value) {
+                    is List<*> -> value.filterIsInstance<Map<String, String>>()
+                    else -> emptyList()
+                }
+                if (templateList.isNotEmpty()) {
+                    preYamlObject.variableTemplates = templateList.filter { it["name"] != null }.map {
+                        VariableTemplate(it["name"]!!, it["version"])
+                    }
                 }
                 return@forEach
             }

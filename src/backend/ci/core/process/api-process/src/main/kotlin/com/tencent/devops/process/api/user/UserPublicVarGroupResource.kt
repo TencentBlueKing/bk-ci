@@ -32,11 +32,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarPipelineRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarTemplateRefDO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import io.swagger.v3.oas.annotations.Operation
@@ -172,10 +173,10 @@ interface UserPublicVarGroupResource {
         groupName: String
     ): Result<Boolean>
 
-    @Operation(summary = "获取引用变量的模板列表")
+    @Operation(summary = "获取引用变量的列表（模板或流水线）")
     @GET
-    @Path("/{groupName}/vars/{varName}/references")
-    fun getTemplateReferences(
+    @Path("/{groupName}/references")
+    fun listVarReferInfo(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -185,9 +186,12 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "变量组名称", required = true)
         @PathParam("groupName")
         groupName: String,
-        @Parameter(description = "变量名称", required = true)
-        @PathParam("varName")
-        varName: String,
+        @Parameter(description = "变量名称", required = false)
+        @QueryParam("varName")
+        varName: String? = null,
+        @Parameter(description = "引用类型", required = false)
+        @QueryParam("referType")
+        referType: PublicVerGroupReferenceTypeEnum? = null,
         @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: Int ?= null,
@@ -197,55 +201,21 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Page<PublicVarTemplateRefDO>>
+    ): Result<Page<PublicGroupVarRefDO>>
 
-    @Operation(summary = "获取引用变量的流水线列表")
-    @GET
-    @Path("/{groupName}/vars/{varName}/references")
-    fun getReferences(
+    @Operation(summary = "预览变更")
+    @POST
+    @Path("/changePreview")
+    fun getChangePreview(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "变量名称", required = true)
-        @PathParam("varName")
-        varName: String,
-        @Parameter(description = "版本号", required = false)
-        @QueryParam("version")
-        version: Int ?= null,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Page<PublicVarPipelineRefDO>>
-
-    @Operation(summary = "获取变量组的发布记录")
-    @GET
-    @Path("/{groupName}/releaseHistory")
-    fun getReleaseHistory(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
-        @Parameter(description = "变量组名称", required = true)
-        @PathParam("groupName")
-        groupName: String,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Page<PublicVarReleaseDO>>
+        @Parameter(description = "公共变量组请求报文", required = true)
+        publicVarGroup: PublicVarGroupVO
+    ): Result<List<PublicVarReleaseDO>>
 
     @Operation(summary = "转换为变量组的YAML内容")
     @POST
@@ -274,4 +244,59 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "YAML内容", required = true)
         yaml: PublicVarGroupYamlStringVO
     ): Result<PublicVarGroupVO>
+
+    @Operation(summary = "获取流水线关联公共变量组信息")
+    @GET
+    @Path("/refers/{referId}/group/info")
+    fun listPipelineVarGroupInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "引用资源ID", required = true)
+        @PathParam("referId")
+        referId: String,
+        @Parameter(description = "引用资源类型", required = true)
+        @QueryParam("referType")
+        referType: PublicVerGroupReferenceTypeEnum,
+        @Parameter(description = "引用资源类型", required = true)
+        @QueryParam("referVersionName")
+        referVersionName: String? = null
+    ): Result<List<PipelinePublicVarGroupDO>>
+
+    @Operation(summary = "获取项目关联公共变量组信息")
+    @GET
+    @Path("/projects/group/info")
+    fun listProjectVarGroupInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String
+    ): Result<List<PipelinePublicVarGroupDO>>
+
+    @Operation(summary = "获取公共变量组版本历史")
+    @GET
+    @Path("/{groupName}/releaseHistory")
+    fun getReleaseHistory(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "变量组名称", required = true)
+        @PathParam("groupName")
+        groupName: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<PublicVarReleaseDO>>
+
 }

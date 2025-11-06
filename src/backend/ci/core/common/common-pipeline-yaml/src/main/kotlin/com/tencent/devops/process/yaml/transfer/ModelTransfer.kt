@@ -65,10 +65,12 @@ import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -327,6 +329,16 @@ class ModelTransfer @Autowired constructor(
         }
         yaml.notices = makeNoticesV3(modelInput)
         yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
+        val variables = mutableMapOf<String, Any>()
+        modelInput.model.handlePublicVarInfo()
+        val publicVarGroups = modelInput.model.publicVarGroups
+        if (!publicVarGroups.isNullOrEmpty()) {
+            variables[TEMPLATE_KEY] = publicVarGroups.map {
+                VariableTemplate(it.groupName, it.versionName)
+            }
+        }
+        variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
+        yaml.variables = if (variables.isEmpty()) null else variables
         yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }

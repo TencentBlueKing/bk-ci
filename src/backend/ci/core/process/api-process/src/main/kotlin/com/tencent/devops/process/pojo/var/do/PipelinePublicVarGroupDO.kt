@@ -30,22 +30,17 @@ package com.tencent.devops.process.pojo.`var`.`do`
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "流水线公共变量模板引用信息")
-data class PublicVarTemplateRefDO(
-    @get:Schema(title = "模板ID")
-    val referId: String,
-    @get:Schema(title = "模板名称")
-    val referName: String,
-    @get:Schema(title = "模板链接")
-    val referUrl: String,
-    @get:Schema(title = "模板类型")
-    val referType: String,
-    @get:Schema(title = "创建人")
-    val creator: String,
-    @get:Schema(title = "最近更新人")
-    val modifier: String,
-    @get:Schema(title = "最近更新时间")
-    val updateTime: LocalDateTime,
-    @get:Schema(title = "实列个数")
-    val instanceCount: Int
+@Schema(title = "流水线关联公共变量组信息")
+data class PipelinePublicVarGroupDO(
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "变量总数")
+    val varCount: Int,
+    @get:Schema(title = "变量组描述")
+    val desc: String? = null,
+    @get:Schema(title = "修改人")
+    var modifier: String,
+    @get:Schema(title = "更新时间")
+    var updateTime: LocalDateTime
 )
+
