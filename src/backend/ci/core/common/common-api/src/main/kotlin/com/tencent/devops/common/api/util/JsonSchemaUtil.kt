@@ -72,23 +72,4 @@ object JsonSchemaUtil {
             false
         }
     }
-
-    fun getJsonValidationError(json: String): String {
-        return try {
-            jsonNodeFromString(json)
-            ""
-        } catch (e: JsonProcessingException) {
-            val line = e.location?.lineNr
-            val column = e.location?.columnNr
-            if (line != null && column != null) {
-                "JSON format error at line $line, column $column: ${e.message ?: "Invalid syntax"}"
-            } else {
-                "Invalid JSON format. Maybe missing parentheses," +
-                        " commas, quotation marks, or containing illegal characters."
-            }
-        } catch (e: Throwable) {
-            "Invalid JSON format. Maybe missing parentheses, " +
-                    "commas, quotation marks, or containing illegal characters."
-        }
-    }
 }

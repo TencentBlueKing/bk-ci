@@ -850,10 +850,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
 
         if (!JsonSchemaUtil.validateJson(taskJsonStr)) {
-            val errorMessage = JsonSchemaUtil.getJsonValidationError(taskJsonStr)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
-                params = arrayOf(TASK_JSON_NAME, errorMessage)
+                params = arrayOf(
+                    TASK_JSON_NAME, "Maybe missing parentheses," +
+                            " commas, quotation marks, or containing illegal characters."
+                )
             )
         }
         return marketAtomCommonService.parseBaseTaskJson(
