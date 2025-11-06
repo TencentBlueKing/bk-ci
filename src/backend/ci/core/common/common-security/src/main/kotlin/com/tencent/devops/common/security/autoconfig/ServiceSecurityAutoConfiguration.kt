@@ -88,16 +88,18 @@ class ServiceSecurityAutoConfiguration {
     }
 
     private fun refreshToken(jwtManager: JwtManager) {
-        logger.info("refresh token")
-        jwtManager.generateToken(
-            JsonUtil.toJson(
-                SecurityJwtInfo(
-                    ip = InetAddress.getLocalHost().hostAddress,
-                    applicationName = EnvironmentUtil.getApplicationName(),
-                    activeProfile = EnvironmentUtil.getActiveProfile(),
-                    serverPort = EnvironmentUtil.getServerPort()
+        if (jwtManager.isSendEnable()) {
+            logger.info("refresh token")
+            jwtManager.generateToken(
+                JsonUtil.toJson(
+                    SecurityJwtInfo(
+                        ip = InetAddress.getLocalHost().hostAddress,
+                        applicationName = EnvironmentUtil.getApplicationName(),
+                        activeProfile = EnvironmentUtil.getActiveProfile(),
+                        serverPort = EnvironmentUtil.getServerPort()
+                    )
                 )
             )
-        )
+        }
     }
 }
