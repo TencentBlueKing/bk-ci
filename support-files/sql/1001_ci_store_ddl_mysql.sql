@@ -1487,7 +1487,7 @@ CREATE TABLE IF NOT EXISTS `T_TEMPLATE_VERSION_INSTALL_HISTORY` (
     `SRC_MARKET_TEMPLATE_PROJECT_CODE` varchar(32) NOT NULL COMMENT '研发商店模板项目ID',
     `SRC_MARKET_TEMPLATE_CODE` varchar(32) NOT NULL COMMENT '研发商店模板代码（对应process数据库的ID）',
     `VERSION` bigint(20) NOT NULL COMMENT '安装的父模板版本号',
-    `VERSION_NAME` varchar(20) NOT NULL COMMENT '安装的父模板版本号',
+    `VERSION_NAME` varchar(64) NOT NULL COMMENT '安装的父模板版本号',
     `NUMBER`  int(11) NOT NULL COMMENT '安装的父模板版本排序号',
     `PROJECT_CODE` varchar(32) NOT NULL COMMENT '项目ID',
     `TEMPLATE_CODE` varchar(32) NOT NULL COMMENT '模板代码（对应process数据库的ID）',

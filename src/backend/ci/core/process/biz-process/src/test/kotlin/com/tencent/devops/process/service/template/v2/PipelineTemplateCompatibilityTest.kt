@@ -48,6 +48,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
 
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
@@ -67,6 +68,14 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
                 includeDelete = false
             )
         } returns mockk(relaxed = true)
+
+        every {
+            pipelineTemplateInfoService.getOrNull(
+                projectId = projectId,
+                templateId = templateId
+            )
+        } returns null
+
         every {
             resourceService.getLatestResource(
                 projectId = projectId,
@@ -85,7 +94,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
@@ -117,7 +127,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
-
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
 
@@ -133,6 +143,13 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
                 includeDelete = false
             )
         } returns null
+        every {
+            pipelineTemplateInfoService.getOrNull(
+                projectId = projectId,
+                templateId = templateId
+            )
+        } returns null
+
         justRun { initializer.initTemplateModel(any()) }
 
         val converter = PipelineTemplateCompatibilityCreateReqConverter(
@@ -140,7 +157,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
@@ -172,7 +190,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val templateDao: TemplateDao = mockk()
         val dsl: DSLContext = dslContext
         val resourceService: PipelineTemplateResourceService = mockk()
-
+        val pipelineTemplateInfoService: PipelineTemplateInfoService = mockk()
         val model = newModel(userId)
         val setting = newSetting(projectId, templateId, userId)
 
@@ -190,6 +208,13 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
                 includeDelete = false
             )
         } returns null
+        every {
+            pipelineTemplateInfoService.getOrNull(
+                projectId = projectId,
+                templateId = templateId
+            )
+        } returns null
+
         justRun { initializer.initTemplateModel(any()) }
 
         val converter = PipelineTemplateCompatibilityCreateReqConverter(
@@ -197,7 +222,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
             pipelineTemplateModelInitializer = initializer,
             templateDao = templateDao,
             dslContext = dsl,
-            pipelineTemplateResourceService = resourceService
+            pipelineTemplateResourceService = resourceService,
+            pipelineTemplateInfoService = pipelineTemplateInfoService
         )
 
         val ctx = converter.convert(
