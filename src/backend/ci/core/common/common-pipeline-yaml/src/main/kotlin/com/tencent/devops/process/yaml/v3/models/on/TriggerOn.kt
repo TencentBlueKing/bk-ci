@@ -114,6 +114,7 @@ data class TriggerOn(
         push = push,
         tag = tag,
         mr = mr,
+        mrMerged = mrMerged,
         schedules = if (schedules?.size == 1) schedules!!.first() else schedules,
         delete = delete,
         issue = issue,
@@ -144,6 +145,7 @@ interface IPreTriggerOn : YamlVersionParser {
     val push: Any?
     val tag: Any?
     val mr: Any?
+    val mrMerged: Any?
     val schedules: Any?
     val delete: DeleteRule?
     val issue: IssueRule?
@@ -166,6 +168,9 @@ data class PreTriggerOn(
     override val push: Any?,
     override val tag: Any?,
     override val mr: Any?,
+    @JsonProperty("mr-merged")
+    @get:Schema(title = "mr-merged")
+    override val mrMerged: Any? = null,
     override val schedules: Any?,
     override val delete: DeleteRule?,
     override val issue: IssueRule? = null,
