@@ -75,6 +75,7 @@
                     slot="content"
                 >
                     <basic-info
+                        ref="basicInfoRef"
                         :read-only="readOnly"
                         :group-data="groupData"
                         :show-type="showType"
@@ -201,10 +202,13 @@
             label: proxy.$t('publicVar.releaseHistory')
         }
     ])
+    const basicInfoRef = ref(null)
     const published = ref(false)
     const showPreView = ref(false)
     const showReleaseSlider = ref(false)
     const previewData = ref([])
+    const initialGroupData = ref(null) // 保存初始的 groupData 状态
+    const shouldSaveInitialData = ref(false) // 标记是否需要保存初始数据
     const groupData = computed(() => proxy.$store.state.publicVar.groupData)
     const isManage = computed(() => proxy.$store.state.pipelines.isManage)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -228,7 +232,7 @@
     const paramTitle = ref('')
     const sliderEditItem = ref({})
     const releaseDisabled = computed(() => {
-        return !groupData.value?.groupName
+        return !groupData.value?.groupName || !groupData.value?.publicVars?.length
     })
     const sidesliderWidth = computed(() => {
         // 250 表格第一列宽度
@@ -237,23 +241,110 @@
         return window.innerWidth - 250 - 120 - 20
     })
     watch(() => props.isShow, (val) => {
-        if (!val) viewTab.value = 'basicInfo'
+        if (!val) {
+            viewTab.value = 'basicInfo'
+            initialGroupData.value = null
+            shouldSaveInitialData.value = false
+        } else {
+            // 侧边栏打开且非只读模式时，标记需要保存初始状态
+            shouldSaveInitialData.value = true
+            
+            // 如果是新建模式（没有 groupName），立即保存初始状态
+            if (operateType.value === OPERATE_TYPE.CREATE || !groupData.value?.groupName) {
+                proxy.$nextTick(() => {
+                    initialGroupData.value = deepClone(groupData.value)
+                    shouldSaveInitialData.value = false
+                })
+            } else if (publicVars.value?.length > 0) {
+                // 如果是编辑模式且 publicVars 已经存在（第二次打开的情况），直接保存
+                proxy.$nextTick(() => {
+                    initialGroupData.value = deepClone(groupData.value)
+                    shouldSaveInitialData.value = false
+                })
+            }
+        }
     })
+    
+    // 监听 publicVars 变化，在数据加载完成后保存初始状态
+    watch(() => publicVars.value, (newVars, oldVars) => {
+        // 只在需要保存初始数据且 publicVars 从空变为有数据时保存
+        if (shouldSaveInitialData.value && newVars?.length > 0 && (!oldVars || oldVars.length === 0)) {
+            proxy.$nextTick(() => {
+                initialGroupData.value = deepClone(groupData.value)
+                shouldSaveInitialData.value = false
+            })
+        }
+    }, { deep: true })
+    
     watch(() => groupData.value.groupName, (newVal, oldVal) => {
         if (!oldVal) return
         console.log('groupName')
     })
-    function handleHidden () {
-        proxy.$emit('update:isShow', false)
+    
+    // 检查 groupData 是否发生变化
+    function hasGroupDataChanged () {
+        if (!initialGroupData.value || props.readOnly) {
+            return false
+        }
+        
+        const current = groupData.value
+        const initial = initialGroupData.value
+        
+        // 检查基本信息是否变化
+        if (current.groupName !== initial.groupName || current.desc !== initial.desc) {
+            return true
+        }
+        
+        // 检查 publicVars 是否变化
+        const currentVars = current.publicVars || []
+        const initialVars = initial.publicVars || []
+        
+        // 数量不同
+        if (currentVars.length !== initialVars.length) {
+            return true
+        }
+        
+        // 深度对比每个变量
+        return JSON.stringify(currentVars) !== JSON.stringify(initialVars)
     }
-    function handleBeforeClose () {
-        return navConfirm(
-            {
-                content: proxy.$t('editPage.closeConfirmMsg'),
-                type: 'warning',
-                cancelText: proxy.$t('cancel')
+    
+    async function handleHidden () {
+        // 检查数据是否变化
+        if (hasGroupDataChanged()) {
+            try {
+                const leave = await navConfirm({
+                    content: proxy.$t('editPage.closeConfirmMsg'),
+                    type: 'warning',
+                    cancelText: proxy.$t('cancel')
+                })
+                if (leave) {
+                    proxy.$emit('update:isShow', false)
+                }
+            } catch (e) {
+                // 用户取消
+                return
             }
-        )
+        } else {
+            proxy.$emit('update:isShow', false)
+        }
+    }
+    
+    async function handleBeforeClose () {
+        // 检查数据是否变化
+        if (hasGroupDataChanged()) {
+            try {
+                const leave = await navConfirm({
+                    content: proxy.$t('editPage.closeConfirmMsg'),
+                    type: 'warning',
+                    cancelText: proxy.$t('cancel')
+                })
+                return leave
+            } catch (e) {
+                // 用户取消
+                return false
+            }
+        }
+        return true
     }
     async function validParamOptions () {
         let optionValid = true
@@ -438,6 +529,10 @@
     }
     async function handlePreview () {
         if (releasing.value) return
+        
+        const isValid = await basicInfoRef.value?.validateForm()
+        if (!isValid) return
+        
         if (operateType.value === OPERATE_TYPE.CREATE) {
             showReleaseSlider.value = true
         } else {

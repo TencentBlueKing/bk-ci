@@ -2093,6 +2093,7 @@
     "paramRemoveByGroupTips": "This variable has been removed from the variable group: Public Variable Group {0}",
     "removeParamInPipeline": "Remove",
     "beenCited": "Reference status",
-    "removeParamTitle": "Are you sure you want to delete this variable?"
+    "removeParamTitle": "Are you sure you want to delete this variable?",
+    "paramGroupIdRule": "Only begin with letters, and only contain letters, numbers, and underscores"
   }
 }

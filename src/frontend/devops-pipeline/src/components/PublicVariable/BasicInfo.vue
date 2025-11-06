@@ -45,12 +45,16 @@
                     </template>
                     <template v-else>
                         <bk-form
+                            ref="formRef"
                             :label-width="200"
                             form-type="vertical"
+                            :rules="formRules"
+                            :model="groupData"
                         >
                             <bk-form-item
                                 :label="$t('publicVar.paramGroupId')"
                                 :required="true"
+                                property="groupName"
                             >
                                 <bk-input
                                     v-model="groupData.groupName"
@@ -62,6 +66,7 @@
                             </bk-form-item>
                             <bk-form-item
                                 :label="$t('publicVar.paramGroupDesc')"
+                                property="desc"
                             >
                                 <bk-input
                                     v-model="groupData.desc"
@@ -174,12 +179,31 @@
         }
     })
     const { proxy } = UseInstance()
+    const formRef = ref(null)
     const isEditPage = computed(() => props.showType === EDIT_VARIABLE)
     const publicVars = computed(() => props.groupData?.publicVars ?? [])
     const publicVarMode = computed(() => proxy.$store.state?.publicVar?.publicVarMode)
     const publicVarYaml = computed(() => proxy.$store.state?.publicVar?.publicVarYaml)
     const isCodeMode = computed(() => publicVarMode.value === CODE_MODE)
     const operateType = computed(() => proxy.$store.state.publicVar.operateType)
+    
+    const formRules = {
+        groupName: [
+            {
+                required: true,
+                message: proxy.$t('publicVar.paramGroupId') + proxy.$t('required'),
+                trigger: 'blur'
+            },
+            {
+                validator: (val) => {
+                    const pattern = /^[a-zA-Z][a-zA-Z0-9_]{2,31}$/
+                    return pattern.test(val)
+                },
+                message: proxy.$t('publicVar.paramGroupIdRule'),
+                trigger: 'blur'
+            }
+        ]
+    }
     const renderInfoList = computed(() => {
         return [
             {
@@ -273,6 +297,22 @@
             console.log(mode)
         }
     }
+    async function validateForm () {
+        if (!formRef.value || isCodeMode.value) {
+            return true
+        }
+        try {
+            await formRef.value.validate()
+            return true
+        } catch (error) {
+            return false
+        }
+    }
+
+    defineExpose({
+        validateForm
+    })
+
     onMounted(() => {
         fetchVariablesByGroupName()
     })

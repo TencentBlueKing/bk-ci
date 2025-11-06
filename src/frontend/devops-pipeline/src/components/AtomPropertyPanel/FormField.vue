@@ -141,11 +141,15 @@
     >
         <label
             v-if="props.label"
-            :title="props.label"
             class="bk-label atom-form-label"
             :style="widthStyle"
         >
-            <span :class="{ deleted: props.isDelete }">{{ props.label }}</span>
+            <span
+                :class="{ deleted: props.isDelete }"
+                :title="props.label"
+            >
+                {{ props.label }}
+            </span>
             {{ props.hideColon ? '' : '：' }}
             <a
                 v-if="props.docsLink"

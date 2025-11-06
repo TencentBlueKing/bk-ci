@@ -2094,6 +2094,7 @@
     "paramRemoveByGroupTips": "此变量已从变量组：公共变量组 {0} 中删除",
     "removeParamInPipeline": "从流水线移出",
     "beenCited": "是否已引用",
-    "removeParamTitle": "确认删除此变量吗？"
+    "removeParamTitle": "确认删除此变量吗？",
+    "paramGroupIdRule": "由英文字母、数字、下划线组成，且以英文字母开头，3～32个字符"
   }
 }

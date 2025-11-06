@@ -2096,6 +2096,7 @@
     "paramRemoveByGroupTips": "この変数は変数グループ「パブリック変数グループ {0}」から削除されました",
     "removeParamInPipeline": "パイプラインから削除",
     "beenCited": "参照されているか",
-    "removeParamTitle": "この変数の削除を確認しますか？"
+    "removeParamTitle": "この変数の削除を確認しますか？",
+    "paramGroupIdRule": "英字、数字、アンダースコアで構成され、英字で始まり、3～32文字"
   }
 }

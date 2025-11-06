@@ -20,6 +20,8 @@ export default {
         groupData: {
             groupName: '',
             desc: '',
+            updateTime: '',
+            modifier: '',
             publicVars: []
         }
     },

@@ -363,7 +363,13 @@
         showType.value = ADD_VARIABLE
         readOnly.value = false
         detailTitle.value = proxy.$t('publicVar.addParamGroup')
-        proxy.$store.dispatch('publicVar/updateGroupData', groupData)
+        proxy.$store.dispatch('publicVar/updateGroupData', {
+            ...groupData.value,
+            groupName: '',
+            desc: '',
+            updateTime: '',
+            modifier: ''
+        })
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.CREATE)
     }
     function handleEditGroup (row) {

@@ -44,13 +44,13 @@
             :label="$t('editPage.repoName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.repo-name }}'])"
             :required="true"
-            :is-error="!param.defaultValue['repo-name']"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.repoName`)"
+            :error-msg="errors.first(`pipelineParam.repoName`)"
         >
             <request-selector
                 v-bind="getRepoOption('CODE_GIT,CODE_GITLAB,GITHUB,CODE_TGIT,CODE_SVN', 'aliasName')"
                 :disabled="disabled"
-                name="defaultValue"
+                name="repoName"
                 :value="param.defaultValue['repo-name']"
                 :handle-change="(name, value) => handleChangeCodeRepo(name, value)"
                 v-validate="'required'"
@@ -66,14 +66,14 @@
             :label="$t('editPage.branchName')"
             :desc="$t('editPage.referencedTips', ['${{ variables.' + `${param.id}` + '.branch }}'])"
             :required="true"
-            :is-error="!param.defaultValue.branch"
-            :error-msg="errors.first(`pipelineParam.defaultValue`)"
+            :is-error="errors.has(`pipelineParam.branchName`)"
+            :error-msg="errors.first(`pipelineParam.branchName`)"
             :key="param.defaultValue['repo-name']"
         >
             <request-selector
                 v-bind="getBranchOption(param.defaultValue['repo-name'])"
                 :disabled="disabled || !param.defaultValue"
-                name="defaultValue"
+                name="branchName"
                 :value="param.defaultValue.branch"
                 :handle-change="handleChangeBranch"
                 v-validate="'required'"
@@ -113,6 +113,8 @@
             :reset-default-val="handleResetDefaultVal"
         />
         <constraint-wraper
+            v-if="!isRepoParam(param.type)"
+            class="form-field bk-form-item"
             :label="valueRequired ? $t('newui.pipelineParam.constValue') : $t(`editPage.${getParamsDefaultValueLabel(param.type)}`)"
             :classify="CLASSIFY_ENUM.PARAM"
             :field="param.id"
@@ -122,7 +124,6 @@
         >
             <template #constraint-area="{ props: { isOverride, isTemplateInstance } }">
                 <form-field
-                    v-if="!isRepoParam(param.type)"
                     :hide-colon="true"
                     :required="valueRequired"
                     :is-error="errors.has(`pipelineParam.defaultValue`)"
@@ -568,13 +569,13 @@
                 }
             },
             handleChangeCodeRepo (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     'repo-name': value,
                     branch: ''
                 })
             },
             handleChangeBranch (key, value) {
-                this.handleChange(key, {
+                this.handleChange('defaultValue', {
                     ...this.param.defaultValue,
                     branch: value
                 })
