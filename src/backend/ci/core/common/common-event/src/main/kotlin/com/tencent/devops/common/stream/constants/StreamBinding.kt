@@ -241,5 +241,5 @@ object StreamBinding {
     const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
 
     // 变量引用事件监听器
-    const val PROCESS_VAR_REFERENCE_LISTENER = "process.var.reference.listener"
+    const val MODEL_VAR_REFERENCE_FANOUT = "model.var.reference.fanout"
 }
