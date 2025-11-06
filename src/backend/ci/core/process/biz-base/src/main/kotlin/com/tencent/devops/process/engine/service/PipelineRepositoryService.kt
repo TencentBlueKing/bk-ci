@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.dialect.IPipelineDialect
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
@@ -120,7 +121,6 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
@@ -826,18 +826,6 @@ class PipelineRepositoryService constructor(
                         versionNum, pipelineVersion, triggerVersion, settingVersion
                     )
                 }
-                publicVarGroupReferInfoService.handleVarGroupReferBus(
-                    PublicVarGroupReferDTO(
-                        userId = userId,
-                        projectId = projectId,
-                        model = model,
-                        referId = pipelineId,
-                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                        referName = model.name,
-                        referVersion = 1,
-                        referVersionName = versionName ?: ""
-                    )
-                )
 
                 pipelineResourceDao.create(
                     dslContext = transactionContext,
@@ -1241,20 +1229,6 @@ class PipelineRepositoryService constructor(
                         )
                     }
                 }
-
-                publicVarGroupReferInfoService.handleVarGroupReferBus(
-                    PublicVarGroupReferDTO(
-                        userId = userId,
-                        projectId = projectId,
-                        model = model,
-                        referId = pipelineId,
-                        referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                        referName = model.name,
-                        referVersion = version,
-                        referVersionName = versionName
-                    )
-                )
-
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,

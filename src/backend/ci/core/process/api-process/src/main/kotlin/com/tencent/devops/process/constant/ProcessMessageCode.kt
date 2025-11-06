@@ -451,6 +451,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101291" // 变量组 {0} 不存在
     const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2101292" // 流水线公共变量组({0})已被引用，无法删除
     const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101292" // 流水线公共变量组({0})已被引用，无法删除
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101319" // 流水线公共变量组中变量名称重复
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101320" // 流水线公共变量组中变量名称格式错误
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

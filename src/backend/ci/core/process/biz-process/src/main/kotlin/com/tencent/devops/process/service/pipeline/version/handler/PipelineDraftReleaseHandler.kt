@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -41,9 +42,11 @@ import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
@@ -66,7 +69,8 @@ class PipelineDraftReleaseHandler @Autowired constructor(
     private val pipelineResourceDao: PipelineResourceDao,
     @Lazy
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineYamlCommonService: PipelineYamlCommonService
+    private val pipelineYamlCommonService: PipelineYamlCommonService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.RELEASE_DRAFT
@@ -189,6 +193,20 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             pipelineId = pipelineId,
             version = resourceOnlyVersion.version
         )
+
+        publicVarGroupReferInfoService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = pipelineResourceWithoutVersion.model,
+                referId = pipelineId,
+                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                referName = pipelineBasicInfo.pipelineName,
+                referVersion = resourceOnlyVersion.version,
+                referVersionName = resourceOnlyVersion.versionName
+            )
+        )
+
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = pipelineBasicInfo.pipelineName,

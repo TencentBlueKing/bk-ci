@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.ITemplateModel
@@ -47,10 +48,12 @@ import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.VariableTemplate
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -179,7 +182,22 @@ class TemplateModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         baseYaml.stages = stages.ifEmpty { null }?.let { TransferMapper.anyTo(stages) }
-        baseYaml.variables = model.triggerContainer()?.let { variableTransfer.makeVariableFromModel(it) }
+        var variables: MutableMap<String, Any>? = null
+        model.triggerContainer()?.let {
+            variables = mutableMapOf()
+            // 刷新公共变量配置信息
+            modelInput.model.handlePublicVarInfo()
+            val publicVarGroupNames = modelInput.model.getPublicVarGroups()
+            if (!publicVarGroupNames.isNullOrEmpty()) {
+                variables!![TEMPLATE_KEY] = publicVarGroupNames.map {
+                    VariableTemplate(it.groupName, it.versionName)
+                }
+            }
+            if (variableTransfer.makeVariableFromModel(it) != null) {
+                variables!!.putAll(variableTransfer.makeVariableFromModel(it)!!)
+            }
+        }
+        baseYaml.variables = variables
         val lastStage = model.stages()?.last()
         val finally = if (lastStage?.finally == true) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -216,6 +234,21 @@ class TemplateModelTransfer @Autowired constructor(
         is JobTemplateModel -> null
         is StepTemplateModel -> null
         else -> null
+    }
+
+    private fun ITemplateModel.handlePublicVarInfo() = when (this) {
+        is Model -> handlePublicVarInfo()
+        is StageTemplateModel -> null
+        is JobTemplateModel -> null
+        is StepTemplateModel -> null
+        else -> null
+    }
+
+    private fun ITemplateModel.getPublicVarGroups(): List<PublicVarGroupRef>? {
+        if (this !is Model) {
+            return null
+        }
+        return publicVarGroups
     }
 
     private fun ITemplateModel.stages() = when (this) {

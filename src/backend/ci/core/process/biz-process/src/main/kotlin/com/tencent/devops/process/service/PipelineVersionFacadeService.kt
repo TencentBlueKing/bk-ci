@@ -70,7 +70,6 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.TemplateFacadeService
-import com.tencent.devops.process.service.`var`.PublicVarService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -93,8 +92,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineVersionManager: PipelineVersionManager,
-    private val publicVarService: PublicVarService
+    private val pipelineVersionManager: PipelineVersionManager
 ) {
 
     companion object {
