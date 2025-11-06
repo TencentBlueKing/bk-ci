@@ -37,6 +37,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -118,6 +121,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -167,6 +173,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -374,6 +383,9 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "id" : {
+                      "type" : "string"
+                    },
                     "name" : {
                       "type" : "string"
                     },
@@ -433,6 +445,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -489,27 +504,6 @@
                 }
               } ]
             },
-            "delete" : {
-              "oneOf" : [ {
-                "type" : "array",
-                "items" : {
-                  "type" : "string"
-                }
-              }, {
-                "type" : "object",
-                "additionalProperties" : false,
-                "properties" : {
-                  "types" : {
-                    "type" : "array",
-                    "uniqueItems" : true,
-                    "items" : {
-                      "enum" : [ "branch", "tag" ]
-                    },
-                    "additionalItems" : false
-                  }
-                }
-              } ]
-            },
             "issue" : {
               "oneOf" : [ {
                 "type" : "array",
@@ -520,6 +514,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -547,6 +544,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -582,6 +582,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -613,6 +616,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -628,10 +634,6 @@
                 }
               } ]
             },
-            "openapi" : {
-              "type" : "string",
-              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
-            },
             "remote" : {
               "oneOf" : [ {
                 "type" : "string",
@@ -640,6 +642,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -651,12 +656,6 @@
               } ]
             },
             "repo-name" : {
-              "type" : "string"
-            },
-            "repo-id" : {
-              "type" : "string"
-            },
-            "credentials" : {
               "type" : "string"
             },
             "type" : {
@@ -677,6 +676,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -708,6 +710,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -739,6 +744,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -770,6 +778,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -801,6 +812,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -842,6 +856,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -923,6 +940,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -972,6 +992,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1179,6 +1202,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -1238,6 +1264,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1294,27 +1323,6 @@
               }
             } ]
           },
-          "delete" : {
-            "oneOf" : [ {
-              "type" : "array",
-              "items" : {
-                "type" : "string"
-              }
-            }, {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "types" : {
-                  "type" : "array",
-                  "uniqueItems" : true,
-                  "items" : {
-                    "enum" : [ "branch", "tag" ]
-                  },
-                  "additionalItems" : false
-                }
-              }
-            } ]
-          },
           "issue" : {
             "oneOf" : [ {
               "type" : "array",
@@ -1325,6 +1333,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1352,6 +1363,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1387,6 +1401,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1418,6 +1435,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1433,10 +1453,6 @@
               }
             } ]
           },
-          "openapi" : {
-            "type" : "string",
-            "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
-          },
           "remote" : {
             "oneOf" : [ {
               "type" : "string",
@@ -1445,6 +1461,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1456,12 +1475,6 @@
             } ]
           },
           "repo-name" : {
-            "type" : "string"
-          },
-          "repo-id" : {
-            "type" : "string"
-          },
-          "credentials" : {
             "type" : "string"
           },
           "type" : {
@@ -1482,6 +1495,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1513,6 +1529,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1544,6 +1563,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1575,6 +1597,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1606,6 +1631,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1688,7 +1716,7 @@
                     "type" : "string"
                   },
                   "type" : {
-                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                   },
                   "options" : {
                     "type" : "array",
@@ -1721,42 +1749,11 @@
                       }
                     }
                   },
-                  "datasource" : {
-                    "type" : "object",
-                    "additionalProperties" : false,
-                    "required" : [ "url" ],
-                    "properties" : {
-                      "url" : {
-                        "type" : "string"
-                      },
-                      "data-path" : {
-                        "type" : "string"
-                      },
-                      "param-id" : {
-                        "type" : "string"
-                      },
-                      "param-name" : {
-                        "type" : "string"
-                      },
-                      "has-add-item" : {
-                        "type" : "boolean"
-                      },
-                      "item-text" : {
-                        "type" : "string"
-                      },
-                      "item-target-url" : {
-                        "type" : "string"
-                      }
-                    }
-                  },
                   "description" : {
                     "type" : "string"
                   },
                   "group" : {
                     "type" : "string"
-                  },
-                  "multiple" : {
-                    "type" : "boolean"
                   },
                   "required" : {
                     "type" : "boolean"
@@ -1825,7 +1822,21 @@
           } ]
         },
         "^template$" : {
-          "$ref" : "#/definitions/template"
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "name" ],
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "version" : {
+                "type" : "string",
+                "pattern" : "v.+"
+              }
+            }
+          }
         },
         "^[A-Z][A-Z0-9_]{0,63}$" : {
           "type" : "object",
@@ -1875,7 +1886,7 @@
                   "type" : "string"
                 },
                 "type" : {
-                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "git-ref", "svn-tag", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips", "repo-ref" ]
                 },
                 "options" : {
                   "type" : "array",
@@ -1908,42 +1919,11 @@
                     }
                   }
                 },
-                "datasource" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "required" : [ "url" ],
-                  "properties" : {
-                    "url" : {
-                      "type" : "string"
-                    },
-                    "data-path" : {
-                      "type" : "string"
-                    },
-                    "param-id" : {
-                      "type" : "string"
-                    },
-                    "param-name" : {
-                      "type" : "string"
-                    },
-                    "has-add-item" : {
-                      "type" : "boolean"
-                    },
-                    "item-text" : {
-                      "type" : "string"
-                    },
-                    "item-target-url" : {
-                      "type" : "string"
-                    }
-                  }
-                },
                 "description" : {
                   "type" : "string"
                 },
                 "group" : {
                   "type" : "string"
-                },
-                "multiple" : {
-                  "type" : "boolean"
                 },
                 "required" : {
                   "type" : "boolean"
@@ -2061,17 +2041,11 @@
             "check-in" : {
               "$ref" : "#/definitions/check-in"
             },
-            "check-out" : {
-              "$ref" : "#/definitions/check-out"
-            },
             "fast-kill" : {
               "type" : "boolean"
             },
             "jobs" : {
               "$ref" : "#/definitions/jobs"
-            },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
             }
           }
         }, {
@@ -2081,9 +2055,6 @@
           "properties" : {
             "template" : {
               "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
             }
           }
         } ]
@@ -2096,20 +2067,135 @@
       "$ref" : "#/definitions/steps"
     },
     "extends" : {
-      "type" : "object",
-      "required" : [ "template" ],
-      "additionalProperties" : false,
-      "properties" : {
-        "template" : {
-          "type" : "string"
-        },
-        "ref" : {
-          "type" : "string"
-        },
-        "parameters" : {
-          "$ref" : "#/definitions/parameters"
+      "anyOf" : [ {
+        "type" : "object",
+        "required" : [ "template" ],
+        "additionalProperties" : false,
+        "properties" : {
+          "template" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "properties" : {
+              "path" : {
+                "type" : "string"
+              },
+              "ref" : {
+                "type" : "string"
+              },
+              "template-id" : {
+                "type" : "string"
+              },
+              "version" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                } ]
+              },
+              "variables" : {
+                "type" : "object",
+                "additionalProperties" : {
+                  "anyOf" : [ {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "value" : {
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        }, {
+                          "type" : "array"
+                        }, {
+                          "type" : "object",
+                          "properties" : {
+                            "repo-name" : {
+                              "type" : "string"
+                            },
+                            "branch" : {
+                              "type" : "string"
+                            }
+                          }
+                        } ]
+                      },
+                      "allow-modify-at-startup" : {
+                        "type" : "boolean"
+                      }
+                    }
+                  }, {
+                    "type" : "string"
+                  }, {
+                    "type" : "number"
+                  }, {
+                    "type" : "boolean"
+                  } ]
+                }
+              },
+              "trigger-conf" : {
+                "type" : "object",
+                "additionalProperties" : {
+                  "anyOf" : [ {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "disabled" : {
+                        "type" : "boolean"
+                      },
+                      "cron" : {
+                        "type" : "string"
+                      },
+                      "variables" : {
+                        "type" : "object"
+                      }
+                    }
+                  } ]
+                }
+              },
+              "recommended-version" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "enabled" : {
+                    "type" : "boolean"
+                  },
+                  "allow-modify-at-startup" : {
+                    "type" : "boolean"
+                  },
+                  "major" : {
+                    "type" : "integer"
+                  },
+                  "minor" : {
+                    "type" : "integer"
+                  },
+                  "fix" : {
+                    "type" : "integer"
+                  },
+                  "build-no" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "initial-value" : {
+                        "type" : "integer"
+                      },
+                      "strategy" : {
+                        "type" : "string",
+                        "pattern" : "\\bplus1-when-success\\b|\\bplus1-everytime\\b|\\binvariable\\b"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "dependencies" : {
+              "template-id" : [ "version" ]
+            }
+          }
         }
-      }
+      }, {
+        "type" : "string"
+      } ]
     },
     "resources" : {
       "type" : "object",
@@ -2392,7 +2478,7 @@
             "type" : "boolean"
           },
           "if" : {
-            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
+            "enum" : [ "FAILURE", "SUCCESS" ]
           }
         }
       }
@@ -2598,55 +2684,6 @@
               "type" : "array",
               "items" : {
                 "type" : "string"
-              }
-            },
-            "notify-groups" : {
-              "type" : "array",
-              "items" : {
-                "type" : "string"
-              }
-            }
-          }
-        },
-        "gates" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "required" : [ "template" ],
-            "properties" : {
-              "template" : {
-                "type" : "string"
-              },
-              "parameters" : {
-                "$ref" : "#/definitions/parameters"
-              }
-            }
-          }
-        },
-        "timeout-hours" : {
-          "minimum" : 1,
-          "maximum" : 720,
-          "type" : "integer"
-        }
-      }
-    },
-    "check-out" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "gates" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "required" : [ "template" ],
-            "properties" : {
-              "template" : {
-                "type" : "string"
-              },
-              "parameters" : {
-                "$ref" : "#/definitions/parameters"
               }
             }
           }
@@ -2909,12 +2946,6 @@
                 "type" : "string"
               }
             },
-            "depend-on-type" : {
-              "type" : "string"
-            },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
-            },
             "mutex" : {
               "$ref" : "#/definitions/resourceExclusiveDeclaration"
             }
@@ -3004,9 +3035,6 @@
                 }
               } ]
             },
-            "if-modify" : {
-              "$ref" : "#/definitions/ifModify"
-            },
             "shell" : {
               "type" : "string"
             },
@@ -3076,9 +3104,6 @@
           "properties" : {
             "template" : {
               "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
             }
           }
         } ]
@@ -3090,46 +3115,11 @@
     },
     "template" : {
       "anyOf" : [ {
-        "type" : "array",
-        "items" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "required" : [ "name" ],
-          "properties" : {
-            "name" : {
-              "type" : "string"
-            },
-            "parameters" : {
-              "$ref" : "#/definitions/parameters"
-            }
-          }
-        }
-      }, {
         "type" : "string"
       } ]
     },
-    "parameters" : {
-      "type" : "object",
-      "additionalProperties" : {
-        "anyOf" : [ {
-          "type" : "string"
-        }, {
-          "type" : "number"
-        }, {
-          "type" : "boolean"
-        }, {
-          "type" : "array"
-        } ]
-      }
-    },
     "buildEnv" : {
       "type" : "object"
-    },
-    "ifModify" : {
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
     },
     "resourceExclusiveDeclaration" : {
       "type" : "object",
@@ -3176,14 +3166,6 @@
       }, {
         "not" : {
           "required" : [ "variables" ]
-        }
-      }, {
-        "not" : {
-          "required" : [ "notices" ]
-        }
-      }, {
-        "not" : {
-          "required" : [ "label" ]
         }
       }, {
         "not" : {

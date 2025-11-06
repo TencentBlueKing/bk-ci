@@ -4,7 +4,7 @@ import {
   ref,
 } from 'vue';
 import http from '@/http/api';
-import { Message, InfoBox } from 'bkui-vue';
+import { Message } from 'bkui-vue';
 import ManageHeader from '@/components/manage-header.vue';
 import ProjectForm from '@/components/project-form.vue';
 import {

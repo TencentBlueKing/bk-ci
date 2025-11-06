@@ -11,7 +11,6 @@ import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.util.ReflectUtil
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -55,7 +54,6 @@ class CodeSchemaCheck @Autowired constructor(
         LoggerFactory.getLogger(CodeSchemaCheck::class.java)
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(YamlUtil.getObjectMapper())
         .build()
 
     private val objectMapperFactory = ThreadLocal.withInitial(

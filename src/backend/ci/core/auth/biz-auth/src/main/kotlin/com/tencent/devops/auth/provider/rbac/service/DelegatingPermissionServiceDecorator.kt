@@ -383,7 +383,7 @@ class DelegatingPermissionServiceDecorator(
         return try {
             circuitBreaker.executeCallable(externalCall)
         } catch (e: CallNotPermittedException) {
-            logger.error(
+            logger.warn(
                 "[AUTH_CIRCUIT_BREAKER_OPEN] Circuit breaker '{}' for context '{}' is open." +
                     " Falling back to internal call. Error: {}",
                 e.causingCircuitBreakerName,
@@ -399,14 +399,13 @@ class DelegatingPermissionServiceDecorator(
             logger.error("[AUTH_NETWORK_ERROR] Network issue for context '$context'", e)
             fallbackCall()
         } catch (e: Exception) {
-            logger.error(
-                "[AUTH_CALL_FAILED] Failed to execute external call for context '{}'. " +
-                    "Falling back to internal call. Error: {}",
+            logger.warn(
+                "[AUTH_CALL_FAILED] Failed to execute external call for context '{}',Error: {}",
                 context,
                 e.message,
                 e
             )
-            fallbackCall()
+            throw e
         }
     }
 

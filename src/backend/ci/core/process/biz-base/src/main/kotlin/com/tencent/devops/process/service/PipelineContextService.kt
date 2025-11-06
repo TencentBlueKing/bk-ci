@@ -245,13 +245,14 @@ class PipelineContextService @Autowired constructor(
         variables: Map<String, String>
     ): String? {
         if (containerId == null || executeCount == null) return null
+        val fixedExecuteCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
         return containerBuildRecordService.getRecord(
             transactionContext = null,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = containerId,
-            executeCount = executeCount.coerceAtLeast(1) // 至少取第一次执行结果
+            executeCount = fixedExecuteCount
         )?.containerVar?.getOrDefault(JOB_RETRY_TASK_ID, null)?.toString() ?: kotlin.run {
             // 兼容通过BK_CI_RETRY_TASK_ID的老方式，如果 BK_CI_RETRY_TASK_ID 有值
             // 并且其对应的container id是当前运行的，就正常返回
@@ -261,7 +262,7 @@ class PipelineContextService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     taskId = taskId,
-                    executeCount = executeCount
+                    executeCount = fixedExecuteCount
                 )?.containerId == containerId
             ) {
                 return taskId

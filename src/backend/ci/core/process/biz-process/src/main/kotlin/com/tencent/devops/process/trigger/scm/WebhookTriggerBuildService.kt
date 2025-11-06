@@ -30,7 +30,6 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -43,11 +42,11 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
@@ -61,10 +60,10 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
     private val webhookTriggerManager: WebhookTriggerManager,
-    private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val pipelineYamlVersionResolver: PipelineYamlVersionResolver
 ) {
 
     companion object {
@@ -169,48 +168,24 @@ class WebhookTriggerBuildService @Autowired constructor(
                     "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|" +
                     "ref: $ref|blobId: $blobId"
             )
-            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(projectId = projectId, eventId = eventId)
-                ?: throw throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
-                    params = arrayOf(eventId.toString())
-                )
-            val webhook = triggerEvent.eventBody ?: throw throw ErrorCodeException(
+            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
+                projectId = projectId, eventId = eventId
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
+                params = arrayOf(eventId.toString())
+            )
+            val webhook = triggerEvent.eventBody ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
                 params = arrayOf(eventId.toString())
             )
-            /*
-            1. 如果是默认分支,则查找当前文件blob_id在默认分支对应的版本
-            2. 如果不是默认分支
-                - 查找blob_id在当前分支是否存在对应的版本
-                - 如果当前分支不存在,则查找是否在默认分支存在
-                - 如果默认分支也不存在,则查找所有的blob_id对应的版本,
-                    这种情况出现在分支a,修改了文件,分支b从分支a拉出,后面分支a又做了修改,分支a合入默认分支后
-             */
-            val pipelineBranchVersion = pipelineYamlService.getPipelineYamlVersion(
+            val pipelineYamlVersion = pipelineYamlVersionResolver.getPipelineYamlVersion(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
                 ref = ref,
-                blobId = blobId,
-                branchAction = BranchVersionAction.ACTIVE.name
-            )
-            val pipelineYamlVersion = if (ref == defaultBranch) {
-                pipelineBranchVersion
-            } else {
-                pipelineBranchVersion ?: pipelineYamlService.getPipelineYamlVersion(
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    ref = defaultBranch,
-                    blobId = blobId,
-                    branchAction = BranchVersionAction.ACTIVE.name
-                ) ?: pipelineYamlService.getPipelineYamlVersion(
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    blobId = blobId
-                )
-            } ?: run {
+                blobId = blobId!!,
+                defaultBranch = defaultBranch
+            ) ?: run {
                 logger.info(
                     "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|eventId: $eventId|" +
                         "projectId: $projectId|repoHashId: $repoHashId|filePath: $filePath|blobId: $blobId"
@@ -280,7 +255,6 @@ class WebhookTriggerBuildService @Autowired constructor(
         triggerContainer: TriggerContainer,
         startParams: Map<String, Any>
     ): MutableMap<String, BuildParameters> {
-        val params = mutableMapOf<String, Any>()
         val pipelineParamMap = mutableMapOf<String, BuildParameters>()
         val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
             userId = userId,
@@ -297,10 +271,8 @@ class WebhookTriggerBuildService @Autowired constructor(
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                params[it.key] = it.value
                 pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value ?: "")
-            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
-                params[newVarName] = it.value
+            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value ?: "")
             }
         }

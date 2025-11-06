@@ -18,26 +18,27 @@
  */
 
 import { statusAlias } from '@/utils/pipelineStatus'
-import { convertMStoStringByRule, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
+import { convertMStoStringByRule, convertMStoString, convertTime, isShallowEqual, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
 import {
     ALL_PIPELINE_VIEW_ID,
+    ARCHIVE_VIEW_ID,
     COLLECT_VIEW_ID,
     DELETED_VIEW_ID,
-    ARCHIVE_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     RECENT_USED_VIEW_ID,
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 import {
+    handleProjectNoPermission,
     PROJECT_RESOURCE_ACTION,
     RESOURCE_ACTION,
-    TEMPLATE_RESOURCE_ACTION,
-    handleProjectNoPermission
+    RESOURCE_TYPE,
+    TEMPLATE_RESOURCE_ACTION
 } from '@/utils/permission'
 
-import { ORDER_ENUM, PIPELINE_SORT_FILED, VERSION_STATUS_ENUM, pipelineTabIdMap } from '@/utils/pipelineConst'
+import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 
 export default {
     data () {
@@ -54,6 +55,16 @@ export default {
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
+        },
+        statusIconMap () {
+            return {
+                SUCCEED: 'check-circle-shape',
+                FAILED: 'close-circle-shape',
+                RUNNING: 'circle-2-1',
+                PAUSE: 'play-circle-shape',
+                CANCELED: 'abort',
+                SKIP: 'redo-arrow'
+            }
         }
     },
     methods: {
@@ -144,6 +155,7 @@ export default {
                             pipelineActions: this.getPipelineActions(item, index),
                             disabled: this.isDisabledPipeline(item),
                             tooltips: this.disabledTips(item),
+                            latestBuildStageStatus: this.getLatestBuildStageStatus(item),
                             released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
                             onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH
                         })
@@ -236,6 +248,12 @@ export default {
             } else {
                 archiveTooltip = false
             }
+            const editPermData = {
+                projectId: pipeline.projectId,
+                resourceType: RESOURCE_TYPE.PIPELINE,
+                resourceCode: pipeline.pipelineId,
+                action: RESOURCE_ACTION.EDIT
+            }
 
             return [
                 {
@@ -243,12 +261,7 @@ export default {
                     handler: this.lockPipelineHandler,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
-                    permissionData: {
-                        projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
+                    permissionData: editPermData
                 },
                 {
                     text: this.$t('addTo'),
@@ -262,7 +275,7 @@ export default {
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
-                            resourceType: 'project',
+                            resourceType: RESOURCE_TYPE.PROJECT,
                             resourceCode: pipeline.projectId,
                             action: RESOURCE_ACTION.CREATE
                         }
@@ -273,12 +286,7 @@ export default {
                     handler: this.copyAs,
                     hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
-                    permissionData: {
-                        projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
+                    permissionData: editPermData
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
@@ -287,7 +295,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'project',
+                        resourceType: RESOURCE_TYPE.PROJECT,
                         resourceCode: pipeline.projectId,
                         action: TEMPLATE_RESOURCE_ACTION.CREATE
                     }
@@ -316,7 +324,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipeline.pipelineId,
                         action: RESOURCE_ACTION.ARCHIVED
                     }
@@ -328,7 +336,7 @@ export default {
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipeline.pipelineId,
                         action: RESOURCE_ACTION.DELETE
                     }
@@ -566,6 +574,24 @@ export default {
                 return false
             }
         },
+        getStageTooltip (stage) {
+            switch (true) {
+                case !!stage.elapsed:
+                    return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+                case stage.status === 'PAUSE':
+                    return this.$t('editPage.toCheck')
+                case stage.status === 'SKIP':
+                    return this.$t('skipStageDesc')
+            }
+        },
+        getLatestBuildStageStatus (item) {
+            return item.latestBuildStageStatus ? item.latestBuildStageStatus.slice(1).map((stage) => ({
+                ...stage,
+                tooltip: this.getStageTooltip(stage),
+                icon: this.statusIconMap[stage.status] || 'circle',
+                statusCls: stage.status
+            })) : null
+        },
         updatePipelineStatus (data, isFirst = false) {
             Object.keys(data).forEach(pipelineId => {
                 const item = data[pipelineId]
@@ -575,7 +601,8 @@ export default {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
                         duration: this.calcDuration(item),
-                        progress: this.calcProgress(item)
+                        progress: this.calcProgress(item),
+                        latestBuildStageStatus: this.getLatestBuildStageStatus(item)
                     })
                 }
             })
@@ -583,7 +610,7 @@ export default {
         copyAsTemplateInstance (pipeline) {
             const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
             const { templateId, pipelineId, projectId, version } = pipeline
-            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${version}/${pipelineName}?pipelineId=${pipelineId}`
+            window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${version}/instance/create?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
         }
     }
 }

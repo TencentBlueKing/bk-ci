@@ -28,6 +28,8 @@ function isSkip (status) {
 }
 
 export default {
+    instanceFromTemplate: state => state.pipelineInfo?.instanceFromTemplate ?? false,
+    isTemplate: state => state.pipelineInfo?.isTemplate ?? false,
     isCurPipelineLocked: state => {
         return state.pipelineInfo?.locked ?? false
     },
@@ -35,7 +37,7 @@ export default {
         return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },
     getDraftBaseVersionName: (state, getters) => {
-        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
+        return getters.hasDraftPipeline ? (state.pipelineInfo?.baseVersionName ?? '--') : '--'
     },
     pipelineHistoryViewable: state => {
         return [
@@ -208,8 +210,8 @@ export default {
 
             stages.forEach((stage, index) => {
                 if (index !== 0 && stage.checkIn) {
-                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
-                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                    const { notifyType = [], notifyGroup = [], manualTrigger } = stage && stage.checkIn
+                    if (manualTrigger && notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
                         Vue.set(stage.checkIn, 'isReviewError', true)
                         throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
                     }
