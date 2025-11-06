@@ -57,8 +57,8 @@
                                 :key="index"
                             >
                                 <bk-option
-                                    v-for="(option, key) in group.children"
-                                    :key="key"
+                                    v-for="option in group.children"
+                                    :key="option.id"
                                     :id="option.id"
                                     :name="option.name"
                                     @click.native="selectClassifyCode(option)"
