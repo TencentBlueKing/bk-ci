@@ -117,7 +117,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml))
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)).toMutableList()
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
