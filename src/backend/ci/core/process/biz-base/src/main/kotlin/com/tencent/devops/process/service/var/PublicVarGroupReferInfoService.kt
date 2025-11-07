@@ -520,7 +520,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         model.handlePublicVarInfo()
         val publicVarGroups = model.publicVarGroups
-        
+
         // 提取并处理动态变量组
         val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(publicVarGroupReferDTO, params)
 
@@ -675,7 +675,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             }
 
         val resourcePublicVarGroupReferPOS = mutableListOf<ResourcePublicVarGroupReferPO>()
-        
+
         if (dynamicPublicVarWithPositions.isNotEmpty()) {
             // 提取所有需要删除的索引，并按降序排序
             val indicesToRemove = dynamicPublicVarWithPositions.values
@@ -689,7 +689,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     params.removeAt(index)
                 }
             }
-            
+
             // 批量生成ID并保存
             resourcePublicVarGroupReferPOS.addAll(
                 createReferRecords(publicVarGroupReferDTO, dynamicPublicVarWithPositions)
@@ -706,7 +706,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
         dynamicPublicVarWithPositions: Map<GroupKey, List<PublicVarPositionPO>>
     ): List<ResourcePublicVarGroupReferPO> {
-        
+
         val currentTime = LocalDateTime.now()
         val segmentIds = client.get(ServiceAllocIdResource::class).batchGenerateSegmentId(
             bizTag = "T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO",
@@ -721,7 +721,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         return dynamicPublicVarWithPositions.entries.mapIndexed { index, (groupKey, positionInfos) ->
             val key = groupKey
-            
+
             ResourcePublicVarGroupReferPO(
                 id = segmentIds[index]!!,
                 projectId = publicVarGroupReferDTO.projectId,
@@ -786,7 +786,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 )
                 return
             }
-            
+
             // 在事务中执行删除和更新操作
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -812,7 +812,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
         }
     }
-    
+
     /**
      * 根据版本名称处理变量组引用
      */
@@ -821,31 +821,31 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     ) {
         val model = publicVarGroupReferDTO.model
         val publicVarGroups = model.publicVarGroups
-        
+
         logger.info("handleVarGroupReferByVersionName publicVarGroups: $publicVarGroups")
-        
+
         if (publicVarGroups.isNullOrEmpty()) {
             logger.info("No public var groups found, skip handling")
             return
         }
-        
+
         val params = model.getTriggerContainer().params
-        
+
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
             .toSet()
-            
+
         // 对比publicVarGroups，找出params中不存在的变量组
         val groupsToAdd = publicVarGroups.filter { publicVarGroup ->
             !existingGroupNames.contains(publicVarGroup.groupName)
         }
-        
+
         if (groupsToAdd.isEmpty()) {
             handleVarGroupReferBus(publicVarGroupReferDTO)
             return
         }
-        
+
         // 查询这些变量组的变量并添加到params末尾
         groupsToAdd.forEach { publicVarGroup ->
             addVarGroupToParams(
@@ -869,7 +869,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         val groupName = publicVarGroup.groupName
         val versionName = publicVarGroup.versionName
         val version = publicVarGroup.version
-        
+
         // 查询变量组信息
         val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
@@ -881,7 +881,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
             params = arrayOf(groupName)
         )
-        
+
         // 查询变量组中的变量
         val groupVars = publicVarDao.listVarByGroupName(
             dslContext = dslContext,
@@ -889,7 +889,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             groupName = groupName,
             version = varGroupRecord.version
         )
-        
+
         // 将变量添加到params
         groupVars.forEach { varPO ->
             val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)

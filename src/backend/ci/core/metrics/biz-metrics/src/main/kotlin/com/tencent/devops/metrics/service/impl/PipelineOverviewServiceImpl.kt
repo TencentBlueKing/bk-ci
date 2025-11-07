@@ -123,7 +123,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
             )
         }
     }
-    
+
     override fun queryPipelineMonthlyExecCounts(
         projectId: String,
         pipelineIds: List<String>,

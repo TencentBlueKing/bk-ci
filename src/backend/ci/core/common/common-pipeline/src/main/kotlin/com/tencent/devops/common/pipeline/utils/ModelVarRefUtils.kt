@@ -464,7 +464,7 @@ object ModelVarRefUtils {
     ) {
         // 创建包含Element ID的新上下文，为后续解析提供Element上下文信息
         val elementContext = context.copy(taskId = element.id)
-        
+
         // Element通常包含脚本、参数等可能包含变量引用的字段
         parseGenericObject(
             obj = element,
@@ -730,7 +730,7 @@ object ModelVarRefUtils {
         return fieldCache.get(clazz) {
             val fields = mutableListOf<java.lang.reflect.Field>()
             var currentClass: Class<*>? = clazz
-            
+
             // 向上遍历继承层次，获取所有父类的字段
             while (currentClass != null && currentClass != Any::class.java) {
                 // 只添加非静态字段，静态字段通常不包含业务数据
@@ -777,7 +777,9 @@ object ModelVarRefUtils {
                     false
                 } else {
                     value.javaClass.isPrimitive || // 原始类型
-                            (className.startsWith("java.lang.") && !className.startsWith("java.lang.reflect.")) || // Java语言包
+                            // Java语言包
+                            (className.startsWith("java.lang.") &&
+                                    !className.startsWith("java.lang.reflect.")) ||
                             className.startsWith("java.math.") || // 数学包
                             className.startsWith("java.net.") || // 网络包
                             className.startsWith("java.io.") // IO包

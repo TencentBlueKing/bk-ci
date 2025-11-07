@@ -51,7 +51,7 @@ interface PipelineOverviewManageService {
     fun queryPipelineTrendInfo(
         queryPipelineOverviewDTO: QueryPipelineOverviewDTO
     ): List<PipelineTrendInfoDO>
-    
+
     /**
      * 批量查询多个流水线最近一月执行次数
      * @param projectId 项目ID

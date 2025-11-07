@@ -138,7 +138,7 @@ class ServiceMetricsResourceImpl constructor(
             )
         )
     }
-    
+
     override fun queryPipelineMonthlyExecCountByList(
         projectId: String,
         pipelineIdList: List<String>

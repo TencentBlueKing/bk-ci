@@ -154,7 +154,7 @@ class PipelineOverviewDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-    
+
     /**
      * 批量查询多个流水线近一月内执行次数
      */
@@ -165,7 +165,7 @@ class PipelineOverviewDao {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Result<Record2<String, BigDecimal>> {
-        
+
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             return dslContext.select(PIPELINE_ID, sum(TOTAL_EXECUTE_COUNT))
                 .from(this)
