@@ -488,7 +488,7 @@ class PublicVarService @Autowired constructor(
         logger.info("Start handling public var group references for resource: $resourceId|$resourceVersion")
 
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
-        
+
         // 1. 查询所有已存在的引用记录（按groupName和version分组）
         val existingGroupMap = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
             dslContext = dslContext,
@@ -529,7 +529,7 @@ class PublicVarService @Autowired constructor(
             .mapValues { (_, vars) -> vars.map { it.id }.toSet() }
 
         // 6. 识别需要清理的变量组（在已存在但不在Model的publicVarGroups中的）
-        val modelGroupKeys = modelVarGroups.map { 
+        val modelGroupKeys = modelVarGroups.map {
             val versionKey = it.version ?: -1
             "${it.groupName}:$versionKey"
         }.toSet()
@@ -570,7 +570,7 @@ class PublicVarService @Autowired constructor(
             referType = referType,
             referVersion = resourceVersion
         ).groupBy { "${it.groupName}:${it.version}" }
-         .mapValues { (_, records) -> records.map { it.varName }.toSet() }
+            .mapValues { (_, records) -> records.map { it.varName }.toSet() }
 
         // 10. 使用Map收集引用计数变化，最后批量更新
         // key: "groupName:version:varName", value: 计数变化量（正数表示增加，负数表示减少）
