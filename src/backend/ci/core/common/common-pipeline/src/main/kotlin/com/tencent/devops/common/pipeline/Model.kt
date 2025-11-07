@@ -280,7 +280,10 @@ data class Model(
     }
 
     fun handlePublicVarInfo() {
-        if (!publicVarGroups.isNullOrEmpty()) return
+        if (!publicVarGroups.isNullOrEmpty()) {
+            publicVarGroups!!.map { it.variables =null }
+            return
+        }
         val triggerParams = (stages.firstOrNull()?.containers?.firstOrNull() as? TriggerContainer)?.params
         triggerParams ?: run {
             publicVarGroups = emptyList()

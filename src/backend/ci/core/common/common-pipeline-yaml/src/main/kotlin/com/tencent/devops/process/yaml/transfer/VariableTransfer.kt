@@ -68,7 +68,7 @@ class VariableTransfer {
     fun makeVariableFromBuildParams(params: List<BuildFormProperty>, skipPublicVar: Boolean): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
         params.forEach {
-            if (it.id in ignoredVariable) return@forEach
+            if (it.id in ignoredVariable || (skipPublicVar && it.varGroupName != null)) return@forEach
             var props = when {
                 // 字符串
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
