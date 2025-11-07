@@ -49,7 +49,7 @@ class ModelVarReferenceListener @Autowired constructor(
                 "projectId=${event.projectId}, resourceId=${event.resourceId}, " +
                 "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"
             )
-            
+
             // 调用 handleModelVarReferences 方法处理变量引用
             modelHandleService.handleModelVarReferences(
                 userId = event.userId,
@@ -58,7 +58,7 @@ class ModelVarReferenceListener @Autowired constructor(
                 resourceType = event.resourceType,
                 resourceVersion = event.resourceVersion
             )
-            
+
             logger.info(
                 "Successfully processed variable reference event: resourceId=${event.resourceId}, " +
                 "resourceType=${event.resourceType}, resourceVersion=${event.resourceVersion}"

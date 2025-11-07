@@ -22,7 +22,10 @@ data class VarRefDetail(
     val containerId: String? = null,
     @get:Schema(title = "任务ID", required = false)
     val taskId: String? = null,
-    @get:Schema(title = "位置路径，描述变量在模型中的具体位置，如model.stages[0].containers[0].elements[0].customCondition", required = true)
+    @get:Schema(
+        title = "位置路径，描述变量在模型中的具体位置，如model.stages[0].containers[0].elements[0].customCondition",
+        required = true
+    )
     val positionPath: String,
     @get:Schema(title = "创建者", required = true)
     val creator: String = "system",

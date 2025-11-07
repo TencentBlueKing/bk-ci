@@ -114,7 +114,6 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
             val newVersion = version + 1
-            
             // 计算新版本的初始引用计数（只统计动态版本引用）
             val newVersionReferCount = if (version != 0) {
                 publicVarGroupReferInfoDao.countByGroupName(
@@ -127,7 +126,7 @@ class PublicVarGroupService @Autowired constructor(
             } else {
                 0
             }
-            
+
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP").data ?: 0,
@@ -154,7 +153,7 @@ class PublicVarGroupService @Autowired constructor(
                     latestFlag = false
                 )
             }
-            
+
             // 事务中只做数据插入和更新操作，不做复杂查询
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -180,7 +179,7 @@ class PublicVarGroupService @Autowired constructor(
                     )
                 )
             }
-            
+
             // 事务提交后再更新新版本的引用计数
             // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）和固定版本引用
             if (newVersionReferCount > 0) {

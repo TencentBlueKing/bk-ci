@@ -43,7 +43,7 @@ class PublicVarReferInfoDao {
         if (pipelinePublicVarReferPOs.isEmpty()) {
             return
         }
-        
+
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             var insertQuery = dslContext.insertInto(
                 this,
@@ -426,5 +426,4 @@ class PublicVarReferInfoDao {
                 .execute()
         }
     }
-
 }

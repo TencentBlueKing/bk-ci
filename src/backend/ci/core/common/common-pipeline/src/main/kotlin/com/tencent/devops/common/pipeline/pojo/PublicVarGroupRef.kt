@@ -39,4 +39,3 @@ data class PublicVarGroupRef(
     @get:Schema(title = "回显的历史变量列表", required = false)
     var variables: List<BuildFormProperty>? = null
 )
-

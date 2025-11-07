@@ -318,42 +318,55 @@ class PublicVarDao {
         projectId: String,
         referCountChanges: Map<String, Int>
     ) {
-        if (referCountChanges.isEmpty()) {
-            return
-        }
+        if (referCountChanges.isEmpty()) return
+        
+        // 过滤掉变化量为0的记录
+        val validChanges = referCountChanges.filter { it.value != 0 }
         
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            referCountChanges.forEach { (key, change) ->
-                if (change != 0) {
-                    val parts = key.split(":")
-                    val groupName = parts[0]
-                    val version = parts[1].toInt()
-                    val varName = parts[2]
-                    
-                    if (change > 0) {
-                        // 增加引用计数
-                        dslContext.update(this)
-                            .set(REFER_COUNT, REFER_COUNT.plus(change))
-                            .set(UPDATE_TIME, LocalDateTime.now())
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(GROUP_NAME.eq(groupName))
-                            .and(VERSION.eq(version))
-                            .and(VAR_NAME.eq(varName))
-                            .execute()
-                    } else {
-                        // 减少引用计数（确保不会变成负数）
-                        dslContext.update(this)
-                            .set(REFER_COUNT, REFER_COUNT.plus(change))
-                            .set(UPDATE_TIME, LocalDateTime.now())
-                            .where(PROJECT_ID.eq(projectId))
-                            .and(GROUP_NAME.eq(groupName))
-                            .and(VERSION.eq(version))
-                            .and(VAR_NAME.eq(varName))
-                            .and(REFER_COUNT.ge(-change))
-                            .execute()
-                    }
-                }
+            validChanges.forEach { (key, change) ->
+                val (groupName, version, varName) = parseReferCountKey(key)
+                updateSingleReferCount(dslContext, projectId, groupName, version, varName, change)
             }
+        }
+    }
+
+    /**
+     * 解析引用计数变更的key
+     * @param key 格式为 "groupName:version:varName"
+     * @return Triple(groupName, version, varName)
+     */
+    private fun parseReferCountKey(key: String): Triple<String, Int, String> {
+        val parts = key.split(":")
+        return Triple(parts[0], parts[1].toInt(), parts[2])
+    }
+
+    /**
+     * 更新单个变量的引用计数
+     */
+    private fun updateSingleReferCount(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String,
+        change: Int
+    ) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            val updateQuery = dslContext.update(this)
+                .set(REFER_COUNT, REFER_COUNT.plus(change))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
+            
+            // 减少引用计数时，确保不会变成负数
+            if (change < 0) {
+                updateQuery.and(REFER_COUNT.ge(-change))
+            }
+            
+            updateQuery.execute()
         }
     }
 }

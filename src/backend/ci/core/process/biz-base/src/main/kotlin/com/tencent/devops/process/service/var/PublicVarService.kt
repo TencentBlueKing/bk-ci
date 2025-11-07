@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
@@ -295,72 +296,89 @@ class PublicVarService @Autowired constructor(
         latestGroupVars: List<BuildFormProperty>,
         params: MutableList<BuildFormProperty>
     ): List<BuildFormProperty> {
-        val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
+        val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 1. 更新已存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
-        diffResult.varsToUpdate.forEach { varName ->
-            positionInfoMap[varName]?.let { pos ->
-                val newVar = newVarMap[varName]
-                if (newVar != null) {
-                    // 先检查positionInfo记录的索引位置是否是同一变量
-                    if (params[pos.index].id == varName) {
-                        // 索引位置匹配，直接更新
-                        params[pos.index] = newVar
-                    } else {
-                        // 索引位置不匹配（可能变量顺序被调整），在params中查找实际位置
-                        val actualIndex = params.indexOfFirst { it.id == varName }
-                        if (actualIndex >= 0) {
-                            params[actualIndex] = newVar
-                        }
-                    }
-                }
+        // 1. 更新已存在的变量
+        updateExistingVars(diffResult.varsToUpdate, positionInfoMap, newVarMap, params)
+
+        // 2. 移除不再存在的变量
+        removeObsoleteVars(diffResult.varsToRemove, positionInfoMap, params)
+
+        // 3. 添加新增的变量到末尾
+        addNewVars(diffResult.varsToAdd, newVarMap, params)
+
+        // 4. 构建已移除的变量列表
+        return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupReferInfo)
+    }
+
+    /**
+     * 更新已存在的变量
+     */
+    private fun updateExistingVars(
+        varsToUpdate: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        newVarMap: Map<String, BuildFormProperty>,
+        params: MutableList<BuildFormProperty>
+    ) {
+        varsToUpdate.forEach { varName ->
+            val pos = positionInfoMap[varName] ?: return@forEach
+            val newVar = newVarMap[varName] ?: return@forEach
+            
+            val targetIndex = findVarIndexInParams(varName, pos.index, params)
+            if (targetIndex >= 0) {
+                params[targetIndex] = newVar
             }
         }
+    }
 
-        // 2. 移除不再存在的变量（先检查索引位置是否是同一变量，不是则在params中查找）
-        val indicesToRemove = diffResult.varsToRemove.mapNotNull { varName ->
-            val pos = positionInfoMap[varName]
-            if (pos != null) {
-                // 先检查positionInfo记录的索引位置是否是同一变量
-                if (pos.index >= 0 && pos.index < params.size && params[pos.index].id == varName) {
-                    logger.info("processVarGroupDiff will remove var: $varName at saved index: ${pos.index}")
-                    pos.index
-                } else {
-                    // 索引位置不匹配，在params中查找实际位置
-                    val actualIndex = params.indexOfFirst { it.id == varName }
-                    if (actualIndex >= 0) {
-                        logger.info("processVarGroupDiff will remove var: $varName at actual index: $actualIndex (saved index was ${pos.index})")
-                        actualIndex
-                    } else {
-                        logger.warn("processVarGroupDiff var to remove not found in params: $varName")
-                        null
-                    }
-                }
-            } else {
-                null
+    /**
+     * 移除不再存在的变量
+     */
+    private fun removeObsoleteVars(
+        varsToRemove: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        params: MutableList<BuildFormProperty>
+    ) {
+        val indicesToRemove = varsToRemove
+            .mapNotNull { varName ->
+                val pos = positionInfoMap[varName] ?: return@mapNotNull null
+                findVarIndexInParams(varName, pos.index, params)
             }
-        }.sortedDescending() // 降序排序，确保先删除索引大的
+            .sortedDescending() // 降序排序，确保先删除索引大的
 
         indicesToRemove.forEach { index ->
-            val removedVarName = params[index].id
             params.removeAt(index)
-            logger.info("processVarGroupDiff removed var: $removedVarName from index: $index")
         }
+    }
 
-        // 3. 添加新增的变量到末尾（先检查是否已存在，避免重复）
+    /**
+     * 添加新增的变量
+     */
+    private fun addNewVars(
+        varsToAdd: Set<String>,
+        newVarMap: Map<String, BuildFormProperty>,
+        params: MutableList<BuildFormProperty>
+    ) {
         val currentParamVarIds = params.map { it.id }.toSet()
-        diffResult.varsToAdd
+        varsToAdd
             .mapNotNull { newVarMap[it] }
-            .filter { it.id !in currentParamVarIds } // 过滤已存在的变量
+            .filter { it.id !in currentParamVarIds }
             .forEach { newVar ->
                 params.add(newVar)
-                logger.info("processVarGroupDiff added new var: ${newVar.id}")
             }
+    }
 
-        // 4. 使用diffResult.varsToRemove来构建已移除的变量列表
-        val removedVars = diffResult.varsToRemove.mapNotNull { varName ->
+    /**
+     * 构建已移除的变量列表
+     */
+    private fun buildRemovedVarsList(
+        varsToRemove: Set<String>,
+        positionInfoMap: Map<String, PublicVarPositionPO>,
+        groupReferInfo: ResourcePublicVarGroupReferPO
+    ): List<BuildFormProperty> {
+        return varsToRemove.mapNotNull { varName ->
             positionInfoMap[varName]?.let { pos ->
                 BuildFormProperty(
                     id = pos.varName,
@@ -377,14 +395,29 @@ class PublicVarService @Autowired constructor(
                     properties = null,
                     varGroupName = groupReferInfo.groupName,
                     varGroupVersion = groupReferInfo.version,
-                    constant = if (pos.type == PublicVarTypeEnum.CONSTANT) true else false,
+                    constant = pos.type == PublicVarTypeEnum.CONSTANT
                 ).apply {
                     this.removeFlag = true
                 }
             }
         }
+    }
 
-        return removedVars
+    /**
+     * 在params中查找变量的实际索引位置
+     * 先检查预期位置是否匹配，不匹配则遍历查找
+     */
+    private fun findVarIndexInParams(
+        varName: String,
+        expectedIndex: Int,
+        params: List<BuildFormProperty>
+    ): Int {
+        // 先检查预期位置是否匹配
+        if (expectedIndex in params.indices && params[expectedIndex].id == varName) {
+            return expectedIndex
+        }
+        // 预期位置不匹配，遍历查找实际位置
+        return params.indexOfFirst { it.id == varName }
     }
 
     /**

@@ -790,7 +790,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             // 在事务中执行删除和更新操作
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                
+
                 // 删除指定版本的变量组引用记录
                 publicVarGroupReferInfoDao.deleteByReferId(
                     dslContext = context,
@@ -854,7 +854,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 params = params
             )
         }
-        
+
         handleVarGroupReferBus(publicVarGroupReferDTO)
     }
 

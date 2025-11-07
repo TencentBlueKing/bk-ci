@@ -150,7 +150,7 @@ class ServiceMetricsResourceImpl constructor(
         val now = LocalDateTime.now()
         val startDate = now.minusMonths(1).withHour(0).withMinute(0).withSecond(0)
         val endDate = now.withHour(0).withMinute(0).withSecond(0)
-        
+
         return Result(
             pipelineOverviewManageService.queryPipelineMonthlyExecCounts(
                 projectId = projectId,

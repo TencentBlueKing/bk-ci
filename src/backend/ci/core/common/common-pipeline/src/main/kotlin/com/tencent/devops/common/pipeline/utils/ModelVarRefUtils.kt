@@ -664,6 +664,7 @@ object ModelVarRefUtils {
      * @param basePath 对象在模型中的基础路径
      * @param visited 已访问对象集合，用于循环引用检测
      */
+    @Suppress("NestedBlockDepth")
     private fun parseGenericObject(
         obj: Any,
         context: ParseContext,

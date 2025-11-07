@@ -38,7 +38,7 @@ class PublicVarGroupReleaseRecordDao {
 
     fun batchInsert(dslContext: DSLContext, records: List<ResourcePublicVarGroupReleaseRecordPO>) {
         if (records.isEmpty()) return
-        
+
         with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             val insertStep = dslContext.insertInto(
                 this,
@@ -55,7 +55,7 @@ class PublicVarGroupReleaseRecordDao {
                 CREATE_TIME,
                 UPDATE_TIME
             )
-            
+
             records.forEach { record ->
                 insertStep.values(
                     record.id,
@@ -72,7 +72,7 @@ class PublicVarGroupReleaseRecordDao {
                     record.updateTime
                 )
             }
-            
+
             insertStep.execute()
         }
     }

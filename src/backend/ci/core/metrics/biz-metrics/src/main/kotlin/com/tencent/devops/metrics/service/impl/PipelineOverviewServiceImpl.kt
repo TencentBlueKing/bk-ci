@@ -133,7 +133,7 @@ class PipelineOverviewServiceImpl @Autowired constructor(
         if (pipelineIds.isEmpty()) {
             return emptyMap()
         }
-        
+
         val result = pipelineOverviewDao.queryPipelineMonthlyExecCounts(
             dslContext = dslContext,
             projectId = projectId,
