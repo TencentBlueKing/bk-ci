@@ -68,7 +68,7 @@ class ModelHandleServiceImpl @Autowired constructor(
     ) {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${MODEL_VAR_REF_LOCK_KEY}:$projectId:$resourceType:$resourceId:$resourceVersion",
+            lockKey = "$MODEL_VAR_REF_LOCK_KEY:$projectId:$resourceType:$resourceId:$resourceVersion",
             expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
         )
         try {
@@ -87,7 +87,6 @@ class ModelHandleServiceImpl @Autowired constructor(
                 model = model,
                 projectId = projectId
             )
-            
             // 在事务中处理变量引用详情
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -101,7 +100,6 @@ class ModelHandleServiceImpl @Autowired constructor(
                 )
                 varRefDetailDao.batchSave(context, varRefDetails)
             }
-            
             // 处理公共变量组变量引用
             handlePublicVarGroupReferences(
                 userId = userId,
@@ -112,9 +110,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                 resourceVersion = resourceVersion,
                 varRefDetails = varRefDetails
             )
-            
             logger.info("Variable references update completed for resource: $resourceId")
-
         } catch (e: Throwable) {
             logger.warn("Error while detecting variable references for resource: $resourceId", e)
             throw e
