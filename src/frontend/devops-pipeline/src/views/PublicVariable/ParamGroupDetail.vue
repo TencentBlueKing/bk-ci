@@ -45,13 +45,13 @@
                     <bk-button
                         theme="primary"
                         v-perm="{
-                            hasPermission: isManage,
+                            hasPermission: groupData?.permission?.canEdit,
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: 'project',
-                                resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                resourceType: RESOURCE_TYPE.VARIABLE,
+                                resourceCode: groupData.groupName,
+                                action: VARIABLE_RESOURCE_ACTION.EDIT
                             }
                         }"
                         @click="handleEditGroup(groupData)"
@@ -158,10 +158,10 @@
 <script setup>
     import { computed, watch, ref } from 'vue'
     import {
-        PROJECT_RESOURCE_ACTION
+        RESOURCE_TYPE,
+        VARIABLE_RESOURCE_ACTION
     } from '@/utils/permission'
     import { deepClone, randomString } from '@/utils/util'
-
     import {
         VARIABLE,
         CONSTANT,
