@@ -339,7 +339,6 @@ class ModelTransfer @Autowired constructor(
         }
         variableTransfer.makeVariableFromModel(modelInput.model.getTriggerContainer())?.let { variables.putAll(it) }
         yaml.variables = if (variables.isEmpty()) null else variables
-        yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
         yaml.extends = makeExtend(modelInput.model)
         yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
         yaml.concurrency = makeConcurrency(modelInput)
