@@ -242,7 +242,7 @@ class PublicVarService @Autowired constructor(
             referVersion = referVersion
         )
         val params = model.getTriggerContainer().params
-        
+
         // 为每个变量组处理并设置 variables
         publicVarGroups.forEach { varGroup ->
             val groupName = varGroup.groupName
@@ -325,7 +325,7 @@ class PublicVarService @Autowired constructor(
         varsToUpdate.forEach { varName ->
             val pos = positionInfoMap[varName] ?: return@forEach
             val newVar = newVarMap[varName] ?: return@forEach
-            
+
             val targetIndex = findVarIndexInParams(varName, pos.index, params)
             if (targetIndex >= 0) {
                 params[targetIndex] = newVar
@@ -486,7 +486,7 @@ class PublicVarService @Autowired constructor(
         varRefDetails: List<VarRefDetail>
     ) {
         logger.info("Start handling public var group references for resource: $resourceId|$resourceVersion")
-        
+
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
         
         // 1. 查询所有已存在的引用记录（按groupName和version分组）
@@ -497,10 +497,10 @@ class PublicVarService @Autowired constructor(
             referType = referType,
             referVersion = resourceVersion
         )
-        
+
         // 2. 构建Model中的变量组列表
         val modelVarGroups = model.publicVarGroups ?: emptyList()
-        
+
         // 3. 如果Model中没有变量组，清理所有已存在的引用记录
         if (modelVarGroups.isEmpty()) {
             if (existingGroupMap.isNotEmpty()) {
@@ -516,10 +516,10 @@ class PublicVarService @Autowired constructor(
             }
             return
         }
-        
+
         // 4. 从varRefDetails中提取被引用的变量名集合
         val referencedVarNames = varRefDetails.map { it.varName }.toSet()
-        
+
         // 5. 从triggerContainer.params中筛选出公共变量（通过varGroupName判断）
         // 构建 Map<varGroupName, Set<varName>>
         val triggerContainer = model.getTriggerContainer()
@@ -527,14 +527,14 @@ class PublicVarService @Autowired constructor(
             .filter { !it.varGroupName.isNullOrBlank() } // 有varGroupName的是公共变量
             .groupBy { it.varGroupName!! }
             .mapValues { (_, vars) -> vars.map { it.id }.toSet() }
-        
+
         // 6. 识别需要清理的变量组（在已存在但不在Model的publicVarGroups中的）
         val modelGroupKeys = modelVarGroups.map { 
             val versionKey = it.version ?: -1
             "${it.groupName}:$versionKey"
         }.toSet()
         val groupsToCleanup = existingGroupMap.keys - modelGroupKeys
-        
+
         // 7. 先清理不在Model中的公共变量引用
         if (groupsToCleanup.isNotEmpty()) {
             cleanupRemovedVarGroupReferences(
@@ -547,7 +547,7 @@ class PublicVarService @Autowired constructor(
                 existingGroupMap = existingGroupMap
             )
         }
-        
+
         // 8. 批量查询需要的最新版本号（减少数据库查询次数）
         val groupsNeedLatestVersion = modelVarGroups
             .filter { it.version == null }
@@ -561,7 +561,7 @@ class PublicVarService @Autowired constructor(
         } else {
             emptyMap()
         }
-        
+
         // 9. 批量查询所有变量组的已存在变量名（减少数据库查询次数）
         val allExistingVarNames = publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
             dslContext = dslContext,
@@ -571,36 +571,36 @@ class PublicVarService @Autowired constructor(
             referVersion = resourceVersion
         ).groupBy { "${it.groupName}:${it.version}" }
          .mapValues { (_, records) -> records.map { it.varName }.toSet() }
-        
+
         // 10. 使用Map收集引用计数变化，最后批量更新
         // key: "groupName:version:varName", value: 计数变化量（正数表示增加，负数表示减少）
         val referCountChanges = mutableMapOf<String, Int>()
-        
+
         // 收集需要批量删除的变量引用 Triple(groupName, versionForDb, varNames)
         val varsToDeleteBatch = mutableListOf<Triple<String, Int, List<String>>>()
-        
+
         // 收集需要批量新增的变量引用
         val referRecordsToAdd = mutableListOf<ResourcePublicVarReferPO>()
-        
+
         // 11. 处理Model中的变量组引用
         modelVarGroups.forEach { varGroup ->
             val groupName = varGroup.groupName
             val versionForDb = varGroup.version ?: -1
             val groupKey = "$groupName:$versionForDb"
-            
+
             // 从publicVarMap中获取该变量组的所有变量
             val groupVarNames = publicVarMap[groupName] ?: emptySet()
-            
+
             // 筛选出被引用的变量（在referencedVarNames中存在的）
-            val referencedVarNameSet = groupVarNames.filter { 
-                referencedVarNames.contains(it) 
+            val referencedVarNameSet = groupVarNames.filter {
+                referencedVarNames.contains(it)
             }.toSet()
-            
+
             // 如果该变量组没有被引用的变量，跳过处理
             if (referencedVarNameSet.isEmpty()) {
                 return@forEach
             }
-            
+
             // 确定实际版本号（用于更新引用计数）
             val actualVersion = if (versionForDb == -1) {
                 latestVersionMap[groupName] ?: run {
@@ -609,25 +609,25 @@ class PublicVarService @Autowired constructor(
             } else {
                 versionForDb
             }
-            
+
             // 获取该组已存在的引用变量名
             val existingVarNames = allExistingVarNames[groupKey] ?: emptySet()
-            
+
             // 识别需要新增和删除的变量
             val varsToAdd = referencedVarNameSet - existingVarNames
             val varsToRemove = existingVarNames - referencedVarNameSet
-            
+
             // 收集需要删除的变量引用
             if (varsToRemove.isNotEmpty()) {
                 varsToDeleteBatch.add(Triple(groupName, versionForDb, varsToRemove.toList()))
-                
+
                 // 收集引用计数变化（减少）
                 varsToRemove.forEach { varName ->
                     val countKey = "$groupName:$actualVersion:$varName"
                     referCountChanges[countKey] = (referCountChanges[countKey] ?: 0) - 1
                 }
             }
-            
+
             // 收集需要新增的变量引用
             if (varsToAdd.isNotEmpty()) {
                 // 批量生成ID
@@ -639,7 +639,7 @@ class PublicVarService @Autowired constructor(
                         params = arrayOf("Failed to generate segment IDs for var refer info")
                     )
                 }
-                
+
                 // 构建引用记录
                 varsToAdd.forEachIndexed { index, varName ->
                     referRecordsToAdd.add(
@@ -659,14 +659,14 @@ class PublicVarService @Autowired constructor(
                             updateTime = LocalDateTime.now()
                         )
                     )
-                    
+
                     // 收集引用计数变化（增加）
                     val countKey = "$groupName:$actualVersion:$varName"
                     referCountChanges[countKey] = (referCountChanges[countKey] ?: 0) + 1
                 }
             }
         }
-        
+
         // 12. 批量执行删除操作
         varsToDeleteBatch.forEach { (groupName, versionForDb, varNames) ->
             publicVarReferInfoDao.deleteByReferIdAndGroupAndVarNames(
@@ -679,12 +679,12 @@ class PublicVarService @Autowired constructor(
                 varNames = varNames
             )
         }
-        
+
         // 13. 批量插入新增的引用记录
         if (referRecordsToAdd.isNotEmpty()) {
             publicVarReferInfoDao.batchSave(dslContext, referRecordsToAdd)
         }
-        
+
         // 14. 批量更新引用计数
         if (referCountChanges.isNotEmpty()) {
             publicVarDao.batchUpdateReferCount(
@@ -694,11 +694,11 @@ class PublicVarService @Autowired constructor(
             )
         }
     }
-    
+
     /**
      * 清理已移除的变量组引用
      */
-    private fun cleanupRemovedVarGroupReferences(
+    fun cleanupRemovedVarGroupReferences(
         context: DSLContext,
         projectId: String,
         resourceId: String,
@@ -709,13 +709,13 @@ class PublicVarService @Autowired constructor(
     ) {
         // 收集引用计数变化
         val referCountChanges = mutableMapOf<String, Int>()
-        
+
         groupsToCleanup.forEach { groupKey ->
             val groupInfo = existingGroupMap[groupKey] ?: return@forEach
             val (groupName, version) = groupInfo
-            
+
             logger.info("Cleaning up var group: $groupName, version: $version")
-            
+
             // 删除引用记录（按groupName和version删除）
             publicVarReferInfoDao.deleteByReferIdAndGroup(
                 dslContext = context,
@@ -725,7 +725,7 @@ class PublicVarService @Autowired constructor(
                 groupName = groupName,
                 referVersion = resourceVersion
             )
-            
+
             // 确定实际版本号用于更新引用计数
             val actualVersion = if (version == -1) {
                 // 查询最新版本号
@@ -740,7 +740,7 @@ class PublicVarService @Autowired constructor(
             } else {
                 version
             }
-            
+
             // 查询该变量组的所有变量名
             val varNames = publicVarDao.queryVarNamesByGroupName(
                 dslContext = context,
@@ -748,16 +748,16 @@ class PublicVarService @Autowired constructor(
                 groupName = groupName,
                 version = actualVersion
             )
-            
+
             // 收集引用计数变化（减少）
             varNames.forEach { varName ->
                 val countKey = "$groupName:$actualVersion:$varName"
                 referCountChanges[countKey] = (referCountChanges[countKey] ?: 0) - 1
             }
-            
+
             logger.info("Cleaned up var group: $groupName, actual version: $actualVersion, ${varNames.size} vars")
         }
-        
+
         // 批量更新引用计数
         publicVarDao.batchUpdateReferCount(
             dslContext = context,

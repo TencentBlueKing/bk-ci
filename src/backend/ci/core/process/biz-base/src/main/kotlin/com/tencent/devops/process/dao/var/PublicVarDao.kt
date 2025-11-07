@@ -319,10 +319,10 @@ class PublicVarDao {
         referCountChanges: Map<String, Int>
     ) {
         if (referCountChanges.isEmpty()) return
-        
+
         // 过滤掉变化量为0的记录
         val validChanges = referCountChanges.filter { it.value != 0 }
-        
+
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             validChanges.forEach { (key, change) ->
                 val (groupName, version, varName) = parseReferCountKey(key)
@@ -360,12 +360,12 @@ class PublicVarDao {
                 .and(GROUP_NAME.eq(groupName))
                 .and(VERSION.eq(version))
                 .and(VAR_NAME.eq(varName))
-            
+
             // 减少引用计数时，确保不会变成负数
             if (change < 0) {
                 updateQuery.and(REFER_COUNT.ge(-change))
             }
-            
+
             updateQuery.execute()
         }
     }

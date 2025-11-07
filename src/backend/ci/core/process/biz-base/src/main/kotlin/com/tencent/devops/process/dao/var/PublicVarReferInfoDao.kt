@@ -60,7 +60,7 @@ class PublicVarReferInfoDao {
                 CREATE_TIME,
                 UPDATE_TIME
             )
-            
+
             pipelinePublicVarReferPOs.forEach { po ->
                 insertQuery = insertQuery.values(
                     po.id,

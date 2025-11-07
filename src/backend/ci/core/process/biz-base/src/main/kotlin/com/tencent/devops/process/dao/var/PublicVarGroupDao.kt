@@ -428,7 +428,7 @@ class PublicVarGroupDao {
         groupNames: List<String>
     ): Map<String, Int> {
         if (groupNames.isEmpty()) return emptyMap()
-        
+
         with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
             return dslContext.select(GROUP_NAME, VAR_COUNT)
                 .from(this)
