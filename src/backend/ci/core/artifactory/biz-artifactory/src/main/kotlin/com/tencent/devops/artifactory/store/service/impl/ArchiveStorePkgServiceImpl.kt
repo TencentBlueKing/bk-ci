@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -348,6 +349,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         osArch: String?,
         checkProjectId: Boolean
     ): String {
+        var storeStatus: String? = null
         if (checkProjectId) {
             val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
                 storeCode = storeCode,
@@ -364,6 +366,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     defaultMessage = validateResult.message
                 )
             }
+            storeStatus = storeBaseInfo.status;
         }
         var finalOsName = osName
         if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
@@ -381,7 +384,18 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         val storePkgEnvInfo = storePkgEnvInfos[0]
-        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
+//        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
+        val queryCacheFlag = if (storeStatus != null) {
+            storeStatus !in StoreStatusEnum.getTestStatusList()
+        } else {
+            val status = client.get(ServiceStoreComponentResource::class).getStoreUpgradeStatusInfo(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.name,
+                version = version
+            ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            status !in StoreStatusEnum.getTestStatusList()
+        }
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,
