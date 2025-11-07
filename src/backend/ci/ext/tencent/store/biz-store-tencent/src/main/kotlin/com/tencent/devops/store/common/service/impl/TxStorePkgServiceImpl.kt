@@ -129,7 +129,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
     ) {
         val storeId = storeBaseRecord.id
         val storeCode = storeBaseRecord.storeCode
-        val storeType = StoreTypeEnum.getStoreType(storeBaseRecord.storeType.toInt())
 
         logger.info("Processing store: $storeCode, storeId: $storeId")
 
@@ -151,7 +150,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
         val t = TStoreBaseEnv.T_STORE_BASE_ENV
         return dslContext.selectFrom(t)
             .where(t.STORE_ID.eq(storeId))
-            .and(t.PKG_PATH.isNotNull)
             .fetch()
     }
 
@@ -164,12 +162,11 @@ class TxStorePkgServiceImpl @Autowired constructor(
         tempDir: File,
         userId: String
     ) {
-        val pkgPath = envRecord.pkgPath ?: return
         val storeCode = storeBaseRecord.storeCode
         val version = storeBaseRecord.version
         val storeType = StoreTypeEnum.getStoreTypeObj(storeBaseRecord.storeType.toInt())
 
-        logger.info("Processing package: $storeCode-$version, pkgPath: $pkgPath")
+        logger.info("Processing package: $storeCode-$version")
 
         // 2. 获取文件下载地址
         val downloadUrl = getPackageDownloadUrl(
