@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarResource
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -42,6 +44,7 @@ class UserPublicVarResourceImpl @Autowired constructor(
     val publicVarService: PublicVarService
 ) : UserPublicVarResource {
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun listGroupPublicVar(
         userId: String,
         projectId: String,
@@ -55,6 +58,7 @@ class UserPublicVarResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun getVariables(
         userId: String,
         projectId: String,

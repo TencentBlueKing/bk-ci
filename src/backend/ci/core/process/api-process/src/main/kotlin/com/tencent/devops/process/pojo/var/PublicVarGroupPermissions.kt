@@ -23,28 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.pojo.`var`.`do`
+package com.tencent.devops.process.pojo.`var`
 
-import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
-@Schema(title = "公共变量组基本信息")
-data class PublicVarGroupDO(
-    @get:Schema(title = "变量组名称")
-    val groupName: String,
-    @get:Schema(title = "关联流水线/模板总数")
-    val referCount: Int,
-    @get:Schema(title = "变量总数")
-    val varCount: Int,
-    @get:Schema(title = "变量组描述")
-    val desc: String? = null,
-    @get:Schema(title = "变量组权限")
-    val permission: PublicVarGroupPermissions,
-    @get:Schema(title = "修改人")
-    var modifier: String,
-    @get:Schema(title = "更新时间")
-    var updateTime: LocalDateTime
+@Schema(title = "公共变量组权限")
+data class PublicVarGroupPermissions(
+    @get:Schema(title = "管理员权限", required = true)
+    val canManage: Boolean,
+    @get:Schema(title = "新增权限", required = true)
+    val canAdd: Boolean = true,
+    @get:Schema(title = "编辑权限", required = true)
+    val canEdit: Boolean = true,
+    @get:Schema(title = "项目变量组列表查看权限", required = true)
+    val groupCanView: Boolean = true,
+    @get:Schema(title = "查看权限", required = true)
+    val canView: Boolean = true,
+    @get:Schema(title = "删除权限", required = true)
+    val canDelete: Boolean = true,
+    @get:Schema(title = "使用权限", required = true)
+    val canUse: Boolean = true
 )

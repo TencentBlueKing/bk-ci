@@ -27,10 +27,14 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
@@ -43,9 +47,11 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService
+    private val publicVarGroupService: PublicVarGroupService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : UserPublicVarGroupResource {
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_CREATE)
     override fun addGroup(
         userId: String,
         projectId: String,
@@ -64,6 +70,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun getGroups(
         userId: String,
         projectId: String,
@@ -90,10 +97,12 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun getGroupNames(userId: String, projectId: String): Result<List<String>> {
         return Result(publicVarGroupService.listGroupNames(projectId))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun importGroup(
         userId: String,
         projectId: String,
@@ -108,6 +117,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun exportGroup(
         userId: String,
         projectId: String,
@@ -121,6 +131,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_DELETE)
     override fun deleteGroup(userId: String, projectId: String, groupName: String): Result<Boolean> {
         return Result(publicVarGroupService.deleteGroup(
             userId = userId,
@@ -129,6 +140,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,
@@ -137,6 +149,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun convertYamlToGroup(
         userId: String,
         projectId: String,

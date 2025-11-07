@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
@@ -47,6 +49,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
+import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
@@ -85,7 +88,8 @@ class PublicVarGroupService @Autowired constructor(
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    private val tokenService: ClientTokenService
 ) {
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
@@ -285,7 +289,17 @@ class PublicVarGroupService @Autowired constructor(
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,
-                updateTime = po.updateTime
+                updateTime = po.updateTime,
+                permission = PublicVarGroupPermissions(
+                    canManage = client.get(ServiceProjectAuthResource::class).checkProjectManager(
+                        userId = userId,
+                        projectCode = projectId,
+                        token = tokenService.getSystemToken()
+                    ).data ?: false,
+                    canAdd = true,
+                    canDelete = true,
+                    canEdit = true
+                )
             )
         }
 

@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupReferenceResource
@@ -47,6 +49,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
     val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 ) : UserPublicVarGroupReferenceResource {
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun listVarReferInfo(
         userId: String,
         projectId: String,
@@ -70,6 +73,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_EDIT)
     override fun getChangePreview(
         userId: String,
         projectId: String,
@@ -82,6 +86,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         ))
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_USE)
     override fun listPipelineVarGroupInfo(
         userId: String,
         projectId: String,
@@ -98,6 +103,7 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
         return publicVarGroupService.listProjectVarGroupInfo(
             userId = userId,
