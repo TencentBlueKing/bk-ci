@@ -87,7 +87,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                 model = model,
                 projectId = projectId
             )
-            // 在事务中处理变量引用详情
+            // 处理变量引用详情
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
 
@@ -98,7 +98,9 @@ class ModelHandleServiceImpl @Autowired constructor(
                     resourceType = resourceType,
                     referVersion = resourceVersion
                 )
-                varRefDetailDao.batchSave(context, varRefDetails)
+                if (varRefDetails.isNotEmpty()) {
+                    varRefDetailDao.batchSave(context, varRefDetails)
+                }
             }
             // 处理公共变量组变量引用
             handlePublicVarGroupReferences(
