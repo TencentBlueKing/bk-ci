@@ -896,6 +896,87 @@ object ModelVarRefUtils {
     }
 
     /**
+     * 移除文本中的注释行
+     * 使用StringBuilder手动扫描
+     * 支持两种注释格式：
+     * 1. 以#开头的注释行
+     * 2. 以REM开头的注释行（不区分大小写）
+     * @param text 原始文本
+     * @return 移除注释行后的文本
+     */
+    private fun removeCommentLines(text: String): String {
+        if (text.isEmpty()) return text
+        
+        val result = StringBuilder(text.length)
+        var lineStart = 0
+        var i = 0
+        
+        while (i < text.length) {
+            // 找到行尾
+            if (text[i] == '\n' || text[i] == '\r') {
+                // 检查这一行是否是注释行
+                if (!isCommentLine(text, lineStart, i)) {
+                    // 不是注释行，添加到结果中
+                    result.append(text, lineStart, i + 1)
+                }
+                
+                // 处理\r\n的情况
+                if (text[i] == '\r' && i + 1 < text.length && text[i + 1] == '\n') {
+                    i++
+                }
+                
+                lineStart = i + 1
+            }
+            i++
+        }
+        
+        // 处理最后一行（如果没有换行符结尾）
+        if (lineStart < text.length && !isCommentLine(text, lineStart, text.length)) {
+            result.append(text, lineStart, text.length)
+        }
+        
+        return result.toString()
+    }
+    
+    /**
+     * 检查指定范围的文本是否为注释行
+     * @param text 完整文本
+     * @param start 行起始位置
+     * @param end 行结束位置
+     * @return 如果是注释行返回true，否则返回false
+     */
+    private fun isCommentLine(text: String, start: Int, end: Int): Boolean {
+        var i = start
+        
+        // 跳过行首空白字符
+        while (i < end && (text[i] == ' ' || text[i] == '\t')) {
+            i++
+        }
+        
+        // 检查是否为空行
+        if (i >= end) return false
+        
+        // 检查是否以#开头
+        if (text[i] == '#') return true
+        
+        // 检查是否以REM开头（不区分大小写）
+        if (i + 3 <= end) {
+            val char1 = text[i]
+            val char2 = text[i + 1]
+            val char3 = text[i + 2]
+            
+            if ((char1 == 'R' || char1 == 'r') &&
+                (char2 == 'E' || char2 == 'e') &&
+                (char3 == 'M' || char3 == 'm')) {
+                // 确保REM后面是空白或行尾
+                return i + 3 >= end || text[i + 3] == ' ' || text[i + 3] == '\t'
+            }
+        }
+        
+        return false
+    }
+
+    /**
      * 优化正则表达式匹配
      * 使用预编译的正则表达式从字符串中提取变量引用
      * 匹配格式：${变量名} 或 ${variables.变量名}
@@ -908,6 +989,7 @@ object ModelVarRefUtils {
      * 2. 预编译正则：使用预编译的正则表达式，避免重复编译
      * 3. 使用Set去重：避免重复变量，提高查找效率
      * 4. 批量匹配：一次性提取所有变量引用
+     * 5. 注释过滤：先移除注释行，避免解析注释中的变量引用
      * 变量提取规则：
      * - 使用正则表达式的第二个分组（group(2)）获取变量名
      * - 对变量名进行trim操作，去除前后空格
@@ -920,8 +1002,12 @@ object ModelVarRefUtils {
         // 这是重要的性能优化，避免对不包含变量引用的字符串进行正则匹配
         if (!text.contains('$')) return emptySet()
 
+        // 先移除注释行，避免解析注释中的变量引用
+        val cleanedText = removeCommentLines(text)
+        if (cleanedText.isEmpty()) return emptySet()
+
         val variables = mutableSetOf<String>()
-        val matcher = VARIABLE_PATTERN.matcher(text)
+        val matcher = VARIABLE_PATTERN.matcher(cleanedText)
 
         // 使用正则表达式匹配所有变量引用
         while (matcher.find()) {
@@ -934,10 +1020,15 @@ object ModelVarRefUtils {
 
     private fun extractCustomConditionVariablesFromString(text: String): Set<String> {
         if (text.isEmpty()) return emptySet()
+        
+        // 先移除注释行，避免解析注释中的变量引用
+        val cleanedText = removeCommentLines(text)
+        if (cleanedText.isEmpty()) return emptySet()
+        
         val variables = mutableSetOf<String>()
         // 匹配不带$的variables.xxx格式，匹配 variables.xxx，确保它是独立的单词（前面是边界或空格，后面是边界或空格）
         val plainPattern = Pattern.compile("(?:^|[^\\w.])(variables\\.(\\S+))(?=$|[^\\w.])")
-        val plainMatcher = plainPattern.matcher(text)
+        val plainMatcher = plainPattern.matcher(cleanedText)
 
         while (plainMatcher.find()) {
             val variable = plainMatcher.group(2)?.trim() // group(2) 是纯变量名
