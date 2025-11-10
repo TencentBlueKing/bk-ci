@@ -281,6 +281,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
                   "name" : {
                     "type" : "string"
                   },
@@ -323,14 +326,6 @@
                       "type" : "string"
                     }
                   },
-                  "action" : {
-                    "type" : "array",
-                    "uniqueItems" : true,
-                    "items" : {
-                      "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
-                    },
-                    "additionalItems" : false
-                  },
                   "users" : {
                     "type" : "array",
                     "items" : {
@@ -344,9 +339,6 @@
                     }
                   },
                   "report-commit-check" : {
-                    "type" : "boolean"
-                  },
-                  "block-mr" : {
                     "type" : "boolean"
                   },
                   "webhook-queue" : {
@@ -1100,6 +1092,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
                 "name" : {
                   "type" : "string"
                 },
@@ -1142,14 +1137,6 @@
                     "type" : "string"
                   }
                 },
-                "action" : {
-                  "type" : "array",
-                  "uniqueItems" : true,
-                  "items" : {
-                    "enum" : [ "open", "close", "reopen", "push-update", "merge", "edit" ]
-                  },
-                  "additionalItems" : false
-                },
                 "users" : {
                   "type" : "array",
                   "items" : {
@@ -1163,9 +1150,6 @@
                   }
                 },
                 "report-commit-check" : {
-                  "type" : "boolean"
-                },
-                "block-mr" : {
                   "type" : "boolean"
                 },
                 "webhook-queue" : {
