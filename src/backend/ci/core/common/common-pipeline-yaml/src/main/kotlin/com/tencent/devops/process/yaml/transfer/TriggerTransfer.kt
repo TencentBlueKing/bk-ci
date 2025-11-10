@@ -291,6 +291,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     skipWip = git.skipWip
                 )
                 CodeEventType.MERGE_REQUEST_ACCEPT -> nowExist.mrMerged = MrRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     targetBranches = git.branchName?.disjoin(),
