@@ -544,7 +544,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
-     * 异步更新引用计数
+     * 更新公共变量组引用计数
      * @param projectId 项目ID
      * @param historicalReferInfos 历史引用信息
      * @param publicVarGroupNames 当前变量组名称列表
@@ -556,7 +556,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         publicVarGroupNames: List<String>,
         resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO> = emptyList()
     ) {
-        logger.info("asyncUpdateReferenceCountsAfterSave historicalReferInfos: $historicalReferInfos" +
+        logger.info("updateReferenceCountsAfterSave historicalReferInfos: $historicalReferInfos" +
                 "publicVarGroupNames: $publicVarGroupNames" +
                 "pipelinePublicVarGroupReferPOs: $resourcePublicVarGroupReferPOS")
         if (publicVarGroupNames.isEmpty() && resourcePublicVarGroupReferPOS.isEmpty()) {
