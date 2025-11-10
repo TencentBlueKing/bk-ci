@@ -63,7 +63,11 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val releaseRecords = generateVarChangeRecords(
             oldVars = oldVarDOs,
             newVars = newVarDOs,
-            groupName = oldVarPOs.firstOrNull()?.groupName ?: newVarPOs.first().groupName,
+            groupName = oldVarPOs.firstOrNull()?.groupName ?: newVarPOs.firstOrNull()?.groupName
+                ?: throw ErrorCodeException(
+                    errorCode = ERROR_INVALID_PARAM_,
+                    params = arrayOf("groupName")
+                ),
             version = publicVarGroupReleaseDTO.version,
             userId = userId,
             pubTime = LocalDateTime.now(),
@@ -87,7 +91,11 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val records = releaseRecords.map { releaseRecord ->
             ResourcePublicVarGroupReleaseRecordPO(
                 id = segmentIds?.get(index++) ?: 0,
-                projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.first().projectId,
+                projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.firstOrNull()?.projectId
+                    ?: throw ErrorCodeException(
+                        errorCode = ERROR_INVALID_PARAM_,
+                        params = arrayOf("projectId")
+                    ),
                 groupName = releaseRecord.groupName,
                 version = releaseRecord.version,
                 publisher = releaseRecord.publisher,

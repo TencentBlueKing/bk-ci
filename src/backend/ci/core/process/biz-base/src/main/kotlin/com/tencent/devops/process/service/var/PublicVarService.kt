@@ -121,8 +121,7 @@ class PublicVarService @Autowired constructor(
             dslContext = context,
             projectId = projectId,
             groupName = groupName,
-            version = publicVarDTO.version - 1,
-            varNameList = publicVarDTO.publicVars.map { it.varName }
+            version = publicVarDTO.version - 1
         )
         publicVarDao.batchSave(dslContext, publicVarPOs)
         publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
