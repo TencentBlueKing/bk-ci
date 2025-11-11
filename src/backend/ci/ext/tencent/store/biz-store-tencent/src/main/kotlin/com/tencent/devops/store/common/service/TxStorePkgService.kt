@@ -9,5 +9,5 @@ interface TxStorePkgService {
         userId: String,
         storeType: StoreTypeEnum?,
         pageSize: Int? = 100
-    ): Result<Boolean>
+    )
 }

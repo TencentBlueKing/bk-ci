@@ -1,23 +1,22 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.common.service.TxStorePkgService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.store.common.service.TxStorePkgService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 
 
@@ -38,85 +37,88 @@ class TxStorePkgServiceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum?,
         pageSize: Int?
-    ): Result<Boolean> {
-        // 使用分布式锁防止重复执行
+    ) {
+        // 1. 获取分布式锁
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "OP_STORE_PKG_SHA256_UPDATE_LOCK",
             expiredTimeInSeconds = 540
         )
-
         if (!redisLock.tryLock()) {
             logger.warn("SHA256 update task is already running")
-            return Result(data = false, message = "SHA256 update task is already running")
+            return
         }
 
-        try {
+        return try {
             logger.info("Start updating package SHA256 values, storeType: $storeType")
-
-            // 创建临时目录
-            val tempDir = File(TEMP_DIR)
-            if (!tempDir.exists()) {
-                tempDir.mkdirs()
-            }
-
-            var offset = 0
-            val limit = pageSize ?: 100
-            var processedCount = 0
-
-            while (true) {
-
-                val storeBaseRecords = queryStoreBaseRecords(storeType, offset, limit)
-
-                if (storeBaseRecords.isEmpty()) {
-                    logger.info("No more records to process")
-                    break
-                }
-
-                // 2. 处理每个组件
-                storeBaseRecords.forEach { storeBaseRecord ->
-                    try {
-                        processStorePackage(storeBaseRecord, tempDir, userId)
-                        processedCount++
-                    } catch (e: Exception) {
-                        logger.error("Failed to process store: ${storeBaseRecord.storeCode}", e)
-                    }
-                }
-
-                offset += limit
-                logger.info("Processed $processedCount packages so far")
-            }
-
+            // 2. 创建临时目录
+            val tempDir = createTempDir()
+            // 3. 分页处理所有记录
+            val processedCount = processAllRecords(storeType, pageSize ?: 100, tempDir, userId)
             logger.info("SHA256 update completed, total processed: $processedCount")
-            return Result(true)
-
         } finally {
-            // 清理临时目录
-            File(TEMP_DIR).deleteRecursively()
+            // 4. 清理资源
+            cleanupResources()
             redisLock.unlock()
         }
     }
 
     /**
-     * 分页查询 T_STORE_BASE 表
+     * 创建临时目录
      */
-    private fun queryStoreBaseRecords(
-        storeType: StoreTypeEnum?,
-        offset: Int,
-        limit: Int
-    ): List<TStoreBaseRecord> {
-        val t = TStoreBase.T_STORE_BASE
-        val conditions = mutableListOf<Condition>()
-
-        if (storeType != null) {
-            conditions.add(t.STORE_TYPE.eq(storeType.type.toByte()))
+    private fun createTempDir(): File {
+        val tempDir = File(TEMP_DIR)
+        if (!tempDir.exists() && !tempDir.mkdirs()) {
+            logger.error("Failed to create temp directory: $TEMP_DIR")
+            throw RuntimeException("Cannot create temp directory: $TEMP_DIR")
         }
+        return tempDir
+    }
 
-        return dslContext.selectFrom(t)
-            .where(conditions)
-            .orderBy(t.ID.asc())
-            .limit(offset, limit)
-            .fetch()
+    /**
+     * 分页处理所有记录
+     */
+    private fun processAllRecords(
+        storeType: StoreTypeEnum?,
+        pageSize: Int,
+        tempDir: File,
+        userId: String
+    ): Int {
+        var offset = 0
+        var processedCount = 0
+        while (true) {
+            // 查询单批记录
+            val storeBaseRecords = queryStoreBaseRecords(storeType, offset, pageSize)
+            if (storeBaseRecords.isEmpty()) {
+                logger.info("No more records to process")
+                break
+            }
+            // 处理单批记录
+            processedCount += processBatchRecords(storeBaseRecords, tempDir, userId)
+            offset += pageSize
+            logger.info("Processed $processedCount packages so far")
+        }
+        return processedCount
+    }
+
+    /**
+     * 处理单批记录
+     */
+    private fun processBatchRecords(
+        storeBaseRecords: List<TStoreBaseRecord>,
+        tempDir: File,
+        userId: String
+    ): Int {
+        var batchCount = 0
+        for (storeBaseRecord in storeBaseRecords) {
+            try {
+                processStorePackage(storeBaseRecord, tempDir, userId)
+                batchCount++
+            } catch (e: Exception) {
+                logger.error("Failed to process store: ${storeBaseRecord.storeCode}", e)
+            }
+        }
+        return batchCount
     }
 
     /**
@@ -129,12 +131,10 @@ class TxStorePkgServiceImpl @Autowired constructor(
     ) {
         val storeId = storeBaseRecord.id
         val storeCode = storeBaseRecord.storeCode
-
         logger.info("Processing store: $storeCode, storeId: $storeId")
 
         val envRecords = queryStoreEnvRecords(storeId)
-
-        envRecords.forEach { envRecord ->
+        for (envRecord in envRecords) {
             try {
                 processEnvPackage(envRecord, storeBaseRecord, tempDir, userId)
             } catch (e: Exception) {
@@ -144,8 +144,32 @@ class TxStorePkgServiceImpl @Autowired constructor(
     }
 
     /**
-     * 查询组件的环境配置记录
+     * 清理资源（临时目录）
      */
+    private fun cleanupResources() {
+        val tempDir = File(TEMP_DIR)
+        if (tempDir.exists() && !tempDir.deleteRecursively()) {
+            logger.warn("Failed to delete temp directory: $TEMP_DIR")
+        }
+    }
+
+    private fun queryStoreBaseRecords(
+        storeType: StoreTypeEnum?,
+        offset: Int,
+        limit: Int
+    ): List<TStoreBaseRecord> {
+        val t = TStoreBase.T_STORE_BASE
+        val conditions = mutableListOf<Condition>()
+        if (storeType != null) {
+            conditions.add(t.STORE_TYPE.eq(storeType.type.toByte()))
+        }
+        return dslContext.selectFrom(t)
+            .where(conditions)
+            .orderBy(t.ID.asc())
+            .limit(offset, limit)
+            .fetch()
+    }
+
     private fun queryStoreEnvRecords(storeId: String): List<TStoreBaseEnvRecord> {
         val t = TStoreBaseEnv.T_STORE_BASE_ENV
         return dslContext.selectFrom(t)
@@ -153,9 +177,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
             .fetch()
     }
 
-    /**
-     * 处理单个环境的包文件
-     */
     private fun processEnvPackage(
         envRecord: TStoreBaseEnvRecord,
         storeBaseRecord: TStoreBaseRecord,
@@ -165,10 +186,8 @@ class TxStorePkgServiceImpl @Autowired constructor(
         val storeCode = storeBaseRecord.storeCode
         val version = storeBaseRecord.version
         val storeType = StoreTypeEnum.getStoreTypeObj(storeBaseRecord.storeType.toInt())
-
         logger.info("Processing package: $storeCode-$version")
 
-        // 2. 获取文件下载地址
         val downloadUrl = getPackageDownloadUrl(
             userId = userId,
             storeType = storeType,
@@ -176,32 +195,24 @@ class TxStorePkgServiceImpl @Autowired constructor(
             version = version,
             osName = envRecord.osName,
             osArch = envRecord.osArch
-        )
-
-        if (downloadUrl.isNullOrBlank()) {
+        ) ?: run {
             logger.warn("Failed to get download url for $storeCode-$version")
             return
         }
 
-        // 3. 下载文件到本地
         val localFile = File(tempDir, "${storeCode}_${version}_${System.currentTimeMillis()}.tmp")
         try {
             downloadFileToLocal(downloadUrl, localFile)
-
-            // 4. 计算 SHA256
             val sha256Value = calculateSha256(localFile)
             logger.info("Calculated SHA256 for $storeCode-$version: $sha256Value")
-
-            // 5. 更新数据库
             updateSha256ToDatabase(envRecord.id, sha256Value)
-
         } finally {
-            // 6. 删除本地文件
             if (localFile.exists()) {
                 localFile.delete()
             }
         }
     }
+
 
     /**
      * 获取组件包下载地址
