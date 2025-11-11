@@ -27,6 +27,7 @@
 package com.tencent.devops.store.devx.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA256_CONTENT
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -174,32 +175,59 @@ class DevxHandleBuildResultService @Autowired constructor(
         storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>
     ) {
         val pkgFileName = baseEnvRecord.pkgName
-        signMap.forEach { (fileName, shaContent) ->
+        signMap.forEach { (fileName, signResult) ->
+            val (sha1Content, sha256Content) = extractSignContents(signResult)
             // 判断文件名是否是软件包文件名称
             if (fileName == pkgFileName) {
                 storeBaseEnvDataPOs.add(
                     StoreBaseEnvDataPO(
                         id = baseEnvRecord.id,
                         storeId = baseEnvRecord.storeId,
-                        shaContent = shaContent.toString(),
+                        shaContent = sha1Content,
+                        sha256Content = sha256Content,
                         creator = baseEnvRecord.creator,
                         modifier = userId,
                         createTime = baseEnvRecord.createTime
                     )
                 )
             } else {
+                val fileNameWithoutPath = fileName.substringAfterLast("/")
                 storeBaseEnvExtDataPOs.add(
                     StoreBaseEnvExtDataPO(
                         id = UUIDUtil.generate(),
                         envId = baseEnvRecord.id,
                         storeId = baseEnvRecord.storeId,
-                        fieldName = "${KEY_FILE_SHA_CONTENT}_${fileName.substringAfterLast("/")}",
-                        fieldValue = shaContent.toString(),
+                        fieldName = "${KEY_FILE_SHA_CONTENT}_$fileNameWithoutPath",
+                        fieldValue = sha1Content,
                         creator = userId,
                         modifier = userId
                     )
                 )
+                sha256Content?.let {
+                    storeBaseEnvExtDataPOs.add(
+                        StoreBaseEnvExtDataPO(
+                            id = UUIDUtil.generate(),
+                            envId = baseEnvRecord.id,
+                            storeId = baseEnvRecord.storeId,
+                            fieldName = "${KEY_FILE_SHA256_CONTENT}_$fileNameWithoutPath",
+                            fieldValue = sha256Content,
+                            creator = userId,
+                            modifier = userId
+                        )
+                    )
+                }
             }
+        }
+    }
+
+    /**
+     * 提取签名内容
+     */
+    private fun extractSignContents(signResult: Any): Pair<String, String?> {
+        return if (signResult is Map<*, *>) {
+            signResult["sha1Content"].toString() to signResult["sha256Content"]?.toString()
+        } else {
+            signResult.toString() to null
         }
     }
 }

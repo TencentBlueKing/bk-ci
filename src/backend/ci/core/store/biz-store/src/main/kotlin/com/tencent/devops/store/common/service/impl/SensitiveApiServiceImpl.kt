@@ -278,7 +278,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
             val dbFileShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
-                shaFieldName
+                "${shaFieldName}_$signFileName"
             )?.getOrNull(0)?.fieldValue ?: baseEnvRecord.shaContent
             if (fileShaContent.lowercase() != dbFileShaContent) {
                 throw ErrorCodeException(
