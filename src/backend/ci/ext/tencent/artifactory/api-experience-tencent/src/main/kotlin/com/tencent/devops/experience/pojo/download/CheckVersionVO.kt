@@ -42,5 +42,7 @@ data class CheckVersionVO(
     @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
     @get:Schema(title = "版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @get:Schema(title = "APP名称I18n", required = false)
+    val appNameI18n: String?
 )

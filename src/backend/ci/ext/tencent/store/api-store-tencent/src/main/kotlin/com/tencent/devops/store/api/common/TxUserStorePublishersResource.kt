@@ -16,8 +16,6 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxUserStorePublishersResource {
-
-
     @Operation(summary = "矫正组件的首次发布人")
     @PUT
     @Path("/updateComponentFirstPublisher")

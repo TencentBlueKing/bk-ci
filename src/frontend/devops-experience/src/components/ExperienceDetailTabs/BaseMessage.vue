@@ -57,7 +57,10 @@
                 </div>
             </div>
         </div>
-        <div class="qrcode-box">
+        <div
+            v-if="!isWindowsExp"
+            class="qrcode-box"
+        >
             <div
                 class="qrcode-contetnt"
                 v-if="curReleaseDetail.url"
@@ -93,6 +96,7 @@
 <script>
     import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import qrcode from '@/components/devops/qrcode'
+    import { platformMap } from '@/utils/util'
     import { mapActions } from 'vuex'
     
     export default {
@@ -118,6 +122,9 @@
             }
         },
         computed: {
+            isWindowsExp () {
+                return this.curReleaseDetail.platform === platformMap.WIN
+            },
             projectId () {
                 return this.$route.params.projectId
             },

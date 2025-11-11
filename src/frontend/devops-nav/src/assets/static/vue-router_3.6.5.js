@@ -4,25 +4,23 @@
   * @license MIT
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined'
-        ? module.exports = factory()
-        : typeof define === 'function' && define.amd
-            ? define(factory)
-            : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.VueRouter = factory())
-})(this, function () {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory()
+        : typeof define === 'function' && define.amd ? define(factory)
+        : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.VueRouter = factory())
+})(this, (function () {
     'use strict'
   
     /*  */
   
     function assert (condition, message) {
         if (!condition) {
-            throw new Error(('[vue-router] ' + message))
+            throw new Error(("[vue-router] " + message))
         }
     }
   
     function warn (condition, message) {
         if (!condition) {
-            typeof console !== 'undefined' && console.warn(('[vue-router] ' + message))
+            typeof console !== 'undefined' && console.warn(("[vue-router] " + message))
         }
     }
   
@@ -55,7 +53,7 @@
             return decodeURIComponent(str)
         } catch (err) {
             {
-                warn(false, ('Error decoding "' + str + '". Leaving it intact.'))
+                warn(false, ("Error decoding \"" + str + "\". Leaving it intact."))
             }
         }
         return str
@@ -66,7 +64,7 @@
         extraQuery,
         _parseQuery
     ) {
-        if (extraQuery === void 0) extraQuery = {}
+        if ( extraQuery === void 0 ) extraQuery = {}
   
         const parse = _parseQuery || parseQuery
         let parsedQuery
@@ -151,7 +149,7 @@
                 })
                 .join('&')
             : null
-        return res ? ('?' + res) : ''
+        return res ? ("?" + res) : ''
     }
   
     /*  */
@@ -220,8 +218,8 @@
         _stringifyQuery
     ) {
         const path = ref.path
-        let query = ref.query; if (query === void 0) query = {}
-        let hash = ref.hash; if (hash === void 0) hash = ''
+        let query = ref.query; if ( query === void 0 ) query = {}
+        let hash = ref.hash; if ( hash === void 0 ) hash = ''
   
         const stringify = _stringifyQuery || stringifyQuery
         return (path || '/') + stringify(query) + hash
@@ -251,8 +249,8 @@
     }
   
     function isObjectEqual (a, b) {
-        if (a === void 0) a = {}
-        if (b === void 0) b = {}
+        if ( a === void 0 ) a = {}
+        if ( b === void 0 ) b = {}
   
         // handle null value #1566
         if (!a || !b) {
@@ -470,8 +468,8 @@
             {
                 warn(
                     false,
-                    'props in "' + (route.path) + '" is a ' + (typeof config) + ', '
-              + 'expecting an object, function or boolean.'
+                    "props in \"" + (route.path) + "\" is a " + (typeof config) + ", "
+              + "expecting an object, function or boolean."
                 )
             }
         }
@@ -1007,7 +1005,7 @@
         } catch (e) {
             {
                 // Fix #3072 no warn if `pathMatch` is string
-                warn(typeof params.pathMatch === 'string', ('missing param for ' + routeMsg + ': ' + (e.message)))
+                warn(typeof params.pathMatch === 'string', ("missing param for " + routeMsg + ": " + (e.message)))
             }
             return ''
         } finally {
@@ -1047,9 +1045,9 @@
                 next.params = params$1
             } else if (current.matched.length) {
                 const rawPath = current.matched[current.matched.length - 1].path
-                next.path = fillParams(rawPath, params$1, ('path ' + (current.path)))
+                next.path = fillParams(rawPath, params$1, ("path " + (current.path)))
             } else {
-                warn(false, 'relative params navigation requires a current route.')
+                warn(false, "relative params navigation requires a current route.")
             }
             return next
         }
@@ -1068,7 +1066,7 @@
   
         let hash = next.hash || parsedPath.hash
         if (hash && hash.charAt(0) !== '#') {
-            hash = '#' + hash
+            hash = "#" + hash
         }
   
         return {
@@ -1203,7 +1201,7 @@
                     {
                         warn(
                             false,
-                            ('<router-link> with to="' + (this.to) + "\" is trying to use a scoped slot but it didn't provide exactly one child. Wrapping the content with a span element.")
+                            ("<router-link> with to=\"" + (this.to) + "\" is trying to use a scoped slot but it didn't provide exactly one child. Wrapping the content with a span element.")
                         )
                     }
                     return scopedSlot.length === 0 ? h() : h('span', {}, scopedSlot)
@@ -1411,9 +1409,9 @@
   
             if (found.length > 0) {
                 const pathNames = found.map(function (path) {
-                    return ('- ' + path)
+                    return ("- " + path)
                 }).join('\n')
-                warn(false, ('Non-nested routes must include a leading slash character. Fix the following routes: \n' + pathNames))
+                warn(false, ("Non-nested routes must include a leading slash character. Fix the following routes: \n" + pathNames))
             }
         }
   
@@ -1435,20 +1433,20 @@
         const path = route.path
         const name = route.name
         {
-            assert(path != null, '"path" is required in a route configuration.')
+            assert(path != null, "\"path\" is required in a route configuration.")
             assert(
                 typeof route.component !== 'string',
-                'route config "component" for path: ' + (String(
+                "route config \"component\" for path: " + (String(
                     path || name
-                )) + ' cannot be a ' + 'string id. Use an actual component instead.'
+                )) + " cannot be a " + "string id. Use an actual component instead."
             )
   
             warn(
                 // eslint-disable-next-line no-control-regex
                 !/[^\u0000-\u007F]+/.test(path),
-                'Route with path "' + path + '" contains unencoded characters, make sure '
-            + 'your path is correctly encoded before passing it to the router. Use '
-            + 'encodeURI to encode static segments of your path.'
+                "Route with path \"" + path + "\" contains unencoded characters, make sure "
+            + "your path is correctly encoded before passing it to the router. Use "
+            + "encodeURI to encode static segments of your path."
             )
         }
   
@@ -1501,15 +1499,15 @@
                         false,
                         "Named Route '" + (route.name) + "' has a default child route. "
                 + "When navigating to this named route (:to=\"{name: '" + (route.name) + "'}\"), "
-                + 'the default child route will not be rendered. Remove the name from '
-                + 'this route and use the name of the default child route for named '
-                + 'links instead.'
+                + "the default child route will not be rendered. Remove the name from "
+                + "this route and use the name of the default child route for named "
+                + "links instead."
                     )
                 }
             }
             route.children.forEach(function (child) {
                 const childMatchAs = matchAs
-                    ? cleanPath((matchAs + '/' + (child.path)))
+                    ? cleanPath((matchAs + "/" + (child.path)))
                     : undefined
                 addRouteRecord(pathList, pathMap, nameMap, child, record, childMatchAs)
             })
@@ -1527,7 +1525,7 @@
                 if (alias === path) {
                     warn(
                         false,
-                        ('Found an alias with the same value as the path: "' + path + '". You have to remove that alias. It will be ignored in development.')
+                        ("Found an alias with the same value as the path: \"" + path + "\". You have to remove that alias. It will be ignored in development.")
                     )
                     // skip in dev to make it work
                     continue
@@ -1554,8 +1552,8 @@
             } else if (!matchAs) {
                 warn(
                     false,
-                    'Duplicate named routes definition: '
-              + '{ name: "' + name + '", path: "' + (record.path) + '" }'
+                    "Duplicate named routes definition: "
+              + "{ name: \"" + name + "\", path: \"" + (record.path) + "\" }"
                 )
             }
         }
@@ -1571,7 +1569,7 @@
             regex.keys.forEach(function (key) {
                 warn(
                     !keys[key.name],
-                    ('Duplicate param keys in route with path: "' + path + '"')
+                    ("Duplicate param keys in route with path: \"" + path + "\"")
                 )
                 keys[key.name] = true
             })
@@ -1593,10 +1591,12 @@
         if (parent == null) {
             return path
         }
-        return cleanPath(((parent.path) + '/' + path))
+        return cleanPath(((parent.path) + "/" + path))
     }
   
     /*  */
+  
+  
   
     function createMatcher (
         routes,
@@ -1615,7 +1615,7 @@
             const parent = (typeof parentOrRoute !== 'object') ? nameMap[parentOrRoute] : undefined
             // $flow-disable-line
             createRouteMap([route || parentOrRoute], pathList, pathMap, nameMap, parent)
-
+  
             // add aliases of parent
             if (parent && parent.alias.length) {
                 createRouteMap(
@@ -1673,7 +1673,7 @@
                     }
                 }
   
-                location.path = fillParams(record.path, location.params, ('named route "' + name + '"'))
+                location.path = fillParams(record.path, location.params, ("named route \"" + name + "\""))
                 return _createRoute(record, location, redirectedFrom)
             } else if (location.path) {
                 location.params = {}
@@ -1705,7 +1705,7 @@
             if (!redirect || typeof redirect !== 'object') {
                 {
                     warn(
-                        false, ('invalid redirect option: ' + (JSON.stringify(redirect)))
+                        false, ("invalid redirect option: " + (JSON.stringify(redirect)))
                     )
                 }
                 return _createRoute(null, location)
@@ -1725,7 +1725,7 @@
                 // resolved named direct
                 const targetRecord = nameMap[name]
                 {
-                    assert(targetRecord, ('redirect failed: named route "' + name + '" not found.'))
+                    assert(targetRecord, ("redirect failed: named route \"" + name + "\" not found."))
                 }
                 return match({
                     _normalized: true,
@@ -1738,7 +1738,7 @@
                 // 1. resolve relative redirect
                 const rawPath = resolveRecordPath(path, record)
                 // 2. resolve params
-                const resolvedPath = fillParams(rawPath, params, ('redirect route with path "' + rawPath + '"'))
+                const resolvedPath = fillParams(rawPath, params, ("redirect route with path \"" + rawPath + "\""))
                 // 3. rematch with existing query and hash
                 return match({
                     _normalized: true,
@@ -1748,7 +1748,7 @@
                 }, undefined, location)
             } else {
                 {
-                    warn(false, ('invalid redirect option: ' + (JSON.stringify(redirect))))
+                    warn(false, ("invalid redirect option: " + (JSON.stringify(redirect))))
                 }
                 return _createRoute(null, location)
             }
@@ -1759,7 +1759,7 @@
             location,
             matchAs
         ) {
-            const aliasedPath = fillParams(matchAs, location.params, ('aliased route with path "' + matchAs + '"'))
+            const aliasedPath = fillParams(matchAs, location.params, ("aliased route with path \"" + matchAs + "\""))
             const aliasedMatch = match({
                 _normalized: true,
                 path: aliasedPath
@@ -1887,7 +1887,7 @@
         }
   
         {
-            assert(typeof behavior === 'function', 'scrollBehavior must be a function')
+            assert(typeof behavior === 'function', "scrollBehavior must be a function")
         }
   
         // wait until re-render finishes before scrolling
@@ -2071,9 +2071,9 @@
             from,
             to,
             NavigationFailureType.redirected,
-            ('Redirected when going from "' + (from.fullPath) + '" to "' + (stringifyRoute(
+            ("Redirected when going from \"" + (from.fullPath) + "\" to \"" + (stringifyRoute(
                 to
-            )) + '" via a navigation guard.')
+            )) + "\" via a navigation guard.")
         )
     }
   
@@ -2082,7 +2082,7 @@
             from,
             to,
             NavigationFailureType.duplicated,
-            ('Avoided redundant navigation to current location: "' + (from.fullPath) + '".')
+            ("Avoided redundant navigation to current location: \"" + (from.fullPath) + "\".")
         )
         // backwards compatible with the first introduction of Errors
         error.name = 'NavigationDuplicated'
@@ -2094,7 +2094,7 @@
             from,
             to,
             NavigationFailureType.cancelled,
-            ('Navigation cancelled from "' + (from.fullPath) + '" to "' + (to.fullPath) + '" with a new navigation.')
+            ("Navigation cancelled from \"" + (from.fullPath) + "\" to \"" + (to.fullPath) + "\" with a new navigation.")
         )
     }
   
@@ -2103,7 +2103,7 @@
             from,
             to,
             NavigationFailureType.aborted,
-            ('Navigation aborted from "' + (from.fullPath) + '" to "' + (to.fullPath) + '" via a navigation guard.')
+            ("Navigation aborted from \"" + (from.fullPath) + "\" to \"" + (to.fullPath) + "\" via a navigation guard.")
         )
     }
   
@@ -2200,7 +2200,7 @@
                     })
   
                     const reject = once(function (reason) {
-                        const msg = 'Failed to resolve async component ' + key + ': ' + reason
+                        const msg = "Failed to resolve async component " + key + ": " + reason
                         warn(false, msg)
                         if (!error) {
                             error = isError(reason)
@@ -2270,8 +2270,8 @@
     function once (fn) {
         let called = false
         return function () {
-            const args = []; let len = arguments.length
-            while (len--) args[len] = arguments[len]
+            let args = [], len = arguments.length
+            while ( len-- ) args[ len ] = arguments[ len ]
   
             if (called) {
                 return
@@ -2447,7 +2447,9 @@
                         this$1$1.ensureURL(true)
                         abort(to)
                     } else if (
-                        typeof to === 'string' || (typeof to === 'object' && (typeof to.path === 'string' || typeof to.name === 'string'))
+                        typeof to === 'string'
+              || (typeof to === 'object'
+                && (typeof to.path === 'string' || typeof to.name === 'string'))
                     ) {
                         // next('/') or next({ path: '/' }) -> redirect
                         abort(createNavigationRedirectedError(current, route))
@@ -2632,8 +2634,8 @@
             this._startLocation = getLocation(this.base)
         }
   
-        if (History) HTML5History.__proto__ = History
-        HTML5History.prototype = Object.create(History && History.prototype)
+        if ( History ) HTML5History.__proto__ = History
+        HTML5History.prototype = Object.create( History && History.prototype )
         HTML5History.prototype.constructor = HTML5History
   
         HTML5History.prototype.setupListeners = function setupListeners () {
@@ -2741,8 +2743,8 @@
             ensureSlash()
         }
   
-        if (History) HashHistory.__proto__ = History
-        HashHistory.prototype = Object.create(History && History.prototype)
+        if ( History ) HashHistory.__proto__ = History
+        HashHistory.prototype = Object.create( History && History.prototype )
         HashHistory.prototype.constructor = HashHistory
   
         // this is delayed until the app mounts
@@ -2872,7 +2874,7 @@
         const href = window.location.href
         const i = href.indexOf('#')
         const base = i >= 0 ? href.slice(0, i) : href
-        return (base + '#' + path)
+        return (base + "#" + path)
     }
   
     function pushHash (path) {
@@ -2900,8 +2902,8 @@
             this.index = -1
         }
   
-        if (History) AbstractHistory.__proto__ = History
-        AbstractHistory.prototype = Object.create(History && History.prototype)
+        if ( History ) AbstractHistory.__proto__ = History
+        AbstractHistory.prototype = Object.create( History && History.prototype )
         AbstractHistory.prototype.constructor = AbstractHistory
   
         AbstractHistory.prototype.push = function push (location, onComplete, onAbort) {
@@ -2971,11 +2973,13 @@
   
     /*  */
   
+  
+  
     const VueRouter = function VueRouter (options) {
-        if (options === void 0) options = {}
+        if ( options === void 0 ) options = {}
   
         {
-            warn(this instanceof VueRouter, 'Router must be called with the new operator.')
+            warn(this instanceof VueRouter, "Router must be called with the new operator.")
         }
         this.app = null
         this.apps = []
@@ -3008,7 +3012,7 @@
                 break
             default:
             {
-                assert(false, ('invalid mode: ' + mode))
+                assert(false, ("invalid mode: " + mode))
             }
         }
     }
@@ -3028,8 +3032,8 @@
   
         assert(
             install.installed,
-            'not installed. Make sure to call `Vue.use(VueRouter)` '
-            + 'before creating root instance.'
+            "not installed. Make sure to call `Vue.use(VueRouter)` "
+            + "before creating root instance."
         )
   
         this.apps.push(app)
@@ -3119,11 +3123,15 @@
             return new Promise(function (resolve, reject) {
                 this$1$1.history.push(location, resolve, reject)
             }).catch((e) => {
-                // 忽略重定向错误
-                if (!isNavigationFailure(e, NavigationFailureType.redirected)) {
+            // 忽略重定向错误
+                if (isNavigationFailure(e, NavigationFailureType.redirected) || isNavigationFailure(e, NavigationFailureType.duplicated)) {
+                // 忽略重定向以及重复导航错误
+                    console.log('duplicated navigation or redirected navigation', e)
+                } else {
                     throw e
                 }
             })
+
         } else {
             this.history.push(location, onComplete, onAbort)
         }
@@ -3137,11 +3145,15 @@
             return new Promise(function (resolve, reject) {
                 this$1$1.history.replace(location, resolve, reject)
             }).catch((e) => {
-                // 忽略重定向错误
-                if (!isNavigationFailure(e, NavigationFailureType.redirected)) {
+            // 忽略重定向错误
+                if (isNavigationFailure(e, NavigationFailureType.redirected) || isNavigationFailure(e, NavigationFailureType.duplicated)) {
+                // 忽略重定向以及重复导航错误
+                    console.log('duplicated navigation or redirected navigation', e)
+                } else {
                     throw e
                 }
             })
+
         } else {
             this.history.replace(location, onComplete, onAbort)
         }
@@ -3220,7 +3232,7 @@
         }
     }
   
-    Object.defineProperties(VueRouter.prototype, prototypeAccessors)
+    Object.defineProperties( VueRouter.prototype, prototypeAccessors )
   
     const VueRouter$1 = VueRouter
   
@@ -3251,4 +3263,5 @@
     }
   
     return VueRouter$1
-})
+  
+}))

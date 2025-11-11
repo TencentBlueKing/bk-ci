@@ -18,12 +18,12 @@
  */
 
 import {
+    AUTH_URL_PREFIX,
     BACKEND_API_URL_PREFIX,
     FETCH_ERROR,
+    MERTICS_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
-    STORE_API_URL_PREFIX,
-    AUTH_URL_PREFIX,
-    MERTICS_URL_PREFIX
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 import ajax from '@/utils/request'
 

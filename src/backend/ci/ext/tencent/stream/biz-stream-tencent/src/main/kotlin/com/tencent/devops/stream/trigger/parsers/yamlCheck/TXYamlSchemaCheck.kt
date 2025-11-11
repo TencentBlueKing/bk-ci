@@ -75,7 +75,6 @@ class TXYamlSchemaCheck @Autowired constructor(
     private val yaml = Yaml()
 
     private val schemaFactory = JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-        .objectMapper(YamlUtil.getObjectMapper())
         .build()
 
     private val schemaMap = mutableMapOf<String, JsonSchema>()

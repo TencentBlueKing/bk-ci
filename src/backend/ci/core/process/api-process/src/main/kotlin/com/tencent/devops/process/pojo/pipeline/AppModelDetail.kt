@@ -36,7 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AppModelDetail(
     @get:Schema(title = "ID", required = true)
     val buildId: String,
-    @get:Schema(title = "启动用户", required = true)
+    @get:Schema(title = "触发用户, 其实是triggerUser", required = true)
     val userId: String,
     @get:Schema(title = "触发条件", required = true)
     val trigger: String,
@@ -77,5 +77,5 @@ data class AppModelDetail(
     @get:Schema(title = "构建信息", required = false)
     var buildMsg: String? = null,
     @get:Schema(title = "制品质量分析", required = false)
-    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
 )

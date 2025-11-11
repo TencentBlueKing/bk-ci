@@ -36,6 +36,10 @@
                 type: Function,
                 required: false
             },
+            templateId: {
+                type: String,
+                default: ''
+            },
             changeShowPerformance: {
                 type: Function,
                 required: false
@@ -57,7 +61,11 @@
             },
             fieldName () {
                 return this.buildType === 'PUBLIC_DEVCLOUD' ? 'performanceUid' : 'performanceConfigId'
-            }
+            },
+            // 是否是流水线编辑页
+            isEditPage () {
+                return this.$route.meta.edit
+            },
         },
         watch: {
             buildType (v) {
@@ -74,6 +82,7 @@
         methods: {
             ...mapActions('atom', [
                 'fetchDevcloudSettings',
+                'getHistoryDevcloudSettings',
                 'fetchDockerSettings'
             ]),
             handleSelect (name, value) {
@@ -82,31 +91,70 @@
             getShowOption (obj) {
                 return `${obj.description} (${obj.cpu}${this.$t('editPage.cpuUnit')}/${obj.memory}/${obj.disk})`
             },
+            // 流水线编辑页面PUBLIC_DEVCLOUD类型下的机型列表
+            async getEditPageDeviceList () {
+                const res = await this.fetchDevcloudSettings({
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId || this.templateId,
+                    templateId: this.templateId
+                })
+                this.changeShowPerformance(true)
+                this.selectValue = this.value || res.data.defaultUid
+
+                this.optionList = res.data.performanceList.map(i => ({
+                    ...i,
+                    id: i.uid
+                })) || []
+                const hasPermission = this.optionList.find(i => i.id === this.selectValue)
+                if (!hasPermission) {
+                    this.optionList.splice(0, 0, {
+                        id: this.value,
+                        name: this.$t('editPage.withoutOption')
+                    })
+                }
+            },
+            // 流水线查看页面PUBLIC_DEVCLOUD类型下的机型列表
+            async getViewPageDeviceList () {
+                const uid = this.value && this.value !== '' ? this.value : 'Standard-S'
+                const res = await this.getHistoryDevcloudSettings({
+                    username: this.$userInfo.username,
+                    projectId: this.projectId,
+                    uid
+                })
+                this.changeShowPerformance(true)
+                this.selectValue = this.value || res.data.uid
+                this.optionList = [res.data].map(i => ({
+                    ...i,
+                    id: i.uid
+                })) || []
+            },
+            // 其它构件资源类型下的机型列表
+            async getOtherDockerSettings () {
+                const res = await this.fetchDockerSettings({ projectId: this.projectId, buildType: this.buildType })
+                const needShow = res.data.needShow || false
+                this.changeShowPerformance(needShow)
+                if (needShow) {
+                    this.selectValue = this.value || res.data.default
+                }
+                this.optionList = res.data.dockerResourceOptionsMaps || []
+                this.optionList = this.optionList.map(item => {
+                    return {
+                        ...item,
+                        name: this.getShowOption(item.dockerResourceOptionsShow)
+                    }
+                })
+            },
             async getData () {
                 try {
                     this.isLoading = true
                     if (this.buildType === 'PUBLIC_DEVCLOUD') {
-                        const res = await this.fetchDevcloudSettings({ projectId: this.projectId, pipelineId: this.pipelineId })
-                        this.changeShowPerformance(true)
-                        this.selectValue = this.value || res.data.defaultUid
-                        this.optionList = res.data.performanceList.map(i => ({
-                            ...i,
-                            id: i.uid
-                        })) || []
-                    } else {
-                        const res = await this.fetchDockerSettings({ projectId: this.projectId, buildType: this.buildType })
-                        const needShow = res.data.needShow || false
-                        this.changeShowPerformance(needShow)
-                        if (needShow) {
-                            this.selectValue = this.value || res.data.default
+                        if (this.isEditPage) {
+                            await this.getEditPageDeviceList()
+                        } else {
+                            await this.getViewPageDeviceList()
                         }
-                        this.optionList = res.data.dockerResourceOptionsMaps || []
-                        this.optionList = this.optionList.map(item => {
-                            return {
-                                ...item,
-                                name: this.getShowOption(item.dockerResourceOptionsShow)
-                            }
-                        })
+                    } else {
+                        await this.getOtherDockerSettings()
                     }
                 } catch (err) {
                     this.$showTips({

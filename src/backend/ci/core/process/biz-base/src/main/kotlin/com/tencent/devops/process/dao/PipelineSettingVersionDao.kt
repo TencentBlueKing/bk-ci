@@ -125,6 +125,37 @@ class PipelineSettingVersionDao {
         }
     }
 
+    fun update(
+        dslContext: DSLContext,
+        setting: PipelineSetting
+    ) {
+        val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+        val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            dslContext.update(this)
+                .set(NAME, setting.pipelineName)
+                .set(DESC, setting.desc)
+                .set(LABELS, setting.labels.let { self -> JsonUtil.toJson(self, false) })
+                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
+                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
+                .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.toJson(self, false)
+                })
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .where(PROJECT_ID.eq(setting.projectId))
+                .and(PIPELINE_ID.eq(setting.pipelineId))
+                .and(VERSION.eq(setting.version))
+                .execute()
+        }
+    }
+
     fun getSettingVersion(
         dslContext: DSLContext,
         projectId: String,
@@ -151,17 +182,6 @@ class PipelineSettingVersionDao {
                 .and(PROJECT_ID.eq(projectId))
                 .orderBy(VERSION.desc()).limit(1)
                 .fetchOne(mapper)
-        }
-    }
-
-    fun getSettingByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): List<PipelineSettingVersion> {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch(mapper)
         }
     }
 

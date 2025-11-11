@@ -29,7 +29,6 @@ package com.tencent.devops.store.template.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
@@ -42,9 +41,6 @@ import org.springframework.stereotype.Service
 @Primary
 @Service
 class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServiceImpl() {
-
-    @Autowired
-    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
 
     @Autowired
     private lateinit var templateVisibleDeptService: TemplateVisibleDeptService

@@ -46,6 +46,37 @@ class WorkspaceNotifyHistoryDao {
         }
     }
 
+    fun add(
+        dslContext: DSLContext,
+        operator: String,
+        userId: String,
+        type: RemoteDevNotifyType,
+        status: RemoteDevNotifyType.Status,
+        bodyParams: String
+    ): Long {
+        val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz().also {
+            MDC.put(TraceTag.BIZID, it)
+        }
+        return with(TWorkspaceNotifyHistory.T_WORKSPACE_NOTIFY_HISTORY) {
+            dslContext.insertInto(
+                this,
+                BIZ_ID,
+                OPERATOR,
+                USER_IDS,
+                TYPE,
+                STATUS,
+                BODY_PARAMS
+            ).values(
+                bizId,
+                operator,
+                userId,
+                type.name,
+                status.name,
+                bodyParams
+            ).returning(ID).fetchOne()!!.id
+        }
+    }
+
     fun updateStatus(
         dslContext: DSLContext,
         id: Long,

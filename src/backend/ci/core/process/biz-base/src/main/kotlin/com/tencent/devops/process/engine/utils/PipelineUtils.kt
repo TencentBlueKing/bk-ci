@@ -42,9 +42,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
-import java.util.regex.Pattern
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
 object PipelineUtils {
 
@@ -246,22 +246,22 @@ object PipelineUtils {
      * options需在运行时实时计算
      */
     fun cleanOptions(params: List<BuildFormProperty>): List<BuildFormProperty> {
-        val filterParams = mutableListOf<BuildFormProperty>()
-        params.forEach {
-            when (it.type) {
-                BuildFormPropertyType.SVN_TAG,
-                BuildFormPropertyType.GIT_REF,
-                BuildFormPropertyType.CODE_LIB,
-                BuildFormPropertyType.SUB_PIPELINE,
-                BuildFormPropertyType.CONTAINER_TYPE -> {
-                    filterParams.add(it.copy(options = emptyList(), replaceKey = null, searchUrl = null))
-                }
+        return params.map { cleanOptions(it) }
+    }
 
-                else ->
-                    filterParams.add(it)
+    fun cleanOptions(param: BuildFormProperty): BuildFormProperty {
+        return when (param.type) {
+            BuildFormPropertyType.SVN_TAG,
+            BuildFormPropertyType.GIT_REF,
+            BuildFormPropertyType.CODE_LIB,
+            BuildFormPropertyType.SUB_PIPELINE,
+            BuildFormPropertyType.CONTAINER_TYPE -> {
+                param.copy(options = emptyList(), replaceKey = null, searchUrl = null)
             }
+
+            else ->
+                param
         }
-        return filterParams
     }
 
     fun isPipelineId(pipelineId: String): Boolean {

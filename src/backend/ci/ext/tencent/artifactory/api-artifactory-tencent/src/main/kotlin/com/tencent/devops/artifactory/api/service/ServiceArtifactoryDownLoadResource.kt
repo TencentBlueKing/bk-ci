@@ -124,7 +124,10 @@ interface ServiceArtifactoryDownLoadResource {
         ttl: Int,
         @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
         @QueryParam("directed")
-        directed: Boolean?
+        directed: Boolean?,
+        @Parameter(description = "是否使用web链接", required = false)
+        @QueryParam("useWeb")
+        useWeb: Boolean? = false
     ): Result<Url>
 
     @Operation(summary = "apk包安全加固")
@@ -202,6 +205,9 @@ interface ServiceArtifactoryDownLoadResource {
         artifactoryType: ArtifactoryType,
         @Parameter(description = "路径", required = true)
         @QueryParam("path")
-        path: String
+        path: String,
+        @Parameter(description = "检查是否下载权限", required = true)
+        @QueryParam("checkDownload")
+        checkDownload: Boolean
     ): Result<AllowDownload>
 }

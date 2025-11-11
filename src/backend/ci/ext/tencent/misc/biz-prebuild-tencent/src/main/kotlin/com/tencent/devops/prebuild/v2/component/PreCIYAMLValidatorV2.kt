@@ -79,7 +79,6 @@ class PreCIYAMLValidatorV2 {
     private fun getSchema(file: String): JsonSchema {
         return schemaCacheMap.getOrPut(file) {
             JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7))
-                    .objectMapper(YamlUtil.getObjectMapper())
                     .build()
                     .getSchema(
                         getStrFromResource("schema/$file.json").ifBlank {

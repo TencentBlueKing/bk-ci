@@ -102,7 +102,7 @@
                 const props = {
                     value: this.value,
                     loading: this.isLoading,
-                    disabled: this.disabled || this.readOnly,
+                    disabled: this.disabled || (this.readOnly && this.readOnlyCheck),
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,

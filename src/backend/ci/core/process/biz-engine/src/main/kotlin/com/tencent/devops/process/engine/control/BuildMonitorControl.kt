@@ -451,7 +451,7 @@ class BuildMonitorControl @Autowired constructor(
                 ) + ". Cancel build!"),
                 tag = VMUtils.genStartVMTaskId(jobId),
                 containerHashId = jobId,
-                executeCount = 1,
+                executeCount = event.executeCount,
                 jobId = null,
                 stepId = VMUtils.genStartVMTaskId(jobId)
             )
@@ -487,10 +487,14 @@ class BuildMonitorControl @Autowired constructor(
                 }
             }
             if (canStart) {
-                val buildId = event.buildId
+                val buildId = buildInfo.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
-                val triggerRecordContainer = containerBuildRecordService.getRecord(
-                    projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildId, containerId = "0"
+                val triggerRecordContainer = containerBuildRecordService.getLatestRecord(
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    containerId = "0",
+                    executeCount = buildInfo.executeCount
                 ) ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
                 )

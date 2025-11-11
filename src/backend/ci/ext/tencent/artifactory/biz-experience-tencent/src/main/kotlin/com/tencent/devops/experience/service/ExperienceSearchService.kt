@@ -112,7 +112,8 @@ class ExperienceSearchService @Autowired constructor(
             version = it.version,
             versionTitle = it.versionTitle,
             appScheme = it.appScheme,
-            classify = it.classify
+            classify = it.classify,
+            appNameI18n = it.appNameI18n
         )
     }
 
@@ -162,7 +163,8 @@ class ExperienceSearchService @Autowired constructor(
                 // 因为搜索需要包含内部体验, 所以以下参数不适用了
                 type = ExperiencePublicType.FROM_BKCI.id,
                 externalUrl = "",
-                downloadTime = 0
+                downloadTime = 0,
+                appNameI18n = it.appNameI18n
             )
         }.toList()
     }

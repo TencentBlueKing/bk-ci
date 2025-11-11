@@ -12,7 +12,7 @@
                             disablePermissionApi: true,
                             permissionData: {
                                 projectId,
-                                resourceType: 'pipeline',
+                                resourceType: RESOURCE_TYPE.PIPELINE,
                                 resourceCode: pipeline.pipelineId,
                                 action: RESOURCE_ACTION.VIEW
                             }
@@ -42,7 +42,10 @@
                         {{ $t('history.branch') }}
                     </bk-tag>
                 </h3>
-                <p class="bk-pipeline-card-summary">
+                <p
+                    v-if="!pipeline.delete"
+                    class="bk-pipeline-card-summary"
+                >
                     <span>
                         <logo
                             size="16"
@@ -63,8 +66,17 @@
                         </span>
                     </span>
                 </p>
+                <p
+                    v-else
+                    class="bk-pipeline-card-summary"
+                >
+                    {{ $t('restore.deleter') }}: {{ getPipelineDeleteInfo(pipeline) }}
+                </p>
             </aside>
-            <aside class="bk-pipeline-card-header-right-aside">
+            <aside
+                class="bk-pipeline-card-header-right-aside"
+                v-if="!pipeline.delete"
+            >
                 <span
                     v-if="!executeable"
                     class="bk-pipeline-card-trigger-btn"
@@ -74,7 +86,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipeline.pipelineId,
                             action: RESOURCE_ACTION.EDIT
                         }
@@ -89,7 +101,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipeline.pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
@@ -139,7 +151,10 @@
                 </bk-button>
             </div>
         </header>
-        <section class="bk-pipeline-card-info">
+        <section
+            class="bk-pipeline-card-info"
+            v-if="!pipeline.delete"
+        >
             <i
                 class="bk-pipeline-card-info-status-bar"
                 :style="`background: ${statusColor}`"
@@ -201,9 +216,9 @@
                 {{ $t('unexecute') }}
             </div>
         </section>
-        <div
-            v-if="pipeline.delete"
-            class="pipeline-card-delete-mask"
+        <section
+            class="delete-card-info"
+            v-else
         >
             <span>{{ $t('alreadyDeleted') }}</span>
             <bk-button
@@ -215,9 +230,9 @@
             >
                 {{ $t('removeFromGroup') }}
             </bk-button>
-        </div>
+        </section>
         <div
-            v-else-if="!pipeline.permissions.canView && !pipeline.delete"
+            v-if="!pipeline.permissions.canView && !pipeline.delete"
             class="pipeline-card-apply-mask"
         >
             <bk-button
@@ -238,9 +253,11 @@
     import { RECENT_USED_VIEW_ID } from '@/store/constants'
     import {
         handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { statusColorMap } from '@/utils/pipelineStatus'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -268,7 +285,8 @@
         },
         data () {
             return {
-                RESOURCE_ACTION
+                RESOURCE_ACTION,
+                RESOURCE_TYPE
             }
         },
         computed: {
@@ -296,6 +314,11 @@
 
         },
         methods: {
+            getPipelineDeleteInfo (pipeline){
+                const {updater, updateTime} = pipeline
+                const deleteTime = convertTime(updateTime)
+                return `${updater} ${deleteTime}`
+            },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
                     projectId: this.projectId,
@@ -443,6 +466,17 @@
                     }
                 }
             }
+        }
+        .delete-card-info {
+            padding: 32px 16px;
+            margin: 12px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 96px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #C4C6CC;
         }
         .bk-pipeline-card-info {
             position: relative;

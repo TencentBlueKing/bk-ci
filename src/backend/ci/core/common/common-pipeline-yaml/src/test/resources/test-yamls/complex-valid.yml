@@ -1,0 +1,24 @@
+version: v3.0
+name: test
+desc: test
+label:
+  - test
+extends:
+  template:
+    template-id: asd
+    version: v1
+notices:
+  - if: FAILURE
+    type:
+      - email
+      - wework-message
+    receivers:
+      - "${{ci.actor}}"
+    content: "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} 执行失败，耗时${{ci.pipeline_execute_time}}, 触发人: ${{ci.actor}}。"
+concurrency:
+  group: "${{ci.pipeline_id}}test"
+  queue-length: 1
+  queue-timeout-minutes: 2
+custom-build-num: test
+syntax-dialect: CLASSIC
+fail-if-variable-invalid: true

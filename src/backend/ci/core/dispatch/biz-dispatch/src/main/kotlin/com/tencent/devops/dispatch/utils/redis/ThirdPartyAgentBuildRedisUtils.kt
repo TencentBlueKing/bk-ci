@@ -79,7 +79,7 @@ class ThirdPartyAgentBuildRedisUtils @Autowired constructor(
         redisOperation.delete(key = thirdPartyUpgradeKey(projectId = projectId, agentId = agentId))
     }
 
-    private fun thirdPartyBuildKey(secretKey: String, agentId: String, buildId: String, vmSeqId: String) =
+    fun thirdPartyBuildKey(secretKey: String, agentId: String, buildId: String, vmSeqId: String) =
         "third_party_agent_${secretKey}_${agentId}_${buildId}_$vmSeqId"
 
     private fun thirdPartyUpgradeKey(projectId: String, agentId: String) =

@@ -208,7 +208,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             pipelineId = pipelineId,
             version = buildInfo.version,
             buildId = buildId,
-            executeCount = buildInfo.executeCount
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
         )
         // TODO 没有升级的worker还需要用到这个变量，下一版删除
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
