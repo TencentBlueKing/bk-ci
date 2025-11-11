@@ -334,6 +334,27 @@ class PipelineGroupService @Autowired constructor(
         return result
     }
 
+    fun getLabel(
+        projectId: String,
+        labelId: String
+    ): PipelineLabel? {
+        return pipelineLabelDao.getById(
+            dslContext = dslContext,
+            projectId = projectId,
+            id = decode(labelId)
+        )?.let { label ->
+            PipelineLabel(
+                id = encode(label.id),
+                groupId = encode(label.groupId),
+                name = label.name,
+                createTime = label.createTime.timestamp(),
+                uptimeTime = label.updateTime.timestamp(),
+                createUser = label.createUser,
+                updateUser = label.updateUser
+            )
+        }
+    }
+
     fun deletePipelineLabel(userId: String, projectId: String, pipelineId: String) {
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)

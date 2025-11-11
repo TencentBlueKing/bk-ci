@@ -122,13 +122,7 @@
             },
             async detectYamlSupport () {
                 try {
-                    // TODO: 模板不支持YAML
-                    if (this.pipeline?.instanceFromTemplate) {
-                        return {
-                            yamlSupported: false,
-                            yamlInvalidMsg: this.$t('templateYamlNotSupport')
-                        }
-                    }
+
                     if (typeof this.isYamlSupport === 'boolean') {
                         return {
                             yamlSupported: this.isYamlSupport,
@@ -173,8 +167,8 @@
                         this.$bkInfo({
                             type: this.pipeline?.instanceFromTemplate ? 'warning' : 'error',
                             width: 500,
-                            zIndex: 2020,
-                            title: this.$t(this.pipeline?.instanceFromTemplate ? 'unSupportCodeMode' : 'invalidCodeMode'),
+                            zIndex: 2040,
+                            title: this.$t('invalidCodeMode'),
                             subHeader: this.$createElement(
                                 'pre',
                                 {

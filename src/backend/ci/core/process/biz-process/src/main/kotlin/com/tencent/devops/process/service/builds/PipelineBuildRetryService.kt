@@ -48,13 +48,13 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -70,6 +70,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_CONTAINER_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_TASK_IN_STAGE_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
+import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,14 +84,14 @@ class PipelineBuildRetryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val buildVariableService: BuildVariableService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineContainerService: PipelineContainerService
+    private val pipelineContainerService: PipelineContainerService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:28}")
@@ -154,8 +155,14 @@ class PipelineBuildRetryService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             }
 
-            // TODO 重试的model需要被覆盖为上次构建的内容，未来需要替换为RECORD表数据
-            resource.model = buildDetailService.getBuildModel(projectId, buildId) ?: throw ErrorCodeException(
+            resource.model = pipelineBuildRecordService.getRecordModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = buildInfo.version,
+                buildId = buildId,
+                executeCount = buildInfo.executeCount,
+                debug = buildInfo.debug
+            ) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
@@ -168,7 +175,17 @@ class PipelineBuildRetryService @Autowired constructor(
             }
 
             val webHookStartParam = mutableMapOf<String, BuildParameters>()
-            buildInfo.buildParameters?.forEach { param -> webHookStartParam[param.key] = param }
+            // 填充构建参数时，若为流水线基础变量，则需补充[variable.]前缀
+            val paramKeys = resource.model.getTriggerContainer().params.map { it.id }
+            buildInfo.buildParameters?.forEach { param ->
+                webHookStartParam[param.key] = param
+                if (paramKeys.contains(param.key)) {
+                    val variableKey = PipelineVarUtil.getVariableKey(param.key)
+                    webHookStartParam[variableKey] = param.copy(
+                        key = variableKey
+                    )
+                }
+            }
             webhookBuildParameterService.getBuildParameters(buildId)?.forEach { param ->
                 webHookStartParam[param.key] = param
             }
@@ -334,7 +351,7 @@ class PipelineBuildRetryService @Autowired constructor(
                             element = element,
                             taskId = taskId,
                             paramMap = paramMap,
-                            skipFailedTask = skipFailedTask,
+                            skipFailedTask = skipFailedTask
                         )
                         return
                     }

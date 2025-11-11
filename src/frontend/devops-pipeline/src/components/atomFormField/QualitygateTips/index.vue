@@ -49,7 +49,7 @@
                 <p class="notice-type">
                     <span v-if="!entry.auditUserList.length">{{ $t('details.quality.stopConditions') }}</span>
                     <span v-if="entry.auditUserList.length">
-                        {{ $t('details.quality.by') }}
+                        {{ $t('editPage.by') }}
                         <span
                             v-for="(reviewr, index) in (entry.auditUserList)"
                             :key="index"
@@ -65,8 +65,8 @@
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
     import Logo from '@/components/Logo'
+    import atomFieldMixin from '../atomFieldMixin'
 
     export default {
         components: {

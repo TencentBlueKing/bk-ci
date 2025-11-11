@@ -35,21 +35,27 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ManualRule(
-    val name: String? = null,
-    val enable: Boolean? = true,
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
     @get:Schema(title = "手动触发执行时可跳过插件 ", name = "can-skip-step", required = false)
     @JsonProperty("can-skip-step")
     var canElementSkip: Boolean? = false,
     @get:Schema(title = "手动触发执行时使用最近一次构建参数值 ", name = "use-latest-inputs", required = false)
     @JsonProperty("use-latest-inputs")
     var useLatestParameters: Boolean? = false
-) {
+) : Rule(id, name, enable) {
     override fun equals(other: Any?): Boolean {
         if (other is ManualRule) {
             return other.canElementSkip == canElementSkip &&
                 other.useLatestParameters == useLatestParameters &&
-                other.enable == enable
+                other.enable == enable &&
+                other.id == id
         }
         return super.equals(other)
+    }
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
     }
 }
