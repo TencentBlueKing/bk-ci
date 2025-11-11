@@ -37,7 +37,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
-import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -56,11 +55,9 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
     @BeforeEach
     fun setUp() {
         templateDao = mockk()
-        
         // Mock I18nUtil 获取默认语言
         mockkObject(I18nUtil)
         every { I18nUtil.getDefaultLocaleLanguage() } returns "zh_CN"
-        
         // Mock MessageUtil 的方法
         mockkObject(MessageUtil)
         every {
@@ -69,7 +66,6 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
                 language = any()
             )
         } returns "模版版本管理重构升级，历史同名版本名称自动添加后缀"
-        
         // 创建真实的 service 实例，只 mock 必要的依赖
         service = TemplateFacadeService(
             dslContext = dslContext,
@@ -125,19 +121,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
             listOf(
                 VersionData(
                     1L, versionName,
-                    LocalDateTime.of(2024, 3, 15, 10, 0, 0),  // 最新
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
                     2L, versionName,
-                    LocalDateTime.of(2024, 3, 10, 10, 0, 0),  // 次新
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 次新
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
                     3L, versionName,
-                    LocalDateTime.of(2024, 3, 5, 10, 0, 0),   // 最旧
+                    LocalDateTime.of(2024, 3, 5, 10, 0, 0), // 最旧
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
                 )
@@ -151,9 +147,9 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(3, result.size)
-        Assertions.assertEquals("init", result[0].versionName)     // 最新版本保留原名
-        Assertions.assertEquals("init-1", result[1].versionName)   // 次新版本加后缀
-        Assertions.assertEquals("init-2", result[2].versionName)   // 最旧版本加后缀
+        Assertions.assertEquals("init", result[0].versionName)   // 最新版本保留原名
+        Assertions.assertEquals("init-1", result[1].versionName) // 次新版本加后缀
+        Assertions.assertEquals("init-2", result[2].versionName) // 最旧版本加后缀
     }
 
     @Test
@@ -168,19 +164,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
             listOf(
                 VersionData(
                     3L, versionName,
-                    LocalDateTime.of(2024, 3, 5, 10, 0, 0),   // 最旧
+                    LocalDateTime.of(2024, 3, 5, 10, 0, 0), // 最旧
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
                     2L, versionName,
-                    LocalDateTime.of(2024, 3, 10, 10, 0, 0),  // 次新
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 次新
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
                     1L, versionName,
-                    LocalDateTime.of(2024, 3, 15, 10, 0, 0),  // 最新
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 )
@@ -194,9 +190,9 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, true)
 
         Assertions.assertEquals(3, result.size)
-        Assertions.assertEquals("init-1", result[0].versionName)   // 最旧版本加后缀
-        Assertions.assertEquals("init-2", result[1].versionName)   // 次新版本加后缀
-        Assertions.assertEquals("init", result[2].versionName)     // 最新版本保留原名
+        Assertions.assertEquals("init-1", result[0].versionName) // 最旧版本加后缀
+        Assertions.assertEquals("init-2", result[1].versionName) // 次新版本加后缀
+        Assertions.assertEquals("init", result[2].versionName)   // 最新版本保留原名
     }
 
     @Test
@@ -213,31 +209,31 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     "user1"
-                ),   // v2.0 唯一
+                ), // v2.0 唯一
                 VersionData(
                     2L, "init",
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
-                ),   // init 最新
+                ), // init 最新
                 VersionData(
                     3L, "init",
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
-                ),   // init 次新
+                ), // init 次新
                 VersionData(
                     4L, "init",
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
-                ),   // init 最旧
+                ), // init 最旧
                 VersionData(
                     5L, "v1.0",
                     LocalDateTime.of(2024, 3, 1, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 1, 10, 0, 0),
                     "user1"
-                )    // v1.0 唯一
+                ) // v1.0 唯一
             )
         )
 
@@ -248,11 +244,11 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(5, result.size)
-        Assertions.assertEquals("v2.0", result[0].versionName)     // 唯一版本
-        Assertions.assertEquals("init", result[1].versionName)     // init 最新版本
-        Assertions.assertEquals("init-1", result[2].versionName)   // init 次新版本
-        Assertions.assertEquals("init-2", result[3].versionName)   // init 最旧版本
-        Assertions.assertEquals("v1.0", result[4].versionName)     // 唯一版本
+        Assertions.assertEquals("v2.0", result[0].versionName)   // 唯一版本
+        Assertions.assertEquals("init", result[1].versionName)   // init 最新版本
+        Assertions.assertEquals("init-1", result[2].versionName) // init 次新版本
+        Assertions.assertEquals("init-2", result[3].versionName) // init 最旧版本
+        Assertions.assertEquals("v1.0", result[4].versionName)   // 唯一版本
     }
 
     @Test
@@ -326,7 +322,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
             listOf(
                 VersionData(3L, versionName, sameUpdateTime, sameUpdateTime, "user1"), // VERSION 最大，最新
                 VersionData(2L, versionName, sameUpdateTime, sameUpdateTime, "user1"),
-                VersionData(1L, versionName, sameUpdateTime, sameUpdateTime, "user1")  // VERSION 最小，最旧
+                VersionData(1L, versionName, sameUpdateTime, sameUpdateTime, "user1") // VERSION 最小，最旧
             )
         )
 
@@ -361,37 +357,37 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     "user1"
-                ),  // v2.0 最新
+                ), // v2.0 最新
                 VersionData(
                     2L, "v2.0",
                     LocalDateTime.of(2024, 3, 18, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 18, 10, 0, 0),
                     "user1"
-                ),  // v2.0 旧
+                ), // v2.0 旧
                 VersionData(
                     3L, "init",
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
-                ),  // init 最新
+                ), // init 最新
                 VersionData(
                     4L, "init",
                     LocalDateTime.of(2024, 3, 12, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 12, 10, 0, 0),
                     "user1"
-                ),  // init 旧
+                ), // init 旧
                 VersionData(
                     5L, "v1.0",
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
-                ),  // v1.0 最新
+                ), // v1.0 最新
                 VersionData(
                     6L, "v1.0",
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
-                )   // v1.0 旧
+                ) // v1.0 旧
             )
         )
 
@@ -402,12 +398,12 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(6, result.size)
-        Assertions.assertEquals("v2.0", result[0].versionName)     // v2.0 最新版本
-        Assertions.assertEquals("v2.0-1", result[1].versionName)   // v2.0 旧版本
-        Assertions.assertEquals("init", result[2].versionName)     // init 最新版本
-        Assertions.assertEquals("init-1", result[3].versionName)   // init 旧版本
-        Assertions.assertEquals("v1.0", result[4].versionName)     // v1.0 最新版本
-        Assertions.assertEquals("v1.0-1", result[5].versionName)   // v1.0 旧版本
+        Assertions.assertEquals("v2.0", result[0].versionName)   // v2.0 最新版本
+        Assertions.assertEquals("v2.0-1", result[1].versionName) // v2.0 旧版本
+        Assertions.assertEquals("init", result[2].versionName)   // init 最新版本
+        Assertions.assertEquals("init-1", result[3].versionName) // init 旧版本
+        Assertions.assertEquals("v1.0", result[4].versionName)   // v1.0 最新版本
+        Assertions.assertEquals("v1.0-1", result[5].versionName) // v1.0 旧版本
     }
 
     // ========== Helper Methods ==========
