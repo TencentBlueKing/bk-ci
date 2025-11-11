@@ -131,14 +131,22 @@ class EnvNodeDao {
         }
     }
 
-    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) {
+    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) =
         with(TEnvNode.T_ENV_NODE) {
             dslContext.update(this)
                 .set(ENABLE_NODE, enable)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
                 .and(NODE_ID.eq(nodeId))
-                .execute()
+                .execute() == 1
         }
-    }
+
+    fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long) =
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.eq(envId))
+                .and(NODE_ID.eq(nodeId))
+                .fetchOne(0, Int::class.java) == 1
+        }
 }

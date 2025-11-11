@@ -307,13 +307,15 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
-        envService.enableNodeEnv(
+        return envService.enableNodeEnv(
             projectId = projectId,
+            userId = userId,
             envHashId = envHashId,
             nodeHashId = nodeHashId,
+            envName = null,
+            nodeName = null,
             enableNode = enableNode
         )
-        return Result(true)
     }
 
     private fun checkParam(
