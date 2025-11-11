@@ -92,7 +92,6 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            logger.info()
             if (draftVersionResource == null) {
                 val resourceOnlyVersion = pipelineVersionGenerator.generateDraftVersion(
                     projectId = projectId,
