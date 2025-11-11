@@ -2142,7 +2142,7 @@
                             "type" : "string"
                           },
                           "privileged" : {
-                            "type" : "string"
+                            "type" : "boolean"
                           }
                         }
                       },
@@ -2589,7 +2589,7 @@
                             "type" : "string"
                           },
                           "privileged" : {
-                            "type" : "string"
+                            "type" : "boolean"
                           }
                         }
                       },
