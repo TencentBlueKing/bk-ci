@@ -42,7 +42,7 @@ object TriggerEventConverter {
                     val groupFields = conditions.subList(index + 1, conditions.size).filter { it.group == currentGroup }
                     val children = listOf(condition).plus(groupFields).map {
                         convertComponent(it)
-                    }.mapNotNull { covertGroupComponent(it) }
+                    }.map { covertGroupComponent(it) }
                     // 记录已处理的分组
                     existsGroup.add(currentGroup)
                     GroupComponent(

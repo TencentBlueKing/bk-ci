@@ -4,6 +4,7 @@ import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromExecution
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromInputGroups
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromOutputItem
+import com.tencent.devops.common.pipeline.pojo.atom.form.components.AtomFormComponent
 
 class AtomFormBuilder {
     private val form = AtomForm(atomCode = "", input = mapOf())
@@ -13,7 +14,7 @@ class AtomFormBuilder {
         return this
     }
 
-    fun input(input: Map<String, Any>): AtomFormBuilder {
+    fun input(input: Map<String, AtomFormComponent>): AtomFormBuilder {
         form.input = input
         return this
     }
