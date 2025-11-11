@@ -106,5 +106,7 @@ data class ModelRecord(
     @get:Schema(title = "约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null,
     @get:Schema(title = "制品质量分析", required = false)
-    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
+    val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
+    @get:Schema(title = "版本是否变更", required = false)
+    val versionChange: Boolean? = false
 )

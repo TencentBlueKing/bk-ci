@@ -11,11 +11,14 @@
             :btns="noPermissionTipsConfig.btns"
         >
         </empty-tips>
-        <YamlPipelineEditor v-else-if="isCodeMode" />
+        <YamlPipelineEditor
+            v-else-if="isCodeMode"
+            :editable="editable"
+        />
         <template v-else>
             <show-variable
                 v-if="currentTab === 'pipeline' && pipeline"
-                :editable="!isTemplatePipeline"
+                :editable="editable"
                 :pipeline="pipeline"
             />
             <header
@@ -128,9 +131,14 @@
                 'editfromImport',
                 'showVariable'
             ]),
+            editable () {
+                return !(this.instanceFromTemplate || this.pipelineInfo?.mode === 'CONSTRAINT')
+            },
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
+                isTemplate: 'atom/isTemplate',
+                instanceFromTemplate: 'atom/instanceFromTemplate',
             }),
             pipelineVersion () {
                 return this.pipelineInfo?.version
@@ -147,9 +155,6 @@
             curPanel () {
                 return this.panels.find((panel) => panel.name === this.currentTab)
             },
-            isTemplatePipeline () {
-                return this.pipelineInfo?.instanceFromTemplate ?? false
-            },
             panels () {
                 return [
                     {
@@ -157,6 +162,7 @@
                         label: this.$t('pipeline'),
                         component: 'PipelineEditTab',
                         bindData: {
+                            editable: this.editable,
                             pipeline: this.pipelineWithoutTrigger,
                             isLoading: !this.pipelineWithoutTrigger
                         }
@@ -166,7 +172,7 @@
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
-                            editable: !this.isTemplatePipeline,
+                            editable: this.editable,
                             pipeline: this.pipeline
                         }
                     },
@@ -175,6 +181,7 @@
                         label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         bindData: {
+                            editable: !this.instanceFromTemplate,
                             failSubscriptionList: this.getPipelineSubscriptions('fail'),
                             successSubscriptionList: this.getPipelineSubscriptions('success'),
                             updateSubscription: (name, value) => {
@@ -194,6 +201,7 @@
                         component: 'BaseSettingTab',
                         bindData: {
                             pipelineSetting: this.pipelineSetting,
+                            editable: !this.instanceFromTemplate,
                             updatePipelineSetting: (...args) => {
                                 this.setPipelineEditing(true)
                                 this.updatePipelineSetting(...args)

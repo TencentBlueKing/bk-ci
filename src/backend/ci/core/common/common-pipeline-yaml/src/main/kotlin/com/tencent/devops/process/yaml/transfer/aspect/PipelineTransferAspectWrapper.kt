@@ -4,16 +4,16 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.IJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
+import com.tencent.devops.process.yaml.v3.models.step.IStep
 import java.util.LinkedList
 import kotlin.reflect.jvm.jvmName
-import com.tencent.devops.process.yaml.v3.models.job.Job as YamlV3Job
-import com.tencent.devops.process.yaml.v3.models.stage.Stage as YamlV3Stage
-import com.tencent.devops.process.yaml.v3.models.step.Step as YamlV3Step
 
 class PipelineTransferAspectWrapper {
     private val aspectTrigger = LinkedList<IPipelineTransferAspectTrigger>()
@@ -98,7 +98,7 @@ class PipelineTransferAspectWrapper {
        * AspectType.BEFORE: yaml -> moel before stage
        * AspectType.AFTER: model -> yaml after stage
        */
-    fun setYamlStage4Yaml(yamlStage: YamlV3Stage? = null, yamlPreStage: PreStage? = null, aspectType: AspectType) {
+    fun setYamlStage4Yaml(yamlStage: IStage? = null, yamlPreStage: IPreStage? = null, aspectType: AspectType) {
         pipelineTransferJoinPoint.yamlStage = yamlStage
         pipelineTransferJoinPoint.yamlPreStage = yamlPreStage
         clzName = IPipelineTransferAspectStage::class.jvmName
@@ -112,7 +112,7 @@ class PipelineTransferAspectWrapper {
        * AspectType.BEFORE: yaml -> moel before job
        * AspectType.AFTER: model -> yaml after job
        */
-    fun setYamlJob4Yaml(yamlJob: YamlV3Job? = null, yamlPreJob: PreJob? = null, aspectType: AspectType) {
+    fun setYamlJob4Yaml(yamlJob: IJob? = null, yamlPreJob: IPreJob? = null, aspectType: AspectType) {
         pipelineTransferJoinPoint.yamlJob = yamlJob
         pipelineTransferJoinPoint.yamlPreJob = yamlPreJob
         clzName = IPipelineTransferAspectJob::class.jvmName
@@ -126,7 +126,7 @@ class PipelineTransferAspectWrapper {
        * AspectType.BEFORE: yaml -> moel before step
        * AspectType.AFTER: model -> yaml after step
        */
-    fun setYamlStep4Yaml(yamlStep: YamlV3Step? = null, yamlPreStep: PreStep? = null, aspectType: AspectType) {
+    fun setYamlStep4Yaml(yamlStep: IStep? = null, yamlPreStep: IPreStep? = null, aspectType: AspectType) {
         pipelineTransferJoinPoint.yamlStep = yamlStep
         pipelineTransferJoinPoint.yamlPreStep = yamlPreStep
         clzName = IPipelineTransferAspectElement::class.jvmName

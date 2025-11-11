@@ -43,6 +43,8 @@ data class CodeGithubWebHookTriggerElement(
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     @get:Schema(title = "仓库ID", required = true)
     val repositoryHashId: String? = null,
     @get:Schema(title = "分支名称", required = false)

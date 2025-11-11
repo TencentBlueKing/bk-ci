@@ -192,12 +192,16 @@ class TPAQueueService @Autowired constructor(
             commonUtil.logDebug(
                 dataContext.data, "env queue size:$queueSize index:$queueIndex cost ${costMilliSecond}ms"
             )
-            // context 只能初始化一次，但是因为初始化过程中也可能出现报错，所以需要把可能的报错分摊给每个消息，防止一次报错整个队列没了
+            // context 只能初始化一次
+            // 但是因为初始化过程中也可能出现报错，需要把可能的报错分摊给每个消息，所以在执行层初始化，防止一次报错整个队列没了
             if (eventContext.context == null) {
                 eventContext.context = tpaEnvQueueService.initEnvContext(dataContext)
+            } else {
+                // 初始化完成的需要更新agent列表，防止用户改变编排或者修改环境节点信息
+                tpaEnvQueueService.refreshEnvContextAgents(eventContext.context!!, dataContext)
             }
             tpaEnvQueueService.inEnvQueue(eventContext.context!!, dataContext)
-            // 只有调度成功才能走到这一步，到这一步就删除,同时删除数据库
+            // 只有调度成功才能走到这一步，到这一步就删除，同时删除数据库
             eventContext.setDelete(sqlData.recordId)
         } catch (e: Throwable) {
             queueEnd(eventContext, sqlData, e)

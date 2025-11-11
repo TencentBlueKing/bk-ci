@@ -8,6 +8,8 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
@@ -107,6 +109,7 @@ object PipelineTransferAspectLoader {
         )
     }
 
+    @Suppress("ComplexCondition")
     fun sharedEnvTransfer(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
@@ -114,12 +117,13 @@ object PipelineTransferAspectLoader {
         aspects.add(
             object : IPipelineTransferAspectJob {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlJob() != null && jp.yaml()?.formatResources()?.pools != null) {
+                    val job = jp.yamlJob()
+                    if (job != null && job is Job && jp.yaml()?.formatResources()?.pools != null) {
                         jp.yaml()?.formatResources()?.pools?.find {
-                            it.name == jp.yamlJob()!!.runsOn.poolName
+                            it.name == job.runsOn.poolName
                         }?.let { pool ->
-                            jp.yamlJob()!!.runsOn.envProjectId = pool.from?.substringBefore("@")
-                            jp.yamlJob()!!.runsOn.poolName = pool.from?.substringAfter("@")
+                            job.runsOn.envProjectId = pool.from?.substringBefore("@")
+                            job.runsOn.poolName = pool.from?.substringAfter("@")
                         }
                     }
 
@@ -127,11 +131,12 @@ object PipelineTransferAspectLoader {
                 }
 
                 override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yamlPreJob()?.runsOn != null &&
-                        jp.yamlPreJob()?.runsOn is RunsOn &&
-                        (jp.yamlPreJob()?.runsOn as RunsOn).envProjectId != null
+                    val job = jp.yamlPreJob()
+                    if (job is PreJob && job.runsOn != null &&
+                        job.runsOn is RunsOn &&
+                        job.runsOn.envProjectId != null
                     ) {
-                        val pool = jp.yamlPreJob()?.runsOn as RunsOn
+                        val pool = job.runsOn
                         pools.add(
                             ResourcesPools(
                                 from = "${pool.envProjectId}@${pool.poolName}",
