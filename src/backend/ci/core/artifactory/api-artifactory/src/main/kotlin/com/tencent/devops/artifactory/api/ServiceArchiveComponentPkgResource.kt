@@ -87,7 +87,7 @@ interface ServiceArchiveComponentPkgResource {
         @Parameter(description = "是否校验组件项目id", required = false)
         @QueryParam("checkProjectId")
         @DefaultValue("true")
-        checkProjectId: Boolean
+        checkProjectId: Boolean = true
     ): Result<String>
 
     @Operation(summary = "删除组件包文件")
