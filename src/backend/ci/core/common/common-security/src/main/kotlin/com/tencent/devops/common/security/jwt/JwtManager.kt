@@ -73,7 +73,7 @@ class JwtManager(
 
     //    private val securityJwtInfo: SecurityJwtInfo
     private val tokenCache = CacheBuilder.newBuilder()
-        .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, Map<String, Any>>()
+        .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, JwtValidationResult>()
 
     init {
         jwtConfig.properties.forEach {
@@ -192,12 +192,9 @@ class JwtManager(
         try {
             // 检查缓存
             val cacheClaims = tokenCache.getIfPresent(token)
-            val cacheExp = cacheClaims?.get(JwtSecurityConstants.JwtClaims.EXPIRATION)?.toString()?.toLong()
+            val cacheExp = cacheClaims?.claims?.get(JwtSecurityConstants.JwtClaims.EXPIRATION)?.toString()?.toLong()
             if (cacheExp != null && cacheExp > Instant.now().toEpochMilli() / 1000) {
-                return JwtValidationResult(
-                    isValid = true,
-                    claims = cacheClaims
-                )
+                return cacheClaims
             }
 
             // 使用JwtClaimsValidator验证JWT Token
@@ -210,7 +207,7 @@ class JwtManager(
             if (result.isValid) {
                 val expClaim = result.claims[JwtSecurityConstants.JwtClaims.EXPIRATION]
                 if (expClaim is Number) {
-                    tokenCache.put(token, result.claims)
+                    tokenCache.put(token, result)
                 }
             }
 
