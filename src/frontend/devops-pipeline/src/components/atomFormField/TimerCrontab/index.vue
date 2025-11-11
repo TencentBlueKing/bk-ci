@@ -1,6 +1,7 @@
 <template>
     <bk-crontab
         v-model="cronValue"
+        :local="curLocal"
         @change="handleChangeCron"
     />
 </template>
@@ -28,6 +29,14 @@
         computed: {
             cronValue () {
                 return this.value.join('')
+            },
+            curLocal () {
+                const localeAliasMap = {
+                    'zh-CN': 'zh-CN',
+                    'ja-JP': 'en',
+                    'en-US': 'en'
+                }
+                return localeAliasMap[this.$i18n.locale] || 'zh-CN'
             }
         },
         methods: {
