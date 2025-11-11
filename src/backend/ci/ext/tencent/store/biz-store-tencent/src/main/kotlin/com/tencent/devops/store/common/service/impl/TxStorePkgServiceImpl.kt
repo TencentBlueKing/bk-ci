@@ -27,7 +27,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
 ) : TxStorePkgService {
 
-    private var actualModifiedCount = 0L
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStorePkgServiceImpl::class.java)
@@ -52,15 +51,14 @@ class TxStorePkgServiceImpl @Autowired constructor(
         }
 
         return try {
-            logger.info("Start updating package SHA256 values, storeType: $storeType")
+            logger.info("Start running SHA256 update task , storeType: $storeType")
             // 2. 创建临时目录
             val tempDir = createTempDir()
             // 3. 分页处理所有记录
-            val processedCount = processAllRecords(storeType, pageSize ?: 100, tempDir, userId)
-            logger.info("SHA256 update completed, total processed: $processedCount, actual modified: $actualModifiedCount")
+            processAllRecords(storeType, pageSize ?: 100, tempDir, userId)
+            logger.info("SHA256 update task running end ")
         } finally {
             // 4. 清理资源
-            actualModifiedCount=0L
             cleanupResources()
             redisLock.unlock()
         }
@@ -86,9 +84,8 @@ class TxStorePkgServiceImpl @Autowired constructor(
         pageSize: Int,
         tempDir: File,
         userId: String
-    ): Int {
+    ) {
         var offset = 0
-        var processedCount = 0
         while (true) {
             // 查询单批记录
             val storeBaseRecords = queryStoreBaseRecords(storeType, offset, pageSize)
@@ -97,11 +94,9 @@ class TxStorePkgServiceImpl @Autowired constructor(
                 break
             }
             // 处理单批记录
-            processedCount += processBatchRecords(storeBaseRecords, tempDir, userId)
+            processBatchRecords(storeBaseRecords, tempDir, userId)
             offset += pageSize
-            logger.info("Processed $processedCount packages so far")
         }
-        return processedCount
     }
 
     /**
@@ -111,17 +106,14 @@ class TxStorePkgServiceImpl @Autowired constructor(
         storeBaseRecords: List<TStoreBaseRecord>,
         tempDir: File,
         userId: String
-    ): Int {
-        var batchCount = 0
+    ) {
         for (storeBaseRecord in storeBaseRecords) {
             try {
                 processStorePackage(storeBaseRecord, tempDir, userId)
-                batchCount++
             } catch (e: Exception) {
                 logger.error("Failed to process store: ${storeBaseRecord.storeCode}", e)
             }
         }
-        return batchCount
     }
 
     /**
@@ -272,7 +264,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
             .where(t.ID.eq(envId))
             .execute()
 
-        actualModifiedCount += 1
         logger.info("Updated SHA256 for env record: $envId")
     }
 
