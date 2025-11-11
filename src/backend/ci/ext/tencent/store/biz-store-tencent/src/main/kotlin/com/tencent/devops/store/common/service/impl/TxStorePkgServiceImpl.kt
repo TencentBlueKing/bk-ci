@@ -43,7 +43,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "OP_STORE_PKG_SHA256_UPDATE_LOCK",
-            expiredTimeInSeconds = 3600
+            expiredTimeInSeconds = 540
         )
 
         if (!redisLock.tryLock()) {
