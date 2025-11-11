@@ -158,7 +158,6 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
-            // 事务中只做数据插入和更新操作，不做复杂查询
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
@@ -184,7 +183,7 @@ class PublicVarGroupService @Autowired constructor(
                 )
             }
 
-            // 事务提交后再更新新版本的引用计数
+            // 提交后再更新新版本的引用计数
             // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）和固定版本引用
             if (newVersionReferCount > 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
