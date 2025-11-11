@@ -728,7 +728,7 @@ class PipelineTemplateMigrateService(
             model = modelTransferResult.templateModel,
             yaml = modelTransferResult.yamlWithVersion?.yamlStr,
             status = VersionStatus.RELEASED,
-            description = currentTemplate.desc,
+            description = versionInfo.desc,
             sortWeight = 0,
             creator = versionInfo.creator,
             updater = versionInfo.creator,

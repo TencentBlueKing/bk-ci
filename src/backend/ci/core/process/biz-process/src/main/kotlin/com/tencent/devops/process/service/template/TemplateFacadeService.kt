@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -509,17 +510,17 @@ class TemplateFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_CONTENT
     )
 
-    /**
-     * 更新流水线模板
-     *
-     * @param projectId 项目ID
-     * @param userId 用户ID
-     * @param templateId 模板ID
-     * @param versionName 新版本名
-     * @param template 模板模型数据
-     * @param checkPermissionFlag 是否检查权限，默认为true
-     * @return 新生成的模板版本号
-     */
+        /**
+         * 更新流水线模板
+         *
+         * @param projectId 项目ID
+         * @param userId 用户ID
+         * @param templateId 模板ID
+         * @param versionName 新版本名
+         * @param template 模板模型数据
+         * @param checkPermissionFlag 是否检查权限，默认为true
+         * @return 新生成的模板版本号
+         */
     fun updateTemplate(
         projectId: String,
         userId: String,
@@ -1418,7 +1419,7 @@ class TemplateFacadeService @Autowired constructor(
      * @param projectId 项目ID
      * @param templateId 模板ID
      * @param ascSort 是否按更新时间升序排序
-     * @return 模板版本列表，重复的 versionName 会被添加后缀（如: "-1", "-2"）
+     * @return 模板版本列表，重复的 versionName 会被添加后缀，但最新版本保留原名
      */
     fun listTemplateAllVersions(
         projectId: String,
@@ -1443,7 +1444,8 @@ class TemplateFacadeService @Autowired constructor(
                 versionName = versionInfo[tTemplate.VERSION_NAME],
                 createTime = versionInfo[tTemplate.CREATED_TIME].timestampmilli(),
                 updateTime = versionInfo[tTemplate.UPDATE_TIME].timestampmilli(),
-                creator = versionInfo[tTemplate.CREATOR]
+                creator = versionInfo[tTemplate.CREATOR],
+                desc = versionInfo[tTemplate.DESC]
             )
         }.let { versions ->
             // 使用 let 块来应用排序，代码更清晰
@@ -1458,26 +1460,51 @@ class TemplateFacadeService @Autowired constructor(
         // 使用 groupingBy().eachCount() 是最高效、最Kotlin风格的方式。
         val totalNameCounts = sortedVersions.groupingBy { it.versionName }.eachCount()
 
-        // --- 步骤 3: 最终转换，根据预计算结果进行重命名 ---
+        // --- 步骤 3: 找出每个 versionName 中需要保留原名的版本（最新版本）---
+        // 根据排序规则：降序时取第一个，升序时取最后一个
+        val latestVersionMap = mutableMapOf<String, TemplateVersion>()
+
+        if (ascSort) {
+            // 升序：从后往前遍历，最后遍历到的（最后一个）会被保留
+            sortedVersions.reversed().forEach { version ->
+                if (!latestVersionMap.containsKey(version.versionName)) {
+                    latestVersionMap[version.versionName] = version
+                }
+            }
+        } else {
+            // 降序：从前往后遍历，第一个遍保历到的（第一个）会被留
+            sortedVersions.forEach { version ->
+                if (!latestVersionMap.containsKey(version.versionName)) {
+                    latestVersionMap[version.versionName] = version
+                }
+            }
+        }
+
+        // --- 步骤 4: 最终转换，根据预计算结果进行重命名 ---
         // 用于为重复项生成递增后缀（如：-1, -2, ...）
-        val runningDuplicateCounters = mutableMapOf<String, Int>()
+        val duplicateCounters = mutableMapOf<String, Int>()
 
         return sortedVersions.map { version ->
             val originalName = version.versionName
             val totalCount = totalNameCounts[originalName] ?: 1
 
-            // 如果总数大于1，说明它是重复项，需要重命名
-            if (totalCount > 1) {
-                // 获取当前名称的后缀计数，从 1 开始
-                val suffixIndex = runningDuplicateCounters.getOrDefault(originalName, 0) + 1
-                // 更新计数器，为下一个同名项做准备
-                runningDuplicateCounters[originalName] = suffixIndex
-
-                // 使用 copy 创建一个带有新名称的新实例
-                version.copy(versionName = "$originalName-$suffixIndex")
-            } else {
-                // 如果总数不大于1，说明它是唯一的，保持原样
-                version
+            when {
+                // 唯一版本名，保持原样
+                totalCount == 1 -> version
+                // 重复版本名中的最新版本，保留原名
+                latestVersionMap[originalName] === version -> version
+                // 重复版本名中的旧版本，添加后缀
+                else -> {
+                    val suffixIndex = duplicateCounters.getOrDefault(originalName, 0) + 1
+                    duplicateCounters[originalName] = suffixIndex
+                    version.copy(
+                        versionName = "$originalName-$suffixIndex",
+                        desc = MessageUtil.getMessageByLocale(
+                            messageCode = ProcessMessageCode.BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    )
+                }
             }
         }
     }

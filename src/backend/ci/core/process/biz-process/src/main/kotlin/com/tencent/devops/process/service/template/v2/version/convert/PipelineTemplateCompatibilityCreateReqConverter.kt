@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
-import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
@@ -42,9 +41,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateVersionReq
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
-import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -56,9 +53,6 @@ import org.springframework.stereotype.Service
 class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateModelInitializer: PipelineTemplateModelInitializer,
-    private val templateDao: TemplateDao,
-    private val dslContext: DSLContext,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService
 ) : PipelineTemplateVersionReqConverter {
 
@@ -103,22 +97,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 )
             }
 
-            // v2新版本中，版本名称需要唯一：先结合v1计数推断，再以v2实时数据兜底校验
-            val v2CustomVersionName = v1VersionName.let { baseName ->
-                val existingCountInV1 = templateDao.countTemplateVersions(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    templateId = templateId,
-                    versionName = baseName
-                )
-                val preferred = if (existingCountInV1 > 0) {
-                    "$baseName-${existingCountInV1 + 1}"
-                } else {
-                    baseName
-                }
-                ensureV2UniqueVersionName(projectId, templateId, preferred)
-            }
-
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = templateId,
                 projectId = projectId,
@@ -155,7 +133,7 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 projectId = projectId,
                 templateId = templateId,
                 v1VersionName = v1VersionName,
-                customVersionName = v2CustomVersionName,
+                customVersionName = v1VersionName,
                 versionAction = PipelineVersionAction.CREATE_RELEASE,
                 pipelineTemplateInfo = pipelineTemplateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
@@ -163,31 +141,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 newTemplate = isNewTemplate
             )
         }
-    }
-
-    private fun ensureV2UniqueVersionName(
-        projectId: String,
-        templateId: String,
-        base: String
-    ): String {
-        var name = base
-        var index = 1
-        while (
-            pipelineTemplateResourceService.getLatestResource(
-                projectId = projectId,
-                templateId = templateId,
-                status = VersionStatus.RELEASED,
-                versionName = name
-            ) != null
-        ) {
-            val m = Regex("^(.*?)(-(\\d+))?$").matchEntire(base)!!
-            val plain = m.groupValues[1]
-            val seed = m.groupValues.getOrNull(3)?.toIntOrNull() ?: 1
-            val n = seed + index
-            name = "$plain-$n"
-            index++
-        }
-        return name
     }
 
     companion object {
