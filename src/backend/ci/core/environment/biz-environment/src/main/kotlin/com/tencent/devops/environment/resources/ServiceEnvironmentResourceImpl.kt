@@ -30,20 +30,14 @@ package com.tencent.devops.environment.resources
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -55,8 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceEnvironmentResourceImpl @Autowired constructor(
-    private val envService: EnvService,
-    private val environmentPermissionService: EnvironmentPermissionService,
+    private val envService: EnvService
 ) : ServiceEnvironmentResource {
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -214,6 +207,18 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         nodeName: String?,
         enableNode: Boolean
     ): Result<Boolean> {
+        if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("envHashIds or envName")
+            )
+        }
+        if (nodeHashId.isNullOrBlank() && nodeName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("nodeHashIds or nodeName")
+            )
+        }
         return envService.enableNodeEnv(
             projectId = projectId,
             userId = userId,

@@ -143,10 +143,11 @@ class EnvNodeDao {
 
     fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long) =
         with(TEnvNode.T_ENV_NODE) {
-            dslContext.selectCount().from(this)
+            dslContext.selectOne().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
                 .and(NODE_ID.eq(nodeId))
-                .fetchOne(0, Int::class.java) == 1
+                .limit(1)
+                .fetchOne() != null
         }
 }
