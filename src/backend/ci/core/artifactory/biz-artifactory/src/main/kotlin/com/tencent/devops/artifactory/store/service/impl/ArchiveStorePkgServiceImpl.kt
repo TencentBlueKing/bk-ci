@@ -372,7 +372,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     defaultMessage = validateResult.message
                 )
             }
-            storeStatus = storeBaseInfo.status;
+            storeStatus = storeBaseInfo.status
         }
         var finalOsName = osName
         if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
