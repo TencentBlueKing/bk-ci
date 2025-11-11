@@ -264,7 +264,7 @@
                         ...item,
                         key: item.id
                     }))
-                    
+
                 }
             },
             displayConditionSetting () {
@@ -305,8 +305,14 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
-                // 新增跟编辑时，list不一样
-                return this.globalParams.map(p => p[field]).filter(item => item !== this.initParamItem[field]).join(',')
+                return this.globalParams
+                    .filter((item) => item[field] !== this.initParamItem[field])
+                    .map((p) =>
+                        typeof p[field] === 'string'
+                            ? encodeURIComponent(p[field])
+                            : p[field]
+                    )
+                    .join(',')
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
