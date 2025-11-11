@@ -141,13 +141,19 @@ class EnvNodeDao {
                 .execute() == 1
         }
 
-    fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long) =
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.selectOne().from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ENV_ID.eq(envId))
-                .and(NODE_ID.eq(nodeId))
-                .limit(1)
-                .fetchOne() != null
+    fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long): Boolean {
+        // 参数校验，避免无效查询
+        if (projectId.isBlank() || envId <= 0 || nodeId <= 0) {
+            return false
         }
+
+        return with(TEnvNode.T_ENV_NODE) {
+            dslContext.fetchExists(
+                /* table = */ this,
+                /* condition = */ PROJECT_ID.eq(projectId)
+                    .and(ENV_ID.eq(envId))
+                    .and(NODE_ID.eq(nodeId))
+            )
+        }
+    }
 }

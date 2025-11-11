@@ -210,13 +210,13 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                params = arrayOf("envHashIds or envName")
+                params = arrayOf("envHashId or envName")
             )
         }
         if (nodeHashId.isNullOrBlank() && nodeName.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                params = arrayOf("nodeHashIds or nodeName")
+                params = arrayOf("nodeHashId or nodeName")
             )
         }
         return envService.enableNodeEnv(
