@@ -45,7 +45,9 @@ data class ModelVarReferenceEvent(
     @get:Schema(title = "资源类型（PIPELINE/TEMPLATE）", required = true)
     val resourceType: String,
     @get:Schema(title = "资源版本", required = true)
-    val resourceVersion: Int
+    val resourceVersion: Int,
+    @get:Schema(title = "资源版本", required = false)
+    val resourceVersionName: String? = null,
 ) : IEvent() {
     @JsonIgnore
     fun getEventKey(): String = "$projectId:$resourceType:$resourceId:$resourceVersion"

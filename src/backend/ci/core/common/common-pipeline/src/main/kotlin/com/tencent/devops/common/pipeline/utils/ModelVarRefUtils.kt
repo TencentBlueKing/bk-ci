@@ -897,7 +897,7 @@ object ModelVarRefUtils {
 
     /**
      * 移除文本中的注释行
-     * 使用StringBuilder手动扫描
+     * 使用逐行处理的方式，确保正确过滤注释行
      * 支持两种注释格式：
      * 1. 以#开头的注释行
      * 2. 以REM开头的注释行（不区分大小写）
@@ -907,73 +907,16 @@ object ModelVarRefUtils {
     private fun removeCommentLines(text: String): String {
         if (text.isEmpty()) return text
         
-        val result = StringBuilder(text.length)
-        var lineStart = 0
-        var i = 0
-        
-        while (i < text.length) {
-            // 找到行尾
-            if (text[i] == '\n' || text[i] == '\r') {
-                // 检查这一行是否是注释行
-                if (!isCommentLine(text, lineStart, i)) {
-                    // 不是注释行，添加到结果中
-                    result.append(text, lineStart, i + 1)
-                }
-                
-                // 处理\r\n的情况
-                if (text[i] == '\r' && i + 1 < text.length && text[i + 1] == '\n') {
-                    i++
-                }
-                
-                lineStart = i + 1
+        // 使用lines()方法分割文本，然后过滤掉注释行
+        return text.lines()
+            .filter { line ->
+                val trimmedLine = line.trimStart()
+                // 保留非注释行：不以#开头，且不以REM开头（不区分大小写）
+                !trimmedLine.startsWith("#") && 
+                !trimmedLine.startsWith("REM ", ignoreCase = true) &&
+                !trimmedLine.equals("REM", ignoreCase = true)
             }
-            i++
-        }
-        
-        // 处理最后一行（如果没有换行符结尾）
-        if (lineStart < text.length && !isCommentLine(text, lineStart, text.length)) {
-            result.append(text, lineStart, text.length)
-        }
-        
-        return result.toString()
-    }
-    
-    /**
-     * 检查指定范围的文本是否为注释行
-     * @param text 完整文本
-     * @param start 行起始位置
-     * @param end 行结束位置
-     * @return 如果是注释行返回true，否则返回false
-     */
-    private fun isCommentLine(text: String, start: Int, end: Int): Boolean {
-        var i = start
-        
-        // 跳过行首空白字符
-        while (i < end && (text[i] == ' ' || text[i] == '\t')) {
-            i++
-        }
-        
-        // 检查是否为空行
-        if (i >= end) return false
-        
-        // 检查是否以#开头
-        if (text[i] == '#') return true
-        
-        // 检查是否以REM开头（不区分大小写）
-        if (i + 3 <= end) {
-            val char1 = text[i]
-            val char2 = text[i + 1]
-            val char3 = text[i + 2]
-            
-            if ((char1 == 'R' || char1 == 'r') &&
-                (char2 == 'E' || char2 == 'e') &&
-                (char3 == 'M' || char3 == 'm')) {
-                // 确保REM后面是空白或行尾
-                return i + 3 >= end || text[i + 3] == ' ' || text[i + 3] == '\t'
-            }
-        }
-        
-        return false
+            .joinToString("\n")
     }
 
     /**

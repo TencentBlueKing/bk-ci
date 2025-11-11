@@ -538,7 +538,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 projectId = publicVarGroupReferDTO.projectId,
                 resourceId = publicVarGroupReferDTO.referId,
                 resourceType = publicVarGroupReferDTO.referType.name,
-                resourceVersion = publicVarGroupReferDTO.referVersion
+                resourceVersion = publicVarGroupReferDTO.referVersion,
+                resourceVersionName = publicVarGroupReferDTO.referVersionName
             )
         )
     }

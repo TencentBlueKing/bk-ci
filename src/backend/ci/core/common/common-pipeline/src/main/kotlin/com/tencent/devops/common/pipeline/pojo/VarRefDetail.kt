@@ -13,9 +13,9 @@ data class VarRefDetail(
     @get:Schema(title = "资源类型", required = true)
     val resourceType: String,
     @get:Schema(title = "资源版本名称", required = true)
-    val resourceVersionName: String = "",
+    var resourceVersionName: String = "",
     @get:Schema(title = "引用版本号", required = true)
-    val referVersion: Int = 1,
+    var referVersion: Int = 1,
     @get:Schema(title = "阶段ID", required = true)
     val stageId: String = "",
     @get:Schema(title = "容器ID", required = false)

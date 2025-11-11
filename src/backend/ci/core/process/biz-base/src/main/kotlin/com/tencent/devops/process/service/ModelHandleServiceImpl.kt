@@ -19,7 +19,6 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.EXPIRED_TIME_IN_SECONDS
 import com.tencent.devops.process.service.`var`.PublicVarService
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -64,7 +63,8 @@ class ModelHandleServiceImpl @Autowired constructor(
         projectId: String,
         resourceId: String,
         resourceType: String,
-        resourceVersion: Int
+        resourceVersion: Int,
+        resourceVersionName: String?
     ) {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
@@ -87,20 +87,23 @@ class ModelHandleServiceImpl @Autowired constructor(
                 model = model,
                 projectId = projectId
             )
-            // 处理变量引用详情
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
 
-                varRefDetailDao.deleteByResourceId(
-                    dslContext = context,
-                    projectId = projectId,
-                    resourceId = resourceId,
-                    resourceType = resourceType,
-                    referVersion = resourceVersion
-                )
-                if (varRefDetails.isNotEmpty()) {
-                    varRefDetailDao.batchSave(context, varRefDetails)
-                }
+            varRefDetails.forEach { varRefDetail ->
+                varRefDetail.referVersion = resourceVersion
+                resourceVersionName?.let { it -> varRefDetail.resourceVersionName = it }
+            }
+
+            logger.info("handleModelVarReferences for varRefDetails: $varRefDetails")
+            // 处理变量引用详情
+            varRefDetailDao.deleteByResourceId(
+                dslContext = dslContext,
+                projectId = projectId,
+                resourceId = resourceId,
+                resourceType = resourceType,
+                referVersion = resourceVersion
+            )
+            if (varRefDetails.isNotEmpty()) {
+                varRefDetailDao.batchSave(dslContext, varRefDetails)
             }
             // 处理公共变量组变量引用
             handlePublicVarGroupReferences(
