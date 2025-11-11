@@ -109,7 +109,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
     }
 
     @Test
-    @DisplayName("降序：3个相同版本名，最新版本保留原名，旧版本添加后缀")
+    @DisplayName("降序：3个相同版本名，最新版本保留原名，旧版本添加version后缀")
     fun testDescendingDuplicateVersionNames() {
         val projectId = "project1"
         val templateId = "template1"
@@ -120,19 +120,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val mockRecords = createMockRecords(
             listOf(
                 VersionData(
-                    1L, versionName,
+                    300L, versionName,
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    2L, versionName,
+                    200L, versionName,
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 次新
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    3L, versionName,
+                    100L, versionName,
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0), // 最旧
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
@@ -147,13 +147,22 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(3, result.size)
-        Assertions.assertEquals("init", result[0].versionName)   // 最新版本保留原名
-        Assertions.assertEquals("init-1", result[1].versionName) // 次新版本加后缀
-        Assertions.assertEquals("init-2", result[2].versionName) // 最旧版本加后缀
+        // 最新版本保留原名，标记为重复
+        Assertions.assertEquals("init", result[0].versionName)
+        Assertions.assertEquals(300L, result[0].version)
+        Assertions.assertEquals(true, result[0].nameDuplicated)
+        // 次新版本添加version后缀，标记为重复
+        Assertions.assertEquals("init-200", result[1].versionName)
+        Assertions.assertEquals(200L, result[1].version)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+        // 最旧版本添加version后缀，标记为重复
+        Assertions.assertEquals("init-100", result[2].versionName)
+        Assertions.assertEquals(100L, result[2].version)
+        Assertions.assertEquals(true, result[2].nameDuplicated)
     }
 
     @Test
-    @DisplayName("升序：3个相同版本名，最新版本保留原名，旧版本添加后缀")
+    @DisplayName("升序：3个相同版本名，最新版本保留原名，旧版本添加version后缀")
     fun testAscendingDuplicateVersionNames() {
         val projectId = "project1"
         val templateId = "template1"
@@ -163,19 +172,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val mockRecords = createMockRecords(
             listOf(
                 VersionData(
-                    3L, versionName,
+                    100L, versionName,
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0), // 最旧
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    2L, versionName,
+                    200L, versionName,
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 次新
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    1L, versionName,
+                    300L, versionName,
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
@@ -190,9 +199,18 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, true)
 
         Assertions.assertEquals(3, result.size)
-        Assertions.assertEquals("init-1", result[0].versionName) // 最旧版本加后缀
-        Assertions.assertEquals("init-2", result[1].versionName) // 次新版本加后缀
-        Assertions.assertEquals("init", result[2].versionName)   // 最新版本保留原名
+        // 最旧版本添加version后缀，标记为重复
+        Assertions.assertEquals("init-100", result[0].versionName)
+        Assertions.assertEquals(100L, result[0].version)
+        Assertions.assertEquals(true, result[0].nameDuplicated)
+        // 次新版本添加version后缀，标记为重复
+        Assertions.assertEquals("init-200", result[1].versionName)
+        Assertions.assertEquals(200L, result[1].version)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+        // 最新版本保留原名，标记为重复
+        Assertions.assertEquals("init", result[2].versionName)
+        Assertions.assertEquals(300L, result[2].version)
+        Assertions.assertEquals(true, result[2].nameDuplicated)
     }
 
     @Test
@@ -205,31 +223,31 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val mockRecords = createMockRecords(
             listOf(
                 VersionData(
-                    1L, "v2.0",
+                    500L, "v2.0",
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     "user1"
                 ), // v2.0 唯一
                 VersionData(
-                    2L, "init",
+                    400L, "init",
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 ), // init 最新
                 VersionData(
-                    3L, "init",
+                    300L, "init",
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ), // init 次新
                 VersionData(
-                    4L, "init",
+                    200L, "init",
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
                 ), // init 最旧
                 VersionData(
-                    5L, "v1.0",
+                    100L, "v1.0",
                     LocalDateTime.of(2024, 3, 1, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 1, 10, 0, 0),
                     "user1"
@@ -244,15 +262,25 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(5, result.size)
-        Assertions.assertEquals("v2.0", result[0].versionName)   // 唯一版本
-        Assertions.assertEquals("init", result[1].versionName)   // init 最新版本
-        Assertions.assertEquals("init-1", result[2].versionName) // init 次新版本
-        Assertions.assertEquals("init-2", result[3].versionName) // init 最旧版本
-        Assertions.assertEquals("v1.0", result[4].versionName)   // 唯一版本
+        // v2.0 唯一版本，不重复
+        Assertions.assertEquals("v2.0", result[0].versionName)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
+        // init 最新版本，保留原名，标记为重复
+        Assertions.assertEquals("init", result[1].versionName)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+        // init 次新版本，添加version后缀，标记为重复
+        Assertions.assertEquals("init-300", result[2].versionName)
+        Assertions.assertEquals(true, result[2].nameDuplicated)
+        // init 最旧版本，添加version后缀，标记为重复
+        Assertions.assertEquals("init-200", result[3].versionName)
+        Assertions.assertEquals(true, result[3].nameDuplicated)
+        // v1.0 唯一版本，不重复
+        Assertions.assertEquals("v1.0", result[4].versionName)
+        Assertions.assertEquals(false, result[4].nameDuplicated)
     }
 
     @Test
-    @DisplayName("所有版本名都唯一，保持原样")
+    @DisplayName("所有版本名都唯一，保持原样且nameDuplicated为false")
     fun testAllUniqueVersionNames() {
         val projectId = "project1"
         val templateId = "template1"
@@ -261,19 +289,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val mockRecords = createMockRecords(
             listOf(
                 VersionData(
-                    1L, "v3.0",
+                    300L, "v3.0",
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    2L, "v2.0",
+                    200L, "v2.0",
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ),
                 VersionData(
-                    3L, "v1.0",
+                    100L, "v1.0",
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
@@ -289,8 +317,11 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
 
         Assertions.assertEquals(3, result.size)
         Assertions.assertEquals("v3.0", result[0].versionName)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
         Assertions.assertEquals("v2.0", result[1].versionName)
+        Assertions.assertEquals(false, result[1].nameDuplicated)
         Assertions.assertEquals("v1.0", result[2].versionName)
+        Assertions.assertEquals(false, result[2].nameDuplicated)
     }
 
     @Test
@@ -320,9 +351,9 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         // 降序排列时，VERSION 大的排在前面（假设数据库已按 VERSION desc 排序）
         val mockRecords = createMockRecords(
             listOf(
-                VersionData(3L, versionName, sameUpdateTime, sameUpdateTime, "user1"), // VERSION 最大，最新
-                VersionData(2L, versionName, sameUpdateTime, sameUpdateTime, "user1"),
-                VersionData(1L, versionName, sameUpdateTime, sameUpdateTime, "user1") // VERSION 最小，最旧
+                VersionData(300L, versionName, sameUpdateTime, sameUpdateTime, "user1"), // VERSION 最大，最新
+                VersionData(200L, versionName, sameUpdateTime, sameUpdateTime, "user1"),
+                VersionData(100L, versionName, sameUpdateTime, sameUpdateTime, "user1") // VERSION 最小，最旧
             )
         )
 
@@ -333,14 +364,107 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(3, result.size)
-        // 第一个出现的（VERSION=3）是最新版本，保留原名
+        // 第一个出现的（VERSION=300）是最新版本，保留原名
         Assertions.assertEquals("init", result[0].versionName)
-        Assertions.assertEquals(3L, result[0].version)
-        // 其他添加后缀
-        Assertions.assertEquals("init-1", result[1].versionName)
-        Assertions.assertEquals(2L, result[1].version)
-        Assertions.assertEquals("init-2", result[2].versionName)
-        Assertions.assertEquals(1L, result[2].version)
+        Assertions.assertEquals(300L, result[0].version)
+        Assertions.assertEquals(true, result[0].nameDuplicated)
+        // 其他添加version后缀
+        Assertions.assertEquals("init-200", result[1].versionName)
+        Assertions.assertEquals(200L, result[1].version)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+        Assertions.assertEquals("init-100", result[2].versionName)
+        Assertions.assertEquals(100L, result[2].version)
+        Assertions.assertEquals(true, result[2].nameDuplicated)
+    }
+
+    @Test
+    @DisplayName("版本名过长：添加后缀后超过64位需要截断")
+    fun testVersionNameTruncation() {
+        val projectId = "project1"
+        val templateId = "template1"
+        // 创建一个60字符的版本名
+        val longVersionName = "a".repeat(60)
+
+        // Mock 数据：2个版本，名称相同且很长
+        val mockRecords = createMockRecords(
+            listOf(
+                VersionData(
+                    300L, longVersionName,
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0),
+                    "user1"
+                ),
+                VersionData(
+                    200L, longVersionName,
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 旧
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0),
+                    "user1"
+                )
+            )
+        )
+
+        every {
+            templateDao.getTemplateVersionInfos(dslContext, projectId, templateId, false)
+        } returns mockRecords
+
+        val result = service.listTemplateAllVersions(projectId, templateId, false)
+
+        Assertions.assertEquals(2, result.size)
+        // 最新版本保留原名
+        Assertions.assertEquals(longVersionName, result[0].versionName)
+        Assertions.assertEquals(60, result[0].versionName.length)
+        Assertions.assertEquals(true, result[0].nameDuplicated)
+        
+        // 旧版本：原名(60) + 后缀(-200=4) = 64，正好等于限制，不需要截断
+        Assertions.assertEquals("$longVersionName-200", result[1].versionName)
+        Assertions.assertEquals(64, result[1].versionName.length)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+    }
+
+    @Test
+    @DisplayName("版本名过长：添加后缀超过64位需要截断原名")
+    fun testVersionNameTruncationWithLongSuffix() {
+        val projectId = "project1"
+        val templateId = "template1"
+        // 创建一个62字符的版本名
+        val veryLongVersionName = "b".repeat(62)
+
+        // Mock 数据：2个版本，名称相同且非常长
+        val mockRecords = createMockRecords(
+            listOf(
+                VersionData(
+                    999999L, veryLongVersionName,
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0), // 最新
+                    LocalDateTime.of(2024, 3, 15, 10, 0, 0),
+                    "user1"
+                ),
+                VersionData(
+                    888888L, veryLongVersionName,
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0), // 旧
+                    LocalDateTime.of(2024, 3, 10, 10, 0, 0),
+                    "user1"
+                )
+            )
+        )
+
+        every {
+            templateDao.getTemplateVersionInfos(dslContext, projectId, templateId, false)
+        } returns mockRecords
+
+        val result = service.listTemplateAllVersions(projectId, templateId, false)
+
+        Assertions.assertEquals(2, result.size)
+        // 最新版本保留原名
+        Assertions.assertEquals(veryLongVersionName, result[0].versionName)
+        Assertions.assertEquals(62, result[0].versionName.length)
+        
+        // 旧版本：原名需要截断以容纳后缀 -888888 (7个字符)
+        // 最终长度应该是64
+        Assertions.assertTrue(result[1].versionName.length <= 64)
+        Assertions.assertEquals(64, result[1].versionName.length)
+        Assertions.assertTrue(result[1].versionName.endsWith("-888888"))
+        // 验证截断后的格式：bbb...(57个b)-888888
+        Assertions.assertEquals("${"b".repeat(57)}-888888", result[1].versionName)
     }
 
     @Test
@@ -353,37 +477,37 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val mockRecords = createMockRecords(
             listOf(
                 VersionData(
-                    1L, "v2.0",
+                    600L, "v2.0",
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 20, 10, 0, 0),
                     "user1"
                 ), // v2.0 最新
                 VersionData(
-                    2L, "v2.0",
+                    500L, "v2.0",
                     LocalDateTime.of(2024, 3, 18, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 18, 10, 0, 0),
                     "user1"
                 ), // v2.0 旧
                 VersionData(
-                    3L, "init",
+                    400L, "init",
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 15, 10, 0, 0),
                     "user1"
                 ), // init 最新
                 VersionData(
-                    4L, "init",
+                    300L, "init",
                     LocalDateTime.of(2024, 3, 12, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 12, 10, 0, 0),
                     "user1"
                 ), // init 旧
                 VersionData(
-                    5L, "v1.0",
+                    200L, "v1.0",
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 10, 10, 0, 0),
                     "user1"
                 ), // v1.0 最新
                 VersionData(
-                    6L, "v1.0",
+                    100L, "v1.0",
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     LocalDateTime.of(2024, 3, 5, 10, 0, 0),
                     "user1"
@@ -398,12 +522,24 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(6, result.size)
-        Assertions.assertEquals("v2.0", result[0].versionName)   // v2.0 最新版本
-        Assertions.assertEquals("v2.0-1", result[1].versionName) // v2.0 旧版本
-        Assertions.assertEquals("init", result[2].versionName)   // init 最新版本
-        Assertions.assertEquals("init-1", result[3].versionName) // init 旧版本
-        Assertions.assertEquals("v1.0", result[4].versionName)   // v1.0 最新版本
-        Assertions.assertEquals("v1.0-1", result[5].versionName) // v1.0 旧版本
+        // v2.0 最新版本，保留原名
+        Assertions.assertEquals("v2.0", result[0].versionName)
+        Assertions.assertEquals(true, result[0].nameDuplicated)
+        // v2.0 旧版本，添加version后缀
+        Assertions.assertEquals("v2.0-500", result[1].versionName)
+        Assertions.assertEquals(true, result[1].nameDuplicated)
+        // init 最新版本，保留原名
+        Assertions.assertEquals("init", result[2].versionName)
+        Assertions.assertEquals(true, result[2].nameDuplicated)
+        // init 旧版本，添加version后缀
+        Assertions.assertEquals("init-300", result[3].versionName)
+        Assertions.assertEquals(true, result[3].nameDuplicated)
+        // v1.0 最新版本，保留原名
+        Assertions.assertEquals("v1.0", result[4].versionName)
+        Assertions.assertEquals(true, result[4].nameDuplicated)
+        // v1.0 旧版本，添加version后缀
+        Assertions.assertEquals("v1.0-100", result[5].versionName)
+        Assertions.assertEquals(true, result[5].nameDuplicated)
     }
 
     // ========== Helper Methods ==========

@@ -132,6 +132,7 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
@@ -1437,7 +1438,7 @@ class TemplateFacadeService @Autowired constructor(
 
         // --- 步骤 1: 准备数据并排序 ---
         // 先将所有记录转换为 TemplateVersion 对象，并确保按 updateTime 排序。
-        // 排序是必须的，以保证后缀（-1, -2）是按时间顺序应用的。
+        // 排序是必须的，以保证后缀是按时间顺序应用的。
         val sortedVersions = versionInfos.map { versionInfo ->
             TemplateVersion(
                 version = versionInfo[tTemplate.VERSION],
@@ -1445,7 +1446,8 @@ class TemplateFacadeService @Autowired constructor(
                 createTime = versionInfo[tTemplate.CREATED_TIME].timestampmilli(),
                 updateTime = versionInfo[tTemplate.UPDATE_TIME].timestampmilli(),
                 creator = versionInfo[tTemplate.CREATOR],
-                desc = versionInfo[tTemplate.DESC]
+                desc = versionInfo[tTemplate.DESC],
+                nameDuplicated = false // 初始值，后续会更新
             )
         }.let { versions ->
             // 使用 let 块来应用排序，代码更清晰
@@ -1480,29 +1482,28 @@ class TemplateFacadeService @Autowired constructor(
             }
         }
 
-        // --- 步骤 4: 最终转换，根据预计算结果进行重命名 ---
-        // 用于为重复项生成递增后缀（如：-1, -2, ...）
-        val duplicateCounters = mutableMapOf<String, Int>()
-
+        // --- 步骤 4: 最终转换，根据预计算结果进行重命名并标记重复状态 ---
+        // 旧版本使用 version 字段作为后缀（而非递增数字）
         return sortedVersions.map { version ->
             val originalName = version.versionName
             val totalCount = totalNameCounts[originalName] ?: 1
 
             when {
                 // 唯一版本名，保持原样
-                totalCount == 1 -> version
-                // 重复版本名中的最新版本，保留原名
-                latestVersionMap[originalName] === version -> version
-                // 重复版本名中的旧版本，添加后缀
+                totalCount == 1 -> version.copy(nameDuplicated = false)
+                // 重复版本名中的最新版本，保留原名但标记为重复
+                latestVersionMap[originalName] === version -> version.copy(nameDuplicated = true)
+                // 重复版本名中的旧版本，使用 version 作为后缀并标记为重复
                 else -> {
-                    val suffixIndex = duplicateCounters.getOrDefault(originalName, 0) + 1
-                    duplicateCounters[originalName] = suffixIndex
+                    val suffix = "-${version.version}"
+                    val newName = PipelineTemplateCommonService.buildVersionNameWithSuffix(originalName, suffix)
                     version.copy(
-                        versionName = "$originalName-$suffixIndex",
+                        versionName = newName,
                         desc = MessageUtil.getMessageByLocale(
                             messageCode = ProcessMessageCode.BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,
                             language = I18nUtil.getDefaultLocaleLanguage()
-                        )
+                        ),
+                        nameDuplicated = true
                     )
                 }
             }

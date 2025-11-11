@@ -12,6 +12,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
@@ -47,37 +48,26 @@ class PTemplateCompatibilityVersionPostProcessor(
             if (v1VersionName.isNullOrBlank()) {
                 return
             }
-            
+
             logger.info(
                 "template compatibility pre process begin|" +
                     "project=$projectId|template=$templateId|desiredVersionName=$customVersionName"
             )
-            
+
             try {
                 // 如果期望的版本名已经被占用，重命名旧版本
                 val existingVersion = v2TemplateResourceService.getLatestResource(
                     projectId = projectId,
                     templateId = templateId,
                     status = VersionStatus.RELEASED,
-                    versionName = customVersionName
+                    versionName = v1VersionName
                 )
-                
+
                 if (existingVersion != null) {
-                    // 查找合适的后缀编号，确保新名称唯一
-                    var suffixIndex = 1
-                    var newName = "$customVersionName-$suffixIndex"
-                    while (
-                        v2TemplateResourceService.getLatestResource(
-                            projectId = projectId,
-                            templateId = templateId,
-                            status = VersionStatus.RELEASED,
-                            versionName = newName
-                        ) != null
-                    ) {
-                        suffixIndex++
-                        newName = "$customVersionName-$suffixIndex"
-                    }
-                    
+                    // 使用旧版本的 version 字段作为后缀，而非递增数字
+                    val suffix = "-${existingVersion.version}"
+                    val newName = PipelineTemplateCommonService.buildVersionNameWithSuffix(v1VersionName, suffix)
+
                     // 重命名旧版本，为新版本腾出原始名称
                     val i18nDesc = MessageUtil.getMessageByLocale(
                         messageCode = ProcessMessageCode.BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC,
@@ -92,8 +82,8 @@ class PTemplateCompatibilityVersionPostProcessor(
                         commonCondition = PipelineTemplateResourceCommonCondition(
                             projectId = projectId,
                             templateId = templateId,
-                            versionName = customVersionName,
-                            status = VersionStatus.RELEASED
+                            versionName = v1VersionName,
+                            status = VersionStatus.DELETE
                         )
                     )
                     logger.info(
