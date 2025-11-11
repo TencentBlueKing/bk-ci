@@ -27,10 +27,12 @@ class TxStorePkgServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
 ) : TxStorePkgService {
 
+    private var actualModifiedCount = 0L
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxStorePkgServiceImpl::class.java)
         private const val TEMP_DIR = "/tmp/bk-ci-sha256-migration"
+        private const val LOCK_EXPIRED_TIME_IN_SECONDS = 540L
     }
 
     override fun updatePackageSha256(
@@ -42,7 +44,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "OP_STORE_PKG_SHA256_UPDATE_LOCK",
-            expiredTimeInSeconds = 540
+            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
         )
         if (!redisLock.tryLock()) {
             logger.warn("SHA256 update task is already running")
@@ -55,9 +57,10 @@ class TxStorePkgServiceImpl @Autowired constructor(
             val tempDir = createTempDir()
             // 3. 分页处理所有记录
             val processedCount = processAllRecords(storeType, pageSize ?: 100, tempDir, userId)
-            logger.info("SHA256 update completed, total processed: $processedCount")
+            logger.info("SHA256 update completed, total processed: $processedCount, actual modified: $actualModifiedCount")
         } finally {
             // 4. 清理资源
+            actualModifiedCount=0L
             cleanupResources()
             redisLock.unlock()
         }
@@ -229,7 +232,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
             val result = client.get(ServiceArchiveComponentPkgResource::class)
                 .getComponentPkgDownloadUrl(
                     userId = userId,
-                    projectId = "",
+                    projectId = " ",
                     storeType = storeType,
                     storeCode = storeCode,
                     version = version,
@@ -269,6 +272,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
             .where(t.ID.eq(envId))
             .execute()
 
+        actualModifiedCount += 1
         logger.info("Updated SHA256 for env record: $envId")
     }
 
