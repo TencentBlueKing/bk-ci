@@ -1671,7 +1671,8 @@ class RepositoryService @Autowired constructor(
         // 仅有新接入的仓库需要手动加入白名单
         val needAddWhitelist = !ScmType.values().any { it.name == scmCode } && listOf(
             ScmProviderCodes.TSVN.name,
-            ScmProviderCodes.GITEE.name
+            ScmProviderCodes.GITEE.name,
+            ScmProviderCodes.BKCODE.name
         ).contains(scmConfig.providerCode)
         if (needAddWhitelist) {
             addGrayRepoWhite(
