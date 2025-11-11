@@ -1368,7 +1368,12 @@ class PipelineBuildFacadeService(
         buildId: String,
         channelCode: ChannelCode
     ): ModelDetail {
-        val newModel = buildRecordService.getBuildRecord(projectId, pipelineId, buildId) ?: throw ErrorCodeException(
+        val newModel = buildRecordService.getBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            encryptedFlag = true
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1594,12 +1599,7 @@ class PipelineBuildFacadeService(
             executeCount = executeCount,
             channelCode = channelCode,
             archiveFlag = archiveFlag,
-            encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT
-            )
+            encryptedFlag = true
         )
     }
 
