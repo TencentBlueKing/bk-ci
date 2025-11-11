@@ -77,13 +77,14 @@ class PTemplateCompatibilityVersionPostProcessor(
                         transactionContext = dslContext,
                         record = PipelineTemplateResourceUpdateInfo(
                             versionName = newName,
-                            description = i18nDesc
+                            description = i18nDesc,
+                            status = VersionStatus.DELETE
                         ),
                         commonCondition = PipelineTemplateResourceCommonCondition(
                             projectId = projectId,
                             templateId = templateId,
                             versionName = v1VersionName,
-                            status = VersionStatus.DELETE
+                            status = VersionStatus.RELEASED
                         )
                     )
                     logger.info(
