@@ -28,6 +28,7 @@
 package com.tencent.devops.process.trigger.scm
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,6 +51,10 @@ class WebhookGrayService @Autowired constructor(
      * 判断是否是scm灰度项目
      */
     fun isGrayRepo(scmCode: String, serverRepoName: String): Boolean {
+        // 新的代码库平台,不需要走灰度逻辑,默认直接开启灰度
+        if (!needGrayScmCode(scmCode)) {
+            return true
+        }
         val grayRepoKey = "$scmCode:$serverRepoName"
         return grayRepoCache.getIfPresent(grayRepoKey) ?: run {
             val hash = (serverRepoName.hashCode() and Int.MAX_VALUE) % 100
@@ -62,6 +67,16 @@ class WebhookGrayService @Autowired constructor(
             grayRepoCache.put(grayRepoKey, result)
             result
         }
+    }
+
+    private fun needGrayScmCode(scmCode: String): Boolean {
+        return listOf(
+            ScmType.CODE_SVN.name,
+            ScmType.CODE_GIT.name,
+            ScmType.GITHUB.name,
+            ScmType.CODE_TGIT.name,
+            ScmType.CODE_P4.name
+        ).contains(scmCode)
     }
 
     /**

@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
@@ -54,15 +55,11 @@ import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
-import io.micrometer.core.instrument.Timer
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class WebhookTriggerBuildService @Autowired constructor(
@@ -73,7 +70,7 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val meterRegistry: MeterRegistry
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
 ) {
     fun trigger(event: ScmWebhookTriggerEvent) {
         with(event) {
@@ -102,6 +99,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun trigger(
         projectId: String,
         pipelineId: String,
@@ -196,13 +194,17 @@ class WebhookTriggerBuildService @Autowired constructor(
             webhookTriggerManager.fireError(context, ignored)
         } finally {
             requestTime?.let {
-                recordWebhookExecuteTime(
+                val timeConsumingMills = System.currentTimeMillis() - it
+                if (timeConsumingMills >= 1000) {
+                    logger.warn("new Webhook trigger execution time exceeds threshold|$eventId|$projectId|$pipelineId")
+                }
+                pipelineTriggerMeasureService.recordTaskExecutionTime(
                     name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
                     tags = Tags.of(MeasureConstant.TAG_STATUS, status.name)
                         .and(MeasureConstant.TAG_YAML, isYaml.toString())
                         .and("old", "false")
                         .toList(),
-                    requestTime = requestTime
+                    timeConsumingMills = timeConsumingMills
                 )
             }
         }
@@ -346,19 +348,6 @@ class WebhookTriggerBuildService @Autowired constructor(
             }
         }
         return pipelineParamMap
-    }
-
-    private fun recordWebhookExecuteTime(
-        name: String,
-        requestTime: Long,
-        tags: List<Tag> = listOf()
-    ) {
-        val timeConsumingMills = System.currentTimeMillis() - requestTime
-        Timer.builder(name)
-            .description("pipeline webhook trigger execution time")
-            .tags(tags)
-            .register(meterRegistry)
-            .record(timeConsumingMills, TimeUnit.MILLISECONDS)
     }
 
     companion object {

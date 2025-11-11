@@ -132,6 +132,12 @@ class PipelineBuildWebhookService @Autowired constructor(
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
             val requestTime = System.currentTimeMillis()
+            if (triggerPipelines.size >= 50) {
+                logger.warn(
+                    "Repository webhook triggered too many pipelines|" +
+                            "${matcher.getRepoName()}|${triggerPipelines.size} pipelines triggered"
+                )
+            }
             triggerPipelines.forEach outside@{ subscriber ->
                 var status = PipelineTriggerReason.TRIGGER_SUCCESS
                 val projectId = subscriber.projectId
@@ -161,13 +167,20 @@ class PipelineBuildWebhookService @Autowired constructor(
                     status = PipelineTriggerReason.TRIGGER_FAILED
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 } finally {
+                    val timeConsumingMills = System.currentTimeMillis() - requestTime
+                    if (timeConsumingMills >= 1000) {
+                        logger.warn(
+                            "old Webhook trigger execution time exceeds threshold|" +
+                                    "${matcher.getRepoName()}|$projectId|$pipelineId"
+                        )
+                    }
                     pipelineTriggerMeasureService.recordTaskExecutionTime(
                         name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
                         tags = Tags.of(MeasureConstant.TAG_STATUS, status.name)
                             .and(MeasureConstant.TAG_YAML, "false")
                             .and("old", "true")
                             .toList(),
-                        timeConsumingMills = System.currentTimeMillis() - requestTime,
+                        timeConsumingMills = timeConsumingMills
                     )
                 }
             }

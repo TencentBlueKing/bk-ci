@@ -45,6 +45,7 @@ import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
@@ -106,8 +107,15 @@ class WebhookRequestService(
         val repoName = matcher.getRepoName()
         // 如果整个仓库都开启灰度，则全部走新逻辑
         val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
-        // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
-        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
+        // 如果仓库开启pac,pac都走灰度流程
+        val pacGrayRepo = try {
+            client.get(ServiceRepositoryPacResource::class).getPacRepository(
+                externalId = matcher.getExternalId(), scmType = scmType
+            ).data != null
+        } catch (ignored: Exception) {
+            logger.error("Failed to get pac repository|${matcher.getRepoName()}", ignored)
+            false
+        }
         try {
             // 有一方为灰度, 则不保存request信息, 后续由灰度逻辑统一保存
             // @see com.tencent.devops.process.trigger.scm.WebhookManager.handleRequestEvent
@@ -134,33 +142,15 @@ class WebhookRequestService(
         if (grayRepo) {
             handleGrayRequest(scmType.name, repoName, request)
         } else {
+            if (pacGrayRepo) {
+                handleGrayRequest(scmType.name, repoName, request)
+            }
             webhookTriggerService.trigger(
                 scmType = scmType,
                 matcher = matcher,
                 requestId = requestId,
                 eventTime = eventTime
             )
-        }
-
-        when {
-            // 如果是灰度仓库,同时也是pac灰度仓库,无需重复触发
-            grayRepo && pacGrayRepo -> {
-                logger.info("The $scmType repo $repoName is gray repo and pac gray repo")
-                return
-            }
-
-            pacGrayRepo -> {
-                handleGrayRequest(scmType.name, repoName, request)
-            }
-
-            else -> {
-                pipelineYamlFacadeService.trigger(
-                    eventObject = event,
-                    scmType = scmType,
-                    requestId = requestId,
-                    eventTime = eventTime
-                )
-            }
         }
     }
 
