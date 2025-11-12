@@ -213,7 +213,8 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         workspaceName: String?,
         ip: String?,
-        workspaceProperty: WorkspaceProperty
+        workspaceProperty: WorkspaceProperty,
+        checkPermission: Boolean = true
     ): Boolean {
         logger.info("$userId modify workspace property $workspaceName|$workspaceProperty")
 
@@ -241,7 +242,7 @@ class WorkspaceService @Autowired constructor(
             .addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
             .scopeId = ws.projectId
 
-        if (!permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
+        if (checkPermission && !permissionService.hasManagerOrViewerPermission(userId, ws.projectId, ws.workspaceName)) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
                 params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
