@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.listeners
 
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
@@ -71,6 +72,13 @@ class KubernetesListener @Autowired constructor(
         if (retry) {
             retry()
         } else {
+            // 上报资源准备中
+            BeanUtil.getDispatchMessageTracking().trackResourcePreparing(
+                buildId = dispatchMessage.event.buildId,
+                vmSeqId = dispatchMessage.event.vmSeqId,
+                executeCount = dispatchMessage.event.executeCount ?: 1,
+                operator = "${this::class.java.simpleName}.startup"
+            )
             dispatchBuildService.startUp(dispatchMessage)
         }
     }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.service.DispatchMessageTracking
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
@@ -79,19 +80,22 @@ interface BuildListener {
         }
         DispatcherContext.setEvent(event)
         val dispatchService = getDispatchService()
+        val dispatchMessageTracking = getDispatchMessageTracking()
 
         var startTime = 0L
         var errorCode = 0
         var errorMessage = ""
         var errorType: ErrorType? = null
 
+        // 初始化消息追踪
+        dispatchMessageTracking.initMessageTracking(event)
+
         try {
             logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")
-
             startTime = System.currentTimeMillis()
             DispatchLogRedisUtils.setRedisExecuteCount(event.buildId, event.executeCount)
 
-            // 校验流水线是否在运行中，且处在构建机未启动状态
+            // 校验流水线是否已结束运行，且处在构建机未启动状态
             if (!dispatchService.checkRunning(event)) {
                 if (event.retryTime > 1) {
                     // 重试的请求如果流水线已结束，主动把配额记录删除
@@ -115,11 +119,28 @@ interface BuildListener {
                     demoteQueueRouteKeySuffix = getStartupDemoteQueue()
                 )
             ) {
+                // 追踪配额不足
+                dispatchMessageTracking.trackQuotaQueue(
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId,
+                    executeCount = event.executeCount ?: 1,
+                    operator = "JobQuotaService.checkAndAddRunningJob"
+                )
+
                 return
             }
 
             onStartup(dispatchService.buildDispatchMessage(event))
+
+            // 追踪处理成功
+            dispatchMessageTracking.trackConsumeSuccess(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1,
+                operator = "${this::class.java.simpleName}.handleStartup"
+            )
         } catch (e: BuildFailureException) {
+            // BuildFailureException是交付中异常，不在此处上报状态
             dispatchService.logRed(
                 buildId = event.buildId,
                 containerHashId = event.containerHashId,
@@ -148,6 +169,17 @@ interface BuildListener {
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
             errorMessage = "Fail to handle the start up message"
             errorType = ErrorType.SYSTEM
+
+            // 追踪处理失败
+            getDispatchMessageTracking().trackConsumeFailed(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1,
+                errorCode = errorCode.toString(),
+                errorMessage = t.message ?: "Unknown error",
+                errorType = "SYSTEM",
+                operator = "${this::class.java.simpleName}.handleStartup"
+            )
 
             dispatchService.onFailure(
                 event = event,
@@ -358,6 +390,10 @@ interface BuildListener {
 
     private fun getJobQuotaService(): JobQuotaService {
         return SpringContextUtil.getBean(JobQuotaService::class.java)
+    }
+
+    private fun getDispatchMessageTracking(): DispatchMessageTracking {
+        return SpringContextUtil.getBean(DispatchMessageTracking::class.java)
     }
 
     private fun getClient() = SpringContextUtil.getBean(Client::class.java)

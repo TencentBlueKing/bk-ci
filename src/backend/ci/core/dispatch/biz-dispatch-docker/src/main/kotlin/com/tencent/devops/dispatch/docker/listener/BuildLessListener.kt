@@ -73,6 +73,7 @@ class BuildLessListener @Autowired constructor(
                     jobQuotaService.handleJobQuotaOverrun(
                         logPrefix = "$projectId$pipelineId$buildId$vmSeqId$executeCount",
                         buildId = buildId,
+                        vmSeqId = vmSeqId,
                         containerId = containerId,
                         containerHashId = containerHashId,
                         executeCount = executeCount,
