@@ -614,7 +614,12 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
 
         // 验证：没有调用 v1 双写
-        verify(exactly = 0) { v1Dao.createTemplate(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) {
+            v1Dao.createTemplate(
+                any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any()
+            )
+        }
         verify(exactly = 0) { v1SettingDao.saveSetting(any(), any(), any()) }
     }
 
@@ -633,7 +638,10 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
 
         // v1 双写失败
         every {
-            v1Dao.createTemplate(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+            v1Dao.createTemplate(
+                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any()
+            )
         } throws RuntimeException("v1 insert failed")
 
         val post = PTemplateCompatibilityVersionPostProcessor(
