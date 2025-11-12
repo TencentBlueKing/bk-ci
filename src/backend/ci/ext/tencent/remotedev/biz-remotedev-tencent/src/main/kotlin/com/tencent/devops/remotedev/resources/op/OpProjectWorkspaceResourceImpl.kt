@@ -124,7 +124,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 ip = null,
-                workspaceProperty = WorkspaceProperty(displayName)
+                workspaceProperty = WorkspaceProperty(displayName),
+                checkPermission = false
             )
         )
     }
@@ -139,7 +140,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 ip = null,
-                workspaceProperty = workspaceProperty
+                workspaceProperty = workspaceProperty,
+                checkPermission = false
             )
         )
     }
