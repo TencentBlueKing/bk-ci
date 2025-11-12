@@ -36,9 +36,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -64,18 +64,6 @@ interface ServiceDispatchMessageTrackingResource {
     fun updateMessageStatus(
         @Parameter(description = "更新状态请求", required = true)
         request: UpdateMessageStatusRequest
-    ): Result<Boolean>
-
-    @Operation(summary = "增加重试次数")
-    @PUT
-    @Path("/retry")
-    fun incrementRetryCount(
-        @Parameter(description = "构建ID", required = true)
-        buildId: String,
-        @Parameter(description = "VM序列ID", required = true)
-        vmSeqId: Int,
-        @Parameter(description = "执行次数", required = true)
-        executeCount: Int
     ): Result<Boolean>
 
     @Operation(summary = "更新性能指标")
