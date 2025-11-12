@@ -434,6 +434,7 @@ class PipelineAtomService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<PipelineAtomInfo> {
+        // 获取流水线信息
         val pipelinesResult = pipelineModelTaskDao.selectPipelineInfosByAtomCode(
             dslContext = dslContext,
             atomCode = atomCode,
@@ -454,6 +455,7 @@ class PipelineAtomService @Autowired constructor(
         val missingPipelineIds = mutableListOf<String>()
         val cachedVersionMap = mutableMapOf<String, String>()
 
+        // 先从本地缓存里面获取到版本信息存放到cachedVersionMap并且将获取不到版本信息的流水线id放入missingPipelineIds
         pipelineIds.forEach { pipelineId ->
             val versions = PipelineAtomRelCacheUtil.getPipelineAtomRelVersions(atomCode, pipelineId)
             if (versions == null) {
@@ -463,6 +465,7 @@ class PipelineAtomService @Autowired constructor(
             }
         }
 
+        // 将获取不到版本信息的流水线id在DB里面查询出具体插件的版本信息再放入缓存 同时更新到cachedVersionMap中供下游业务使用
         if (missingPipelineIds.isNotEmpty()) {
             val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
             val atomVersionsList = pipelineModelTaskDao.selectAtomVersionsByPipelineIdsAndAtomCode(
