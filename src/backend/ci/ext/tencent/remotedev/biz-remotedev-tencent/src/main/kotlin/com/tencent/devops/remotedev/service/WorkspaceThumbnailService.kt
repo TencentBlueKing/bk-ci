@@ -34,6 +34,7 @@ class WorkspaceThumbnailService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val bkRepoConfig: RemoteDevBkRepoConfig,
+    private val whiteListService: WhiteListService,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     @Qualifier("screenshotTaskExecutor")
     private val screenshotTaskExecutor: ThreadPoolTaskExecutor
@@ -134,6 +135,16 @@ class WorkspaceThumbnailService @Autowired constructor(
                 // 检查是否有查看权限
                 if (!permissionService.hasViewerPermission(userId, workspaceName, workspaceInfo.projectId)) {
                     logger.warn("user not viewer permission: userId=$userId, workspaceName=$workspaceName")
+                    return@forEach
+                }
+
+                // 检查是否单向网络
+                if (whiteListService.checkInCdsMeshWhiteList(
+                        workspaceInfo.projectId,
+                        workspaceInfo.workspaceName
+                    ) != 1
+                ) {
+                    logger.warn("workspace is not single network: workspaceName=$workspaceName")
                     return@forEach
                 }
 
