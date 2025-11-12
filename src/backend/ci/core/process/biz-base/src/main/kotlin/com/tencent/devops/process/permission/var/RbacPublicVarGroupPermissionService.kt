@@ -69,9 +69,6 @@ class RbacPublicVarGroupPermissionService constructor(
         groupName: String
     ): PublicVarGroupPermissions {
         // 逐个检查权限
-        val canManage = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.MANAGE, groupName
-        )
         val canEdit = checkPublicVarGroupPermission(
             userId, projectId, AuthPermission.EDIT, groupName
         )
@@ -84,15 +81,9 @@ class RbacPublicVarGroupPermissionService constructor(
         val canUse = checkPublicVarGroupPermission(
             userId, projectId, AuthPermission.USE, groupName
         )
-        val canAdd = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.CREATE, groupName
-        )
 
         return PublicVarGroupPermissions(
-            canManage = canManage,
-            canAdd = canAdd,
             canEdit = canEdit,
-            groupCanView = canView,
             canView = canView,
             canDelete = canDelete,
             canUse = canUse

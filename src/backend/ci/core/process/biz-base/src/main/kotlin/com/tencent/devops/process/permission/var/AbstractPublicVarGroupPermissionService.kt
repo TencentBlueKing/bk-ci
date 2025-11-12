@@ -62,10 +62,7 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         return if (isManager) {
             // 管理员拥有所有权限
             PublicVarGroupPermissions(
-                canManage = true,
-                canAdd = true,
                 canEdit = true,
-                groupCanView = true,
                 canView = true,
                 canDelete = true,
                 canUse = true
@@ -73,10 +70,7 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         } else {
             // 非管理员默认只有查看和使用权限
             PublicVarGroupPermissions(
-                canManage = false,
-                canAdd = false,
                 canEdit = false,
-                groupCanView = true,
                 canView = true,
                 canDelete = false,
                 canUse = true

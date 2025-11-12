@@ -32,18 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "公共变量组权限")
 data class PublicVarGroupPermissions(
-    @get:Schema(title = "管理员权限", required = true)
-    val canManage: Boolean,
-    @get:Schema(title = "新增权限", required = true)
-    val canAdd: Boolean = true,
     @get:Schema(title = "编辑权限", required = true)
-    val canEdit: Boolean = true,
-    @get:Schema(title = "项目变量组列表查看权限", required = true)
-    val groupCanView: Boolean = true,
+    val canEdit: Boolean = false,
     @get:Schema(title = "查看权限", required = true)
-    val canView: Boolean = true,
+    val canView: Boolean = false,
     @get:Schema(title = "删除权限", required = true)
-    val canDelete: Boolean = true,
+    val canDelete: Boolean = false,
     @get:Schema(title = "使用权限", required = true)
-    val canUse: Boolean = true
+    val canUse: Boolean = false
 )
