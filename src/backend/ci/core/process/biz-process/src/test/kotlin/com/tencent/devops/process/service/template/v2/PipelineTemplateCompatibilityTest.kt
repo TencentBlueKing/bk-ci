@@ -182,16 +182,16 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
 
         // 验证：v2 旧版本被重命名（使用 version 字段作为后缀）
         // 由于我们不知道 existingVersion 的确切 version 值，只验证调用发生且包含描述
-        verify(exactly = 1) { 
+        verify(exactly = 1) {
             resourceService.update(
                 transactionContext = any(),
                 record = match { it.description != null },
-                commonCondition = match { 
-                    it.projectId == projectId && 
-                    it.templateId == templateId && 
-                    it.versionName == v1VersionName 
+                commonCondition = match {
+                    it.projectId == projectId &&
+                        it.templateId == templateId &&
+                        it.versionName == v1VersionName
                 }
-            ) 
+            )
         }
     }
 
@@ -317,7 +317,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
                 includeDelete = false
             )
         } returns existingVersionMock
-        
+
         every { resourceService.update(any(), any(), any()) } returns 1
 
         val post = PTemplateCompatibilityVersionPostProcessor(
@@ -376,16 +376,16 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         post.postProcessBeforeVersionCreate(ctx, res, setting)
 
         // 验证：旧版本被重命名为 init-150（使用existingVersion.version作为后缀）
-        verify(exactly = 1) { 
+        verify(exactly = 1) {
             resourceService.update(
                 transactionContext = any(),
                 record = match { it.versionName == "init-150" && it.description != null },
-                commonCondition = match { 
-                    it.projectId == projectId && 
-                    it.templateId == templateId && 
-                    it.versionName == "init"
+                commonCondition = match {
+                    it.projectId == projectId &&
+                        it.templateId == templateId &&
+                        it.versionName == "init"
                 }
-            ) 
+            )
         }
     }
 
@@ -721,7 +721,7 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
                 includeDelete = false
             )
         } returns existingVersionMock
-        
+
         // 重命名时抛异常
         every { resourceService.update(any(), any(), any()) } throws RuntimeException("dup key")
 

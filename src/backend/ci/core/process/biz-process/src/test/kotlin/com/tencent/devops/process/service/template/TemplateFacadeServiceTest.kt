@@ -414,7 +414,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         Assertions.assertEquals(longVersionName, result[0].versionName)
         Assertions.assertEquals(60, result[0].versionName.length)
         Assertions.assertEquals(true, result[0].nameDuplicated)
-        
+
         // 旧版本：原名(60) + 后缀(-200=4) = 64，正好等于限制，不需要截断
         Assertions.assertEquals("$longVersionName-200", result[1].versionName)
         Assertions.assertEquals(64, result[1].versionName.length)
@@ -457,7 +457,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         // 最新版本保留原名
         Assertions.assertEquals(veryLongVersionName, result[0].versionName)
         Assertions.assertEquals(62, result[0].versionName.length)
-        
+
         // 旧版本：原名需要截断以容纳后缀 -888888 (7个字符)
         // 最终长度应该是64
         Assertions.assertTrue(result[1].versionName.length <= 64)
