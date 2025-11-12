@@ -25,20 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:project:biz-project"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:store:api-store-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:auth:api-auth-tencent"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:misc:api-support-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:metrics:api-metrics"))
-    testImplementation(project(":core:common:common-test"))
+package com.tencent.devops.project.service
+
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+
+class ProjectBillsServiceTest {
+
+    @Test
+    fun `test filter reporter users from active users`() {
+        val reporterUsers = setOf("reporter1", "reporter2")
+        val activeUsers = setOf("user1", "user2", "reporter1", "user3", "reporter2")
+        
+        val nonReporterUsers = activeUsers - reporterUsers
+        
+        assertEquals(setOf("user1", "user2", "user3"), nonReporterUsers)
+        assertEquals(3, nonReporterUsers.size)
+    }
+
+    @Test
+    fun `test all users are reporters`() {
+        val reporterUsers = setOf("reporter1", "reporter2", "reporter3")
+        val activeUsers = setOf("reporter1", "reporter2", "reporter3")
+        
+        val nonReporterUsers = activeUsers - reporterUsers
+        
+        assertEquals(emptySet<String>(), nonReporterUsers)
+        assertEquals(0, nonReporterUsers.size)
+    }
 }

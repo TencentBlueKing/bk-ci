@@ -374,7 +374,9 @@ class ProjectBillsService(
             val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 15)
             // 获取reporter用户
             val reporterUsers = try {
-                client.get(ServiceManagerUserResource::class).getAllManagerUsers().data?.toSet() ?: emptySet()
+                val users = client.get(ServiceManagerUserResource::class).getAllManagerUsers().data?.toSet() ?: emptySet()
+                logger.info("Successfully get manager users, count: ${users.size}, users: $users")
+                users
             } catch (e: Exception) {
                 logger.warn(
                     "Failed to get manager users, bill data will" +
@@ -417,8 +419,17 @@ class ProjectBillsService(
                         } else {
                             projectActiveUserResponse.users.split(',').toSet()
                         }
+                        logger.info(
+                            "Project ${it.englishName} active users before filtering: " +
+                                "count=${activeUsers.size}, users=$activeUsers"
+                        )
                         val nonReporterUsers = (activeUsers - reporterUsers).toMutableSet()
                         val nonReporterUserCount = nonReporterUsers.size
+                        logger.info(
+                            "Project ${it.englishName} active users after filtering: " +
+                                "count=$nonReporterUserCount, users=$nonReporterUsers, " +
+                                "filtered=${activeUsers.size - nonReporterUserCount}"
+                        )
                         // 不活跃项目不上报
                         if (nonReporterUserCount == 0) {
                             logger.info("This project is inactive and does not need to be reported:${it.englishName}")
