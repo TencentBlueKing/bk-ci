@@ -818,37 +818,21 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(tag.enable)
+                ).checkTriggerElementEnable(tag.enable).apply {
+                    version = "1.*"
+                }
             )
         }
 
         triggerOn.mr?.let { mr ->
             elementQueue.add(
-                CodeGitlabWebHookTriggerElement(
-                    stepId = mr.id,
-                    name = mr.name ?: "Gitlab事件触发",
-                    branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
-                    excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
-                    excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includePaths = mr.paths.nonEmptyOrNull()?.join(),
-                    excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
-                    includeUsers = mr.users,
-                    excludeUsers = mr.usersIgnore,
-                    block = mr.blockMr,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
-                        ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action ?: listOf(
-                        TGitMrEventAction.OPEN.value,
-                        TGitMrEventAction.REOPEN.value,
-                        TGitMrEventAction.PUSH_UPDATE.value
-                    ),
-                    eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(mr.enable).apply {
-                    version = "2.*"
-                }
+                convertGitlabTriggerElement(mr, false, repositoryType, triggerOn.repoName)
+            )
+        }
+
+        triggerOn.mrMerged?.let { mr ->
+            elementQueue.add(
+                convertGitlabTriggerElement(mr, true, repositoryType, triggerOn.repoName)
             )
         }
     }
@@ -1099,6 +1083,45 @@ class TriggerTransfer @Autowired(required = false) constructor(
             )
         ).checkTriggerElementEnable(mr.enable).apply {
             version = elementVersion
+        }
+    }
+
+    private fun convertGitlabTriggerElement(
+        mr: MrRule,
+        merged: Boolean,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element {
+        val (includeMrAction, eventType) = if (merged) {
+            Pair(null, CodeEventType.MERGE_REQUEST_ACCEPT)
+        } else {
+            val actions = mr.action ?: listOf(
+                TGitMrEventAction.OPEN.value,
+                TGitMrEventAction.REOPEN.value,
+                TGitMrEventAction.PUSH_UPDATE.value
+            )
+            Pair(actions, CodeEventType.MERGE_REQUEST)
+        }
+        return CodeGitlabWebHookTriggerElement(
+            stepId = mr.id,
+            name = mr.name ?: "Gitlab事件触发",
+            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+            includePaths = mr.paths.nonEmptyOrNull()?.join(),
+            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+            includeUsers = mr.users,
+            excludeUsers = mr.usersIgnore,
+            block = mr.blockMr,
+            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                ?: PathFilterType.NamePrefixFilter,
+            includeMrAction = includeMrAction,
+            eventType = eventType,
+            repositoryType = repositoryType,
+            repositoryName = repoName
+        ).checkTriggerElementEnable(mr.enable).apply {
+            version = "1.*"
         }
     }
 }
