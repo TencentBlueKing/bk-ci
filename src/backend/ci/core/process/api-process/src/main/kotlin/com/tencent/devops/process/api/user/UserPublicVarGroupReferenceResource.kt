@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
@@ -122,7 +122,7 @@ interface UserPublicVarGroupReferenceResource {
         @Parameter(description = "引用版本号", required = true)
         @QueryParam("referVersion")
         referVersion: Int
-    ): Result<List<PipelinePublicVarGroupDO>>
+    ): Result<List<PipelineRefPublicVarGroupDO>>
 
     @Operation(summary = "获取项目关联公共变量组信息")
     @GET
@@ -134,5 +134,5 @@ interface UserPublicVarGroupReferenceResource {
         @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
-    ): Result<List<PipelinePublicVarGroupDO>>
+    ): Result<List<PipelineRefPublicVarGroupDO>>
 }

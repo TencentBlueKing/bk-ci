@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 @Schema(title = "流水线关联公共变量组信息")
-data class PipelinePublicVarGroupDO(
+data class PipelineRefPublicVarGroupDO(
     @get:Schema(title = "变量组名称")
     val groupName: String,
     @get:Schema(title = "变量总数")

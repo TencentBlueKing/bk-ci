@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.`var`
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -49,8 +48,8 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
-import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
-import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
+import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
@@ -89,7 +88,8 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
-    private val tokenService: ClientTokenService
+    private val tokenService: ClientTokenService,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) {
     companion object {
         const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
@@ -194,6 +194,16 @@ class PublicVarGroupService @Autowired constructor(
                     latestFlag = true
                 )
             }
+
+            // 如果是新建变量组（首次创建），注册到权限中心
+            if (operateType == OperateTypeEnum.CREATE) {
+                publicVarGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    groupCode = groupName,
+                    name = groupName
+                )
+            }
         } catch (t: Throwable) {
             logger.warn("Failed to add variable group $groupName", t)
             throw t
@@ -289,15 +299,10 @@ class PublicVarGroupService @Autowired constructor(
                 desc = po.desc,
                 modifier = po.modifier,
                 updateTime = po.updateTime,
-                permission = PublicVarGroupPermissions(
-                    canManage = client.get(ServiceProjectAuthResource::class).checkProjectManager(
-                        userId = userId,
-                        projectCode = projectId,
-                        token = tokenService.getSystemToken()
-                    ).data ?: false,
-                    canAdd = true,
-                    canDelete = true,
-                    canEdit = true
+                permission = publicVarGroupPermissionService.getPublicVarGroupPermissions(
+                    userId = userId,
+                    projectId = projectId,
+                    groupName = po.groupName
                 )
             )
         }
@@ -400,6 +405,13 @@ class PublicVarGroupService @Autowired constructor(
                 pipelinePublicVarGroupReleaseRecordDao.deleteByGroupName(context, projectId, groupName)
                 publicVarDao.deleteByGroupName(context, projectId, groupName)
             }
+
+            // 从权限中心删除变量组资源
+            publicVarGroupPermissionService.deleteResource(
+                projectId = projectId,
+                groupName = groupName
+            )
+
             return true
         } catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
@@ -632,7 +644,7 @@ class PublicVarGroupService @Autowired constructor(
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int
-    ): Result<List<PipelinePublicVarGroupDO>> {
+    ): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
             logger.info("[$projectId|$referId] Get pipeline variables for type: $referType")
 
@@ -658,7 +670,7 @@ class PublicVarGroupService @Autowired constructor(
                     version = referInfo.version
                 ) ?: return@map null
 
-                PipelinePublicVarGroupDO(
+                PipelineRefPublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,
                     desc = groupRecord.desc,
@@ -674,7 +686,7 @@ class PublicVarGroupService @Autowired constructor(
         }
     }
 
-    fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
+    fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelineRefPublicVarGroupDO>> {
         try {
             logger.info("[$projectId] Get all public variable groups info")
 
@@ -690,7 +702,7 @@ class PublicVarGroupService @Autowired constructor(
 
             // 转换为PipelinePublicVarGroupDO列表
             val pipelineVarGroups = varGroups.map { groupRecord ->
-                PipelinePublicVarGroupDO(
+                PipelineRefPublicVarGroupDO(
                     groupName = groupRecord.groupName,
                     varCount = groupRecord.varCount,
                     desc = groupRecord.desc,
