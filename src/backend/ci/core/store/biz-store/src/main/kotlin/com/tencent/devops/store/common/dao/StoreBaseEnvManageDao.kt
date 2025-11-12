@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.db.utils.JooqUtils.values
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
