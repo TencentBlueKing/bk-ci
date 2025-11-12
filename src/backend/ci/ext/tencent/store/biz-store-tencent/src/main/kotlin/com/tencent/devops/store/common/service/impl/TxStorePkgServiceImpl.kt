@@ -7,13 +7,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.model.store.tables.TStoreBase
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.service.TxStorePkgService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,6 +24,8 @@ class TxStorePkgServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val redisOperation: RedisOperation,
+    private val storeBaseManageDao: StoreBaseManageDao,
+    private val storeBaseEnvManageDao: StoreBaseEnvManageDao
 ) : TxStorePkgService {
 
 
@@ -36,7 +37,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
 
     override fun updatePackageSha256(
         userId: String,
-        storeType: StoreTypeEnum?,
+        storeType: StoreTypeEnum,
         pageSize: Int?
     ) {
         // 1. 获取分布式锁
@@ -80,7 +81,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
      * 分页处理所有记录
      */
     private fun processAllRecords(
-        storeType: StoreTypeEnum?,
+        storeType: StoreTypeEnum,
         pageSize: Int,
         tempDir: File,
         userId: String
@@ -89,7 +90,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
         while (true) {
             // 查询单批记录
             val storeBaseRecords = queryStoreBaseRecords(storeType, offset, pageSize)
-            if (storeBaseRecords.isEmpty()) {
+            if (storeBaseRecords.isNullOrEmpty()) {
                 logger.info("No more records to process")
                 break
             }
@@ -129,6 +130,10 @@ class TxStorePkgServiceImpl @Autowired constructor(
         logger.info("Processing store: $storeCode, storeId: $storeId")
 
         val envRecords = queryStoreEnvRecords(storeId)
+        if (envRecords.isNullOrEmpty()) {
+            logger.info("No env records found for store: $storeCode, storeId: $storeId")
+            return
+        }
         for (envRecord in envRecords) {
             try {
                 processEnvPackage(envRecord, storeBaseRecord, tempDir, userId)
@@ -149,27 +154,23 @@ class TxStorePkgServiceImpl @Autowired constructor(
     }
 
     private fun queryStoreBaseRecords(
-        storeType: StoreTypeEnum?,
+        storeType: StoreTypeEnum,
         offset: Int,
         limit: Int
-    ): List<TStoreBaseRecord> {
-        val t = TStoreBase.T_STORE_BASE
-        val conditions = mutableListOf<Condition>()
-        if (storeType != null) {
-            conditions.add(t.STORE_TYPE.eq(storeType.type.toByte()))
-        }
-        return dslContext.selectFrom(t)
-            .where(conditions)
-            .orderBy(t.ID.asc())
-            .limit(offset, limit)
-            .fetch()
+    ): List<TStoreBaseRecord>? {
+        return storeBaseManageDao.getStoreBaseRecordsByStoreType(
+            dslContext = dslContext,
+            storeType = storeType,
+            offset = offset,
+            limit = limit
+        )
     }
 
-    private fun queryStoreEnvRecords(storeId: String): List<TStoreBaseEnvRecord> {
-        val t = TStoreBaseEnv.T_STORE_BASE_ENV
-        return dslContext.selectFrom(t)
-            .where(t.STORE_ID.eq(storeId))
-            .fetch()
+    private fun queryStoreEnvRecords(storeId: String): List<TStoreBaseEnvRecord>? {
+        return storeBaseEnvManageDao.getStoreEnvRecordsByStoreId(
+            dslContext = dslContext,
+            storeId = storeId
+        )
     }
 
     private fun processEnvPackage(
@@ -207,7 +208,6 @@ class TxStorePkgServiceImpl @Autowired constructor(
             }
         }
     }
-
 
     /**
      * 获取组件包下载地址
@@ -258,13 +258,11 @@ class TxStorePkgServiceImpl @Autowired constructor(
      * 更新 SHA256 值到数据库
      */
     private fun updateSha256ToDatabase(envId: String, sha256Value: String) {
-        val t = TStoreBaseEnv.T_STORE_BASE_ENV
-        dslContext.update(t)
-            .set(t.SHA256_CONTENT, sha256Value)
-            .where(t.ID.eq(envId))
-            .execute()
-
+        storeBaseEnvManageDao.updateSha256(
+            dslContext = dslContext,
+            envId = envId,
+            sha256Value = sha256Value
+        )
         logger.info("Updated SHA256 for env record: $envId")
     }
-
 }

@@ -6,7 +6,7 @@ interface TxStorePkgService {
 
     fun updatePackageSha256(
         userId: String,
-        storeType: StoreTypeEnum?,
+        storeType: StoreTypeEnum,
         pageSize: Int? = 100
     )
 }

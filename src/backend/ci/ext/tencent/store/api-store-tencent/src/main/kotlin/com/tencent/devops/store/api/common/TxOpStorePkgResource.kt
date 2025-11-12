@@ -25,9 +25,9 @@ interface TxOpStorePkgResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = false)
+        @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
-        storeType: StoreTypeEnum?,
+        storeType: StoreTypeEnum,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 100
