@@ -511,17 +511,17 @@ class TemplateFacadeService @Autowired constructor(
         content = ActionAuditContent.PIPELINE_TEMPLATE_EDIT_CONTENT
     )
 
-        /**
-         * 更新流水线模板
-         *
-         * @param projectId 项目ID
-         * @param userId 用户ID
-         * @param templateId 模板ID
-         * @param versionName 新版本名
-         * @param template 模板模型数据
-         * @param checkPermissionFlag 是否检查权限，默认为true
-         * @return 新生成的模板版本号
-         */
+    /**
+     * 更新流水线模板
+     *
+     * @param projectId 项目ID
+     * @param userId 用户ID
+     * @param templateId 模板ID
+     * @param versionName 新版本名
+     * @param template 模板模型数据
+     * @param checkPermissionFlag 是否检查权限，默认为true
+     * @return 新生成的模板版本号
+     */
     fun updateTemplate(
         projectId: String,
         userId: String,
