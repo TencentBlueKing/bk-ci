@@ -350,7 +350,10 @@ class MakeMoneyService @Autowired constructor(
             val machineFlag: String,
             @JsonProperty("commission_date")
             @get:Schema(title = "启用日期：YYYY-MM")
-            val commissionDate: String
+            val commissionDate: String,
+            @JsonProperty("commission_years")
+            @get:Schema(title = "启用年数：根据启用日期计算距今年数")
+            val commissionYears: Int
         )
     }
 
@@ -471,6 +474,43 @@ class MakeMoneyService @Autowired constructor(
         }
     }
 
+    /**
+     * 计算启用年数
+     * @param commissionDate 启用日期（格式：YYYY-MM）
+     * @return 启用年数，如果输入为空或格式错误则返回0
+     * 
+     * 计算规则：
+     * - 如 2025-08 购入，则 2025-08-01 >= 当前日期 < 2026-08-01 为1
+     * - 2026-08-01 >= 当前日期 < 2027-08-01 为2，依次类推
+     */
+    private fun calculateCommissionYears(commissionDate: String?): Int {
+        return try {
+            if (commissionDate.isNullOrBlank()) return 0
+            
+            // 解析 YYYY-MM 格式
+            val parts = commissionDate.split("-")
+            if (parts.size < 2) return 0
+            
+            val year = parts[0].toIntOrNull() ?: return 0
+            val month = parts[1].toIntOrNull() ?: return 0
+            
+            // 构造启用日期，设置为每月1号
+            val commissionLocalDate = LocalDate.of(year, month, 1)
+            val currentDate = LocalDate.now()
+            
+            // 计算从启用日期开始经过的完整年份
+            // 例如：2025-08-01 到 2025-12-31 为第1年，2026-08-01 到 2026-12-31 为第2年
+            val monthsBetween = ChronoUnit.MONTHS.between(commissionLocalDate, currentDate)
+            val years = (monthsBetween / 12).toInt() + 1
+            
+            // 确保返回值至少为0
+            maxOf(years, 0)
+        } catch (e: Exception) {
+            logger.warn("calculateCommissionYears failed|commissionDate: $commissionDate", e)
+            0
+        }
+    }
+
     private fun makeMoneyMonthly(year: Int, month: Int): List<Bill.BillDetail> {
         val end = LocalDate.of(year, month, 14)
         val costData = end.format(DateTimeFormatter.ofPattern("yyyyMM"))
@@ -526,6 +566,9 @@ class MakeMoneyService @Autowired constructor(
                 val commissionDate = workspaceCommissionDateMap[name] ?: ""
                 val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
 
+                // 计算启用年数
+                val commissionYears = calculateCommissionYears(commissionDate)
+
                 // 获取机型标识
                 val winConfigId = allWindows[name]?.winConfigId?.toLong()
                 val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
@@ -547,7 +590,8 @@ class MakeMoneyService @Autowired constructor(
                         machineType = workspace?.machineType ?: "ERROR",
                         hardwareCost = hardwareCost,
                         machineFlag = machineFlag,
-                        commissionDate = commissionDate
+                        commissionDate = commissionDate,
+                        commissionYears = commissionYears
                     )
                 )
             }
@@ -603,6 +647,7 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(13).setCellValue("hardware_cost")
             row.createCell(14).setCellValue("machine_flag")
             row.createCell(15).setCellValue("commission_date")
+            row.createCell(16).setCellValue("commission_years 启用年数")
         }
 
         bills.forEachIndexed { index, bill ->
@@ -624,8 +669,9 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(13).setCellValue(bill.hardwareCost.toString())
             row.createCell(14).setCellValue(bill.machineFlag)
             row.createCell(15).setCellValue(bill.commissionDate)
+            row.createCell(16).setCellValue(bill.commissionYears.toString())
         }
-        for (i in 0 until 16) {
+        for (i in 0 until 17) {
             sheet.trackAllColumnsForAutoSizing()
             sheet.autoSizeColumn(i)
         }
