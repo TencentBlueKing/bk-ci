@@ -166,15 +166,6 @@ interface DispatchMessageTracking {
     ): Boolean
 
     /**
-     * 增加重试次数
-     */
-    fun incrementRetryCount(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int
-    )
-
-    /**
      * 更新队列耗时
      */
     fun updateQueueTimeCost(

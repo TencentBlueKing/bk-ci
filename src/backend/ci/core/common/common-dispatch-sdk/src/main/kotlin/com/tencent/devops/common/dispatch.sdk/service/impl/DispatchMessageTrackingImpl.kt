@@ -32,6 +32,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRe
 import com.tencent.devops.common.dispatch.sdk.pojo.dto.InitMessageTrackingRequest
 import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdateMessageStatusRequest
 import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdatePerformanceRequest
+import com.tencent.devops.common.dispatch.sdk.service.DispatchMessageTracking
 import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
 import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -45,7 +46,7 @@ import org.springframework.stereotype.Component
 @Component
 class DispatchMessageTrackingImpl @Autowired constructor(
     private val client: Client
-) : com.tencent.devops.common.dispatch.sdk.service.DispatchMessageTracking {
+) : DispatchMessageTracking {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchMessageTrackingImpl::class.java)
@@ -232,22 +233,6 @@ class DispatchMessageTrackingImpl @Autowired constructor(
         operator = operator,
         remark = "Message consumption completed successfully"
     )
-
-    override fun incrementRetryCount(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int
-    ) {
-        try {
-            client.get(ServiceDispatchMessageTrackingResource::class).incrementRetryCount(
-                buildId = buildId,
-                vmSeqId = vmSeqId.toInt(),
-                executeCount = executeCount
-            )
-        } catch (e: Exception) {
-            logger.warn("[$buildId|$vmSeqId] Failed to increment retry count", e)
-        }
-    }
 
     override fun updateQueueTimeCost(
         buildId: String,
