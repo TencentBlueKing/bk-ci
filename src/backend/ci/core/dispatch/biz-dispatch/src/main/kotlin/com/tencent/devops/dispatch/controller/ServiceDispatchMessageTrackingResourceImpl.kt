@@ -53,15 +53,6 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
         return Result(dispatchMessageTrackingService.updateMessageStatus(request))
     }
 
-    override fun incrementRetryCount(
-        buildId: String,
-        vmSeqId: Int,
-        executeCount: Int
-    ): Result<Boolean> {
-        dispatchMessageTrackingService.incrementRetryCount(buildId, vmSeqId, executeCount)
-        return Result(true)
-    }
-
     override fun updatePerformance(
         request: UpdatePerformanceRequest
     ): Result<Boolean> {
