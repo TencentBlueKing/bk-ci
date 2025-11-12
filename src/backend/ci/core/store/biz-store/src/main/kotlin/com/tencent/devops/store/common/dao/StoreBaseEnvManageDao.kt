@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import java.time.LocalDateTime
 import org.jooq.DSLContext
