@@ -155,4 +155,19 @@ class StoreBaseEnvManageDao {
                 .execute()
         }
     }
+
+    fun updateSha256(dslContext: DSLContext, envId: String, sha256Value: String) {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        dslContext.update(t)
+            .set(t.SHA256_CONTENT, sha256Value)
+            .where(t.ID.eq(envId))
+            .execute()
+    }
+
+    fun getStoreEnvRecordsByStoreId(dslContext: DSLContext, storeId: String): List<TStoreBaseEnvRecord>? {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        return dslContext.selectFrom(t)
+            .where(t.STORE_ID.eq(storeId))
+            .fetch()
+    }
 }

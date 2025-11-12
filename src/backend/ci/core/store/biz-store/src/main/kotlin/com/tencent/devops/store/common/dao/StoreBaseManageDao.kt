@@ -242,4 +242,20 @@ class StoreBaseManageDao {
                 .execute()
         }
     }
+
+    fun getStoreBaseRecordsByStoreType(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        offset: Int,
+        limit: Int
+    ): List<TStoreBaseRecord>? {
+        val t = TStoreBase.T_STORE_BASE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t.STORE_TYPE.eq(storeType.type.toByte()))
+        return dslContext.selectFrom(t)
+            .where(conditions)
+            .orderBy(t.ID.asc())
+            .limit(offset, limit)
+            .fetch()
+    }
 }
