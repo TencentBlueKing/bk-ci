@@ -29,8 +29,11 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
+import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.RemoteDevWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
+import com.tencent.devops.process.trigger.market.MarketEventManager
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
@@ -112,4 +115,18 @@ class WebhookMQConfiguration @Autowired constructor() {
     fun scmWebhookTriggerEventConsumer(
         @Autowired webhookTriggerBuildService: WebhookTriggerBuildService
     ) = ScsConsumerBuilder.build<ScmWebhookTriggerEvent> { webhookTriggerBuildService.trigger(it) }
+
+    @EventConsumer
+    fun remoteDevWebhookRequestEventConsumer(
+        @Autowired marketEventManager: MarketEventManager
+    ) = ScsConsumerBuilder.build<RemoteDevWebhookRequestEvent> {
+        marketEventManager.handleRemoteDevWebhookRequestEvent(it)
+    }
+
+    @EventConsumer
+    fun genericWebhookRequestEventConsumer(
+        @Autowired marketEventManager: MarketEventManager
+    ) = ScsConsumerBuilder.build<GenericWebhookRequestEvent> {
+        marketEventManager.handleGenericWebhookRequestEvent(it)
+    }
 }
