@@ -1767,8 +1767,8 @@
   "notParamsTip": "このパラメータはもはや入力パラメータではないか、削除されています。実行時に再び渡すことはできません。手動で削除するか、保存後に自動的にこのパラメータリストから削除されます。",
   "showStageProgress": "ステージの進捗を表示",
   "showBuildInfo": "ビルド情報を表示",
-  "selectPredefinedOption": "定義済みオプションを選択",
-  "fillVariable": "変数を入力",
+  "switchToVarMode": "クリックして変数入力モードに切り替え",
+  "closeVarMode": "クリックして変数入力モードを閉じる",
   "placeholderVar": "変数を入力してください、例: ${{variables.a}}",
   "selectTips": "選択してください"
 }
