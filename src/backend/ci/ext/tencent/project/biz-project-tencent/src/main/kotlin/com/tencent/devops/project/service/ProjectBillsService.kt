@@ -37,7 +37,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
+@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList","MaxLineLength")
 class ProjectBillsService(
     val client: Client,
     val projectService: ProjectService,
