@@ -232,7 +232,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
                     instanceId = null,
                     osName = osName,
                     osArch = osArch,
-                    checkProjectId = false
+                    checkPermissionFlag = false
                 )
             result.data
         } catch (e: Exception) {
