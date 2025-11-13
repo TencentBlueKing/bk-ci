@@ -25,4 +25,8 @@ data class SelectCondition(
     val multiple: Boolean = false,
     @get:Schema(title = "下拉选项")
     val options: List<ConditionOption>? = listOf()
-) : TriggerCondition
+) : TriggerCondition {
+    companion object {
+        const val classType = "selectInput"
+    }
+}

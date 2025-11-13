@@ -1,8 +1,23 @@
 package com.tencent.devops.store.pojo.event.conditions
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
+import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.store.pojo.event.enums.ConditionOperator
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "@type",
+    defaultImpl = EmptyElement::class
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = CheckboxListCondition::class, name = CheckboxListCondition.classType),
+    JsonSubTypes.Type(value = EnumInputCondition::class, name = EnumInputCondition.classType),
+    JsonSubTypes.Type(value = InputCondition::class, name = InputCondition.classType),
+    JsonSubTypes.Type(value = SelectCondition::class, name = SelectCondition.classType)
+)
 interface TriggerCondition {
     // 字段名
     val label: String

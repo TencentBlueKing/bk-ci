@@ -23,7 +23,11 @@ data class CheckboxListCondition(
     override val component: AtomFormComponentType = AtomFormComponentType.ATOM_CHECKBOX_LIST,
     @get:Schema(title = "多选选项")
     val options: List<ConditionOption>? = listOf()
-) : TriggerCondition
+) : TriggerCondition {
+    companion object {
+        const val classType = "checkboxList"
+    }
+}
 
 data class ConditionOption(
     @get:Schema(description = "选项名称")

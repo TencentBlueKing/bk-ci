@@ -21,4 +21,8 @@ data class InputCondition(
     @get:Schema(title = "描述")
     override val desc: String?,
     override val component: AtomFormComponentType = AtomFormComponentType.VUE_INPUT
-) : TriggerCondition
+) : TriggerCondition {
+    companion object {
+        const val classType = "vueInput"
+    }
+}
