@@ -37,4 +37,6 @@ interface TriggerCondition {
     val desc: String?
 
     fun key() = "$refField@$operator"
+
+    fun defaultPreview(): String = default as String? ?: ""
 }

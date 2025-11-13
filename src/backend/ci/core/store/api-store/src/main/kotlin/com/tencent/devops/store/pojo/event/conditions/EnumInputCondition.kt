@@ -23,6 +23,7 @@ data class EnumInputCondition(
     override val component: AtomFormComponentType = AtomFormComponentType.ENUM_INPUT,
     val options: List<ConditionOption>? = null
 ) : TriggerCondition {
+
     companion object {
         const val classType = "enumInput"
     }

@@ -27,40 +27,42 @@ import com.tencent.devops.store.pojo.event.enums.MappingSource
 
 object TriggerEventConverter {
     fun convertAtomForm(triggerEventConfig: TriggerEventConfig): AtomForm {
-        with(triggerEventConfig) {
-            val groupNames = conditions.map { it.group }
-            val inputs = mutableListOf<AtomFormComponent>()
-            // 已处理分组
-            val existsGroup = mutableListOf<String>()
-            conditions.forEachIndexed { index, condition ->
-                val currentGroup = condition.group
-                // 已处理则跳过
-                if (existsGroup.contains(currentGroup)) {
-                    return@forEachIndexed
-                }
-                val component = if (currentGroup.isNullOrBlank() || !groupNames.contains(currentGroup)) {
-                    convertComponent(condition)
-                } else {
-                    val groupFields = conditions.subList(index + 1, conditions.size).filter { it.group == currentGroup }
-                    val children = listOf(condition).plus(groupFields).map {
-                        convertComponent(it)
-                    }.map { covertGroupComponent(it) }
-                    // 记录已处理的分组
-                    existsGroup.add(currentGroup)
-                    GroupComponent(
-                        label = currentGroup,
-                        key = condition.key(),
-                        children = children
-                    )
-                }
-                inputs.add(component)
-            }
+        return convertAtomForm(triggerEventConfig.conditions)
+    }
 
-            return AtomForm(
-                atomCode = "",
-                input = inputs.associateBy { it.key }
-            )
+    fun convertAtomForm(conditions: List<TriggerCondition>): AtomForm {
+        val groupNames = conditions.map { it.group }
+        val inputs = mutableListOf<AtomFormComponent>()
+        // 已处理分组
+        val existsGroup = mutableListOf<String>()
+        conditions.forEachIndexed { index, condition ->
+            val currentGroup = condition.group
+            // 已处理则跳过
+            if (existsGroup.contains(currentGroup)) {
+                return@forEachIndexed
+            }
+            val component = if (currentGroup.isNullOrBlank() || !groupNames.contains(currentGroup)) {
+                convertComponent(condition)
+            } else {
+                val groupFields = conditions.subList(index + 1, conditions.size).filter { it.group == currentGroup }
+                val children = listOf(condition).plus(groupFields).map {
+                    convertComponent(it)
+                }.map { covertGroupComponent(it) }
+                // 记录已处理的分组
+                existsGroup.add(currentGroup)
+                GroupComponent(
+                    label = currentGroup,
+                    key = condition.key(),
+                    children = children
+                )
+            }
+            inputs.add(component)
         }
+
+        return AtomForm(
+            atomCode = "",
+            input = inputs.associateBy { it.key }
+        )
     }
 
     private fun covertGroupComponent(condition: AtomFormComponent) = when (condition) {
@@ -172,7 +174,7 @@ fun main() {
                 ),
                 desc = "触发动作",
                 refField = "ci.action",
-                default = null,
+                default = listOf("open"),
                 operator = ConditionOperator.NOT_IN,
                 required = false
             ),

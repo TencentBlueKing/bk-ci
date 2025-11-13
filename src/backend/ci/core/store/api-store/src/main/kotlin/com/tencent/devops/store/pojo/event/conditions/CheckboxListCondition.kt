@@ -11,7 +11,7 @@ data class CheckboxListCondition(
     @get:Schema(title = "分组名称")
     override val group: String? = null,
     @get:Schema(title = "默认值")
-    override val default: String?,
+    override val default: List<String>,
     @get:Schema(title = "条件字段")
     override val refField: String,
     @get:Schema(title = "逻辑操作")
@@ -24,6 +24,15 @@ data class CheckboxListCondition(
     @get:Schema(title = "多选选项")
     val options: List<ConditionOption>? = listOf()
 ) : TriggerCondition {
+
+    override fun defaultPreview(): String {
+        return default.joinToString(
+            separator = ", ",
+            prefix = "(",
+            postfix = ")"
+        )
+    }
+
     companion object {
         const val classType = "checkboxList"
     }
