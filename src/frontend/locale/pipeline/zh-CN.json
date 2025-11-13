@@ -2032,6 +2032,6 @@
   "showBuildInfo": "展示构建信息",
   "switchToVarMode": "点击切换为输入变量模式",
   "closeVarMode": "点击关闭输入变量模式",
-  "placeholderVar": "请输入变量，如 ${{variables.a}}",
+  "placeholderVar": "请输入变量，如 ${'{{'}variables.a{'}}'}",
   "selectTips": "请选择"
 }

@@ -2033,5 +2033,7 @@
   "showBuildInfo": "Show Build Information",
   "switchToVarMode": "Click to switch to variable input mode",
   "closeVarMode": "Click to close variable input mode",
-  "placeholderVar": "Please enter the variable, such as ${{variables.a}}",
+  "placeholderVar": "Please enter the variable, such as ${'{{'}variables.a{'}}'}",
   "selectTips": "Please select"
+}
+
