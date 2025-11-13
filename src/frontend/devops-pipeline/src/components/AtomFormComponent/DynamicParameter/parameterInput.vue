@@ -17,11 +17,11 @@
                         class="change-type"
                         @click="handleChangeType"
                     >
-                        <bk-icon
-                            type="sort"
-                            class="icon-sort"
+                        <Logo
+                            size="12"
+                            :class="!isVarInputMode ? 'open-var' : 'close-var'"
+                            name="isSetAsVariable"
                         />
-                        {{ !isVarInputMode ? $t('fillVariable') : $t('selectPredefinedOption') }}
                     </span>
                 </label>
                 <i
@@ -82,11 +82,13 @@
 
 <script>
     import mixins from '../mixins'
+    import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
 
     export default {
         components: {
             EnumInput,
+            Logo
         },
 
         mixins: [mixins],
@@ -300,16 +302,28 @@
             flex: 1;
         }
         .change-type {
-            display: inline-flex;
-            align-items: center;
-            color: #3a84ff;
             cursor: pointer;
-            .icon-sort::before {
-                display: inline-block;
-                transform: rotate(90deg);
+            .open-var {
+                width: 20px;
+                height: 20px;
+                background: #EAEBF0;
+                color: #979BA5;
+                border-radius: 2px;
+                &:hover {
+                 color: #4D4F56;
+                 background-color: #DCDEE5;
+                }
             }
-            .icon-sort {
-                margin: 0 5px;
+            .close-var {
+                width: 20px;
+                height: 20px;
+                background: #E1ECFF;
+                color: #3A84FF;
+                border-radius: 2px;
+                &:hover {
+                 color: #1768EF;
+                 background-color: #CDDFFE;
+                }
             }
         }
     }
