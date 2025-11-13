@@ -85,9 +85,9 @@ interface ServiceArchiveComponentPkgResource {
         @QueryParam("osArch")
         osArch: String? = null,
         @Parameter(description = "是否校验组件项目id", required = false)
-        @QueryParam("checkProjectId")
+        @QueryParam("checkPermissionFlag")
         @DefaultValue("true")
-        checkProjectId: Boolean = true
+        checkPermissionFlag: Boolean = true
     ): Result<String>
 
     @Operation(summary = "删除组件包文件")

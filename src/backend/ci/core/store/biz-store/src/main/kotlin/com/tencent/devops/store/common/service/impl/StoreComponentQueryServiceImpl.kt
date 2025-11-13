@@ -854,7 +854,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeCode: String,
         version: String
     ): Result<String?> {
-        val baseRecord = storeBaseQueryDao.getComponent(
+        val record = storeBaseQueryDao.getComponentStatusInfo(
             dslContext = dslContext,
             storeCode = storeCode,
             version = version,
@@ -863,7 +863,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("$storeCode:$version")
         )
-        return Result(baseRecord.status)
+        return Result(record.value1())
     }
 
     private fun isUpdateRequired(
