@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WhiteListDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.CdsMeshStatus
 import com.tencent.devops.remotedev.pojo.IWhiteList
 import com.tencent.devops.remotedev.pojo.WhiteList
 import com.tencent.devops.remotedev.pojo.WhiteListType
@@ -153,16 +154,21 @@ class WhiteListService @Autowired constructor(
         projectId: String,
         workspaceName: String
     ): Int {
+
         if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
-            return 0
+            return CdsMeshStatus.DISABLED.value
         }
         if (whiteListDao.get(dslContext, projectId, WhiteListType.CDS_MESH_PROJECT) != null) {
-            return 1
+            return CdsMeshStatus.MESH.value
         }
         if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_MESH_WORKSPACE) != null) {
-            return 1
+            return CdsMeshStatus.MESH.value
         }
-        return 0
+        // 检查是否启用 SSL 模式
+        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_SSL_WORKSPACE) != null) {
+            return CdsMeshStatus.SSL.value
+        }
+        return CdsMeshStatus.DISABLED.value
     }
 
     fun getCdsDomain(projectId: String, workspaceName: String): String? {

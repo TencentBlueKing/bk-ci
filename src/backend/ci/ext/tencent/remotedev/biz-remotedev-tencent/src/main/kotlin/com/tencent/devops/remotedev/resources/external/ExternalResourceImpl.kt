@@ -89,9 +89,10 @@ class ExternalResourceImpl @Autowired constructor(
         token: String,
         ip: String,
         enable: String,
-        domain: String
+        domain: String,
+        sslMode: String?
     ): Result<Boolean> {
-        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|ts=$ts|token=$token")
+        logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|sslMode=$sslMode|ts=$ts|token=$token")
         // ts 10位时间戳需与当前时间相差小于10秒
         if (LocalDateTime.now().timestamp() - ts.toLong() > 10) {
             logger.warn("ts not match|ts=$ts")
@@ -110,19 +111,47 @@ class ExternalResourceImpl @Autowired constructor(
             logger.warn("no workspace found|ip=$ip")
             return Result(false)
         }.first()
+        
         val cdsMesh = enable.toBooleanStrictOrNull()
+        
         if (cdsMesh == true) {
-            whiteListService.opCreateOrUpdateWhiteList(
-                SYSTEM,
-                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
-            )
+            // 启用模式
+            if (!sslMode.isNullOrBlank()) {
+                // 情况1: enable=true 且 sslMode 有值 → 启用 SSL 模式
+                // 先删除可能存在的 CDS_MESH_WORKSPACE
+                whiteListService.opDeleteWhiteList(
+                    SYSTEM,
+                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
+                )
+                // 设置 CDS_SSL_WORKSPACE
+                whiteListService.opCreateOrUpdateWhiteList(
+                    SYSTEM,
+                    WhiteList(ws.workspaceName, WhiteListType.CDS_SSL_WORKSPACE, SYSTEM)
+                )
+            } else {
+                // 情况2: enable=true 且 sslMode 为空 → 启用默认 Mesh 模式
+                whiteListService.opCreateOrUpdateWhiteList(
+                    SYSTEM,
+                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
+                )
+            }
+        } else if (cdsMesh == false) {
+            // 禁用模式
+            if (!sslMode.isNullOrBlank()) {
+                // 情况3: enable=false 且 sslMode 有值 → 删除 SSL 模式
+                whiteListService.opDeleteWhiteList(
+                    SYSTEM,
+                    WhiteList(ws.workspaceName, WhiteListType.CDS_SSL_WORKSPACE, SYSTEM)
+                )
+            } else {
+                // 情况4: enable=false 且 sslMode 为空 → 删除默认 Mesh 模式
+                whiteListService.opDeleteWhiteList(
+                    SYSTEM,
+                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
+                )
+            }
         }
-        if (cdsMesh == false) {
-            whiteListService.opDeleteWhiteList(
-                SYSTEM,
-                WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
-            )
-        }
+        
         if (domain.isNotBlank()) {
             configCacheService.opInsertOrUpdateConfig(CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + ws.workspaceName, domain)
         }
