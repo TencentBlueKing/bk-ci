@@ -413,13 +413,11 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     }
 
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
-        val imageStatus = client.get(ServiceStoreImageResource::class)
-            .getImageStatusByCodeAndVersion(imageCode, imageVersion).data
-        return ImageStatusEnum.RELEASED.name == imageStatus
+        return client.get(ServiceStoreImageResource::class)
+            .isReleasedStatus(imageCode, imageVersion).data!!
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMarketFacadeService::class.java)
-        private val updateMarketTemplateExecutorService = Executors.newFixedThreadPool(3)
     }
 }
