@@ -13,10 +13,22 @@ class TxOpStorePkgResourceImpl @Autowired constructor(
     private val txStorePkgService: TxStorePkgService
 ) : TxOpStorePkgResource {
 
-    override fun updatePackageSha256(userId: String, storeType: StoreTypeEnum, pageSize: Int?): Result<Boolean> {
+    override fun updatePackageSha256(userId: String, storeType: StoreTypeEnum, pageSize: Int): Result<Boolean> {
+        val executor = ThreadPoolUtil.getThreadPoolExecutor(
+            corePoolSize = 1,
+            maximumPoolSize = 1,
+            threadNamePrefix = "op-updatePackageSha256-%d"
+        )
         ThreadPoolUtil.submitAction(
+            executor = executor,
             actionTitle = "updatePackageSha256",
-            action = { txStorePkgService.updatePackageSha256(userId, storeType, pageSize) }
+            action = {
+                try {
+                    txStorePkgService.updatePackageSha256(userId, storeType, pageSize)
+                } finally {
+                    executor.shutdown()
+                }
+            }
         )
         return Result(true)
     }

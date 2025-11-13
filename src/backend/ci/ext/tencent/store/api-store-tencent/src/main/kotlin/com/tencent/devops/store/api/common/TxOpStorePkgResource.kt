@@ -11,6 +11,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
+import jakarta.ws.rs.DefaultValue
 
 @Tag(name = "OP_STORE_PKG", description = "OP-研发商店包文件管理")
 @Path("/op/store/pkg")
@@ -30,6 +31,7 @@ interface TxOpStorePkgResource {
         storeType: StoreTypeEnum,
         @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int? = 100
+        @DefaultValue("100")
+        pageSize: Int
     ): Result<Boolean>
 }

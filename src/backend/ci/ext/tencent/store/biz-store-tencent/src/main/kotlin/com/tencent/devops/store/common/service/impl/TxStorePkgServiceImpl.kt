@@ -17,6 +17,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
+import java.util.UUID
 
 
 @RestResource
@@ -38,7 +39,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
     override fun updatePackageSha256(
         userId: String,
         storeType: StoreTypeEnum,
-        pageSize: Int?
+        pageSize: Int
     ) {
         // 1. 获取分布式锁
         val redisLock = RedisLock(
@@ -56,7 +57,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
             // 2. 创建临时目录
             val tempDir = createTempDir()
             // 3. 分页处理所有记录
-            processAllRecords(storeType, pageSize ?: 100, tempDir, userId)
+            processAllRecords(storeType, pageSize, tempDir, userId)
             logger.info("SHA256 update task running end ")
         } finally {
             // 4. 清理资源
@@ -196,7 +197,7 @@ class TxStorePkgServiceImpl @Autowired constructor(
             return
         }
 
-        val localFile = File(tempDir, "${storeCode}_${version}_${System.currentTimeMillis()}.tmp")
+        val localFile = File(tempDir, "${storeCode}_${version}_${UUID.randomUUID()}.tmp")
         try {
             downloadFileToLocal(downloadUrl, localFile)
             val sha256Value = calculateSha256(localFile)

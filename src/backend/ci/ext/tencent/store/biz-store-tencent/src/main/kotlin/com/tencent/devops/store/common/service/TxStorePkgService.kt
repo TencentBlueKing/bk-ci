@@ -7,6 +7,6 @@ interface TxStorePkgService {
     fun updatePackageSha256(
         userId: String,
         storeType: StoreTypeEnum,
-        pageSize: Int? = 100
+        pageSize: Int = 100
     )
 }
