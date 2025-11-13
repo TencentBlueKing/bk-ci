@@ -226,7 +226,7 @@
                 margin-left: 8px;
                 width: 18px;
                 height: 18px;
-                line-height: 20;
+                line-height: 20px;
                 text-align: center;
                 margin-top: 2px;
                 border-radius: 2px;
