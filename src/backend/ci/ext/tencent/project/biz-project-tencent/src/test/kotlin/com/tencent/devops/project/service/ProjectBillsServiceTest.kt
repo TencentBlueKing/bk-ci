@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,37 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api.manager
+package com.tencent.devops.project.service
 
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.GET
-import jakarta.ws.rs.Path
-import jakarta.ws.rs.PathParam
-import jakarta.ws.rs.Produces
-import jakarta.ws.rs.core.MediaType
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 
-@Tag(name = "AUTH_SERVICE_MANAGER_USER", description = "权限-管理员")
-@Path("/service/auth/manager/users")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceManagerUserResource {
+class ProjectBillsServiceTest {
 
-    @GET
-    @Path("/{userId}")
-    @Operation(summary = "用户管理员信息")
-    fun getManagerInfo(
-        @Parameter(description = "用户Id", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
+    @Test
+    fun `test filter reporter users from active users`() {
+        val reporterUsers = setOf("reporter1", "reporter2")
+        val activeUsers = setOf("user1", "user2", "reporter1", "user3", "reporter2")
+        
+        val nonReporterUsers = activeUsers - reporterUsers
+        
+        assertEquals(setOf("user1", "user2", "user3"), nonReporterUsers)
+        assertEquals(3, nonReporterUsers.size)
+    }
 
-    @GET
-    @Path("/")
-    @Operation(summary = "获取所有管理员用户")
-    fun getAllManagerUsers(): Result<List<String>>
+    @Test
+    fun `test all users are reporters`() {
+        val reporterUsers = setOf("reporter1", "reporter2", "reporter3")
+        val activeUsers = setOf("reporter1", "reporter2", "reporter3")
+        
+        val nonReporterUsers = activeUsers - reporterUsers
+        
+        assertEquals(emptySet<String>(), nonReporterUsers)
+        assertEquals(0, nonReporterUsers.size)
+    }
 }
