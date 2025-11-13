@@ -19,6 +19,7 @@
         <div class="option-items">
             <section v-if="payloadValue.type !== 'remote'">
                 <key-options
+                    :disabled="disabled"
                     :options="param.options"
                     :handle-change-options="updateOptions"
                 />
@@ -29,28 +30,26 @@
                     class="new-ui-form"
                     :label-width="300"
                 >
-                    <template v-for="obj in remoteTypeOptions">
-                        <form-field
-                            :hide-colon="true"
-                            :key="obj.key"
-                            :desc="obj.tips"
-                            :required="obj.required"
-                            :label="obj.label"
-                            :is-error="errors.has(key)"
-                            :error-msg="errors.first(key)"
-                        >
-                            <component
-                                :is="'vuex-input'"
-                                :disabled="disabled"
-                                :name="obj.key"
-                                v-validate.initial="Object.assign({}, { required: !!obj.required })"
-                                :handle-change="handleRemoteParamChange"
-                                :value="payloadValue[obj.key]"
-                                v-bind="obj"
-                                :placeholder="obj.placeholder"
-                            ></component>
-                        </form-field>
-                    </template>
+                    <form-field
+                        v-for="obj in remoteTypeOptions"
+                        :hide-colon="true"
+                        :key="obj.key"
+                        :desc="obj.tips"
+                        :required="obj.required"
+                        :label="obj.label"
+                        :is-error="errors.has(key)"
+                        :error-msg="errors.first(key)"
+                    >
+                        <bk-input
+                            :disabled="disabled"
+                            :name="obj.key"
+                            v-validate.initial="Object.assign({}, { required: !!obj.required })"
+                            @change="value => handleRemoteParamChange(obj.key, value)"
+                            :value="payloadValue[obj.key]"
+                            :placeholder="obj.placeholder"
+                            @blur="handleBlur"
+                        />
+                    </form-field>
                 </bk-form>
             </section>
         </div>
@@ -58,14 +57,13 @@
 </template>
 
 <script>
-    import KeyOptions from './key-options'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexInput from '@/components/atomFormField/VuexInput'
+    // import VuexInput from '@/components/atomFormField/VuexInput'
+    import KeyOptions from './key-options'
     export default {
         components: {
             KeyOptions,
-            FormField,
-            VuexInput
+            FormField
         },
         props: {
             disabled: {
@@ -130,13 +128,12 @@
             },
             handleRemoteParamChange (name, value) {
                 Object.assign(this.payloadValue, { [name]: value })
-                this.updatePayload('payload', this.payloadValue)
             },
             updateOptions (name, value) {
                 this.handleUpdateOptions(name, value)
             },
-            updatePayload (name, value) {
-                this.handleUpdatePayload(name, value)
+            handleBlur () {
+                this.handleUpdatePayload('payload', this.payloadValue)
             }
         }
     }

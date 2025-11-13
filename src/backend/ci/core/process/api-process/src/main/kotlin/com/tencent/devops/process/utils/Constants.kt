@@ -51,8 +51,10 @@ const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.bu
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
+
 // 禁用定时触发器参数,当流水线配置这个参数，并且值为true,则禁用定时触发器
 const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
+
 // 子流水线运行方式
 const val PIPELINE_START_SUB_RUN_MODE = "BK_CI_SUB_PIPELINE_RUN_MODE"
 
@@ -129,6 +131,7 @@ const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文�
 const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
 const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
 const val PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG = "BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG" // "流水线变量校验失败是否继续执行"
+
 /**
  * 自定义触发材料
  */
