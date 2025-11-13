@@ -1492,7 +1492,7 @@ class TemplateFacadeService @Autowired constructor(
                 // 唯一版本名，保持原样
                 totalCount == 1 -> version.copy(nameDuplicated = false)
                 // 重复版本名中的最新版本，保留原名但标记为重复
-                latestVersionMap[originalName] === version -> version.copy(nameDuplicated = true)
+                latestVersionMap[originalName] === version -> version.copy(nameDuplicated = false)
                 // 重复版本名中的旧版本，使用 version 作为后缀并标记为重复
                 else -> {
                     val suffix = "-${version.version}"
