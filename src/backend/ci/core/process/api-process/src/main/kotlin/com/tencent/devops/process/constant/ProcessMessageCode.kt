@@ -445,7 +445,7 @@ object ProcessMessageCode {
 
     const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101337" // 流水线公共变量组({0})已存在
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101338" // 流水线公共变量组中变量名称格式错误
-    // 编排配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
+    // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101339"
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101340" // 变量组引用更新失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101341" // 变量组 {0} 不存在
