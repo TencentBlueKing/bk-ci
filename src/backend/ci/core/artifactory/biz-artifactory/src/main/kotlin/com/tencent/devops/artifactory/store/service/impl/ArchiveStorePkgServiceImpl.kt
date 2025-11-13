@@ -352,10 +352,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         instanceId: String?,
         osName: String?,
         osArch: String?,
-        checkProjectId: Boolean
+        checkPermissionFlag: Boolean
     ): String {
         var storeStatus: String? = null
-        if (checkProjectId) {
+        if (checkPermissionFlag) {
             val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
                 storeCode = storeCode,
                 storeType = storeType,
@@ -389,7 +389,6 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         val storePkgEnvInfo = storePkgEnvInfos[0]
-//        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
         val queryCacheFlag = if (storeStatus != null) {
             storeStatus !in StoreStatusEnum.getTestStatusList()
         } else {
