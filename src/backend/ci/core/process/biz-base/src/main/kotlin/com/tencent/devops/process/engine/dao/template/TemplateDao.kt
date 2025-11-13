@@ -384,7 +384,8 @@ class TemplateDao {
                 VERSION_NAME,
                 CREATED_TIME,
                 UPDATE_TIME,
-                CREATOR
+                CREATOR,
+                DESC
             )
                 .from(this)
                 .where(ID.eq(templateId))
