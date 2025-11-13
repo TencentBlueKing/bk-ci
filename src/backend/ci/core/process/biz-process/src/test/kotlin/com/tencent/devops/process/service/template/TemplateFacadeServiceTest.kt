@@ -147,10 +147,10 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         val result = service.listTemplateAllVersions(projectId, templateId, false)
 
         Assertions.assertEquals(3, result.size)
-        // 最新版本保留原名，标记为重复
+        // 最新版本保留原名，不标记为重复
         Assertions.assertEquals("init", result[0].versionName)
         Assertions.assertEquals(300L, result[0].version)
-        Assertions.assertEquals(true, result[0].nameDuplicated)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
         // 次新版本添加version后缀，标记为重复
         Assertions.assertEquals("init-200", result[1].versionName)
         Assertions.assertEquals(200L, result[1].version)
@@ -207,10 +207,10 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         Assertions.assertEquals("init-200", result[1].versionName)
         Assertions.assertEquals(200L, result[1].version)
         Assertions.assertEquals(true, result[1].nameDuplicated)
-        // 最新版本保留原名，标记为重复
+        // 最新版本保留原名，不标记为重复
         Assertions.assertEquals("init", result[2].versionName)
         Assertions.assertEquals(300L, result[2].version)
-        Assertions.assertEquals(true, result[2].nameDuplicated)
+        Assertions.assertEquals(false, result[2].nameDuplicated)
     }
 
     @Test
@@ -265,9 +265,9 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         // v2.0 唯一版本，不重复
         Assertions.assertEquals("v2.0", result[0].versionName)
         Assertions.assertEquals(false, result[0].nameDuplicated)
-        // init 最新版本，保留原名，标记为重复
+        // init 最新版本，保留原名，不标记为重复
         Assertions.assertEquals("init", result[1].versionName)
-        Assertions.assertEquals(true, result[1].nameDuplicated)
+        Assertions.assertEquals(false, result[1].nameDuplicated)
         // init 次新版本，添加version后缀，标记为重复
         Assertions.assertEquals("init-300", result[2].versionName)
         Assertions.assertEquals(true, result[2].nameDuplicated)
@@ -367,7 +367,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         // 第一个出现的（VERSION=300）是最新版本，保留原名
         Assertions.assertEquals("init", result[0].versionName)
         Assertions.assertEquals(300L, result[0].version)
-        Assertions.assertEquals(true, result[0].nameDuplicated)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
         // 其他添加version后缀
         Assertions.assertEquals("init-200", result[1].versionName)
         Assertions.assertEquals(200L, result[1].version)
@@ -413,7 +413,7 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         // 最新版本保留原名
         Assertions.assertEquals(longVersionName, result[0].versionName)
         Assertions.assertEquals(60, result[0].versionName.length)
-        Assertions.assertEquals(true, result[0].nameDuplicated)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
 
         // 旧版本：原名(60) + 后缀(-200=4) = 64，正好等于限制，不需要截断
         Assertions.assertEquals("$longVersionName-200", result[1].versionName)
@@ -524,19 +524,19 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
         Assertions.assertEquals(6, result.size)
         // v2.0 最新版本，保留原名
         Assertions.assertEquals("v2.0", result[0].versionName)
-        Assertions.assertEquals(true, result[0].nameDuplicated)
+        Assertions.assertEquals(false, result[0].nameDuplicated)
         // v2.0 旧版本，添加version后缀
         Assertions.assertEquals("v2.0-500", result[1].versionName)
         Assertions.assertEquals(true, result[1].nameDuplicated)
         // init 最新版本，保留原名
         Assertions.assertEquals("init", result[2].versionName)
-        Assertions.assertEquals(true, result[2].nameDuplicated)
+        Assertions.assertEquals(false, result[2].nameDuplicated)
         // init 旧版本，添加version后缀
         Assertions.assertEquals("init-300", result[3].versionName)
         Assertions.assertEquals(true, result[3].nameDuplicated)
         // v1.0 最新版本，保留原名
         Assertions.assertEquals("v1.0", result[4].versionName)
-        Assertions.assertEquals(true, result[4].nameDuplicated)
+        Assertions.assertEquals(false, result[4].nameDuplicated)
         // v1.0 旧版本，添加version后缀
         Assertions.assertEquals("v1.0-100", result[5].versionName)
         Assertions.assertEquals(true, result[5].nameDuplicated)
