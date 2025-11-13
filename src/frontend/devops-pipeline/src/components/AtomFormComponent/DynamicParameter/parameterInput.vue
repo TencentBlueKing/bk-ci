@@ -309,18 +309,26 @@
             }
             .open-var {
                 background: #EAEBF0;
-                color: #979BA5;
+                svg {
+                    color: #979BA5;
+                }
                 &:hover {
-                    color: #4D4F56;
                     background-color: #DCDEE5;
+                }
+                &:hover svg{
+                    color: #4D4F56;
                 }
             }
             .close-var {
                 background: #E1ECFF;
-                color: #3A84FF;
+                svg {
+                    color: #3A84FF;
+                }
                 &:hover {
-                    color: #1768EF;
                     background-color: #CDDFFE;
+                }
+                &:hover svg{
+                    color: #1768EF;
                 }
             }
         }
