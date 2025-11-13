@@ -137,7 +137,6 @@ class ModelTransfer @Autowired constructor(
     private fun yamlSyntaxDialect2Setting(syntaxDialectType: String?): PipelineAsCodeSettings? {
         if (syntaxDialectType.isNullOrBlank()) return null
         return when (syntaxDialectType) {
-            SyntaxDialectType.INHERIT.name -> PipelineAsCodeSettings(inheritedDialect = true)
             SyntaxDialectType.CLASSIC.name -> PipelineAsCodeSettings(
                 inheritedDialect = false,
                 pipelineDialect = PipelineDialectType.CLASSIC.name
@@ -148,7 +147,7 @@ class ModelTransfer @Autowired constructor(
                 pipelineDialect = PipelineDialectType.CONSTRAINED.name
             )
 
-            else -> null
+            else -> PipelineAsCodeSettings(inheritedDialect = true)
         }
     }
 

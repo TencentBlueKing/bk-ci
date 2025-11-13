@@ -727,8 +727,12 @@ class PipelineTemplateMigrateService(
             params = params,
             model = modelTransferResult.templateModel,
             yaml = modelTransferResult.yamlWithVersion?.yamlStr,
-            status = VersionStatus.RELEASED,
-            description = currentTemplate.desc,
+            status = if (versionInfo.nameDuplicated) {
+                VersionStatus.DELETE
+            } else {
+                VersionStatus.RELEASED
+            },
+            description = versionInfo.desc,
             sortWeight = 0,
             creator = versionInfo.creator,
             updater = versionInfo.creator,

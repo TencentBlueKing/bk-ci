@@ -635,6 +635,8 @@ object ProcessMessageCode {
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
 
+    const val BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC = "bkTemplateVersionRefactorSuffixDesc"
+
     // 没有子流水线执行权限错误标题
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
 
