@@ -849,15 +849,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
 
-        if (!JsonSchemaUtil.validateJson(taskJsonStr)) {
+        // 校验task.json配置文件格式合法性
+        try {
+            JsonSchemaUtil.jsonNodeFromString(taskJsonStr)
+        } catch (ignored: Exception) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
                 params = arrayOf(
-                    TASK_JSON_NAME, "Maybe missing parentheses," +
-                            " commas, quotation marks, or containing illegal characters."
+                    TASK_JSON_NAME, ignored.message ?: ("Maybe missing parentheses commas," +
+                            " quotation marks, or containing illegal characters.")
                 )
             )
         }
+
         return marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
             projectCode = projectCode,
