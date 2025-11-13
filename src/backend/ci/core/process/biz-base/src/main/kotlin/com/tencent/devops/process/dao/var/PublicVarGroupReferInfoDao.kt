@@ -116,6 +116,55 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 根据 referId 列表查询变量组引用信息（分页）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID列表
+     * @param referType 引用类型
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 变量组引用信息列表
+     */
+    fun listVarGroupReferInfoByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        page: Int,
+        pageSize: Int
+    ): List<ResourcePublicVarGroupReferPO> {
+        if (referIds.isEmpty()) {
+            return emptyList()
+        }
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REFER_ID.`in`(referIds)
+            )
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
+            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val t2 = this.`as`("t2")
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .and(DSL.notExists(
+                    dslContext.selectOne()
+                        .from(t2)
+                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
+                        .and(t2.REFER_ID.eq(this.REFER_ID))
+                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
+                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
+                ))
+                .orderBy(REFER_ID.asc())
+                .limit(pageSize)
+                .offset((page - 1) * pageSize)
+                .fetch()
+                .map { convertResourcePublicVarGroupReferPO(it) }
+        }
+    }
+
     fun listVarGroupReferInfoByReferId(
         dslContext: DSLContext,
         projectId: String,
@@ -358,6 +407,38 @@ class PublicVarGroupReferInfoDao {
             val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
                 referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    /**
+     * 根据 referId 列表统计总数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID列表
+     * @param referType 引用类型
+     * @return 总数
+     */
+    fun countByReferIds(
+        dslContext: DSLContext,
+        projectId: String,
+        referIds: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum?
+    ): Int {
+        if (referIds.isEmpty()) {
+            return 0
+        }
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                REFER_ID.`in`(referIds)
+            )
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
             return dslContext.select(DSL.countDistinct(REFER_ID))
                 .from(this)
                 .where(conditions)

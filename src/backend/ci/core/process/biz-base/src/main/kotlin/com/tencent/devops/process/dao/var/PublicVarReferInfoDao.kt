@@ -426,4 +426,39 @@ class PublicVarReferInfoDao {
                 .execute()
         }
     }
+
+    /**
+     * 根据变量名查询引用该变量的资源ID列表（去重）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param varName 变量名
+     * @param version 变量组版本
+     * @param referType 引用类型（可选）
+     * @return 引用ID列表（去重）
+     */
+    fun listReferIdsByVarName(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        varName: String,
+        version: Int?,
+        referType: PublicVerGroupReferenceTypeEnum?
+    ): List<String> {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                GROUP_NAME.eq(groupName),
+                VAR_NAME.eq(varName)
+            )
+            version?.let { conditions.add(VERSION.eq(it)) }
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
+            return dslContext.selectDistinct(REFER_ID)
+                .from(this)
+                .where(conditions)
+                .fetch()
+                .map { it.value1() }
+        }
+    }
 }
