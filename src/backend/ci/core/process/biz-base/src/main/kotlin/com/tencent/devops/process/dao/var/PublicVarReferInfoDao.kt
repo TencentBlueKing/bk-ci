@@ -184,7 +184,7 @@ class PublicVarReferInfoDao {
      * @param projectId 项目ID
      * @param referId 引用ID
      * @param referType 引用类型
-     * @param referVersionName 引用版本名称
+     * @param referVersion 引用版本号
      * @return 实际变量引用数量
      */
     fun countActualVarReferencesByReferId(
@@ -192,7 +192,7 @@ class PublicVarReferInfoDao {
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String? = null
+        referVersion: Int? = null
     ): Int {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             val conditions = mutableListOf(
@@ -200,8 +200,8 @@ class PublicVarReferInfoDao {
                 REFER_ID.eq(referId),
                 REFER_TYPE.eq(referType.name)
             )
-            if (referVersionName != null) {
-                conditions.add(REFER_VERSION_NAME.eq(referVersionName))
+            if (referVersion != null) {
+                conditions.add(REFER_VERSION.eq(referVersion))
             }
             return dslContext.selectCount()
                 .from(this)

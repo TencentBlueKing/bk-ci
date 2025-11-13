@@ -52,7 +52,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
-import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -312,14 +311,17 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 .queryPipelineMonthlyExecCountByList(queryReq.projectId, pipelineIds)
                 .data ?: emptyMap()
 
-            // 批量查询变量组信息
-            val groupRecordsMap = batchQueryGroupRecords(
-                projectId = queryReq.projectId,
-                groupNames = pipelineReferInfos.map { it.groupName }.distinct()
-            )
-
             // 构建流水线引用记录
             pipelineReferInfos.map { referInfo ->
+                // 查询该流水线实际引用的变量数量
+                val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
+                    dslContext = dslContext,
+                    projectId = queryReq.projectId,
+                    referId = referInfo.referId,
+                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                    referVersion = referInfo.referVersion
+                )
+
                 PublicGroupVarRefDO(
                     referId = referInfo.referId,
                     referName = referInfo.referName,
@@ -333,7 +335,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     creator = referInfo.creator,
                     modifier = referInfo.modifier,
                     updateTime = referInfo.updateTime,
-                    actualRefCount = groupRecordsMap[referInfo.groupName]?.referCount ?: 0,
+                    actualRefCount = actualRefCount,
                     executeCount = pipelineExecCounts[referInfo.referId] ?: 0
                 )
             }
@@ -341,22 +343,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             logger.warn("Failed to process pipeline references", e)
             emptyList()
         }
-    }
-
-    /**
-     * 批量查询变量组记录
-     */
-    private fun batchQueryGroupRecords(
-        projectId: String,
-        groupNames: List<String>
-    ): Map<String, PublicVarGroupPO> {
-        return groupNames.mapNotNull { groupName ->
-            publicVarGroupDao.getRecordByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName
-            )?.let { groupName to it }
-        }.toMap()
     }
 
     /**
@@ -374,12 +360,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
 
         return try {
-            // 批量查询变量组信息
-            val groupRecordsMap = batchQueryGroupRecords(
-                projectId = queryReq.projectId,
-                groupNames = templateReferInfos.map { it.groupName }.distinct()
-            )
-
             // 批量查询模板信息
             val templateKeys = templateReferInfos
                 .map { Pair(it.referId, it.referVersion.toLong()) }
@@ -403,6 +383,15 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     return@mapNotNull null
                 }
 
+                // 查询该模板实际引用的变量数量
+                val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
+                    dslContext = dslContext,
+                    projectId = queryReq.projectId,
+                    referId = referInfo.referId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referVersion = referInfo.referVersion
+                )
+
                 PublicGroupVarRefDO(
                     referId = referInfo.referId,
                     referName = referInfo.referName,
@@ -416,7 +405,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     creator = template.creator,
                     modifier = template.creator,
                     updateTime = template.updateTime ?: LocalDateTime.now(),
-                    actualRefCount = groupRecordsMap[referInfo.groupName]?.referCount ?: 0,
+                    actualRefCount = actualRefCount,
                     instanceCount = countTemplateVersionInstances(
                         projectId = queryReq.projectId,
                         templateId = referInfo.referId,
@@ -442,23 +431,26 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         try {
             // 检查变量组是否存在
-            val pipelinePublicVarGroupCount = publicVarGroupDao.countRecordByGroupName(
+            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
                 version = version
             )
 
-            if (pipelinePublicVarGroupCount == 0) {
+            if (varGroupRecord == null) {
                 return Pair(0, emptyList())
             }
+
+            // 使用查询出的记录的version
+            val actualVersion = varGroupRecord.version
 
             val totalCount = publicVarGroupReferInfoDao.countByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
                 referType = queryReq.referType,
-                version = version
+                version = actualVersion
             )
 
             val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfo(
@@ -466,7 +458,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 projectId = projectId,
                 groupName = groupName,
                 referType = queryReq.referType,
-                version = version,
+                version = actualVersion,
                 page = queryReq.page,
                 pageSize = queryReq.pageSize
             )
