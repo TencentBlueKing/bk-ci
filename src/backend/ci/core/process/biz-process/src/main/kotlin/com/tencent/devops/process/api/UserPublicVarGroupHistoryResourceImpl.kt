@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupHistoryResource
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
@@ -40,6 +42,7 @@ class UserPublicVarGroupHistoryResourceImpl @Autowired constructor(
     val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) : UserPublicVarGroupHistoryResource {
 
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun getReleaseHistory(
         userId: String,
         projectId: String,
