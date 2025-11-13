@@ -16,13 +16,14 @@
                 />
                 <span
                     v-if="showTypeSwitcher"
-                    class="change-type"
                     @click="handleChangeType"
+                    :class="['change-type', !isVarInputMode ? 'open-var' : 'close-var']"
                 >
                     <Logo
-                        size="12"
+                        size="14"
                         :class="!isVarInputMode ? 'open-var' : 'close-var'"
                         name="isSetAsVariable"
+                        v-bk-tooltips="{ content: !isVarInputMode ? $t('switchToVarMode') : $t('closeVarMode') }"
                     />
                 </span>
             </p>
@@ -221,28 +222,29 @@
                 flex-shrink: 0;
             }
             .change-type {
-                cursor: pointer;
-                .open-var {
-                    width: 20px;
-                    height: 20px;
-                    background: #EAEBF0;
-                    color: #979BA5;
-                    border-radius: 2px;
-                    &:hover {
+                display: inline-block;
+                margin-left: 8px;
+                width: 18px;
+                height: 18px;
+                line-height: 20;
+                text-align: center;
+                margin-top: 2px;
+                border-radius: 2px;
+            }
+            .open-var {
+                background: #EAEBF0;
+                color: #979BA5;
+                &:hover {
                     color: #4D4F56;
                     background-color: #DCDEE5;
-                    }
                 }
-                .close-var {
-                    width: 20px;
-                    height: 20px;
-                    background: #E1ECFF;
-                    color: #3A84FF;
-                    border-radius: 2px;
-                    &:hover {
+            }
+            .close-var {
+                background: #E1ECFF;
+                color: #3A84FF;
+                &:hover {
                     color: #1768EF;
                     background-color: #CDDFFE;
-                    }
                 }
             }
         }

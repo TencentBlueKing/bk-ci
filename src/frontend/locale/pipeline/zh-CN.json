@@ -2054,8 +2054,8 @@
   "noVariablesAvailable": "暂无变量",
   "showStageProgress": "展示 Stage 进度",
   "showBuildInfo": "展示构建信息",
-  "selectPredefinedOption": "选择预定义选项",
-  "fillVariable": "填写变量",
+  "switchToVarMode": "点击切换为输入变量模式",
+  "closeVarMode": "点击关闭输入变量模式",
   "placeholderVar": "请输入变量，如 ${{variables.a}}",
   "selectTips": "请选择"
 }

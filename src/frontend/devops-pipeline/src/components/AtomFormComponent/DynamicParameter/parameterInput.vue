@@ -12,23 +12,23 @@
             >
                 <label>
                     {{ label }}
-                    <span
-                        v-if="showTypeSwitcher"
-                        class="change-type"
-                        @click="handleChangeType"
-                    >
-                        <Logo
-                            size="12"
-                            :class="!isVarInputMode ? 'open-var' : 'close-var'"
-                            name="isSetAsVariable"
-                        />
-                    </span>
                 </label>
                 <i
                     v-if="desc"
                     class="bk-icon icon-info-circle label-desc"
                     v-bk-tooltips.top="{ content: desc, allowHTML: false }"
                 />
+                <span
+                    v-if="showTypeSwitcher"
+                    @click="handleChangeType"
+                    :class="['change-type', !isVarInputMode ? 'open-var' : 'close-var']"
+                    v-bk-tooltips="{ content: !isVarInputMode ? $t('switchToVarMode') : $t('closeVarMode') }"
+                >
+                    <Logo
+                        size="14"
+                        name="isSetAsVariable"
+                    />
+                </span>
             </p>
             <bk-input
                 class="input-main"
@@ -297,34 +297,35 @@
                 flex-shrink: 0;
                 margin-left: 8px;
             }
-        }
-        .input-main {
-            flex: 1;
-        }
-        .change-type {
-            cursor: pointer;
+            .change-type {
+                display: inline-block;
+                margin-left: 8px;
+                width: 18px;
+                height: 18px;
+                line-height: 20;
+                text-align: center;
+                margin-top: 2px;
+                border-radius: 2px;
+            }
             .open-var {
-                width: 20px;
-                height: 20px;
                 background: #EAEBF0;
                 color: #979BA5;
-                border-radius: 2px;
                 &:hover {
-                 color: #4D4F56;
-                 background-color: #DCDEE5;
+                    color: #4D4F56;
+                    background-color: #DCDEE5;
                 }
             }
             .close-var {
-                width: 20px;
-                height: 20px;
                 background: #E1ECFF;
                 color: #3A84FF;
-                border-radius: 2px;
                 &:hover {
-                 color: #1768EF;
-                 background-color: #CDDFFE;
+                    color: #1768EF;
+                    background-color: #CDDFFE;
                 }
             }
+        }
+        .input-main {
+            flex: 1;
         }
     }
 </style>

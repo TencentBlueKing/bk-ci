@@ -2147,8 +2147,8 @@
   "validVariableFormat": "有効な変数形式を入力してください",
   "showStageProgress": "ステージの進捗を表示",
   "showBuildInfo": "ビルド情報を表示",
-  "selectPredefinedOption": "定義済みオプションを選択",
-  "fillVariable": "変数を入力",
+  "switchToVarMode": "クリックして変数入力モードに切り替え",
+  "closeVarMode": "クリックして変数入力モードを閉じる",
   "placeholderVar": "変数を入力してください、例: ${{variables.a}}",
   "selectTips": "選択してください"
 }

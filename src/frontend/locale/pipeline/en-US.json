@@ -2062,8 +2062,8 @@
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
-  "selectPredefinedOption": "Select Predefined Option",
-  "fillVariable": "Fill in Variable",
+  "switchToVarMode": "Click to switch to variable input mode",
+  "closeVarMode": "Click to close variable input mode",
   "placeholderVar": "Please enter the variable, such as ${{variables.a}}",
   "selectTips": "Please select"
 }
