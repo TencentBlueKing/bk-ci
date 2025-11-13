@@ -468,7 +468,7 @@ class PipelineAtomService @Autowired constructor(
         // 将获取不到版本信息的流水线id在DB里面查询出具体插件的版本信息再放入缓存 同时更新到cachedVersionMap中供下游业务使用
         if (missingPipelineIds.isNotEmpty()) {
             val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
-            val atomVersionsList = pipelineModelTaskDao.selectAtomVersionsByPipelineIdsAndAtomCode(
+            val atomVersionsList = pipelineModelTaskDao.selectPipelineAtomVersions(
                 dslContext = dslContext,
                 atomCode = atomCode,
                 version = version,

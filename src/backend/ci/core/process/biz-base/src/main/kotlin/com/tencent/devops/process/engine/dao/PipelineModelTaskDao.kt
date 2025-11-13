@@ -384,7 +384,7 @@ class PipelineModelTaskDao {
     }
 
 
-    fun selectAtomVersionsByPipelineIdsAndAtomCode(
+    fun selectPipelineAtomVersions(
         dslContext: DSLContext,
         atomCode: String,
         version: String? = null,
