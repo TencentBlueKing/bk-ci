@@ -290,7 +290,7 @@ open class MarketAtomTask : ITask() {
                 buildId = buildTask.buildId
             )
             // 检查插件包的完整性
-            checkSha1(atomExecuteFile, atomData.shaContent!!)
+            checkSha(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
             val atomLanguage = atomData.language!!
             val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
@@ -481,7 +481,7 @@ open class MarketAtomTask : ITask() {
                     queryCacheFlag = cacheFlag
                 )
 
-                val shouldCache = atomData.authFlag != true && checkSha1(
+                val shouldCache = atomData.authFlag != true && checkSha(
                     atomExecuteFile, atomData.shaContent!!
                 ) && cacheFlag && !fileCacheDir.contains(buildId)
 
@@ -1070,11 +1070,37 @@ open class MarketAtomTask : ITask() {
         return JsonUtil.to(json, AtomResult::class.java)
     }
 
-    private fun checkSha1(file: File, sha1: String): Boolean {
-        val fileSha1 = file.inputStream().use { ShaUtils.sha1InputStream(it) }
-        if (fileSha1 != sha1) {
+    /**
+     * 校验文件SHA哈希值，确保文件完整性
+     * 该方法用于验证下载的插件文件是否与预期的SHA值匹配，防止文件被篡改或损坏
+     *
+     * @param file 需要校验的文件对象
+     * @param sha 预期的SHA哈希值字符串
+     * @return Boolean 校验结果，true表示校验通过
+     * @throws TaskExecuteException 当文件SHA值与预期不符时抛出异常
+     *
+     * 算法选择逻辑：
+     * - SHA256：当SHA字符串长度为64字符时使用（SHA256哈希值为64位十六进制字符串）
+     * - SHA1：当SHA字符串长度不为64时使用（SHA1哈希值为40位十六进制字符串）
+     *
+     * 使用场景：
+     * - 插件文件下载后的完整性校验
+     * - 确保从市场下载的插件文件未被篡改
+     * - 防止恶意文件注入和传输过程中的数据损坏
+     */
+    private fun checkSha(file: File, sha: String): Boolean {
+        // 根据SHA字符串长度选择算法：64位为SHA256，其他为SHA1
+        val fileSha = if (sha.length == 64) {
+            // 使用SHA256算法计算文件哈希值
+            file.inputStream().use { ShaUtils.sha256InputStream(it) }
+        } else {
+            // 使用SHA1算法计算文件哈希值
+            file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        }
+        if (fileSha != sha) {
+            // SHA值不匹配，抛出异常并记录错误的SHA值
             throw TaskExecuteException(
-                errorMsg = "Plugin File Sha1 is wrong! wrong sha1: $fileSha1",
+                errorMsg = "Plugin File Sha is wrong! wrong sha: $fileSha",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
