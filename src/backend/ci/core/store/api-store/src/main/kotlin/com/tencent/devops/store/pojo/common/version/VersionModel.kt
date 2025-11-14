@@ -30,6 +30,7 @@ package com.tencent.devops.store.pojo.common.version
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -43,7 +44,13 @@ data class VersionModel(
     @get:Schema(title = "版本号", required = true)
     var version: String = "",
     @get:Schema(title = "版本日志内容", required = true)
-    @field:BkField(maxLength = 65535)
+    @field:BkField(
+        patternStyle = BkStyleEnum.LONG_TEXT_STYLE,
+        required = true,
+        minLength = 1,
+        maxLength = 65535,
+        message = "版本日志内容长度必须在1-65535个字符之间"
+    )
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val versionContent: String = ""
 )
