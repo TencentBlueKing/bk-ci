@@ -460,7 +460,12 @@ class PublicVarGroupReferInfoDao {
     ): Int {
         with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             // 当version不为null时才添加版本条件
-            val conditions = buildGroupConditions(this, projectId, groupName, if (version != null) version else null).apply {
+            val conditions = buildGroupConditions(
+                table = this,
+                projectId = projectId,
+                groupName = groupName,
+                version = if (version != null) version else null
+            ).apply {
                 referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
             return dslContext.select(DSL.countDistinct(REFER_ID))
