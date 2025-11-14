@@ -93,68 +93,96 @@ class ExternalResourceImpl @Autowired constructor(
         sslMode: String?
     ): Result<Boolean> {
         logger.info("cdsMeshEnableAndDomain|enable=$enable|domain=$domain|ip=$ip|sslMode=$sslMode|ts=$ts|token=$token")
+        
+        // 验证请求
+        if (!validateRequest(ts, token, ip)) {
+            return Result(false)
+        }
+        
+        // 查询工作空间
+        val workspace = findWorkspaceByIp(ip) ?: run {
+            logger.warn("no workspace found|ip=$ip")
+            return Result(false)
+        }
+        
+        // 处理网络配置 - 使用 Pair 模式匹配
+        val isEnabled = enable.toBooleanStrictOrNull() == true
+        val useSslMode = !sslMode.isNullOrBlank()
+        
+        when (isEnabled to useSslMode) {
+            true to true -> {
+                // 情况1: 启用 SSL 模式
+                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
+                createWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
+            }
+            true to false -> {
+                // 情况2: 启用 Mesh 模式
+                createWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
+            }
+            false to true -> {
+                // 情况3: 禁用 SSL 模式
+                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
+            }
+            false to false -> {
+                // 情况4: 禁用 Mesh 模式
+                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
+            }
+        }
+        
+        // 处理域名配置 - 使用 Kotlin 惯用法
+        domain.takeIf { it.isNotBlank() }?.let {
+            configCacheService.opInsertOrUpdateConfig(
+                CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + workspace.workspaceName,
+                it
+            )
+        }
+        
+        return Result(true)
+    }
+
+    /**
+     * 验证请求的时间戳和签名
+     */
+    private fun validateRequest(ts: String, token: String, ip: String): Boolean {
         // ts 10位时间戳需与当前时间相差小于10秒
         if (LocalDateTime.now().timestamp() - ts.toLong() > 10) {
             logger.warn("ts not match|ts=$ts")
-            return Result(false)
+            return false
         }
         val sign = ShaUtils.sha256("$ts$externalKey$ip")
         if (sign != token) {
             logger.warn("sign not match|sign=$sign|token=$token|ts=$ts|ip=$ip")
-            return Result(false)
+            return false
         }
-        val ws = workspaceService.limitFetchProjectWorkspace(
-            limit = SQLLimit(0, 1),
-            queryType = QueryType.OP,
-            search = WorkspaceSearch(sips = listOf(ip), onFuzzyMatch = false)
-        ).ifEmpty {
-            logger.warn("no workspace found|ip=$ip")
-            return Result(false)
-        }.first()
-        
-        val cdsMesh = enable.toBooleanStrictOrNull()
-        
-        if (cdsMesh == true) {
-            // 启用模式
-            if (!sslMode.isNullOrBlank()) {
-                // 情况1: enable=true 且 sslMode 有值 → 启用 SSL 模式
-                // 先删除可能存在的 CDS_MESH_WORKSPACE
-                whiteListService.opDeleteWhiteList(
-                    SYSTEM,
-                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
-                )
-                // 设置 CDS_SSL_WORKSPACE
-                whiteListService.opCreateOrUpdateWhiteList(
-                    SYSTEM,
-                    WhiteList(ws.workspaceName, WhiteListType.CDS_SSL_WORKSPACE, SYSTEM)
-                )
-            } else {
-                // 情况2: enable=true 且 sslMode 为空 → 启用默认 Mesh 模式
-                whiteListService.opCreateOrUpdateWhiteList(
-                    SYSTEM,
-                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
-                )
-            }
-        } else if (cdsMesh == false) {
-            // 禁用模式
-            if (!sslMode.isNullOrBlank()) {
-                // 情况3: enable=false 且 sslMode 有值 → 删除 SSL 模式
-                whiteListService.opDeleteWhiteList(
-                    SYSTEM,
-                    WhiteList(ws.workspaceName, WhiteListType.CDS_SSL_WORKSPACE, SYSTEM)
-                )
-            } else {
-                // 情况4: enable=false 且 sslMode 为空 → 删除默认 Mesh 模式
-                whiteListService.opDeleteWhiteList(
-                    SYSTEM,
-                    WhiteList(ws.workspaceName, WhiteListType.CDS_MESH_WORKSPACE, SYSTEM)
-                )
-            }
-        }
-        
-        if (domain.isNotBlank()) {
-            configCacheService.opInsertOrUpdateConfig(CONFIG_CDS_DOMAIN_WORKSPACE_KEY_PREFIX + ws.workspaceName, domain)
-        }
-        return Result(true)
+        return true
+    }
+
+    /**
+     * 根据 IP 查找工作空间
+     */
+    private fun findWorkspaceByIp(ip: String) = workspaceService.limitFetchProjectWorkspace(
+        limit = SQLLimit(0, 1),
+        queryType = QueryType.OP,
+        search = WorkspaceSearch(sips = listOf(ip), onFuzzyMatch = false)
+    ).firstOrNull()
+
+    /**
+     * 创建或更新白名单
+     */
+    private fun createWhiteList(workspaceName: String, type: WhiteListType) {
+        whiteListService.opCreateOrUpdateWhiteList(
+            SYSTEM,
+            WhiteList(workspaceName, type, SYSTEM)
+        )
+    }
+
+    /**
+     * 删除白名单
+     */
+    private fun deleteWhiteList(workspaceName: String, type: WhiteListType) {
+        whiteListService.opDeleteWhiteList(
+            SYSTEM,
+            WhiteList(workspaceName, type, SYSTEM)
+        )
     }
 }
