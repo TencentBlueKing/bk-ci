@@ -107,7 +107,7 @@ class ExternalResourceImpl @Autowired constructor(
         
         // 处理网络配置 - 使用 Pair 模式匹配
         val isEnabled = enable.toBooleanStrictOrNull() == true
-        val useSslMode = !sslMode.isNullOrBlank()
+        val useSslMode = sslMode?.toBooleanStrictOrNull() == true
         
         when (isEnabled to useSslMode) {
             true to true -> {
