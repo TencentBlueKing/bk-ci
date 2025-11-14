@@ -27,7 +27,7 @@
 
 <script>
     import PipelineIndex from '../subpages/index.vue'
-    import TemplateEdit from '../template/edit.vue'
+    import TemplateEdit from '../Template/TemplateEdit.vue'
 
     const COMPONENTS = {
         zyPipelines: PipelineIndex,

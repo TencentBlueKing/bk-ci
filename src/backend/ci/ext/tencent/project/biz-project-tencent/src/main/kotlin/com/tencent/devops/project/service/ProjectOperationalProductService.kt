@@ -95,13 +95,14 @@ class ProjectOperationalProductService(
                 val productId = obsProductInfo.productId!!.toInt()
 
                 val iCosProductVO = iCosProductVOs.firstOrNull {
-                    it.productId == productId
+                    it.productId == productId && !it.iCosProductCode.isNullOrBlank()
                 }
-                val crosCheck = iCosProductVO?.let { iCosProduct ->
+                val crosProductVO = iCosProductVO?.let { iCosProduct ->
                     crosProductVOs.firstOrNull {
                         iCosProduct.iCosProductCode == it.iCosProductCode
-                    }?.crosCheck
+                    }
                 }
+                val crosCheck = crosProductVO?.crosCheck
 
                 val operationalProductVO = OperationalProductVO(
                     productId = obsProductInfo.productId!!.toInt(),

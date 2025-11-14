@@ -31,6 +31,7 @@ class DevCloudPerformanceClient {
         userId: String,
         projectId: String,
         pipelineId: String,
+        templateId: String,
         retryTime: Int = 3
     ): List<PerformanceData> {
         return executeWithRetry(
@@ -44,6 +45,7 @@ class DevCloudPerformanceClient {
                 username = userId,
                 t1 = projectId,
                 t2 = pipelineId,
+                tx = templateId,
                 rsType = RsType.DOCKER.value
             )
             val request = getClientProxy().baseRequest(userId, MODEL_LIST_API_PATH, projectId, pipelineId)
@@ -69,25 +71,33 @@ class DevCloudPerformanceClient {
         userId: String,
         projectId: String,
         pipelineId: String,
-        uid: String
-    ): PerformanceRsp {
-        val request = getClientProxy().baseRequest(userId, PERFORMANCE_INFO_API_PATH, projectId, pipelineId)
-            .get()
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body?.string() ?: ""
-            logger.info("$userId|$projectId|$pipelineId getPerformanceInfo response: $responseContent")
-            if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
-                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
-                            "http response code: ${response.code}"
-                )
+        performanceUid: String,
+        retryTime: Int = 3
+    ): PerformanceData? {
+        return executeWithRetry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            retryTime = retryTime,
+            operation = "getPerformanceInfo"
+        ) {
+            val logPrefix = getLogPrefix(userId, projectId, pipelineId)
+            val body = mapOf("uid" to performanceUid)
+            val request = getClientProxy().baseRequest(userId, PERFORMANCE_INFO_API_PATH, projectId, pipelineId)
+                .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body?.string() ?: ""
+                logger.info("$logPrefix getPerformanceInfo response: $responseContent")
+
+                validateHttpResponse(response, logPrefix, "get performance info")
+
+                val performanceRsp = JsonUtil.to(responseContent, PerformanceRsp::class.java)
+                validateBusinessResponse(performanceRsp.actionCode, logPrefix, "get performance info")
+                performanceRsp.data
             }
-            return JsonUtil.to(responseContent, PerformanceRsp::class.java)
         }
+
     }
 
     /**
@@ -109,7 +119,7 @@ class DevCloudPerformanceClient {
             // 对于非超时异常，如果还有重试次数，也进行重试
             if (retryTime > 0) {
                 logger.warn("$userId|$projectId|$pipelineId $operation failed, retrying. Error: ${e.message}")
-                return executeWithRetry(userId, projectId, pipelineId, retryTime - 1, operation, block)
+                return executeWithRetry(userId, projectId, pipelineId,retryTime - 1, operation, block)
             }
             throw e
         }
@@ -130,7 +140,7 @@ class DevCloudPerformanceClient {
         val logPrefix = getLogPrefix(userId, projectId, pipelineId)
         if (retryTime > 0) {
             logger.info("$logPrefix $operation SocketTimeoutException. retry: $retryTime")
-            return executeWithRetry(userId, projectId, pipelineId, retryTime - 1, operation, block)
+            return executeWithRetry(userId, projectId, pipelineId,retryTime - 1, operation, block)
         } else {
             logger.error("$logPrefix $operation failed after all retries.", exception)
             throw BuildFailureException(

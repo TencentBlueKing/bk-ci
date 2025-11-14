@@ -41,5 +41,6 @@ enum class WebSocketActionType {
     WORKSPACE_NOTIFY, // workspace 通知
     WORKSPACE_ASSIGN, // 分配workspace
     WORKSPACE_UPGRADE, // 升级 workspace 配置
-    WORKSPACE_CLONE; // 克隆 workspace 配置
+    WORKSPACE_CLONE, // 克隆 workspace 配置
+    WORKSPACE_NOTIFY_UNREAD_COUNT // 未读数量更新消息
 }

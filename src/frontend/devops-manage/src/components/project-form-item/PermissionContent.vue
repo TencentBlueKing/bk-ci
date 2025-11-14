@@ -76,7 +76,6 @@ function handleMessage (event) {
   const { data, origin } = event;
   if (!trustedOrigins.includes(origin)) {
     console.warn('Received message from untrusted origin:', origin);
-    
   }
   if (data.type === 'IAM') {
     switch (data.code) {

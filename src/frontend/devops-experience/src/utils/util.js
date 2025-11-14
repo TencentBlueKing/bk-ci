@@ -380,3 +380,10 @@ export function getQueryString (name) {
     const r = window.location.search.substr(1).match(reg)
     if (r != null) return unescape(r[2]); return null
 }
+
+export const platformMap = {
+    ANDROID: 'ANDROID',
+    IOS: 'IOS',
+    HAP: 'HAP',
+    WIN: 'WIN'
+}

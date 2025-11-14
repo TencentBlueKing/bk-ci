@@ -109,40 +109,42 @@
                     >
                         <template slot-scope="props">
                             <div class="operate-cell">
-                                <template v-if="!props.row.expired && props.row.online">
-                                    <span
-                                        v-if="!props.row.permissions.canExperience "
-                                        v-bk-tooltips="{ content: $t('experience.no_experience_permission') }"
-                                        class="devops-icon icon-qrcode"
-                                    ></span>
-                                    <bk-popover
-                                        placement="left"
-                                        theme="light"
-                                        v-if="props.row.permissions.canExperience"
-                                    >
-                                        <i
+                                <template v-if="props.row.isWindowsExp">
+                                    <template v-if="!props.row.expired && props.row.online">
+                                        <span
+                                            v-if="!props.row.permissions.canExperience"
+                                            v-bk-tooltips="{ content: $t('experience.no_experience_permission') }"
                                             class="devops-icon icon-qrcode"
-                                            @mouseover="requestUrl(props.row)"
-                                        ></i>
-                                        <p
-                                            slot="content"
-                                            class="qrcode-box"
+                                        ></span>
+                                        <bk-popover
+                                            placement="left"
+                                            theme="light"
                                             v-if="props.row.permissions.canExperience"
-                                            v-bkloading="{ isLoading: !curIndexItemUrl }"
                                         >
-                                            <qrcode
-                                                class="qrcode-view"
-                                                :text="curIndexItemUrl"
-                                                :size="100"
-                                            ></qrcode>
-                                        </p>
-                                    </bk-popover>
+                                            <i
+                                                class="devops-icon icon-qrcode"
+                                                @mouseover="requestUrl(props.row)"
+                                            ></i>
+                                            <p
+                                                slot="content"
+                                                class="qrcode-box"
+                                                v-if="props.row.permissions.canExperience"
+                                                v-bkloading="{ isLoading: !curIndexItemUrl }"
+                                            >
+                                                <qrcode
+                                                    class="qrcode-view"
+                                                    :text="curIndexItemUrl"
+                                                    :size="100"
+                                                ></qrcode>
+                                            </p>
+                                        </bk-popover>
+                                    </template>
+                                    <i
+                                        v-bk-tooltips="{ content: $t('experience.experience_expired') }"
+                                        class="devops-icon icon-qrcode expired-text"
+                                        v-else
+                                    ></i>
                                 </template>
-                                <i
-                                    v-bk-tooltips="{ content: $t('experience.experience_expired') }"
-                                    class="devops-icon icon-qrcode expired-text"
-                                    v-else
-                                ></i>
                                 <bk-button
                                     v-perm="{
                                         hasPermission: props.row.permissions.canEdit,
@@ -226,7 +228,7 @@
 <script>
     import qrcode from '@/components/devops/qrcode'
     import { EXPERIENCE_TASK_RESOURCE_ACTION, EXPERIENCE_TASK_RESOURCE_TYPE } from '@/utils/permission'
-    import { convertTime } from '@/utils/util'
+    import { convertTime, platformMap } from '@/utils/util'
     import '@blueking/search-select/dist/styles/index.css'
     import { mapGetters } from 'vuex'
     import emptyData from './empty-data'
@@ -324,20 +326,10 @@
                     {
                         name: this.$t('experience.search_fields.platform'),
                         id: 'platform',
-                        children: [
-                            {
-                                name: this.$t('experience.platform_labels.ANDROID'),
-                                id: 'ANDROID'
-                            },
-                            {
-                                name: this.$t('experience.platform_labels.IOS'),
-                                id: 'IOS'
-                            },
-                            {
-                                name: this.$t('experience.platform_labels.HAP'),
-                                id: 'HAP'
-                            }
-                        ]
+                        children: Object.keys(platformMap).map(key =>({
+                            id: key,
+                            name: this.$t(`experience.platform_labels.${key}`)
+                        }))
                     },
                     {
                         name: this.$t('experience.search_fields.creator'),
@@ -409,11 +401,6 @@
                     })
                     this.isTableLoading = false
                     
-                    const platformLabelMap = {
-                        ANDROID: this.$t('experience.platform_labels.ANDROID'),
-                        IOS: this.$t('experience.platform_labels.IOS'),
-                        HAP: this.$t('experience.platform_labels.HAP')
-                    }
                     const sourceLabelMap = {
                         PIPELINE: this.$t('experience.source_labels.PIPELINE'),
                         WEB: this.$t('experience.source_labels.WEB')
@@ -421,7 +408,8 @@
                     
                     this.totalList = res.map(item => ({
                         ...item,
-                        platformLabel: platformLabelMap[item.platform],
+                        platformLabel: this.$t(`experience.platform_labels.${item.platform}`),
+                        isWindowsExp: item.platform !== platformMap.WIN,
                         sourceLabel: sourceLabelMap[item.source],
                         formatExpireDate: this.localConvertTime(item.expireDate).split(' ')[0],
                         formatRepoCreateTime: this.localConvertTime(item.repoCreateTime).split(' ')[0],

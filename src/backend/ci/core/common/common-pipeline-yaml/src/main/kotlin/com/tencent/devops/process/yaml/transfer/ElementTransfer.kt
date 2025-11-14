@@ -33,12 +33,16 @@ import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.StepTemplateElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
@@ -79,6 +83,7 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.step.StepTemplate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -130,6 +135,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             )
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
+                    id = element.stepId,
                     name = element.name,
                     enable = element.elementEnabled().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
@@ -174,6 +180,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                 }
                 schedules.add(
                     SchedulesRule(
+                        id = element.stepId,
                         name = element.name,
                         interval = week?.let { SchedulesRule.Interval(week, timePoints) },
                         cron = if (element.advanceExpression?.size == 1) {
@@ -194,9 +201,9 @@ class ElementTransfer @Autowired(required = false) constructor(
             }
             if (element is RemoteTriggerElement) {
                 triggerOn.value.remote = if (element.elementEnabled()) {
-                    RemoteRule(element.name, EnableType.TRUE.value)
+                    RemoteRule(id = element.stepId, name = element.name, enable = EnableType.TRUE.value)
                 } else {
-                    RemoteRule(element.name, EnableType.FALSE.value)
+                    RemoteRule(id = element.stepId, name = element.name, enable = EnableType.FALSE.value)
                 }
             }
         }
@@ -344,18 +351,50 @@ class ElementTransfer @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
-            yamlInput.aspectWrapper.setYamlStep4Yaml(
-                yamlStep = step,
-                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
-            )
-            val element: Element = yaml2element(
-                userId = yamlInput.userId,
-                step = step,
-                agentSelector = job.runsOn.agentSelector?.first(),
-                jobRunsOnType = JobRunsOnType.parse(job.runsOn.poolName)
-            )
-            yamlInput.aspectWrapper.setModelElement4Model(element, PipelineTransferAspectWrapper.AspectType.AFTER)
-            elementList.add(element)
+            when (step) {
+                is Step -> {
+                    yamlInput.aspectWrapper.setYamlStep4Yaml(
+                        yamlStep = step,
+                        aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+                    )
+                    val element: Element = yaml2element(
+                        userId = yamlInput.userId,
+                        step = step,
+                        agentSelector = job.runsOn.agentSelector?.first(),
+                        jobRunsOnType = JobRunsOnType.parse(job.runsOn.poolName)
+                    )
+                    yamlInput.aspectWrapper.setModelElement4Model(
+                        element,
+                        PipelineTransferAspectWrapper.AspectType.AFTER
+                    )
+                    elementList.add(element)
+                }
+
+                is StepTemplate -> {
+                    elementList.add(
+                        StepTemplateElement(
+                            template = TemplateDescriptor(
+                                templateRefType = if (step.templateId != null) {
+                                    TemplateRefType.ID
+                                } else {
+                                    TemplateRefType.PATH
+                                },
+                                templatePath = step.templatePath,
+                                templateRef = step.templateRef,
+                                templateId = step.templateId,
+                                templateVersionName = step.templateVersionName,
+                                templateVariables = step.variables?.map {
+                                    TemplateVariable(
+                                        key = it.key,
+                                        value = it.value.value,
+                                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                                    )
+                                }
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         return elementList
@@ -524,6 +563,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         step.with?.get(RunAtomParam::charsetType.name)?.toString()
                     )
                 )
+                step.namespace?.let { data["namespace"] = it }
                 MarketBuildAtomElement(
                     id = step.taskId,
                     name = step.name ?: "run",
@@ -580,6 +620,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     uses = null,
+                    namespace = element.data["namespace"]?.toString()?.ifBlank { null },
                     with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
                         this.remove(CheckoutAtomParam::repositoryType.name)
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
@@ -596,6 +637,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     uses = null,
+                    namespace = element.data["namespace"]?.toString()?.ifBlank { null },
                     with = TransferUtil.simplifyParams(
                         transferCache.getAtomDefaultValue(uses),
                         input.filterNot {

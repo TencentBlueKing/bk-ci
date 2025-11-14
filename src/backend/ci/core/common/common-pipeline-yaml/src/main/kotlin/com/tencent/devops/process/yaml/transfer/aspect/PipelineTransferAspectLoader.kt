@@ -1,16 +1,15 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ELEMENT_NAMESPACE_NOT_SUPPORT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
@@ -110,6 +109,7 @@ object PipelineTransferAspectLoader {
         )
     }
 
+    @Suppress("ComplexCondition")
     fun sharedEnvTransfer(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
@@ -117,12 +117,13 @@ object PipelineTransferAspectLoader {
         aspects.add(
             object : IPipelineTransferAspectJob {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlJob() != null && jp.yaml()?.formatResources()?.pools != null) {
+                    val job = jp.yamlJob()
+                    if (job != null && job is Job && jp.yaml()?.formatResources()?.pools != null) {
                         jp.yaml()?.formatResources()?.pools?.find {
-                            it.name == jp.yamlJob()!!.runsOn.poolName
+                            it.name == job.runsOn.poolName
                         }?.let { pool ->
-                            jp.yamlJob()!!.runsOn.envProjectId = pool.from?.substringBefore("@")
-                            jp.yamlJob()!!.runsOn.poolName = pool.from?.substringAfter("@")
+                            job.runsOn.envProjectId = pool.from?.substringBefore("@")
+                            job.runsOn.poolName = pool.from?.substringAfter("@")
                         }
                     }
 
@@ -130,11 +131,12 @@ object PipelineTransferAspectLoader {
                 }
 
                 override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yamlPreJob()?.runsOn != null &&
-                        jp.yamlPreJob()?.runsOn is RunsOn &&
-                        (jp.yamlPreJob()?.runsOn as RunsOn).envProjectId != null
+                    val job = jp.yamlPreJob()
+                    if (job is PreJob && job.runsOn != null &&
+                        job.runsOn is RunsOn &&
+                        job.runsOn.envProjectId != null
                     ) {
-                        val pool = jp.yamlPreJob()?.runsOn as RunsOn
+                        val pool = job.runsOn
                         pools.add(
                             ResourcesPools(
                                 from = "${pool.envProjectId}@${pool.poolName}",
@@ -168,44 +170,7 @@ object PipelineTransferAspectLoader {
         defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
-        // val repoName = lazy { defaultRepo() }
-        /*aspects.add(
-            object : IPipelineTransferAspectTrigger {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = repoName.value
-                    }
-                    return null
-                }
-            }
-        )*/
-        /*checkout 新增 self类型，此处暂时去掉转换 */
-//        aspects.add(
-//            object : IPipelineTransferAspectElement {
-//                override fun before(jp: PipelineTransferJoinPoint): Any? {
-//                    if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
-//                        jp.yamlStep()!!.checkout = repoName.value
-//                    }
-//                    return null
-//                }
-//            }
-//        )
-        /*aspects.add(
-            // 一个触发器时，如果为默认仓库则忽略repoName和type
-            object : IPipelineTransferAspectModel {
-                override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yaml() is PreTemplateScriptBuildYamlV3 &&
-                        (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
-                    ) {
-                        val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
-                        if (triggerOn.repoName == repoName.value) {
-                            triggerOn.repoName = null
-                            triggerOn.type = null
-                        }
-                    }
-                }
-            }
-        )*/
+        // 可以在此添加公共策略
         return aspects
     }
 
@@ -221,29 +186,6 @@ object PipelineTransferAspectLoader {
                     if (jp.yamlPreStep() == null) {
                         invalidElement.add("${jp.modelElement()?.getClassType()}(${jp.modelElement()?.name})")
                     }
-                }
-            }
-        )
-
-        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
-        aspects.add(
-            object : IPipelineTransferAspectElement {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.modelElement() != null &&
-                        jp.modelElement() is MarketBuildAtomElement
-                    ) {
-                        val element = jp.modelElement() as MarketBuildAtomElement
-                        val namespace = element.data["namespace"] as String? ?: return null
-                        if (namespace.isNotBlank()) {
-                            invalidNameSpaceElement.add(
-                                I18nUtil.getCodeLanMessage(
-                                    BK_ELEMENT_NAMESPACE_NOT_SUPPORT,
-                                    params = arrayOf("${element.name}[${element.stepId}]")
-                                )
-                            )
-                        }
-                    }
-                    return null
                 }
             }
         )

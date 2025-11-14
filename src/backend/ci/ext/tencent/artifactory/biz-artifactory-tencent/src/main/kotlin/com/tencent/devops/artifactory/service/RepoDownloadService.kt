@@ -55,7 +55,8 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean?
     ): Url
 
     /**
@@ -166,6 +167,7 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ip: String
+        ip: String,
+        checkDownload: Boolean
     ): AllowDownload
 }

@@ -415,6 +415,7 @@
                 this.$router.push({
                     name: 'install',
                     query: {
+                        name: this.detail.name,
                         code: this.detail.atomCode,
                         type: 'atom',
                         from: 'details'

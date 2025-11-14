@@ -94,6 +94,9 @@ data class BuildRecordContainer(
             startVMTaskSeq?.let {
                 containerVar[Container::startVMTaskSeq.name] = it
             }
+            container.jobId?.let { jobId ->
+                containerVar[Container::jobId.name] = jobId
+            }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
                 container.buildNo?.let {

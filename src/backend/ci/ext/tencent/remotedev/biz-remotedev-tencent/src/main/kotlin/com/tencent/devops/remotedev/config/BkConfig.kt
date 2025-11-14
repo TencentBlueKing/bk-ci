@@ -81,7 +81,25 @@ class BkConfig @Autowired constructor(
     @Value("\${bknodeman.bizId:#{null}}")
     val bknodemanBizId: Int? = null
 
+    // CMDB配置
+    @Value("\${bkCMDB.assetDetailUrl:}")
+    val cmdbAssetDetailUrl: String = ""
+
     fun headerStr(): String {
+        return objectMapper.writeValueAsString(
+            mapOf(
+                "bk_app_code" to appCode,
+                "bk_app_secret" to appSecret,
+                "bk_username" to ccUserName
+            )
+        ).replace("\\s".toRegex(), "")
+    }
+
+    /**
+     * 构建CMDB API请求的认证Header字符串
+     * @return JSON格式的认证信息字符串，包含bk_app_code、bk_app_secret、bk_username
+     */
+    fun cmdbHeaderStr(): String {
         return objectMapper.writeValueAsString(
             mapOf(
                 "bk_app_code" to appCode,

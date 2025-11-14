@@ -1,6 +1,7 @@
 <template>
     <div class="reference-var">
         <span>{{ $t('editPage.useParams') }} <i class="devops-icon icon-angle-down"></i><i class="devops-icon icon-angle-up"></i></span>
+        <div class="env-layout-container"></div>
         <div
             v-if="globalEnvs"
             class="env-layout"
@@ -153,6 +154,23 @@
 <style lang="scss">
     @import '../../scss/conf';
     @import '../../scss/mixins/ellipsis';
+    .env-layout-container {
+        position: relative;
+        display: none;
+        &:before {
+            content: '';
+            position: absolute;
+            border: 1px solid $borderWeightColor;
+            border-bottom-color: transparent;
+            border-right-color: transparent;
+            right: 35px;
+            top: -6px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            transform: rotate(45deg);
+        }
+    }
      .reference-var {
             color: $primaryColor;
             padding: 10px;
@@ -176,6 +194,9 @@
                 .icon-angle-up {
                    display: inline-block;
                 }
+                .env-layout-container {
+                    display: block;
+                }
             }
             .env-layout {
                 display: none;
@@ -188,22 +209,11 @@
                 margin-bottom: 10px;
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);
                 transition: all .3s ease;
+                max-height: calc(100vh - 90px);
+                overflow-y: auto;
 
                 ::v-deep .bk-table-row {
                     line-height: 42px;
-                }
-                &:before {
-                    content: '';
-                    position: absolute;
-                    border: 1px solid $borderWeightColor;
-                    border-bottom-color: transparent;
-                    border-right-color: transparent;
-                    right: 74px;
-                    top: -5px;
-                    width: 8px;
-                    height: 8px;
-                    background: white;
-                    transform: rotate(45deg);
                 }
 
                 .bk-table {

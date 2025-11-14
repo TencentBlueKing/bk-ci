@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -36,7 +37,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
+@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList","MaxLineLength")
 class ProjectBillsService(
     val client: Client,
     val projectService: ProjectService,
@@ -371,6 +372,18 @@ class ProjectBillsService(
                 LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue - 1, 15)
             }
             val endTime = LocalDate.of(yearAndMonthOfReportDate.year, yearAndMonthOfReportDate.monthValue, 15)
+            // 获取reporter用户
+            val reporterUsers = try {
+                val users = client.get(ServiceManagerUserResource::class).getAllManagerUsers().data?.toSet() ?: emptySet()
+                logger.info("Successfully get manager users, count: ${users.size}, users: $users")
+                users
+            } catch (e: Exception) {
+                logger.warn(
+                    "Failed to get manager users, bill data will" +
+                        " be reported without filtering manager users.", e
+                )
+                emptySet()
+            }
             do {
                 val projects = projectService.listProjectsByCondition(
                     projectConditionDTO = ProjectConditionDTO(
@@ -394,8 +407,31 @@ class ProjectBillsService(
                                     endTime = endTime.format(DATE_FORMATTER)
                                 )
                             ).data ?: return@forEach
-                        // 不活跃项目不上报
+
                         if (projectActiveUserResponse.userCount == 0) {
+                            logger.info("This project is inactive and does not need to be reported:${it.englishName}")
+                            return@forEach
+                        }
+
+                        // 过滤掉 'reporter' 角色的用户
+                        val activeUsers = if (projectActiveUserResponse.users.isBlank()) {
+                            emptySet()
+                        } else {
+                            projectActiveUserResponse.users.split(',').toSet()
+                        }
+                        logger.info(
+                            "Project ${it.englishName} active users before filtering: " +
+                                "count=${activeUsers.size}, users=$activeUsers"
+                        )
+                        val nonReporterUsers = (activeUsers - reporterUsers).toMutableSet()
+                        val nonReporterUserCount = nonReporterUsers.size
+                        logger.info(
+                            "Project ${it.englishName} active users after filtering: " +
+                                "count=$nonReporterUserCount, users=$nonReporterUsers, " +
+                                "filtered=${activeUsers.size - nonReporterUserCount}"
+                        )
+                        // 不活跃项目不上报
+                        if (nonReporterUserCount == 0) {
                             logger.info("This project is inactive and does not need to be reported:${it.englishName}")
                             return@forEach
                         }
@@ -414,7 +450,7 @@ class ProjectBillsService(
                             BkBillKind.WINDOWS_DEVCLOUD to (maxJobConcurrency?.windowsDevcloud ?: 0),
                             BkBillKind.BUILD_LESS to (maxJobConcurrency?.buildLess ?: 0),
                             BkBillKind.PRIVATE to (maxJobConcurrency?.other ?: 0),
-                            BkBillKind.PIPELINE_USER_COUNT to projectActiveUserResponse.userCount
+                            BkBillKind.PIPELINE_USER_COUNT to nonReporterUserCount
                         )
                         billKind2Usage.forEach { (billKind, usage) ->
                             if (usage != 0) {
@@ -430,7 +466,7 @@ class ProjectBillsService(
                                 )
                                 // 若是流水线用户类型，还额外需要上报用户名单
                                 if (billKind == BkBillKind.PIPELINE_USER_COUNT) {
-                                    bkBillDTO.users = projectActiveUserResponse.users
+                                    bkBillDTO.users = nonReporterUsers.joinToString(",")
                                 }
                                 bills.add(bkBillDTO)
                             }

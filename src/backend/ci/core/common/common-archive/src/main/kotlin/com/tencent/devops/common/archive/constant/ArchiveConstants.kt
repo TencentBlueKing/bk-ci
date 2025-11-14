@@ -52,6 +52,7 @@ const val ARCHIVE_PROPS_BK_CI_APP_STAGE = "BK-CI-APP-STAGE"
 const val ARCHIVE_PROPS_APP_DEPENDENCIES = "appDependencies"
 const val ARCHIVE_PROPS_APP_DEVICE_TYPES = "appDeviceTypes"
 const val ARCHIVE_PROPS_APP_MODULE_TYPE = "appModuleType"
+const val ARCHIVE_PROPS_APP_NAME_I18N = "appNameI18n"
 
 const val REPO_PIPELINE = "pipeline"
 const val REPO_CUSTOM = "custom"

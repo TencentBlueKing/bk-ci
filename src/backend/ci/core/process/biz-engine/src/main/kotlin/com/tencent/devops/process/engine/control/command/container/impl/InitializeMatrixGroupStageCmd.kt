@@ -385,6 +385,9 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
                         }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
+                        }
                         recordContainerList.add(
                             BuildRecordContainer(
                                 projectId = event.projectId,
@@ -509,6 +512,9 @@ class InitializeMatrixGroupStageCmd(
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
+                        }
+                        newContainer.jobId?.let {
+                            containerVar[newContainer::jobId.name] = it
                         }
                         recordContainerList.add(
                             BuildRecordContainer(

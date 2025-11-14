@@ -1,6 +1,9 @@
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -14,14 +17,14 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import jakarta.ws.rs.core.StreamingOutput
 import java.lang.Long.bitCount
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
-import jakarta.ws.rs.core.StreamingOutput
 import org.apache.poi.xssf.streaming.SXSSFWorkbook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,6 +54,35 @@ class MakeMoneyService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MakeMoneyService::class.java)
     }
+
+    /**
+     * CMDB API响应数据类
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private data class CmdbAssetResponse(
+        val result: Boolean?,
+        val message: String?,
+        val data: CmdbAssetData?
+    )
+
+    /**
+     * CMDB资产数据类
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private data class CmdbAssetData(
+        val info: List<CmdbAssetInfo>?
+    )
+
+    /**
+     * CMDB资产详情类
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private data class CmdbAssetInfo(
+        @JsonProperty("bk_inst_name")
+        val bkInstName: String,
+        @JsonProperty("start_date")
+        val startDate: String?
+    )
 
     /*
      * 注意：计算当天是不在计算时间范围内的
@@ -152,16 +184,16 @@ class MakeMoneyService @Autowired constructor(
             if (res.isEmpty()) break
             aMap.putAll(
                 res.associateBy({ it.name }, {
-                SaveData(
-                    projectId = it.projectId,
-                    projectName = it.projectName,
-                    status = WorkspaceStatus.load(it.status),
-                    ip = it.ip,
-                    bgName = it.creatorBgName,
-                    creator = it.creator,
-                    machineType = ""
-                )
-            })
+                    SaveData(
+                        projectId = it.projectId,
+                        projectName = it.projectName,
+                        status = WorkspaceStatus.load(it.status),
+                        ip = it.ip,
+                        bgName = it.creatorBgName,
+                        creator = it.creator,
+                        machineType = ""
+                    )
+                })
             )
             page += 1
         }
@@ -174,13 +206,26 @@ class MakeMoneyService @Autowired constructor(
         aMap: MutableMap<String, SaveData>,
         lastDay: LocalDateTime
     ) {
+        // 获取CMDB资产信息
+        val cmdbAssetMap = fetchCmdbAssetInfo()
+        logger.info("save method - fetchCmdbAssetInfo result size: ${cmdbAssetMap.size}")
+
         use.chunked(99).forEach { chunk ->
+            // 批量更新COMMISSION_DATE字段（如果为空）
+            // 1. 更新已删除的实例
+            batchUpdateCommissionDateFromRecords(chunk, cmdbAssetMap)
+            // 快照昨天在使用的实例
+            aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
+                snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
+            }
             val filter = chunk.filter { name -> name !in a }
-            val res = workspaceDao.limitFetchWorkspace(
+            val workspaces = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = filter.toSet()
-            ).associateBy({ it.name }, {
+            )
+
+            val res = workspaces.associateBy({ it.name }, {
                 SaveData(
                     projectId = it.projectId,
                     projectName = it.projectName,
@@ -191,14 +236,54 @@ class MakeMoneyService @Autowired constructor(
                     machineType = ""
                 )
             })
-            // 快照昨天在使用的实例
-            aMap.filterKeys { it in chunk }.ifEmpty { null }?.let { save ->
-                snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
-            }
             // 快照昨天用户删除的实例
             res.ifEmpty { null }?.let { save ->
                 snapshotsDao.createWorkspaceHistory(dslContext, save, lastDay)
             }
+        }
+    }
+
+    /**
+     * 批量更新工作空间的COMMISSION_DATE字段（如果为空）
+     * 直接使用已查询的工作空间记录，避免重复查询
+     */
+    private fun batchUpdateCommissionDateFromRecords(
+        chunk: List<String>,
+        cmdbAssetMap: Map<String, String>
+    ) {
+        val workspaces = workspaceDao.limitFetchWorkspace(
+            dslContext = dslContext,
+            limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
+            workspaceName = chunk.toSet()
+        )
+        if (workspaces.isEmpty()) {
+            return
+        }
+
+        try {
+            // 筛选出需要更新的工作空间（COMMISSION_DATE为空且CMDB中有对应数据）
+            val needUpdateList = workspaces.filter { workspace ->
+                workspace.commissionDate.isNullOrBlank() && !cmdbAssetMap[workspace.name].isNullOrBlank()
+            }
+
+            if (needUpdateList.isEmpty()) {
+                logger.info("No workspace needs to update COMMISSION_DATE in current batch")
+                return
+            }
+
+            // 批量更新
+            var updateCount = 0
+            needUpdateList.forEach { workspace ->
+                val commissionDate = cmdbAssetMap[workspace.name]
+                if (!commissionDate.isNullOrBlank()) {
+                    workspaceDao.updateCommissionDate(dslContext, workspace.name, commissionDate)
+                    updateCount++
+                }
+            }
+
+            logger.info("Batch updated COMMISSION_DATE for $updateCount workspaces")
+        } catch (e: Exception) {
+            logger.error("Failed to batch update COMMISSION_DATE", e)
         }
     }
 
@@ -256,7 +341,19 @@ class MakeMoneyService @Autowired constructor(
             val creator: String,
             @JsonProperty("machine_type")
             @get:Schema(title = "机型")
-            val machineType: String
+            val machineType: String,
+            @JsonProperty("hardware_cost")
+            @get:Schema(title = "是否计算硬件成本：0或1")
+            val hardwareCost: Int,
+            @JsonProperty("machine_flag")
+            @get:Schema(title = "机型标识：高配开发机、高配美术机")
+            val machineFlag: String,
+            @JsonProperty("commission_date")
+            @get:Schema(title = "启用日期：YYYY-MM")
+            val commissionDate: String,
+            @JsonProperty("commission_years")
+            @get:Schema(title = "启用年数：根据启用日期计算距今年数")
+            val commissionYears: Int
         )
     }
 
@@ -282,6 +379,135 @@ class MakeMoneyService @Autowired constructor(
                 throw RemoteServiceException("request bill data failed code: ${it.code},response: ${it.body?.string()}")
             }
             logger.info("push bills|code: ${it.code}|response: ${it.body?.string()}")
+        }
+    }
+
+    /**
+     * 从CMDB API查询资产详情信息，构建实例名到启用日期的映射
+     * @return Map<String, String> - Key为bk_inst_name（实例名），Value为格式化后的启用日期（YYYY-MM）
+     */
+    @Suppress("NestedBlockDepth")
+    fun fetchCmdbAssetInfo(): Map<String, String> {
+        return try {
+            logger.info("start fetchCmdbAssetInfo|url:${bkConfig.cmdbAssetDetailUrl}")
+            val resultMap = mutableMapOf<String, String>()
+            var start = 0
+            val limit = 500
+            var hasMore = true
+
+            while (hasMore) {
+                val requestBody = JsonUtil.toJson(
+                    mapOf(
+                        "bk_biz_id" to (bkConfig.ccBizId ?: 0),
+                        "page" to mapOf("start" to start, "limit" to limit),
+                        "fields" to listOf("bk_inst_name", "start_date")
+                    )
+                )
+
+                OkhttpUtils.doPost(
+                    url = bkConfig.cmdbAssetDetailUrl,
+                    jsonParam = requestBody,
+                    headers = mapOf("X-Bkapi-Authorization" to bkConfig.cmdbHeaderStr())
+                ).use { response ->
+                    if (!response.isSuccessful) {
+                        logger.warn(
+                            "fetchCmdbAssetInfo failed|start: $start|" +
+                                "code: ${response.code}|response: ${response.body?.string()}"
+                        )
+                        hasMore = false
+                        return@use
+                    }
+
+                    val responseBody = response.body?.string() ?: ""
+                    logger.info("fetchCmdbAssetInfo page|start: $start|limit: $limit")
+                    val cmdbResponse: CmdbAssetResponse = jacksonObjectMapper().readValue(responseBody)
+
+                    if (cmdbResponse.result != true || cmdbResponse.data?.info == null) {
+                        logger.warn("fetchCmdbAssetInfo result is false or data is null|start: $start")
+                        hasMore = false
+                        return@use
+                    }
+
+                    val currentPageData = cmdbResponse.data.info
+                    if (currentPageData.isEmpty()) {
+                        hasMore = false
+                    } else {
+                        currentPageData.forEach { asset ->
+                            resultMap[asset.bkInstName] = formatCommissionDate(asset.startDate)
+                        }
+
+                        // 如果返回的数据量小于limit，说明已经是最后一页
+                        if (currentPageData.size < limit) {
+                            hasMore = false
+                        } else {
+                            start += limit
+                        }
+                    }
+                }
+            }
+
+            logger.info("fetchCmdbAssetInfo completed|total size: ${resultMap.size}")
+            resultMap
+        } catch (e: Exception) {
+            logger.error("fetchCmdbAssetInfo exception", e)
+            emptyMap()
+        }
+    }
+
+    /**
+     * 将CMDB返回的启用日期格式化为YYYY-MM格式
+     * @param startDate CMDB返回的启用日期（格式：YYYY-MM-DD）
+     * @return 格式化后的日期（格式：YYYY-MM），如果输入为空或格式错误则返回空字符串
+     */
+    private fun formatCommissionDate(startDate: String?): String {
+        return try {
+            if (startDate.isNullOrBlank()) return ""
+            val parts = startDate.split("-")
+            if (parts.size >= 2) {
+                "${parts[0]}-${parts[1]}"
+            } else {
+                startDate
+            }
+        } catch (e: Exception) {
+            logger.warn("formatCommissionDate failed|startDate: $startDate", e)
+            startDate ?: ""
+        }
+    }
+
+    /**
+     * 计算启用年数
+     * @param commissionDate 启用日期（格式：YYYY-MM）
+     * @return 启用年数，如果输入为空或格式错误则返回0
+     * 
+     * 计算规则：
+     * - 如 2025-08 购入，则 2025-08-01 >= 当前日期 < 2026-08-01 为1
+     * - 2026-08-01 >= 当前日期 < 2027-08-01 为2，依次类推
+     */
+    private fun calculateCommissionYears(commissionDate: String?): Int {
+        return try {
+            if (commissionDate.isNullOrBlank()) return 0
+            
+            // 解析 YYYY-MM 格式
+            val parts = commissionDate.split("-")
+            if (parts.size < 2) return 0
+            
+            val year = parts[0].toIntOrNull() ?: return 0
+            val month = parts[1].toIntOrNull() ?: return 0
+            
+            // 构造启用日期，设置为每月1号
+            val commissionLocalDate = LocalDate.of(year, month, 1)
+            val currentDate = LocalDate.now()
+            
+            // 计算从启用日期开始经过的完整年份
+            // 例如：2025-08-01 到 2025-12-31 为第1年，2026-08-01 到 2026-12-31 为第2年
+            val monthsBetween = ChronoUnit.MONTHS.between(commissionLocalDate, currentDate)
+            val years = (monthsBetween / 12).toInt() + 1
+            
+            // 确保返回值至少为0
+            maxOf(years, 0)
+        } catch (e: Exception) {
+            logger.warn("calculateCommissionYears failed|commissionDate: $commissionDate", e)
+            0
         }
     }
 
@@ -311,11 +537,13 @@ class MakeMoneyService @Autowired constructor(
                 chunk.toSet()
             ).associateBy { it.workspaceName }
 
-            val workspaceInfo = workspaceDao.limitFetchWorkspace(
+            val workspaceRecords = workspaceDao.limitFetchWorkspace(
                 dslContext = dslContext,
                 limit = PageUtil.convertPageSizeToSQLLimit(1, 100),
                 workspaceName = chunk.toSet()
-            ).associateBy({ it.name }, {
+            )
+
+            val workspaceInfo = workspaceRecords.associateBy({ it.name }, {
                 SaveData(
                     projectId = it.projectId,
                     projectName = it.projectName,
@@ -326,10 +554,25 @@ class MakeMoneyService @Autowired constructor(
                     creator = it.creator
                 )
             })
+
+            val workspaceCommissionDateMap = workspaceRecords.associateBy({ it.name }, { it.commissionDate ?: "" })
+
             chunk.forEach { name ->
                 val workspace = workspaceInfo[name]
                 val usage = bitCount(checkNotNull(total[name]))
                 val dayDetail = dayDetail(checkNotNull(total[name]), dateList)
+
+                // 从已查询的记录中获取COMMISSION_DATE字段
+                val commissionDate = workspaceCommissionDateMap[name] ?: ""
+                val hardwareCost = if (commissionDate.isNotEmpty()) 1 else 0
+
+                // 计算启用年数
+                val commissionYears = calculateCommissionYears(commissionDate)
+
+                // 获取机型标识
+                val winConfigId = allWindows[name]?.winConfigId?.toLong()
+                val machineFlag = winConfigId?.let { allConfig[it]?.machineFlag } ?: ""
+
                 res.add(
                     Bill.BillDetail(
                         costDate = costData,
@@ -344,7 +587,11 @@ class MakeMoneyService @Autowired constructor(
                         bgName = workspace?.bgName ?: "ERROR",
                         flag = if (workspace?.bgName == "IEG互动娱乐事业群" || workspace?.bgName == "子公司组织") 1 else 0,
                         creator = workspace?.creator ?: "ERROR",
-                        machineType = workspace?.machineType ?: "ERROR"
+                        machineType = workspace?.machineType ?: "ERROR",
+                        hardwareCost = hardwareCost,
+                        machineFlag = machineFlag,
+                        commissionDate = commissionDate,
+                        commissionYears = commissionYears
                     )
                 )
             }
@@ -397,6 +644,10 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(10).setCellValue("flag")
             row.createCell(11).setCellValue("creator")
             row.createCell(12).setCellValue("machine_type")
+            row.createCell(13).setCellValue("hardware_cost")
+            row.createCell(14).setCellValue("machine_flag")
+            row.createCell(15).setCellValue("commission_date")
+            row.createCell(16).setCellValue("commission_years 启用年数")
         }
 
         bills.forEachIndexed { index, bill ->
@@ -415,8 +666,12 @@ class MakeMoneyService @Autowired constructor(
             row.createCell(10).setCellValue(bill.flag.toString())
             row.createCell(11).setCellValue(bill.creator)
             row.createCell(12).setCellValue(bill.machineType)
+            row.createCell(13).setCellValue(bill.hardwareCost.toString())
+            row.createCell(14).setCellValue(bill.machineFlag)
+            row.createCell(15).setCellValue(bill.commissionDate)
+            row.createCell(16).setCellValue(bill.commissionYears.toString())
         }
-        for (i in 0 until 10) {
+        for (i in 0 until 17) {
             sheet.trackAllColumnsForAutoSizing()
             sheet.autoSizeColumn(i)
         }

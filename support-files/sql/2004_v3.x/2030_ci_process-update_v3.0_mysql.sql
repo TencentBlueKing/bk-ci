@@ -47,8 +47,6 @@ BEGIN
         ALTER TABLE `T_PIPELINE_BUILD_TASK`
 			ADD COLUMN `JOB_ID` varchar(128) NULL COMMENT 'job id';
     END IF;
-
-
 	IF NOT EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db

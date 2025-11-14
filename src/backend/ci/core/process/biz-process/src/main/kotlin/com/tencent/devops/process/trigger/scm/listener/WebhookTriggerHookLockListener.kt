@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service
 @Service
 class WebhookTriggerHookLockListener @Autowired constructor(
     private val pipelineWebHookQueueService: PipelineWebHookQueueService
-) : WebhookTriggerListenerSupport() {
+) : WebhookTriggerListener {
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         with(context) {
             if (buildId == null) return

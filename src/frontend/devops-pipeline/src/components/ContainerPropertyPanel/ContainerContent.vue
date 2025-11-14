@@ -176,7 +176,7 @@
                     name="buildResource"
                 />
             </form-field>
-            
+
             <form-field
                 v-if="isLinuxOsDockerImage"
             >
@@ -295,6 +295,7 @@
                     <devcloud-option
                         :disabled="!editable"
                         :value="devcloudValue"
+                        :template-id="templateId"
                         :build-type="buildResourceType"
                         :handle-change="changeBuildResourceWithoutEnv"
                         :change-show-performance="changeShowPerformance"
@@ -398,38 +399,6 @@
             </div>
         </form>
 
-        <section v-if="isTriggerContainer(container)">
-            <version-config
-                :disabled="!editable"
-                :params="container.params"
-                :build-no="container.buildNo"
-                :set-parent-validate="setContainerValidate"
-                :update-container-params="handleContainerChange"
-            ></version-config>
-            <build-params
-                key="params"
-                :disabled="!editable"
-                :params="container.params"
-                :addition-params="container.templateParams"
-                setting-key="params"
-                :title="$t('template.pipelineVar')"
-                :build-no="container.buildNo"
-                :set-parent-validate="setContainerValidate"
-                :update-container-params="handleContainerChange"
-            ></build-params>
-            <build-params
-                v-if="routeName === 'templateEdit'"
-                key="templateParams"
-                :disabled="!editable"
-                :params="container.templateParams"
-                :addition-params="container.params"
-                setting-key="templateParams"
-                :title="$t('template.templateConst')"
-                :set-parent-validate="setContainerValidate"
-                :update-container-params="handleContainerChange"
-            ></build-params>
-        </section>
-
         <div>
             <CustomEnvField
                 v-if="isVmContainer(container)"
@@ -491,7 +460,6 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Vue from 'vue'
     import { mapActions, mapGetters } from 'vuex'
-    import BuildParams from './BuildParams'
     import ContainerAppSelector from './ContainerAppSelector'
     import ContainerEnvNode from './ContainerEnvNode'
     import DevcloudOption from './DevcloudOption'
@@ -499,7 +467,6 @@
     import JobMutual from './JobMutual'
     import JobOption from './JobOption'
     import LinuxOsDockerImage from './LinuxOsDockerImage'
-    import VersionConfig from './VersionConfig'
 
     export default {
         name: 'container-content',
@@ -508,8 +475,6 @@
             VuexInput,
             FormField,
             ContainerAppSelector,
-            BuildParams,
-            VersionConfig,
             DevcloudOption,
             ContainerEnvNode,
             JobOption,
@@ -573,6 +538,10 @@
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
                     { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
+            },
+            templateId () {
+                // 实例流水线、模板编辑流水线的templateId
+                return this.pipeline.templateId || this.$route.params.templateId
             },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
@@ -770,32 +739,19 @@
         },
         created () {
             const { container } = this
-            if (
-                this.isTriggerContainer(container)
-                && this.container.templateParams === undefined
-            ) {
-                Vue.set(container, 'templateParams', [])
-            }
-            if (this.isTriggerContainer(container) && this.container.buildNo === undefined) {
-                Vue.set(container, 'buildNo', null)
-            }
-            if (
-                !this.isTriggerContainer(container)
-                && this.container.jobControlOption === undefined
-            ) {
-                Vue.set(container, 'jobControlOption', {})
-            }
-            if (!this.isTriggerContainer(container) && this.container.mutexGroup === undefined) {
-                Vue.set(container, 'mutexGroup', {})
-            }
-            if (!this.isTriggerContainer(container) && this.container.jobId === undefined) {
-                Vue.set(container, 'jobId', '')
-            }
-            if (
-                !this.isTriggerContainer(container)
-                && this.container.matrixGroupFlag === undefined
-            ) {
-                Vue.set(container, 'matrixGroupFlag', false)
+            if (!this.isTriggerContainer(container)) {
+                const defaultProperties = {
+                    jobControlOption: {},
+                    mutexGroup: {},
+                    jobId: '',
+                    matrixGroupFlag: false
+                }
+
+                Object.entries(defaultProperties).forEach(([key, value]) => {
+                    if (container[key] === undefined) {
+                        Vue.set(container, key, value)
+                    }
+                })
             }
             if (
                 this.buildResourceType === 'THIRD_PARTY_AGENT_ID'
@@ -941,7 +897,7 @@
                         })
                     )
                 }
-                    
+
                 return this.getVersionList(card.code).then(() => {
                     let chooseVersion = this.versionList[0] || {}
                     if (card.historyVersion) {

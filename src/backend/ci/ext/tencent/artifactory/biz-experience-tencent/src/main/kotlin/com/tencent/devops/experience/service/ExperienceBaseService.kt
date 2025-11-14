@@ -172,7 +172,8 @@ class ExperienceBaseService @Autowired constructor(
                 subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
                         userId == it.creator,
                 redPointEnabled = redPointIds.contains(it.id.toString()),
-                classify = it.classify
+                classify = it.classify,
+                appNameI18n = it.appNameI18n
             )
         }
 
@@ -282,7 +283,7 @@ class ExperienceBaseService @Autowired constructor(
                 for (depts in getGroupIdToDept(groupIds, false).values) {
                     for (dept in depts) {
                         if (userDeptDetail.bgId == dept || userDeptDetail.deptId == dept ||
-                            userDeptDetail.centerId == dept || userDeptDetail.groupId == dept||
+                            userDeptDetail.centerId == dept || userDeptDetail.groupId == dept ||
                             userDeptDetail.businessLineId == dept
                         ) {
                             return@lazy true

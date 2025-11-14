@@ -1,7 +1,9 @@
 package com.tencent.devops.remotedev.service.redis
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WhiteListDao
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class ConfigCacheService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val whiteListDao: WhiteListDao,
@@ -40,6 +43,15 @@ class ConfigCacheService @Autowired constructor(
         logger.info("delete config, key: $key")
         return configDao.deleteConfig(dslContext, key)
     }
+
+    private val userNameCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String, String> { key ->
+            runCatching {
+                client.get(ServiceTxUserResource::class).get(key).data?.name
+            }.getOrNull() ?: ""
+        }
 
     private val redisCache = Caffeine.newBuilder()
         .maximumSize(200)
@@ -82,4 +94,6 @@ class ConfigCacheService @Autowired constructor(
 
     fun checkExpertSupportUser(userId: String) =
         expertSupportCache.get(ExpertSupportConfigType.SUPPORTER)?.contains(userId) ?: false
+
+    fun getUserName(key: String): String = userNameCache.get(key)
 }

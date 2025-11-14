@@ -98,7 +98,7 @@ class RestartWorkspaceHandler @Autowired constructor(
         ),
         content = TencentActionAuditContent.CGS_RESTART_CONTENT
     )
-    fun restartWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
+    fun restartWorkspace(userId: String, workspaceName: String, force: Boolean? = null): WorkspaceResponse {
         logger.info("$userId restart project workspace $workspaceName")
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -171,7 +171,8 @@ class RestartWorkspaceHandler @Autowired constructor(
                     type = UpdateEventType.RESTART,
                     workspaceName = workspaceName,
                     mountType = WorkspaceMountType.START,
-                    appName = gameId.first
+                    appName = gameId.first,
+                    force = force
                 )
             )
 

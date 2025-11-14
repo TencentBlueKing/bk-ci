@@ -791,7 +791,8 @@ class BuildStartControl @Autowired constructor(
             pipelineId = pipelineId,
             version = buildInfo.version,
             buildId = buildId,
-            executeCount = executeCount
+            executeCount = executeCount,
+            debug = buildInfo.debug
         ) ?: run {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(

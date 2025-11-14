@@ -132,7 +132,8 @@ class ExperienceDownloadService @Autowired constructor(
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                 experienceName = it.experienceName,
                 createTime = it.createTime.timestampmilli(),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                appNameI18n = it.appNameI18n
             )
         }
     }
@@ -314,8 +315,16 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         addDownloadRecord(experienceRecord, userId)
-        var url = client.get(ServiceArtifactoryResource::class)
-            .downloadUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
+        var url = client.get(ServiceArtifactoryDownLoadResource::class)
+            .downloadUrl(
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                userId = experienceRecord.creator,
+                path = path,
+                ttl = 24 * 3600,
+                directed = false,
+                useWeb = true
+            ).data!!.url
         if (!url.contains("userId=")) {
             url += "&userId=$userId"
         }
@@ -482,7 +491,8 @@ class ExperienceDownloadService @Autowired constructor(
                         appScheme = it.scheme,
                         expired = false,
                         lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-                            ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+                            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+                        appNameI18n = it.appNameI18n
                     )
                 }.sortedByDescending { it.downloadTime }.toList()
 
@@ -611,7 +621,14 @@ class ExperienceDownloadService @Autowired constructor(
             }
         }
         return client.get(ServiceArtifactoryDownLoadResource::class)
-            .allowDownload(userId, realIP, finalProjectId!!, finalArtifactoryType!!, finalPath!!).data!!
+            .allowDownload(
+                userId = userId,
+                realIP = realIP,
+                projectId = finalProjectId!!,
+                artifactoryType = finalArtifactoryType!!,
+                path = finalPath!!,
+                checkDownload = (experienceHashId == null) // 非体验检查才需要检查下载
+            ).data!!
     }
 
     companion object {

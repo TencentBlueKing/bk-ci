@@ -40,4 +40,5 @@ dependencies {
     api(project(":ext:tencent:misc:api-support-tencent"))
     api(project(":core:notify:api-notify"))
     api(project(":core:metrics:api-metrics"))
+    testImplementation(project(":core:common:common-test"))
 }
