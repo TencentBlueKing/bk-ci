@@ -92,7 +92,10 @@ class PublicVarGroupReferInfoDao {
             val conditions = mutableListOf(PROJECT_ID.eq(projectId))
             conditions.add(GROUP_NAME.eq(groupName))
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-            version?.let { conditions.add(VERSION.eq(it)) }
+            // 当version不为null时才添加版本条件，为null时查询所有版本
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
 
             // 查找每个REFER_ID对应的CREATE_TIME最大的记录
             val t2 = this.`as`("t2")
@@ -104,11 +107,63 @@ class PublicVarGroupReferInfoDao {
                         .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
                         .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
                         .and(t2.REFER_ID.eq(this.REFER_ID))
-                        .and(version?.let { t2.VERSION.eq(it) } ?: DSL.trueCondition())
+                        .and(if (version != null) t2.VERSION.eq(version) else DSL.trueCondition())
                         .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
                         .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
                 ))
-                .orderBy(REFER_ID.asc())
+                .orderBy(UPDATE_TIME.desc())
+                .limit(pageSize)
+                .offset((page - 1) * pageSize)
+                .fetch()
+                .map { convertResourcePublicVarGroupReferPO(it) }
+        }
+    }
+
+    /**
+     * 查询变量组引用信息（支持多个版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param referType 引用类型
+     * @param versions 版本列表
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 变量组引用信息列表
+     */
+    fun listVarGroupReferInfoByVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        versions: List<Int>,
+        page: Int,
+        pageSize: Int
+    ): List<ResourcePublicVarGroupReferPO> {
+        if (versions.isEmpty()) {
+            return emptyList()
+        }
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
+            conditions.add(GROUP_NAME.eq(groupName))
+            conditions.add(VERSION.`in`(versions))
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
+            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val t2 = this.`as`("t2")
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .and(DSL.notExists(
+                    dslContext.selectOne()
+                        .from(t2)
+                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
+                        .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
+                        .and(t2.REFER_ID.eq(this.REFER_ID))
+                        .and(t2.VERSION.`in`(versions))
+                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
+                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
+                ))
+                .orderBy(UPDATE_TIME.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
                 .fetch()
@@ -404,9 +459,45 @@ class PublicVarGroupReferInfoDao {
         version: Int? = -1
     ): Int {
         with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = buildGroupConditions(this, projectId, groupName, version).apply {
+            // 当version不为null时才添加版本条件
+            val conditions = buildGroupConditions(this, projectId, groupName, if (version != null) version else null).apply {
                 referType?.let { add(REFER_TYPE.eq(it.name)) }
             }
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    /**
+     * 统计变量组引用数量（支持多个版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param referType 引用类型
+     * @param versions 版本列表
+     * @return 引用数量
+     */
+    fun countByGroupNameAndVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        referType: PublicVerGroupReferenceTypeEnum?,
+        versions: List<Int>
+    ): Int {
+        if (versions.isEmpty()) {
+            return 0
+        }
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                GROUP_NAME.eq(groupName),
+                VERSION.`in`(versions)
+            )
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
             return dslContext.select(DSL.countDistinct(REFER_ID))
                 .from(this)
                 .where(conditions)

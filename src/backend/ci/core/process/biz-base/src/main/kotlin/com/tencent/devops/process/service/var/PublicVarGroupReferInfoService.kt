@@ -458,6 +458,33 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 )
             }
 
+            // 当version为null时，查询动态引用（version=-1）和最新版本号的固定引用
+            if (version == null) {
+                val versions = listOf(-1, actualVersion)
+                
+                // 统计总数
+                val totalCount = publicVarGroupReferInfoDao.countByGroupNameAndVersions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = queryReq.referType,
+                    versions = versions
+                )
+
+                // 查询引用信息
+                val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByVersions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = queryReq.referType,
+                    versions = versions,
+                    page = queryReq.page,
+                    pageSize = queryReq.pageSize
+                )
+
+                return Pair(totalCount, varGroupReferInfo)
+            }
+
             val totalCount = publicVarGroupReferInfoDao.countByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -493,8 +520,48 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         actualVersion: Int
     ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
         val projectId = queryReq.projectId
+        val version = queryReq.version
 
         try {
+            // 当version为null时，查询动态引用（version=-1）和最新版本号的固定引用
+            if (version == null) {
+                val versions = listOf(-1, actualVersion)
+                
+                // 查询引用了该变量的 referId 列表（使用IN查询）
+                val referIds = publicVarReferInfoDao.listReferIdsByVarNameAndVersions(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    varName = varName,
+                    versions = versions,
+                    referType = queryReq.referType
+                )
+
+                if (referIds.isEmpty()) {
+                    return Pair(0, emptyList())
+                }
+
+                // 统计总数
+                val totalCount = publicVarGroupReferInfoDao.countByReferIds(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referIds = referIds,
+                    referType = queryReq.referType
+                )
+
+                // 查询详细信息
+                val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referIds = referIds,
+                    referType = queryReq.referType,
+                    page = queryReq.page,
+                    pageSize = queryReq.pageSize
+                )
+
+                return Pair(totalCount, varGroupReferInfo)
+            }
+
             // 从变量引用表中查询引用了该变量的 referId 列表
             val referIds = publicVarReferInfoDao.listReferIdsByVarName(
                 dslContext = dslContext,
