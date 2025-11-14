@@ -188,6 +188,7 @@
                 :show-tips="showPublicVarTips"
                 :show-type="showType"
                 :read-only="readOnly"
+                :default-tab="defaultTab"
                 :handle-edit-group="handleEditGroup"
                 @release-success="handleReleaseSuccess"
             />
@@ -231,6 +232,7 @@
     const tableData = ref([])
     const newNameFlag = ref('')
     const activeNameFlag = ref('')
+    const defaultTab = ref('basicInfo')
     const pagination = ref({
         current: 1,
         count: 0,
@@ -350,13 +352,11 @@
         activeNameFlag.value = row.groupName
         showDetail.value = true
         readOnly.value = true
+        defaultTab.value = 'basicInfo'
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...groupData.value,
-            groupName: row.groupName,
-            desc: row.desc,
-            updateTime: row.updateTime,
-            modifier: row.modifier
+            ...row
         })
     }
     function handleClearSearchValue () {
@@ -367,6 +367,7 @@
         showDetail.value = true
         showType.value = ADD_VARIABLE
         readOnly.value = false
+        defaultTab.value = 'basicInfo'
         detailTitle.value = proxy.$t('publicVar.addParamGroup')
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...groupData
@@ -378,6 +379,7 @@
         showType.value = EDIT_VARIABLE
         readOnly.value = false
         activeNameFlag.value = row.groupName
+        defaultTab.value = 'basicInfo'
         detailTitle.value = proxy.$t('publicVar.editParamGroup')
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
         proxy.$store.dispatch('publicVar/updateGroupData', {
@@ -462,8 +464,20 @@
             console.error(e)
         }
     }
-    function handleViewRef () {
-        // todo
+    function handleViewRef (row) {
+        if (showDetail.value) return
+        activeNameFlag.value = row.groupName
+        showDetail.value = true
+        readOnly.value = true
+        defaultTab.value = 'referenceList'
+        proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
+        proxy.$store.dispatch('publicVar/updateGroupData', {
+            ...groupData.value,
+            groupName: row.groupName,
+            desc: row.desc,
+            updateTime: row.updateTime,
+            modifier: row.modifier
+        })
     }
     function handleDeleteGroup (data, item) {
         const groupName = item.data.groupName

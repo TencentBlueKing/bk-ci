@@ -43,8 +43,15 @@
                                 :name="item.groupName"
                                 :disabled="item.disabled"
                             >
-                                {{ item.groupName }}
-                                <span class="manage-var-page-group-desc">{{ item.desc }}</span>
+                                <div class="manage-var-page-group-option">
+                                    <span class="group-name">{{ item.groupName }}</span>
+                                    <span
+                                        v-bk-overflow-tips
+                                        class="manage-var-page-group-desc"
+                                    >
+                                        {{ item.desc }}
+                                    </span>
+                                </div>
                             </bk-option>
                         </bk-select>
                         <bk-button
@@ -63,7 +70,10 @@
                         </bk-button>
                     </div>
                     <div v-if="selectedVarGroupData.groupName">
-                        <div class="group-desc">
+                        <div
+                            v-bk-overflow-tips
+                            class="group-desc"
+                        >
                             {{ selectedVarGroupData.desc }}
                         </div>
                         <div
@@ -425,6 +435,9 @@
             margin-right: 10px;
         }
         .group-desc {
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
             margin: 8px 0;
             color: #979BA5;
         }
@@ -435,8 +448,20 @@
             }
         }
     }
-    .manage-var-page-group-desc {
-        color: #979BA5 !important;
-        padding-left: 8px;
+    .manage-var-page-group-option {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        .group-name {
+            flex-shrink: 0;
+        }
+        .manage-var-page-group-desc {
+            color: #979BA5 !important;
+            padding-left: 8px;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 </style>

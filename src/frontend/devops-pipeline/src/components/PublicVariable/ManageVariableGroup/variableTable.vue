@@ -7,6 +7,8 @@
         <bk-table-column
             :label="data.title"
             prop="varName"
+            width="200"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 <span
@@ -27,6 +29,8 @@
         <bk-table-column
             :label="$t('desc')"
             prop="desc"
+            width="180"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 {{ row.desc || '--' }}
@@ -44,6 +48,7 @@
         <bk-table-column
             :label="$t('publicVar.defaultValue')"
             prop="defaultValue"
+            show-overflow-tooltip
             width="120"
         >
             <template slot-scope="{ row }">
@@ -81,8 +86,11 @@
     })
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .variable-list-table {
+        .bk-table-body tr.bk-table-row.hover-row>td {
+            background-color: #FFFFFF !important;
+        }
         .var-name.is-required {
             padding-left: 8px;
             &::before {

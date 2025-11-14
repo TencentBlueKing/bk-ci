@@ -13,7 +13,12 @@
                 </div>
                 <div>
                     <p class="group-name">{{ data.groupName }}</p>
-                    <p class="group-desc">{{ data.desc || '--' }}</p>
+                    <p
+                        class="group-desc"
+                        v-bk-overflow-tips
+                    >
+                        {{ data.desc || '--' }}
+                    </p>
                 </div>
                 <template v-if="editable">
                     <!-- <div
@@ -202,6 +207,7 @@
             color: #4D4F56;
         }
         .group-desc {
+            width: 680px;
             font-size: 12px;
             color: #979BA5;
             margin: 8px 0 0px !important;

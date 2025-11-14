@@ -185,7 +185,11 @@
         showTips: Boolean,
         readOnly: Boolean,
         handleEditGroup: Function,
-        saveSuccessFn: Function
+        saveSuccessFn: Function,
+        defaultTab: {
+            type: String,
+            default: 'basicInfo'
+        }
     })
     const viewTab = ref('basicInfo')
     const panels = ref([
@@ -246,6 +250,8 @@
             initialGroupData.value = null
             shouldSaveInitialData.value = false
         } else {
+            // 设置初始 tab
+            viewTab.value = props.defaultTab || 'basicInfo'
             // 侧边栏打开且非只读模式时，标记需要保存初始状态
             shouldSaveInitialData.value = true
             
