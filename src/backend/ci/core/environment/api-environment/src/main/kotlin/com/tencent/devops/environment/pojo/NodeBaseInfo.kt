@@ -66,5 +66,9 @@ data class NodeBaseInfo(
     @get:Schema(title = "主机名")
     val nodeName: String? = null,
     @get:Schema(title = "机型")
-    val size: String? = null
+    val size: String? = null,
+    @get:Schema(title = "第三方机器 HashId", required = true)
+    val agentHashId: String?,
+    @get:Schema(title = "第三方机器 Id", required = true)
+    val agentId: Long?
 )

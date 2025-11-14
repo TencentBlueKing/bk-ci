@@ -681,7 +681,13 @@ class EnvService @Autowired constructor(
                 bakOperator = it.bakOperator,
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                agentHashId = if (thirdPartyAgent == null) {
+                    null
+                } else {
+                    HashUtil.encodeLongId(thirdPartyAgent.id)
+                },
+                agentId = thirdPartyAgent?.id
             )
         }
     }
@@ -746,7 +752,13 @@ class EnvService @Autowired constructor(
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
-                size = it.size
+                size = it.size,
+                agentHashId = if (thirdPartyAgent == null) {
+                    null
+                } else {
+                    HashUtil.encodeLongId(thirdPartyAgent.id)
+                },
+                agentId = thirdPartyAgent?.id
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()

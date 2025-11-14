@@ -66,7 +66,9 @@ object NodeStringIdUtils {
             displayName = displayName,
             envEnableNode = null,
             nodeName = nodeRecord.nodeName,
-            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli()
+            lastModifyTime = (nodeRecord.lastModifyTime ?: nodeRecord.createdTime).timestampmilli(),
+            agentHashId = null,
+            agentId = null
         )
     }
 }
