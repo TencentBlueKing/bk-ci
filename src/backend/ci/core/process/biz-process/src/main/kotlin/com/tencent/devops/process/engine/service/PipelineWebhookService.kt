@@ -329,7 +329,8 @@ class PipelineWebhookService @Autowired constructor(
         name: String,
         repositoryType: ScmType,
         yamlPipelineIds: List<String>?,
-        compatibilityRepoNames: Set<String>
+        compatibilityRepoNames: Set<String>,
+        eventType: String
     ): List<WebhookTriggerPipeline> {
         val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
         // 需要精确匹配的代码库类型
@@ -345,7 +346,8 @@ class PipelineWebhookService @Autowired constructor(
                 dslContext = dslContext,
                 projectNames = setOf(name),
                 repositoryType = repositoryType.name,
-                yamlPipelineIds = yamlPipelineIds
+                yamlPipelineIds = yamlPipelineIds,
+                eventType = eventType
             )?.toSet() ?: setOf()
         } else {
             setOf()
@@ -358,7 +360,8 @@ class PipelineWebhookService @Autowired constructor(
             dslContext = dslContext,
             projectNames = repoNames,
             repositoryType = repositoryType.name,
-            yamlPipelineIds = yamlPipelineIds
+            yamlPipelineIds = yamlPipelineIds,
+            eventType = eventType
         )?.toSet() ?: setOf()
         // projectName字段补充完毕后，模糊匹配结果应为空
         if (needExactMatch && fuzzyResults.isNotEmpty()) {

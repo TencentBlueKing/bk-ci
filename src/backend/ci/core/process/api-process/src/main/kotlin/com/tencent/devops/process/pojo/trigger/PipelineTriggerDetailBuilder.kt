@@ -87,6 +87,8 @@ class PipelineTriggerDetailBuilder {
         this.buildNum = buildNum
     }
 
+    fun getProjectId() = projectId
+
     fun build(): PipelineTriggerDetail {
         return PipelineTriggerDetail(
             projectId = projectId,
