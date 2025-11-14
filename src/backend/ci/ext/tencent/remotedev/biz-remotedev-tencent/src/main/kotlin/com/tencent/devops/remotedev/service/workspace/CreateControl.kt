@@ -550,7 +550,8 @@ class CreateControl @Autowired constructor(
                     workspaceCommon.makeDiskMount(
                         ip = ip,
                         user = event.userId,
-                        owner = ws.createUserId
+                        owner = ws.createUserId,
+                        type = "create"
                     )
                 }
 
