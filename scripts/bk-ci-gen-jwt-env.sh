@@ -13,9 +13,9 @@ rsa_private_key_content=${rsa_private_key_content%$'\n'*}
 rsa_public_key_content=${rsa_public_key#*$'\n'}
 rsa_public_key_content=${rsa_public_key_content%$'\n'*}
 
-# 最终渲染后yaml里换行应为"\n", 因为中途有多次转义, 所以ci.env中为"\\\n".
-rsa_public_key_content_oneline=${rsa_public_key_content//$'\n'/\\\\\\n}
-rsa_private_key_content_oneline=${rsa_private_key_content//$'\n'/\\\\\\n}
+# 最终渲染成一行
+rsa_public_key_content_oneline=${rsa_public_key_content//$'\n'/''}
+rsa_private_key_content_oneline=${rsa_private_key_content//$'\n'/''}
 # 输出变量赋值语句
 echo BK_CI_JWT_RSA_PRIVATE_KEY=\"$rsa_private_key_content_oneline\"
 echo BK_CI_JWT_RSA_PUBLIC_KEY=\"$rsa_public_key_content_oneline\"

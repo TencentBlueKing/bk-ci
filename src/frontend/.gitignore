@@ -13,8 +13,15 @@ devops-gitci/src/conf
 *.pem
 dist/
 .pnpm-global/
+main.*.dll.js
+main.dll.js
+manifest.json
+*.dll.js.LICENSE.txt
 
 
 
+*.csv
+codeql.sh
+*.sarif
 .nx/cache
 .nx/workspace-data

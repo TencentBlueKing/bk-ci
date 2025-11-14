@@ -81,14 +81,6 @@ interface PermissionManageFacadeService {
     ): List<Int>
 
     /**
-     * 获取用户在该项目加入的组
-     * */
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int>
-
-    /**
      * 查询成员所在资源用户组列表
      * 管理员视角返回用户直接加入/模板加入的用户组
      * 个人视角返回用户直接加入/模板加入/组织加入的用户组

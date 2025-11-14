@@ -10,6 +10,7 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.model.process.tables.TTemplate
+import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -21,7 +22,8 @@ class AuthPipelineTemplateService @Autowired constructor(
     val authTokenApi: AuthTokenApi,
     val pipelineListFacadeService: PipelineListFacadeService,
     val templateDao: TemplateDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val pipelineSettingDao: PipelineSettingDao
 ) {
     fun pipelineTemplateInfo(
         callBackInfo: CallbackRequestDTO,
@@ -40,6 +42,7 @@ class AuthPipelineTemplateService @Autowired constructor(
                     token = token
                 )
             }
+
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return getPipelineTemplateInfo(
@@ -48,6 +51,7 @@ class AuthPipelineTemplateService @Autowired constructor(
                     token
                 )
             }
+
             else -> {}
         }
         return null
@@ -78,10 +82,17 @@ class AuthPipelineTemplateService @Autowired constructor(
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         val tTemplate = TTemplate.T_TEMPLATE
+        val templateId2Name = pipelineSettingDao.listPipelineNames(
+            dslContext = dslContext,
+            pipelineIds = templatesRecords.map { it[tTemplate.ID] },
+            projectId = projectId
+        )
         templatesRecords.map { record ->
+            val templateId = record[tTemplate.ID]
+            val name = templateId2Name[templateId] ?: return@map
             val entity = InstanceInfoDTO()
-            entity.id = record[tTemplate.ID]
-            entity.displayName = record[tTemplate.TEMPLATE_NAME]
+            entity.id = templateId
+            entity.displayName = name
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${entityInfo.size}")
@@ -113,11 +124,18 @@ class AuthPipelineTemplateService @Autowired constructor(
 
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         val tTemplate = TTemplate.T_TEMPLATE
+        val templateId2Name = pipelineSettingDao.listPipelineNames(
+            dslContext = dslContext,
+            pipelineIds = pipelineTemplateList.map { it[tTemplate.ID] },
+            projectId = projectId
+        )
         pipelineTemplateList.map {
             val entity = InstanceInfoDTO()
-            entity.id = it[tTemplate.ID]
+            val templateId = it[tTemplate.ID]
+            val name = templateId2Name[templateId] ?: return@map
+            entity.id = templateId
             entity.iamApprover = arrayListOf(it[tTemplate.CREATOR])
-            entity.displayName = it[tTemplate.TEMPLATE_NAME]
+            entity.displayName = name
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${entityInfo.size.toLong()}")

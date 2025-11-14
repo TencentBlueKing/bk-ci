@@ -27,17 +27,28 @@
 
 package com.tencent.devops.repository.service.hub
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.repository.sdk.github.pojo.CheckRunOutput
 import com.tencent.devops.repository.service.RepositoryOauthService
 import com.tencent.devops.repository.service.RepositoryScmConfigService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.ScmApiManager
+import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.oauth2.Oauth2TokenStoreManager
+import com.tencent.devops.scm.api.enums.CheckRunConclusion
+import com.tencent.devops.scm.api.enums.CheckRunStatus
 import com.tencent.devops.scm.api.enums.ScmEventType
+import com.tencent.devops.scm.api.enums.ScmProviderCodes
 import com.tencent.devops.scm.api.pojo.BranchListOptions
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Hook
 import com.tencent.devops.scm.api.pojo.HookEvents
 import com.tencent.devops.scm.api.pojo.HookInput
@@ -59,6 +70,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * 代码源-仓库api
@@ -74,7 +87,8 @@ class ScmRepositoryApiService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val repositoryOauthService: RepositoryOauthService,
     private val p4Config: P4Config,
-    private val scmConfig: ScmConfig
+    private val scmConfig: ScmConfig,
+    private val githubService: IGithubService
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
@@ -83,6 +97,23 @@ class ScmRepositoryApiService @Autowired constructor(
 
     @Value("\${scm.webhook.url:#{null}}")
     private val webhookUrl: String = ""
+
+    fun findRepository(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): ScmServerRepository {
+        return invokeApi(
+            projectId = projectId,
+            repositoryType = repositoryType,
+            repoHashIdOrName = repoHashIdOrName
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findRepository(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository
+            )
+        }
+    }
 
     fun findRepository(
         projectId: String,
@@ -103,14 +134,24 @@ class ScmRepositoryApiService @Autowired constructor(
         userId: String,
         projectId: String,
         scmCode: String,
-        search: String?
+        search: String?,
+        oauthUserId: String?
     ): AuthorizeResult {
-        val oauthTokenInfo = oauth2TokenStoreManager.get(userId = userId, scmCode = scmCode) ?: run {
+        // 若指定指定授权账号，则以目标账号权限拉取仓库列表
+        val oauthTokenInfo = oauth2TokenStoreManager.get(
+            userId = if (oauthUserId.isNullOrBlank()) {
+                userId
+            } else {
+                oauthUserId
+            },
+            scmCode = scmCode
+        ) ?: run {
             val redirectUrl = gitConfig.redirectUrl + "/$projectId/?scmCode=$scmCode&popupScm"
             val oauthUrl = repositoryOauthService.oauthUrl(
                 userId = userId,
                 scmCode = scmCode,
-                redirectUrl = redirectUrl
+                redirectUrl = redirectUrl,
+                oauthUserId = userId
             )
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
@@ -160,7 +201,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findBranches(
+    fun listBranches(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -170,6 +211,36 @@ class ScmRepositoryApiService @Autowired constructor(
         return invokeApi(
             projectId = projectId,
             authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.listBranches(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = BranchListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
+    fun listBranches(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
+        return invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repository)
         ) { providerProperties, providerRepository ->
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
@@ -200,7 +271,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findTags(
+    fun listTags(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -223,10 +294,40 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
+    fun listTags(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
+        return invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repository)
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findTags(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = TagListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
     /**
      * 批量创建hook,蓝盾每个事件一条hook记录,方便用户查询webhook历史
      *
-     * @param event webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
+     * @param events webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
      */
     fun createHook(
         projectId: String,
@@ -269,6 +370,127 @@ class ScmRepositoryApiService @Autowired constructor(
                 hooks.add(hook)
             }
             hooks
+        }
+    }
+
+    fun createCheckRun(
+        projectId: String,
+        repositoryType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): CheckRun {
+        val repo = getRepo(projectId, repositoryType, repoId)
+        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
+            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+                invokeApi(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo)
+                ) { providerProperties, providerRepository ->
+                    scmApiManager.createCheckRun(
+                        providerProperties = providerProperties,
+                        providerRepository = providerRepository,
+                        input = checkRunInput
+                    )
+                }
+            }
+
+            // github 暂时没对接sdk，先走老接口创建
+            ScmProviderCodes.GITHUB.name -> {
+                githubService.addCheckRuns(
+                    token = oauth2TokenStoreManager.get(
+                        userId = repo.userName,
+                        scmCode = repo.scmCode
+                    )?.accessToken ?: "",
+                    projectName = repo.projectName,
+                    checkRuns = checkRunInput.convertGithubCheckRun()
+                ).let {
+                    CheckRun(
+                        id = it.id,
+                        name = checkRunInput.name,
+                        status = checkRunInput.status,
+                        summary = checkRunInput.output?.summary,
+                        detailsUrl = checkRunInput.detailsUrl,
+                        conclusion = checkRunInput.conclusion,
+                        detail = checkRunInput.output?.text
+                    )
+                }
+            }
+
+            else -> {
+                throw UnsupportedOperationException("repo($providerCode) unsupported create checkRun")
+            }
+        }
+    }
+
+    fun updateCheckRun(
+        projectId: String,
+        repositoryType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): CheckRun {
+        val repo = getRepo(projectId, repositoryType, repoId)
+        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
+            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+                invokeApi(
+                    projectId = projectId,
+                    authRepository = AuthRepository(repo)
+                ) { providerProperties, providerRepository ->
+                    scmApiManager.updateCheckRun(
+                        providerProperties = providerProperties,
+                        providerRepository = providerRepository,
+                        input = checkRunInput
+                    )
+                }
+            }
+
+            // github 暂时没对接sdk，先走老接口创建
+            ScmProviderCodes.GITHUB.name -> {
+                val checkRunId = checkRunInput.id!!
+                githubService.updateCheckRuns(
+                    token = oauth2TokenStoreManager.get(
+                        userId = repo.userName,
+                        scmCode = repo.scmCode
+                    )?.accessToken ?: "",
+                    projectName = repo.projectName,
+                    checkRunId = checkRunId,
+                    checkRuns = checkRunInput.convertGithubCheckRun()
+                ).let {
+                    CheckRun(
+                        id = checkRunId,
+                        name = checkRunInput.name,
+                        status = checkRunInput.status,
+                        summary = checkRunInput.output?.summary,
+                        detailsUrl = checkRunInput.detailsUrl,
+                        conclusion = checkRunInput.conclusion,
+                        detail = checkRunInput.output?.text
+                    )
+                }
+            }
+
+            else -> {
+                throw UnsupportedOperationException("repo($providerCode) unsupported create checkRun")
+            }
+        }
+    }
+
+    fun addComment(
+        projectId: String,
+        repositoryType: RepositoryType,
+        repoId: String,
+        number: Int,
+        input: CommentInput
+    ) {
+        val repo = getRepo(projectId, repositoryType, repoId)
+        invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repo)
+        ) { providerProperties, providerRepository ->
+            scmApiManager.createPullRequestComment(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                number = number,
+                input = input
+            )
         }
     }
 
@@ -372,6 +594,39 @@ class ScmRepositoryApiService @Autowired constructor(
             }
         }
     }
+
+    private fun getRepo(
+        projectId: String,
+        repositoryType: RepositoryType,
+        repoId: String
+    ) = repositoryService.getRepository(
+        projectId,
+        repositoryHashId = if (repositoryType == RepositoryType.ID) repoId else null,
+        repoAliasName = if (repositoryType == RepositoryType.NAME) repoId else null
+    )
+
+    private fun CheckRunInput.convertGithubCheckRun() =
+        GithubCheckRuns(
+            name = name,
+            headSha = ref!!,
+            detailsUrl = detailsUrl ?: "",
+            status = when (status) {
+                CheckRunStatus.IN_PROGRESS -> "in_progress"
+                else -> "completed"
+            },
+            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+            conclusion = when (conclusion) {
+                CheckRunConclusion.SUCCESS -> "success"
+                else -> "failure"
+            },
+            output = CheckRunOutput(
+                summary = output?.summary,
+                title = output?.title,
+                text = output?.text
+            ),
+            externalId = externalId ?: ""
+        )
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmRepositoryApiService::class.java)

@@ -19,7 +19,8 @@
         <component
             ref="form"
             :is="comName"
-        ></component>
+            :oauth-user-list="oauthUserList"
+        />
         <footer slot="footer">
             <template v-if="showDialogFooter">
                 <bk-button
@@ -80,6 +81,10 @@
             refreshCodelibList: {
                 type: Function,
                 required: true
+            },
+            oauthUserList: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -89,9 +94,6 @@
             }
         },
         computed: {
-            ...mapState({
-                user: 'user'
-            }),
             ...mapState('codelib', [
                 'codelib',
                 'gitOAuth',
@@ -201,6 +203,13 @@
                     return this.codelib.credentialType === 'OAUTH'
                 }
                 return this.codelib.authType === 'OAUTH'
+            },
+
+            shouldCheckScmAuth () {
+                return {
+                    scmCode: this.codelib.scmCode,
+                    userName: this.codelib.userName
+                }
             }
         },
         watch: {
@@ -225,21 +234,21 @@
                 }
             },
             
-            codelib: {
-                deep: true,
-                handler: async function (newVal, oldVal) {
-                    if (newVal.authType === oldVal.authType && newVal['@type'] === oldVal['@type'] && !this.isShow) return
+            shouldCheckScmAuth: {
+                handler: async function (newVal) {
                     const { projectId, codelibTypeConstants } = this
-                    if (newVal['@type']?.startsWith('scm') && newVal.credentialType === 'OAUTH') {
+                    if (this.codelib['@type']?.startsWith('scm') && this.codelib.credentialType === 'OAUTH') {
                         await this.checkScmOAuth({
                             projectId,
-                            scmCode: newVal.scmCode,
-                            type: codelibTypeConstants
+                            scmCode: this.codelib.scmCode,
+                            type: codelibTypeConstants,
+                            username: this.codelib.userName
                         })
-                    } else if (newVal.authType === 'OAUTH' && !this.hasValidate) {
+                    } else if (this.codelib.authType === 'OAUTH') {
                         await this.checkOAuth({
                             projectId,
-                            type: codelibTypeConstants
+                            type: codelibTypeConstants,
+                            username: this.codelib.userName
                         })
                     }
                 }
@@ -264,12 +273,11 @@
                 
                 const {
                     projectId,
-                    user: { username },
                     codelib,
                     createRepo,
                     repositoryHashId
                 } = this
-                const params = Object.assign({}, codelib, { userName: username })
+                const params = Object.assign({}, codelib)
                 try {
                     this.$refs.form.$refs.form.validate().then(async () => {
                         if (!this.urlErrMsg) {
@@ -346,7 +354,8 @@
                     credentialId: '',
                     projectName: '',
                     authType: '',
-                    svnType: ''
+                    svnType: '',
+                    userName: ''
                 })
             }
         }

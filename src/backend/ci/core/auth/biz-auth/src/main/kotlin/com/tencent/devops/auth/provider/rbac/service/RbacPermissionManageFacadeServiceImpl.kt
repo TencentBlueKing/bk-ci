@@ -54,6 +54,7 @@ import com.tencent.devops.auth.pojo.vo.HandoverOverviewVo
 import com.tencent.devops.auth.pojo.vo.MemberExitsProjectCheckVo
 import com.tencent.devops.auth.pojo.vo.ResourceType2CountVo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthProjectLevelPermissionsSyncEvent
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.UserManageService
@@ -63,6 +64,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionServ
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.lock.HandleHandoverApplicationLock
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -118,7 +120,8 @@ class RbacPermissionManageFacadeServiceImpl(
     private val client: Client,
     private val config: CommonConfig,
     private val userManageService: UserManageService,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val permissionService: PermissionService
 ) : PermissionManageFacadeService {
     override fun getMemberGroupsDetails(
         projectId: String,
@@ -401,7 +404,7 @@ class RbacPermissionManageFacadeServiceImpl(
         operateChannel: OperateChannel?
     ): Pair<List<String>, List<String>> {
         // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
+        val iamTemplateIds = permissionResourceGroupService.listProjectMemberGroupTemplateIds(
             projectCode = projectCode,
             memberId = memberId
         )
@@ -455,26 +458,6 @@ class RbacPermissionManageFacadeServiceImpl(
         }
 
         return finalGroupIds
-    }
-
-    override fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
-    ): List<Int> {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
-            projectCode = projectCode,
-            memberId = memberId
-        )
-        // 获取用户的所属组织
-        val memberDeptInfos = userManageService.getUserDepartmentPath(memberId)
-        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            memberId = memberId,
-            iamTemplateIds = iamTemplateIds,
-            memberDeptInfos = memberDeptInfos
-        )
     }
 
     @Suppress("LongParameterList")
@@ -532,27 +515,6 @@ class RbacPermissionManageFacadeServiceImpl(
             limit = limit
         )
         return Pair(count, resourceGroupMembers)
-    }
-
-    // 获取用户加入的项目级用户组模板ID
-    private fun listProjectMemberGroupTemplateIds(
-        projectCode: String,
-        memberId: String
-    ): List<String> {
-        // 查询项目下包含该成员的组列表
-        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            memberId = memberId
-        ).map { it.iamGroupId.toString() }
-        // 通过项目组ID获取人员模板ID
-        return authResourceGroupDao.listByRelationId(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            iamGroupIds = projectGroupIds
-        ).filter { it.iamTemplateId != null }
-            .map { it.iamTemplateId.toString() }
     }
 
     private fun getMemberDeptInfos(
@@ -1032,6 +994,7 @@ class RbacPermissionManageFacadeServiceImpl(
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt),
             memberId = targetMember.id
         )
+        BkInternalPermissionCache.invalidateProjectUserGroups(projectCode, targetMember.id)
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
                 projectCode = projectCode,
@@ -1612,6 +1575,10 @@ class RbacPermissionManageFacadeServiceImpl(
             handoverTo = handoverMemberDTO.handoverTo,
             expiredTime = DateTimeUtil.convertTimestampToLocalDateTime(finalExpiredAt)
         )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(handoverMemberDTO.targetMember.id, handoverMemberDTO.handoverTo.id)
+        )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
                 projectCode = projectCode,
@@ -1638,6 +1605,10 @@ class RbacPermissionManageFacadeServiceImpl(
             projectCode = projectCode,
             iamGroupId = groupId,
             memberIds = listOf(removeMemberDTO.targetMember.id)
+        )
+        BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+            projectCode = projectCode,
+            userIds = listOf(removeMemberDTO.targetMember.id)
         )
         traceEventDispatcher.dispatch(
             AuthProjectLevelPermissionsSyncEvent(
@@ -2189,23 +2160,16 @@ class RbacPermissionManageFacadeServiceImpl(
         projectCode: String,
         userId: String
     ): Boolean {
-        // 获取用户加入的项目级用户组模板ID
-        val iamTemplateIds = listProjectMemberGroupTemplateIds(
-            projectCode = projectCode,
-            memberId = userId
-        )
-        val memberDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! }
-
-        return authResourceGroupMemberDao.isMemberInProject(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            userId = userId,
-            iamTemplateIds = iamTemplateIds,
-            memberDeptInfos = memberDeptInfos
-        ) || rbacCommonService.validateUserProjectPermission(
+        return permissionService.validateUserProjectPermission(
             userId = userId,
             projectCode = projectCode,
             permission = AuthPermission.VISIT
+        ) || authResourceGroupMemberDao.isMemberInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            userId = userId,
+            iamTemplateIds = emptyList(),
+            memberDeptInfos = deptService.getUserInfo(userId)?.deptInfo?.map { it.name!! }
         )
     }
 

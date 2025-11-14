@@ -181,7 +181,6 @@ object CommonMessageCode {
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val THIRD_PARTY_SERVICE_OPERATION_FAILED = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
-    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
@@ -194,6 +193,7 @@ object CommonMessageCode {
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
+    const val BK_JOB_MATRIX_STR_ERROR = "bkJobMatrixStrError" // 当前矩阵YAML/JSON配置有误，请仔细检查格式、语法是否符合要求。当前配置为: {0}
     const val BK_FILE_NAME = "bkFileName" // 文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" // 所属项目
     const val BK_OPERATING = "bkOperating" // 操作
@@ -269,6 +269,8 @@ object CommonMessageCode {
 
     // 插件{0}输出变量命名空间功能已不推荐使用，请去掉命名空间，通过jobs上下文访问插件输出
     const val BK_ELEMENT_NAMESPACE_NOT_SUPPORT = "bkElementNamespaceNotSupport"
+    // 插件{0}不支持执行前暂停，请去掉相关配置后再保存。
+    const val BK_ELEMENT_CAN_PAUSE_BEFORE_RUN_NOT_SUPPORT = "bkElementCanPauseBeforeRunNotSupport"
 
     const val BK_BUILD_ENV_TYPE = "BUILD_ENV_TYPE_" // 构建环境-
     const val BK_BUILD_ENV_TYPE_BUILDLESS = "BUILD_ENV_TYPE_BUILDLESS" // 无编译环境

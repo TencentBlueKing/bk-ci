@@ -27,11 +27,13 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.UserScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
+import com.tencent.devops.scm.api.pojo.Reference
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -43,14 +45,60 @@ class UserScmRepositoryApiResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         scmCode: String,
-        search: String?
+        search: String?,
+        oauthUserId: String?
     ): Result<AuthorizeResult> {
         return Result(
             repositoryApiService.listRepoBaseInfo(
                 userId = userId,
                 projectId = projectId,
                 scmCode = scmCode,
-                search = search
+                search = search,
+                oauthUserId = oauthUserId
+            )
+        )
+    }
+
+    override fun listBranches(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listBranches(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listTags(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listTags(
+                userId = userId,
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName,
+                search = search,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

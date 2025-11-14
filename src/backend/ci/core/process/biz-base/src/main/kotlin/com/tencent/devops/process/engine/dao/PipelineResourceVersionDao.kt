@@ -37,10 +37,8 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.utils.PipelineVersionUtils
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -344,8 +342,12 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
-                    STATUS.ne(VersionStatus.DELETE.name)
-                        .or(STATUS.isNull)
+                    STATUS.isNull.or(
+                        STATUS.notIn(
+                            VersionStatus.DELETE.name,
+                            VersionStatus.HIDDEN.name
+                        )
+                    )
                 )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
@@ -555,27 +557,6 @@ class PipelineResourceVersionDao {
         }
     }
 
-    fun updatePipelineModel(
-        dslContext: DSLContext,
-        userId: String,
-        pipelineModelVersion: PipelineModelVersion
-    ) {
-        with(T_PIPELINE_RESOURCE_VERSION) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
-            val version = pipelineModelVersion.version
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
-            }
-            dslContext.update(this)
-                .set(MODEL, pipelineModelVersion.model)
-                .set(CREATOR, userId)
-                .where(conditions)
-                .execute()
-        }
-    }
-
     fun updateSettingVersion(
         dslContext: DSLContext,
         userId: String,
@@ -620,14 +601,31 @@ class PipelineResourceVersionDao {
         }
     }
 
+    fun updateVersionStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        versionStatus: VersionStatus
+    ): Int {
+        with(T_PIPELINE_RESOURCE_VERSION) {
+            return dslContext.update(this)
+                .set(STATUS, versionStatus.name)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     class PipelineResourceVersionJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineResourceVersion> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
-                val versionName = record.versionName.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName})"
@@ -673,8 +671,8 @@ class PipelineResourceVersionDao {
                 val versionNum = (record.versionNum ?: record.version ?: 1)
                     .takeIf { status == VersionStatus.RELEASED }
                 // 如果名称已经为init的则尝试计算新版本名，如果获取不到新的版本名称则保持init
-                val versionName = record.versionName?.takeIf {
-                    name -> name != "init"
+                val versionName = record.versionName?.takeIf { name ->
+                    name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
                     versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: "V$versionNum(${record.versionName ?: "init"})"

@@ -67,7 +67,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false),
-            artifactQualityList = JsonUtil.toJson(artifactQualityList, formatted = false),
+            artifactQualityList = JsonUtil.toJson(artifactQualityList, formatted = false)
         )
 
         if (success) {
@@ -87,7 +87,6 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             )
             return Result(buildHistory)
         }
-
         throw ErrorCodeException(
             errorCode = ERROR_UPDATE_FAILED,
             params = arrayOf(buildId)

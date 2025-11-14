@@ -343,6 +343,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 validate(ProjectValidateType.project_name, projectName)
                 validate(ProjectValidateType.english_name, englishName)
             }
+            validateProjectOrganization(
+                projectChannel = projectChannel,
+                bgId = bgId,
+                bgName = bgName,
+                deptId = deptId,
+                deptName = deptName
+            )
             validateProjectRelateProduct(
                 ProjectProductValidateDTO(
                     englishName = englishName,
@@ -352,14 +359,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
+                    bgName = bgName
                 )
-            )
-            validateProjectOrganization(
-                projectChannel = projectChannel,
-                bgId = bgId,
-                bgName = bgName,
-                deptId = deptId,
-                deptName = deptName
             )
             validateProperties(properties)
         }
@@ -689,7 +690,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectOperation = ProjectOperation.UPDATE,
                     productId = productId,
                     productName = productName,
-                    bgId = bgId
+                    bgId = bgId,
+                    bgName = bgName
                 )
             )
             validateProjectOrganization(
@@ -1022,6 +1024,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, null)
+            val projectsWithManagePermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.MANAGE
+            )
+            val projectsWithViewPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.VIEW
+            )
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(
@@ -1034,7 +1046,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 channelCodes = splitStr(channelCodes).toSet(),
                 sortType = sort
             ).map {
-                list.add(ProjectUtils.packagingBean(it))
+                list.add(
+                    ProjectUtils.packagingBean(
+                        tProjectRecord = it,
+                        managePermission = projectsWithManagePermission?.contains(it.englishName),
+                        viewPermission = projectsWithViewPermission?.contains(it.englishName)
+                    )
+                )
             }
             success = true
             return list
@@ -1109,6 +1127,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }?.remotedevManager
             )
         }
+    }
+
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = projectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map { ProjectUtils.packagingBean(it) }
     }
 
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
@@ -1301,7 +1332,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         userId = userId,
                         projectOperation = ProjectOperation.ENABLE,
                         productId = projectInfo.productId,
-                        bgId = projectInfo.bgId
+                        bgId = projectInfo.bgId,
+                        bgName = projectInfo.bgName
                     )
                 )
             }

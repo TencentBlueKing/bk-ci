@@ -49,6 +49,7 @@ data class PreStep(
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
+    val namespace: String? = null,
     val with: Map<String, Any?>?,
     @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
@@ -59,6 +60,12 @@ data class PreStep(
     @get:Schema(title = "retry-times")
     @JsonProperty("retry-times")
     var retryTimes: Int? = null,
+    @get:Schema(title = "can-pause-before-run")
+    @JsonProperty("can-pause-before-run")
+    var canPauseBeforeRun: Boolean? = null,
+    @get:Schema(title = "pause-notice-receivers")
+    @JsonProperty("pause-notice-receivers")
+    var pauseNoticeReceivers: List<String>? = null,
     var env: Map<String, Any?>? = emptyMap(),
     val run: String? = null,
     val shell: String? = null,
@@ -67,3 +74,11 @@ data class PreStep(
     var manualRetry: Boolean? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreStep
+
+data class PreStepTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : IPreStep, CodeTemplate

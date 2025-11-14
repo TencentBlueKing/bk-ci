@@ -49,7 +49,11 @@ import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStepTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.v3.check.Flow
@@ -60,8 +64,13 @@ import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
+import com.tencent.devops.process.yaml.v3.models.Extends
+import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
+import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreRepositoryHook
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
+import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import com.tencent.devops.process.yaml.v3.models.YamlTransferData
 import com.tencent.devops.process.yaml.v3.models.YmlName
@@ -69,9 +78,13 @@ import com.tencent.devops.process.yaml.v3.models.YmlVersion
 import com.tencent.devops.process.yaml.v3.models.add
 import com.tencent.devops.process.yaml.v3.models.job.Container
 import com.tencent.devops.process.yaml.v3.models.job.Container2
+import com.tencent.devops.process.yaml.v3.models.job.IJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.JobTemplate
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.PreJobTemplateList
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import com.tencent.devops.process.yaml.v3.models.job.Service
 import com.tencent.devops.process.yaml.v3.models.on.DeleteRule
@@ -88,20 +101,26 @@ import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.IfField
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.PreStageTemplate
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
+import com.tencent.devops.process.yaml.v3.models.stage.StageTemplate
 import com.tencent.devops.process.yaml.v3.models.step.CheckoutStep
+import com.tencent.devops.process.yaml.v3.models.step.IStep
 import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.Step
+import com.tencent.devops.process.yaml.v3.models.step.StepTemplate
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
+import com.tencent.devops.process.yaml.v3.parsers.template.YamlObjects
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
 
 @Suppress("MaximumLineLength", "ComplexCondition", "ComplexMethod")
 object ScriptYmlUtils {
@@ -300,7 +319,7 @@ object ScriptYmlUtils {
     fun formatStage(
         preScriptBuildYaml: PreScriptBuildYamlIParser,
         transferData: YamlTransferData? = null
-    ): List<Stage> {
+    ): List<IStage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 val jobId = randomString(jobNamespace)
@@ -333,65 +352,160 @@ object ScriptYmlUtils {
             }
 
             else -> {
-                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>, transferData)
+                preStages2Stages(preScriptBuildYaml.stages, transferData)
             }
         }
     }
 
-    fun preJobs2Jobs(preJobs: LinkedHashMap<String, PreJob>?, transferData: YamlTransferData? = null): List<Job> {
+    fun preExtend2Extend(preExtend: PreExtends?): Extends? {
+        if (preExtend?.template == null) {
+            return null
+        }
+
+        return Extends(
+            template = when (preExtend.template) {
+                is String -> ExtendsTemplate(templatePath = preExtend.template)
+                else -> getExtendsTemplate(preExtend.template)
+            }
+        )
+    }
+
+    private fun getExtendsTemplate(template: Any): ExtendsTemplate {
+        val map = YamlObjects.transValue<Map<String, Any?>>("Extends", "template", template)
+        return ExtendsTemplate(
+            templatePath = YamlObjects.getNullValue("path", map),
+            templateRef = YamlObjects.getNullValue("ref", map),
+            templateId = YamlObjects.getNullValue("template-id", map),
+            templateVersionName = YamlObjects.getNullValue("version", map),
+            variables = getExtendsTemplateVariables(map["variables"]),
+            triggerConfig = getExtendsTriggerConfig(map["trigger-conf"]),
+            recommendedVersion = getRecommendedVersion(map["recommended-version"])
+        )
+    }
+
+    private fun getExtendsTriggerConfig(triggerConfig: Any?): Map<String, ExtendsTriggerConfig>? {
+        if (triggerConfig == null) {
+            return null
+        }
+        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "trigger-conf", triggerConfig)
+        return map.mapValues {
+            val config =
+                YamlObjects.transValue<Map<String, Any?>>("Extends.template.trigger-conf", it.key, it.value)
+            ExtendsTriggerConfig(
+                disabled = YamlObjects.getNullValue("disabled", config)?.toBooleanStrictOrNull(),
+                cron = YamlObjects.getNullValue("cron", config),
+                variables = YamlObjects.transValue<Map<String, Any>?>(
+                    path = "Extends.template.trigger-conf.${it.key}",
+                    type = "variables",
+                    value = YamlObjects.getNullValue("variables", config)
+                )
+            )
+        }
+    }
+
+    private fun getRecommendedVersion(recommendedVersion: Any?): RecommendedVersion? {
+        if (recommendedVersion == null) {
+            return null
+        }
+        return JsonUtil.anyTo(recommendedVersion, object : TypeReference<RecommendedVersion>() {})
+    }
+
+    private fun getExtendsTemplateVariables(variables: Any?): Map<String, PreTemplateVariable>? {
+        if (variables == null) {
+            return null
+        }
+        val map = YamlObjects.transValue<Map<String, Any?>>("Extends.template", "variables", variables)
+        return map.mapValues {
+            when (it.value) {
+                is String -> PreTemplateVariable(it.value as String)
+                else -> {
+                    val variable =
+                        YamlObjects.transValue<Map<String, Any?>>("Extends.template.variables", it.key, it.value)
+                    PreTemplateVariable(
+                        value = YamlObjects.getNotNullValueAny("value", it.key, variable),
+                        allowModifyAtStartup = YamlObjects.getNullValue("allow-modify-at-startup", variable)
+                            ?.toBoolean() ?: true
+                    )
+                }
+            }
+        }
+    }
+
+    fun preJobs2Jobs(preJobs: LinkedHashMap<String, IPreJob>?, transferData: YamlTransferData? = null): List<IJob> {
         if (preJobs == null) {
             return emptyList()
         }
 
-        val jobs = mutableListOf<Job>()
+        val jobs = mutableListOf<IJob>()
         preJobs.forEach { (index, preJob) ->
+            when (preJob) {
+                is PreJob -> {
+                    // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
+                    if (index.length > 64) {
+                        throw YamlFormatException(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
+                                params = arrayOf("", index)
+                            )
+                        )
+                    }
 
-            // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
-            if (index.length > 64) {
-                throw YamlFormatException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
-                        params = arrayOf("", index)
+                    // 检测job env合法性
+                    StreamEnvUtils.checkEnv(preJob.env)
+
+                    val services = mutableListOf<Service>()
+                    preJob.services?.forEach { (key, value) ->
+                        services.add(
+                            Service(
+                                serviceId = key,
+                                image = value.image,
+                                with = value.with
+                            )
+                        )
+                    }
+
+                    jobs.add(
+                        Job(
+                            enable = preJob.enable,
+                            id = index,
+                            name = preJob.name,
+                            mutex = preJob.mutex,
+                            runsOn = formatRunsOn(preJob.runsOn),
+                            showRunsOn = preJob.showRunsOn,
+                            services = services,
+                            ifField = formatIfField(preJob.ifField),
+                            ifModify = preJob.ifModify,
+                            steps = preStepsToSteps(index, preJob.steps, transferData),
+                            timeoutMinutes = preJob.timeoutMinutes,
+                            env = preJob.env,
+                            continueOnError = preJob.continueOnError,
+                            strategy = preJob.strategy,
+                            dependOn = preJob.dependOn
+                        )
                     )
-                )
-            }
 
-            // 检测job env合法性
-            StreamEnvUtils.checkEnv(preJob.env)
-
-            val services = mutableListOf<Service>()
-            preJob.services?.forEach { (key, value) ->
-                services.add(
-                    Service(
-                        serviceId = key,
-                        image = value.image,
-                        with = value.with
+                    // 为每个job增加可能的模板信息
+                    transferData?.add(
+                        index,
+                        TemplateType.JOB,
+                        preJob.yamlMetaData?.templateInfo?.remoteTemplateProjectId
                     )
-                )
+                }
+
+                is PreJobTemplateList -> {
+                    preJob.template.forEach { templateJob ->
+                        jobs.add(
+                            JobTemplate(
+                                templatePath = templateJob.templatePath,
+                                templateRef = templateJob.templateRef,
+                                templateId = templateJob.templateId,
+                                templateVersionName = templateJob.templateVersionName,
+                                variables = templateJob.variables,
+                            )
+                        )
+                    }
+                }
             }
-
-            jobs.add(
-                Job(
-                    enable = preJob.enable,
-                    id = index,
-                    name = preJob.name,
-                    mutex = preJob.mutex,
-                    runsOn = formatRunsOn(preJob.runsOn),
-                    showRunsOn = preJob.showRunsOn,
-                    services = services,
-                    ifField = formatIfField(preJob.ifField),
-                    ifModify = preJob.ifModify,
-                    steps = preStepsToSteps(index, preJob.steps, transferData),
-                    timeoutMinutes = preJob.timeoutMinutes,
-                    env = preJob.env,
-                    continueOnError = preJob.continueOnError,
-                    strategy = preJob.strategy,
-                    dependOn = preJob.dependOn
-                )
-            )
-
-            // 为每个job增加可能的模板信息
-            transferData?.add(index, TemplateType.JOB, preJob.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return jobs
@@ -434,43 +548,59 @@ object ScriptYmlUtils {
 
     private fun preStepsToSteps(
         jobId: String,
-        oldSteps: List<PreStep>?,
+        oldSteps: List<IPreStep>?,
         transferData: YamlTransferData?
-    ): List<Step> {
+    ): List<IStep> {
         if (oldSteps == null) {
             return emptyList()
         }
 
-        val stepList = mutableListOf<Step>()
+        val stepList = mutableListOf<IStep>()
         val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach { preStep ->
-            if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
-                throw YamlFormatException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                        params = arrayOf("oldStep")
+            when (preStep) {
+                is PreStep -> {
+                    if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
+                        throw YamlFormatException(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                                params = arrayOf("oldStep")
+                            )
+                        )
+                    }
+
+                    // 校验stepId唯一性
+                    if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
+                        throw YamlFormatException(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
+                                params = arrayOf(preStep.id!!)
+                            )
+                        )
+                    } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
+                        stepIdSet.add(preStep.id!!)
+                    }
+
+                    // 检测step env合法性
+                    StreamEnvUtils.checkEnv(preStep.env)
+
+                    stepList.add(
+                        preStepToStep(preStep, transferData)
                     )
-                )
-            }
+                }
 
-            // 校验stepId唯一性
-            if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
-                throw YamlFormatException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
-                        params = arrayOf(preStep.id!!)
+                is PreStepTemplate -> {
+                    stepList.add(
+                        StepTemplate(
+                            templatePath = preStep.templatePath,
+                            templateRef = preStep.templateRef,
+                            templateId = preStep.templateId,
+                            templateVersionName = preStep.templateVersionName,
+                            variables = preStep.variables,
+                        )
                     )
-                )
-            } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
-                stepIdSet.add(preStep.id!!)
+                }
             }
-
-            // 检测step env合法性
-            StreamEnvUtils.checkEnv(preStep.env)
-
-            stepList.add(
-                preStepToStep(preStep, transferData)
-            )
         }
 
         return stepList
@@ -489,10 +619,13 @@ object ScriptYmlUtils {
             ifField = formatIfField(preStep.ifField),
             ifModify = preStep.ifModify,
             uses = preStep.uses,
+            namespace = preStep.namespace,
             with = preStep.with,
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
             retryTimes = preStep.retryTimes,
+            canPauseBeforeRun = preStep.canPauseBeforeRun,
+            pauseNoticeReceivers = preStep.pauseNoticeReceivers,
             env = preStep.env,
             run = preStep.run,
             runAdditionalOptions = mapOf("shell" to preStep.shell),
@@ -518,27 +651,39 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun preStages2Stages(preStageList: List<PreStage>?, transferData: YamlTransferData?): List<Stage> {
+    private fun preStages2Stages(preStageList: List<IPreStage>?, transferData: YamlTransferData?): List<IStage> {
         if (preStageList == null) {
             return emptyList()
         }
 
-        val stageList = mutableListOf<Stage>()
-        preStageList.forEach {
-            stageList.add(
-                Stage(
-                    id = it.id,
-                    enable = it.enable,
-                    name = it.name,
-                    label = formatStageLabel(it.label),
-                    ifField = formatIfField(it.ifField),
-                    ifModify = it.ifModify,
-                    fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs, transferData),
-                    checkIn = formatStageCheck(it.checkIn),
-                    checkOut = formatStageCheck(it.checkOut)
+        val stageList = mutableListOf<IStage>()
+        preStageList.forEach { preStage ->
+            when (preStage) {
+                is PreStage -> stageList.add(
+                    Stage(
+                        id = preStage.id,
+                        enable = preStage.enable,
+                        name = preStage.name,
+                        label = formatStageLabel(preStage.label),
+                        ifField = formatIfField(preStage.ifField),
+                        ifModify = preStage.ifModify,
+                        fastKill = preStage.fastKill ?: false,
+                        jobs = preJobs2Jobs(preStage.jobs, transferData),
+                        checkIn = formatStageCheck(preStage.checkIn),
+                        checkOut = formatStageCheck(preStage.checkOut)
+                    )
                 )
-            )
+
+                is PreStageTemplate -> stageList.add(
+                    StageTemplate(
+                        templatePath = preStage.templatePath,
+                        templateRef = preStage.templateRef,
+                        templateId = preStage.templateId,
+                        templateVersionName = preStage.templateVersionName,
+                        variables = preStage.variables,
+                    )
+                )
+            }
         }
 
         return stageList
@@ -645,7 +790,8 @@ object ScriptYmlUtils {
         val res = TriggerOn(
             push = pushRule(preTriggerOn),
             tag = tagRule(preTriggerOn),
-            mr = mrRule(preTriggerOn),
+            mr = mrRule(preTriggerOn.mr),
+            mrMerged = mrRule(preTriggerOn.mrMerged),
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
@@ -892,10 +1038,9 @@ object ScriptYmlUtils {
     }
 
     private fun mrRule(
-        preTriggerOn: IPreTriggerOn
+        mr: Any?
     ): MrRule? {
-        if (preTriggerOn.mr != null) {
-            val mr = preTriggerOn.mr!!
+        if (mr != null) {
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),

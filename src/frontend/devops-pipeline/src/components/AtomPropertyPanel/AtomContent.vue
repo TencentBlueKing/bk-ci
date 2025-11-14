@@ -9,7 +9,7 @@
             v-bkloading="{ isLoading: fetchingAtmoModal }"
         >
             <form-field
-                v-if="atom && !isTriggerContainer(container)"
+                v-if="atom"
                 :desc="$t('editPage.stepIdDesc')"
                 label="Step ID"
                 :is-error="errors.has('stepId')"
@@ -169,7 +169,7 @@
 
                 <div
                     v-if="atom"
-                    :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }"
+                    :class="{ 'atom-form-box': true, 'readonly': !isOverride && !editable && !isRemoteAtom }"
                 >
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
@@ -492,7 +492,9 @@
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
                     const atomMap = {
                         codeTGitWebHookTrigger: CodeWebHookTrigger,
-                        codeP4WebHookTrigger: CodeWebHookTrigger
+                        codeP4WebHookTrigger: CodeWebHookTrigger,
+                        codeScmGitWebHookTrigger: CodeWebHookTrigger,
+                        codeScmSvnWebHookTrigger: CodeWebHookTrigger
                     }
                     return atomMap[this.atomCode] || NormalAtomV2
                 }
@@ -520,7 +522,11 @@
                     manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
-            }
+            },
+            isOverride () {
+                console.log(this.atom, this.element)
+                return this.editable || this.element?.isOverride
+            },
         },
         watch: {
             atomCode (atomCode) {

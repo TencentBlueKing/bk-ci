@@ -42,7 +42,7 @@ class OpPipelineVersionResourceImpl @Autowired constructor(
         projectChannelCode: String,
         routerTag: AuthSystemType?,
         projectId: String?,
-        queryUnknownRelatedFlag: Boolean?,
+        queryUnknownRelatedFlag: Boolean?
     ): Result<Boolean> {
         return Result(
             pipelineRepositoryVersionService.asyncBatchUpdateReferFlag(

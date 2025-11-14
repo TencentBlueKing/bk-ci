@@ -78,12 +78,10 @@ data class Variable(
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
-    val props: VariableProps? = null
+    val props: VariableProps? = null,
+    @JsonProperty("if")
+    val ifCondition: Map<String, String>? = null
 ) : IVariable
-
-data class ShortVariable(val value: String) : IVariable
-
-data class TemplateVariable(private val list: List<Extends>) : List<Extends> by list, IVariable
 
 /**
  * Variable 属性变量

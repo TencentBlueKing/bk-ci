@@ -27,12 +27,16 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Perm
 import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
@@ -42,6 +46,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
     private val repositoryApiService: ScmRepositoryApiService
 ) : ServiceScmRepositoryApiResource {
+
+    override fun getServerRepositoryById(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository> {
+        return Result(
+            repositoryApiService.findRepository(
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName
+            )
+        )
+    }
+
     override fun getServerRepository(
         projectId: String,
         authRepository: AuthRepository
@@ -64,7 +83,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         )
     }
 
-    override fun findBranches(
+    override fun listBranches(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -72,7 +91,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<List<Reference>> {
         return Result(
-            repositoryApiService.findBranches(
+            repositoryApiService.listBranches(
                 projectId = projectId,
                 authRepository = authRepository,
                 search = search,
@@ -96,7 +115,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         )
     }
 
-    override fun findTags(
+    override fun listTags(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -104,7 +123,7 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<List<Reference>> {
         return Result(
-            repositoryApiService.findTags(
+            repositoryApiService.listTags(
                 projectId = projectId,
                 authRepository = authRepository,
                 search = search,
@@ -127,5 +146,54 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
             scmType = repository.getScmType(),
             scmCode = repository.scmCode
         )
+    }
+
+    override fun createCheckRun(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun> {
+        return Result(
+            repositoryApiService.createCheckRun(
+                projectId = projectId,
+                repositoryType = repoType,
+                repoId = repoId,
+                checkRunInput = checkRunInput
+            )
+        )
+    }
+
+    override fun updateCheckRun(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun> {
+        return Result(
+            repositoryApiService.updateCheckRun(
+                projectId = projectId,
+                repositoryType = repoType,
+                repoId = repoId,
+                checkRunInput = checkRunInput
+            )
+        )
+    }
+
+    override fun addComment(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        number: Int,
+        input: CommentInput
+    ): Result<Boolean> {
+        repositoryApiService.addComment(
+            projectId = projectId,
+            repositoryType = repoType,
+            repoId = repoId,
+            number = number,
+            input = input
+        )
+        return Result(true)
     }
 }

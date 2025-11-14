@@ -32,4 +32,5 @@ dependencies {
     api("org.apache.httpcomponents:httpclient")
     api("com.tencent.bk.sdk:iam-java-sdk")
     api("org.json:json")
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
 }

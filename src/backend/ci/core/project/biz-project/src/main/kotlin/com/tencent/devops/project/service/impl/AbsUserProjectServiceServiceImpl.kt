@@ -97,10 +97,10 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
                     iframeUrl = tServiceRecord.iframeUrl,
                     grayIframeUrl = tServiceRecord.grayIframeUrl,
-                    cssUrl = tServiceRecord.cssUrl,
-                    jsUrl = tServiceRecord.jsUrl,
-                    grayCssUrl = tServiceRecord.grayCssUrl,
-                    grayJsUrl = tServiceRecord.grayJsUrl,
+                    cssUrl = tServiceRecord.cssUrl ?: "",
+                    jsUrl = tServiceRecord.jsUrl ?: "",
+                    grayCssUrl = tServiceRecord.grayCssUrl ?: "",
+                    grayJsUrl = tServiceRecord.grayJsUrl ?: "",
                     showProjectList = tServiceRecord.showProjectList,
                     showNav = tServiceRecord.showNav,
                     projectIdType = tServiceRecord.projectIdType,
@@ -411,6 +411,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             serviceCode = pipelineAuthServiceCode,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
+            resourceCode = pipelineId,
             permission = permission
         )
         if (!hasPermission) {

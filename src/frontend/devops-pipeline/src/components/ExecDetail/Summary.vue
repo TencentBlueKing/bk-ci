@@ -118,6 +118,16 @@
                             </p>
                         </div>
                     </bk-popover>
+                    <span
+                        v-if="execDetail?.versionChange"
+                        class="version-changed-info"
+                        @click="showVersionDiffDialog"
+                    >
+                        <Logo
+                            size="14"
+                            name="warning-circle"
+                        />
+                    </span>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -155,6 +165,7 @@
                         v-if="remarkEditable"
                         type="textarea"
                         v-model="tempRemark"
+                        :maxlength="4096"
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
@@ -185,10 +196,16 @@
                 @goOutputs="goOutputs"
             />
         </div>
+        <VersionDiffDialog
+            :visible.sync="isShowVersionDiffDialog"
+            :build-num="`#${execDetail?.buildNum}`"
+            :build-id="$route.params.buildNo"
+        />
     </header>
 </template>
 
 <script>
+    import VersionDiffDialog from '@/components/BuildHistoryTable/VersionDiffDialog'
     import Logo from '@/components/Logo'
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
@@ -198,7 +215,8 @@
         components: {
             MaterialItem,
             Logo,
-            ArtifactQuality
+            ArtifactQuality,
+            VersionDiffDialog
         },
         props: {
             visible: {
@@ -217,7 +235,8 @@
                 remark: this.execDetail.remark,
                 isChangeRemark: false,
                 isShowMoreMaterial: false,
-                curVersionDesc: ''
+                curVersionDesc: '',
+                isShowVersionDiffDialog: false
             }
         },
         computed: {
@@ -348,6 +367,9 @@
                         metadataValues: values.map(item => item.value).join(',')
                     }
                 })
+            },
+            showVersionDiffDialog () {
+                this.isShowVersionDiffDialog = true
             }
         }
     }
@@ -396,7 +418,7 @@
         padding: 0 8px;
         .no-exec-material {
           display: flex;
-          flex: 1;
+          line-height: 48px;
           align-items: center;
           padding-left: 8px;
         }
@@ -449,16 +471,21 @@
     }
 
     &-block-content {
-      flex: 1;
       align-self: stretch;
       display: flex;
       align-items: center;
-      line-height: 48px;
+      height: 48px;
       .pipeline-cur-version-span {
+        display: inline-block;
+        line-height: 48px;
         @include ellipsis();
         text-decoration: underline;
         text-decoration-skip-ink: none;
         cursor: pointer;
+      }
+      .version-changed-info {
+        color: $warningColor;
+        margin: -16px 0 0 4px;
       }
 
       .exec-remark {
@@ -520,8 +547,8 @@
 .part-quality-block {
     display: flex;
     flex-wrap: wrap;
-    padding-top: 18px;
-    padding-bottom: 10px;
+    padding-top: 6px;
+    padding-bottom: 16px;
     font-size: 12px;
     
     .part-quality-block-title {

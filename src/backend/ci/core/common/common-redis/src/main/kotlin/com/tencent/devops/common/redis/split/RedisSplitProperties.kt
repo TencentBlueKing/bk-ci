@@ -2,7 +2,7 @@ package com.tencent.devops.common.redis.split
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-@ConfigurationProperties("spring.redis.split")
+@ConfigurationProperties("spring.data.redis.split")
 data class RedisSplitProperties(
     val mode: Mode = Mode.ONLY_MASTER,
     val database: Int? = null,

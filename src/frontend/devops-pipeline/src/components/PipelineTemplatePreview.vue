@@ -68,8 +68,11 @@
                 type: String,
                 default: ''
             },
-            templatePipeline: {
-                type: Object
+            templatePipeline: Object,
+            templateVersion: String,
+            isTemplate: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -80,7 +83,8 @@
                 highlightMarkList: [],
                 isYamlSupport: true,
                 yamlInvalidMsg: '',
-                pipelineSetting: null
+                pipelineSetting: null,
+                templateStage: []
             }
         },
         computed: {
@@ -110,7 +114,7 @@
                         props: {
                             pipeline: {
                                 ...this.templatePipeline,
-                                stages: this.templatePipeline?.stages?.slice(1) ?? []
+                                stages: (this.isTemplate ? this.templateStage?.slice(1) : this.templatePipeline?.stages?.slice(1)) ?? []
                             },
                             editable: false,
                             showHeader: false
@@ -122,7 +126,10 @@
                         component: 'triggerTab',
                         props: {
                             editable: false,
-                            pipeline: this.templatePipeline
+                            pipeline: {
+                                ...this.templatePipeline,
+                                ...(this.isTemplate && { stages: this.templateStage })
+                            }
                         }
                     },
                     {
@@ -167,30 +174,57 @@
         methods: {
             ...mapActions({
                 updatePipelineMode: 'updatePipelineMode',
-                requestTemplatePreview: 'pipelines/requestTemplatePreview'
+                requestTemplatePreview: 'pipelines/requestTemplatePreview',
+                requestTemplatePreviewByVersion: 'templates/requestTemplatePreviewByVersion',
+                templatePreviewDetail: 'templates/templatePreviewDetail'
             }),
+            async getTemplatePreviewDetail () {
+                return this.templatePreviewDetail({
+                    projectId: this.templatePipeline.srcProjectId,
+                    templateId: this.templatePipeline.code
+                })
+            },
+            async getRequestTemplatePreview () {
+                if (this.templateVersion) {
+                    return this.requestTemplatePreviewByVersion({
+                        projectId: this.templatePipeline.projectId,
+                        templateId: this.templatePipeline.templateId,
+                        version: this.templateVersion,
+                        highlightType: this.highlightType
+                    })
+                }
+                return this.requestTemplatePreview({
+                    projectId: this.templatePipeline.projectId,
+                    templateId: this.templatePipeline.templateId,
+                    highlightType: this.highlightType
+                })
+            },
             async init () {
                 try {
                     this.isLoading = true
-                    const res = await this.requestTemplatePreview({
-                        projectId: this.$route.params.projectId,
-                        templateId: this.templatePipeline.templateId,
-                        highlightType: this.highlightType
-                    })
+                    const res = this.isTemplate
+                        ? await this.getTemplatePreviewDetail()
+                        : await this.getRequestTemplatePreview()
+                    
+                    if (this.isTemplate) {
+                        this.templateStage = res.resource.model.stages
+                    }
                     if (!res.yamlSupported && this.isCodeMode) {
                         this.updatePipelineMode(UI_MODE)
                     } else {
-                        this.templateYaml = res.templateYaml
-                        this.highlightMarkList = res.highlightMarkList ?? []
+                        this.templateYaml = this.isTemplate ? res.yamlPreview?.yaml : res.templateYaml
+                        this.highlightMarkList = (this.isTemplate ? res.yamlPreview?.pipeline : res.highlightMarkList) ?? []
                     }
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg
-                    this.pipelineSetting = res.setting
+                    this.pipelineSetting = this.isTemplate ? res.setting : res.setting
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message
                     })
+                    this.templateStage = []
+                    this.pipelineSetting = null
                 } finally {
                     this.isLoading = false
                 }

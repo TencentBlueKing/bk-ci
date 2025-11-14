@@ -39,19 +39,19 @@ gatewayImage:
   registry: __image_registry__
   repository: bkci-gateway
   tag: __image_gateway_tag__
-  pullPolicy: IfNotPresent 
+  pullPolicy: IfNotPresent
   pullSecrets: []
 backendImage:
   registry: __image_registry__
   repository: bkci-backend
   tag: __image_backend_tag__
-  pullPolicy: IfNotPresent 
+  pullPolicy: IfNotPresent
   pullSecrets: []
 frontendImage:
   registry: __image_registry__
   repository: bkci-frontend
   tag: __image_frontend_tag__
-  pullPolicy: IfNotPresent 
+  pullPolicy: IfNotPresent
   pullSecrets: []
 
 # 日志采集配置
@@ -79,6 +79,7 @@ init:
   iam: true
   turbo: false
   bkrepo: true
+  migrateTemplate: true
   defaultImage:
     enabled: true
     image:
@@ -115,7 +116,7 @@ multiCluster:
 
 # 内部数据源配置
 mysql:
-  image: 
+  image:
     tag: 8.0.37-debian-12-r2
   enabled: true
   auth:
@@ -159,11 +160,11 @@ redis:
     password: blueking
   replica:
     replicaCount: 1
-    persistence: 
+    persistence:
       size: 10Gi
   master:
-    persistence: 
-      size: 10Gi 
+    persistence:
+      size: 10Gi
 elasticsearch:
   enabled: true
   master:
@@ -178,7 +179,7 @@ elasticsearch:
       size: 10Gi
 rabbitmq:
   enabled: true
-  image: 
+  image:
     repository: bitnami/rabbitmq
     tag: 3.10.8-debian-11-r4
   persistence:
@@ -235,7 +236,7 @@ influxdb:
       enabled: false
     livenessProbe:
       enabled: false
-    initdbScripts: 
+    initdbScripts:
       creata_db.sh: |
         influx -host localhost -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
 mongodb:
@@ -1095,9 +1096,9 @@ websocket:
 turbo:
   enabled: false
   image:
-    registry: registry-1.docker.io/bkci
+    registry: bkci
     repository: bkci-turbo
-    tag: 0.0.18
+    tag: 0.0.21
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
@@ -1155,47 +1156,6 @@ gateway:
     limits:
       cpu: 500m
       memory: 800Mi
-  hostAliases: []
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-    runAsNonRoot: true
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  podAnnotations: {}
-  priorityClassName: ""
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 80
-    targetMemory: 80
-
-# stream Deployment
-stream:
-  enabled: false
-  replicas: 1
-  podLabels: {}
-  resources:
-    requests:
-      cpu: 100m
-      memory: 2000Mi
-    limits:
-      cpu: 500m
-      memory: 3000Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
   hostAliases: []
   containerSecurityContext:
     enabled: false

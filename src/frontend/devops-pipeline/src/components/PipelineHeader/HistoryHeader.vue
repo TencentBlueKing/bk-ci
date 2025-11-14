@@ -1,6 +1,9 @@
 <template>
     <div class="pipeline-history-header">
-        <pipeline-bread-crumb :is-loading="isSwitchPipeline || switchingVersion">
+        <component
+            :is="breadCrumb"
+            v-bind="breadCrumbProps"
+        >
             <bk-popover :delay="[666, 0]">
                 <VersionSelector
                     :value="currentVersion"
@@ -9,6 +12,8 @@
                     @showAllVersion="showVersionSideSlider"
                     :include-draft="false"
                     refresh-list-on-expand
+                    :is-template="isTemplate"
+                    :unique-id="uniqueId"
                 />
                 <div slot="content">
                     <p>{{ $t('versionRuleP') }}</p>
@@ -27,12 +32,12 @@
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
             <badge
-                v-if="isReleaseVersion"
+                v-if="!isTemplate && isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
+                :pipeline-id="uniqueId"
             />
-        </pipeline-bread-crumb>
+        </component>
 
         <aside
             v-show="!(isSwitchPipeline || switchingVersion)"
@@ -53,14 +58,16 @@
                 :has-permission="canEdit"
                 :version="currentVersion"
                 :draft-version="pipelineInfo?.version"
-                :pipeline-id="pipelineId"
+                :pipeline-id="uniqueId"
                 :project-id="projectId"
+                :theme="isTemplate ? 'default' : 'primary'"
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
                 :is-active-branch-version="isActiveBranchVersion"
                 :draft-creator="activePipelineVersion?.creator"
                 :draft-create-time="activePipelineVersion?.createTime"
+                :rollback-id="uniqueId"
             >
                 {{ operateName }}
             </RollbackEntry>
@@ -73,39 +80,55 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
+                        resourceType,
+                        resourceCode: uniqueId,
+                        action: resourceEditAction
                     }
                 }"
                 @click="goEdit"
             >
-                {{ $t("edit") }}
+                {{ isTemplate ? $t('template.editTemplate') : $t('edit') }}
             </bk-button>
-            <template v-if="editAndExecutable">
-                <span
-                    v-if="!archiveFlag"
-                    v-bk-tooltips="tooltip"
-                >
-                    <bk-button
-                        :disabled="!executable"
-                        theme="primary"
-                        v-perm="{
-                            hasPermission: canExecute,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: pipelineId,
-                                action: RESOURCE_ACTION.EXECUTE
-                            }
-                        }"
-                        @click="goExecPreview"
+
+            <instance-release-btn
+                v-if="isTemplate && canInstantiate"
+                :perm-data="{
+                    disablePermissionApi: false,
+                    permissionData: {
+                        projectId,
+                        resourceType: RESOURCE_TYPE.PROJECT,
+                        resourceCode: projectId,
+                        action: RESOURCE_ACTION.CREATE
+                    }
+                }"
+                @click="handleToInstanceEntry"
+            />
+            <template v-else-if="!isTemplate">
+                <template v-if="editAndExecutable">
+                    <span
+                        v-if="!archiveFlag"
+                        v-bk-tooltips="tooltip"
                     >
-                        {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
-                    </bk-button>
-                </span>
-                <more-actions />
+                        <bk-button
+                            :disabled="!executable"
+                            theme="primary"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType,
+                                    resourceCode: uniqueId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            @click="goExecPreview"
+                        >
+                            {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
+                        </bk-button>
+                    </span>
+                    <more-actions />
+                </template>
             </template>
         </aside>
         <VersionHistorySideSlider
@@ -117,13 +140,16 @@
 
 <script>
     import Badge from '@/components/Badge.vue'
-
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import InstanceReleaseBtn from '@/components/Template/InstanceReleaseBtn.vue'
+    import TemplateBreadCrumb from '@/components/Template/TemplateBreadCrumb.vue'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE,
+        TEMPLATE_RESOURCE_ACTION,
     } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -133,19 +159,22 @@
     export default {
         components: {
             PipelineBreadCrumb,
-
+            TemplateBreadCrumb,
             Badge,
             MoreActions,
             VersionSelector,
             VersionHistorySideSlider,
             VersionDiffEntry,
-            RollbackEntry
+            RollbackEntry,
+            InstanceReleaseBtn
         },
         props: {
             isSwitchPipeline: Boolean
         },
         data () {
             return {
+                RESOURCE_TYPE,
+                RESOURCE_ACTION,
                 showVersionSideslider: false,
                 isPipelineIdChanged: false
             }
@@ -165,8 +194,23 @@
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pipelineHistoryViewable: 'atom/pipelineHistoryViewable',
-                onlyBranchPipeline: 'atom/onlyBranchPipeline'
+                onlyBranchPipeline: 'atom/onlyBranchPipeline',
+                isTemplate: 'atom/isTemplate'
             }),
+            
+            breadCrumb () {
+                return this.isTemplate ? 'template-bread-crumb' : 'pipeline-bread-crumb'
+            },
+            breadCrumbProps () {
+                return this.isTemplate
+                    ? {
+                        templateName: this.pipeline?.name,
+                        isLoading: !this.pipeline
+                    }
+                    : {
+                        isLoading: this.isSwitchPipeline || this.switchingVersion
+                    }
+            },
             editAndExecutable () {
                 return this.isReleaseVersion || this.activePipelineVersion?.isBranchVersion
             },
@@ -188,8 +232,14 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
+            uniqueId () {
+                return this.$route.params?.[this.isTemplate ? 'templateId' : 'pipelineId']
+            },
+            resourceType () {
+                return this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
+            },
+            resourceEditAction () {
+                return this.isTemplate ? TEMPLATE_RESOURCE_ACTION.EDIT : RESOURCE_ACTION.EDIT
             },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
@@ -209,7 +259,7 @@
             operateName () {
                 switch (true) {
                     case this.editAndExecutable:
-                        return this.$t('edit')
+                        return this.isTemplate ? this.$t('template.editTemplate') : this.$t('edit')
                     case this.pipelineInfo?.baseVersion && this.activePipelineVersion?.version === this.pipelineInfo?.baseVersion:
                         return this.$t('editCurDraft')
                     default:
@@ -226,8 +276,11 @@
                         delay: [300, 0]
                     }
             },
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+            editRouteName () {
+                return this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+            },
+            canInstantiate () {
+                return this.releaseVersion === this.currentVersion || this.isBranchVersion
             },
             archiveFlag () {
                 return this.$route.query.archiveFlag
@@ -241,10 +294,10 @@
         created () {
             if (!this.pipelineHistoryViewable) {
                 this.$router.replace({
-                    name: 'pipelinesEdit'
+                    name: this.editRouteName
                 })
             }
-            if (this.releaseVersion !== this.currentVersion) {
+            if (this.releaseVersion !== this.currentVersion && !this.currentVersion) {
                 this.handleVersionChange(this.releaseVersion)
             } else {
                 this.init()
@@ -259,9 +312,19 @@
             ]),
             goEdit () {
                 this.$router.push({
-                    name: 'pipelinesEdit',
+                    name: this.editRouteName,
                     query: {
                         tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
+                })
+            },
+            handleToInstanceEntry () {
+                this.$router.push({
+                    name: 'instanceEntry',
+                    params: {
+                        ...this.$route.params,
+                        version: this.releaseVersion,
+                        type: 'create'
                     }
                 })
             },
@@ -279,7 +342,7 @@
                         this.setSwitchingPipelineVersion(true)
                         const urlParams = {
                             projectId: this.projectId,
-                            pipelineId: this.pipelineId,
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId,
                             version: this.currentVersion,
                             archiveFlag: this.archiveFlag
                         }
@@ -309,17 +372,19 @@
             switchToReleaseVersion () {
                 this.handleVersionChange(this.releaseVersion)
             },
+
             handleVersionChange (versionId, version) {
-                let routeType = this.$route.params.type || 'history'
+                let routeType = this.$route.params.type || this.isTemplate ? 'instanceList' : 'history'
+                const noRecordVersionTab = this.isTemplate ? ['instanceList'] : ['history', 'triggerEvent']
 
                 if (version) {
                     this.selectPipelineVersion(version)
                     if (this.releaseVersion) {
-                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
+                        const noRecordVersion = noRecordVersionTab.includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                console.log('handleVersionChange', this.pipelineInfo, this.pipelineHistoryViewable, versionId)
+
                 this.$router.replace({
                     query: this.$route.query,
                     params: {
