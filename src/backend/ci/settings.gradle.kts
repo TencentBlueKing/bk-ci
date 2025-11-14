@@ -170,12 +170,6 @@ include(":core:store:biz-store")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
-include(":core:stream")
-include(":core:stream:api-stream")
-include(":core:stream:biz-stream")
-include(":core:stream:boot-stream")
-include(":core:stream:model-stream")
-
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
