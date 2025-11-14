@@ -41,7 +41,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_OAUTH_GIT", description = "用户-git的oauth")
+@Tag(name = "USER_GIT_OAUTH_OPERATIONS", description = "用户代码库提交信息查询等功能")
 @Path("/user/git/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
