@@ -257,4 +257,24 @@ interface ServiceStoreComponentResource {
         @QueryParam("osArch")
         osArch: String? = null
     ): Result<VersionInfo?>
+
+    @Operation(summary = "根据组件code和版本号获取组件状态信息")
+    @Path("/types/{storeType}/codes/{storeCode}/component/upgrade/status/info/get")
+    @GET
+    fun getStoreUpgradeStatusInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
+        @Parameter(description = "组件代码", required = true)
+        @PathParam("storeCode")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeCode: String,
+        @Parameter(description = "组件版本", required = true)
+        @QueryParam("version")
+        version: String
+    ): Result<String?>
 }

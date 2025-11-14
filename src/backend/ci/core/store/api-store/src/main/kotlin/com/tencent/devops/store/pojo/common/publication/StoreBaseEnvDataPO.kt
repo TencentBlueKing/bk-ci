@@ -46,8 +46,10 @@ data class StoreBaseEnvDataPO(
     val pkgPath: String? = null,
     @get:Schema(title = "执行入口命令")
     val target: String? = null,
-    @get:Schema(title = "SHA签名串")
+    @get:Schema(title = "SHA1签名串")
     val shaContent: String? = null,
+    @get:Schema(title = "SHA256签名串")
+    val sha256Content: String? = null,
     @get:Schema(title = "执行前置命令")
     val preCmd: String? = null,
     @get:Schema(title = "支持的操作系统名称")
