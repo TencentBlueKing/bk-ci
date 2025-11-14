@@ -15,6 +15,9 @@ object ResourceTypeId {
     const val REPERTORY = "repertory"
     const val EXPERIENCE_TASK = "experience_task"
     const val EXPERIENCE_GROUP = "experience_group"
+    const val CGS = "cgs"
+    const val CGS_GROUP = "cgs_group"
+
     // 自定义
     const val SECURITY = "security"
 }

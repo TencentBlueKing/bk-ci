@@ -48,6 +48,7 @@ import com.tencent.devops.auth.dao.AuthHandoverDetailDao
 import com.tencent.devops.auth.dao.AuthHandoverOverviewDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthProjectResetRecordDao
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupApplyDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -97,6 +98,7 @@ import com.tencent.devops.auth.provider.rbac.service.migrate.RbacPermissionMigra
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
+import com.tencent.devops.auth.service.AuthResourceGroupFactory
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.BkInternalPermissionService
 import com.tencent.devops.auth.service.DeptService
@@ -284,7 +286,8 @@ class RbacAuthConfiguration {
         authResourceMemberDao: AuthResourceGroupMemberDao,
         traceEventDispatcher: TraceEventDispatcher,
         syncDataTaskDao: AuthSyncDataTaskDao,
-        redisOperation: RedisOperation
+        redisOperation: RedisOperation,
+        authResourceGroupFactory: AuthResourceGroupFactory
     ) = RbacPermissionResourceGroupPermissionService(
         v2ManagerService = v2ManagerService,
         rbacCommonService = rbacCommonService,
@@ -304,7 +307,8 @@ class RbacAuthConfiguration {
         authResourceMemberDao = authResourceMemberDao,
         traceEventDispatcher = traceEventDispatcher,
         syncDataTaskDao = syncDataTaskDao,
-        redisOperation = redisOperation
+        redisOperation = redisOperation,
+        authResourceGroupFactory = authResourceGroupFactory
     )
 
     @Bean
@@ -358,7 +362,8 @@ class RbacAuthConfiguration {
         rbacCommonService: RbacCommonService,
         client: Client,
         bkInternalPermissionReconciler: BkInternalPermissionReconciler,
-        authProjectUserMetricsService: AuthProjectUserMetricsService
+        authProjectUserMetricsService: AuthProjectUserMetricsService,
+        authResourceGroupFactory: AuthResourceGroupFactory
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
@@ -369,7 +374,8 @@ class RbacAuthConfiguration {
         rbacCommonService = rbacCommonService,
         client = client,
         bkInternalPermissionReconciler = bkInternalPermissionReconciler,
-        authProjectUserMetricsService = authProjectUserMetricsService
+        authProjectUserMetricsService = authProjectUserMetricsService,
+        authResourceGroupFactory = authResourceGroupFactory
     )
 
     @Bean
@@ -654,7 +660,8 @@ class RbacAuthConfiguration {
         migrateResourceGroupService: MigrateResourceGroupService,
         syncDataTaskDao: AuthSyncDataTaskDao,
         rbacCommonService: RbacCommonService,
-        authResourceGroupMemberDao: AuthResourceGroupMemberDao
+        authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+        authProjectResetRecordDao: AuthProjectResetRecordDao
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
@@ -674,7 +681,8 @@ class RbacAuthConfiguration {
         migrateResourceGroupService = migrateResourceGroupService,
         syncDataTaskDao = syncDataTaskDao,
         rbacCommonService = rbacCommonService,
-        authResourceGroupMemberDao = authResourceGroupMemberDao
+        authResourceGroupMemberDao = authResourceGroupMemberDao,
+        authProjectResetRecordDao = authProjectResetRecordDao
     )
 
     @Bean
