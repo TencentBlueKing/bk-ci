@@ -111,7 +111,7 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParam
+            params = pipelineParam.toMutableList()
         )
 
         return Model(
@@ -217,7 +217,7 @@ object TemplateInstanceUtil {
         return templateModel.getTriggerContainer().copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams
+            params = pipelineParams.toMutableList()
         )
     }
 
