@@ -34,11 +34,13 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -53,6 +55,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
@@ -90,11 +93,12 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import java.text.SimpleDateFormat
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
 
 @Service
 @Suppress("ALL")
@@ -1169,28 +1173,94 @@ class EnvService @Autowired constructor(
     )
     fun enableNodeEnv(
         projectId: String,
-        envHashId: String,
-        nodeHashId: String,
+        userId: String,
+        envHashId: String?,
+        nodeHashId: String?,
+        envName: String?,
+        nodeName: String?,
         enableNode: Boolean
-    ) {
-        val envId = HashUtil.decodeIdToLong(envHashId)
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        ActionAuditContext.current()
-            .setInstanceId(nodeId.toString())
-            .setInstanceName(envId.toString())
-        if (enableNode) {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+    ): Result<Boolean> {
+        val env = if (envHashId != null) {
+            envDao.get(dslContext, projectId, envId = HashUtil.decodeIdToLong(envHashId))
+        } else if (envName != null) {
+            envDao.getByEnvName(dslContext, projectId, envName)
         } else {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashId/envName")
+                )
+            )
         }
-        envNodeDao.disableOrEnableNode(
-            dslContext = dslContext,
-            projectId = projectId,
-            envId = envId,
-            nodeId = nodeId,
-            enable = enableNode
-        )
+        if (env == null) {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId ?: envName!!)
+                )
+            )
+        }
+
+        val envId = env.envId
+        if (!environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+
+        val node = if (nodeHashId != null) {
+            nodeDao.get(dslContext, projectId, nodeId = HashUtil.decodeIdToLong(nodeHashId))
+        } else if (nodeName != null) {
+            nodeDao.getByDisplayName(
+                dslContext = dslContext,
+                projectId = projectId,
+                displayName = nodeName,
+                nodeType = listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()
+        } else {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("nodeHashId/nodeName")
+                )
+            )
+        }
+        if (node == null) {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_NODE_NOT_EXISTS, params = arrayOf(nodeHashId ?: nodeName!!)
+                )
+            )
+        }
+
+        val nodeId = node.nodeId
+        ActionAuditContext.current().setInstanceId(nodeId.toString()).setInstanceName(envId.toString())
+        if (enableNode) {
+            ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+        }
+        return if (envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
+            Result(
+                data = envNodeDao.disableOrEnableNode(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    envId = envId,
+                    nodeId = nodeId,
+                    enable = enableNode
+                )
+            )
+        } else {
+            Result(data = false,
+                   status = 400,
+                   message = I18nUtil.getCodeLanMessage(
+                       messageCode = ERROR_NODE_NOT_EXISTS,
+                       params = arrayOf(node.displayName)
+                   )
+            )
+        }
     }
 }
