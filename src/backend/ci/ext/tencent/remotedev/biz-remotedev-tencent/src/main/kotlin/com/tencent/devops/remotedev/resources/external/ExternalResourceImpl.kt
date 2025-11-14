@@ -117,6 +117,7 @@ class ExternalResourceImpl @Autowired constructor(
             }
             true to false -> {
                 // 情况2: 启用 Mesh 模式
+                deleteWhiteList(workspace.workspaceName, WhiteListType.CDS_SSL_WORKSPACE)
                 createWhiteList(workspace.workspaceName, WhiteListType.CDS_MESH_WORKSPACE)
             }
             false to true -> {
