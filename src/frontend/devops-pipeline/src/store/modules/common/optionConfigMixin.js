@@ -125,7 +125,7 @@ const optionConfigMixin = {
                 }
             },
             timeoutVar: {
-                rule: { timeoutsRule: true },
+                rule: { timeoutsRule: this.pipelineDialect },
                 component: 'vuex-input',
                 label: this.$t('storeMap.atomTimeout'),
                 desc: this.$t('storeMap.timeoutDesc'),
