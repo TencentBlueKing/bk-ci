@@ -14,6 +14,7 @@
                         :full-atom-value="atomValue"
                         :get-atom-key-modal="getAtomKeyModal"
                         :container="container"
+                        :pipeline-dialect="pipelineDialect"
                         :disabled="disabled"
                         :element="element"
                     />
@@ -43,6 +44,7 @@
                             :full-atom-value="atomValue"
                             :get-atom-key-modal="getAtomKeyModal"
                             :container="container"
+                            :pipeline-dialect="pipelineDialect"
                             :element="element"
                             :disabled="disabled"
                         />
@@ -77,6 +79,7 @@
                             :full-atom-value="atomValue"
                             :get-atom-key-modal="getAtomKeyModal"
                             :container="container"
+                            :pipeline-dialect="pipelineDialect"
                             :element="element"
                             :disabled="disabled"
                         />
@@ -90,6 +93,7 @@
                         :full-atom-value="atomValue"
                         :get-atom-key-modal="getAtomKeyModal"
                         :container="container"
+                        :pipeline-dialect="pipelineDialect"
                         :element="element"
                         :disabled="disabled"
                     />
@@ -128,7 +132,11 @@
             stage: Object,
             atomPropsModel: Object,
             setAtomValidate: Function,
-            disabled: Boolean
+            disabled: Boolean,
+            pipelineDialect: {
+                type: String,
+                default: "CLASSIC"
+            }
         },
         computed: {
             appIdProps () {
