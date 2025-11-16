@@ -69,13 +69,18 @@
             </bk-select>
             <bk-input
                 v-else-if="isVarInputMode"
-                class="input-main"
+                :class="['input-main', isError ? 'error-input' : '']"
                 :clearable="!disabled"
                 v-model="displayValue"
                 @blur="handleVarBlur"
+                @clear="handleVarClear"
                 :disabled="disabled"
-                :placeholder="$t('placeholderVar')"
+                :placeholder="pipelineDialect === 'CLASSIC' ? $t('placeholderVar') : $t('placeholderConstraintVar')"
             ></bk-input>
+
+            <span class="error-text">
+                {{ isError ? $t('editPage.paramValueTips') : '' }}
+            </span>
         </section>
     </section>
 </template>
@@ -154,7 +159,8 @@
                 isVarInputMode: false,
                 enumValue: '',
                 selectValue: null,
-                displayValue: ''
+                displayValue: '',
+                isError: false
             }
         },
 
@@ -167,7 +173,7 @@
         watch: {
             value: {
                 handler (newValue) {
-                    const isVar = newValue?.isBkVar()
+                    const isVar = this.getValidaVar(newValue)
                     const inList = this.list?.some(i => i.value === newValue)
 
                     if (this.type === 'enum-input') {
@@ -224,6 +230,7 @@
 
             handleChangeType () {
                 this.isVarInputMode = !this.isVarInputMode
+                this.isError = false
                 if (this.type === 'enum-input' && !this.isVarInputMode) {
                     const defaultVal = this.list[0]?.value
                     this.$emit('update-value', defaultVal)
@@ -234,12 +241,25 @@
                 }
             },
 
+            handleVarClear () {
+                this.isError = false
+                this.$emit('update-value', '')
+            },
+
             handleVarBlur (newValue) {
-                if (newValue !== '' && newValue.isBkVar()) {
-                    this.displayValue = newValue
-                } else {
-                    this.displayValue = ''
+                let displayValue = ''
+                let isError = false
+                
+                if (newValue !== '') {
+                    if (this.getValidaVar(newValue)) {
+                        displayValue = newValue
+                    } else {
+                        isError = true
+                    }
                 }
+                
+                this.displayValue = displayValue
+                this.isError = isError
                 this.$emit('update-value', this.displayValue)
             },
 
@@ -274,14 +294,18 @@
 <style lang="scss" scoped>
     .param-input-home {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         flex: 1;
         .param-hyphen {
             margin-right: 11px;
+            margin-bottom: 16px;
         }
     }
     .parameter-input {
         flex: 1;
+        & > *:not(.error-text) {
+           line-height: 30px;
+        }
         .input-label {
             display: flex;
             align-items: center;
@@ -336,4 +360,19 @@
             flex: 1;
         }
     }
+</style>
+<style lang="scss">
+.param-input-home {
+    .error-text {
+        color: #ff5656;
+        display: inline-block;
+        height: 16px;
+        line-height: 16px;
+    }
+    .error-input {
+        .bk-form-input {
+            border-color: #ff5656 !important;
+        }
+    }
+}
 </style>

@@ -72,7 +72,11 @@ const atomMixin = {
         stage: Object,
         atomPropsModel: Object,
         setAtomValidate: Function,
-        disabled: Boolean
+        disabled: Boolean,
+        pipelineDialect: {
+            type: String,
+            default: "CLASSIC"
+        }
     },
     components: {
         Accordion,
