@@ -175,19 +175,27 @@
                 handler (newValue) {
                     const isVar = this.getValidaVar(newValue)
                     const inList = this.list?.some(i => i.value === newValue)
+                    const defaultVal = this.list[0]?.value
+
+                    const handleVarMode = () => {
+                        this.isVarInputMode = true
+                        this.displayValue = newValue
+                    }
 
                     if (this.type === 'enum-input') {
                         if (newValue ==='' ||  (isVar && !inList)) {
-                            this.isVarInputMode = true
-                            this.displayValue = newValue
+                            handleVarMode()
                         } else {
-                            const defaultVal = this.list[0]?.value
-                            this.enumValue = newValue || defaultVal || ''
+                            this.enumValue = newValue
+
+                            if (newValue !== defaultVal) {
+                                handleVarMode()
+                                this.handleVarBlur(newValue)
+                            }
                         }
                     } else {
                         if (isVar && !inList) {
-                            this.isVarInputMode = true
-                            this.displayValue = newValue
+                            handleVarMode()
                         } else {
                             if (this.isMultiple) {
                                 const valArr = this.value ? this.value.split(',') : []
