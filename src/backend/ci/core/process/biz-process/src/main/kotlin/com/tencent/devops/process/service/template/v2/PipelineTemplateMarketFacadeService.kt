@@ -28,7 +28,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdate
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
@@ -37,7 +36,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 /**
  * 流水线市场模版门面类
@@ -365,6 +363,26 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
+    /**
+     * 校验模板（指定版本）中引用的构建镜像是否全部处于【已发布】状态。
+     *
+     * 逻辑说明：
+     * 1. 获取模板资源与其模型，仅在模板类型为 PIPELINE 时检查镜像；否则直接返回 null。
+     * 2. 遍历所有阶段与容器，仅处理 VMBuildContainer 且分发类型为 StoreDispatchType 的场景。
+     * 3. 以 `imageCode@imageVersion` 作为唯一键去重，避免对相同镜像重复调用远端状态接口。
+     * 4. 一旦发现第一个未发布的镜像，立即短路返回该镜像的 imageCode；若全部发布则返回 null。
+     *
+     * 设计考量：
+     * - 命名参数：统一采用命名参数，降低参数顺序误用风险并提升可读性。
+     * - 安全转换：使用 `as?` 避免不必要的强转异常。
+     * - 早退出：非流水线类型模板直接返回，减少分支嵌套。
+     *
+     * @param userId 操作人 ID（用于审计/日志，当前逻辑不参与判定）
+     * @param projectId 项目 ID
+     * @param templateId 模板 ID
+     * @param version 模板版本号
+     * @return Result<String?> 未发布镜像的 imageCode；若全部发布或无需校验则为 null
+     */
     fun checkImageReleaseStatus(
         userId: String,
         projectId: String,
@@ -377,49 +395,48 @@ class PipelineTemplateMarketFacadeService @Autowired constructor(
             templateId = templateId,
             version = version
         )
-        // TODO pac模板 二期，局部模板需要进行改造
-        if (template.type != PipelineTemplateType.PIPELINE)
-            return Result(null)
+        // TODO pac模板 二期，局部模板需要进行改造：当前仅在 PIPELINE 类型模板上检查镜像发布状态
+        if (template.type != PipelineTemplateType.PIPELINE) return Result(data = null)
+
         val templateModel = template.model as Model
-        var code: String? = null
-        val images = mutableSetOf<String>()
-        run releaseStatus@{
-            templateModel.stages.forEach { stage ->
-                stage.containers.forEach imageInfo@{ container ->
-                    if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
-                        val imageCode = (container.dispatchType as StoreDispatchType).imageCode
-                        val imageVersion = (container.dispatchType as StoreDispatchType).imageVersion
-                        val image = imageCode + imageVersion
-                        if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) {
-                            return@imageInfo
-                        } else {
-                            if (images.contains(image)) {
-                                return@imageInfo
-                            } else {
-                                images.add(image)
-                            }
-                            if (!isRelease(imageCode, imageVersion)) {
-                                code = imageCode
-                            }
-                            return@releaseStatus
-                        }
-                    } else {
-                        return@imageInfo
-                    }
+        var unreleasedCode: String? = null
+        // 记录已检查过的镜像 key（imageCode@imageVersion），避免重复远程查询
+        val visitedImages = mutableSetOf<String>()
+
+        outer@ for (stage in templateModel.stages) {
+            for (container in stage.containers) {
+                // 仅处理构建机容器，并且分发方式为商店镜像（StoreDispatchType）
+                val dispatch = (container as? VMBuildContainer)?.dispatchType as? StoreDispatchType ?: continue
+                val imageCode = dispatch.imageCode
+                val imageVersion = dispatch.imageVersion
+                if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) continue
+
+                val key = "$imageCode@$imageVersion"
+                if (!visitedImages.add(key)) continue // 已检查，跳过
+
+                // 发现未发布镜像则立即短路，返回首个未发布镜像的 code
+                if (!isRelease(imageCode = imageCode, imageVersion = imageVersion)) {
+                    unreleasedCode = imageCode
+                    break@outer
                 }
             }
         }
-        return Result(code)
+        return Result(data = unreleasedCode)
     }
 
+    /**
+     * 查询镜像发布状态。
+     *
+     * @param imageCode 镜像 code
+     * @param imageVersion 镜像版本
+     * @return Boolean 是否为【已发布】状态
+     */
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
-        val imageStatus = client.get(ServiceStoreImageResource::class)
-            .getImageStatusByCodeAndVersion(imageCode, imageVersion).data
-        return ImageStatusEnum.RELEASED.name == imageStatus
+        return client.get(ServiceStoreImageResource::class)
+            .isReleasedStatus(imageCode = imageCode, imageVersion = imageVersion).data!!
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMarketFacadeService::class.java)
-        private val updateMarketTemplateExecutorService = Executors.newFixedThreadPool(3)
     }
 }

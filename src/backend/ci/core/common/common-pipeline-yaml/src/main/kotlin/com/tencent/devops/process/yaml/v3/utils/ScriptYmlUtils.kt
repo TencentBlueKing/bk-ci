@@ -619,6 +619,7 @@ object ScriptYmlUtils {
             ifField = formatIfField(preStep.ifField),
             ifModify = preStep.ifModify,
             uses = preStep.uses,
+            namespace = preStep.namespace,
             with = preStep.with,
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
