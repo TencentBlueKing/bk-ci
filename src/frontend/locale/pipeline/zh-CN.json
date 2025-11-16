@@ -356,7 +356,7 @@
     "noticeGroup": "通知组",
     "emptyNoticeGroup": "通知组为空",
     "additionUser": "通知人",
-    "additionUserPlaceholder": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
+    "additionUserPlaceholder": "支持环境变量(${'{'}var{'}'})，多个环境变量以英文逗号分隔",
     "noticeContent": "通知内容",
     "noticeGroupIds": "企业微信群 ID",
     "pipelineLink": "通知内容附加流水线链接",
@@ -1875,7 +1875,7 @@
   "differenceItem": "差异项",
   "expressionFormat": "表达式格式",
   "traditionalFormat": "单花括号或双花括号",
-  "traditionalFormatExample": "如：${var}、${'{{'}var{'}}'}",
+  "traditionalFormatExample": "如：${'{'}var{'}'}、${'{{'}var{'}}'}",
   "constraintFormat": "仅支持双花括号，避免出现 bash 脚本变量在执行前被系统赋值的问题",
   "constraintFormatExample": "如：${'{{'}variables.var{'}}'}",
   "expressionFunction": "表达式函数",
@@ -2032,6 +2032,7 @@
   "showBuildInfo": "展示构建信息",
   "switchToVarMode": "点击切换为输入变量模式",
   "closeVarMode": "点击关闭输入变量模式",
-  "placeholderVar": "请输入变量，如 ${'{{'}variables.a{'}}'}",
+  "placeholderConstraintVar": "请输入变量，如 ${'{{'}var{'}}'}",
+  "placeholderVar": "请输入变量，如 ${'{{'}var{'}}'} 或 ${'{'}var{'}'}",
   "selectTips": "请选择"
 }

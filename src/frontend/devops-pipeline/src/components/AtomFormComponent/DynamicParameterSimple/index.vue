@@ -16,8 +16,9 @@
                 @update-key="(newValue) => updateKey(model, newValue)"
                 @update-value="(newValue) => updateValue(model, newValue)"
                 :param-values="paramValues"
+                :pipeline-dialect="pipelineDialect"
             ></parameter-com>
-            <div :class="parameter.rowAttributes[paramIndex]?.label ? 'label-icon' : ''">
+            <div :class="parameter.rowAttributes?.[0].label ? 'label-icon' : 'simple-label-icon'">
                 <i
                     class="bk-icon icon-plus-circle"
                     @click="plusParam(parameter, paramIndex)"
@@ -155,6 +156,7 @@
             align-items: center;
             grid-gap: 10px;
             grid-auto-flow: column;
+            line-height: 0;
             .input-com {
                 min-width: 0;
                 display: block;
@@ -166,7 +168,10 @@
         }
     }
     .label-icon {
-        margin-top: 30px;
+        margin-top: 12px;
+    }
+    .simple-label-icon {
+        margin-bottom: 12px;
     }
     .bk-icon {
         margin-left: 5px;
