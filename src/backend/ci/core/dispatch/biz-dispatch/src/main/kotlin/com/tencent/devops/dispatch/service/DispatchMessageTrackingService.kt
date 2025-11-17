@@ -141,36 +141,26 @@ class DispatchMessageTrackingService @Autowired constructor(
         vmSeqId: Int,
         executeCount: Int
     ): DispatchMessageTrackingRecord? {
-        return try {
-            val record = messageConsumeRecordDao.get(dslContext, buildId, vmSeqId, executeCount)
-                ?: return null
+        val record = messageConsumeRecordDao.get(dslContext, buildId, vmSeqId, executeCount)
+            ?: return null
 
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-            DispatchMessageTrackingRecord(
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                buildId = record.buildId,
-                vmSeqId = record.vmSeqId,
-                executeCount = record.executeCount,
-                dispatchType = record.dispatchType,
-                consumeStatus = record.consumeStatus,
-                consumeStatusMsg = DispatchMessageStatus.valueOf(record.consumeStatus)?.description,
-                errorCode = record.errorCode,
-                errorMessage = record.errorMessage,
-                errorType = record.errorType,
-                retryCount = record.retryCount,
-                queueTimeCost = record.queueTimeCost,
-                resourcePrepareTimeCost = record.resourcePrepareTimeCost,
-                totalTimeCost = record.totalTimeCost,
-                startTime = record.startTime?.format(formatter),
-                endTime = record.endTime?.format(formatter),
-                createdTime = record.createdTime.format(formatter),
-                updatedTime = record.updatedTime.format(formatter)
-            )
-        } catch (e: Exception) {
-            logger.error("[$buildId|$vmSeqId|$executeCount] Failed to get message tracking record", e)
-            null
-        }
+        return DispatchMessageTrackingRecord(
+            projectId = record.projectId,
+            pipelineId = record.pipelineId,
+            buildId = record.buildId,
+            vmSeqId = record.vmSeqId,
+            executeCount = record.executeCount,
+            dispatchType = record.dispatchType,
+            consumeStatus = record.consumeStatus,
+            consumeStatusMsg = DispatchMessageStatus.valueOf(record.consumeStatus)?.description,
+            errorCode = record.errorCode,
+            errorMessage = record.errorMessage,
+            errorType = record.errorType,
+            totalTimeCost = record.totalTimeCost,
+            startTime = record.startTime?.format(formatter),
+            endTime = record.endTime?.format(formatter)
+        )
     }
 }

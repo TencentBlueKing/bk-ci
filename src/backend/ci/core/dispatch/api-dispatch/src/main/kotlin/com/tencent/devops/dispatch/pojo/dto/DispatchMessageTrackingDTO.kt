@@ -119,20 +119,10 @@ data class DispatchMessageTrackingRecord(
     val errorMessage: String? = null,
     @get:Schema(title = "错误类型")
     val errorType: String? = null,
-    @get:Schema(title = "重试次数")
-    val retryCount: Int,
-    @get:Schema(title = "队列耗时（毫秒）")
-    val queueTimeCost: Long? = null,
-    @get:Schema(title = "资源准备耗时（毫秒）")
-    val resourcePrepareTimeCost: Long? = null,
     @get:Schema(title = "总耗时（毫秒）")
     val totalTimeCost: Long? = null,
     @get:Schema(title = "开始时间")
     val startTime: String? = null,
     @get:Schema(title = "结束时间")
-    val endTime: String? = null,
-    @get:Schema(title = "创建时间")
-    val createdTime: String,
-    @get:Schema(title = "更新时间")
-    val updatedTime: String
+    val endTime: String? = null
 )

@@ -78,5 +78,5 @@ interface ServiceDispatchMessageTrackingResource {
         @Parameter(description = "执行次数", required = true)
         @PathParam("executeCount")
         executeCount: Int
-    ): Result<DispatchMessageTrackingRecord?>
+    ): Result<DispatchMessageTrackingRecord>
 }

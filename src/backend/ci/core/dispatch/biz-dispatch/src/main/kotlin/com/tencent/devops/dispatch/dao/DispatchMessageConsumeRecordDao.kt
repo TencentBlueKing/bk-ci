@@ -115,59 +115,6 @@ class DispatchMessageConsumeRecordDao {
         }
     }
 
-    fun updateQueueTimeCost(
-        dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: Int,
-        executeCount: Int,
-        queueTimeCost: Long
-    ): Boolean {
-        with(TDispatchMessageConsumeRecord.T_DISPATCH_MESSAGE_CONSUME_RECORD) {
-            return dslContext.update(this)
-                .set(QUEUE_TIME_COST, queueTimeCost)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .and(EXECUTE_COUNT.eq(executeCount))
-                .execute() > 0
-        }
-    }
-
-    fun updateResourcePrepareTimeCost(
-        dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: Int,
-        executeCount: Int,
-        prepareTimeCost: Long
-    ): Boolean {
-        with(TDispatchMessageConsumeRecord.T_DISPATCH_MESSAGE_CONSUME_RECORD) {
-            return dslContext.update(this)
-                .set(RESOURCE_PREPARE_TIME_COST, prepareTimeCost)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .and(EXECUTE_COUNT.eq(executeCount))
-                .execute() > 0
-        }
-    }
-
-    fun incrementRetryCount(
-        dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: Int,
-        executeCount: Int
-    ): Boolean {
-        with(TDispatchMessageConsumeRecord.T_DISPATCH_MESSAGE_CONSUME_RECORD) {
-            return dslContext.update(this)
-                .set(RETRY_COUNT, RETRY_COUNT.plus(1))
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
-                .and(VM_SEQ_ID.eq(vmSeqId))
-                .and(EXECUTE_COUNT.eq(executeCount))
-                .execute() > 0
-        }
-    }
-
     fun get(
         dslContext: DSLContext,
         buildId: String,

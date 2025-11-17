@@ -28,11 +28,10 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
-import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
 import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -245,22 +244,4 @@ class DispatchMessageTracking @Autowired constructor(
         operator = operator,
         remark = "Message consumption completed successfully"
     )
-
-    fun getMessageTrackingRecord(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int
-    ): DispatchMessageTrackingRecord? {
-        return try {
-            val result = client.get(ServiceDispatchMessageTrackingResource::class).getMessageTrackingRecord(
-                buildId = buildId,
-                vmSeqId = vmSeqId.toInt(),
-                executeCount = executeCount
-            ).data
-            result
-        } catch (e: Exception) {
-            logger.error("[$buildId|$vmSeqId|$executeCount] Failed to get message tracking record", e)
-            null
-        }
-    }
 }

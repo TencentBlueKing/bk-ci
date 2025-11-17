@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
@@ -57,8 +58,12 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: Int,
         executeCount: Int
-    ): Result<DispatchMessageTrackingRecord?> {
+    ): Result<DispatchMessageTrackingRecord> {
         val record = dispatchMessageTrackingService.getMessageTrackingRecord(buildId, vmSeqId, executeCount)
-        return Result(record)
+        if (record == null) {
+            return Result(HTTP_500, "Message tracking record not found")
+        } else {
+            return Result(record)
+        }
     }
 }
