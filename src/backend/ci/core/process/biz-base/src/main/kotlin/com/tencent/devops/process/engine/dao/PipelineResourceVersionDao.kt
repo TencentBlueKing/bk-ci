@@ -339,7 +339,12 @@ class PipelineResourceVersionDao {
         buildOnly: Boolean? = false
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val query = dslContext.selectFrom(this)
+            val query = dslContext.select(
+                PIPELINE_ID, PROJECT_ID, CREATOR, CREATE_TIME, UPDATER, UPDATE_TIME,
+                VERSION, VERSION_NAME, YAML_VERSION, REFER_FLAG, REFER_COUNT,
+                VERSION_NUM, PIPELINE_VERSION, TRIGGER_VERSION, SETTING_VERSION,
+                STATUS, DESCRIPTION, DEBUG_BUILD_ID, BASE_VERSION, BRANCH_ACTION
+            ).from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
                     STATUS.isNull.or(
@@ -386,7 +391,30 @@ class PipelineResourceVersionDao {
             }
             val list = query.orderBy(
                 RELEASE_TIME.desc(), VERSION.desc()
-            ).limit(limit).offset(offset).fetch(sampleMapper)
+            ).limit(limit).offset(offset).fetch().map { record ->
+                PipelineVersionSimple(
+                    pipelineId = record.get(PIPELINE_ID),
+                    creator = record.get(CREATOR) ?: "unknown",
+                    createTime = record.get(CREATE_TIME).timestampmilli(),
+                    updater = record.get(UPDATER),
+                    updateTime = record.get(UPDATE_TIME)?.timestampmilli(),
+                    version = record.get(VERSION) ?: 1,
+                    versionName = record.get(VERSION_NAME) ?: "",
+                    yamlVersion = record.get(YAML_VERSION),
+                    referFlag = record.get(REFER_FLAG),
+                    referCount = record.get(REFER_COUNT),
+                    versionNum = record.get(VERSION_NUM),
+                    pipelineVersion = record.get(PIPELINE_VERSION),
+                    triggerVersion = record.get(TRIGGER_VERSION),
+                    settingVersion = record.get(SETTING_VERSION),
+                    status = record.get(STATUS)?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED,
+                    description = record.get(DESCRIPTION),
+                    debugBuildId = record.get(DEBUG_BUILD_ID),
+                    baseVersion = record.get(BASE_VERSION),
+                    baseVersionName = null,
+                    latestReleasedFlag = record.get(VERSION) == pipelineInfo.version
+                )
+            }
             list.forEach { if (it.version == pipelineInfo.version) it.latestReleasedFlag = true }
             return list
         }
