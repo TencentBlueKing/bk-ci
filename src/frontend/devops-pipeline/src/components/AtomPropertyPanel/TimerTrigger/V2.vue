@@ -11,12 +11,13 @@
             >
                 <component
                     :is="obj.component"
-                    v-bind="obj"
+                    v-validate.initial="Object.assign({}, { required: obj.required, crontabArrayRule: obj.required && obj.component === 'timer-cron-tab' })"
                     :name="key"
                     :value="element[key]"
                     :element="element"
                     :disabled="disabled"
                     :handle-change="handleChange"
+                    v-bind="obj"
                 />
             </form-field>
         </template>
@@ -36,6 +37,19 @@
             CodelibSelector
         },
         mixins: [atomMixin, validMixins],
+        watch: {
+            element: {
+                handler (newVal, oldVal) {
+                    this.$nextTick(() => {
+                        if (this.$validator) {
+                            this.$validator.validateAll()
+                        }
+                    })
+                },
+                deep: true
+            }
+        },
+
         methods: {
             updateProps (newParam) {
                 this.updateAtom({
