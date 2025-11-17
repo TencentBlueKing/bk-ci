@@ -80,7 +80,7 @@
                     <bk-table-column
                         :label="$t('template.currentVision')"
                         prop="pipelineVersionName"
-                        :width="250"
+                        :width="180"
                     >
                         <template slot-scope="{ row }">
                             <div class="version-wrapper">
@@ -144,12 +144,12 @@
                     <bk-table-column
                         :label="$t('template.referenceTemplateVersion')"
                         prop="fromTemplateVersionName"
-                        :width="250"
+                        :width="180"
                     >
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('template.newestVersion')"
-                        :width="140"
+                        :width="180"
                     >
                         <template>
                             <span>{{ currentVersionName }}</span>
@@ -158,7 +158,7 @@
                     <bk-table-column
                         :label="$t('template.codeRepo')"
                         prop="repoAliasName"
-                        :width="150"
+                        :width="200"
                     >
                         <template slot-scope="{ row }">
                             {{ row.repoAliasName || '--' }}
@@ -474,7 +474,7 @@
     }
     function updateInstance (row) {
         if (row.canEdit) {
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, [row])
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [row] })
             createInstance(row.templateId, 'upgrade')
         }
     }
@@ -493,7 +493,7 @@
                 },
                 query: {
                     from: row.pipelineId,
-                    copyPipelineName: (row.pipelineName + '_copy').substring(0, 128),
+                    pipelineName: (row.pipelineName + '_copy').substring(0, 128),
                 }
             })
         } catch (e) {
@@ -505,7 +505,7 @@
         window.open(url, '_blank')
     }
     function batchUpdateInstance () {
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, selectItemList.value)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: selectItemList.value })
         proxy.$router.push({
             name: 'instanceEntry',
             params: {

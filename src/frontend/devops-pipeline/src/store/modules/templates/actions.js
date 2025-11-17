@@ -124,10 +124,14 @@ const actions = {
             stepId: i.stepId ?? '',
             disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
-            variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: true
+            isFollowTemplate: true,
+            ...(
+                i.startParams ? {
+                    variables: JSON.parse(i.startParams)
+                } : {}
+            )
         }))
         commit(SET_TEMPLATE_DETAIL, {
             templateDetail: {

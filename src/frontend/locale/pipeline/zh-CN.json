@@ -668,7 +668,7 @@
     "buildParam": "入参",
     "notBuildParam": "非入参",
     "currentInstance": "此实例中",
-    "cancelParticipant": "点击可取消设置，变更为非入参",
+    "cancelParticipant": "点击可变更为非入参",
     "setParticipant": "点击恢复为入参",
     "unfollow": "不跟随模板",
     "follow": "跟随模板",

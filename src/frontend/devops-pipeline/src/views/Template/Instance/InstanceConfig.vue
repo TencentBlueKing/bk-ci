@@ -321,7 +321,7 @@
     })
     const activeName = ref(new Set([1]))
     const { proxy } = UseInstance()
-    const isLoading = ref(true)
+    const isLoading = ref(false)
     const paramsList = ref([])
     const paramsValues = ref({})
     const otherParams = ref([])
@@ -472,18 +472,23 @@
             if (!curTemplateVersion.value) {
                 isLoading.value = false
             }
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value.map((instance) => {
-                return {
-                    ...instance,
-                    param: curTemplateDetail.value?.param?.map(i => ({
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: instanceList.value.map((instance) => {
+                    return {
+                        ...instance,
+                        param: curTemplateDetail.value?.param?.map(i => ({
                         ...i,
                         isRequiredParam: true
                     })),
-                    buildNo: curTemplateDetail.value?.buildNo
-                }
-            }))
+                        buildNo: curTemplateDetail.value?.buildNo
+                    }
+                })
+            })
+            
         } else {
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, initialInstanceList.value)
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: initialInstanceList.value
+            })
         }
     })
     function compareParams (instance, template) {
@@ -493,7 +498,7 @@
             acc[item.id] = item
             return acc
         }, {})
-        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param.reduce((acc, item) => {
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param?.reduce((acc, item) => {
             acc[item.id] = item
             return acc
         }, {})
@@ -534,6 +539,7 @@
                         : itemDefaultValue !== templateDefaultValue
                     
                     if (!item.isNew) {
+                        console.log(123)
                         const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem?.defaultValue) : initialInstanceParamItem?.defaultValue
                         item.isChange =  isObject(itemDefaultValue)
                             ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)

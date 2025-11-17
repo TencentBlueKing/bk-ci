@@ -670,7 +670,7 @@
     "buildParam": "入力パラメータ",
     "notBuildParam": "非入力パラメータ",
     "currentInstance": "このインスタンスにおいて",
-    "cancelParticipant": "クリックすると設定が解除され、入力パラメータではなくなります",
+    "cancelParticipant": "クリックすると非入力パラメータに変更できます",
     "setParticipant": "クリックすると入力パラメータに戻ります",
     "unfollow": "テンプレートに従わない",
     "follow": "テンプレートに従う",
