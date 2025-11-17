@@ -1015,6 +1015,10 @@
                         } else {
                             await this.requestPipelineSummary(this.$route.params)
                         }
+                        
+                        const { storeFlag, publishStrategy } = this.pipelineInfo
+                        const isManual = publishStrategy && publishStrategy === 'MANUAL'
+
                         this.customVersionName = ''
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
@@ -1055,15 +1059,12 @@
                                     attrs: {
                                         class: 'release-info-title'
                                     }
-                                }, this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc')),
+                                }, this.$t(isPacMR ? 'pacMRRelaseTips' :  storeFlag ? 'template.versionReleaseSuc' :'releaseSuc', [versionName])),
                                 h('h3', {
                                     class: 'release-info-text',
-                                    domProps: {
-                                        innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                            versionName
-                                        ])
-                                    }
-                                }),
+                                }, this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
+                                    versionName
+                                ])),
                                 updateBuildNo && !tipsArrayLength
                                     ? h('div', { class: 'warning-box' }, [
                                         h(Logo, { size: 14, name: 'warning-circle-fill' }),
@@ -1172,6 +1173,20 @@
                                                     this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
                                                 )
                                                 : null,
+                                        storeFlag && isManual && !isPacMR
+                                            ? h('bk-button', {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        if (!this.pipelineInfo.permissions.canEdit) return
+                                                        const href = `${WEB_URL_PREFIX}/store/editTemplate/${this.pipelineInfo.id}?hasSourceInfo=true`
+                                                        window.open(href, '_blank')
+                                                    }
+                                                },
+                                            }, this.$t('template.toStoreUpdate')) : null,
                                         h(
                                             'bk-button',
                                             {
