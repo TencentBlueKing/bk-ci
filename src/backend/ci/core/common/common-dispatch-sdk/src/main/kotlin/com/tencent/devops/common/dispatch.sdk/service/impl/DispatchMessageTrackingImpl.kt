@@ -28,10 +28,9 @@
 package com.tencent.devops.common.dispatch.sdk.service.impl
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRecord
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdateMessageStatusRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdatePerformanceRequest
+import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import com.tencent.devops.common.dispatch.sdk.service.DispatchMessageTracking
 import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
 import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
@@ -53,20 +52,17 @@ class DispatchMessageTrackingImpl @Autowired constructor(
     }
 
     override fun initMessageTracking(
-        event: PipelineAgentStartupEvent
+        initMessageTrackingRequest: InitMessageTrackingRequest
     ): Long {
         return try {
-            val request = InitMessageTrackingRequest(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                buildId = event.buildId,
-                vmSeqId = event.vmSeqId.toInt(),
-                executeCount = event.executeCount ?: 1,
-                dispatchType = event.dispatchType::class.java.simpleName
-            )
-            client.get(ServiceDispatchMessageTrackingResource::class).initMessageTracking(request).data ?: 0L
+            client.get(ServiceDispatchMessageTrackingResource::class)
+                .initMessageTracking(initMessageTrackingRequest).data ?: 0L
         } catch (e: Exception) {
-            logger.warn("[${event.buildId}|${event.vmSeqId}] Failed to init message tracking", e)
+            logger.warn(
+                "[${initMessageTrackingRequest.buildId}|${initMessageTrackingRequest.vmSeqId}] " +
+                        "Failed to init message tracking",
+                e
+            )
             0L
         }
     }
@@ -233,44 +229,6 @@ class DispatchMessageTrackingImpl @Autowired constructor(
         operator = operator,
         remark = "Message consumption completed successfully"
     )
-
-    override fun updateQueueTimeCost(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        queueTimeCost: Long
-    ) {
-        try {
-            val request = UpdatePerformanceRequest(
-                buildId = buildId,
-                vmSeqId = vmSeqId.toInt(),
-                executeCount = executeCount,
-                queueTimeCost = queueTimeCost
-            )
-            client.get(ServiceDispatchMessageTrackingResource::class).updatePerformance(request)
-        } catch (e: Exception) {
-            logger.warn("[$buildId|$vmSeqId] Failed to update queue time cost", e)
-        }
-    }
-
-    override fun updateResourcePrepareTimeCost(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        prepareTimeCost: Long
-    ) {
-        try {
-            val request = UpdatePerformanceRequest(
-                buildId = buildId,
-                vmSeqId = vmSeqId.toInt(),
-                executeCount = executeCount,
-                resourcePrepareTimeCost = prepareTimeCost
-            )
-            client.get(ServiceDispatchMessageTrackingResource::class).updatePerformance(request)
-        } catch (e: Exception) {
-            logger.warn("[$buildId|$vmSeqId] Failed to update resource prepare time cost", e)
-        }
-    }
 
     override fun getMessageTrackingRecord(
         buildId: String,

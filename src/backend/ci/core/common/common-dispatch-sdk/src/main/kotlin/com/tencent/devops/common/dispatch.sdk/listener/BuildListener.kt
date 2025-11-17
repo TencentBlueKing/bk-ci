@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -88,7 +89,16 @@ interface BuildListener {
         var errorType: ErrorType? = null
 
         // 初始化消息追踪
-        dispatchMessageTracking.initMessageTracking(event)
+        dispatchMessageTracking.initMessageTracking(
+            InitMessageTrackingRequest(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId.toInt(),
+                executeCount = event.executeCount ?: 1,
+                dispatchType = event.dispatchType::class.java.simpleName
+            )
+        )
 
         try {
             logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")

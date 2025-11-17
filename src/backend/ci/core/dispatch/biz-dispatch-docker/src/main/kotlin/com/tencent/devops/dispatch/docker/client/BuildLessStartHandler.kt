@@ -34,6 +34,7 @@ import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
@@ -80,11 +81,25 @@ class BuildLessStartHandler @Autowired constructor(
                 rejectedExecutionType = rejectedExecutionType
             )
 
+            // 记录资源交付中
+            BeanUtil.getDispatchMessageTracking().trackResourceDelivering(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
+
             when (clusterType) {
                 DockerHostClusterType.BUILD_LESS -> startBuildLess(buildLessStartInfo, handlerContext)
                 DockerHostClusterType.K8S_BUILD_LESS -> startK8sBuildLess(buildLessStartInfo, handlerContext)
                 else -> startBuildLess(buildLessStartInfo, handlerContext)
             }
+
+            // 记录资源交付完成
+            BeanUtil.getDispatchMessageTracking().trackResourceReady(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
         }
     }
 

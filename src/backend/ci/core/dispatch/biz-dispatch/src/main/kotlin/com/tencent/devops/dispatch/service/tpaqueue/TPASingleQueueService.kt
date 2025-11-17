@@ -250,7 +250,7 @@ class TPASingleQueueService @Autowired constructor(
             buildId = data.buildId,
             vmSeqId = data.vmSeqId,
             executeCount = data.executeCount ?: 1,
-            operator = "${this::class.java.simpleName}.startup"
+            operator = "${this::class.java.simpleName}.inQueue"
         )
 
         thirdPartyAgentService.queueBuild(

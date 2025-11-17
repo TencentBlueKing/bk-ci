@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.pojo.dto
+package com.tencent.devops.dispatch.pojo.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 

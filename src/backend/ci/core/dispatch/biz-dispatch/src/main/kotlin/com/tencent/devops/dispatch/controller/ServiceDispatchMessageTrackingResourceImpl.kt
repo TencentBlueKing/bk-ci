@@ -28,11 +28,11 @@
 package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdateMessageStatusRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdatePerformanceRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
+import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import com.tencent.devops.dispatch.service.DispatchMessageTrackingService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,18 +53,11 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
         return Result(dispatchMessageTrackingService.updateMessageStatus(request))
     }
 
-    override fun updatePerformance(
-        request: UpdatePerformanceRequest
-    ): Result<Boolean> {
-        dispatchMessageTrackingService.updatePerformance(request)
-        return Result(true)
-    }
-
     override fun getMessageTrackingRecord(
         buildId: String,
         vmSeqId: Int,
         executeCount: Int
-    ): Result<com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRecord?> {
+    ): Result<DispatchMessageTrackingRecord?> {
         val record = dispatchMessageTrackingService.getMessageTrackingRecord(buildId, vmSeqId, executeCount)
         return Result(record)
     }

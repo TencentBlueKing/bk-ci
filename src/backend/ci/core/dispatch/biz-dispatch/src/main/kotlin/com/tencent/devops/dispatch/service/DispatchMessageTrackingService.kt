@@ -27,13 +27,11 @@
 
 package com.tencent.devops.dispatch.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRecord
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdateMessageStatusRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdatePerformanceRequest
 import com.tencent.devops.dispatch.dao.DispatchMessageConsumeRecordDao
+import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
+import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -132,39 +130,6 @@ class DispatchMessageTrackingService @Autowired constructor(
             logger.error("[${request.buildId}|${request.vmSeqId}|${request.executeCount}] " +
                 "Failed to update status", e)
             false
-        }
-    }
-
-    /**
-     * 增加重试次数
-     */
-    fun incrementRetryCount(buildId: String, vmSeqId: Int, executeCount: Int) {
-        try {
-            messageConsumeRecordDao.incrementRetryCount(dslContext, buildId, vmSeqId, executeCount)
-        } catch (e: Exception) {
-            logger.error("[$buildId|$vmSeqId|$executeCount] Failed to increment retry count", e)
-        }
-    }
-
-    /**
-     * 更新性能指标
-     */
-    fun updatePerformance(request: UpdatePerformanceRequest) {
-        try {
-            request.queueTimeCost?.let {
-                messageConsumeRecordDao.updateQueueTimeCost(
-                    dslContext, request.buildId, request.vmSeqId, request.executeCount, it
-                )
-            }
-
-            request.resourcePrepareTimeCost?.let {
-                messageConsumeRecordDao.updateResourcePrepareTimeCost(
-                    dslContext, request.buildId, request.vmSeqId, request.executeCount, it
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("[${request.buildId}|${request.vmSeqId}|${request.executeCount}] " +
-                "Failed to update performance", e)
         }
     }
 

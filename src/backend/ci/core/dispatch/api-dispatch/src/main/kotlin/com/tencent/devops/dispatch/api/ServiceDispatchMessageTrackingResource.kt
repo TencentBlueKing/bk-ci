@@ -28,10 +28,9 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRecord
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdateMessageStatusRequest
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.UpdatePerformanceRequest
+import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -64,14 +63,6 @@ interface ServiceDispatchMessageTrackingResource {
     fun updateMessageStatus(
         @Parameter(description = "更新状态请求", required = true)
         request: UpdateMessageStatusRequest
-    ): Result<Boolean>
-
-    @Operation(summary = "更新性能指标")
-    @PUT
-    @Path("/performance")
-    fun updatePerformance(
-        @Parameter(description = "更新性能指标请求", required = true)
-        request: UpdatePerformanceRequest
     ): Result<Boolean>
 
     @Operation(summary = "查询消息追踪记录")

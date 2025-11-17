@@ -27,8 +27,9 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
 import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
-import com.tencent.devops.common.dispatch.sdk.pojo.dto.DispatchMessageTrackingRecord
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
 /**
@@ -41,7 +42,7 @@ interface DispatchMessageTracking {
      * 初始化消息追踪
      */
     fun initMessageTracking(
-        event: PipelineAgentStartupEvent
+        initMessageTrackingRequest: InitMessageTrackingRequest
     ): Long
 
     /**
@@ -164,26 +165,6 @@ interface DispatchMessageTracking {
         executeCount: Int,
         operator: String? = null
     ): Boolean
-
-    /**
-     * 更新队列耗时
-     */
-    fun updateQueueTimeCost(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        queueTimeCost: Long
-    )
-
-    /**
-     * 更新资源准备耗时
-     */
-    fun updateResourcePrepareTimeCost(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        prepareTimeCost: Long
-    )
 
     /**
      * 查询消息追踪记录
