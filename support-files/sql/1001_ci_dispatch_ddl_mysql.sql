@@ -428,4 +428,33 @@ CREATE TABLE IF NOT EXISTS `T_DISPATCH_THIRDPARTY_AGENT_QUEUE`
   KEY `IDX_BUILD_VMSEQ` (`BUILD_ID`,`VM_SEQ_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '第三方构建机排队表';
 
+CREATE TABLE IF NOT EXISTS `T_DISPATCH_MESSAGE_CONSUME_RECORD`
+(
+    `ID`                         bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `PROJECT_ID`                 varchar(64)  NOT NULL COMMENT '项目ID',
+    `PIPELINE_ID`                varchar(64)  NOT NULL COMMENT '流水线ID',
+    `BUILD_ID`                   varchar(64)  NOT NULL COMMENT '构建ID',
+    `VM_SEQ_ID`                  int(11)      NOT NULL DEFAULT 1 COMMENT 'VM序列ID',
+    `EXECUTE_COUNT`              int(11)      NOT NULL DEFAULT 1 COMMENT '执行次数',
+    `DISPATCH_TYPE`              varchar(128) NOT NULL COMMENT 'Dispatch类型全名（如PublicDevCloudDispatchType）',
+    `EXTRA_INFO`                 text                  DEFAULT NULL COMMENT '扩展信息（JSON格式）',
+    `RETRY_COUNT`                int(11)      NOT NULL DEFAULT 0 COMMENT '重试次数',
+    `CONSUME_STATUS`             int(11)      NOT NULL DEFAULT 0 COMMENT '消息消费状态（见DispatchMessageStatus枚举）',
+    `ERROR_CODE`                 varchar(128) NOT NULL DEFAULT '' COMMENT '错误码',
+    `ERROR_MESSAGE`              text                  DEFAULT NULL COMMENT '错误详细信息',
+    `ERROR_TYPE`                 varchar(64)  NOT NULL        DEFAULT '' COMMENT '错误类型（USER/SYSTEM/THIRD_PARTY）',
+    `QUEUE_TIME_COST`            bigint(20)   NOT NULL         DEFAULT 0 COMMENT '排队耗时（毫秒）',
+    `RESOURCE_PREPARE_TIME_COST` bigint(20)   NOT NULL        DEFAULT 0 COMMENT '资源准备耗时（毫秒）',
+    `TOTAL_TIME_COST`            bigint(20)   NOT NULL         DEFAULT 0 COMMENT '总耗时（毫秒）',
+    `START_TIME`                 datetime              DEFAULT NULL COMMENT '开始时间',
+    `END_TIME`                   datetime              DEFAULT NULL COMMENT '结束时间',
+    `CREATED_TIME`               datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATED_TIME`               datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UK_BUILD_VM_EXEC` (`BUILD_ID`, `VM_SEQ_ID`, `EXECUTE_COUNT`),
+    KEY `IDX_PROJECT_PIPELINE` (`PROJECT_ID`, `PIPELINE_ID`),
+    KEY `IDX_STATUS` (`CONSUME_STATUS`),
+    KEY `IDX_BUILD_STATUS` (`BUILD_ID`, `CONSUME_STATUS`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='Dispatch消息消费状态记录表（通用）';
+
 SET FOREIGN_KEY_CHECKS = 1;
