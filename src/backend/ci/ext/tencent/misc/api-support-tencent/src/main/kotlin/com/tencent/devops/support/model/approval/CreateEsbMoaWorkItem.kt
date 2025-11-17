@@ -213,7 +213,7 @@ data class MoaWorkItemCreateKeyAndValue(
     @JsonProperty("key")
     val key: String, // 申请人
     @JsonProperty("value")
-    val value: String // {{applicant}}
+    var value: String // {{applicant}}
 )
 
 data class MoaWorkItemCreateData(
