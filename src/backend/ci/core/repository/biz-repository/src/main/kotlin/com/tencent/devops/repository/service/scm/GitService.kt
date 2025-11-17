@@ -32,8 +32,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_QUERY_COUNT_RANGE
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -49,6 +49,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_QUERY_COUNT_RANGE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -2131,11 +2132,8 @@ class GitService @Autowired constructor(
     ): Result<String> {
         if (commitNumber !in min..max) {
             throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
-                params = arrayOf(
-                    "commitNumber", "value is $commitNumber," +
-                            " must be between $min and $max"
-                ),
+                errorCode = ERROR_QUERY_COUNT_RANGE,
+                params = arrayOf(min.toString(), max.toString()),
                 defaultMessage = "commitNumber must be" +
                         " between $min and $max, but got $commitNumber"
             )
@@ -2144,6 +2142,7 @@ class GitService @Autowired constructor(
         if (accessToken.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = NOT_AUTHORIZED_BY_OAUTH,
+                params = arrayOf(userId),
                 defaultMessage = "User [$userId] has not performed OAUTH authorization, please authorize first",
             )
         }

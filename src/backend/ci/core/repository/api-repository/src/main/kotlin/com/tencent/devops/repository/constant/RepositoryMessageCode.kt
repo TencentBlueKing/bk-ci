@@ -119,6 +119,7 @@ object RepositoryMessageCode {
     const val ERROR_SCM_API_NOT_READ_PERMISSION = "2115066" // 用户/凭证[{0}]没有仓库[{1}]访问权限
     const val ERROR_SCM_API_UNKNOWN_EXCEPTION = "2115067" // 调用[{0}]接口失败，异常信息: {1}
     const val ERROR_SCM_API_FILE_NOT_FOUND = "2115069" // 分支[{1}]上不存在文件[{2}]
+    const val ERROR_QUERY_COUNT_RANGE = "2115070" // 查询条数需要在{}到{}之间
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
