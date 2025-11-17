@@ -27,152 +27,241 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.pojo.dto.DispatchMessageTrackingRecord
-import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
 import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.dispatch.pojo.dto.UpdateMessageStatusRequest
+import com.tencent.devops.dispatch.api.ServiceDispatchMessageTrackingResource
+import com.tencent.devops.dispatch.pojo.DispatchMessageStatus
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 /**
- * Dispatch 消息追踪 Client 接口
- * 各 dispatch 模块通过此 Client 调用追踪服务
+ * Dispatch 消息追踪实现
  */
-interface DispatchMessageTracking {
+@Component
+class DispatchMessageTracking @Autowired constructor(
+    private val client: Client
+) {
 
-    /**
-     * 初始化消息追踪
-     */
+    companion object {
+        private val logger = LoggerFactory.getLogger(DispatchMessageTracking::class.java)
+    }
+
     fun initMessageTracking(
         initMessageTrackingRequest: InitMessageTrackingRequest
-    ): Long
+    ): Long {
+        return try {
+            client.get(ServiceDispatchMessageTrackingResource::class)
+                .initMessageTracking(initMessageTrackingRequest).data ?: 0L
+        } catch (e: Exception) {
+            logger.warn(
+                "[${initMessageTrackingRequest.buildId}|${initMessageTrackingRequest.vmSeqId}] " +
+                        "Failed to init message tracking",
+                e
+            )
+            0L
+        }
+    }
 
-    /**
-     * 更新消息状态
-     */
     fun updateMessageStatus(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
         newStatus: DispatchMessageStatus,
-        statusMsg: String? = null,
-        errorCode: String? = null,
-        errorMessage: String? = null,
-        errorType: String? = null,
-        operator: String? = null,
-        remark: String? = null
-    ): Boolean
+        statusMsg: String?,
+        errorCode: String? = "",
+        errorMessage: String? = "",
+        errorType: String? = "",
+        operator: String? = "",
+        remark: String? = ""
+    ): Boolean {
+        return try {
+            val request = UpdateMessageStatusRequest(
+                buildId = buildId,
+                vmSeqId = vmSeqId.toInt(),
+                executeCount = executeCount,
+                newStatus = newStatus.status,
+                statusMsg = statusMsg,
+                errorCode = errorCode,
+                errorMessage = errorMessage,
+                errorType = errorType,
+                operator = operator,
+                remark = remark
+            )
+            client.get(ServiceDispatchMessageTrackingResource::class).updateMessageStatus(request).data ?: false
+        } catch (e: Exception) {
+            logger.warn("[$buildId|$vmSeqId] Failed to update message status", e)
+            false
+        }
+    }
 
-    // ========== 便捷方法 ==========
-
-    /**
-     * 追踪消息处理失败
-     */
     fun trackConsumeFailed(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
         errorCode: String,
         errorMessage: String,
-        errorType: String = "SYSTEM",
-        operator: String? = null
-    ): Boolean
+        errorType: String,
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.CONSUME_FAILED,
+        statusMsg = DispatchMessageStatus.CONSUME_SUCCESS.description,
+        errorCode = errorCode,
+        errorMessage = errorMessage,
+        errorType = errorType,
+        operator = operator,
+        remark = "Message consumption failed: $errorMessage"
+    )
 
-    /**
-     * 追踪消息处理成功
-     */
-    fun trackConsumeSuccess(
-        buildId: String,
-        vmSeqId: String,
-        executeCount: Int,
-        operator: String? = null
-    ): Boolean
-
-    /**
-     * 追踪排队等待
-     */
     fun trackResourceQueue(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_QUEUE,
+        statusMsg = DispatchMessageStatus.RESOURCE_QUEUE.description,
+        operator = operator,
+        remark = "Queuing for resources"
+    )
 
-    /**
-     * 追踪配额排队
-     */
     fun trackQuotaQueue(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.QUOTA_QUEUE,
+        statusMsg = DispatchMessageStatus.QUOTA_QUEUE.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪配额不足导致的失败
-     */
     fun trackQuotaInSufficient(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.QUOTA_INSUFFICIENT,
+        statusMsg = DispatchMessageStatus.QUOTA_INSUFFICIENT.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪资源准备中
-     */
     fun trackResourcePreparing(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_PREPARING,
+        statusMsg = DispatchMessageStatus.RESOURCE_PREPARING.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪资源准备失败
-     */
     fun trackResourcePreparingFailed(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_PREPARE_FAILED,
+        statusMsg = DispatchMessageStatus.RESOURCE_PREPARE_FAILED.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪资源交付中
-     */
     fun trackResourceDelivering(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_DELIVERING,
+        statusMsg = DispatchMessageStatus.RESOURCE_DELIVERING.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪资源交付失败
-     */
     fun trackResourceDeliveringFailed(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_DELIVERY_FAILED,
+        statusMsg = DispatchMessageStatus.RESOURCE_DELIVERY_FAILED.description,
+        operator = operator
+    )
 
-    /**
-     * 追踪资源就绪
-     */
     fun trackResourceReady(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String? = null
-    ): Boolean
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.RESOURCE_READY,
+        statusMsg = DispatchMessageStatus.RESOURCE_READY.description,
+        operator = operator
+    )
 
-    /**
-     * 查询消息追踪记录
-     */
+    fun trackConsumeSuccess(
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int,
+        operator: String?
+    ) = updateMessageStatus(
+        buildId = buildId,
+        vmSeqId = vmSeqId,
+        executeCount = executeCount,
+        newStatus = DispatchMessageStatus.CONSUME_SUCCESS,
+        statusMsg = DispatchMessageStatus.CONSUME_SUCCESS.description,
+        operator = operator,
+        remark = "Message consumption completed successfully"
+    )
+
     fun getMessageTrackingRecord(
         buildId: String,
         vmSeqId: String,
         executeCount: Int
-    ): DispatchMessageTrackingRecord?
+    ): DispatchMessageTrackingRecord? {
+        return try {
+            val result = client.get(ServiceDispatchMessageTrackingResource::class).getMessageTrackingRecord(
+                buildId = buildId,
+                vmSeqId = vmSeqId.toInt(),
+                executeCount = executeCount
+            ).data
+            result
+        } catch (e: Exception) {
+            logger.error("[$buildId|$vmSeqId|$executeCount] Failed to get message tracking record", e)
+            null
+        }
+    }
 }
 

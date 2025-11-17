@@ -29,6 +29,7 @@ package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.DispatchMessageTracking
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
@@ -73,6 +74,13 @@ class SDKConfiguration {
         @Autowired buildLogPrinter: BuildLogPrinter
     ) =
         JobQuotaService(client, buildLogPrinter)
+
+    @Bean
+    fun dispatchMessageTracking(
+        @Autowired client: Client,
+        @Autowired buildLogPrinter: BuildLogPrinter
+    ) =
+        DispatchMessageTracking(client)
 
     @Bean
     fun dockerRoutingSdkService(
