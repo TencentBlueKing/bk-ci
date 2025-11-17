@@ -30,7 +30,11 @@
         },
         computed: {
             cronValue () {
-                return this.value.join('')
+                // 处理 value 可能是字符串（错误标记）或数组的情况
+                if (typeof this.value === 'string') {
+                    return ''
+                }
+                return Array.isArray(this.value) ? this.value.join('') : ''
             },
             curLocal () {
                 const localeAliasMap = {
