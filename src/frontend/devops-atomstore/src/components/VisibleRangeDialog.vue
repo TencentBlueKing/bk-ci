@@ -59,14 +59,14 @@
                     >
                         <i18n
                             tag="span"
-                            path="将添加X个可见范围"
+                            path="store.将添加X个可见范围"
                         >
                             <span class="text-blue">{{ selectedList.length }}</span>
                         </i18n>
                         <span
                             class="text-blue ml10"
                             @click="handleDeleteAll"
-                        >{{ $t('清空') }}</span>
+                        >{{ $t('store.清空') }}</span>
                     </div>
                     <div class="selected-content">
                         <div
