@@ -74,7 +74,7 @@
             ></bk-input>
 
             <span class="error-text">
-                {{ isError ? $t('editPage.paramValueTips') : '' }}
+                {{ isError ? $t('validVariableFormat') : '' }}
             </span>
         </section>
     </section>
@@ -265,6 +265,7 @@
                 text-align: center;
                 margin-top: 2px;
                 border-radius: 2px;
+                cursor: pointer;
             }
             .open-var {
                 background: #EAEBF0;
