@@ -160,8 +160,7 @@
                             handleVarMode()
                         } else {
                             this.enumValue = newValue
-
-                            if (newValue !== defaultVal) {
+                            if (newValue !== defaultVal && !inList) {
                                 handleVarMode()
                                 this.handleVarBlur(newValue)
                             }
