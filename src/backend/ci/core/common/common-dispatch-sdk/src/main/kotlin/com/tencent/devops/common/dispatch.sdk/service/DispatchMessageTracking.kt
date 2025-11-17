@@ -104,7 +104,7 @@ class DispatchMessageTracking @Autowired constructor(
         errorCode: String,
         errorMessage: String,
         errorType: String,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -122,7 +122,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -137,7 +137,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -151,7 +151,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -165,7 +165,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -193,7 +193,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -207,7 +207,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -221,7 +221,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
@@ -235,7 +235,7 @@ class DispatchMessageTracking @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         executeCount: Int,
-        operator: String?
+        operator: String? = ""
     ) = updateMessageStatus(
         buildId = buildId,
         vmSeqId = vmSeqId,
