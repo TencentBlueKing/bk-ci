@@ -136,4 +136,3 @@ data class DispatchMessageTrackingRecord(
     @get:Schema(title = "更新时间")
     val updatedTime: String
 )
-

@@ -107,14 +107,14 @@ class DispatchMessageTrackingService @Autowired constructor(
                 val elapsedTime = currentRecord.updatedTime?.let {
                     java.time.Duration.between(it, java.time.LocalDateTime.now()).toMillis()
                 }
-                
+
                 logger.info(
                     "[${request.buildId}|${request.vmSeqId}|${request.executeCount}] " +
                     "Status changed: [${oldStatus?.statusName ?: "INIT"}] -> [${newStatus.statusName}], " +
                     "elapsed: ${elapsedTime}ms, operator: ${request.operator ?: "system"}, " +
                     "remark: ${request.remark ?: "N/A"}"
                 )
-                
+
                 // 如果有错误信息，单独记录
                 if (request.errorCode != null || request.errorMessage != null) {
                     logger.warn(
@@ -174,4 +174,3 @@ class DispatchMessageTrackingService @Autowired constructor(
         }
     }
 }
-

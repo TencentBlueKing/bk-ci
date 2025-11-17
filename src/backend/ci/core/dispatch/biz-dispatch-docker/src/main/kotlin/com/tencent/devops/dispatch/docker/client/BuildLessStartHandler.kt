@@ -107,34 +107,32 @@ class BuildLessStartHandler @Autowired constructor(
         buildLessStartInfo: BuildLessStartInfo,
         handlerContext: BuildLessStartHandlerContext
     ) {
-        with(handlerContext) {
-            val request = getDockerHostProxyRequest(
-                hostUri = Constants.BUILD_LESS_STARTUP_URI,
-                hostIp = buildLessHost,
-                hostPort = buildLessPort
-            ).post(
-                JsonUtil.toJson(buildLessStartInfo)
-                    .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-            ).build()
+        val request = getDockerHostProxyRequest(
+            hostUri = Constants.BUILD_LESS_STARTUP_URI,
+            hostIp = handlerContext.buildLessHost,
+            hostPort = handlerContext.buildLessPort
+        ).post(
+            JsonUtil.toJson(buildLessStartInfo)
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        ).build()
 
-            logger.info("$buildLogKey start buildLess $buildLessHost, ${request.url}")
+        logger.info("${handlerContext.buildLogKey} start buildLess ${handlerContext.buildLessHost}, ${request.url}")
 
-            try {
-                OkhttpUtils.doHttp(request).use { resp ->
-                    if (resp.isSuccessful) {
-                        val response: Map<String, Any> = jacksonObjectMapper().readValue(resp.body!!.string())
-                        logger.info("$buildLogKey response: ${JsonUtil.toJson(response)}")
-                        dealWithResponse(response, this)
-                    } else {
-                        // 接口异常重试
-                        doRetry(resp.message, this)
-                    }
+        try {
+            OkhttpUtils.doHttp(request).use { resp ->
+                if (resp.isSuccessful) {
+                    val response: Map<String, Any> = jacksonObjectMapper().readValue(resp.body!!.string())
+                    logger.info("${handlerContext.buildLogKey} response: ${JsonUtil.toJson(response)}")
+                    dealWithResponse(response, handlerContext)
+                } else {
+                    // 接口异常重试
+                    doRetry(resp.message, handlerContext)
                 }
-            } catch (e: Exception) {
-                when (e) {
-                    is SocketTimeoutException -> handleSocketTimeoutException(e, this)
-                    is NoRouteToHostException, is ConnectException -> doRetry(e.message, this)
-                }
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is SocketTimeoutException -> handleSocketTimeoutException(e, handlerContext)
+                is NoRouteToHostException, is ConnectException -> doRetry(e.message, handlerContext)
             }
         }
     }

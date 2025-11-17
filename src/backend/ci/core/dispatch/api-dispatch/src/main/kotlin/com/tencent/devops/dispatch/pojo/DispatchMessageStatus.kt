@@ -73,8 +73,7 @@ enum class DispatchMessageStatus(
         }
 
         fun isFinalStatus(status: DispatchMessageStatus): Boolean {
-            return status.category == StatusCategory.SUCCESS ||
-                   status.category == StatusCategory.FAILED
+            return status.category == StatusCategory.SUCCESS || status.category == StatusCategory.FAILED
         }
 
         fun isSuccessStatus(status: DispatchMessageStatus): Boolean {
@@ -90,4 +89,3 @@ enum class DispatchMessageStatus(
         }
     }
 }
-

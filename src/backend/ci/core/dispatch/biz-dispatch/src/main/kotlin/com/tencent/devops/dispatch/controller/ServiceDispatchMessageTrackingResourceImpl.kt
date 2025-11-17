@@ -62,4 +62,3 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
         return Result(record)
     }
 }
-
