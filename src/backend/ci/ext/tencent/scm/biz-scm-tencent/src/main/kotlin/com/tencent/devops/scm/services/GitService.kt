@@ -32,9 +32,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_QUERY_COUNT_RANGE
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -120,14 +120,6 @@ import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import java.io.File
-import java.net.HttpRetryException
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -144,6 +136,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
+import java.io.File
+import java.net.HttpRetryException
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -2717,11 +2717,8 @@ class GitService @Autowired constructor(
     ): Result<String> {
         if (commitNumber !in min..max) {
             throw ErrorCodeException(
-                errorCode = PARAMETER_VALIDATE_ERROR,
-                params = arrayOf(
-                    "commitNumber", "value is $commitNumber," +
-                            " must be between $min and $max"
-                ),
+                errorCode = ERROR_QUERY_COUNT_RANGE,
+                params = arrayOf(min.toString(), max.toString()),
                 defaultMessage = "commitNumber must be" +
                         " between $min and $max, but got $commitNumber"
             )
@@ -2739,6 +2736,7 @@ class GitService @Autowired constructor(
                 .data?.id ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
                 params = arrayOf(projectName),
+
                 defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
             )
         }
