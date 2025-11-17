@@ -72,6 +72,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -716,23 +717,41 @@ class PipelineBuildFacadeService(
         terminateFlag: Boolean? = false
     ) {
         if (checkPermission) {
-            val permission = AuthPermission.EXECUTE
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
+            // 获取流水线配置以检查取消策略
+            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+
+            // 根据策略执行不同的权限检查
+            when (setting?.buildCancelPolicy) {
+                BuildCancelPolicy.RESTRICTED -> {
+                    // 受限策略:仅触发人/拥有者/管理员可取消
+                    validateRestrictedCancelPermission(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId
                     )
-                )
-            )
+                }
+                else -> {
+                    // 默认策略:检查执行权限
+                    val permission = AuthPermission.EXECUTE
+                    pipelinePermissionService.validPipelinePermission(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        permission = permission,
+                        message = MessageUtil.getMessageByLocale(
+                            CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf(
+                                userId,
+                                projectId,
+                                permission.getI18n(I18nUtil.getLanguage(userId)),
+                                pipelineId
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         buildManualShutdown(
@@ -2490,6 +2509,52 @@ class PipelineBuildFacadeService(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    /**
+     * 验证受限取消权限策略
+     * 仅允许触发人或拥有流水线管理权限的用户取消构建
+     */
+    private fun validateRestrictedCancelPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId)
+            )
+
+        // 检查是否为触发人或启动人
+        val isTriggerUser = userId == buildInfo.triggerUser || userId == buildInfo.startUser
+
+        // 检查是否拥有流水线管理权限
+        val hasManagePermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.MANAGE
+        )
+
+        if (!isTriggerUser && !hasManagePermission) {
+            logger.warn(
+                "[$buildId]|User $userId has no permission to cancel build. " +
+                    "triggerUser=${buildInfo.triggerUser}, startUser=${buildInfo.startUser}, " +
+                    "hasManagePermission=$hasManagePermission"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NO_CANCEL_BUILD_PERMISSION,
+                params = arrayOf(userId, buildId)
+            )
+        }
+
+        logger.info(
+            "[$buildId]|User $userId validated for cancel. " +
+                "isTriggerUser=$isTriggerUser, hasManagePermission=$hasManagePermission"
+        )
     }
 
     fun getPipelineLatestBuildByIds(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {
