@@ -29,22 +29,20 @@ package com.tencent.devops.common.pipeline.pojo.setting
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线-设置-组类型")
-enum class PipelineSettingGroupType {
-    // 构建号生成规则
-    CUSTOM_BUILD_NUM,
+@Schema(title = "构建取消权限策略")
+enum class BuildCancelPolicy(val value: String) {
+    @Schema(title = "拥有执行权限的用户可取消任意构建")
+    EXECUTE_PERMISSION("EXECUTE_PERMISSION"),
 
-    LABEL,
+    @Schema(title = "仅限触发人或拥有流水线管理权限的用户可取消")
+    RESTRICTED("RESTRICTED");
 
-    // 通知
-    NOTICES,
-
-    // 并发
-    CONCURRENCY,
-
-    // 是否配置流水线变量值超长时终止执行
-    FAIL_IF_VARIABLE_INVALID,
-
-    // 构建取消策略
-    BUILD_CANCEL_POLICY
+    companion object {
+        fun parse(value: String?): BuildCancelPolicy {
+            return when (value) {
+                RESTRICTED.value -> RESTRICTED
+                else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
+            }
+        }
+    }
 }

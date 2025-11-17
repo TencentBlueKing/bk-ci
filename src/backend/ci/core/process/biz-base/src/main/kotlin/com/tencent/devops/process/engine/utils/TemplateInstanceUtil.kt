@@ -171,6 +171,7 @@ object TemplateInstanceUtil {
         mergeNotices(instanceSetting, templateSetting, overrideTemplateField)
         mergeConcurrency(instanceSetting, templateSetting, overrideTemplateField)
         mergeFailIfVariableInvalid(instanceSetting, templateSetting, overrideTemplateField)
+        mergeBuildCancelPolicy(instanceSetting, templateSetting, overrideTemplateField)
         return instanceSetting
     }
 
@@ -328,7 +329,7 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        // 如果“自定义构建号”这个设置项不被实例覆盖，则使用模板的设置
+        // 如果"自定义构建号"这个设置项不被实例覆盖，则使用模板的设置
         if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.CUSTOM_BUILD_NUM)) {
             setting.buildNumRule = templateSetting.buildNumRule
         }
@@ -339,7 +340,7 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        // 如果“标签”这个设置项不被实例覆盖，则使用模板的设置
+        // 如果"标签"这个设置项不被实例覆盖，则使用模板的设置
         if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.LABEL)) {
             setting.labels = templateSetting.labels
             setting.labelNames = templateSetting.labelNames
@@ -351,7 +352,7 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        // 如果“通知”这个设置项不被实例覆盖，则使用模板的设置
+        // 如果"通知"这个设置项不被实例覆盖，则使用模板的设置
         if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.NOTICES)) {
             setting.successSubscription = templateSetting.successSubscription
             setting.failSubscription = templateSetting.failSubscription
@@ -365,7 +366,7 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        // 如果“并发”这个设置项不被实例覆盖，则使用模板的设置
+        // 如果"并发"这个设置项不被实例覆盖，则使用模板的设置
         if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.CONCURRENCY)) {
             setting.runLockType = templateSetting.runLockType
             setting.waitQueueTimeMinute = templateSetting.waitQueueTimeMinute
@@ -381,9 +382,20 @@ object TemplateInstanceUtil {
         templateSetting: PipelineSetting,
         overrideTemplateField: TemplateInstanceField
     ) {
-        // 如果“变量检查”这个设置项不被实例覆盖，则使用模板的设置
+        // 如果"变量检查"这个设置项不被实例覆盖，则使用模板的设置
         if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.FAIL_IF_VARIABLE_INVALID)) {
             setting.failIfVariableInvalid = templateSetting.failIfVariableInvalid
+        }
+    }
+
+    private fun mergeBuildCancelPolicy(
+        setting: PipelineSetting,
+        templateSetting: PipelineSetting,
+        overrideTemplateField: TemplateInstanceField
+    ) {
+        // 如果"构建取消策略"这个设置项不被实例覆盖，则使用模板的设置
+        if (!overrideTemplateField.overrideSetting(PipelineSettingGroupType.BUILD_CANCEL_POLICY)) {
+            setting.buildCancelPolicy = templateSetting.buildCancelPolicy
         }
     }
 

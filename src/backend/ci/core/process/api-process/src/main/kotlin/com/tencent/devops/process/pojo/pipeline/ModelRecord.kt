@@ -108,5 +108,7 @@ data class ModelRecord(
     @get:Schema(title = "制品质量分析", required = false)
     val artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
     @get:Schema(title = "版本是否变更", required = false)
-    val versionChange: Boolean? = false
+    val versionChange: Boolean? = false,
+    @get:Schema(title = "取消构建权限", required = false)
+    var cancelBuildPerm: Boolean? = null
 )
