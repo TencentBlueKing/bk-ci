@@ -172,7 +172,7 @@
             handleDelete (row) {
                 this.$bkInfo({
                     title: this.$t('store.删除'),
-                    subTitle:this.$t('store.确定删除选中的可见对象？'),
+                    subTitle: `${this.$t('store.确定删除')}(${row.deptName})？`,
                     confirmFn: () => {
                         this.visibleList = this.visibleList.filter(item => item.deptId !== row.deptId)
                         this.$refs.visibleRef.clearChecked(row.deptId, false)
