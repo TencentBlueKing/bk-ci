@@ -172,7 +172,7 @@
                         > {{ $t('store.下架') }} </span>
                         <span
                             style="margin-right:0"
-                            @click="delete (props.row)"
+                            @click="handleDelete (props.row)"
                             v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"
                         > {{ $t('store.移除') }} </span>
                     </template>
@@ -491,7 +491,7 @@
                 return `${year} ${time}`
             },
 
-            async delete (row) {
+            async handleDelete (row) {
                 let message = this.$t('store.移除成功')
                 let theme = 'success'
                 try {

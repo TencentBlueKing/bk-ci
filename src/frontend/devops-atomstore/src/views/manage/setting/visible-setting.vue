@@ -66,13 +66,13 @@
             </bk-table>
         </section>
 
-        <organization-dialog
+        <VisibleRangeDialog
             :show-dialog="showDialog"
             :is-loading="isSaveOrg"
             @saveHandle="saveHandle"
             @cancelHandle="cancelHandle"
         >
-        </organization-dialog>
+        </VisibleRangeDialog>
 
         <bk-dialog
             v-model="deleteObj.show"
@@ -88,11 +88,11 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import organizationDialog from '@/components/organization-dialog'
+    import VisibleRangeDialog from '@/components/VisibleRangeDialog'
 
     export default {
         components: {
-            organizationDialog
+            VisibleRangeDialog
         },
 
         data () {

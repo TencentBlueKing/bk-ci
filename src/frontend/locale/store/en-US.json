@@ -804,5 +804,10 @@
   "部分可见": "Partial visible",
   "当前模板的版本已全部上架": "All versions of the current template have been listed",
   "typeError": "Type Error",
-  "已上架至商店": "Listed in the store"
+  "已上架至商店": "Listed in the store",
+  "结果预览": "Preview Results",
+  "添加可见对象": "Add Visible Object",
+  "将添加X个可见范围": "Will add {0} visible ranges",
+  "清空": "Clear",
+  "已添加": "Added"
 }
