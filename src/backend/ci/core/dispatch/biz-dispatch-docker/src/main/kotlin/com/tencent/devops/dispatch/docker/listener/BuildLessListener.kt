@@ -106,6 +106,12 @@ class BuildLessListener @Autowired constructor(
             }
 
             buildLessStartHandler.handlerRequest(BuildLessStartHandlerContext(event))
+
+            BeanUtil.getDispatchMessageTracking().trackConsumeSuccess(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
         } catch (discard: Throwable) {
             logger.warn("[${event.buildId}|${event.vmSeqId}] BuildLess startup failure.", discard)
 
@@ -127,6 +133,15 @@ class BuildLessListener @Autowired constructor(
                     second = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
                     third = "Fail to handle the start up message")
             }
+
+            BeanUtil.getDispatchMessageTracking().trackConsumeFailed(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1,
+                errorCode = errorCode.toString(),
+                errorType = errorType.toString(),
+                errorMessage = errorMsg ?: ""
+            )
 
             try {
                 client.get(ServiceBuildResource::class).setVMStatus(

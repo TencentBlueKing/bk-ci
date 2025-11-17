@@ -27,16 +27,6 @@
 
 package com.tencent.devops.dispatch.pojo
 
-enum class AgentStartDiagnoseStatus {
-    UNKNOWN, // 未知（通常是还没被消费到或者是没有这个消息）
-    IN_QUEUE, // 队列中， 看要不要细化？
-    SCHEDULER_FAILURE,// 构建机调度失败
-    DELIVERING, // 构建机交付中
-    SUCCESS, // 构建机交付成功
-    FAILURE, // 构建机交付失败
-}
-
-
 /**
  * Dispatch 消息消费通用状态
  */
@@ -68,12 +58,7 @@ enum class DispatchMessageStatus(
     AGENT_CONNECTING(300, "Agent连接中", "Agent connecting", StatusCategory.PROCESSING),
     AGENT_CONNECTED(301, "Agent已连接", "Agent connected", StatusCategory.SUCCESS),
     AGENT_CONNECT_TIMEOUT(302, "Agent连接超时", "Agent connection timeout", StatusCategory.FAILED),
-    BUILD_RUNNING(303, "构建执行中", "Build running", StatusCategory.PROCESSING),
-
-    // ========== 清理状态 (400-499) ==========
-    RESOURCE_CLEANING(400, "资源清理中", "Resource cleaning", StatusCategory.PROCESSING),
-    RESOURCE_CLEANED(401, "资源已清理", "Resource cleaned", StatusCategory.SUCCESS),
-    RESOURCE_CLEAN_FAILED(402, "资源清理失败", "Resource clean failed", StatusCategory.FAILED);
+    BUILD_RUNNING(303, "构建执行中", "Build running", StatusCategory.PROCESSING);
 
     enum class StatusCategory {
         INITIAL,      // 初始状态
