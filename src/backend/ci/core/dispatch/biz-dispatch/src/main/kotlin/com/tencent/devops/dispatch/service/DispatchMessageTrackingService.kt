@@ -53,7 +53,7 @@ class DispatchMessageTrackingService @Autowired constructor(
     /**
      * 初始化消息追踪
      */
-    fun initMessageTracking(request: InitMessageTrackingRequest): Long {
+    fun initMessageTracking(request: InitMessageTrackingRequest) {
         logger.info("[${request.buildId}|${request.vmSeqId}|${request.executeCount}] " +
             "Init message tracking for module: ${request.dispatchType}")
 

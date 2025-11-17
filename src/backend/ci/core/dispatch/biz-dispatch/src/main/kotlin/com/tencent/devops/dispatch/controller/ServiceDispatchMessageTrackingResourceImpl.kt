@@ -44,8 +44,9 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
 
     override fun initMessageTracking(
         request: InitMessageTrackingRequest
-    ): Result<Long> {
-        return Result(dispatchMessageTrackingService.initMessageTracking(request))
+    ): Result<Boolean> {
+        dispatchMessageTrackingService.initMessageTracking(request)
+        return Result(true)
     }
 
     override fun updateMessageStatus(
@@ -60,10 +61,6 @@ class ServiceDispatchMessageTrackingResourceImpl @Autowired constructor(
         executeCount: Int
     ): Result<DispatchMessageTrackingRecord> {
         val record = dispatchMessageTrackingService.getMessageTrackingRecord(buildId, vmSeqId, executeCount)
-        if (record == null) {
-            return Result(HTTP_500, "Message tracking record not found")
-        } else {
-            return Result(record)
-        }
+        return Result(record ?: return Result(HTTP_500, "Message tracking record not found"))
     }
 }

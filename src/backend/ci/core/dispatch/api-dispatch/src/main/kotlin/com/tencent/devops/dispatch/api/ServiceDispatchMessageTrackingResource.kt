@@ -55,7 +55,7 @@ interface ServiceDispatchMessageTrackingResource {
     fun initMessageTracking(
         @Parameter(description = "初始化请求", required = true)
         request: InitMessageTrackingRequest
-    ): Result<Long>
+    ): Result<Boolean>
 
     @Operation(summary = "更新消息状态")
     @PUT

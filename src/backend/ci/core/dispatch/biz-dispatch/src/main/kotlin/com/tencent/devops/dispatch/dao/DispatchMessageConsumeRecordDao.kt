@@ -45,7 +45,7 @@ class DispatchMessageConsumeRecordDao {
         vmSeqId: Int,
         executeCount: Int,
         dispatchType: String
-    ): Long {
+    ) {
         with(TDispatchMessageConsumeRecord.T_DISPATCH_MESSAGE_CONSUME_RECORD) {
             val now = LocalDateTime.now()
             val record = dslContext.insertInto(
@@ -72,8 +72,6 @@ class DispatchMessageConsumeRecordDao {
                 .set(RETRY_COUNT, RETRY_COUNT.plus(1))
                 .returning(ID)
                 .fetchOne()
-
-            return record?.id ?: throw RuntimeException("Failed to create consume record")
         }
     }
 

@@ -50,17 +50,16 @@ class DispatchMessageTracking @Autowired constructor(
 
     fun initMessageTracking(
         initMessageTrackingRequest: InitMessageTrackingRequest
-    ): Long {
-        return try {
+    ) {
+        try {
             client.get(ServiceDispatchMessageTrackingResource::class)
-                .initMessageTracking(initMessageTrackingRequest).data ?: 0L
+                .initMessageTracking(initMessageTrackingRequest)
         } catch (e: Exception) {
             logger.warn(
                 "[${initMessageTrackingRequest.buildId}|${initMessageTrackingRequest.vmSeqId}] " +
                         "Failed to init message tracking",
                 e
             )
-            0L
         }
     }
 
