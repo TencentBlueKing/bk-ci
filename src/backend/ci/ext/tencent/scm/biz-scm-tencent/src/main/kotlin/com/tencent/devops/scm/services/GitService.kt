@@ -2736,7 +2736,6 @@ class GitService @Autowired constructor(
                 .data?.id ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
                 params = arrayOf(projectName),
-
                 defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
             )
         }
