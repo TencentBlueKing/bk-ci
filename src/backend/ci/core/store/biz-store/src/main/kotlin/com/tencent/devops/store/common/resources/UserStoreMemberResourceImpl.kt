@@ -31,13 +31,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreMemberResource
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.member.StoreMemberItem
 import com.tencent.devops.store.pojo.common.member.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreMemberService
 
 @RestResource
-class UserStoreMemberResourceImpl : UserStoreMemberResource {
+class UserStoreMemberResourceImpl(val storeMemberService: StoreMemberService) : UserStoreMemberResource {
 
     override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
         return getStoreMemberService(storeType).list(userId, storeCode, storeType)
@@ -70,6 +70,14 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
             storeCode = storeCode,
             storeType = storeType
         )
+    }
+
+    override fun isStoreMember(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+    ): Result<Boolean> {
+        return Result(storeMemberService.isStoreMember(userId, storeCode, storeType.type.toByte()))
     }
 
     private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
