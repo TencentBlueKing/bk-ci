@@ -10,6 +10,7 @@
                 class="release-show"
                 :detail="detail"
                 :version-list="versionList"
+                :has-promission="hasPromission"
                 :pagination="pagination"
                 @pageChanged="pageChanged"
                 @pageLimitChanged="pageLimitChanged"
@@ -31,6 +32,13 @@
             imageVersion,
             templateVersion,
             serviceVersion
+        },
+
+        props:{
+            hasPromission: {
+                type: Boolean,
+                default: false
+            },
         },
 
         data () {
