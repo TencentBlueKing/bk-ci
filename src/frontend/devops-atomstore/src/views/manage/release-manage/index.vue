@@ -24,7 +24,7 @@
     import codeCheck from '@/views/manage/release-manage/code-check.vue'
     import environment from '@/views/manage/release-manage/environment.vue'
     import version from '@/views/manage/release-manage/version.vue'
-    import { computed, defineComponent, getCurrentInstance, ref, onMounted } from 'vue'
+    import { computed, defineComponent, getCurrentInstance, onMounted, ref } from 'vue'
 
     export default defineComponent({
         components: {
