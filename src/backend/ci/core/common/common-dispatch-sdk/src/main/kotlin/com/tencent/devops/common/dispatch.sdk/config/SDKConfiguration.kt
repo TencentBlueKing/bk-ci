@@ -77,8 +77,7 @@ class SDKConfiguration {
 
     @Bean
     fun dispatchMessageTracking(
-        @Autowired client: Client,
-        @Autowired buildLogPrinter: BuildLogPrinter
+        @Autowired client: Client
     ) =
         DispatchMessageTracking(client)
 
