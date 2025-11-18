@@ -166,7 +166,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds, null))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

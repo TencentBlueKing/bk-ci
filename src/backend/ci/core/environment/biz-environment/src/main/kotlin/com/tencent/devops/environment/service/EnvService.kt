@@ -681,7 +681,13 @@ class EnvService @Autowired constructor(
                 bakOperator = it.bakOperator,
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                envEnableNode = nodeIdMaps[it.nodeId] ?: true
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
+                agentHashId = if (thirdPartyAgent == null) {
+                    null
+                } else {
+                    HashUtil.encodeLongId(thirdPartyAgent.id)
+                },
+                agentId = thirdPartyAgent?.id
             )
         }
     }
@@ -691,9 +697,20 @@ class EnvService @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        envHashIds: List<String>
+        envHashIds: List<String>?,
+        envName: String?
     ): Page<NodeBaseInfo> {
-        val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
+        val envIds = envHashIds?.map { HashUtil.decodeIdToLong(it) }
+            ?: if (envName != null) {
+                val rEnvId = envDao.getByEnvName(dslContext, projectId, envName)?.envId
+                if (rEnvId != null) {
+                    listOf(rEnvId)
+                } else {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
@@ -746,7 +763,13 @@ class EnvService @Autowired constructor(
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 envEnableNode = nodeIdMaps[it.nodeId] ?: true,
-                size = it.size
+                size = it.size,
+                agentHashId = if (thirdPartyAgent == null) {
+                    null
+                } else {
+                    HashUtil.encodeLongId(thirdPartyAgent.id)
+                },
+                agentId = thirdPartyAgent?.id
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()

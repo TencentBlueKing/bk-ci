@@ -76,7 +76,8 @@ interface IEnvService {
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        envHashIds: List<String>
+        envHashIds: List<String>?,
+        envName: String?
     ): Page<NodeBaseInfo>
 
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)

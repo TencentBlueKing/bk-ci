@@ -432,7 +432,9 @@ class NodeService @Autowired constructor(
         val canDeleteNodeIds = permissionMap.takeIf { it.containsKey(AuthPermission.DELETE) }.run {
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         }
-        val thirdPartyAgentNodeIds = nodeListResult.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        val thirdPartyAgentNodeIds = nodeListResult.filter {
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
+        }.map { it.nodeId }
         val thirdPartyAgentMap = if (thirdPartyAgentNodeIds.isNotEmpty()) {
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
