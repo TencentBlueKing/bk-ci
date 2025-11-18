@@ -240,7 +240,7 @@ export const actions = {
      * 流水线模板管理员校验
      */
     templateUserValidate (_, { templateCode }) {
-        return vue.$ajax.get(`${prefix}/user/market/desk/store/member/codes/${templateCode}/user/validate?storeType=TEMPLATE   `)
+        return vue.$ajax.get(`${prefix}/user/market/desk/store/member/codes/${templateCode}/user/validate?storeType=TEMPLATE`)
     },
 
     updateCurrentaTemplate ({ commit }, { res }) {
