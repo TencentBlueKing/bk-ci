@@ -59,6 +59,7 @@
                                 required: true,
                                 max: 128
                             }"
+                            maxlength="128"
                             :value="instanceName"
                             @change="checkPipelineName"
                             @blur="(value) => handleEnterChangeName(value, instanceIndex)"
