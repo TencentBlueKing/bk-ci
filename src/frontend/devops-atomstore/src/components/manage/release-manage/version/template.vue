@@ -3,6 +3,7 @@
         <bk-button
             theme="primary"
             class="version-button"
+            :disabled="!hasPromission"
             @click="toUpgrade"
         >
             {{ $t('store.新增版本') }}
@@ -39,6 +40,7 @@
                             text
                             theme="primary"
                             size="small"
+                            :disabled="!hasPromission"
                             @click="toDetail"
                         >
                             {{ $t('store.查看') }}
@@ -48,6 +50,7 @@
                             text
                             theme="primary"
                             size="small"
+                            :disabled="!hasPromission"
                             v-if="props.row.published"
                             @click="offline(props.row)"
                         >
@@ -58,6 +61,7 @@
                             text
                             theme="primary"
                             size="small"
+                            :disabled="!hasPromission"
                             @click="online(props.row)"
                         >
                             {{ $t('store.上架') }}
@@ -127,6 +131,10 @@
     export default {
         props: {
             versionList: Array,
+            hasPromission: {
+                type: Boolean,
+                default: false
+            },
             pagination: Object
         },
         emits: ['pageChanged', 'pageLimitChanged'],

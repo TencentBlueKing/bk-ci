@@ -41,7 +41,10 @@
                 <div class="left">
                     {{ $t('template.instanceConfig') }}
                     <span class="line">|</span>
-                    <span class="instance-name">{{ curInstance?.pipelineName }}</span>
+                    <span
+                        class="instance-name"
+                        v-bk-overflow-tips
+                    >{{ curInstance?.pipelineName }}</span>
                 </div>
                 <div
                     class="right"
@@ -878,6 +881,8 @@
             align-items: center;
             justify-content: space-between;
             .left {
+                display: flex;
+                align-items: center;
                 font-weight: 700;
                 font-size: 14px;
                 color: #313238;
@@ -888,6 +893,11 @@
                 color: #DCDEE5;
             }
             .instance-name {
+                max-width: 580px;
+                display: inline-block;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
                 color: #979BA5;
                 font-weight: 400;
             }

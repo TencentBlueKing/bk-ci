@@ -43,6 +43,7 @@
                 <span>{{ strategyLabel }}</span>
                 <span class="publish-strategy-desc">( {{ strategyDesc }} )</span>
                 <i
+                    v-if="hasPromission"
                     class="devops-icon icon-edit-line"
                     @click="editStrategy"
                 />
@@ -53,7 +54,7 @@
 
 <script>
     import { PUBLISH_STRATEGY } from '@/utils/constants'
-    import { computed, defineComponent, getCurrentInstance, ref, watch } from 'vue'
+    import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue'
 
     export default defineComponent({
 
@@ -70,10 +71,30 @@
                 id: key,
                 name: `${vm.proxy.$t(`store.${key}`)} (${vm.proxy.$t(`store.${key}-upgradeStrategyDesc`)})`
             }))
+            const hasPromission = ref(false)
 
             watch(strategy, (newVal) => {
                 publishStrategy.value = newVal
             })
+
+            onMounted(() => {
+                getTemplateUserValidate()
+            })
+
+            async function getTemplateUserValidate () {
+                try {
+                    const { code } = vm.proxy.$route.params
+                    const res = await vm.proxy.$store.dispatch('store/templateUserValidate', {
+                        templateCode: code
+                    })
+                    hasPromission.value = res
+                } catch (err) {
+                    vm.proxy.$bkMessage({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
+            }
 
             function editStrategy () {
                 editing.value = true
@@ -114,6 +135,7 @@
             return {
                 editing,
                 isConfirmLoading,
+                hasPromission,
                 strategyOptions,
                 strategyLabel,
                 strategyDesc,

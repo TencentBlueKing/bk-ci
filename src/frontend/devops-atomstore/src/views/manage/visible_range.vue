@@ -50,23 +50,23 @@
                 :has-border="false">
             </bk-tree>
         </section>
-        <organization-dialog :show-dialog="showDialog"
+        <VisibleRangeDialog :show-dialog="showDialog"
             :is-loading="isSaveOrg"
             @saveHandle="saveHandle"
             @cancelHandle="cancelHandle">
-        </organization-dialog>
+        </VisibleRangeDialog>
     </div>
 </template>
 
 <script>
     import { mapGetters } from 'vuex'
     import emptyTips from '@/components/img-empty-tips'
-    import organizationDialog from '@/components/organization-dialog'
+    import VisibleRangeDialog from '@/components/VisibleRangeDialog'
 
     export default {
         components: {
             emptyTips,
-            organizationDialog
+            VisibleRangeDialog
         },
         data () {
             return {
