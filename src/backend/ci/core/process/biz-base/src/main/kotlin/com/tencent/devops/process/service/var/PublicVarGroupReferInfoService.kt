@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -41,11 +42,11 @@ import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
+import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
-import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
@@ -68,7 +69,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val dslContext: DSLContext,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client,
-    private val templateDao: TemplateDao,
+    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
@@ -368,8 +369,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 .distinct()
 
             val templateMap = templateKeys.mapNotNull { (templateId, version) ->
-                templateDao.getTemplate(
+                pipelineTemplateResourceDao.get(
                     dslContext = dslContext,
+                    projectId = queryReq.projectId,
                     templateId = templateId,
                     version = version
                 )?.let { Pair(templateId, version) to it }
@@ -406,7 +408,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     referType = referInfo.referType,
                     creator = template.creator,
                     modifier = template.creator,
-                    updateTime = template.updateTime ?: LocalDateTime.now(),
+                    updateTime = template.updateTime?.toLocalDateTime() ?: LocalDateTime.now(),
                     actualRefCount = actualRefCount,
                     instanceCount = countTemplateVersionInstances(
                         projectId = queryReq.projectId,
