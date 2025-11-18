@@ -135,16 +135,14 @@
                 })
             },
             handleError () {
-                // 优先使用事件传递的值，其次使用已保存的internalValue，最后使用当前的value
                 if (!this.internalValue && Array.isArray(this.value) && this.value.length > 0) {
                     // 如果internalValue为空，尝试从value中获取
                     this.internalValue = this.value.join('')
                 }
                 // 标记组件有格式错误
                 this.hasInternalError = true
-                // 使用空数组 [] 来标记组件有错误
-                // 空数组不会触发 required 校验（因为它不是空字符串），触发 crontabArrayRule 校验失败
-                this.handleChange(this.name, [])
+                // 触发 crontabArrayRule 校验失败
+                this.handleChange(this.name, 'error')
                 this.$nextTick(() => {
                     if (this.$parent && this.$parent.$validator) {
                         this.$parent.$validator.validate(this.name)

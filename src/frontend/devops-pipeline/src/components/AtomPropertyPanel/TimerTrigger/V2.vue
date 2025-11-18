@@ -11,7 +11,7 @@
             >
                 <component
                     :is="obj.component"
-                    v-validate.initial="Object.assign({}, { required: obj.required, crontabArrayRule: obj.required && obj.component === 'timer-cron-tab' })"
+                    v-validate.initial="Object.assign({}, { crontabArrayRule: obj.required && obj.component === 'timer-cron-tab' })"
                     :name="key"
                     :value="element[key]"
                     :element="element"
