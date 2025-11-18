@@ -78,7 +78,6 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateStrategyUpdat
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateYamlWebhookReq
 import com.tencent.devops.process.pojo.template.v2.PreFetchTemplateReleaseResult
 import com.tencent.devops.process.pojo.template.v2.TemplateVersionPair
-import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
@@ -119,7 +118,6 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val config: CommonConfig,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineModelParser: PipelineModelParser
@@ -973,16 +971,16 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        pipelineVersion: Int
     ): PipelineTemplateDetailsResponse? {
         val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version,
+            version = pipelineVersion,
             includeDraft = true
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(pipelineVersion.toString())
         )
 
         val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
@@ -1044,15 +1042,25 @@ class PipelineTemplateFacadeService @Autowired constructor(
         return if (templateRefType == TemplateRefType.ID) {
             val templateDetailsUrl =
                 String.format(templateDetailRedirectUri, projectId, templateId, templateVersion).plus("/pipeline")
-            val pipelineReleaseVersion = pipelineVersionFacadeService.getPipelineDetailIncludeDraft(
-                userId = userId,
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                 projectId = projectId,
                 pipelineId = pipelineId
-            ).releaseVersion
+            ) ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(pipelineId)
+            )
             // 当前流水版本为最新版本，并且关联的模板版本不是最新版本，则需要升级
-            val upgradeFlag = pipelineReleaseVersion == version && templateInfo.releasedVersion != templateVersion
+            val upgradeFlag = pipelineInfo.version == version && templateInfo.releasedVersion != templateVersion
             val upgradeUrl = takeIf { upgradeFlag }?.let {
-                String.format(templateDetailRedirectUri, projectId, templateId, templateInfo.releasedVersion)
+                String.format(
+                    pipelineUpgradeRedirectUri,
+                    projectId,
+                    templateId,
+                    templateInfo.releasedVersion,
+                    pipelineId,
+                    pipelineInfo.pipelineName
+                )
             }
             PTemplatePipelineRefInfo(
                 templateName = templateInfo.name,
@@ -1083,6 +1091,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     fun getTemplateInfo(
         userId: String,
         projectId: String,
@@ -1619,6 +1628,9 @@ class PipelineTemplateFacadeService @Autowired constructor(
     }
 
     private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"
+    private val pipelineUpgradeRedirectUri =
+        "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s?pipelineId=%s&pipelineName=%s"
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateFacadeService::class.java)

@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.service.template.v2
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.ModelIdDuplicateChecker
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.template.JobTemplateModel
 import com.tencent.devops.common.pipeline.template.StageTemplateModel
 import com.tencent.devops.common.pipeline.template.StepTemplateModel
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -62,6 +65,7 @@ class PipelineTemplateModelInitializer @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun initModel(templateModel: Model) {
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
@@ -69,6 +73,8 @@ class PipelineTemplateModelInitializer @Autowired constructor(
         val distinctIdSet = mutableSetOf<String>()
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        val jobIdDuplicateChecker = ModelIdDuplicateChecker()
+        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
 
         templateModel.stages.forEachIndexed { index, stage ->
             stage.id = VMUtils.genStageId(index + 1)
@@ -89,13 +95,31 @@ class PipelineTemplateModelInitializer @Autowired constructor(
                     container.containerHashId = modelContainerIdGenerator.getNextId()
                 }
                 distinctIdSet.add(container.containerHashId!!)
+                if (!container.jobId.isNullOrBlank()) {
+                    jobIdDuplicateChecker.addId(container.jobId!!)
+                }
                 container.elements.forEach { e ->
                     if (e.id.isNullOrBlank() || distinctIdSet.contains(e.id)) {
                         e.id = modelTaskIdGenerator.getNextId()
                     }
                     distinctIdSet.add(e.id!!)
+                    if (!e.stepId.isNullOrBlank()) {
+                        stepIdDuplicateChecker.addId(e.stepId!!)
+                    }
                 }
             }
+        }
+        if (jobIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
+                params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
+            )
+        }
+        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
+                params = arrayOf(stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
+            )
         }
     }
 

@@ -61,6 +61,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.common.pipeline.pojo.ModelIdDuplicateChecker
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
@@ -83,6 +84,8 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
 import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -97,8 +100,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
-import com.tencent.devops.process.dao.yaml.PipelineYamlVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -386,7 +387,8 @@ class PipelineRepositoryService constructor(
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
-
+        val jobIdDuplicateChecker = ModelIdDuplicateChecker()
+        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
@@ -409,7 +411,9 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo
+                    yamlInfo = yamlInfo,
+                    jobIdDuplicateChecker = jobIdDuplicateChecker,
+                    stepIdDuplicateChecker = stepIdDuplicateChecker
                 )
             } else {
                 initOtherContainer(
@@ -425,11 +429,24 @@ class PipelineRepositoryService constructor(
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
                     yamlInfo = yamlInfo,
-                    stageIndex = index
+                    stageIndex = index,
+                    jobIdDuplicateChecker = jobIdDuplicateChecker,
+                    stepIdDuplicateChecker = stepIdDuplicateChecker
                 )
             }
         }
-
+        if (jobIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
+                params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
+            )
+        }
+        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
+                params = arrayOf(stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
+            )
+        }
         return modelTasks
     }
 
@@ -445,7 +462,9 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?
+        yamlInfo: PipelineYamlVo?,
+        jobIdDuplicateChecker: ModelIdDuplicateChecker,
+        stepIdDuplicateChecker: ModelIdDuplicateChecker
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -467,6 +486,9 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
+        if (!c.jobId.isNullOrBlank()) {
+            jobIdDuplicateChecker.addId(c.jobId!!)
+        }
 
         // 清理无用的options
         c.params = PipelineUtils.cleanOptions(c.params)
@@ -475,6 +497,9 @@ class PipelineRepositoryService constructor(
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                 e.id = modelTaskIdGenerator.getNextId()
+            }
+            if (!e.stepId.isNullOrBlank()) {
+                stepIdDuplicateChecker.addId(e.stepId!!)
             }
             distIds.add(e.id!!)
             if (versionStatus?.isReleasing() == true) {
@@ -524,7 +549,9 @@ class PipelineRepositoryService constructor(
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         yamlInfo: PipelineYamlVo?,
-        stageIndex: Int
+        stageIndex: Int,
+        jobIdDuplicateChecker: ModelIdDuplicateChecker,
+        stepIdDuplicateChecker: ModelIdDuplicateChecker
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -589,12 +616,18 @@ class PipelineRepositoryService constructor(
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
             distIds.add(c.containerHashId!!)
+            if (!c.jobId.isNullOrBlank()) {
+                jobIdDuplicateChecker.addId(c.jobId!!)
+            }
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
+                if (!e.stepId.isNullOrBlank()) {
+                    stepIdDuplicateChecker.addId(e.stepId!!)
+                }
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
