@@ -38,8 +38,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PushRule(
-    val name: String? = null,
-    val enable: Boolean? = true,
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
     val branches: List<String>?,
 
     @get:Schema(title = "branches-ignore")
@@ -67,7 +68,7 @@ data class PushRule(
     @get:Schema(title = "custom-filter")
     @JsonProperty("custom-filter")
     val custom: CustomFilter? = null
-)
+) : Rule(id, name, enable)
 
 data class CustomFilter(
     @get:Schema(title = "custom-filter-url")

@@ -123,9 +123,6 @@ class StageBuildRecordService(
                 if (stageVar[Stage::startEpoch.name] == null) {
                     stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
                 }
-            } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
-                stageVar[Stage::elapsed.name] =
-                    System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
             }
             updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -482,9 +479,13 @@ class StageBuildRecordService(
             if (buildStatus?.isRunning() == true && recordStage.startTime == null) {
                 startTime = now
             }
+            val dbStageVar = recordStage.stageVar
             if (buildStatus?.isFinish() == true) {
                 if (recordStage.endTime == null) {
                     endTime = now
+                }
+                dbStageVar[Stage::startEpoch.name]?.let {
+                    stageVar[Stage::elapsed.name] = System.currentTimeMillis() - it.toString().toLong()
                 }
                 val recordContainers = recordContainerDao.getRecords(
                     dslContext = context, projectId = projectId,
@@ -511,7 +512,7 @@ class StageBuildRecordService(
                 buildId = buildId,
                 stageId = stageId,
                 executeCount = executeCount,
-                stageVar = recordStage.stageVar.plus(stageVar),
+                stageVar = dbStageVar.plus(stageVar),
                 buildStatus = buildStatus,
                 startTime = recordStage.startTime ?: startTime,
                 endTime = endTime,

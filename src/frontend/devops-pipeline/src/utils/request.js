@@ -34,7 +34,8 @@ const request = axios.create({
 })
 
 function errorHandler (error) {
-    if (typeof error.response.data === 'undefined') {
+    
+    if (typeof error.response.data === 'undefined' && !error.config?.signal?.aborted) {
         // HACK REDIRECT 302
         bus.$toggleLoginDialog(true)
     }
