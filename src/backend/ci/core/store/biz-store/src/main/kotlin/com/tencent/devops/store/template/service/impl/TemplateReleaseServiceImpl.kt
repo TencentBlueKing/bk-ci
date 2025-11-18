@@ -597,7 +597,17 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                     )
                 }
             } else {
-                storeMemberService.isStoreMember(userId, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+                val check = storeMemberService.isStoreMember(
+                    userId = userId,
+                    storeCode = templateCode,
+                    storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                )
+                if (!check) {
+                    throw ErrorCodeException(
+                        errorCode = GET_INFO_NO_PERMISSION,
+                        params = arrayOf(templateCode)
+                    )
+                }
             }
 
             // 校验模板是否合法
