@@ -452,6 +452,19 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101343" // 公共变量组({0})已被引用，无法删除
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101344" // 流水线公共变量组中变量名称重复
 
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101345" // 公共变量组YAML解析失败: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_EMPTY = "2101346" // 公共变量组YAML中version字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_FORMAT = "2101347" // 公共变量组YAML版本格式不正确，应为vX.X格式
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_EMPTY = "2101348" // 公共变量组YAML中name字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101349" // 公共变量组名称只能包含字母、数字、下划线和中划线
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLES_EMPTY = "2101350" // 公共变量组YAML中variables字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_EMPTY = "2101351" // 变量名不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101352" // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101353" // 公共变量组YAML包含未知字段: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101354" // 公共变量组YAML格式不正确，请检查字段类型
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101355" // 公共变量组YAML缺少必填字段
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101356" // 公共变量组YAML格式错误
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

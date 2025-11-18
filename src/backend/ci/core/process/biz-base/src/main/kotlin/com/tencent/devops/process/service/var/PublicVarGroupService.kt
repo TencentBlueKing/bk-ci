@@ -42,8 +42,16 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_IS_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
@@ -537,9 +545,9 @@ class PublicVarGroupService @Autowired constructor(
                 processedVarNames = processedVarNames,
                 currentIndex = currentIndex
             )
-        } catch (e: Throwable) {
-            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", e)
-            throw e
+        } catch (ignore: Throwable) {
+            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", ignore)
+            throw ignore
         }
     }
 
@@ -607,10 +615,34 @@ class PublicVarGroupService @Autowired constructor(
                 yaml.yaml,
                 object : TypeReference<PublicVarGroupYamlParser>() {}
             )
-        } catch (e: Throwable) {
-            logger.warn("Failed to parse YAML for public variable group", e)
-            throw e
+        } catch (ignore: Throwable) {
+            logger.warn("Failed to parse YAML for public variable group", ignore)
+            val errorMsg = when {
+                ignore.message?.contains("Unrecognized field") == true -> {
+                    val fieldName =
+                        ignore.message?.substringAfter("Unrecognized field \"")?.substringBefore("\"")
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD,
+                        params = arrayOf(fieldName ?: "")
+                    )
+                }
+                ignore.message?.contains("Cannot deserialize") == true -> {
+                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
+                }
+                ignore.message?.contains("missing") == true -> {
+                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                }
+                else -> ignore.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
+            }
+            throw ErrorCodeException(
+                errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED,
+                params = arrayOf(errorMsg)
+            )
         }
+        
+        // 调用格式检查方法
+        validateYamlFormat(parserVO)
+
         parserVO.variables.forEach { variable ->
             if (variable.value.const == true) {
                 variable.value.readonly = true
@@ -680,8 +712,8 @@ class PublicVarGroupService @Autowired constructor(
             }.filterNotNull()
 
             return Result(pipelineVarGroups)
-        } catch (e: Throwable) {
-            logger.warn("[$projectId|$referId] Failed to get pipeline variables", e)
+        } catch (ignore: Throwable) {
+            logger.warn("[$projectId|$referId] Failed to get pipeline variables", ignore)
             return Result(emptyList())
         }
     }
@@ -712,9 +744,32 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             return Result(pipelineVarGroups)
-        } catch (e: Throwable) {
-            logger.warn("[$projectId] Failed to get project variable groups info", e)
+        } catch (ignore: Throwable) {
+            logger.warn("[$projectId] Failed to get project variable groups info", ignore)
             return Result(emptyList())
+        }
+    }
+
+    /**
+     * 验证YAML格式
+     */
+    private fun validateYamlFormat(parserVO: PublicVarGroupYamlParser) {
+
+        // 验证变量组名称格式（以英文字母开头，由字母、数字、下划线组成，长度3-32字符）
+        if (parserVO.name.isBlank() || !parserVO.name.matches(Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$"))) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT
+            )
+        }
+
+        // 验证变量名格式
+        parserVO.variables.keys.forEach { varName ->
+            if (varName.isBlank() || !varName.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*$"))) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT,
+                    params = arrayOf(varName)
+                )
+            }
         }
     }
 }
