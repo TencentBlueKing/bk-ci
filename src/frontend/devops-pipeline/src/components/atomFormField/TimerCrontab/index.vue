@@ -1,7 +1,6 @@
 <template>
     <bk-crontab
         v-model="cronValue"
-        :local="curLocal"
         :language-package="languagePackage"
         @change="handleChangeCron"
         @error="handleError"
@@ -28,22 +27,32 @@
                 default: () => {}
             }
         },
+        data () {
+            return {
+                hasInternalError: false,
+                internalValue: '' // 保存组件内部的值（包括错误的值）
+            }
+        },
         computed: {
-            cronValue () {
-                // 处理 value 可能是字符串（错误标记）或数组的情况
-                if (typeof this.value === 'string') {
-                    return ''
+            cronValue: {
+                get () {
+                    if (this.hasInternalError) {
+                        return this.internalValue
+                    }
+                    return Array.isArray(this.value) ? this.value.join('') : ''
+                },
+                set (val) {
+                    this.internalValue = val
                 }
-                return Array.isArray(this.value) ? this.value.join('') : ''
             },
-            curLocal () {
-                const localeAliasMap = {
-                    'zh-CN': 'zh-CN',
-                    'ja-JP': 'en',
-                    'en-US': 'en'
-                }
-                return localeAliasMap[this.$i18n.locale] || 'zh-CN'
-            },
+            // curLocal () {
+            //     const localeAliasMap = {
+            //         'zh-CN': 'zh-CN',
+            //         'ja-JP': 'en',
+            //         'en-US': 'en'
+            //     }
+            //     return localeAliasMap[this.$i18n.locale] || 'zh-CN'
+            // },
             languagePackage () {
                 return {
                     'en-US': {
@@ -79,9 +88,8 @@
         },
         methods: {
             handleChangeCron (value) {
-                // 更新值为正常的数组格式
+                this.hasInternalError = false
                 this.handleChange(this.name, !!value ? [value] : [])
-                // 值变化时触发校验
                 this.$nextTick(() => {
                     if (this.$parent && this.$parent.$validator) {
                         this.$parent.$validator.validate(this.name)
@@ -89,8 +97,11 @@
                 })
             },
             handleError () {
-                // 使用字符串 '[]' 来标记组件有错误，crontabArrayRule 识别为空数组
-                this.handleChange(this.name, '[]')
+                // 标记组件有格式错误，但不修改 value
+                // 保持用户输入的错误值显示在界面上
+                this.hasInternalError = true
+                // 设置一个空数组触发校验失败
+                this.handleChange(this.name, [])
                 // 触发校验
                 this.$nextTick(() => {
                     if (this.$parent && this.$parent.$validator) {
