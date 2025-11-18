@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.bk.audit.annotations.AuditRequestBody
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
@@ -79,5 +80,9 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
 
     override fun getCommonSetting(userId: String): Result<PipelineCommonSetting> {
         return Result(pipelineSettingFacadeService.getCommonSetting(userId))
+    }
+
+    override fun getDefaultSetting(userId: String, channelCode: ChannelCode?): Result<PipelineSetting> {
+        return Result(pipelineSettingFacadeService.getDefaultSetting(userId, channelCode))
     }
 }

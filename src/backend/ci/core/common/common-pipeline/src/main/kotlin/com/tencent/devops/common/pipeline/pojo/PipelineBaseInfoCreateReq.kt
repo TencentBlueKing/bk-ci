@@ -25,46 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "渠道代码")
-enum class ChannelCode {
-    @Schema(title = "蓝鲸持续集成平台")
-    BS,
-    @Schema(title = "蓝鲸流水线插件市场")
-    AM,
-    @Schema(title = "蓝鲸代码检查平台")
-    CODECC,
-    @Schema(title = "GCloud")
-    GCLOUD,
-    @Schema(title = "工蜂")
-    GIT,
-    @Schema(title = "开源扫描")
-    GONGFENGSCAN,
-    @Schema(title = "codecc回迁")
-    CODECC_EE,
-    @Schema(title = "创作流")
-    CREATIVE_STREAM;
-
-    companion object {
-        // Only BS need to check the authentication for now
-        fun isNeedAuth(channelCode: ChannelCode) =
-                channelCode == BS || channelCode == CREATIVE_STREAM
-
-        // 页面可见channel
-        fun webChannel(channelCode: ChannelCode): Boolean {
-            return channelCode == BS || channelCode == GIT || channelCode == CREATIVE_STREAM
-        }
-
-        fun getChannel(channel: String): ChannelCode? {
-            values().forEach {
-                if (it.name == channel) {
-                    return it
-                }
-            }
-            return null
-        }
-    }
-}
+data class PipelineBaseInfoCreateReq(
+    @get:Schema(title = "流水线名称", required = true)
+    val pipelineName: String,
+    @get:Schema(title = "流水线描述", required = false)
+    val pipelineDesc: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    val envName: String? = null,
+)

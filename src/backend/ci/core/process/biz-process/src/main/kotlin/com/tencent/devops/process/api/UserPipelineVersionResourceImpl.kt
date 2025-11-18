@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
+import com.tencent.devops.common.pipeline.pojo.PipelineBaseInfoCreateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
@@ -186,6 +187,14 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 request = request
             )
         )
+    }
+
+    override fun createPipelineBaseInfo(
+        userId: String,
+        projectId: String,
+        baseInfo: PipelineBaseInfoCreateReq
+    ): Result<DeployPipelineResult> {
+        TODO("Not yet implemented")
     }
 
     override fun getVersion(

@@ -657,9 +657,9 @@ class PipelineRepositoryService constructor(
      * 初始化默认的流水线setting
      */
     fun createDefaultSetting(
-        projectId: String,
-        pipelineId: String,
-        pipelineName: String,
+        projectId: String = "",
+        pipelineId: String = "",
+        pipelineName: String = "",
         channelCode: ChannelCode
     ): PipelineSetting {
         // 空白流水线设置初始化
