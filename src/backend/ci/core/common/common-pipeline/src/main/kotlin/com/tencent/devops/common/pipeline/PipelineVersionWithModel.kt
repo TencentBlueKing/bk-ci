@@ -34,11 +34,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineVersionWithModel(
     @get:Schema(title = "版本号（流水线唯一递增）", required = true)
     val version: Int,
-    @get:Schema(title = "版本名称", required = true)
+    @get:Schema(title = "版本名称", required = false)
     val versionName: String?,
-    @get:Schema(title = "该版本的源版本号", required = true)
+    @get:Schema(title = "该版本的源版本号", required = false)
     val baseVersion: Int?,
-    @get:Schema(title = "该版本的版本号名", required = true)
+    @get:Schema(title = "该版本的版本号名", required = false)
     val baseVersionName: String?,
     @get:Schema(title = "流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
@@ -50,10 +50,12 @@ data class PipelineVersionWithModel(
     val description: String?,
     @get:Schema(title = "是否支持YAML解析", required = true)
     val yamlSupported: Boolean,
-    @get:Schema(title = "YAML解析异常信息")
+    @get:Schema(title = "YAML解析异常信息", required = false)
     val yamlInvalidMsg: String?,
-    @get:Schema(title = "更新操作人", required = true)
+    @get:Schema(title = "更新操作人", required = false)
     val updater: String?,
-    @get:Schema(title = "版本修改时间", required = true)
-    val updateTime: Long?
+    @get:Schema(title = "版本修改时间", required = false)
+    val updateTime: Long?,
+    @get:Schema(title = "运行环境名称", required = false)
+    val envName: String? = null
 )
