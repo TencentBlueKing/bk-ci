@@ -1741,13 +1741,11 @@
     "removeUnarchivablePipelines": "Remove unarchivable pipelines"
   },
   "cron": {
-    "分": "Minute",
-    "时": "Hour",
-    "日": "Day",
-    "周": "Week",
-    "月": "Month",
-    "下次：": "Next:",
-    "小时": "Hour"
+    "everyMinute": "Per minute",
+    "everyHour": "Per hour",
+    "everyDay": "Per day",
+    "everyWeek": "Per week",
+    "everyMonth": "Per month"
   },
   "validVariableFormat": "Please enter a valid variable format",
   "enterRepoAlias": "Please enter the repository alias",

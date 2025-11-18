@@ -1739,13 +1739,11 @@
     "removeUnarchivablePipelines": "去除无法归档的流水线"
   },
   "cron": {
-    "分": "分",
-    "时": "时",
-    "日": "日",
-    "周": "周",
-    "月": "月",
-    "下次：": "下次：",
-    "小时": "小时"
+    "everyMinute": "每分钟",
+    "everyHour": "每小时",
+    "everyDay": "每天",
+    "everyWeek": "每周",
+    "everyMonth": "每月"
   },
   "validVariableFormat": "请输入有效的变量格式",
   "enterRepoAlias": "请输入代码库别名",
