@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -550,7 +551,8 @@ class CreateControl @Autowired constructor(
                     workspaceCommon.makeDiskMount(
                         ip = ip,
                         user = event.userId,
-                        owner = ws.createUserId
+                        owner = ws.createUserId,
+                        type = EnvironmentAction.CREATE.name
                     )
                 }
 

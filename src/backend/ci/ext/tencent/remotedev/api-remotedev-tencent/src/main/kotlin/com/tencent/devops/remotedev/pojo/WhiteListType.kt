@@ -57,6 +57,9 @@ enum class WhiteListType {
     // 单向网络开关-单个实例级别关闭-黑名单
     NOT_CDS_MESH_WORKSPACE,
 
+    // SSL模式-单个实例级别开启
+    CDS_SSL_WORKSPACE,
+
     // 设备管控白名单
     PROJECT_ACCESS_DEVICE;
 

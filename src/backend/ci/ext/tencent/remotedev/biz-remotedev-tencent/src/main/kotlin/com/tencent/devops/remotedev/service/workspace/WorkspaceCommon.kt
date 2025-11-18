@@ -554,7 +554,10 @@ class WorkspaceCommon @Autowired constructor(
                         )
                     )
                     // 分配拥有者后触发L盘挂载
-                    makeDiskMount(cgsId.substringAfter("."), operator)
+                    makeDiskMount(
+                        ip = cgsId.substringAfter("."),
+                        user = operator
+                    )
                 }
                 notifyControl.dispatchWebsocketPushEvent(
                     userId = it.userId,
@@ -747,7 +750,8 @@ class WorkspaceCommon @Autowired constructor(
     fun makeDiskMount(
         ip: String,
         user: String,
-        owner: String? = null
+        owner: String? = null,
+        type: String? = null
     ) {
         try {
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
@@ -761,9 +765,11 @@ class WorkspaceCommon @Autowired constructor(
                     "repoId" -> newParam[k] = REPOID
                     "localDriver" -> newParam[k] = LOCALDRIVER
                     "owner" -> newParam[k] = owner ?: ""
+                    "type" -> newParam[k] = type ?: ""
                     else -> newParam[k] = v
                 }
             }
+
             AsyncExecute.dispatch(
                 streamBridge,
                 AsyncPipelineEvent(

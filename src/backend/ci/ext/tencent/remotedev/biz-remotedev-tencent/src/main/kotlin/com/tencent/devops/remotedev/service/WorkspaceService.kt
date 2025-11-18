@@ -368,7 +368,6 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?,
         search: WorkspaceSearch?
     ): Page<ProjectWorkspace> {
-        logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
         val theSearch = search?.apply {
@@ -396,7 +395,6 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         data: ProjectWorkspaceFetchData
     ): Page<ProjectWorkspace> {
-        logger.info("op get project ${data.projectId} workspace list {}", data)
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
         val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null

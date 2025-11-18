@@ -77,6 +77,9 @@ interface ExternalResource {
         @QueryParam("enable")
         enable: String,
         @QueryParam("domain")
-        domain: String
+        domain: String,
+        @Parameter(description = "SSL模式：true表示使用SSL模式，为空表示使用默认Mesh模式")
+        @QueryParam("sslMode")
+        sslMode: String? = null
     ): Result<Boolean>
 }

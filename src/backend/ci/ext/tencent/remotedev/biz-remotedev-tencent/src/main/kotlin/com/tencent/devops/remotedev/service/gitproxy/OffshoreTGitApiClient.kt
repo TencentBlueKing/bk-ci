@@ -42,7 +42,6 @@ class OffshoreTGitApiClient @Autowired constructor(
         type: TGitProjectType,
         throwE: Boolean
     ): List<TGitProjectInfo> {
-        logger.info("get /api/v3/projects|$page|$pageSize|$search|$minAccessLevel|$type")
         val url = "${tGitConfig.tGitUrl}/api/v3/projects".addQuery(
             token.key() to token.token,
             "page" to page,
