@@ -100,8 +100,8 @@
                 // 标记组件有格式错误，但不修改 value
                 // 保持用户输入的错误值显示在界面上
                 this.hasInternalError = true
-                // 设置一个空数组触发校验失败
-                this.handleChange(this.name, [])
+                // 使用字符串 '[]' 来标记组件有错误，crontabArrayRule 识别为空数组
+                this.handleChange(this.name, '[]')
                 // 触发校验
                 this.$nextTick(() => {
                     if (this.$parent && this.$parent.$validator) {
