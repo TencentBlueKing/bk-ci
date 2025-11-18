@@ -697,9 +697,20 @@ class EnvService @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        envHashIds: List<String>
+        envHashIds: List<String>?,
+        envName: String?
     ): Page<NodeBaseInfo> {
-        val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
+        val envIds = envHashIds?.map { HashUtil.decodeIdToLong(it) }
+            ?: if (envName != null) {
+                val rEnvId = envDao.getByEnvName(dslContext, projectId, envName)?.envId
+                if (rEnvId != null) {
+                    listOf(rEnvId)
+                } else {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {

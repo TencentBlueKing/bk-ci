@@ -171,7 +171,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, listOf(envHashId)))
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, listOf(envHashId), null))
+    }
+
+    override fun listNodesNewByName(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envName: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, null, envName))
     }
 
     @BkTimed(extraTags = ["operate", "createNode"])
