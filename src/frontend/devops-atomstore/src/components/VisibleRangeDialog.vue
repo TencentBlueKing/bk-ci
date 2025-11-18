@@ -112,7 +112,7 @@
                 searchValue: '',
                 closeSvg,
                 defaultExpandedNodes: ['0'],
-                timerId: null,
+                timerIds: [],
                 currentSelectNode: []
             }
         },
@@ -143,15 +143,26 @@
                     this.clearChecked(this.selectIds, true)
                 }
                 if (!val) {
-                    this.timerId = null
                     this.selectedList = []
                     this.treeList = [{ id: 0, name: this.$t('store.腾讯公司') }]
+                    this.clearTimers()
                 }
             },
         },
+
+        beforeDestroy () {
+            this.clearTimers()
+        },
+
         methods: {
+            clearTimers () {
+                this.timerIds.forEach(timerId => {
+                    clearTimeout(timerId)
+                })
+                this.timerIds = []
+            },
+        
             clearChecked (ids, status) {
-                console.log(ids, status)
               this.$refs.organizationTree?.setChecked(ids, { checked: status })
               this.$refs.organizationTree?.setDisabled(ids, { disabled: status })
             },
@@ -170,7 +181,7 @@
                         parentNode = parentNode.parent
                     }
                     const nodeId = String(node.id)
-                    if (!this.selectIds.includes(nodeId) && !this.selectedList.some(i=> i.id === nodeId)) {
+                    if (!this.selectIds.includes(nodeId) && !this.selectedList.some(i => i.id === nodeId)) {
                         this.selectedList.push(node.data)
                     }
                 })
@@ -187,7 +198,7 @@
             },
 
             handleDeleteAll () {
-                const clearIds = this.selectedList.map(i=>i.id)
+                const clearIds = this.selectedList.map(i => i.id)
                 this.clearChecked(clearIds, false)
                 this.$refs.organizationTree.removeChecked()
                 this.selectedList = []
@@ -217,9 +228,10 @@
                     res.forEach((x) => {
                         x.type = curType
                         if (this.selectIds.includes(x.id)) {
-                            this.timerId = setTimeout(() => {
+                            const timerId = setTimeout(() => {
                                 this.clearChecked(x.id, true)
                             }, 100)
+                            this.timerIds.push(timerId)
                         }
                         data.push(x)
                         if (node.level === 2) leaf.push(x.id)
