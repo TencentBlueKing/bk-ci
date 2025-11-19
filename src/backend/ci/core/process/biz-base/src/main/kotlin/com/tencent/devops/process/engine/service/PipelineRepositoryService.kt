@@ -388,7 +388,7 @@ class PipelineRepositoryService constructor(
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
         val jobIdDuplicateChecker = ModelIdDuplicateChecker()
-        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
+
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
@@ -412,8 +412,7 @@ class PipelineRepositoryService constructor(
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
                     yamlInfo = yamlInfo,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker,
-                    stepIdDuplicateChecker = stepIdDuplicateChecker
+                    jobIdDuplicateChecker = jobIdDuplicateChecker
                 )
             } else {
                 initOtherContainer(
@@ -430,8 +429,7 @@ class PipelineRepositoryService constructor(
                     versionStatus = versionStatus,
                     yamlInfo = yamlInfo,
                     stageIndex = index,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker,
-                    stepIdDuplicateChecker = stepIdDuplicateChecker
+                    jobIdDuplicateChecker = jobIdDuplicateChecker
                 )
             }
         }
@@ -439,12 +437,6 @@ class PipelineRepositoryService constructor(
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
                 params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
-            )
-        }
-        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                params = arrayOf(stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
             )
         }
         return modelTasks
@@ -463,8 +455,7 @@ class PipelineRepositoryService constructor(
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         yamlInfo: PipelineYamlVo?,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker,
-        stepIdDuplicateChecker: ModelIdDuplicateChecker
+        jobIdDuplicateChecker: ModelIdDuplicateChecker
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -493,6 +484,7 @@ class PipelineRepositoryService constructor(
         // 清理无用的options
         c.params = PipelineUtils.cleanOptions(c.params)
 
+        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
@@ -534,6 +526,12 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
+        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
+                params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
+            )
+        }
     }
 
     private fun initOtherContainer(
@@ -550,8 +548,7 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         yamlInfo: PipelineYamlVo?,
         stageIndex: Int,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker,
-        stepIdDuplicateChecker: ModelIdDuplicateChecker
+        jobIdDuplicateChecker: ModelIdDuplicateChecker
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -619,6 +616,7 @@ class PipelineRepositoryService constructor(
             if (!c.jobId.isNullOrBlank()) {
                 jobIdDuplicateChecker.addId(c.jobId!!)
             }
+            val stepIdDuplicateChecker = ModelIdDuplicateChecker()
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
@@ -662,6 +660,12 @@ class PipelineRepositoryService constructor(
                         containerEnable = c.containerEnabled(),
                         stageEnable = stage.stageEnabled()
                     )
+                )
+            }
+            if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
+                    params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
                 )
             }
         }

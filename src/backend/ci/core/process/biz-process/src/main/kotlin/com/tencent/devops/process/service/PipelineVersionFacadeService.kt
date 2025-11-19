@@ -481,8 +481,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
             archiveFlag = archiveFlag
         )
+        // 判断是否需要再重新生成yaml,这行代码需要放在getFixedModel之前,不然getFixedModel会把template字段补充
+        val force = resource.version == pipelineInfo.version &&
+                resource.model.instanceFromTemplate == true &&
+                resource.model.template == null
         val model = pipelineInfoFacadeService.getFixedModel(
-            model = resource.model,
+            resource = resource,
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
@@ -511,7 +515,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 resource = resource,
                 editPermission = editPermission,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                force = force
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
@@ -762,7 +767,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             targetVersion = targetVersion.copy(
                 model = pipelineInfoFacadeService.getFixedModel(
-                    targetVersion.model, projectId, pipelineId, userId, pipelineInfo
+                    targetVersion, projectId, pipelineId, userId, pipelineInfo
                 )
             )
         )

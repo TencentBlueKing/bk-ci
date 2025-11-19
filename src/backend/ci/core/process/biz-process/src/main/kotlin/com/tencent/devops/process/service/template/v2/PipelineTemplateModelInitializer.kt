@@ -74,13 +74,13 @@ class PipelineTemplateModelInitializer @Autowired constructor(
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
         val jobIdDuplicateChecker = ModelIdDuplicateChecker()
-        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
 
         templateModel.stages.forEachIndexed { index, stage ->
             stage.id = VMUtils.genStageId(index + 1)
             if (stage.name.isNullOrBlank()) stage.name = stage.id
             if (stage.tag == null) stage.tag = defaultTagIds
             stage.containers.forEach { container ->
+                val stepIdDuplicateChecker = ModelIdDuplicateChecker()
                 if (container is TriggerContainer) {
                     container.params = PipelineUtils.cleanOptions(params = container.params)
                     container.templateParams = container.templateParams?.let {
@@ -107,18 +107,18 @@ class PipelineTemplateModelInitializer @Autowired constructor(
                         stepIdDuplicateChecker.addId(e.stepId!!)
                     }
                 }
+                if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
+                        params = arrayOf(container.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
+                    )
+                }
             }
         }
         if (jobIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
                 params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
-            )
-        }
-        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                params = arrayOf(stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
             )
         }
     }
