@@ -720,10 +720,21 @@ class PipelineBuildFacadeService(
             // 检查用户是否有权限取消构建
             if (!hasPermissionToCancelBuild(userId, projectId, pipelineId, buildId)) {
                 logger.warn("[$buildId]|User $userId has no permission to cancel build.")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.USER_NO_CANCEL_BUILD_PERMISSION,
-                    params = arrayOf(userId, buildId)
-                )
+                // 根据不同的策略抛出不同的错误信息
+                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
+
+                if (cancelPolicy == BuildCancelPolicy.RESTRICTED) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.USER_NO_CANCEL_BUILD_PERMISSION,
+                        params = arrayOf(userId, buildId)
+                    )
+                } else {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                        params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+                    )
+                }
             }
         }
         buildManualShutdown(
