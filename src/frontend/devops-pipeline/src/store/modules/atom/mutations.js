@@ -179,6 +179,10 @@ export default {
         })
     },
     [PIPELINE_SETTING_MUTATION]: (state, pipelineSetting) => {
+        // Set default value for buildCancelPolicy if not exists
+        if (pipelineSetting && !pipelineSetting.buildCancelPolicy) {
+            pipelineSetting.buildCancelPolicy = 'EXECUTE_PERMISSION'
+        }
         return Object.assign(state, {
             pipelineSetting
         })
