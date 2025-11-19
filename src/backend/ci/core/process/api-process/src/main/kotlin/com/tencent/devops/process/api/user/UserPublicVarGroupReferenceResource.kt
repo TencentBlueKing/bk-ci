@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import io.swagger.v3.oas.annotations.Operation
@@ -135,4 +136,32 @@ interface UserPublicVarGroupReferenceResource {
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<List<PipelineRefPublicVarGroupDO>>
+
+    @Operation(summary = "获取资源关联的变量组变量引用信息")
+    @GET
+    @Path("/refers/{referId}/vars")
+    fun listResourceVarReferInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "引用资源ID", required = true)
+        @PathParam("referId")
+        referId: String,
+        @Parameter(description = "引用资源类型", required = true)
+        @QueryParam("referType")
+        referType: PublicVerGroupReferenceTypeEnum,
+        @Parameter(description = "引用版本号", required = true)
+        @QueryParam("referVersion")
+        referVersion: Int,
+        @Parameter(description = "变量组名称", required = true)
+        @QueryParam("groupName")
+        groupName: String,
+        @Parameter(description = "变量组版本号", required = false)
+        @QueryParam("version")
+        version: Int?
+    ): Result<List<PublicVarDO>>
+
 }

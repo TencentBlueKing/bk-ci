@@ -42,6 +42,8 @@ import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
+import com.tencent.devops.process.pojo.`var`.`do`.ResourceVarReferInfoDO
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
@@ -1022,6 +1024,99 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             buildFormProperty.varGroupName = groupName
             buildFormProperty.varGroupVersion = if (varPO.version != -1) version else null
             params.add(buildFormProperty)
+        }
+    }
+
+    /**
+     * 获取资源关联的变量组变量引用信息
+     * @param projectId 项目ID
+     * @param referId 引用资源ID
+     * @param referType 引用资源类型
+     * @param referVersion 引用版本号
+     * @param groupName 变量组名称
+     * @param version 变量组版本号
+     * @return 变量列表
+     */
+    fun listResourceVarReferInfo(
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersion: Int,
+        groupName: String,
+        version: Int?
+    ): List<PublicVarDO> {
+        logger.info("listResourceVarReferInfo for referId: $referId, referType: $referType, " +
+                "referVersion: $referVersion, groupName: $groupName, version: $version")
+        
+        try {
+            // version为空时使用-1
+            val actualVersion = version ?: -1
+            
+            // 查询变量组信息，确认变量组存在
+            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = actualVersion
+            ) ?: throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
+                params = arrayOf(groupName)
+            )
+
+            // 查询该资源在该变量组中引用的变量信息
+            val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndGroup(
+                dslContext = dslContext,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                groupName = groupName,
+                referVersion = referVersion
+            )
+
+            if (varReferInfos.isEmpty()) {
+                return emptyList()
+            }
+
+            // 获取该资源实际引用的变量名列表
+            val referencedVarNames = varReferInfos.map { it.varName }.toSet()
+
+            // 统计每个变量的引用次数
+            val varReferCountMap = varReferInfos.groupingBy { it.varName }.eachCount()
+
+            // 查询变量组中的所有变量详细信息
+            val groupVars = publicVarDao.listVarByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = varGroupRecord.version
+            )
+
+            // 只返回实际被引用的变量
+            return groupVars
+                .filter { referencedVarNames.contains(it.varName) }
+                .map { varPO ->
+                    val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
+                    buildFormProperty.varGroupVersion =
+                        if (varGroupRecord.version != -1) varGroupRecord.version else null
+                    PublicVarDO(
+                        varName = varPO.varName,
+                        alias = varPO.alias,
+                        type = varPO.type,
+                        valueType = varPO.valueType,
+                        defaultValue = varPO.defaultValue,
+                        desc = varPO.desc,
+                        referCount = varReferCountMap[varPO.varName] ?: 0,
+                        buildFormProperty = buildFormProperty
+                    )
+                }
+        } catch (e: ErrorCodeException) {
+            throw e
+        } catch (e: Throwable) {
+            logger.warn("Failed to list resource var refer info for referId: $referId, groupName: $groupName", e)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP,
+                params = arrayOf(e.message ?: "Unknown error")
+            )
         }
     }
 }

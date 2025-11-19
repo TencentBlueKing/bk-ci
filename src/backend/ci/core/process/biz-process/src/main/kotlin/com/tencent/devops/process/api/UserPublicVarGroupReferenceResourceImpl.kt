@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupReferenceResource
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
+import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
@@ -45,8 +46,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService,
-    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupService: PublicVarGroupService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    private val publicVarReferInfoService: PublicVarGroupReferInfoService
 ) : UserPublicVarGroupReferenceResource {
 
     @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
@@ -109,5 +111,25 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
+    }
+
+    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_USE)
+    override fun listResourceVarReferInfo(
+        userId: String,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersion: Int,
+        groupName: String,
+        version: Int?
+    ): Result<List<PublicVarDO>> {
+        return Result(publicVarReferInfoService.listResourceVarReferInfo(
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referVersion = referVersion,
+            groupName = groupName,
+            version = version
+        ))
     }
 }
