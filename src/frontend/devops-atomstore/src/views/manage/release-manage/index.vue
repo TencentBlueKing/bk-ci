@@ -51,7 +51,9 @@
             const hasPromission = ref(false)
 
             onMounted(() => {
-                getTemplateUserValidate()
+                if (type.value === 'template') {
+                    getTemplateUserValidate()
+                }
             })
 
             async function getTemplateUserValidate () {
