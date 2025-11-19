@@ -43,5 +43,8 @@ enum class PipelineSettingGroupType {
     CONCURRENCY,
 
     // 是否配置流水线变量值超长时终止执行
-    FAIL_IF_VARIABLE_INVALID
+    FAIL_IF_VARIABLE_INVALID,
+
+    // 构建取消策略
+    BUILD_CANCEL_POLICY
 }
