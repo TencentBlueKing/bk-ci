@@ -426,83 +426,52 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
-     * 查询变量组引用信息
+     * 查询变量组引用信息（查询所有版本的引用）
      */
     private fun queryVarGroupReferInfo(
         queryReq: PublicVarGroupInfoQueryReqDTO
     ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
         val projectId = queryReq.projectId
         val groupName = queryReq.groupName!!
-        val version = queryReq.version
         val varName = queryReq.varName
 
         try {
-            // 检查变量组是否存在
+            // 检查变量组是否存在（查询任意版本以确认变量组存在）
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                version = version
+                version = null
             )
 
             if (varGroupRecord == null) {
                 return Pair(0, emptyList())
             }
 
-            // 使用查询出的记录的version
-            val actualVersion = varGroupRecord.version
-
             // 如果指定了 varName，则查询引用了该变量的资源列表
             if (!varName.isNullOrBlank()) {
-                return queryVarGroupReferInfoByVarName(
+                return queryVarGroupReferInfoByVarNameAllVersions(
                     queryReq = queryReq,
                     groupName = groupName,
-                    varName = varName,
-                    actualVersion = actualVersion
+                    varName = varName
                 )
             }
 
-            // 当version为null时，查询动态引用（version=-1）和最新版本号的固定引用
-            if (version == null) {
-                val versions = listOf(-1, actualVersion)
-                
-                // 统计总数
-                val totalCount = publicVarGroupReferInfoDao.countByGroupNameAndVersions(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    referType = queryReq.referType,
-                    versions = versions
-                )
-
-                // 查询引用信息
-                val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByVersions(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    referType = queryReq.referType,
-                    versions = versions,
-                    page = queryReq.page,
-                    pageSize = queryReq.pageSize
-                )
-
-                return Pair(totalCount, varGroupReferInfo)
-            }
-
+            // 查询所有版本的引用（不限制版本）
+            // 统计总数
             val totalCount = publicVarGroupReferInfoDao.countByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                referType = queryReq.referType,
-                version = actualVersion
+                referType = queryReq.referType
             )
 
+            // 查询引用信息
             val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
                 referType = queryReq.referType,
-                version = actualVersion,
                 page = queryReq.page,
                 pageSize = queryReq.pageSize
             )
@@ -510,6 +479,56 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             return Pair(totalCount, varGroupReferInfo)
         } catch (e: Throwable) {
             logger.warn("Failed to query var group refer info for group: $groupName", e)
+            return Pair(0, emptyList())
+        }
+    }
+
+    /**
+     * 根据变量名查询变量组引用信息（所有版本）
+     */
+    private fun queryVarGroupReferInfoByVarNameAllVersions(
+        queryReq: PublicVarGroupInfoQueryReqDTO,
+        groupName: String,
+        varName: String
+    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
+        val projectId = queryReq.projectId
+
+        try {
+            // 查询引用了该变量的 referId 列表（所有版本）
+            val referIds = publicVarReferInfoDao.listReferIdsByVarName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                varName = varName,
+                version = null, // 传null表示查询所有版本
+                referType = queryReq.referType
+            )
+
+            if (referIds.isEmpty()) {
+                return Pair(0, emptyList())
+            }
+
+            // 统计总数
+            val totalCount = publicVarGroupReferInfoDao.countByReferIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                referIds = referIds,
+                referType = queryReq.referType
+            )
+
+            // 查询详细信息
+            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                referIds = referIds,
+                referType = queryReq.referType,
+                page = queryReq.page,
+                pageSize = queryReq.pageSize
+            )
+
+            return Pair(totalCount, varGroupReferInfo)
+        } catch (e: Throwable) {
+            logger.warn("Failed to query var group refer info by varName: $varName (all versions)", e)
             return Pair(0, emptyList())
         }
     }
