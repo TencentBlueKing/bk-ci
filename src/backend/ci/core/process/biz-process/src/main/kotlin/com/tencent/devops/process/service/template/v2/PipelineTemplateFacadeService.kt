@@ -983,19 +983,39 @@ class PipelineTemplateFacadeService @Autowired constructor(
             params = arrayOf(pipelineVersion.toString())
         )
 
-        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
             projectId = projectId,
             pipelineId = pipelineId
-        )
-        if (!instanceFromTemplate || pipelineResource.model.template == null) {
-            return null
-        }
+        ) ?: return null
 
-        val templateResource = pipelineModelParser.parseTemplateDescriptor(
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
-            descriptor = pipelineResource.model.template!!,
             pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
         )
+        val templateDescriptor = pipelineResource.model.template
+        val templateResource = templateDescriptor?.let {
+            pipelineModelParser.parseTemplateDescriptor(
+                projectId = projectId,
+                descriptor = it,
+                pipelineId = pipelineId
+            )
+        } ?: run {
+            // 如果没有template字段,说明是历史实例化流水线,如果是最新版本,则需要填充数据
+            if (pipelineInfo.version == pipelineVersion) {
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = pipelineTemplateRelated.templateId,
+                    version = pipelineTemplateRelated.version
+                )
+            } else {
+                logger.warn("legacy version, cannot view related template|$projectId|$pipelineId|$pipelineVersion")
+                return null
+            }
+        }
 
         return getTemplateDetails(
             projectId = projectId,
@@ -1007,51 +1027,63 @@ class PipelineTemplateFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        pipelineVersion: Int
     ): PTemplatePipelineRefInfo? {
         val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = version,
+            version = pipelineVersion,
             includeDraft = true
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
-            params = arrayOf(version.toString())
+            params = arrayOf(pipelineVersion.toString())
         )
 
-        val instanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
             projectId = projectId,
             pipelineId = pipelineId
+        ) ?: return null
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
         )
+
         val templateDescriptor = pipelineResource.model.template
-        if (!instanceFromTemplate || templateDescriptor == null) {
-            return null
+        val templateResource = templateDescriptor?.let {
+            pipelineModelParser.parseTemplateDescriptor(
+                projectId = projectId,
+                descriptor = it,
+                pipelineId = pipelineId
+            )
+        } ?: run {
+            // 如果没有template字段,说明是历史实例化流水线,如果是最新版本,则需要填充数据
+            if (pipelineInfo.version == pipelineVersion) {
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = pipelineTemplateRelated.templateId,
+                    version = pipelineTemplateRelated.version
+                )
+            } else {
+                logger.warn("legacy version, cannot view related template|$projectId|$pipelineId|$pipelineVersion")
+                return null
+            }
         }
 
-        val templateResource = pipelineModelParser.parseTemplateDescriptor(
-            projectId = projectId,
-            descriptor = templateDescriptor,
-            pipelineId = pipelineId
-        )
-
-        val templateId = templateResource.templateId
-        val templateVersion = templateResource.version
+        val templateId = pipelineTemplateRelated.templateId
         val templateInfo = pipelineTemplateInfoService.get(templateId)
-        val templateRefType = templateDescriptor.templateRefType
+        val templateVersion = templateResource.version
 
-        return if (templateRefType == TemplateRefType.ID) {
+        return if (templateDescriptor == null || templateDescriptor.templateRefType == TemplateRefType.ID) {
             val templateDetailsUrl =
                 String.format(templateDetailRedirectUri, projectId, templateId, templateVersion).plus("/pipeline")
-            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId)
-            )
             // 当前流水版本为最新版本，并且关联的模板版本不是最新版本，则需要升级
-            val upgradeFlag = pipelineInfo.version == version && templateInfo.releasedVersion != templateVersion
+            val upgradeFlag =
+                pipelineInfo.version == pipelineVersion && templateInfo.releasedVersion != templateVersion
             val upgradeUrl = takeIf { upgradeFlag }?.let {
                 String.format(
                     pipelineUpgradeRedirectUri,
@@ -1067,7 +1099,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateInfo.id,
                 templateVersionName = templateResource.versionName,
                 templateVersion = templateVersion,
-                refType = templateRefType,
+                refType = TemplateRefType.ID,
                 templateDetailsUrl = templateDetailsUrl,
                 upgradeFlag = upgradeFlag,
                 upgradeUrl = upgradeUrl
@@ -1083,7 +1115,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 templateId = templateInfo.id,
                 templateVersionName = templateResource.versionName,
                 templateVersion = templateVersion,
-                refType = templateRefType,
+                refType = TemplateRefType.PATH,
                 templateDetailsUrl = templateDetailsUrl,
                 upgradeFlag = false,
                 upgradeUrl = null
@@ -1629,7 +1661,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
 
     private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"
     private val pipelineUpgradeRedirectUri =
-        "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s?pipelineId=%s&pipelineName=%s"
+        "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s/instance/upgrade?pipelineId=%s&pipelineName=%s"
 
 
     companion object {

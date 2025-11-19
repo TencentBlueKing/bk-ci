@@ -325,7 +325,7 @@ class UserPipelineTemplateV2ResourceImpl(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                pipelineVersion = version
             )
         )
     }

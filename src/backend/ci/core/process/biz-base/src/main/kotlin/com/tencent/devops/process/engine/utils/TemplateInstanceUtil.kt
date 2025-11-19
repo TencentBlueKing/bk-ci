@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
@@ -312,11 +313,12 @@ object TemplateInstanceUtil {
         }
         return when (triggerElement) {
             is TimerTriggerElement -> {
-                triggerConfig.cron?.let { c ->
-                    triggerElement.copy(
-                        advanceExpression = c
-                    )
-                } ?: triggerElement
+                triggerElement.copy(
+                    advanceExpression = triggerConfig.cron ?: triggerElement.advanceExpression,
+                    startParams = triggerConfig.variables?.let {
+                        JsonUtil.toJson(it, false)
+                    } ?: triggerElement.startParams
+                )
             }
 
             else -> triggerElement
