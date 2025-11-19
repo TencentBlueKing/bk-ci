@@ -227,6 +227,11 @@
         }
         return comMap[viewTab.value]
     })
+    const publicVarTypeMap = computed(() => ({
+        [VARIABLE]: VARIABLE,
+        [CONSTANT]: CONSTANT,
+        [OTHER]: VARIABLE
+    }))
     const showAddParamSlider = ref(false)
     const releasing = ref(false)
     const newParamId = ref('') // 用于记录新增的变量，新增变量后高亮table当前行
@@ -378,7 +383,7 @@
                 const newVarData = {
                     varName: id,
                     alias: name,
-                    type: publicVarType.value,
+                    type: publicVarTypeMap.value[publicVarType.value],
                     valueType: type,
                     defaultValue,
                     desc,

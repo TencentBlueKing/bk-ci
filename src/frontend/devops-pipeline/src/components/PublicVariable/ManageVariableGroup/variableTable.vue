@@ -63,10 +63,10 @@
             <template slot-scope="{ row }">
                 <span
                     :style="{
-                        color: row.isCited ? '#63656E' : '#C4C6CC'
+                        color: !!row.referCount ? '#63656E' : '#C4C6CC'
                     }"
                 >
-                    {{ row.isCited ? $t('true') : $t('false') }}
+                    {{ !!row.referCount ? $t('true') : $t('false') }}
                 </span>
             </template>
         </bk-table-column>
