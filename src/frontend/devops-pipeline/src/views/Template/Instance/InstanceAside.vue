@@ -316,13 +316,13 @@
     }
     async function init () {
         if ([INSTANCE_OPERATE_TYPE.UPGRADE, INSTANCE_OPERATE_TYPE.COPY].includes(instanceViewType.value)) {
-            const { from, pipelineName } = proxy.$route.query
-            if (from && pipelineName) {
+            const { pipelineId, pipelineName } = proxy.$route.query
+            if (pipelineId && pipelineName) {
                 proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
                     list: [
                         {
                             pipelineName: pipelineName?.substring(0, 128),
-                            pipelineId: from
+                            pipelineId
                         }
                     ]
                 })

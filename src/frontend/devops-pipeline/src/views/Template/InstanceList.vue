@@ -492,7 +492,7 @@
                     type: 'copy'
                 },
                 query: {
-                    from: row.pipelineId,
+                    pipelineId: row.pipelineId,
                     pipelineName: (row.pipelineName + '_copy').substring(0, 128),
                 }
             })

@@ -539,7 +539,6 @@
                         : itemDefaultValue !== templateDefaultValue
                     
                     if (!item.isNew) {
-                        console.log(123)
                         const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem?.defaultValue) : initialInstanceParamItem?.defaultValue
                         item.isChange =  isObject(itemDefaultValue)
                             ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
