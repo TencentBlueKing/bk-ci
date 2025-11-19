@@ -341,7 +341,7 @@
     "lockGroupDesc": "A concurrency group can be any string or expression, and the effective scope is under the current project. Support variables with values that can be determined during the startup phase, such as ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (provided that the value of a is clear at startup), etc",
     "buildCancelPolicyOptions": {
       "EXECUTE_PERMISSION": "Users with execute permission can cancel any build",
-      "RESTRICTED": "Only the trigger user, pipeline owner, and project admin can cancel"
+      "RESTRICTED": "Only the trigger user or users with pipeline management permission can cancel"
     },
     "notify": "Notifications",
     "auth": " Permissions",
