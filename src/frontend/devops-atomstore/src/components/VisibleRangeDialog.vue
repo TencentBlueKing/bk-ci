@@ -9,7 +9,7 @@
         :loading="isLoading"
         :auto-close="false"
         @confirm="toConfirmLogo"
-        @cancel="$emit('cancelHandle')"
+        @cancel="handleCancel"
     >
         <main class="organization-select-content">
             <div class="organization-content">
@@ -122,22 +122,15 @@
             },
         },
         watch: {
-            selectData: {
-                handler (val) {
-                    this.currentSelectNode = val.map((i) => ({
-                        ...i,
-                        id: i.deptId,
-                        displayName: i.deptName,
-                    }))
-                }, immediate: true
-            },
             showDialog (val) {
-                if (val && this.currentSelectNode) {
-                    this.selectedList = this.currentSelectNode.map((i) => ({
+                if (val) {
+                    this.currentSelectNode = this.selectData?.map((i) => ({
                         ...i,
                         id: i.deptId,
                         displayName: i.deptName,
                     }))
+
+                    this.selectedList = [...this.currentSelectNode]
 
                     this.selectIds.includes('0') && this.$refs.organizationTree?.setChecked(0)
                     this.clearChecked(this.selectIds, true)
@@ -168,7 +161,7 @@
             },
             handleChange (ids) {
                 if (this.currentSelectNode.length) {
-                    this.selectedList = this.currentSelectNode
+                    this.selectedList = [...this.currentSelectNode]
                 } else {
                     this.selectedList = []
                 }
@@ -264,6 +257,11 @@
                     this.$emit('saveHandle', params)
                 }
             },
+            handleCancel () {
+                this.selectedList = []
+                this.currentSelectNode = []
+                this.$emit('cancelHandle')
+            }
         },
     }
 </script>
