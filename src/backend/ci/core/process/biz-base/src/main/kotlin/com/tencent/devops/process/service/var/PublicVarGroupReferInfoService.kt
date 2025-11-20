@@ -1081,6 +1081,18 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
+            // 先查询变量组中的所有变量详细信息
+            val groupVars = publicVarDao.listVarByGroupName(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = varGroupRecord.version
+            )
+
+            if (groupVars.isEmpty()) {
+                return emptyList()
+            }
+
             // 查询该资源在该变量组中引用的变量信息
             val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndGroup(
                 dslContext = dslContext,
@@ -1091,42 +1103,25 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 referVersion = referVersion
             )
 
-            if (varReferInfos.isEmpty()) {
-                return emptyList()
-            }
-
-            // 获取该资源实际引用的变量名列表
-            val referencedVarNames = varReferInfos.map { it.varName }.toSet()
-
             // 统计每个变量的引用次数
             val varReferCountMap = varReferInfos.groupingBy { it.varName }.eachCount()
 
-            // 查询变量组中的所有变量详细信息
-            val groupVars = publicVarDao.listVarByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                version = varGroupRecord.version
-            )
-
-            // 只返回实际被引用的变量
-            return groupVars
-                .filter { referencedVarNames.contains(it.varName) }
-                .map { varPO ->
-                    val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
-                    buildFormProperty.varGroupVersion =
-                        if (varGroupRecord.version != -1) varGroupRecord.version else null
-                    PublicVarDO(
-                        varName = varPO.varName,
-                        alias = varPO.alias,
-                        type = varPO.type,
-                        valueType = varPO.valueType,
-                        defaultValue = varPO.defaultValue,
-                        desc = varPO.desc,
-                        referCount = varReferCountMap[varPO.varName] ?: 0,
-                        buildFormProperty = buildFormProperty
-                    )
-                }
+            // 返回所有变量，有关联就设置referCount
+            return groupVars.map { varPO ->
+                val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
+                buildFormProperty.varGroupVersion =
+                    if (varGroupRecord.version != -1) varGroupRecord.version else null
+                PublicVarDO(
+                    varName = varPO.varName,
+                    alias = varPO.alias,
+                    type = varPO.type,
+                    valueType = varPO.valueType,
+                    defaultValue = varPO.defaultValue,
+                    desc = varPO.desc,
+                    referCount = varReferCountMap[varPO.varName] ?: 0,
+                    buildFormProperty = buildFormProperty
+                )
+            }
         } catch (e: ErrorCodeException) {
             throw e
         } catch (e: Throwable) {

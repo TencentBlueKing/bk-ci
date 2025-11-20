@@ -163,5 +163,4 @@ interface UserPublicVarGroupReferenceResource {
         @QueryParam("version")
         version: Int?
     ): Result<List<PublicVarDO>>
-
 }
