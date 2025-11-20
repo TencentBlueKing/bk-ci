@@ -202,16 +202,13 @@ interface ServiceStoreResource {
         marketAtomCreateRequest: MarketAtomCreateRequest
     ): Result<String>
 
-    @Operation(summary = "插件工作台-升级插件")
+    @Operation(summary = "插件工作台-升级插件为测试版本")
     @PUT
-    @Path("/market/desk/atom/")
-    fun updateMarketAtom(
+    @Path("/market/desk/atom/test")
+    fun updateMarketAtomTest(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String,
         @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?>

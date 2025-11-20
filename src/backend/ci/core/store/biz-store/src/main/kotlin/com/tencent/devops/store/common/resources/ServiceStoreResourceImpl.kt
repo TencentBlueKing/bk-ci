@@ -147,11 +147,10 @@ class ServiceStoreResourceImpl @Autowired constructor(
         return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
     }
 
-    override fun updateMarketAtom(
+    override fun updateMarketAtomTest(
         userId: String,
-        projectCode: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?> {
-        return atomReleaseService.updateMarketAtom(userId, projectCode, marketAtomUpdateRequest)
+        return atomReleaseService.creatAtomBranchTestVersion(userId, marketAtomUpdateRequest)
     }
 }
