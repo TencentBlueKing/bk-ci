@@ -556,6 +556,12 @@ class CreateControl @Autowired constructor(
                     )
                 }
 
+                // 创建实例成功后异步执行流水线
+                workspaceCommon.executeCreateWorkspacePipeline(
+                    ip = ip,
+                    user = event.userId
+                )
+
                 if (ws.ownerType.projectPublicUse()) {
                     val winInfo = checkNotNull(
                         workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)
