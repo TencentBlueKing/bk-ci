@@ -678,17 +678,16 @@ class RbacPermissionResourceMemberService(
         type: String,
         memberIds: List<String>
     ): Boolean {
-        val membersOfNeedToDelete = if (type == MemberType.USER.type) {
-            memberIds.filterNot { deptService.isUserDeparted(it) }
-        } else {
-            memberIds
-        }
-        if (membersOfNeedToDelete.isNotEmpty()) {
-            iamV2ManagerService.deleteRoleGroupMemberV2(
-                groupId,
-                type,
-                membersOfNeedToDelete.joinToString(",")
-            )
+        if (memberIds.isNotEmpty()) {
+            try {
+                iamV2ManagerService.deleteRoleGroupMemberV2(
+                    groupId,
+                    type,
+                    memberIds.joinToString(",")
+                )
+            } catch (e: Exception) {
+                logger.warn("delete iam group member failed, groupId=$groupId, type=$type, memberIds=$memberIds", e)
+            }
         }
         return true
     }

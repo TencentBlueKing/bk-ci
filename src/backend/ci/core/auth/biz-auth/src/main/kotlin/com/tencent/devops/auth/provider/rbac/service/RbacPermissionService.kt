@@ -40,20 +40,17 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
+import com.tencent.devops.auth.service.AuthResourceGroupFactory
 import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.api.service.ServicePipelineViewResource
-import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
@@ -66,9 +63,9 @@ class RbacPermissionService(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val superManagerService: SuperManagerService,
     private val rbacCommonService: RbacCommonService,
-    private val client: Client,
     private val bkInternalPermissionReconciler: BkInternalPermissionReconciler,
-    private val authProjectUserMetricsService: AuthProjectUserMetricsService
+    private val authProjectUserMetricsService: AuthProjectUserMetricsService,
+    private val authResourceGroupFactory: AuthResourceGroupFactory
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -444,38 +441,25 @@ class RbacPermissionService(
                             resourceType = resourceType
                         )
 
-                    resourceType == AuthResourceType.PIPELINE_DEFAULT.value -> {
-                        val authViewPipelineIds = instanceMap[AuthResourceType.PIPELINE_GROUP.value]?.let { viewIds ->
-                            client.get(ServicePipelineViewResource::class).listPipelineIdByViewIds(
-                                projectId = projectCode,
-                                viewIdsEncode = viewIds
-                            ).data
-                        } ?: emptyList()
-
-                        val authPipelineIamIds = instanceMap[AuthResourceType.PIPELINE_DEFAULT.value] ?: emptyList()
-                        val pipelineIds = mutableSetOf<String>().apply {
-                            addAll(authViewPipelineIds)
-                            addAll(
-                                getFinalResourceCodes(
-                                    projectCode = projectCode,
-                                    resourceType = resourceType,
-                                    iamResourceCodes = authPipelineIamIds,
-                                    createUser = userId
-                                )
-                            )
-                        }
-                        pipelineIds.toList()
-                    }
-
-                    // 返回具体资源列表
                     else -> {
+                        // 获取资源的上级资源类型组（流水线组/云桌面组）
+                        val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+                        // 获取资源组（流水线组/云桌面组）下的资源
+                        val resourcesUnderGroup = resourceGroupType?.let {
+                            authResourceGroupFactory.getResourcesUnderGroup(
+                                projectCode = projectCode,
+                                resourceGroupType = resourceGroupType,
+                                resourceGroupIds = instanceMap[resourceGroupType] ?: emptyList()
+                            )
+                        } ?: emptyList()
                         val iamResourceCodes = instanceMap[resourceType] ?: emptyList()
-                        getFinalResourceCodes(
+                        val resourceCodes = getFinalResourceCodes(
                             projectCode = projectCode,
                             resourceType = resourceType,
                             iamResourceCodes = iamResourceCodes,
                             createUser = userId
                         )
+                        (resourcesUnderGroup + resourceCodes).distinct()
                     }
                 }
             }
@@ -682,7 +666,7 @@ class RbacPermissionService(
         return result
     }
 
-    private fun buildAuthResourceInstance(
+    fun buildAuthResourceInstance(
         userId: String,
         projectCode: String,
         resourceCode: String,
@@ -695,35 +679,35 @@ class RbacPermissionService(
         return when (resourceType) {
             AuthResourceType.PROJECT.value ->
                 projectResourceInstance
-            // 流水线鉴权,需要添加关联的流水线组
-            AuthResourceType.PIPELINE_DEFAULT.value -> {
+
+            else -> {
                 val parents = mutableListOf<AuthResourceInstance>()
                 parents.add(projectResourceInstance)
-                client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
-                    userId = userId,
-                    projectId = projectCode,
-                    pipelineId = resourceCode
-                ).data?.forEach { viewId ->
-                    parents.add(
-                        AuthResourceInstance(
-                            resourceType = AuthResourceType.PIPELINE_GROUP.value,
-                            resourceCode = HashUtil.encodeLongId(viewId),
-                            parents = listOf(projectResourceInstance)
-                        )
+
+                // 获取资源的上级资源类型组（流水线组/云桌面组）
+                val resourceGroupType = authResourceGroupFactory.getResourceGroupType(resourceType)
+                // 获取资源所属的资源组（流水线组/云桌面组）
+                resourceGroupType?.let {
+                    val resourceGroupIds = authResourceGroupFactory.getResourceGroupsByResource(
+                        projectCode = projectCode,
+                        resourceGroupType = resourceGroupType,
+                        resourceCode = resourceCode
                     )
+                    resourceGroupIds.forEach { resourceGroupId ->
+                        parents.add(
+                            AuthResourceInstance(
+                                resourceType = resourceGroupType,
+                                resourceCode = resourceGroupId,
+                                parents = listOf(projectResourceInstance)
+                            )
+                        )
+                    }
                 }
+
                 AuthResourceInstance(
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     parents = parents
-                )
-            }
-
-            else -> {
-                AuthResourceInstance(
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    parents = listOf(projectResourceInstance)
                 )
             }
         }

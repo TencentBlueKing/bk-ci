@@ -31,12 +31,23 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.yaml.pojo.YamlVersion
@@ -46,17 +57,18 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
-import com.tencent.devops.process.yaml.v3.models.Extends
-import com.tencent.devops.process.yaml.v3.models.GitNotices
+import com.tencent.devops.process.yaml.v3.models.ExtendsTemplate
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
 import com.tencent.devops.process.yaml.v3.models.PacNotices
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlParser
+import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -110,7 +122,7 @@ class ModelTransfer @Autowired constructor(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
             ),
-            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
+            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false)
         )
     }
 
@@ -125,7 +137,6 @@ class ModelTransfer @Autowired constructor(
     private fun yamlSyntaxDialect2Setting(syntaxDialectType: String?): PipelineAsCodeSettings? {
         if (syntaxDialectType.isNullOrBlank()) return null
         return when (syntaxDialectType) {
-            SyntaxDialectType.INHERIT.name -> PipelineAsCodeSettings(inheritedDialect = true)
             SyntaxDialectType.CLASSIC.name -> PipelineAsCodeSettings(
                 inheritedDialect = false,
                 pipelineDialect = PipelineDialectType.CLASSIC.name
@@ -136,7 +147,7 @@ class ModelTransfer @Autowired constructor(
                 pipelineDialect = PipelineDialectType.CONSTRAINED.name
             )
 
-            else -> null
+            else -> PipelineAsCodeSettings(inheritedDialect = true)
         }
     }
 
@@ -170,10 +181,80 @@ class ModelTransfer @Autowired constructor(
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
-        var stageIndex = 1
-        stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex++))
+        val stageIndex = AtomicInteger(0)
+        // trigger stage
+        if (!yamlInput.yaml.checkForTemplateUse()) {
+            stageList.add(modelStage.yaml2TriggerStage(yamlInput, stageIndex.incrementAndGet()))
+        }
 
         // 其他的stage
+        formatStage(yamlInput, stageList, stageIndex)
+        // 添加finally
+        formatFinally(yamlInput, stageList, stageIndex.incrementAndGet())
+        formatTemplate(yamlInput, model)
+        yamlInput.aspectWrapper.setModel4Model(model, PipelineTransferAspectWrapper.AspectType.AFTER)
+        return model
+    }
+
+    private fun formatTemplate(
+        input: YamlTransferInput,
+        model: Model
+    ) {
+        val template = input.yaml.formatExtends()?.template
+        if (template != null) {
+            model.templateId = template.templateId
+            model.template = TemplateInstanceDescriptor(
+                templateRefType = if (template.templateId != null) {
+                    TemplateRefType.ID
+                } else {
+                    TemplateRefType.PATH
+                },
+                templatePath = template.templatePath,
+                templateRef = template.templateRef,
+                templateId = template.templateId,
+                templateVersionName = template.templateVersionName,
+                templateVariables = template.variables?.map {
+                    TemplateVariable(
+                        key = it.key,
+                        value = it.value.value,
+                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                    )
+                },
+                triggerConfigs = template.triggerConfig?.map {
+                    TemplateInstanceTriggerConfig(
+                        stepId = it.key,
+                        disabled = it.value.disabled,
+                        cron = it.value.cron?.let { c -> listOf(c) },
+                        variables = it.value.variables
+                    )
+                },
+                recommendedVersion = template.recommendedVersion?.let {
+                    TemplateInstanceRecommendedVersion(
+                        enabled = it.enabled,
+                        major = it.major,
+                        minor = it.minor,
+                        fix = it.fix,
+                        buildNo = BuildNo(
+                            it.buildNo.initialValue,
+                            RecommendedVersion.Strategy.parse(it.buildNo.strategy).toBuildNoType(),
+                            required = it.allowModifyAtStartup
+                        )
+                    )
+                }
+            )
+            model.overrideTemplateField = TemplateInstanceField(
+                paramIds = template.variables?.keys?.toList(),
+                triggerStepIds = template.triggerConfig?.keys?.toList(),
+                settingGroups = input.yaml.settingGroups(),
+            )
+        }
+    }
+
+    private fun formatStage(
+        yamlInput: YamlTransferInput,
+        stageList: MutableList<Stage>,
+        stageIndex: AtomicInteger
+    ) {
         yamlInput.yaml.formatStages().forEach { stage ->
             yamlInput.aspectWrapper.setYamlStage4Yaml(
                 yamlStage = stage,
@@ -183,14 +264,20 @@ class ModelTransfer @Autowired constructor(
                 modelStage.yaml2Stage(
                     stage = stage,
                     // stream的stage标号从1开始，后续都加1
-                    stageIndex = stageIndex++,
+                    stageIndex = stageIndex.incrementAndGet(),
                     yamlInput = yamlInput
                 ).also {
                     yamlInput.aspectWrapper.setModelStage4Model(it, PipelineTransferAspectWrapper.AspectType.AFTER)
                 }
             )
         }
-        // 添加finally
+    }
+
+    private fun formatFinally(
+        yamlInput: YamlTransferInput,
+        stageList: MutableList<Stage>,
+        stageIndex: Int
+    ) {
         val finallyJobs = yamlInput.yaml.formatFinallyStage()
         if (finallyJobs.isNotEmpty()) {
             yamlInput.aspectWrapper.setYamlStage4Yaml(
@@ -206,61 +293,51 @@ class ModelTransfer @Autowired constructor(
                 }
             )
         }
-        checkExtends(yamlInput.yaml.templateFilter().extends, model)
-        yamlInput.aspectWrapper.setModel4Model(model, PipelineTransferAspectWrapper.AspectType.AFTER)
-        return model
     }
 
     fun model2yaml(modelInput: ModelTransferInput): IPreTemplateScriptBuildYamlParser {
         modelInput.aspectWrapper.setModel4Model(modelInput.model, PipelineTransferAspectWrapper.AspectType.BEFORE)
-        val label = prepareYamlLabels(modelInput.userId, modelInput.setting).ifEmpty { null }
+        val label = prepareYamlLabels(modelInput.setting).ifEmpty { null }
         val yaml = when (modelInput.version) {
-//            YamlVersion.V2_0 -> PreTemplateScriptBuildYamlParser(
-//                version = "v2.0",
-//                name = modelInput.setting.pipelineName,
-//                desc = modelInput.setting.desc.ifEmpty { null },
-//                label = label,
-//                resources = modelInput.model.resources,
-//                notices = makeNoticesV2(modelInput.setting)
-//            )
+            YamlVersion.V2_0 -> throw PipelineTransferException(YAML_NOT_VALID, arrayOf("only support v3"))
             YamlVersion.V3_0 -> PreTemplateScriptBuildYamlV3Parser(
                 version = "v3.0",
                 name = modelInput.setting.pipelineName,
                 desc = modelInput.setting.desc.ifEmpty { null },
                 label = label,
                 resources = modelInput.model.resources,
-                notices = makeNoticesV3(modelInput.setting),
                 syntaxDialect = makeSyntaxDialect(modelInput.setting)
             )
-
-            else -> {
-                throw PipelineTransferException(
-                    YAML_NOT_VALID,
-                    arrayOf("only support v3")
-                )
-            }
-        }
-        if (modelInput.model.template != null) {
-            yaml.extends = Extends(
-                modelInput.model.template!!,
-                modelInput.model.ref,
-                modelInput.model.variables
-            )
-            return yaml
         }
 
         val triggerOn = makeTriggerOn(modelInput)
         when (modelInput.version) {
             YamlVersion.V2_0 -> {
-                (yaml as PreTemplateScriptBuildYamlParser).triggerOn = triggerOn.firstOrNull() as PreTriggerOn?
+                throw PipelineTransferException(YAML_NOT_VALID, arrayOf("only support v3"))
             }
 
             YamlVersion.V3_0 -> {
-                (yaml as PreTemplateScriptBuildYamlV3Parser).triggerOn =
-                    triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it }
+                yaml.triggerOn = triggerOn.ifEmpty { null }?.let { if (it.size == 1) it.first() else it }
             }
         }
+        yaml.notices = makeNoticesV3(modelInput)
+        yaml.stages = makeStages(modelInput).ifEmpty { null }?.let { TransferMapper.anyTo(it) }
+        yaml.variables = variableTransfer.makeVariableFromModel(getTriggerContainer(modelInput))
+        yaml.extends = makeExtend(modelInput.model)
+        yaml.finally = makeFinally(modelInput)?.ifEmpty { null }
+        yaml.concurrency = makeConcurrency(modelInput)
+        yaml.customBuildNum = makeBuildNum(modelInput)
+        yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(getTriggerContainer(modelInput))
+        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
+            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
+        yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
+        modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
+        return yaml
+    }
+
+    private fun makeStages(modelInput: ModelTransferInput): MutableList<PreStage> {
         val stages = mutableListOf<PreStage>()
+        if (modelInput.fromTemplate()) return mutableListOf()
         modelInput.model.stages.forEachIndexed { index, stage ->
             if (index == 0 || stage.finally) return@forEachIndexed
             modelInput.aspectWrapper.setModelStage4Model(stage, PipelineTransferAspectWrapper.AspectType.BEFORE)
@@ -276,10 +353,13 @@ class ModelTransfer @Autowired constructor(
             )
             stages.add(ymlStage)
         }
-        yaml.stages = TransferMapper.anyTo(stages)
-        yaml.variables = variableTransfer.makeVariableFromModel(modelInput.model)
-        val lastStage = modelInput.model.stages.last()
-        val finally = if (lastStage.finally) {
+        return stages
+    }
+
+    private fun makeFinally(modelInput: ModelTransferInput): LinkedHashMap<String, Any>? {
+        if (modelInput.fromTemplate()) return LinkedHashMap()
+        val lastStage = modelInput.model.stages.lastOrNull()
+        val finally = if (lastStage != null && lastStage.finally) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)
             modelStage.model2YamlStage(
                 stage = lastStage,
@@ -288,33 +368,63 @@ class ModelTransfer @Autowired constructor(
                 aspectWrapper = modelInput.aspectWrapper
             ).jobs
         } else null
-        yaml.finally = finally as LinkedHashMap<String, Any>?
-        yaml.concurrency = makeConcurrency(modelInput.setting)
-        yaml.customBuildNum = modelInput.setting.buildNumRule
-        yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
-        yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
-            modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
-        yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
-        modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
-        return yaml
+        return finally as LinkedHashMap<String, Any>?
     }
 
-    private fun makeNoticesV2(setting: PipelineSetting): List<GitNotices>? {
-        val res = mutableListOf<GitNotices>()
-        setting.successSubscriptionList?.forEach {
-            if (it.types.isNotEmpty()) {
-                res.add(GitNotices(it, IfType.SUCCESS.name))
-            }
+    private fun makeExtend(templateInfo: Model): PreExtends? {
+        if (templateInfo.template == null) return null
+        with(templateInfo.template!!) {
+            return PreExtends(
+                template = ExtendsTemplate(
+                    templatePath = templatePath,
+                    templateRef = templateRef,
+                    templateId = templateId,
+                    templateVersionName = templateVersionName,
+                    variables = templateVariables?.associateBy(
+                        { it.key },
+                        { PreTemplateVariable(it.value, it.allowModifyAtStartup) }
+                    )?.ifEmpty { null },
+                    triggerConfig = triggerConfigs?.filter { it.stepId != null }?.associateBy(
+                        { it.stepId!! },
+                        {
+                            ExtendsTriggerConfig(
+                                disabled = it.disabled,
+                                cron = it.cron?.firstOrNull(),
+                                variables = it.variables
+                            )
+                        }
+                    )?.ifEmpty { null },
+                    recommendedVersion = recommendedVersion?.let {
+                        RecommendedVersion(
+                            enabled = it.enabled,
+                            major = it.major,
+                            minor = it.minor,
+                            fix = it.fix,
+                            buildNo = RecommendedVersion.BuildNo(
+                                it.buildNo.buildNo,
+                                RecommendedVersion.Strategy.parse(it.buildNo.buildNoType).alis
+                            )
+                        )
+                    }
+                )
+            )
         }
-        setting.failSubscriptionList?.forEach {
-            if (it.types.isNotEmpty()) {
-                res.add(GitNotices(it, IfType.FAILURE.name))
-            }
-        }
-        return res.ifEmpty { null }
     }
 
-    private fun makeNoticesV3(setting: PipelineSetting): List<PacNotices>? {
+    fun getTriggerContainer(modelInput: ModelTransferInput): TriggerContainer? {
+        if (modelInput.fromTemplate()) return null
+        return modelInput.model.stages.firstOrNull()?.containers?.firstOrNull() as TriggerContainer?
+    }
+
+    fun makeNoticesV3(modelInput: ModelTransferInput): List<PacNotices>? {
+        if (modelInput.fromTemplate() && !modelInput.overrideTemplateSettingGroups(PipelineSettingGroupType.NOTICES)) {
+            return null
+        }
+        return makeNoticesV3(modelInput.setting)
+    }
+
+
+    fun makeNoticesV3(setting: PipelineSetting): List<PacNotices>? {
         val res = mutableListOf<PacNotices>()
         setting.successSubscriptionList?.ifEmpty { setting.successSubscription?.let { listOf(it) } }?.forEach {
             if (it.types.isNotEmpty()) {
@@ -331,7 +441,25 @@ class ModelTransfer @Autowired constructor(
         return res.ifEmpty { null }
     }
 
-    private fun makeConcurrency(setting: PipelineSetting): Concurrency? {
+    fun makeBuildNum(modelInput: ModelTransferInput): String? {
+        if (modelInput.fromTemplate() &&
+            !modelInput.overrideTemplateSettingGroups(PipelineSettingGroupType.CUSTOM_BUILD_NUM)
+        ) {
+            return null
+        }
+        return modelInput.setting.buildNumRule
+    }
+
+    fun makeConcurrency(modelInput: ModelTransferInput): Concurrency? {
+        if (modelInput.fromTemplate() &&
+            !modelInput.overrideTemplateSettingGroups(PipelineSettingGroupType.CONCURRENCY)
+        ) {
+            return null
+        }
+        return makeConcurrency(modelInput.setting)
+    }
+
+    fun makeConcurrency(setting: PipelineSetting): Concurrency? {
         if (setting.runLockType == PipelineRunLockType.GROUP_LOCK ||
             setting.runLockType == PipelineRunLockType.LOCK
         ) {
@@ -359,6 +487,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun makeTriggerOn(modelInput: ModelTransferInput): List<IPreTriggerOn> {
+        if (modelInput.model.stages.isEmpty()) return emptyList()
         modelInput.aspectWrapper.setModelStage4Model(
             modelInput.model.stages[0],
             PipelineTransferAspectWrapper.AspectType.BEFORE
@@ -367,7 +496,7 @@ class ModelTransfer @Autowired constructor(
             modelInput.model.stages[0].containers[0],
             PipelineTransferAspectWrapper.AspectType.BEFORE
         )
-        val triggers = (modelInput.model.getTriggerContainer()).elements
+        val triggers = getTriggerContainer(modelInput)?.elements ?: return emptyList()
         val baseTrigger = elementTransfer.baseTriggers2yaml(triggers, modelInput.aspectWrapper)
             ?.toPre(modelInput.version)
         val scmTrigger = elementTransfer.scmTriggers2Yaml(
@@ -459,24 +588,16 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun prepareYamlLabels(
-        userId: String,
         pipelineSetting: PipelineSetting
     ): List<String> {
         val labels = mutableListOf<String>()
-
-        transferCache.getPipelineLabel(userId, pipelineSetting.projectId)?.forEach { group ->
-            group.labels.forEach {
-                if (pipelineSetting.labels.contains(it.id)) labels.add(it.name)
+        pipelineSetting.labels.forEach { labelId ->
+            transferCache.getPipelineLabelById(
+                projectId = pipelineSetting.projectId, labelId = labelId
+            )?.let {
+                labels.add(it.name)
             }
         }
         return labels
-    }
-
-    private fun checkExtends(extends: Extends?, model: Model) {
-        if (extends != null) {
-            model.template = extends.template
-            model.ref = extends.ref
-            model.variables = extends.variables
-        }
     }
 }

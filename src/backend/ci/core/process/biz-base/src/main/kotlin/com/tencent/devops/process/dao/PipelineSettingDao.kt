@@ -163,6 +163,7 @@ class PipelineSettingDao {
                 .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
                 .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
                 .set(VERSION, setting.version)
+                .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
             // pipelineAsCodeSettings 默认传空不更新
@@ -240,6 +241,23 @@ class PipelineSettingDao {
             return dslContext.select(PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE).from(this)
                 .where(conditions)
                 .fetch()
+        }
+    }
+
+    fun listPipelineNames(
+        dslContext: DSLContext,
+        pipelineIds: List<String>,
+        projectId: String?
+    ): Map<String, String> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, NAME).from(this)
+                .where(conditions)
+                .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
         }
     }
 

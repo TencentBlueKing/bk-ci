@@ -1703,6 +1703,23 @@ class PipelineBuildDao {
         } else 1
     }
 
+    fun updateBuildVersionChangeFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        versionChange: Boolean
+    ) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(VERSION_CHANGE, versionChange)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
     fun updateBuildMaterial(dslContext: DSLContext, projectId: String, buildId: String, material: String?) {
         val success = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
@@ -1930,6 +1947,17 @@ class PipelineBuildDao {
         }
     }
 
+    fun getDebugFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun clearDebugHistory(
         dslContext: DSLContext,
         projectId: String,
@@ -2006,7 +2034,8 @@ class PipelineBuildDao {
                     recommendVersion = t.recommendVersion,
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
-                    debug = false // #8164 原历史表中查出的记录均为非调试的记录
+                    debug = false, // #8164 原历史表中查出的记录均为非调试的记录
+                    versionChange = t.versionChange
                 )
             }
         }
@@ -2071,7 +2100,8 @@ class PipelineBuildDao {
                     recommendVersion = t.recommendVersion,
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
-                    debug = true // #8164 原历史表中查出的记录均为非调试的记录
+                    debug = true, // #8164 原历史表中查出的记录均为非调试的记录
+                    versionChange = t.versionChange
                 )
             }
         }

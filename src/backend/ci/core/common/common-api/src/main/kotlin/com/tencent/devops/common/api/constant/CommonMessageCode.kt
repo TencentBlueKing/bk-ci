@@ -181,7 +181,6 @@ object CommonMessageCode {
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val THIRD_PARTY_SERVICE_OPERATION_FAILED = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
-    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
@@ -192,6 +191,7 @@ object CommonMessageCode {
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
+    const val BK_JOB_MATRIX_STR_ERROR = "bkJobMatrixStrError" // 当前矩阵YAML/JSON配置有误，请仔细检查格式、语法是否符合要求。当前配置为: {0}
     const val BK_FILE_NAME = "bkFileName" // 文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" // 所属项目
     const val BK_OPERATING = "bkOperating" // 操作

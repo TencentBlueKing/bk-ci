@@ -77,7 +77,7 @@
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
-                    <bk-form-item
+                    <!-- <bk-form-item
                         v-if="isWindowOs && installModeAsService"
                         required
                         :label="$t('environment.nodeInfo.switchRunningAccount')"
@@ -110,7 +110,7 @@
                                 @blur="requestDevCommand"
                             />
                         </div>
-                    </bk-form-item>
+                    </bk-form-item> -->
                 </bk-form>
                 <p class="handler-prompt">
                     <i18n

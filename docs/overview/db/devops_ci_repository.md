@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_repository
 
-**文档版本：** 1.0.10
+**文档版本：** 1.0.14
 
 **文档描述：** devops_ci_repository 的数据库文档
 | 表名                  | 说明       |
@@ -20,6 +20,7 @@
 | T_REPOSITORY_GIT_TOKEN | 工蜂 commitchecker 表 |
 | T_REPOSITORY_PIPELINE_REF | 流水线引用代码库表 |
 | T_REPOSITORY_SCM_CONFIG | 源代码管理配置 |
+| T_REPOSITORY_SCM_CONFIG_VISIBILITY | 代码源可见范围表 |
 | T_REPOSITORY_SCM_PROVIDER | 源代码管理提供者 |
 | T_REPOSITORY_SCM_TOKEN | 代码仓库 token 表 |
 | T_REPOSITORY_TGIT_TOKEN | 外网工蜂 OAUTHtoken 表 |
@@ -287,6 +288,21 @@
 |  18   | UPDATER |   varchar   | 255 |   0    |    Y     |  N   |       | 更新人  |
 |  19   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  20   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
+
+**表名：** <a>T_REPOSITORY_SCM_CONFIG_VISIBILITY</a>
+
+**说明：** 代码源可见范围表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   int   | 10 |   0    |    N     |  Y   |       | 主键 ID  |
+|  2   | SCM_CODE |   varchar   | 64 |   0    |    N     |  N   |       | 代码源标识  |
+|  3   | DEPT_ID |   int   | 10 |   0    |    N     |  N   |       | 所属机构节点 ID  |
+|  4   | DEPT_NAME |   varchar   | 1024 |   0    |    N     |  N   |       | 所属机构节点名称，包含父级节点名称  |
+|  5   | CREATOR |   varchar   | 50 |   0    |    N     |  N   |   system    | 创建者  |
+|  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a>T_REPOSITORY_SCM_PROVIDER</a>
 

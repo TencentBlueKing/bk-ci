@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -44,7 +43,6 @@ import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTHORIZATION_USER_INFO_EXPIRED
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPOS
@@ -72,6 +70,7 @@ import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
+import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -82,7 +81,6 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-import jakarta.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -93,7 +91,8 @@ class GithubService @Autowired constructor(
     private val githubUserService: GithubUserService,
     private val objectMapper: ObjectMapper,
     private val gitConfig: GitConfig,
-    private val client: Client
+    private val client: Client,
+    private val githubExtService: IGithubExtService
 ) : IGithubService {
 
     override fun webhookCommit(event: String, guid: String, signature: String, body: String) {
@@ -108,6 +107,7 @@ class GithubService @Autowired constructor(
 
             client.get(ServiceScmWebhookResource::class)
                 .webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
+            githubExtService.webhookCommit(event = event, guid = guid, signature = signature, body = body)
         } catch (t: Throwable) {
             logger.info("Github webhook exception", t)
         }
@@ -170,10 +170,7 @@ class GithubService @Autowired constructor(
             // 匹配不到以operator进行匹配（新数据：userId为服务端用户名，operator为rtx名，获取最新授权的token）
             githubTokenService.getAccessToken(userId) ?: githubTokenService.getAccessTokenByOperator(userId)
         } else {
-            githubTokenService.getAccessToken(oauthUserId) ?: throw ErrorCodeException(
-                errorCode = ERROR_AUTHORIZATION_USER_INFO_EXPIRED,
-                params = arrayOf(oauthUserId)
-            )
+            githubTokenService.getAccessToken(oauthUserId)
         }
         if (accessToken == null) {
             val url = githubOAuthService.getGithubOauth(projectId, userId, repoHashId).redirectUrl

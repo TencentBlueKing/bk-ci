@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
-import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -204,43 +203,6 @@ class PipelineResourceDao {
         }
     }
 
-    fun updatePipelineModel(
-        dslContext: DSLContext,
-        userId: String,
-        pipelineModelVersion: PipelineModelVersion
-    ) {
-        with(T_PIPELINE_RESOURCE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(pipelineModelVersion.projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineModelVersion.pipelineId))
-            val version = pipelineModelVersion.version
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
-            }
-            dslContext.update(this)
-                .set(MODEL, pipelineModelVersion.model)
-                .set(CREATOR, userId)
-                .where(conditions)
-                .execute()
-        }
-    }
-
-    fun updateSettingVersion(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        settingVersion: Int
-    ): Int? {
-        with(T_PIPELINE_RESOURCE) {
-            return dslContext.update(this)
-                .set(SETTING_VERSION, settingVersion)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .returning(VERSION)
-                .fetchOne()?.version
-        }
-    }
-
     /**
      * 获取最新的modelString
      *
@@ -266,6 +228,35 @@ class PipelineResourceDao {
                 if (maxVersion == null || maxVersion < it.get(VERSION)) {
                     maxVersionMap[it.get(PIPELINE_ID)] = it.get(VERSION)
                     result[it.get(PIPELINE_ID)] = it.get(MODEL)
+                }
+            }
+            return result
+        }
+    }
+
+    /**
+     * 获取流水线最新的版本名称
+     */
+    fun getLatestVersionNames(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: List<String>
+    ): Map<String, String> {
+        with(T_PIPELINE_RESOURCE) {
+            val record3s = dslContext.select(PIPELINE_ID, VERSION_NAME, VERSION)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+            if (record3s.isEmpty()) {
+                return emptyMap()
+            }
+            val result = mutableMapOf<String, String>()
+            val maxVersionMap = mutableMapOf<String, Int>()
+            record3s.forEach {
+                val maxVersion = maxVersionMap[it.get(PIPELINE_ID)]
+                if (maxVersion == null || maxVersion < it.get(VERSION)) {
+                    maxVersionMap[it.get(PIPELINE_ID)] = it.get(VERSION)
+                    result[it.get(PIPELINE_ID)] = it.get(VERSION_NAME) ?: "init"
                 }
             }
             return result

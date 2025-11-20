@@ -1024,6 +1024,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, null)
+            val projectsWithManagePermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.MANAGE
+            )
+            val projectsWithViewPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = null,
+                permission = AuthPermission.VIEW
+            )
             logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(
@@ -1036,7 +1046,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 channelCodes = splitStr(channelCodes).toSet(),
                 sortType = sort
             ).map {
-                list.add(ProjectUtils.packagingBean(it))
+                list.add(
+                    ProjectUtils.packagingBean(
+                        tProjectRecord = it,
+                        managePermission = projectsWithManagePermission?.contains(it.englishName),
+                        viewPermission = projectsWithViewPermission?.contains(it.englishName)
+                    )
+                )
             }
             success = true
             return list
@@ -1111,6 +1127,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }?.remotedevManager
             )
         }
+    }
+
+    override fun listProjectDetailsByCondition(
+        projectConditionDTO: ProjectConditionDTO,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.listProjectsByCondition(
+            dslContext = dslContext,
+            projectConditionDTO = projectConditionDTO,
+            limit = limit,
+            offset = offset
+        ).map { ProjectUtils.packagingBean(it) }
     }
 
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {

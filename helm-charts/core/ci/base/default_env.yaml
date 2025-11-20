@@ -58,3 +58,4 @@ bkCiMqDefaultBinder: core-rabbit
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
 bkCiRabbitQuorumEnable: false
+bkCiAuthSyncCronEnabled: true

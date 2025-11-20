@@ -138,7 +138,8 @@ class AuthResourceGroupPermissionDao {
         filterIamGroupIds: List<Int>?,
         resourceType: String,
         resourceCode: String?,
-        pipelineGroupIds: List<String>,
+        resourceGroupType: String? = null,
+        resourceGroupIds: List<String>? = emptyList(),
         action: String?
     ): List<Int> {
         return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
@@ -150,7 +151,8 @@ class AuthResourceGroupPermissionDao {
                         filterIamGroupIds = filterIamGroupIds,
                         resourceType = resourceType,
                         resourceCode = resourceCode,
-                        pipelineGroupIds = pipelineGroupIds,
+                        resourceGroupType = resourceGroupType,
+                        resourceGroupIds = resourceGroupIds,
                         action = action
                     )
                 )
@@ -165,7 +167,8 @@ class AuthResourceGroupPermissionDao {
         filterIamGroupIds: List<Int>,
         resourceType: String,
         resourceCode: String,
-        pipelineGroupIds: List<String>,
+        resourceGroupType: String? = null,
+        resourceGroupIds: List<String>? = emptyList(),
         action: String
     ): Boolean {
         return with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
@@ -177,7 +180,8 @@ class AuthResourceGroupPermissionDao {
                         filterIamGroupIds = filterIamGroupIds,
                         resourceType = resourceType,
                         resourceCode = resourceCode,
-                        pipelineGroupIds = pipelineGroupIds,
+                        resourceGroupType = resourceGroupType,
+                        resourceGroupIds = resourceGroupIds,
                         action = action
                     )
                 ).fetchOne(0, Int::class.java)!! > 0
@@ -243,7 +247,8 @@ class AuthResourceGroupPermissionDao {
         filterIamGroupIds: List<Int>?,
         resourceType: String,
         resourceCode: String? = null,
-        pipelineGroupIds: List<String>,
+        resourceGroupType: String? = null,
+        resourceGroupIds: List<String>? = emptyList(),
         action: String?
     ): List<Condition> {
         with(TAuthResourceGroupPermission.T_AUTH_RESOURCE_GROUP_PERMISSION) {
@@ -267,11 +272,10 @@ class AuthResourceGroupPermissionDao {
                             }
                         }
                         .let {
-                            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value &&
-                                pipelineGroupIds.isNotEmpty()) {
+                            if (resourceGroupType != null && !resourceGroupIds.isNullOrEmpty()) {
                                 it.or(
-                                    RELATED_RESOURCE_TYPE.eq(AuthResourceType.PIPELINE_GROUP.value)
-                                        .and(RELATED_RESOURCE_CODE.`in`(pipelineGroupIds))
+                                    RELATED_RESOURCE_TYPE.eq(resourceGroupType)
+                                        .and(RELATED_RESOURCE_CODE.`in`(resourceGroupIds))
                                 )
                             } else {
                                 it

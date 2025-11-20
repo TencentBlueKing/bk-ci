@@ -41,7 +41,6 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,9 +54,6 @@ class ProcessDataDeleteService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProcessDataDeleteService::class.java)
         private const val DEFAULT_PAGE_SIZE = 20
     }
-
-    @Value("\${process.clearBaseBuildData:false}")
-    private val clearBaseBuildData: Boolean = false
 
     /**
      * 删除process数据库数据
@@ -142,7 +138,7 @@ class ProcessDataDeleteService @Autowired constructor(
         dslContext: DSLContext,
         projectId: String,
         pipelineIds: MutableList<String>?,
-        broadcastTableDeleteFlag: Boolean? = true,
+        broadcastTableDeleteFlag: Boolean? = false,
         archivePipelineFlag: Boolean? = null
     ) {
         pipelineIds?.forEach { pipelineId ->
@@ -386,6 +382,8 @@ class ProcessDataDeleteService @Autowired constructor(
 
     private fun deleteProjectRelData(dslContext: DSLContext, projectId: String) {
         processDataDeleteDao.deleteAuditResource(dslContext, projectId)
+        processDataDeleteDao.deletePipelineSetting(dslContext, projectId)
+        processDataDeleteDao.deletePipelineSettingVersion(dslContext, projectId)
         listOf(
             processDataDeleteDao::deletePipelineGroup,
             processDataDeleteDao::deletePipelineJobMutexGroup,
@@ -398,15 +396,10 @@ class ProcessDataDeleteService @Autowired constructor(
             processDataDeleteDao::deletePipelineViewTop,
             processDataDeleteDao::deletePipelineYamlSync,
             processDataDeleteDao::deletePipelineYamlBranchFile,
-            processDataDeleteDao::deletePipelineYamlView
+            processDataDeleteDao::deletePipelineYamlView,
+            processDataDeleteDao::deletePipelineTriggerEvent,
+            processDataDeleteDao::deleteProjectPipelineCallbackHistory
         ).forEach { it(dslContext, projectId) }
-
-        if (clearBaseBuildData) {
-            listOf(
-                processDataDeleteDao::deletePipelineTriggerEvent,
-                processDataDeleteDao::deleteProjectPipelineCallbackHistory
-            ).forEach { it(dslContext, projectId) }
-        }
         logger.info("project[$projectId] deleteProjectDirectlyRelData success!")
     }
 }

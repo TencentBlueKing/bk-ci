@@ -65,8 +65,12 @@ class RepoCredentialService @Autowired constructor(
     fun getCredentialItem(projectId: String, credentialId: String): CredentialItem {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
-        val result = client.get(ServiceCredentialResource::class)
-            .getCredentialItem(projectId, credentialId, encoder.encodeToString(pair.publicKey))
+        val result = client.get(ServiceCredentialResource::class).getCredentialItem(
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
+        )
         if (result.isNotOk() || result.data == null) {
             throw ErrorCodeException(errorCode = GET_TICKET_FAIL)
         }
@@ -98,8 +102,12 @@ class RepoCredentialService @Autowired constructor(
     fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
-        val result = client.get(ServiceCredentialResource::class)
-            .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
+        val result = client.get(ServiceCredentialResource::class).get(
+            projectId = projectId,
+            credentialId = repository.credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
+        )
         if (result.isNotOk() || result.data == null) {
             throw ErrorCodeException(errorCode = GET_TICKET_FAIL)
         }

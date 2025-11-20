@@ -252,5 +252,10 @@
     "本次操作将忽略": "This operation will be ignored",
     "需先完成交接。": "Handover must be completed first.",
     "唯一管理员，不可直接退出。请交接或停用项目": "The sole administrator, cannot exit directly. Please hand over or deactivate the project",
-    "唯一拥有者，不可直接退出。请交接或删除资源": "The sole owner, cannot exit directly. Please hand over or delete resources"
+    "唯一拥有者，不可直接退出。请交接或删除资源": "The sole owner, cannot exit directly. Please hand over or delete resources",
+    "此授权用于平台和代码库进行交互，涉及如下功能：": "This authorization enables interaction between the platform and the code repository, involving the following features:",
+    "注册 Webhook 到代码库，用于事件触发场景": " Register Webhook to the code repository for event-triggering scenarios",
+    "回写提交检测状态到代码库，用于代码库支持 checker 拦截合并请求场景": " Report commit check status back to the code repository, supporting checker interception of merge requests when supported by the repository",
+    "流水线中 Checkout 代码": " Checkout code in pipelines",
+    "需拥有代码库注册 Webhook 权限": "Requires Webhook registration permission in the code repository"
 }
