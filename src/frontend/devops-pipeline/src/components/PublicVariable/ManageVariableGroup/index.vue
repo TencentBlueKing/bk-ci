@@ -293,8 +293,13 @@
         newGroups.value = {
             groupName: id
         }
-        selectedVariableList.value = await proxy.$store.dispatch('publicVar/getVariables', {
-            groupName: id
+        selectedVariableList.value = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo',  {
+            referId: proxy.$route.params.pipelineId,
+            params: {
+                referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
+                referVersion: proxy.$route.params.version,
+                groupName: id
+            }
         })
     }
     async function fetchAllVarGroupByGroupName () {
@@ -348,7 +353,7 @@
         const curVariableList = groupsMap.value.variableList.filter(group => group?.varGroupName === groupName)
         const ids = new Set(curVariableList.map(item => item.id))
         groupsMap.value.varGroups = groupsMap.value.varGroups.filter(group => group.groupName !== groupName)
-        groupsMap.value.variableList = groupsMap.value.variableList.filter(i => !ids.has(i.id))
+        groupsMap.value.variableList = groupsMap.value.variableList.filter(i => !(ids.has(i.id) && i.varGroupName === groupName))
         allProjectVarGroup.value = allProjectVarGroup.value.filter(group => group.groupName !== groupName)
     }
     function handleAddGroup () {

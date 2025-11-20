@@ -148,7 +148,6 @@
         immediate: true
     })
     function toggleOpen () {
-        console.log(props.data)
         if (!props.data.isRequested) {
             fetchVariablesByGroupName()
         }
@@ -162,8 +161,13 @@
     async function fetchVariablesByGroupName () {
         try {
             isLoading.value = true
-            const variableList = await proxy.$store.dispatch('publicVar/getVariables', {
-                groupName: props.data.groupName
+            const variableList = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo', {
+                referId: proxy.$route.params.pipelineId,
+                params: {
+                    referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
+                    referVersion: proxy.$route.params.version,
+                    groupName: props.data.groupName
+                }
             })
             proxy.$emit('updateData', {
                 index: props.index,

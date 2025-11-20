@@ -21,13 +21,11 @@
                         class="mr10"
                         :disabled="showDetail"
                         v-perm="{
-                            hasPermission: isManage,
-                            disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: RESOURCE_TYPE.PROJECT,
+                                resourceType: RESOURCE_TYPE.VARIABLE,
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: VARIABLE_RESOURCE_ACTION.CREATE
                             }
                         }"
                         @click="handleAddGroup"
@@ -38,13 +36,11 @@
                         @click="handleShowImportDialog"
                         :disabled="showDetail"
                         v-perm="{
-                            hasPermission: isManage,
-                            disablePermissionApi: true,
                             permissionData: {
                                 projectId: projectId,
-                                resourceType: RESOURCE_TYPE.PROJECT,
+                                resourceType: RESOURCE_TYPE.VARIABLE,
                                 resourceCode: projectId,
-                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                                action: VARIABLE_RESOURCE_ACTION.CREATE
                             }
                         }"
                     >
@@ -79,12 +75,12 @@
                     show-overflow-tooltip
                 >
                     <template slot-scope="{ row }">
-                        <bk-button
-                            text
+                        <a
+                            class="group-name-link"
                             @click="handleViewDetail(row)"
                         >
                             {{ row.groupName }}
-                        </bk-button>
+                        </a>
                     </template>
                 </bk-table-column>
                 <bk-table-column
@@ -166,13 +162,11 @@
                             text
                             class="empty-tips"
                             v-perm="{
-                                hasPermission: isManage,
-                                disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'project',
+                                    resourceType: RESOURCE_TYPE.VARIABLE,
                                     resourceCode: projectId,
-                                    action: PROJECT_RESOURCE_ACTION.MANAGE
+                                    action: VARIABLE_RESOURCE_ACTION.CREATE
                                 }
                             }"
                             @click="handleAddGroup"
@@ -210,7 +204,6 @@
     } from '@/store/modules/publicVar/constants'
     import {
         RESOURCE_TYPE,
-        PROJECT_RESOURCE_ACTION,
         VARIABLE_RESOURCE_ACTION
     } from '@/utils/permission'
     import UseInstance from '@/hook/useInstance'
@@ -240,7 +233,6 @@
     })
     const operateType = computed(() => proxy.$store.state.publicVar.operateType)
     const groupData = computed(() => proxy.$store.state.publicVar.groupData)
-    const isManage = computed(() => proxy.$store?.state?.pipelines?.isManage)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const searchList = computed(() => {
         return [
@@ -284,40 +276,22 @@
                         text: proxy.$t('copy'),
                         handler: handleCopyGroup,
                         data: row,
-                        hasPermission: isManage.value,
-                        disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId.value,
-                            resourceType: RESOURCE_TYPE.PROJECT,
+                            resourceType: RESOURCE_TYPE.VARIABLE,
                             resourceCode: projectId.value,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                            action: VARIABLE_RESOURCE_ACTION.CREATE
                         }
                     },
                     {
                         text: proxy.$t('publicVar.export'),
                         handler: handleExportGroup,
                         data: row
-                        // hasPermission: isManage.value,
-                        // disablePermissionApi: true,
-                        // permissionData: {
-                        //     projectId: projectId.value,
-                        //     resourceType: 'project',
-                        //     resourceCode: projectId.value,
-                        //     action: PROJECT_RESOURCE_ACTION.MANAGE
-                        // }
                     },
                     // {
                     //     text: proxy.$t('publicVar.offline'),
                     //     handler: handleOfflineGroup,
                     //     data: row,
-                    //     hasPermission: isManage.value,
-                    //     disablePermissionApi: true,
-                    //     permissionData: {
-                    //         projectId: projectId.value,
-                    //         resourceType: 'project',
-                    //         resourceCode: projectId.value,
-                    //         action: PROJECT_RESOURCE_ACTION.MANAGE
-                    //     }
                     // },
                     {
                         text: proxy.$t('delete'),
@@ -588,6 +562,10 @@
             //     cursor: pointer !important;
             // }
         // }
+        .group-name-link {
+            color: #3a84ff;
+            cursor: pointer;
+        }
         .is-new {
             background-color: #f2fff4 !important;
         }

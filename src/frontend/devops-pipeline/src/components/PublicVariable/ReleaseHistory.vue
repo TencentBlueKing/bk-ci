@@ -82,7 +82,11 @@
                 :label="$t('publicVar.versionDesc')"
                 prop="desc"
                 show-overflow-tooltip
-            />
+            >
+                <template slot-scope="{ row }">
+                    {{ row.desc || '--' }}
+                </template>
+            </bk-table-column>
         </bk-table>
     </section>
 </template>

@@ -101,6 +101,15 @@ const actions = {
             return response.data
         })
     },
+    // 获取资源关联的变量组变量引用信息
+    getResourceVarReferenceInfo (_, { referId, params }) {
+        const query = new URLSearchParams({
+            ...params,
+        }).toString()
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/public/var/groups/references/refers/${referId}/vars?${query}`).then(response => {
+            return response.data
+        })
+    },
     updatePublicVarMode ({ commit }, mode) {
         commit(UPDATE_PUBLIC_VAR_MODE, mode)
     },
