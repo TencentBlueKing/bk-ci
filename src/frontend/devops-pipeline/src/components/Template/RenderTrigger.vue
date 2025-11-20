@@ -56,6 +56,8 @@
             :title="$t('template.setTimeCron')"
             header-position="left"
             width="700px"
+            render-directive="if"
+            :mask-close="false"
             @confirm="handleConfirmChangeCron"
         >
             <timer-cron-tab

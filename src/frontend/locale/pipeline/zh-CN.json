@@ -679,7 +679,8 @@
     "recommendVersion": "推荐版本号",
     "followTemplateTips": "升级实例时，将自动跟随模版新版本变更{0}。",
     "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。",
-    "setTimeCron": "设置定时规则"
+    "setTimeCron": "设置定时规则",
+    "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

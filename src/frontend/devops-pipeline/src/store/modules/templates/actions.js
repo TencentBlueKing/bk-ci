@@ -195,6 +195,11 @@ const actions = {
             return response.data
         })
     },
+    checkTemplatePipelineRollback ({ commit }, { projectId, pipelineId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/canRollback?version=${version}`).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions
