@@ -35,11 +35,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class MarketAtomCreateRequestMCP(
     @get:Schema(title = "调试项目，期望该插件在哪个项目下调试？需要用户指定", required = true)
     var projectCode: String,
-    @get:Schema(title = "插件代码, 唯一标识，创建后不能修改。纯英文，不超过30个字符。", required = true)
+    @get:Schema(title = "插件代码, 唯一标识，创建后不能修改。纯英文，不超过30个字符。从task.json中获取。", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     var atomCode: String,
     @get:Schema(
-        title = "插件名称, 由汉字、英文字母、数字、空格、连字符(-)、下划线(_)或点(.)组成，不超过40个字符",
+        title = "插件名称, 由汉字、英文字母、数字、空格、连字符(-)、下划线(_)或点(.)组成，不超过40个字符。从task.json中获取。",
         required = true
     )
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)

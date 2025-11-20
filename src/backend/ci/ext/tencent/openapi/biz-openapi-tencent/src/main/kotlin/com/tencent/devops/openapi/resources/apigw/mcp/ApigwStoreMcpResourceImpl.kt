@@ -7,11 +7,16 @@ import com.tencent.devops.openapi.api.apigw.mcp.ApigwStoreMcpResource
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomCreateRequestMCP
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomUpdateRequestMCP
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import java.text.SimpleDateFormat
+import java.util.Date
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -32,31 +37,33 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
         })
     }
 
-    override fun updateMarketAtom(
+    override fun updateMarketAtomTest(
         userId: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequestMCP
     ): Result<String?> {
-        val projectCode = ""// todo 调试项目
-        val logoUrl = "" // todo 调试logo
-        val version = "" // todo 通过后台计算出需要的版本
+        val atomInfo = client.get(ServiceMarketAtomResource::class)
+            .getAtomByCode(marketAtomUpdateRequest.atomCode, userId).data
+            ?: return Result(message = "没有找到atomCode对应的插件", data = null)
+        val version = "test-${marketAtomUpdateRequest.branch}-${SimpleDateFormat("yyyyMMdd").format(Date())}"
         return client.get(ServiceStoreResource::class)
-            .updateMarketAtom(userId, projectCode, with(marketAtomUpdateRequest) {
+            .updateMarketAtomTest(
+                userId,
                 MarketAtomUpdateRequest(
-                    atomCode = atomCode,
-                    name = name,
+                    atomCode = marketAtomUpdateRequest.atomCode,
+                    name = atomInfo.name,
                     category = AtomCategoryEnum.TASK,
-                    classifyCode = classifyCode,
-                    jobType = jobType,
-                    os = os,
-                    summary = summary,
-                    description = description,
-                    logoUrl = logoUrl,
+                    classifyCode = atomInfo.classifyCode ?: "",
+                    jobType = JobTypeEnum.valueOf(atomInfo.jobType ?: "AGENT_LESS"),
+                    os = atomInfo.os?.let { ArrayList(it) } ?: arrayListOf("LINUX"),
+                    summary = atomInfo.summary,
+                    description = atomInfo.description,
+                    logoUrl = atomInfo.logoUrl,
                     version = version,
-                    releaseType = releaseType,
-                    versionContent = versionContent,
+                    releaseType = ReleaseTypeEnum.BRANCH_TEST,
+                    versionContent = "build atom branch version",
                     publisher = userId,
                     labelIdList = null
                 )
-            })
+            )
     }
 }

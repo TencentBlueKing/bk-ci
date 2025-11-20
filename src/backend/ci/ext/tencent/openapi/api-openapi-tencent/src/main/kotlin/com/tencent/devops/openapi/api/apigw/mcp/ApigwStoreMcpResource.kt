@@ -30,8 +30,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomCreateRequestMCP
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomUpdateRequestMCP
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
-import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -42,7 +40,6 @@ import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
-import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Suppress("LongParameterList")
@@ -64,10 +61,10 @@ interface ApigwStoreMcpResource {
         marketAtomCreateRequest: MarketAtomCreateRequestMCP
     ): Result<String>
 
-    @Operation(summary = "插件工作台-升级插件")
+    @Operation(summary = "插件工作台-升级插件为测试版本")
     @PUT
-    @Path("/market/desk/atom/")
-    fun updateMarketAtom(
+    @Path("/market/desk/atom/test")
+    fun updateMarketAtomTest(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
