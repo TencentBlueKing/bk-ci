@@ -293,6 +293,7 @@
                             <bk-radio-group
                                 v-model="atomForm.releaseType"
                                 class="radio-group"
+                                @change="releaseTypeChange"
                             >
                                 <bk-radio
                                     :value="entry.value"
@@ -389,7 +390,10 @@
                 >
                     <label class="bk-label"> {{ $t('store.分支') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <bk-input v-model="atomForm.branch"></bk-input>
+                        <bk-input
+                            v-model="atomForm.branch"
+                            @blur="branchBlur"
+                        ></bk-input>
                     </div>
                 </div>
                 <div class="bk-form-item versionlog-form-item is-required">
@@ -558,6 +562,9 @@
             userName () {
                 return this.$store.state.user.username
             },
+            isCancelReRelease () {
+                return this.initReleaseType === 'CANCEL_RE_RELEASE'
+            },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
@@ -596,6 +603,31 @@
             this.requestAtomClassify()
         },
         methods: {
+            branchBlur (value) {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && !this.isCancelReRelease) {
+                    this.getAtomLog(value)
+                }
+            },
+            releaseTypeChange (value) {
+                const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
+                if (!this.isCancelReRelease) {
+                    this.getAtomLog(branch)
+                }
+            },
+            async getAtomLog (branch) {
+                try {
+                    const data = await this.$store.dispatch('store/requestAtomLog', {
+                        codeSrc: this.atomForm.codeSrc,
+                        ...(branch ? { branch }:{})
+                    })
+                    this.atomForm.versionContent = data
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
+            },
             fetchContainerList () {
                 this.$store.dispatch('store/getContainerList').then(res => {
                     this.containerList = res
@@ -665,8 +697,12 @@
                                 this.curVersion = versionInfo.version
                                 this.atomForm.releaseType = versionInfo.releaseType
                                 this.initReleaseType = versionInfo.releaseType
+                                this.isCancelReRelease && (this.atomForm.versionContent = versionInfo.lastVersionContent)
                             }
                         })
+                        if (!this.isCancelReRelease) {
+                            this.getAtomLog()
+                        }
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -1132,5 +1168,8 @@
         .bk-dialog-default-status {
             padding-top: 10px;
         }
+    }
+    .input-width-full {
+        width: 100%;
     }
 </style>
