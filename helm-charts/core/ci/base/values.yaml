@@ -96,7 +96,7 @@ init:
       code: SubPipelineExec
     - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.4/uploadArtifact_en.zip
       code: uploadArtifact
-    - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.4/uploadReport_en.zip
+    - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.1/uploadReport_en.zip
       code: uploadReport
     - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.4/AcrossProjectDistribution_en.zip
       code: AcrossProjectDistribution
