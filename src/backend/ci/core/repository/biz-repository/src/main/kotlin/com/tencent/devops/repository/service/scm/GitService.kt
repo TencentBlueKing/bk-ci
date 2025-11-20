@@ -2181,11 +2181,8 @@ class GitService @Autowired constructor(
         val filteredCommits = commits.filter { commit ->
             shouldKeepCommit(message = commit.message, prefixes = prefixes, keywords = keywords)
         }
-        // 最早的排最前面
-        val sortedCommits = filteredCommits.sortedBy {
-            it.committedDate?.let { timeStr -> DateTimeUtil.zoneDateToDate(timeStr) }
-        }
-        return sortedCommits.mapIndexed { index, commit ->
+
+        return filteredCommits.mapIndexed { index, commit ->
             "${index + 1}. ${commit.message}"
         }.joinToString("")
     }
