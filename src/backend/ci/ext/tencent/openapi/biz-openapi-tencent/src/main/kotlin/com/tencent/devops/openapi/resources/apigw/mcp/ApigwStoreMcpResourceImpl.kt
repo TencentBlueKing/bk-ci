@@ -45,7 +45,7 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
         val atomInfo = client.get(ServiceMarketAtomResource::class)
             .getAtomByCode(marketAtomUpdateRequest.atomCode, userId).data
             ?: return Result(message = "没有找到atomCode对应的插件", data = null)
-        val version = "test-${marketAtomUpdateRequest.branch}-${SimpleDateFormat("yyyyMMdd").format(Date())}"
+        val version = marketAtomUpdateRequest.branch.take(29)
         return client.get(ServiceStoreResource::class)
             .updateMarketAtomTest(
                 userId,
