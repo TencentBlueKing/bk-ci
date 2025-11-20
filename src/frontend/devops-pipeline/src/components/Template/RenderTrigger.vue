@@ -63,6 +63,8 @@
             <timer-cron-tab
                 :value="trigger.cron"
                 name="cron"
+                :keep-error="false"
+                show-error
                 :handle-change="handleChangeCron"
             />
         </bk-dialog>
