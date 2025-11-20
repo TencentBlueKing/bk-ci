@@ -1970,7 +1970,8 @@
     "everyHour": "毎時",
     "everyDay": "毎日",
     "everyWeek": "毎週",
-    "everyMonth": "毎月"
+    "everyMonth": "毎月",
+    "errorTips": "タイミングルールは空にできないか、形式が正しくありません"
   },
   "validVariableFormat": "有効な変数形式を入力してください",
   "enterRepoAlias": "コードリポジトリの別名を入力してください",

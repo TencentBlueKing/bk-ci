@@ -1,12 +1,20 @@
 <template>
-    <bk-crontab
-        v-model="cronValue"
-        :local="curLocal"
-        :language-package="languagePackage"
-        :shortcuts="shortcuts"
-        @change="handleChangeCron"
-        @error="handleError"
-    />
+    <div class="timer-crontab">
+        <bk-crontab
+            v-model="cronValue"
+            :local="curLocal"
+            :language-package="languagePackage"
+            :shortcuts="shortcuts"
+            @change="handleChangeCron"
+            @error="handleError"
+        />
+        <p
+            v-if="showError && hasInternalError"
+            class="error-msg"
+        >
+            {{ $t('cron.errorTips') }}
+        </p>
+    </div>
 </template>
 <script>
     import BkCrontab from '@blueking/crontab/vue2'
@@ -27,6 +35,14 @@
             handleChange: {
                 type: Function,
                 default: () => {}
+            },
+            keepError: {
+                type: Boolean,
+                default: true
+            },
+            showError: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -38,7 +54,7 @@
         computed: {
             cronValue: {
                 get () {
-                    if (this.hasInternalError) {
+                    if (this.hasInternalError && this.keepError) {
                         return this.internalValue
                     }
                     return Array.isArray(this.value) ? this.value.join('') : ''
@@ -128,11 +144,6 @@
             handleChangeCron (value) {
                 this.hasInternalError = false
                 this.handleChange(this.name, !!value ? [value] : [])
-                this.$nextTick(() => {
-                    if (this.$parent && this.$parent.$validator) {
-                        this.$parent.$validator.validate(this.name)
-                    }
-                })
             },
             handleError () {
                 if (!this.internalValue && Array.isArray(this.value) && this.value.length > 0) {
@@ -143,12 +154,17 @@
                 this.hasInternalError = true
                 // 触发 crontabArrayRule 校验失败
                 this.handleChange(this.name, 'error')
-                this.$nextTick(() => {
-                    if (this.$parent && this.$parent.$validator) {
-                        this.$parent.$validator.validate(this.name)
-                    }
-                })
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .timer-crontab {
+        .error-msg {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    }
+</style>

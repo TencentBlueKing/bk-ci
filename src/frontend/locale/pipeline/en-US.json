@@ -1970,7 +1970,8 @@
     "everyHour": "Per hour",
     "everyDay": "Per day",
     "everyWeek": "Per week",
-    "everyMonth": "Per month"
+    "everyMonth": "Per month",
+    "errorTips": "The timing rule cannot be empty or the format is incorrect"
   },
   "validVariableFormat": "Please enter a valid variable format",
   "enterRepoAlias": "Please enter the repository alias",
