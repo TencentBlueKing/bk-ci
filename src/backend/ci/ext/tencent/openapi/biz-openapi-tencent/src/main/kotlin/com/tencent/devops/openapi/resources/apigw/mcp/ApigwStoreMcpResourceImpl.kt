@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.resources.apigw.mcp
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -52,17 +53,19 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
                     atomCode = marketAtomUpdateRequest.atomCode,
                     name = atomInfo.name,
                     category = AtomCategoryEnum.TASK,
-                    classifyCode = atomInfo.classifyCode ?: "",
-                    jobType = JobTypeEnum.valueOf(atomInfo.jobType ?: "AGENT_LESS"),
-                    os = atomInfo.os?.let { ArrayList(it) } ?: arrayListOf("LINUX"),
-                    summary = atomInfo.summary,
-                    description = atomInfo.description,
+                    classifyCode = marketAtomUpdateRequest.classifyCode ?: atomInfo.classifyCode ?: "",
+                    jobType = marketAtomUpdateRequest.jobType ?: JobTypeEnum.valueOf(atomInfo.jobType ?: "AGENT_LESS"),
+                    os = marketAtomUpdateRequest.os ?: atomInfo.os?.let { ArrayList(it) } ?: arrayListOf("LINUX"),
+                    summary = marketAtomUpdateRequest.summary ?: atomInfo.summary,
+                    description = marketAtomUpdateRequest.description ?: atomInfo.description,
                     logoUrl = atomInfo.logoUrl,
                     version = version,
                     releaseType = ReleaseTypeEnum.BRANCH_TEST,
                     versionContent = "build atom branch version",
                     publisher = userId,
-                    labelIdList = null
+                    labelIdList = null,
+                    frontendType = atomInfo.frontendType ?: FrontendTypeEnum.NORMAL,
+                    branch = marketAtomUpdateRequest.branch
                 )
             )
     }
