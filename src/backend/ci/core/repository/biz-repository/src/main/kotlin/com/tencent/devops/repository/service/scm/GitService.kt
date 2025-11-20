@@ -2184,7 +2184,8 @@ class GitService @Autowired constructor(
 
         return filteredCommits.mapIndexed { index, commit ->
             val message = commit.message ?: ""
-            "${index + 1}. $message${if (message.endsWith('\n')) "" else "\n"}"
+            val trimmedMessage = message.trimEnd('\n')
+            "${index + 1}. $trimmedMessage\n"
         }.joinToString("")
     }
 
