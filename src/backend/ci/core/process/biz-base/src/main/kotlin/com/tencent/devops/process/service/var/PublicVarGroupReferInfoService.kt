@@ -1067,15 +1067,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 "referVersion: $referVersion, groupName: $groupName, version: $version")
         
         try {
-            // version为空时使用-1
-            val actualVersion = version ?: -1
             
             // 查询变量组信息，确认变量组存在
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                version = actualVersion
+                version = version
             ) ?: throw ErrorCodeException(
                 errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
                 params = arrayOf(groupName)
