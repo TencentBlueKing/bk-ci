@@ -2183,7 +2183,8 @@ class GitService @Autowired constructor(
         }
 
         return filteredCommits.mapIndexed { index, commit ->
-            "${index + 1}. ${commit.message}"
+            val message = commit.message ?: ""
+            "${index + 1}. $message${if (message.endsWith('\n')) "" else "\n"}"
         }.joinToString("")
     }
 
