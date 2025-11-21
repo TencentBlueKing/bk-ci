@@ -8,6 +8,7 @@ import com.tencent.devops.openapi.api.apigw.mcp.ApigwStoreMcpResource
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomCreateRequestMCP
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomUpdateRequestMCP
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.atom.TxServiceAtomReleaseResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
@@ -49,9 +50,8 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
             ?: return Result(message = "没有找到atomCode对应的插件", data = null)
         val version = marketAtomUpdateRequest.branch.take(29)
         // 获取当前分支是否在测试中，如果是，则直接重试
-        val test = client.get(ServiceMarketAtomResource::class)
-            .getPipelineAtom(
-                projectCode = atomInfo.projectCode ?: "",
+        val test = client.get(ServiceAtomResource::class)
+            .getAtomVersionInfo(
                 atomCode = marketAtomUpdateRequest.atomCode,
                 version = version
             ).data
