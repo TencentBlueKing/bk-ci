@@ -45,10 +45,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_COND
 import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
@@ -57,6 +54,8 @@ import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
+import com.tencent.devops.process.trigger.WebhookTriggerBuildService
+import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -72,7 +71,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class WebhookTriggerBuildService @Autowired constructor(
+class ScmWebhookTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
@@ -86,6 +85,10 @@ class WebhookTriggerBuildService @Autowired constructor(
 ) {
     @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScmWebhookTriggerBuildService::class.java)
+    }
 
     fun trigger(event: ScmWebhookTriggerEvent) {
         // 同一个项目,最大处理并发数

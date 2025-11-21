@@ -42,6 +42,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineTriggerEventReco
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventWithoutBody
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedFix
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
@@ -432,15 +433,43 @@ class PipelineTriggerEventDao {
             .fetch().distinct().map { it.value1() }.toSet()
     }
 
-    fun listRepoTriggerEvent(
+    fun listRepoTriggerEventWithoutBody(
         dslContext: DSLContext,
         eventIds: Set<Long>
-    ): List<TPipelineTriggerEventRecord> {
+    ): List<PipelineTriggerEventWithoutBody> {
         return with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.selectFrom(this)
+            dslContext.select(
+                REQUEST_ID,
+                PROJECT_ID,
+                EVENT_ID,
+                TRIGGER_TYPE,
+                EVENT_SOURCE,
+                EVENT_TYPE,
+                TRIGGER_USER,
+                EVENT_DESC,
+                REPLAY_REQUEST_ID,
+                REQUEST_PARAMS,
+                CREATE_TIME
+            ).from(this)
                 .where(EVENT_ID.`in`(eventIds))
                 .orderBy(CREATE_TIME.desc())
-                .fetch()
+                .fetch().map {
+                    PipelineTriggerEventWithoutBody(
+                        requestId = it.value1(),
+                        projectId = it.value2(),
+                        eventId = it.value3(),
+                        triggerType = it.value4(),
+                        eventSource = it.value5(),
+                        eventType = it.value6(),
+                        triggerUser = it.value7(),
+                        eventDesc = it.value8(),
+                        replayRequestId = it.value9(),
+                        requestParams = it.value10()?.let { param ->
+                            JsonUtil.to(param, object : TypeReference<Map<String, String>>() {})
+                        },
+                        createTime = it.value11()
+                    )
+                }
         }
     }
 

@@ -118,15 +118,29 @@ class WebhookMQConfiguration @Autowired constructor() {
 
     @EventConsumer
     fun remoteDevWebhookRequestEventConsumer(
-        @Autowired marketEventManager: MarketEventManager
+        @Autowired marketEventRequestService: MarketEventRequestService
     ) = ScsConsumerBuilder.build<RemoteDevWebhookRequestEvent> {
-        marketEventManager.handleRemoteDevWebhookRequestEvent(it)
+        marketEventRequestService.handleRemoteDevWebhookRequestEvent(it)
+    }
+
+    @EventConsumer
+    fun remoteDevWebhookTriggerEventConsumer(
+        @Autowired marketEventTriggerBuildService: MarketEventTriggerBuildService
+    ) = ScsConsumerBuilder.build<RemoteDevWebhookTriggerEvent> {
+        marketEventTriggerBuildService.remoteDevWebhookTrigger(it)
     }
 
     @EventConsumer
     fun genericWebhookRequestEventConsumer(
-        @Autowired marketEventManager: MarketEventManager
+        @Autowired marketEventRequestService: MarketEventRequestService
     ) = ScsConsumerBuilder.build<GenericWebhookRequestEvent> {
-        marketEventManager.handleGenericWebhookRequestEvent(it)
+        marketEventRequestService.handleGenericWebhookRequestEvent(it)
+    }
+
+    @EventConsumer
+    fun genericWebhookTriggerEventConsumer(
+        @Autowired marketEventTriggerBuildService: MarketEventTriggerBuildService
+    ) = ScsConsumerBuilder.build<GenericWebhookTriggerEvent> {
+        marketEventTriggerBuildService.genericWebhookTrigger(it)
     }
 }

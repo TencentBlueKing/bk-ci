@@ -298,7 +298,7 @@ class PipelineTriggerEventService @Autowired constructor(
             eventIds to count
         }
         // 事件信息
-        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEvent(
+        val triggerEvent = pipelineTriggerEventDao.listRepoTriggerEventWithoutBody(
             dslContext = dslContext,
             eventIds = eventIds
         )

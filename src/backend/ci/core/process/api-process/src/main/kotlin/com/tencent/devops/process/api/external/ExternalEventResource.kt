@@ -17,14 +17,14 @@ import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "EXTERNAL_EVENT", description = "外部-事件触发")
-@Path("/external/event")
+@Path("/external/event/{eventCode}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalEventResource {
 
     @Operation(summary = "云桌面webhook事件推送")
     @POST
-    @Path("/remoteDev/{eventCode}/webhook")
+    @Path("/remoteDev/webhook")
     fun remoteDevWebhook(
         @Parameter(description = "用户ID")
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -46,7 +46,7 @@ interface ExternalEventResource {
 
     @Operation(summary = "通用webhook事件推送")
     @POST
-    @Path("/generic/{eventCode}/webhook")
+    @Path("/generic/webhook")
     fun genericWebhook(
         @Context
         request: HttpServletRequest,
