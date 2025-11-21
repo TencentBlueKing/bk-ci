@@ -1,0 +1,95 @@
+# frontend Deployment
+{{- if .Values.frontend.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-frontend
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/name: frontend
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+      app.kubernetes.io/name: frontend
+  {{- if not .Values.frontend.autoscaling.enabled }}
+  replicas: {{ .Values.frontend.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/name: frontend
+        {{- if .Values.frontend.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.frontend.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.frontend.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.frontend.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.frontend.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.frontend.podAffinityPreset "component" "frontend" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.frontend.podAntiAffinityPreset "component" "frontend" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.frontend.nodeAffinityPreset.type "key" .Values.frontend.nodeAffinityPreset.key "values" .Values.frontend.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.frontend.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.frontend.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.frontend.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.frontend.priorityClassName }}
+      priorityClassName: {{ .Values.frontend.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.frontend.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.frontend.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: {{ include "bkci-frontend.image" . }}
+          imagePullPolicy: {{ .Values.frontendImage.pullPolicy }}
+          {{- if .Values.frontend.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.frontend.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.frontend.resources }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: {{ include "bkci.names.fullname" . }}-gateway
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              # 渲染前端模板
+              /data/workspace/scripts/render_tpl -m . /data/workspace/frontend/*.html
+              # 启动nginx
+              nginx -g "daemon off;"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+      terminationGracePeriodSeconds: 30
+{{- end -}}
+
