@@ -172,4 +172,33 @@ object GitUtils {
         }
         else -> throw IllegalArgumentException("Unknown code repository URL")
     }
+
+    /**
+     * 判断是否需要过滤当前提交信息
+     * @param message 提交信息原文
+     * @param prefixes 需过滤的前缀
+     * @param keywords 需过滤的关键词
+     * @return true：需要过滤该提交；false：保留该提交
+     */
+    fun isFilterCommitMessage(message: String?, prefixes: String?, keywords: String?): Boolean {
+        val trimmedMessage = message?.takeIf { it.isNotBlank() }?.trimStart() ?: return false
+        val prefixList = prefixes
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+
+        val keywordList = keywords
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+        // 判断是否匹配前缀
+        val matchesPrefix = prefixList.any { trimmedMessage.startsWith(it, ignoreCase = true) }
+
+        // 判断是否匹配关键词
+        val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
+
+        return !matchesPrefix && !containsKeyword
+    }
 }
