@@ -14,16 +14,23 @@
                 'is-debug-exec-detail': isDebugExec
             }]"
         >
-            <bk-button
+            <span
                 v-if="isRunning"
-                :disabled="loading"
-                :icon="loading ? 'loading' : ''"
-                outline
-                theme="warning"
-                @click="handleCancel"
+                v-bk-tooltips="{
+                    disabled: canCancelBuild !== false,
+                    content: $t('cancelBuildPermTip')
+                }"
             >
-                {{ $t("cancel") }}
-            </bk-button>
+                <bk-button
+                    :disabled="loading || canCancelBuild === false"
+                    :icon="loading ? 'loading' : ''"
+                    outline
+                    theme="warning"
+                    @click="handleCancel"
+                >
+                    {{ $t("cancel") }}
+                </bk-button>
+            </span>
             <template v-else-if="!isDebugExec">
                 <bk-dropdown-menu
                     trigger="click"
@@ -204,6 +211,13 @@
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            canCancelBuild () {
+                // Check cancelBuildPerm from current execution record
+                const executeCount = this.execDetail?.executeCount ?? 1
+                const recordList = this.execDetail?.recordList ?? []
+                const currentRecord = recordList[recordList.length - executeCount]
+                return currentRecord?.cancelBuildPerm ?? true
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
