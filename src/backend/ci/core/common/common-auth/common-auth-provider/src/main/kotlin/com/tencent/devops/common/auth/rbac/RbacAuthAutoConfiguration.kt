@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.rbac.code.RbacExperienceAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacPipelineAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacPipelineGroupAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacProjectAuthServiceCode
+import com.tencent.devops.common.auth.rbac.code.RbacPublicVarGroupAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacQualityAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacTicketAuthServiceCode
@@ -153,4 +154,8 @@ class RbacAuthAutoConfiguration {
     @Bean
     @Primary
     fun experienceAuthServiceCode() = RbacExperienceAuthServiceCode()
+
+    @Bean
+    @Primary
+    fun publicVarGroupAuthServiceCode() = RbacPublicVarGroupAuthServiceCode()
 }
