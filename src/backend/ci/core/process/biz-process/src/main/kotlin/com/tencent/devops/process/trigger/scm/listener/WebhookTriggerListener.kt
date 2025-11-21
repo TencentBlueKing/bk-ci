@@ -33,15 +33,15 @@ interface WebhookTriggerListener {
     /**
      * 构建成功
      */
-    fun onBuildSuccess(context: WebhookTriggerContext)
+    fun onBuildSuccess(context: WebhookTriggerContext) = Unit
 
     /**
      * webhook触发失败
      */
-    fun onError(context: WebhookTriggerContext, exception: Exception)
+    fun onError(context: WebhookTriggerContext, exception: Exception) = Unit
 
     /**
      * 匹配失败
      */
-    fun onMatchFailed(context: WebhookTriggerContext)
+    fun onMatchFailed(context: WebhookTriggerContext) = Unit
 }

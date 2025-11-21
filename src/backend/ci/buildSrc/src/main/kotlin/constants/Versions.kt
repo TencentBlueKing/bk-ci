@@ -36,7 +36,7 @@ object Versions {
     const val Oshi = "6.6.1"
     const val Leaf = "1.0.2-RELEASE"
     const val p4 = "2024.1.2612262"
-    const val YamlSchema = "1.0.88"
+    const val YamlSchema = "1.5.8"
     const val Xinge = "1.2.4.10"
     const val Pulsar = "2.7.2"
     const val reflections = "0.10.2"
@@ -53,5 +53,5 @@ object Versions {
     const val Winp = "1.28"
     const val Jna = "5.14.0"
     const val JenkinsVersionNumber = "1.1"
-    const val devopsScm = "1.1.5"
+    const val devopsScm = "1.1.6"
 }

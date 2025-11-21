@@ -549,13 +549,13 @@ class TGitApiService @Autowired constructor(
             val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
             val title = if (fileExists) {
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
+                    messageCode = ProcessMessageCode.BK_MERGE_PIPELINE_YAML_UPDATE_TITLE,
                     params = arrayOf(dateStr, pipelineName),
                     language = I18nUtil.getDefaultLocaleLanguage()
                 )
             } else {
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
+                    messageCode = ProcessMessageCode.BK_MERGE_PIPELINE_YAML_CREATE_TITLE,
                     params = arrayOf(dateStr, pipelineName),
                     language = I18nUtil.getDefaultLocaleLanguage()
                 )
