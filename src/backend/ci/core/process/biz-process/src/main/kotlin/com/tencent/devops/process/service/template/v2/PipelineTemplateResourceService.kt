@@ -177,6 +177,19 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
+    fun getOrNull(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): PipelineTemplateResource? {
+        return pipelineTemplateResourceDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+    }
+
     fun get(
         projectId: String,
         templateId: String,

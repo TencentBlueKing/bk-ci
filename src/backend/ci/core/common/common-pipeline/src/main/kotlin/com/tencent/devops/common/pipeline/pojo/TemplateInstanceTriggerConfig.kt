@@ -40,7 +40,7 @@ data class TemplateInstanceTriggerConfig(
 
     val cron: List<String>? = null,
     @get:Schema(title = "触发器配置启动时启动的变量,目前仅定时触发支持")
-    val variables: Map<String, Any>? = null
+    val variables: List<TemplateVariable>? = null
 ) {
     constructor(element: Element) : this(
         stepId = element.stepId,
