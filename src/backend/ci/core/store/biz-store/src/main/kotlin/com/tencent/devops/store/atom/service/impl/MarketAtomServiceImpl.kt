@@ -649,7 +649,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     modifier = it[tAtom.MODIFIER] as String,
                     createTime = DateTimeUtil.toDateTime(it[tAtom.CREATE_TIME] as LocalDateTime),
                     updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
-                    processingVersionInfos = processingVersionInfoMap?.get(atomCode)
+                    processingVersionInfos = processingVersionInfoMap?.get(atomCode),
+                    codeSrc = it[tAtom.CODE_SRC]
                 )
             )
         }
