@@ -2756,7 +2756,7 @@ class GitService @Autowired constructor(
     fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
         // 根据请求条件过滤
         val filteredCommits = commits.filter { commit ->
-            shouldKeepCommit(message = commit.message, prefixes = prefixes, keywords = keywords)
+            GitUtils.isFilterCommitMessage(message = commit.message, prefixes = prefixes, keywords = keywords)
         }
 
         return filteredCommits.mapIndexed { index, commit ->
@@ -2764,25 +2764,5 @@ class GitService @Autowired constructor(
             val trimmedMessage = message.trimEnd('\n')
             "${index + 1}. $trimmedMessage\n"
         }.joinToString("")
-    }
-
-    private fun shouldKeepCommit(message: String?, prefixes: String?, keywords: String?): Boolean {
-        val trimmedMessage = message?.takeIf { it.isNotBlank() }?.trimStart() ?: return false
-        val prefixList = prefixes
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotBlank() }
-            ?: emptyList()
-
-        val keywordList = keywords
-            ?.split(",")
-            ?.map { it.trim() }
-            ?.filter { it.isNotBlank() }
-            ?: emptyList()
-        val matchesPrefix = prefixList.any { trimmedMessage.startsWith(it, ignoreCase = true) }
-
-        val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
-
-        return !matchesPrefix && !containsKeyword
     }
 }
