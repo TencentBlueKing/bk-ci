@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SHA_CONTENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA256_CONTENT
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -269,15 +270,20 @@ class SensitiveApiServiceImpl @Autowired constructor(
             ) ?: storeBaseEnvQueryDao.getDefaultBaseEnvInfo(dslContext, storeId) ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("$osName:$osArch")
             )
+            val shaFieldName = if (fileShaContent.length == 64) {
+                KEY_FILE_SHA256_CONTENT
+            } else {
+                KEY_FILE_SHA_CONTENT
+            }
             val dbFileShaContent = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(
                 dslContext = dslContext,
                 envId = baseEnvRecord.id,
-                "${KEY_FILE_SHA_CONTENT}_$signFileName"
+                "${shaFieldName}_$signFileName"
             )?.getOrNull(0)?.fieldValue ?: baseEnvRecord.shaContent
             if (fileShaContent.lowercase() != dbFileShaContent) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
-                    params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT, "wrong sha1 content")
+                    params = arrayOf(AUTH_HEADER_DEVOPS_SHA_CONTENT, "wrong sha content")
                 )
             }
         }
