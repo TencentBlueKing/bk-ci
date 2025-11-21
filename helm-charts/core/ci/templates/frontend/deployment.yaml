@@ -1,5 +1,5 @@
 # frontend Deployment
-{{- if .Values.frontend.enabled -}}
+{{if .Values.frontend.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -71,12 +71,12 @@ spec:
             - "-c"
             - |
               # 渲染前端模板
-              /data/workspace/scripts/render_tpl -m . /data/workspace/frontend/*.html
+              /data/workspace/scripts/render_tpl -m . /data/workspace/templates/frontend*
               # 启动nginx
               nginx -g "daemon off;"
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -84,7 +84,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
