@@ -1,10 +1,15 @@
-FROM bkci/os:0.0.1
+FROM fedora:40
 
 LABEL maintainer="Tencent BlueKing Devops"
 
+# 设置安装路径
+ENV INSTALL_PATH="/data/workspace/"
+
 # 安装nginx
-RUN dnf install -y nginx && \
-    dnf clean all
+RUN dnf makecache --refresh && \
+    dnf install -y nginx && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf/*
 COPY ./dockerfile/nginx.conf /etc/nginx/nginx.conf
 
 # 复制脚本和模板
