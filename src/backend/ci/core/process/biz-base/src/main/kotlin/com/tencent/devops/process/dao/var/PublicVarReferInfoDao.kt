@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TResourcePublicVarReferInfo
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -173,6 +174,31 @@ class PublicVarReferInfoDao {
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(GROUP_NAME.eq(groupName))
+                .and(REFER_VERSION.eq(referVersion))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除指定资源版本的所有变量引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersion 引用版本号
+     */
+    fun deleteByReferIdAndVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersion: Int
+    ) {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
                 .and(REFER_VERSION.eq(referVersion))
                 .execute()
         }
@@ -335,8 +361,7 @@ class PublicVarReferInfoDao {
 
     /**
      * 根据引用ID、引用类型和引用版本查询变量组信息（只查询groupName和version字段）
-     * 获取字段用于对比
-     * @return 变量组信息Map，key为"groupName:version"
+     * @return 变量组PublicGroupKey集合
      */
     fun listVarGroupsByReferIdAndVersion(
         dslContext: DSLContext,
@@ -344,7 +369,7 @@ class PublicVarReferInfoDao {
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int
-    ): Map<String, Pair<String, Int>> {
+    ): Set<com.tencent.devops.process.pojo.`var`.PublicGroupKey> {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
             return dslContext.selectDistinct(GROUP_NAME, VERSION)
                 .from(this)
@@ -353,12 +378,15 @@ class PublicVarReferInfoDao {
                 .and(REFER_TYPE.eq(referType.name))
                 .and(REFER_VERSION.eq(referVersion))
                 .fetch()
-                .associate { record ->
+                .map { record ->
                     val groupName = record.value1()
-                    val version = record.value2() ?: -1
-                    val key = "$groupName:$version"
-                    key to Pair(groupName, version)
+                    val version = record.value2()
+                    com.tencent.devops.process.pojo.`var`.PublicGroupKey(
+                        groupName = groupName,
+                        version = if (version == -1) null else version
+                    )
                 }
+                .toSet()
         }
     }
 
@@ -442,7 +470,7 @@ class PublicVarReferInfoDao {
         projectId: String,
         groupName: String,
         varName: String,
-        version: Int?,
+        version: Int? = null,
         referType: PublicVerGroupReferenceTypeEnum?
     ): List<String> {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
@@ -498,6 +526,34 @@ class PublicVarReferInfoDao {
                 .where(conditions)
                 .fetch()
                 .map { it.value1() }
+        }
+    }
+
+    /**
+     * 统计指定变量的不同 referId 数量（跨版本去重）
+     * 计数原则：referId + varName 的唯一组合计数为1，跨版本去重
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 变量组版本
+     * @param varName 变量名
+     * @return 不同 referId 的数量
+     */
+    fun countDistinctReferIdsByVar(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String
+    ): Int {
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
+                .fetchOne(0, Int::class.java) ?: 0
         }
     }
 }

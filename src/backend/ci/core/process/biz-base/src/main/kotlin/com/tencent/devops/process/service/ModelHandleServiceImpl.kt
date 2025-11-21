@@ -17,6 +17,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.EXPIRED_TIME_IN_SECONDS
+import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service
 @Service
 class ModelHandleServiceImpl @Autowired constructor(
     private val publicVarService: PublicVarService,
+    private val publicVarReferInfoService: PublicVarReferInfoService,
     private val varRefDetailDao: VarRefDetailDao,
     private val dslContext: DSLContext,
     private val publicVarDao: PublicVarDao,
@@ -126,7 +128,7 @@ class ModelHandleServiceImpl @Autowired constructor(
 
     /**
      * 处理公共变量组变量引用
-     * 调用PublicVarService处理变量组引用的增删改
+     * 调用PublicVarReferInfoService处理变量组引用的增删改
      */
     private fun handlePublicVarGroupReferences(
         userId: String,
@@ -137,7 +139,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         resourceVersion: Int,
         varRefDetails: List<VarRefDetail>
     ) {
-        publicVarService.handlePublicVarGroupReferences(
+        publicVarReferInfoService.handlePublicVarGroupReferences(
             userId = userId,
             projectId = projectId,
             model = model,

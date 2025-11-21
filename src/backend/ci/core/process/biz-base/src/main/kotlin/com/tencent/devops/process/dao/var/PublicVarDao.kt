@@ -115,20 +115,6 @@ class PublicVarDao {
         }
     }
 
-    fun listGroupNamesByVarType(
-        dslContext: DSLContext,
-        projectId: String,
-        type: String
-    ): List<String> {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            return dslContext.selectDistinct(GROUP_NAME)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(TYPE.eq(type))
-                .fetchInto(String::class.java)
-        }
-    }
-
     fun listVarByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -198,153 +184,15 @@ class PublicVarDao {
     }
 
     /**
-     * 更新变量引用计数
+     * 更新变量引用计数（增量更新）
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名
      * @param version 版本号
      * @param varName 变量名
-     * @param referCount 新的引用计数
+     * @param change 计数变化量（正数表示增加，负数表示减少）
      */
     fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varName: String,
-        referCount: Int
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.eq(varName))
-                .execute()
-        }
-    }
-
-    /**
-     * 按变量组批量更新引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param countChange 计数变化量（正数表示增加，负数表示减少）
-     */
-    fun updateReferCountByGroup(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .execute()
-        }
-    }
-
-    /**
-     * 减少变量引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param varName 变量名
-     */
-    fun decrementReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varName: String
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.minus(1))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.eq(varName))
-                .and(REFER_COUNT.gt(0)) // 确保引用计数不会变成负数
-                .execute()
-        }
-    }
-
-    /**
-     * 增加变量引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param varName 变量名
-     */
-    fun incrementReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varName: String
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(1))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.eq(varName))
-                .execute()
-        }
-    }
-
-    /**
-     * 批量更新变量引用计数（增量更新）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referCountChanges Map<"groupName:version:varName", 计数变化量>
-     */
-    fun batchUpdateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        referCountChanges: Map<String, Int>
-    ) {
-        if (referCountChanges.isEmpty()) return
-
-        // 过滤掉变化量为0的记录
-        val validChanges = referCountChanges.filter { it.value != 0 }
-
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            validChanges.forEach { (key, change) ->
-                val (groupName, version, varName) = parseReferCountKey(key)
-                updateSingleReferCount(dslContext, projectId, groupName, version, varName, change)
-            }
-        }
-    }
-
-    /**
-     * 解析引用计数变更的key
-     * @param key 格式为 "groupName:version:varName"
-     * @return Triple(groupName, version, varName)
-     */
-    private fun parseReferCountKey(key: String): Triple<String, Int, String> {
-        val parts = key.split(":")
-        return Triple(parts[0], parts[1].toInt(), parts[2])
-    }
-
-    /**
-     * 更新单个变量的引用计数
-     */
-    private fun updateSingleReferCount(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
@@ -367,6 +215,36 @@ class PublicVarDao {
             }
 
             updateQuery.execute()
+        }
+    }
+
+    /**
+     * 直接设置变量引用计数（非增量更新）
+     * 用于基于实际统计结果直接更新引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varName 变量名
+     * @param referCount 引用计数值
+     */
+    fun updateReferCountDirectly(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varName: String,
+        referCount: Int
+    ) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
+            dslContext.update(this)
+                .set(REFER_COUNT, referCount)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.eq(varName))
+                .execute()
         }
     }
 }

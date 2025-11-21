@@ -49,6 +49,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
+import com.tencent.devops.process.pojo.`var`.PublicGroupKey
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
@@ -78,7 +79,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val sampleEventDispatcher: SampleEventDispatcher
 ) {
-    private data class GroupKey(val groupName: String, val version: Int?)
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
@@ -439,8 +439,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
-                groupName = groupName,
-                version = null
+                groupName = groupName
             )
 
             if (varGroupRecord == null) {
@@ -456,7 +455,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 )
             }
 
-            // 查询所有版本的引用（不限制版本）
+            // 查询所有版本的引用
             // 统计总数
             val totalCount = publicVarGroupReferInfoDao.countByGroupName(
                 dslContext = dslContext,
@@ -499,7 +498,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 projectId = projectId,
                 groupName = groupName,
                 varName = varName,
-                version = null, // 传null表示查询所有版本
                 referType = queryReq.referType
             )
 
@@ -528,97 +526,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             return Pair(totalCount, varGroupReferInfo)
         } catch (e: Throwable) {
             logger.warn("Failed to query var group refer info by varName: $varName (all versions)", e)
-            return Pair(0, emptyList())
-        }
-    }
-
-    /**
-     * 根据变量名查询变量组引用信息
-     */
-    private fun queryVarGroupReferInfoByVarName(
-        queryReq: PublicVarGroupInfoQueryReqDTO,
-        groupName: String,
-        varName: String,
-        actualVersion: Int
-    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
-        val projectId = queryReq.projectId
-        val version = queryReq.version
-
-        try {
-            // 当version为null时，查询动态引用（version=-1）和最新版本号的固定引用
-            if (version == null) {
-                val versions = listOf(-1, actualVersion)
-                
-                // 查询引用了该变量的 referId 列表（使用IN查询）
-                val referIds = publicVarReferInfoDao.listReferIdsByVarNameAndVersions(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    varName = varName,
-                    versions = versions,
-                    referType = queryReq.referType
-                )
-
-                if (referIds.isEmpty()) {
-                    return Pair(0, emptyList())
-                }
-
-                // 统计总数
-                val totalCount = publicVarGroupReferInfoDao.countByReferIds(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    referIds = referIds,
-                    referType = queryReq.referType
-                )
-
-                // 查询详细信息
-                val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    referIds = referIds,
-                    referType = queryReq.referType,
-                    page = queryReq.page,
-                    pageSize = queryReq.pageSize
-                )
-
-                return Pair(totalCount, varGroupReferInfo)
-            }
-
-            // 从变量引用表中查询引用了该变量的 referId 列表
-            val referIds = publicVarReferInfoDao.listReferIdsByVarName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                version = actualVersion,
-                referType = queryReq.referType
-            )
-
-            if (referIds.isEmpty()) {
-                return Pair(0, emptyList())
-            }
-
-            // 统计总数
-            val totalCount = publicVarGroupReferInfoDao.countByReferIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                referIds = referIds,
-                referType = queryReq.referType
-            )
-
-            // 查询详细信息
-            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                referIds = referIds,
-                referType = queryReq.referType,
-                page = queryReq.page,
-                pageSize = queryReq.pageSize
-            )
-
-            return Pair(totalCount, varGroupReferInfo)
-        } catch (e: Throwable) {
-            logger.warn("Failed to query var group refer info by varName: $varName", e)
             return Pair(0, emptyList())
         }
     }
@@ -801,7 +708,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 !element.varGroupName.isNullOrBlank() && element.varGroupVersion == null
             }
             .groupBy { (_, element) ->
-                GroupKey(element.varGroupName!!, element.varGroupVersion)
+                PublicGroupKey(element.varGroupName!!, element.varGroupVersion)
             }
             .mapValues { (key, group) ->
                 group.map { (index, element) ->
@@ -850,7 +757,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun createReferRecords(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
-        dynamicPublicVarWithPositions: Map<GroupKey, List<PublicVarPositionPO>>
+        dynamicPublicVarWithPositions: Map<PublicGroupKey, List<PublicVarPositionPO>>
     ): List<ResourcePublicVarGroupReferPO> {
 
         val currentTime = LocalDateTime.now()
