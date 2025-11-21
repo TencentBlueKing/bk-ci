@@ -29,6 +29,7 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
@@ -93,9 +94,12 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
                 setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
-                setProperty("$prefix.destination", event.destination)
                 if (event.binder != StreamBinder.CUSTOM) {
                     setProperty("$prefix.binder", event.binder)
+                    setProperty("$prefix.destination", event.destination)
+                } else {
+                    val namespace = KubernetesUtils.getNamespace()
+                    setProperty("$prefix.destination", "$namespace.${event.destination}")
                 }
             }
 
@@ -141,9 +145,12 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
-        setProperty("$bindingPrefix.destination", event.destination)
         if (event.binder != StreamBinder.CUSTOM) {
             setProperty("$bindingPrefix.binder", event.binder)
+            setProperty("$bindingPrefix.destination", event.destination)
+        } else {
+            val namespace = KubernetesUtils.getNamespace()
+            setProperty("$bindingPrefix.destination", "$namespace.${event.destination}")
         }
         setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
