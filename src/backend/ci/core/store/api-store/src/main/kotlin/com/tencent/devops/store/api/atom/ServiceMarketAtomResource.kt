@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -171,4 +172,25 @@ interface ServiceMarketAtomResource {
     fun getAtomsDefaultValue(
         atom: ElementThirdPartySearchParam
     ): Result<Map<String, Any>>
+
+    @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")
+    @GET
+    @Path("/project/{projectCode}/{atomCode}/{version}")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
+    )
+    fun getPipelineAtom(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "是否查询已下架版本", required = false)
+        @QueryParam("queryOfflineFlag")
+        queryOfflineFlag: Boolean? = true
+    ): Result<PipelineAtom?>
 }
