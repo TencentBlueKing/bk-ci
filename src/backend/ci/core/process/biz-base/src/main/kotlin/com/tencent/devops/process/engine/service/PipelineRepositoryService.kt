@@ -78,6 +78,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
+import com.tencent.devops.process.dao.PipelineBuildEnvDao
 import com.tencent.devops.process.dao.PipelineCallbackDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -183,7 +184,8 @@ class PipelineRepositoryService constructor(
     private val pipelineCallbackDao: PipelineCallbackDao,
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
-    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao
+    private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
+    private val pipelineBuildEnvDao: PipelineBuildEnvDao
 ) {
 
     companion object {
@@ -2486,4 +2488,22 @@ class PipelineRepositoryService constructor(
             )
         }
     }
+
+    fun createBuildEnv(userId: String, projectId: String, pipelineId: String, version: Int, envName: String) {
+        pipelineBuildEnvDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            envName = envName
+        )
+    }
+
+    fun getBuildEnvRecord(projectId: String, pipelineId: String, version: Int) = pipelineBuildEnvDao.get(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        version = version
+    )
 }

@@ -194,7 +194,18 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         baseInfo: PipelineBaseInfoCreateReq
     ): Result<DeployPipelineResult> {
-        TODO("Not yet implemented")
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            AuthPermission.CREATE
+        )
+        return Result(
+            pipelineVersionFacadeService.createPipelineBaseInfo(
+                userId = userId,
+                projectId = projectId,
+                baseInfo = baseInfo
+            )
+        )
     }
 
     override fun getVersion(

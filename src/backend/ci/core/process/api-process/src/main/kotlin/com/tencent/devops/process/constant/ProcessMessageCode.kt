@@ -704,4 +704,10 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 创作流节点标签
+    const val BK_CREATIVE_STREAM_NODE_LABEL = "bkCreativeStreamNodeLabel"
+
+    // 创作流节点描述
+    const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
 }

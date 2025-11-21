@@ -65,12 +65,16 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
+        
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = "*",
             permission = permission,
-            authResourceType = authResourceType
+            authResourceType = finalAuthResourceType
         )
     }
 
@@ -90,11 +94,14 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
 
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = authResourceType ?: resourceType,
+            resourceType = finalAuthResourceType,
             projectCode = projectId,
             resourceCode = pipelineId,
             permission = permission
@@ -108,10 +115,13 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         message: String?
     ) {
+        // 从ChannelContext自动获取authResourceType
+        val finalAuthResourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType)
+        
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = finalAuthResourceType,
                 projectCode = projectId,
                 resourceCode = pipelineId,
                 permission = permission

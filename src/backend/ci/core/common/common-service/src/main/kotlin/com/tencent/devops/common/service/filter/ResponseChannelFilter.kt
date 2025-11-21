@@ -27,44 +27,23 @@
 
 package com.tencent.devops.common.service.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
-import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.context.ChannelContext
-import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
-import jakarta.servlet.Filter
-import jakarta.servlet.FilterChain
-import jakarta.servlet.FilterConfig
-import jakarta.servlet.ServletRequest
-import jakarta.servlet.ServletResponse
-import jakarta.servlet.http.HttpServletRequest
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerResponseContext
+import jakarta.ws.rs.container.ContainerResponseFilter
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-class RequestChannelFilter : Filter {
-    override fun destroy() = Unit
-
-    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
-        if (request == null || chain == null) {
-            return
-        }
-        val httpServletRequest = request as HttpServletRequest
-        val requestUrl = httpServletRequest.requestURI
-        // 根据接口路径设置请求渠道信息
-        val channel = when {
-            requestUrl.contains("/api/build/") -> RequestChannelTypeEnum.BUILD.name
-            requestUrl.contains("/api/user/") -> RequestChannelTypeEnum.USER.name
-            requestUrl.contains("/api/op/") -> RequestChannelTypeEnum.OP.name
-            requestUrl.contains("/api/open/") -> RequestChannelTypeEnum.OPEN.name
-            requestUrl.contains("/api/apigw") -> RequestChannelTypeEnum.API.name
-            else -> null
-        }
-        channel?.let { request.setAttribute(REQUEST_CHANNEL, channel) }
-        ChannelContext.setChannel(request.getHeader(AUTH_HEADER_DEVOPS_CHANNEL))
-        chain.doFilter(request, response)
+class ResponseChannelFilter : ContainerResponseFilter {
+    
+    override fun filter(
+        requestContext: ContainerRequestContext,
+        responseContext: ContainerResponseContext
+    ) {
+        ChannelContext.clear()
     }
-
-    override fun init(filterConfig: FilterConfig?) = Unit
 }
+

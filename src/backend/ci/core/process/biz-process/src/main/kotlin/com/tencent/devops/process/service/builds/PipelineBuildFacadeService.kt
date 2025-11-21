@@ -143,6 +143,7 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -301,11 +302,13 @@ class PipelineBuildFacadeService(
         val params = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = resource.version,
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
             debug = debug,
-            manualBuildMsg = manualBuildMsg
+            manualBuildMsg = manualBuildMsg,
+            channelCode = channelCode
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -2931,6 +2934,7 @@ class PipelineBuildFacadeService(
         val properties = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = model.latestVersion,
             userId = userId,
             debug = false,
             checkPermission = true,
@@ -3072,11 +3076,13 @@ class PipelineBuildFacadeService(
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
+        version: Int,
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
         triggerParams: List<BuildFormProperty>,
-        manualBuildMsg: String? = null
+        manualBuildMsg: String? = null,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val permission = AuthPermission.EXECUTE
@@ -3119,6 +3125,44 @@ class PipelineBuildFacadeService(
                 propertyType = BuildPropertyType.BUILD.name
             )
         )
+        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            // 查出环境信息
+            val envName = pipelineRepositoryService.getBuildEnvRecord(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )?.envName
+            envName?.let {
+                val payload = mapOf(
+                    "type" to "remote",
+                    "url" to "/environment/api/user/environment/$projectId/listNodesNew?page=-1&envName=$it",
+                    "dataPath" to "data.records",
+                    "paramName" to "displayName",
+                    "paramId" to "agentId"
+                )
+                params.add(
+                    BuildFormProperty(
+                        id = CREATIVE_STREAM_NODE_AGENT_ID,
+                        required = true,
+                        type = BuildFormPropertyType.ENUM,
+                        defaultValue = "",
+                        value = "",
+                        options = null,
+                        desc = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_DESC),
+                        repoHashId = null,
+                        relativePath = null,
+                        scmType = null,
+                        containerType = null,
+                        glob = null,
+                        properties = null,
+                        label = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_LABEL),
+                        propertyType = BuildPropertyType.BUILD.name,
+                        valueNotEmpty = true,
+                        payload = payload
+                    )
+                )
+            }
+        }
         params.addAll(
             filterParams(
                 userId = if (checkPermission) userId else null,

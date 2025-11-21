@@ -84,7 +84,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -128,7 +128,7 @@ class UserBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             buildNo = buildNo,
             version = version,
             triggerReviewers = triggerReviewers
