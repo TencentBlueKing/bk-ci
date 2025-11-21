@@ -3057,7 +3057,7 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId
-                )?.let{
+                )?.let {
                     BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
                 } ?: BuildReplayResult(
                     status = BuildReplayStatus.CANNOT_REPLAY,
