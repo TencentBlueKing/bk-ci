@@ -46,7 +46,6 @@ import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MyAtomResp
-import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -116,20 +115,6 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomsDefaultValue(atom: ElementThirdPartySearchParam): Result<Map<String, Any>> {
         return Result(marketAtomService.getAtomsDefaultValue(atom = atom))
-    }
-
-    override fun getPipelineAtom(
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        queryOfflineFlag: Boolean?
-    ): Result<PipelineAtom?> {
-        return atomService.getPipelineAtom(
-            projectCode = projectCode,
-            atomCode = atomCode,
-            version = version,
-            queryOfflineFlag = queryOfflineFlag ?: true
-        )
     }
 
     override fun listMyAtoms(
