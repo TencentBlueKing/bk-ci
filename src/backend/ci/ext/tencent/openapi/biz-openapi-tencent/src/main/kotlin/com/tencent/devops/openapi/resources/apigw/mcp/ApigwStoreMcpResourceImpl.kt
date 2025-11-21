@@ -62,7 +62,7 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
                     data = null
                 )
 
-                AtomStatusEnum.TESTING.name -> {
+                else -> {
                     val res = client.get(TxServiceAtomReleaseResource::class)
                         .rebuild(
                             userId = userId,
