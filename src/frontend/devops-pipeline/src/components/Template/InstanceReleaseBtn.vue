@@ -102,7 +102,9 @@
                 templateId,
                 baseId
             })
-            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, res.data?.request?.instanceReleaseInfos)
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: res.data?.request?.instanceReleaseInfos
+            })
             proxy.$store.commit(`templates/${UPDATE_USE_TEMPLATE_SETTING}`, res.data?.request?.useTemplateSetting)
             proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, baseId)
             proxy.$store.commit(`templates/${SHOW_TASK_DETAIL}`, true)

@@ -181,26 +181,24 @@
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestTemplateSummary: 'atom/requestTemplateSummary',
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
-                rollbackTemplateVersion: 'templates/rollbackTemplateVersion'
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                checkTemplatePipelineRollback: 'templates/checkTemplatePipelineRollback'
             }),
-            handleClick () {
+            async handleClick () {
                 if (this.isRollback) {
                     if (this.isTemplatePipeline) {
-                        this.$bkInfo({
-                            subTitle: this.$t('templateRollbackBackTips'),
-                            confirmFn: () => {
-                                this.$router.push({
-                                    name: 'instanceEntry',
-                                    params: {
-                                        type: 'upgrade',
-                                        projectId: this.projectId,
-                                        templateId: this.pipelineInfo?.templateId,
-                                        version: this.pipelineInfo?.templateVersion
-                                    },
-                                    hash: `#${this.rollbackId}`
-                                })
-                            }
+                        const res = await this.checkTemplatePipelineRollback({
+                            ...this.$route.params,
+                            version: this.version
                         })
+                        if (res.data) {
+                            this.showDraftConfirmDialog()
+                        } else {
+                            this.$showTips({
+                                theme: 'error',
+                                message: this.$t('template.templatePipelineRollbackNotAllowedTips')
+                            })
+                        }
                     } else {
                         this.showDraftConfirmDialog()
                     }
