@@ -14,6 +14,7 @@ import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
+import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
@@ -99,5 +100,15 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
                     branch = marketAtomUpdateRequest.branch
                 )
             )
+    }
+
+    override fun listMyAtoms(
+        userId: String,
+        atomName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<MyAtomResp?> {
+        return client.get(ServiceMarketAtomResource::class)
+            .listMyAtoms(userId, atomName, page, pageSize)
     }
 }

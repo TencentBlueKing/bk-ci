@@ -26,20 +26,26 @@
  */
 package com.tencent.devops.openapi.api.apigw.mcp
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomCreateRequestMCP
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomUpdateRequestMCP
+import com.tencent.devops.store.pojo.atom.MyAtomResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Suppress("LongParameterList")
@@ -71,4 +77,26 @@ interface ApigwStoreMcpResource {
         @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
         marketAtomUpdateRequest: MarketAtomUpdateRequestMCP
     ): Result<String?>
+
+    @Operation(summary = "根据用户获取插件工作台插件列表")
+    @GET
+    @Path("/desk/atom/list/")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
+    )
+    fun listMyAtoms(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件名称,如果指定就只返回该插件的信息，不指定返回所有拥有的插件", required = false)
+        @QueryParam("atomName")
+        atomName: String?,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
+    ): Result<MyAtomResp?>
 }
