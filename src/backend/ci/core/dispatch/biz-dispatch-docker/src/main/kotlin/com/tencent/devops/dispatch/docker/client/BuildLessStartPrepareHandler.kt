@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.client
 
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
@@ -47,6 +48,13 @@ class BuildLessStartPrepareHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
+            // 记录资源准备中
+            BeanUtil.getDispatchMessageTracking().trackResourcePreparing(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
+
             // 设置日志打印关键字
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
             logger.info("$buildLogKey start select buildLess.")
