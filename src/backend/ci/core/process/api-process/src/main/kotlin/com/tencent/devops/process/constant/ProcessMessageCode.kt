@@ -442,6 +442,7 @@ object ProcessMessageCode {
 
     const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
+    const val USER_NO_CANCEL_BUILD_PERMISSION = "2101337" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

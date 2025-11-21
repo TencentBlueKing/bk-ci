@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.template.v2
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -72,6 +73,8 @@ data class PipelineTemplateSettingUpdateInfo(
     val maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     var failIfVariableInvalid: Boolean? = false,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy? = null,
 
     /* 平台系统控制相关配置 —— 不作为生成版本的配置 */
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
@@ -98,6 +101,7 @@ data class PipelineTemplateSettingUpdateInfo(
         concurrencyCancelInProgress = pipelineSetting.concurrencyCancelInProgress,
         maxConRunningQueueSize = pipelineSetting.maxConRunningQueueSize,
         failIfVariableInvalid = pipelineSetting.failIfVariableInvalid,
+        buildCancelPolicy = pipelineSetting.buildCancelPolicy,
         maxPipelineResNum = pipelineSetting.maxPipelineResNum,
         pipelineAsCodeSettings = pipelineSetting.pipelineAsCodeSettings,
         updater = userId

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
@@ -95,7 +96,8 @@ class PipelineSettingDao {
                 FAILURE_SUBSCRIPTION,
                 VERSION,
                 PIPELINE_AS_CODE_SETTINGS,
-                FAIL_IF_VARIABLE_INVALID
+                FAIL_IF_VARIABLE_INVALID,
+                BUILD_CANCEL_POLICY
             ).values(
                 setting.projectId,
                 setting.pipelineName,
@@ -131,7 +133,8 @@ class PipelineSettingDao {
                 JsonUtil.toJson(failSubscriptionList, false),
                 setting.version,
                 setting.pipelineAsCodeSettings?.let { JsonUtil.toJson(it, false) },
-                setting.failIfVariableInvalid
+                setting.failIfVariableInvalid,
+                setting.buildCancelPolicy.value
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -166,6 +169,7 @@ class PipelineSettingDao {
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
             // pipelineAsCodeSettings 默认传空不更新
             setting.pipelineAsCodeSettings?.let { self ->
                 insert.set(PIPELINE_AS_CODE_SETTINGS, JsonUtil.toJson(self, false))
@@ -464,6 +468,7 @@ class PipelineSettingDao {
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                     },
+                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
                     version = t.version ?: 1
                 )
             }
