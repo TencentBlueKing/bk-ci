@@ -9,15 +9,16 @@ import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomCreateRequestMCP
 import com.tencent.devops.openapi.api.apigw.mcp.pojo.MarketAtomUpdateRequestMCP
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.api.atom.TxServiceAtomReleaseResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import java.text.SimpleDateFormat
-import java.util.Date
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -46,6 +47,36 @@ class ApigwStoreMcpResourceImpl @Autowired constructor(private val client: Clien
             .getAtomByCode(marketAtomUpdateRequest.atomCode, userId).data
             ?: return Result(message = "没有找到atomCode对应的插件", data = null)
         val version = marketAtomUpdateRequest.branch.take(29)
+        // 获取当前分支是否在测试中，如果是，则直接重试
+        val test = client.get(ServiceMarketAtomResource::class)
+            .getPipelineAtom(
+                projectCode = atomInfo.projectCode ?: "",
+                atomCode = marketAtomUpdateRequest.atomCode,
+                version = version
+            ).data
+        if (test != null) {
+            when (test.atomStatus) {
+                AtomStatusEnum.BUILDING.name -> return Result(
+                    message = "插件测试版本正在构建中，请勿重复触发",
+                    data = null
+                )
+
+                AtomStatusEnum.TESTING.name -> {
+                    val res = client.get(TxServiceAtomReleaseResource::class)
+                        .rebuild(
+                            userId = userId,
+                            projectId = atomInfo.projectCode ?: "",
+                            atomId = test.id,
+                            atomRebuildRequest = AtomRebuildRequest(true)
+                        )
+                    return if (res.data != null && res.data == true) {
+                        Result(test.id)
+                    } else
+                        Result(message = res.message, data = null)
+                }
+            }
+        }
+
         return client.get(ServiceStoreResource::class)
             .updateMarketAtomTest(
                 userId,
