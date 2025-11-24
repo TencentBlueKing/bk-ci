@@ -36,6 +36,9 @@ scm:
       account: devops
       email: devops@devops.com
       secret: devops123
+    queryCommitNumLimit:
+      min: 1
+      max: 10
   external:
     #gitlab v4.
     gitlab:
@@ -71,8 +74,3 @@ aes:
   aes:
     scm:
       props: __BK_CI_REPOSITORY_AES_SCM_PROPS__
-
-git:
-  queryCommitNumLimit:
-    min: 1
-    max: 10

@@ -145,10 +145,10 @@ class GitService @Autowired constructor(
     @Value("\${scm.git.public.secret}")
     private lateinit var gitPublicSecret: String
 
-    @Value("\${git.queryCommitNumLimit.min:1}")
+    @Value("\${scm.git.queryCommitNumLimit.min:1}")
     private var min: Int = 1
 
-    @Value("\${git.queryCommitNumLimit.max:10}")
+    @Value("\${scm.git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
 
     private val redirectUrl = gitConfig.redirectUrl
