@@ -848,6 +848,24 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
     }
 
+    override fun getStoreUpgradeStatusInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String
+    ): Result<String?> {
+        val record = storeBaseQueryDao.getComponentStatusInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = StoreTypeEnum.valueOf(storeType)
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        return Result(record.value1())
+    }
+
     private fun isUpdateRequired(
         storeId: String,
         installedTime: LocalDateTime,

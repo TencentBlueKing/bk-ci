@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.db.utils.JooqUtils.values
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -136,5 +137,20 @@ class StoreBaseEnvManageDao {
                 .where(STORE_ID.`in`(storeIds))
                 .execute()
         }
+    }
+
+    fun updateSha256(dslContext: DSLContext, envId: String, sha256Value: String) {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        dslContext.update(t)
+            .set(t.SHA256_CONTENT, sha256Value)
+            .where(t.ID.eq(envId))
+            .execute()
+    }
+
+    fun getStoreEnvRecordsByStoreId(dslContext: DSLContext, storeId: String): List<TStoreBaseEnvRecord>? {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        return dslContext.selectFrom(t)
+            .where(t.STORE_ID.eq(storeId))
+            .fetch()
     }
 }
