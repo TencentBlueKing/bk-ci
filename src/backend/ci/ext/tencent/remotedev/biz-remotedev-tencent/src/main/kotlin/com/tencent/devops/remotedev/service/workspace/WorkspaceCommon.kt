@@ -796,12 +796,7 @@ class WorkspaceCommon @Autowired constructor(
             val resIps = mutableSetOf<String>()
             resIps.add(ip)
             val newParam = mutableMapOf<String, String>()
-            info.buildParam.forEach { (k, v) ->
-                when (v) {
-                    "job_ip_list" -> newParam[k] = resIps.joinToString(separator = " ")
-                    else -> newParam[k] = v
-                }
-            }
+            newParam["job_ip_list"] = resIps.joinToString(separator = " ")
 
             AsyncExecute.dispatch(
                 streamBridge,
