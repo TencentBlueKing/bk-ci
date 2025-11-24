@@ -154,6 +154,7 @@ const val KEY_STORE_PACKAGE_FILE = "storePackageFile"
 const val KEY_CONDITIONS = "conditions"
 const val KEY_FIELD_MAPPING = "fieldMapping"
 const val KEY_ATOM_FORM = "atomForm"
+const val KEY_TRIGGER_EVENT_CONFIG = "triggerEventConfig"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"

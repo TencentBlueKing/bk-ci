@@ -18,19 +18,18 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.event.utils.TriggerEventConverter
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
+import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
@@ -47,13 +46,19 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
 ): StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")
-        // 根据入参生成触发器task.json
-        fillAtomForm(storeCreateRequest.baseInfo.baseFeatureInfo)
+        storeCreateRequest.baseInfo.extBaseInfo?.toMutableMap()?.let {
+            // 根据入参生成触发器task.json
+            val extBaseParam = generateAtomForm(it)
+            it.putAll(extBaseParam)
+        }
     }
 
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
-        // 根据入参生成触发器task.json
-        fillAtomForm(storeUpdateRequest.baseInfo.baseFeatureInfo)
+        storeUpdateRequest.baseInfo.extBaseInfo?.toMutableMap()?.let {
+            // 根据入参生成触发器task.json
+            val extBaseParam = generateAtomForm(it)
+            it.putAll(extBaseParam)
+        }
     }
 
     override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
@@ -65,7 +70,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
     }
 
     override fun getStoreUpdateStatus(): StoreStatusEnum {
-        return StoreStatusEnum.INIT
+        return StoreStatusEnum.COMMITTING
     }
 
     override fun getStoreRunPipelineStartParams(
@@ -175,24 +180,36 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         logger.info("doStoreCreatePostBus")
     }
 
-    private fun getTriggerEventConfig(storeBaseFeatureRequest: StoreBaseFeatureRequest?):TriggerEventConfig {
-        val extBaseInfo = storeBaseFeatureRequest?.extBaseFeatureInfo ?: mapOf()
-        if (extBaseInfo.isEmpty()) {
-            throw InvalidParamException(
-                message = "extBaseInfo is empty"
-            )
-        }
-        return JsonUtil.mapTo(extBaseInfo, TriggerEventConfig::class.java)
-    }
-
     /**
      * 根据触发事件配置，生成对应的触发器表单配置
      */
-    private fun fillAtomForm(storeBaseFeatureRequest: StoreBaseFeatureRequest?) {
-        val triggerEventConfig = getTriggerEventConfig(storeBaseFeatureRequest)
-        val atomForm = TriggerEventConverter.convertAtomForm(triggerEventConfig)
-        val extBaseFeatureInfo = storeBaseFeatureRequest?.extBaseFeatureInfo ?: mutableMapOf()
-        extBaseFeatureInfo[KEY_ATOM_FORM] = JsonUtil.toJson(atomForm)
+    private fun generateAtomForm(extBaseInfo: Map<String, Any>?): Map<String, Any> {
+        val map = mutableMapOf<String, Any>()
+        extBaseInfo?.get(KEY_TRIGGER_EVENT_CONFIG)?.let {
+            try {
+                when (it) {
+                    is String -> {
+                        JsonUtil.to(it, TriggerEventConfig::class.java)
+                    }
+
+                    is Map<*, *> -> {
+                        JsonUtil.mapTo(it as Map<String, Any>, TriggerEventConfig::class.java)
+                    }
+
+                    else -> {
+                        logger.warn("trigger event config[$it] is not string or map")
+                        null
+                    }
+                }
+            } catch (ignored: Exception) {
+                logger.warn("fail to convert trigger event config[$it]", ignored)
+                null
+            }?.let { eventConfig ->
+                val atomForm = TriggerEventConverter.convertAtomForm(eventConfig)
+                map[KEY_ATOM_FORM] = JsonUtil.toJson(atomForm)
+            }
+        }
+        return map
     }
 
     companion object {
