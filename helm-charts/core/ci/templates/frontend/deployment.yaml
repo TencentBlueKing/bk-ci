@@ -71,13 +71,11 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              # 渲染前端模板
               /data/workspace/scripts/render_tpl -m . /data/workspace/templates/frontend*
-              # 启动nginx
               sbin/nginx -g 'daemon off;';
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -85,7 +83,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
