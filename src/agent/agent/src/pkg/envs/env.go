@@ -1,6 +1,7 @@
-package config
+package envs
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -12,6 +13,14 @@ var GApiEnvVars *GEnvVarsT
 type GEnvVarsT struct {
 	envs map[string]string
 	lock sync.RWMutex
+}
+
+func Init() {
+	GApiEnvVars = &GEnvVarsT{
+		envs: make(map[string]string),
+		lock: sync.RWMutex{},
+	}
+
 }
 
 func (e *GEnvVarsT) Get(key string) (string, bool) {
@@ -51,6 +60,30 @@ func (e *GEnvVarsT) Size() int {
 	return len(e.envs)
 }
 
+// Envs 获取系统环境变量，代替 os.Environ()
+func Envs() []string {
+	envs := os.Environ()
+	pollingEnvs := FetchEnvFromPolling()
+	if len(pollingEnvs) == 0 {
+		return envs
+	}
+	envMap := make(map[string]string, len(envs)+len(pollingEnvs))
+	for _, envStr := range envs {
+		parts := strings.SplitN(envStr, "=", 2)
+		if len(parts) == 2 {
+			envMap[parts[0]] = parts[1]
+		}
+	}
+	for key, value := range pollingEnvs {
+		envMap[key] = value
+	}
+	resEnvs := make([]string, 0, len(envMap))
+	for key, value := range envMap {
+		resEnvs = append(resEnvs, fmt.Sprintf("%s=%s", key, value))
+	}
+	return resEnvs
+}
+
 // FetchEnvAndCheck 查询是否有某个环境变量，同时校验是否符合要求
 func FetchEnvAndCheck(key string, checkValue string) bool {
 	v, ok := FetchEnv(key)
@@ -68,12 +101,9 @@ func FetchEnv(key string) (string, bool) {
 		return v, true
 	}
 
-	for _, envStr := range os.Environ() {
-		parts := strings.Split(envStr, "=")
-		if len(parts) < 2 {
-			continue
-		}
-		if parts[0] == key {
+	for _, envStr := range Envs() {
+		parts := strings.SplitN(envStr, "=", 2)
+		if len(parts) == 2 && parts[0] == key {
 			return parts[1], true
 		}
 	}

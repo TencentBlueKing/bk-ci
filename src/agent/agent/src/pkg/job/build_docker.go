@@ -45,6 +45,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	envvars "github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
@@ -564,7 +565,7 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	}
 
 	// 用户指定的节点环境变量
-	userEnvs := config.GApiEnvVars.GetAll()
+	userEnvs := envvars.GApiEnvVars.GetAll()
 	for k, v := range userEnvs {
 		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
 	}

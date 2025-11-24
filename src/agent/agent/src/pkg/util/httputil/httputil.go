@@ -41,6 +41,7 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 
 	"github.com/pkg/errors"
@@ -216,7 +217,7 @@ func (r *HttpClient) Execute(ignoreDupLogResp *IgnoreDupLogResp) *HttpResult {
 
 // checkTimeOutExit 检查是否因为超时直接退出
 func checkTimeOutExit(err error) {
-	enableExitTimeStr, ok := config.FetchEnv(constant.DevopsAgentTimeoutExitTime)
+	enableExitTimeStr, ok := envs.FetchEnv(constant.DevopsAgentTimeoutExitTime)
 	if !ok {
 		return
 	}

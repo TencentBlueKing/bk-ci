@@ -32,6 +32,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -86,11 +87,11 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 
 	// agent环境变量
 	if heartbeatResponse.Envs != nil {
-		if config.GApiEnvVars.Size() <= 0 {
-			config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+		if envs.GApiEnvVars.Size() <= 0 {
+			envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 		} else {
 			flag := false
-			config.GApiEnvVars.RangeDo(func(k, v string) bool {
+			envs.GApiEnvVars.RangeDo(func(k, v string) bool {
 				if heartbeatResponse.Envs[k] != v {
 					flag = true
 					return false
@@ -98,7 +99,7 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 				return true
 			})
 			if flag {
-				config.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
+				envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 			}
 		}
 	}

@@ -47,6 +47,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
@@ -153,11 +154,7 @@ func Init(isDebug bool) {
 	}
 	initCert()
 	LoadAgentEnv()
-
-	GApiEnvVars = &GEnvVarsT{
-		envs: make(map[string]string),
-		lock: sync.RWMutex{},
-	}
+	envs.Init()
 }
 
 // LoadAgentEnv 加载Agent环境
@@ -442,7 +439,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
 
-	err := exitcode.WriteFileWithCheck(filePath, []byte(content.String()), 0666)
+	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
 	if err != nil {
 		logs.Error("write config failed:", err.Error())
 		return errors.New("write config failed")

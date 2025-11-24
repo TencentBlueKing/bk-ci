@@ -44,6 +44,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
@@ -212,8 +213,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		"DEVOPS_AGENT_JDK_8_PATH":  third_components.Jdk.Jdk8.GetJavaOrNull(),
 		"DEVOPS_AGENT_JDK_17_PATH": third_components.Jdk.Jdk17.GetJavaOrNull(),
 	}
-	if config.GApiEnvVars != nil {
-		config.GApiEnvVars.RangeDo(func(k, v string) bool {
+	if envs.GApiEnvVars != nil {
+		envs.GApiEnvVars.RangeDo(func(k, v string) bool {
 			goEnv[k] = v
 			return true
 		})

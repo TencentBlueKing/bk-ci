@@ -29,11 +29,11 @@ package command
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 )
 
@@ -48,11 +48,9 @@ func RunCommand(command string, args []string, workDir string, envMap map[string
 		cmd.Dir = workDir
 	}
 
-	cmd.Env = os.Environ()
-	if envMap != nil {
-		for k, v := range envMap {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
+	cmd.Env = envs.Envs()
+	for k, v := range envMap {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	logs.Info("cmd.Path: ", cmd.Path)
@@ -79,11 +77,9 @@ func StartProcess(command string, args []string, workDir string, envMap map[stri
 		cmd.Dir = workDir
 	}
 
-	cmd.Env = os.Environ()
-	if envMap != nil {
-		for k, v := range envMap {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
+	cmd.Env = envs.Envs()
+	for k, v := range envMap {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
 	err := SetUser(cmd, runUser)
