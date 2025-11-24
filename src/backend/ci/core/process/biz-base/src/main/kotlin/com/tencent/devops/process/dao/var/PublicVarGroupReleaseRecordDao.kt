@@ -96,6 +96,21 @@ class PublicVarGroupReleaseRecordDao {
         }
     }
 
+    /**
+     * 按版本分组统计数量
+     */
+    fun countVersionsByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Long {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .fetch()
+                .size
+                .toLong()
+        }
+    }
+
     fun listByGroupNamePage(
         dslContext: DSLContext,
         projectId: String,
@@ -162,6 +177,64 @@ class PublicVarGroupReleaseRecordDao {
                         content = record.get(CONTENT)
                     )
                 }
+        }
+    }
+
+    /**
+     * 按版本分组查询所有记录
+     */
+    fun listAllRecordsByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int
+    ): List<PublicVarReleaseDO> {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+            return dslContext.select(
+                GROUP_NAME,
+                VERSION,
+                PUBLISHER,
+                PUB_TIME,
+                DESC,
+                CONTENT
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .orderBy(CREATE_TIME.asc())
+                .fetch { record ->
+                    PublicVarReleaseDO(
+                        groupName = record.get(GROUP_NAME),
+                        version = record.get(VERSION),
+                        publisher = record.get(PUBLISHER),
+                        pubTime = record.get(PUB_TIME),
+                        desc = record.get(DESC),
+                        content = record.get(CONTENT)
+                    )
+                }
+        }
+    }
+
+    /**
+     * 获取所有不同的版本号列表（分页）
+     */
+    fun listDistinctVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        page: Int,
+        pageSize: Int
+    ): List<Int> {
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+            val offset = (page - 1) * pageSize
+            return dslContext.selectDistinct(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .orderBy(VERSION.desc())
+                .offset(offset)
+                .limit(pageSize)
+                .fetch(VERSION)
         }
     }
 }

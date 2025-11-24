@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.enums
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 
 /**
  * 操作类型枚举
@@ -37,10 +37,7 @@ enum class OperateTypeEnum {
     CREATE,
     UPDATE;
 
-    fun getI18n(language: String): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = "OPERATE_TYPE_${this.name}",
-            language = language
-        )
+    fun getI18n(): String {
+        return I18nUtil.getCodeLanMessage("OPERATE_TYPE_${this.name}")
     }
 }

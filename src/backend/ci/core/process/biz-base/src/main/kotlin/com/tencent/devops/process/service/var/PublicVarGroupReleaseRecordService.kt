@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
+import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReleaseRecordPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -127,7 +128,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<PublicVarReleaseDO> {
-        val count = pipelinePublicVarGroupReleaseRecordDao.countByGroupName(dslContext, projectId, groupName)
+        // 按版本分组统计数量
+        val count = pipelinePublicVarGroupReleaseRecordDao.countVersionsByGroupName(dslContext, projectId, groupName)
         if (count == 0L) {
             return Page(
                 page = page,
@@ -136,18 +138,126 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 records = emptyList()
             )
         }
+
+        // 获取分页的版本号列表
+        val versions = pipelinePublicVarGroupReleaseRecordDao.listDistinctVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            page = page,
+            pageSize = pageSize
+        )
+
+        // 对每个版本，查询所有记录并组合 content
+        val records = versions.map { version ->
+            val versionRecords = pipelinePublicVarGroupReleaseRecordDao.listAllRecordsByVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = version
+            )
+
+            // 取第一条记录的基本信息
+            val firstRecord = versionRecords.first()
+
+            // 解析并组合所有记录的 content
+            val combinedContent = combineReleaseContents(versionRecords)
+
+            PublicVarReleaseDO(
+                groupName = firstRecord.groupName,
+                version = firstRecord.version,
+                pubTime = firstRecord.pubTime,
+                publisher = firstRecord.publisher,
+                content = combinedContent,
+                desc = firstRecord.desc
+            )
+        }
+
         return Page(
             page = page,
             pageSize = pageSize,
             count = count,
-            records = pipelinePublicVarGroupReleaseRecordDao.listGroupReleaseHistory(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                page = page,
-                pageSize = pageSize
-            )
+            records = records
         )
+    }
+
+    /**
+     * 组合多条发布记录的 content
+     * 格式：新增变量: var1、var2，新增常量: const1、const2，修改变量: var3、var4，删除变量: var5
+     */
+    private fun combineReleaseContents(records: List<PublicVarReleaseDO>): String {
+        val addedVariables = mutableListOf<String>()
+        val addedConstants = mutableListOf<String>()
+        val updatedVariables = mutableListOf<String>()
+        val updatedConstants = mutableListOf<String>()
+        val deletedVariables = mutableListOf<String>()
+        val deletedConstants = mutableListOf<String>()
+
+        records.forEach { record ->
+            try {
+                val contentMap = JsonUtil.toMap(record.content)
+                val operate = contentMap["operate"]?.toString() ?: return@forEach
+                val varName = contentMap["varName"]?.toString() ?: return@forEach
+                val type = contentMap["type"]?.toString() ?: "VARIABLE"
+
+                when (operate) {
+                    OperateTypeEnum.CREATE.name -> {
+                        if (type == PublicVarTypeEnum.CONSTANT.name) {
+                            addedConstants.add(varName)
+                        } else {
+                            addedVariables.add(varName)
+                        }
+                    }
+                    OperateTypeEnum.UPDATE.name -> {
+                        if (type == PublicVarTypeEnum.CONSTANT.name) {
+                            updatedConstants.add(varName)
+                        } else {
+                            updatedVariables.add(varName)
+                        }
+                    }
+                    OperateTypeEnum.DELETE.name -> {
+                        if (type == PublicVarTypeEnum.CONSTANT.name) {
+                            deletedConstants.add(varName)
+                        } else {
+                            deletedVariables.add(varName)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to parse content: ${record.content}", e)
+            }
+        }
+
+        val constantDesc = PublicVarTypeEnum.CONSTANT.getI18n()
+        val variableDesc = PublicVarTypeEnum.VARIABLE.getI18n()
+
+        val parts = mutableListOf<String>()
+        if (addedVariables.isNotEmpty()) {
+            val desc = OperateTypeEnum.CREATE.getI18n()
+            parts.add("${desc}${variableDesc}: ${addedVariables.joinToString("、")}")
+        }
+        if (addedConstants.isNotEmpty()) {
+            val desc = OperateTypeEnum.CREATE.getI18n()
+            parts.add("${desc}${constantDesc}: ${addedConstants.joinToString("、")}")
+        }
+        if (updatedVariables.isNotEmpty()) {
+            val desc = OperateTypeEnum.UPDATE.getI18n()
+            parts.add("${desc}${variableDesc}: ${updatedVariables.joinToString("、")}")
+        }
+        if (updatedConstants.isNotEmpty()) {
+            val desc = OperateTypeEnum.UPDATE.getI18n()
+            parts.add("${desc}${constantDesc}: ${updatedConstants.joinToString("、")}")
+        }
+        if (deletedVariables.isNotEmpty()) {
+            val desc = OperateTypeEnum.DELETE.getI18n()
+            parts.add("${desc}${variableDesc}: ${deletedVariables.joinToString("、")}")
+        }
+        if (deletedConstants.isNotEmpty()) {
+            val desc = OperateTypeEnum.DELETE.getI18n()
+            parts.add("${desc}${constantDesc}: ${deletedConstants.joinToString("、")}")
+        }
+
+        return parts.joinToString("，")
     }
 
     /**

@@ -317,13 +317,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
             // 构建流水线引用记录
             pipelineReferInfos.map { referInfo ->
-                // 查询该流水线实际引用的变量数量（统计所有版本）
+                // 查询该流水线实际引用的变量数量
                 val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
                     dslContext = dslContext,
                     projectId = queryReq.projectId,
                     referId = referInfo.referId,
                     referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                    referVersion = null  // 不传版本号，统计所有版本的引用
+                    referVersion = referInfo.referVersion
                 )
 
                 PublicGroupVarRefDO(
@@ -388,13 +388,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                     return@mapNotNull null
                 }
 
-                // 查询该模板实际引用的变量数量（统计所有版本）
+                // 查询该模板实际引用的变量数量
                 val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
                     dslContext = dslContext,
                     projectId = queryReq.projectId,
                     referId = referInfo.referId,
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referVersion = null  // 不传版本号，统计所有版本的引用
+                    referVersion = referInfo.referVersion
                 )
 
                 PublicGroupVarRefDO(
@@ -427,36 +427,15 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     /**
      * 查询变量组引用信息（查询所有版本的引用）
      */
-    /**
-     * 查询变量组引用信息的入口方法
-     * 根据 varName 是否有值分发到不同的查询方法
-     */
     private fun queryVarGroupReferInfo(
-        queryReq: PublicVarGroupInfoQueryReqDTO
-    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
-        val varName = queryReq.varName
-
-        // 根据 varName 是否有值分发到不同的查询方法
-        return if (!varName.isNullOrBlank()) {
-            queryVarGroupReferInfoByVarName(queryReq)
-        } else {
-            queryVarGroupReferInfoByGroupName(queryReq)
-        }
-    }
-
-    /**
-     * 根据变量组名称查询引用信息（varName 为空时使用）
-     * 从 T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 查询所有变量组关联
-     * 然后根据 T_RESOURCE_PUBLIC_VAR_REFER_INFO 统计引用值
-     */
-    private fun queryVarGroupReferInfoByGroupName(
         queryReq: PublicVarGroupInfoQueryReqDTO
     ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
         val projectId = queryReq.projectId
         val groupName = queryReq.groupName!!
+        val varName = queryReq.varName
 
         try {
-            // 检查变量组是否存在
+            // 检查变量组是否存在（查询任意版本以确认变量组存在）
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -467,7 +446,17 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 return Pair(0, emptyList())
             }
 
-            // 从 T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 统计总数
+            // 如果指定了 varName，则查询引用了该变量的资源列表
+            if (!varName.isNullOrBlank()) {
+                return queryVarGroupReferInfoByVarNameAllVersions(
+                    queryReq = queryReq,
+                    groupName = groupName,
+                    varName = varName
+                )
+            }
+
+            // 查询所有版本的引用
+            // 统计总数
             val totalCount = publicVarGroupReferInfoDao.countByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -475,11 +464,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 referType = queryReq.referType
             )
 
-            if (totalCount == 0) {
-                return Pair(0, emptyList())
-            }
-
-            // 从 T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 查询引用信息
+            // 查询引用信息
             val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -491,42 +476,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
             return Pair(totalCount, varGroupReferInfo)
         } catch (e: Throwable) {
-            logger.warn("Failed to query var group refer info by groupName: $groupName", e)
-            return Pair(0, emptyList())
-        }
-    }
-
-    /**
-     * 根据变量名查询引用信息（varName 有值时使用）
-     * 从 T_RESOURCE_PUBLIC_VAR_REFER_INFO 查询引用了该变量的资源
-     * 然后从 T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO 获取详细信息
-     */
-    private fun queryVarGroupReferInfoByVarName(
-        queryReq: PublicVarGroupInfoQueryReqDTO
-    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
-        val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
-        val varName = queryReq.varName!!
-
-        try {
-            // 检查变量组是否存在
-            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName
-            )
-
-            if (varGroupRecord == null) {
-                return Pair(0, emptyList())
-            }
-
-            return queryVarGroupReferInfoByVarNameAllVersions(
-                queryReq = queryReq,
-                groupName = groupName,
-                varName = varName
-            )
-        } catch (e: Throwable) {
-            logger.warn("Failed to query var group refer info by varName: $varName", e)
+            logger.warn("Failed to query var group refer info for group: $groupName", e)
             return Pair(0, emptyList())
         }
     }
@@ -622,7 +572,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         model.handlePublicVarInfo()
         val publicVarGroups = model.publicVarGroups
-
+        publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
         // 提取并处理动态变量组
         val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(publicVarGroupReferDTO, params)
 
@@ -740,6 +690,32 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
                 params = arrayOf(duplicateIds.joinToString(", "))
+            )
+        }
+    }
+
+    /**
+     * 验证变量组是否存在
+     */
+    private fun validatePublicVarGroupsExist(
+        projectId: String,
+        publicVarGroups: List<PublicVarGroupRef>
+    ) {
+        val groupNames = publicVarGroups.map { it.groupName }.distinct()
+        
+        // 批量查询变量组是否存在
+        val existingGroups = publicVarGroupDao.listGroupsNameByProjectId(
+            dslContext = dslContext,
+            projectId = projectId
+        ).toSet()
+
+        // 找出不存在的变量组
+        val notExistGroups = groupNames.filter { !existingGroups.contains(it) }
+
+        if (notExistGroups.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
+                params = arrayOf(notExistGroups.joinToString(", "))
             )
         }
     }
