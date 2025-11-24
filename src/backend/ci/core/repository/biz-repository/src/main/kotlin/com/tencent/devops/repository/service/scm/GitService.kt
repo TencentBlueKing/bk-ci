@@ -2179,7 +2179,7 @@ class GitService @Autowired constructor(
     fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
         // 根据请求条件过滤
         val filteredCommits = commits.filter { commit ->
-            GitUtils.isFilterCommitMessage(message = commit.message, prefixes = prefixes, keywords = keywords)
+            !GitUtils.isFilterCommitMessage(message = commit.message, prefixes = prefixes, keywords = keywords)
         }
 
         return filteredCommits.mapIndexed { index, commit ->
