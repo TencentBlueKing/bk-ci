@@ -103,6 +103,6 @@ object V2NotifyTemplate {
 </body>
 
 </html>
-"""
+""".replace("\n", "")
     }
 }
