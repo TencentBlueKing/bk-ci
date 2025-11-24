@@ -59,7 +59,7 @@ import jakarta.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPublicVarGroupReferenceResource {
 
-    @Operation(summary = "获取引用变量的列表（模板或流水线）")
+    @Operation(summary = "获取使用变量组的列表（模板或流水线）")
     @GET
     @Path("/{groupName}/list")
     fun listVarReferInfo(
