@@ -48,7 +48,7 @@ data class StoreBaseCreateRequest(
     @get:Schema(title = "版本号", required = true)
     var version: String = INIT_VERSION,
     @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null,
+    val extBaseInfo: MutableMap<String, Any>? = null,
     @get:Schema(title = "特性信息", required = false)
     @Valid
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,

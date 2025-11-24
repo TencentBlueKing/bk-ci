@@ -46,7 +46,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
 ): StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")
-        storeCreateRequest.baseInfo.extBaseInfo?.toMutableMap()?.let {
+        storeCreateRequest.baseInfo.extBaseInfo?.let {
             // 根据入参生成触发器task.json
             val extBaseParam = generateAtomForm(it)
             it.putAll(extBaseParam)
@@ -54,7 +54,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
     }
 
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
-        storeUpdateRequest.baseInfo.extBaseInfo?.toMutableMap()?.let {
+        storeUpdateRequest.baseInfo.extBaseInfo?.let {
             // 根据入参生成触发器task.json
             val extBaseParam = generateAtomForm(it)
             it.putAll(extBaseParam)
