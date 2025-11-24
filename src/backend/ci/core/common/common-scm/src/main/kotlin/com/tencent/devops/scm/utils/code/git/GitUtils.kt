@@ -199,6 +199,6 @@ object GitUtils {
         // 判断是否匹配关键词
         val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
 
-        return !matchesPrefix && !containsKeyword
+        return matchesPrefix || containsKeyword
     }
 }
