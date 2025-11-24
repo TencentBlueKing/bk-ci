@@ -6,7 +6,7 @@ LABEL maintainer="Tencent BlueKing Devops"
 ENV INSTALL_PATH="/data/workspace/"
 
 # nginx配置文件
-COPY ./dockerfile/nginx.conf /usr/local/openresty/nginx/nginx.conf
+COPY ./dockerfile/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 
 # 复制脚本和模板
 COPY ./ci-docker/scripts /data/workspace/scripts
