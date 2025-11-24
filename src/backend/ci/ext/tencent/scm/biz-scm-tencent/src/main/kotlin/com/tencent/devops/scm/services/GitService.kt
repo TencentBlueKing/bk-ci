@@ -173,10 +173,10 @@ class GitService @Autowired constructor(
     @Value("\${gitCI.tokenExpiresIn:#{null}}")
     private val tokenExpiresIn: Int? = 86400
 
-    @Value("\${git.queryCommitNumLimit.min:1}")
+    @Value("\${scm.git.queryCommitNumLimit.min:1}")
     private var min: Int = 1
 
-    @Value("\${git.queryCommitNumLimit.max:10}")
+    @Value("\${scm.git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
 
     private val clientId: String = gitConfig.clientId
