@@ -539,6 +539,7 @@
                 versionMap: {},
                 publishersList: [],
                 containerList: [],
+                lastVersionContent: '',
                 isZH: true
             }
         },
@@ -604,14 +605,17 @@
         },
         methods: {
             branchBlur (value) {
-                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value && !this.isCancelReRelease) {
+                if (this.atomForm.releaseType === 'HIS_VERSION_UPGRADE' && value) {
                     this.getAtomLog(value)
                 }
             },
             releaseTypeChange (value) {
-                const branch = (value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch) ? this.atomForm.branch : null
-                if (!this.isCancelReRelease) {
+                const isGetAtomLog = value === 'HIS_VERSION_UPGRADE' && this.atomForm.branch
+                const branch = isGetAtomLog ? this.atomForm.branch : null
+                if (isGetAtomLog || !this.isCancelReRelease) {
                     this.getAtomLog(branch)
+                } else {
+                    this.atomForm.versionContent = this.lastVersionContent
                 }
             },
             async getAtomLog (branch) {
@@ -697,6 +701,7 @@
                                 this.curVersion = versionInfo.version
                                 this.atomForm.releaseType = versionInfo.releaseType
                                 this.initReleaseType = versionInfo.releaseType
+                                this.lastVersionContent = versionInfo.lastVersionContent
                                 this.isCancelReRelease && (this.atomForm.versionContent = versionInfo.lastVersionContent)
                             }
                         })
