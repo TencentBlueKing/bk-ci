@@ -27,8 +27,13 @@
 
 package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.api.common.UserStoreReleaseResource
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.pojo.common.StoreReleaseInfoUpdateRequest
@@ -36,13 +41,15 @@ import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStoreReleaseResourceImpl @Autowired constructor(
-    private val storeReleaseService: StoreReleaseService
+    private val storeReleaseService: StoreReleaseService,
+    private val authPlatformApi: AuthPlatformApi
 ) : UserStoreReleaseResource {
 
     override fun createComponent(
@@ -89,5 +96,20 @@ class UserStoreReleaseResourceImpl @Autowired constructor(
 
     override fun back(userId: String, storeId: String): Result<Boolean> {
         return Result(storeReleaseService.back(userId, storeId))
+    }
+
+    override fun release(
+        userId: String,
+        storeReleaseRequest: StoreReleaseRequest
+    ): Result<Boolean> {
+        // 平台管理员可直接发布组件
+        if (!authPlatformApi.validateUserPlatformPermission(userId)) {
+            throw OperationException(
+                message = I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.ERROR_USER_NO_PLATFORM_ADMIN_PERMISSION
+                )
+            )
+        }
+        return Result(storeReleaseService.handleStoreRelease(userId, storeReleaseRequest))
     }
 }
