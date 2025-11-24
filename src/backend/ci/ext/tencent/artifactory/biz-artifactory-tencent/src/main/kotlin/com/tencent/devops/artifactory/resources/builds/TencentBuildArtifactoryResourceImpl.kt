@@ -126,7 +126,7 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
             crossBuildNo
         )
         return Result(
-            files.map { it.copy(meta = convertToStrValue(it.meta)) }
+            files.map { it.copy(meta = it.meta.mapValues { m -> m.value.toString() }) }
         )
     }
 
@@ -251,11 +251,5 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
             null
         }?.handoverFrom ?: client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-    }
-
-    private fun convertToStrValue(map: Map<String, Any>): Map<String, String> {
-        val newMap = mutableMapOf<String, String>()
-        map.forEach { (key, value) -> newMap[key] = value.toString() }
-        return newMap
     }
 }
