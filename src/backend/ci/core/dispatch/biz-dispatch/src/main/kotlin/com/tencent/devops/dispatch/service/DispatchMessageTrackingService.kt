@@ -141,10 +141,18 @@ class DispatchMessageTrackingService @Autowired constructor(
         vmSeqId: Int,
         executeCount: Int
     ): DispatchMessageTrackingRecord? {
-        val record = messageConsumeRecordDao.get(dslContext, buildId, vmSeqId, executeCount)
-            ?: return null
-
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val record = messageConsumeRecordDao.get(dslContext, buildId, vmSeqId, executeCount)
+            ?: return DispatchMessageTrackingRecord(
+                projectId = "",
+                pipelineId = "",
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                executeCount = executeCount,
+                dispatchType = "",
+                consumeStatus = DispatchMessageStatus.NOT_RECEIVED.status,
+                consumeStatusMsg = DispatchMessageStatus.NOT_RECEIVED.description
+            )
 
         return DispatchMessageTrackingRecord(
             projectId = record.projectId,
