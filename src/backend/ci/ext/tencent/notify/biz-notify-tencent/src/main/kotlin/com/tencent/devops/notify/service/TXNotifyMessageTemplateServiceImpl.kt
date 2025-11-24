@@ -157,9 +157,12 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
             }
         }
         val detailView = JsonUtil.toOrNull(
-            NotifierUtils.replaceContentParams(request.bodyParams, moaTplRecord.body),
+            moaTplRecord.body,
             object : TypeReference<List<MoaWorkItemCreateKeyAndValue>>() {}
         )
+        detailView?.forEach {
+            it.value = NotifierUtils.replaceContentParams(request.bodyParams, it.value)
+        }
 
         // 保持和complete时的id一致, 考虑不需要持久化该字段，采用可计算出的 signature 前32位作为id
         val processInstId = request.callbackData?.get("signature")?.take(32) ?: UUIDUtil.generate()
