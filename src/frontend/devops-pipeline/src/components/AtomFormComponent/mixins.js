@@ -56,6 +56,10 @@ export default {
         hidden: {
             type: Boolean,
             default: false
+        },
+        pipelineDialect: {
+            type: String,
+            default: "CLASSIC"
         }
     },
     watch: {
@@ -102,6 +106,13 @@ export default {
                 return value
             })
             return [lackParam ? '' : newUrl, queryKey]
+        },
+        getValidaVar (value) {
+            if (this.pipelineDialect === 'CLASSIC') {
+                return value.isBkVar()
+            } else {
+                return value.isBKConstraintVar()
+            }
         }
     }
 }

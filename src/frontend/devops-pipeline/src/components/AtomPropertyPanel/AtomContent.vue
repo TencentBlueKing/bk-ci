@@ -186,6 +186,7 @@
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
                         :is-instance-template="isInstanceTemplate"
+                        :pipeline-dialect="pipelineDialect"
                         class="atom-content"
                     >
                     </div>
@@ -204,6 +205,7 @@
                             :element="element"
                             :container="container"
                             :set-parent-validate="setAtomValidate"
+                            :pipeline-dialect="pipelineDialect"
                             :disabled="!editable"
                         />
                     </div>
@@ -351,6 +353,7 @@
                 'atomVersionList',
                 'isPropertyPanelVisible',
                 'showPanelType',
+                'pipelineSetting',
                 'editingElementPos'
             ]),
             projectId () {
@@ -381,6 +384,14 @@
                 const { container, elementIndex, getElement } = this
                 const element = getElement(container, elementIndex)
                 return element
+            },
+            pipelineDialect () {
+                if (this.pipelineSetting?.pipelineAsCodeSettings) {
+                    const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting?.pipelineAsCodeSettings
+                    return inheritedDialect ? projectDialect : pipelineDialect
+                } else {
+                    return 'CLASSIC'
+                }
             },
             allStepId () {
                 const stepIdList = []
