@@ -2490,9 +2490,11 @@ class PipelineRepositoryService constructor(
     }
 
     fun createBuildEnv(userId: String, projectId: String, pipelineId: String, version: Int, envName: String) {
+        val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_BUILD_ENV").data ?: 0
         pipelineBuildEnvDao.create(
             dslContext = dslContext,
             userId = userId,
+            id = id,
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,

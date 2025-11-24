@@ -49,6 +49,7 @@ class PipelineBuildEnvDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
+        id: Long,
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -58,6 +59,7 @@ class PipelineBuildEnvDao {
         with(TPipelineBuildEnv.T_PIPELINE_BUILD_ENV) {
             dslContext.insertInto(
                 this,
+                ID,
                 PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
@@ -67,6 +69,7 @@ class PipelineBuildEnvDao {
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
+                id,
                 projectId,
                 pipelineId,
                 version,

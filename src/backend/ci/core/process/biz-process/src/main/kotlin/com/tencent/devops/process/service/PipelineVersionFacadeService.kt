@@ -455,6 +455,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         baseInfo: PipelineBaseInfoCreateReq
     ): DeployPipelineResult {
         val model = initializeModel(userId, baseInfo.pipelineName)
+        model.desc = baseInfo.pipelineDesc
         val deployPipelineResult = pipelineInfoFacadeService.createPipeline(
             userId = userId,
             projectId = projectId,
