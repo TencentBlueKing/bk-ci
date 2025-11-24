@@ -66,6 +66,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "bkci.names.fullname" . }}-gateway
+          workingDir: /usr/local/openresty/nginx
           command:
             - "/bin/sh"
             - "-c"
@@ -73,7 +74,7 @@ spec:
               # 渲染前端模板
               /data/workspace/scripts/render_tpl -m . /data/workspace/templates/frontend*
               # 启动nginx
-              nginx -g "daemon off;"
+              sbin/nginx -g 'daemon off;';
           livenessProbe:
             httpGet:
               path: /healthz
