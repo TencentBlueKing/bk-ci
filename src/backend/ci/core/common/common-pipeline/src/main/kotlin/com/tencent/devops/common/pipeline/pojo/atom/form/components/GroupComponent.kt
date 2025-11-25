@@ -28,7 +28,7 @@ data class GroupComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.GROUP.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     @get:Schema(title = "子组件")
     val children: List<GroupItemComponent>? = listOf()
 ) : AtomFormComponent {

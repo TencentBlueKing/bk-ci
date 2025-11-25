@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.PROPERTY,
-    property = "type"
+    property = "@type"
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = CheckboxComponent::class, name = CheckboxComponent.classType),
@@ -36,7 +36,7 @@ interface AtomFormComponent {
     val sensitive: Boolean?
     val rely: AtomFormComponentRely?
     // 后端生成的key，前端组件没有，用于标识插件入参对应的字段
-    val key: String
+    val key: String?
 }
 
 @Schema(title = "插件表单-条件配置")

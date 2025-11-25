@@ -28,7 +28,7 @@ data class CheckboxListComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.ATOM_CHECKBOX_LIST.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     val list: List<CheckBoxListComponentOption>? = null
 ) : AtomFormComponent {
     companion object {

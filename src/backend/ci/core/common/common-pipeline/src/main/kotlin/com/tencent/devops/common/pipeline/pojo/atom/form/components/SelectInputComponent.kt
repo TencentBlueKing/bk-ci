@@ -28,7 +28,7 @@ data class SelectInputComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.SELECT_INPUT.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     @get:Schema(description = "下拉选配置")
     val optionsConf: SelectInputComponentConfig? = null,
     @get:Schema(description = "下拉选选项集合")

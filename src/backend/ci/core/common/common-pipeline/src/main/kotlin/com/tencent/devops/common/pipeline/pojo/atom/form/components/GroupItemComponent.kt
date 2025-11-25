@@ -27,7 +27,7 @@ data class GroupItemComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.GROUP_ITEM.value,
     @get:Schema(title = "组件key")
-    override val key: String,
+    override val key: String? = null,
     @get:Schema(title = "子组件标题")
     val prependText: String,
     @get:Schema(title = "子组件标识")

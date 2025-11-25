@@ -28,7 +28,7 @@ data class EnumInputComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.ENUM_INPUT.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     @get:Schema(description = "单选框选项集合")
     val list: List<EnumInputOptions>? = listOf(),
     @get:Schema(description = "每行展示个数")

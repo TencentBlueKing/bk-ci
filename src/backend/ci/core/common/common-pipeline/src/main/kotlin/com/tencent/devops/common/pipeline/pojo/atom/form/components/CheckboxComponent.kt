@@ -29,7 +29,7 @@ data class CheckboxComponent(
     @get:Schema(title = "组件类型", description = "必填，平台提供常用的输入组件，根据不同组件有不同展现")
     override val type: String = AtomFormComponentType.ATOM_CHECKBOX.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     val text: String? = null,
 ) : AtomFormComponent {
     companion object {

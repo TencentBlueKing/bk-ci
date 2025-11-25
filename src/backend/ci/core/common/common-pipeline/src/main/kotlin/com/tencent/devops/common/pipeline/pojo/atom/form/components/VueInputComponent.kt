@@ -28,7 +28,7 @@ data class VueInputComponent(
     override val rely: AtomFormComponentRely? = null,
     override val type: String = AtomFormComponentType.VUE_INPUT.value,
     @JsonIgnore
-    override val key: String,
+    override val key: String? = null,
     val inputType: String? = null
 ) : AtomFormComponent {
     companion object {

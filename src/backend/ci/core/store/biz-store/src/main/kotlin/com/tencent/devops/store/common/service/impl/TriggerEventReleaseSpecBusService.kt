@@ -206,7 +206,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
                 null
             }?.let { eventConfig ->
                 val atomForm = TriggerEventConverter.convertAtomForm(eventConfig)
-                map[KEY_ATOM_FORM] = JsonUtil.toJson(atomForm)
+                map[KEY_ATOM_FORM] = JsonUtil.toJson(atomForm, false)
             }
         }
         return map
