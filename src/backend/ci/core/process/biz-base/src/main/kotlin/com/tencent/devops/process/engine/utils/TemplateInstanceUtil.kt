@@ -123,7 +123,8 @@ object TemplateInstanceUtil {
             staticViews = staticViews,
             templateId = templateResource.templateId,
             template = template,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = overrideTemplateField,
+            publicVarGroups = templateModel.publicVarGroups
         )
     }
 
