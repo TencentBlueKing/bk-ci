@@ -31,12 +31,7 @@ class TriggerEventService @Autowired constructor(
             storeType = StoreTypeEnum.TRIGGER_EVENT
         ) ?: throw InvalidParamException("storeId[$storeId] not found")
         val atomForm = detailInfo.extData?.get(KEY_ATOM_FORM)?.let {
-            it as String
-            if (it.isNotBlank()) {
-                JsonUtil.to(it, AtomForm::class.java)
-            } else {
-                null
-            }
+            JsonUtil.mapTo(it as Map<String, Any>, AtomForm::class.java)
         }
         return atomForm
     }
@@ -50,7 +45,7 @@ class TriggerEventService @Autowired constructor(
             jobType = null,
             keyword = null,
             os = null,
-            recommendFlag = false,
+            recommendFlag = null,
             serviceScope = null
         ).toInt()
         val componentCount = storeComponentQueryService.getComponentCount(
