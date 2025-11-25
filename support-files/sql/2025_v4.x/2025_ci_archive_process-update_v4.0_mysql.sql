@@ -50,7 +50,7 @@ BEGIN
                     AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
     ALTER TABLE T_PIPELINE_SETTING
         ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
-        COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有者/管理员可取消';
+        COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -60,7 +60,7 @@ BEGIN
                     AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
         ALTER TABLE T_PIPELINE_SETTING_VERSION
             ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
-            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有者/管理员可取消';
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
     COMMIT;
