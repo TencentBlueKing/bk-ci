@@ -17,7 +17,7 @@
             <span
                 v-if="isRunning"
                 v-bk-tooltips="{
-                    disabled: canCancelBuild !== false,
+                    disabled: !(canExecute && canCancelBuild === false),
                     content: $t('cancelBuildPermTip')
                 }"
             >
@@ -27,6 +27,16 @@
                     outline
                     theme="warning"
                     @click="handleCancel"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: RESOURCE_TYPE.PIPELINE,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                 >
                     {{ $t("cancel") }}
                 </bk-button>
