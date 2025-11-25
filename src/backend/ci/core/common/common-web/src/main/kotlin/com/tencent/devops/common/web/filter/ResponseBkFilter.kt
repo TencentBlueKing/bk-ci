@@ -25,46 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.context
+package com.tencent.devops.common.web.filter
 
-/**
- * Channel上下文管理，用于统一管理请求头中的X-DEVOPS-CHANNEL信息
- * 支持HTTP请求、跨服务调用、MQ消息、异步调用等场景
- */
-object ChannelContext {
-    private val channelThreadLocal = ThreadLocal<String?>()
+import com.tencent.devops.common.api.context.ChannelContext
+import com.tencent.devops.common.web.RequestFilter
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerResponseContext
+import jakarta.ws.rs.container.ContainerResponseFilter
+import jakarta.ws.rs.ext.Provider
+
+@Provider
+@RequestFilter
+class ResponseBkFilter : ContainerResponseFilter {
     
-    /**
-     * 从ThreadLocal获取Channel（HTTP请求场景）
-     */
-    fun getChannel(): String? {
-        return channelThreadLocal.get()
-    }
-    
-    /**
-     * 设置Channel（用于显式传递，跨服务调用、MQ等场景）
-     */
-    fun setChannel(channel: String?) {
-        channelThreadLocal.set(channel)
-    }
-    
-    /**
-     * 清除ThreadLocal
-     */
-    fun clear() {
-        channelThreadLocal.remove()
-    }
-    
-    /**
-     * 在指定上下文中执行代码（用于异步、跨线程场景）
-     */
-    fun <T> withChannel(channel: String?, block: () -> T): T {
-        val oldChannel = getChannel()
-        try {
-            setChannel(channel)
-            return block()
-        } finally {
-            setChannel(oldChannel)
-        }
+    override fun filter(
+        requestContext: ContainerRequestContext,
+        responseContext: ContainerResponseContext
+    ) {
+        // 删除渠道ThreadLocal变量
+        ChannelContext.clear()
     }
 }

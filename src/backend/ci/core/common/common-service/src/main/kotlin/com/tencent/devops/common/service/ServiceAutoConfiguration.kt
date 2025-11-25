@@ -29,7 +29,6 @@ package com.tencent.devops.common.service
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.filter.RequestChannelFilter
-import com.tencent.devops.common.service.filter.ResponseChannelFilter
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.prometheus.UndertowThreadMetrics
@@ -75,9 +74,6 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun requestChannelFilter() = RequestChannelFilter()
-
-    @Bean
-    fun responseChannelFilter() = ResponseChannelFilter()
 
     @Bean
     fun bkTimedAspect(meterRegistry: MeterRegistry) = BkTimedAspect(meterRegistry)

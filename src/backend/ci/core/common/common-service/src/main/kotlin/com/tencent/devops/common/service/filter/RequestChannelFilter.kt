@@ -27,9 +27,7 @@
 
 package com.tencent.devops.common.service.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
-import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import jakarta.servlet.Filter
 import jakarta.servlet.FilterChain
@@ -62,7 +60,6 @@ class RequestChannelFilter : Filter {
             else -> null
         }
         channel?.let { request.setAttribute(REQUEST_CHANNEL, channel) }
-        ChannelContext.setChannel(request.getHeader(AUTH_HEADER_DEVOPS_CHANNEL))
         chain.doFilter(request, response)
     }
 
