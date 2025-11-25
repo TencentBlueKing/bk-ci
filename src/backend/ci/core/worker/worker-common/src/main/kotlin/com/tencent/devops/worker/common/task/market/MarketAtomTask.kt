@@ -465,6 +465,23 @@ open class MarketAtomTask : ITask() {
         val fileCacheKey = "${atomData.atomCode}-${atomData.version}-$atomExecuteFileName"
         bkDiskLruFileCache.get(fileCacheKey, atomExecuteFile)
         try {
+            // 新增：插件缓存文件本地缓存探测功能
+            if (atomExecuteFile.exists() && atomExecuteFile.length() > 0) {
+                // 缓存文件存在，检查完整性
+                val isValid = verifyCachedFile(atomExecuteFile, atomData.shaContent)
+                if (!isValid) {
+                    // 文件损坏，删除并从缓存中移除
+                    logger.warn(
+                        "Cached atom file is corrupted! " +
+                                "atomCode=${atomData.atomCode}, version=${atomData.version}, " +
+                                "file=${atomExecuteFile.absolutePath}"
+                    )
+                    atomExecuteFile.delete()
+                    bkDiskLruFileCache.remove(fileCacheKey)
+                    logger.info("Corrupted cache file deleted, will re-download from repo")
+                }
+            }
+
             if (!atomExecuteFile.exists() || atomExecuteFile.length() < 1) {
                 logger.info("local file[$atomExecuteFileName] is not exist,start downloading from the repo!")
                 val cacheFlag = atomData.atomStatus !in setOf(
@@ -1131,6 +1148,25 @@ open class MarketAtomTask : ITask() {
             )
         }
         return context
+    }
+
+    private fun verifyCachedFile(file: File, expectedSha1: String?): Boolean {
+        if (expectedSha1.isNullOrBlank()) {
+            // 没有SHA1信息，无法校验，认为有效
+            return true
+        }
+        return try {
+            val fileSha1 = file.inputStream().use { ShaUtils.sha1InputStream(it) }
+            val isValid = fileSha1 == expectedSha1
+            if (!isValid) {
+                logger.warn("SHA1 mismatch! expected=$expectedSha1, actual=$fileSha1")
+            }
+            isValid
+        } catch (e: Exception) {
+            // 校验过程出错（如文件读取失败），认为文件损坏
+            logger.warn("Failed to verify cached file SHA1", e)
+            false
+        }
     }
 
     companion object {
