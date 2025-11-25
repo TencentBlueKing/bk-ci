@@ -186,78 +186,65 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
      * 格式：新增变量: var1、var2，新增常量: const1、const2，修改变量: var3、var4，删除变量: var5
      */
     private fun combineReleaseContents(records: List<PublicVarReleaseDO>): String {
-        val addedVariables = mutableListOf<String>()
-        val addedConstants = mutableListOf<String>()
-        val updatedVariables = mutableListOf<String>()
-        val updatedConstants = mutableListOf<String>()
-        val deletedVariables = mutableListOf<String>()
-        val deletedConstants = mutableListOf<String>()
+        // 使用 Map 结构来组织变量分类，key 为 "操作类型_变量类型"
+        val varMap = mutableMapOf<String, MutableList<String>>()
 
+        // 解析所有记录，按操作类型和变量类型分类
         records.forEach { record ->
-            try {
-                val contentMap = JsonUtil.toMap(record.content)
-                val operate = contentMap["operate"]?.toString() ?: return@forEach
-                val varName = contentMap["varName"]?.toString() ?: return@forEach
-                val type = contentMap["type"]?.toString() ?: "VARIABLE"
+            parseAndClassifyRecord(record, varMap)
+        }
 
-                when (operate) {
-                    OperateTypeEnum.CREATE.name -> {
-                        if (type == PublicVarTypeEnum.CONSTANT.name) {
-                            addedConstants.add(varName)
-                        } else {
-                            addedVariables.add(varName)
-                        }
-                    }
-                    OperateTypeEnum.UPDATE.name -> {
-                        if (type == PublicVarTypeEnum.CONSTANT.name) {
-                            updatedConstants.add(varName)
-                        } else {
-                            updatedVariables.add(varName)
-                        }
-                    }
-                    OperateTypeEnum.DELETE.name -> {
-                        if (type == PublicVarTypeEnum.CONSTANT.name) {
-                            deletedConstants.add(varName)
-                        } else {
-                            deletedVariables.add(varName)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Failed to parse content: ${record.content}", e)
+        // 构建输出文本
+        return buildOutputText(varMap)
+    }
+
+    /**
+     * 解析单条记录并分类到 varMap 中
+     */
+    private fun parseAndClassifyRecord(
+        record: PublicVarReleaseDO,
+        varMap: MutableMap<String, MutableList<String>>
+    ) {
+        try {
+            val contentMap = JsonUtil.toMap(record.content)
+            val operate = contentMap["operate"]?.toString() ?: return
+            val varName = contentMap["varName"]?.toString() ?: return
+            val type = contentMap["type"]?.toString() ?: PublicVarTypeEnum.VARIABLE.name
+
+            val key = "${operate}_${type}"
+            varMap.getOrPut(key) { mutableListOf() }.add(varName)
+        } catch (e: Exception) {
+            logger.warn("Failed to parse content: ${record.content}", e)
+        }
+    }
+
+    /**
+     * 构建输出文本
+     */
+    private fun buildOutputText(varMap: Map<String, List<String>>): String {
+        // 提前获取国际化文本，避免重复调用
+        val createText = OperateTypeEnum.CREATE.getI18n()
+        val updateText = OperateTypeEnum.UPDATE.getI18n()
+        val deleteText = OperateTypeEnum.DELETE.getI18n()
+        val variableText = PublicVarTypeEnum.VARIABLE.getI18n()
+        val constantText = PublicVarTypeEnum.CONSTANT.getI18n()
+
+        // 定义输出顺序和对应的文本
+        val outputOrder = listOf(
+            Triple("${OperateTypeEnum.CREATE.name}_${PublicVarTypeEnum.VARIABLE.name}", createText, variableText),
+            Triple("${OperateTypeEnum.CREATE.name}_${PublicVarTypeEnum.CONSTANT.name}", createText, constantText),
+            Triple("${OperateTypeEnum.UPDATE.name}_${PublicVarTypeEnum.VARIABLE.name}", updateText, variableText),
+            Triple("${OperateTypeEnum.UPDATE.name}_${PublicVarTypeEnum.CONSTANT.name}", updateText, constantText),
+            Triple("${OperateTypeEnum.DELETE.name}_${PublicVarTypeEnum.VARIABLE.name}", deleteText, variableText),
+            Triple("${OperateTypeEnum.DELETE.name}_${PublicVarTypeEnum.CONSTANT.name}", deleteText, constantText)
+        )
+
+        // 按顺序构建输出文本，只包含非空的变量列表
+        return outputOrder.mapNotNull { (key, operateText, typeText) ->
+            varMap[key]?.takeIf { it.isNotEmpty() }?.let { varNames ->
+                "$operateText$typeText: ${varNames.joinToString("、")}"
             }
-        }
-
-        val constantDesc = PublicVarTypeEnum.CONSTANT.getI18n()
-        val variableDesc = PublicVarTypeEnum.VARIABLE.getI18n()
-
-        val parts = mutableListOf<String>()
-        if (addedVariables.isNotEmpty()) {
-            val desc = OperateTypeEnum.CREATE.getI18n()
-            parts.add("${desc}${variableDesc}: ${addedVariables.joinToString("、")}")
-        }
-        if (addedConstants.isNotEmpty()) {
-            val desc = OperateTypeEnum.CREATE.getI18n()
-            parts.add("${desc}${constantDesc}: ${addedConstants.joinToString("、")}")
-        }
-        if (updatedVariables.isNotEmpty()) {
-            val desc = OperateTypeEnum.UPDATE.getI18n()
-            parts.add("${desc}${variableDesc}: ${updatedVariables.joinToString("、")}")
-        }
-        if (updatedConstants.isNotEmpty()) {
-            val desc = OperateTypeEnum.UPDATE.getI18n()
-            parts.add("${desc}${constantDesc}: ${updatedConstants.joinToString("、")}")
-        }
-        if (deletedVariables.isNotEmpty()) {
-            val desc = OperateTypeEnum.DELETE.getI18n()
-            parts.add("${desc}${variableDesc}: ${deletedVariables.joinToString("、")}")
-        }
-        if (deletedConstants.isNotEmpty()) {
-            val desc = OperateTypeEnum.DELETE.getI18n()
-            parts.add("${desc}${constantDesc}: ${deletedConstants.joinToString("、")}")
-        }
-
-        return parts.joinToString("，")
+        }.joinToString("，")
     }
 
     /**
