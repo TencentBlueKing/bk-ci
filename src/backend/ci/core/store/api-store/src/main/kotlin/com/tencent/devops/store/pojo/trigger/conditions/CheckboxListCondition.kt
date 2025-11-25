@@ -1,7 +1,7 @@
-package com.tencent.devops.store.pojo.event.conditions
+package com.tencent.devops.store.pojo.trigger.conditions
 
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
-import com.tencent.devops.store.pojo.event.enums.ConditionOperator
+import com.tencent.devops.store.pojo.trigger.enums.ConditionOperator
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "触发条件-多选框")

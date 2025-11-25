@@ -1,4 +1,4 @@
-package com.tencent.devops.store.event.utils
+package com.tencent.devops.store.trigger.utils
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
@@ -14,16 +14,16 @@ import com.tencent.devops.common.pipeline.pojo.atom.form.components.SelectInputC
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.SelectInputComponentConfig
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.VueInputComponent
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
-import com.tencent.devops.store.pojo.event.EventFieldMappingItem
-import com.tencent.devops.store.pojo.event.TriggerEventConfig
-import com.tencent.devops.store.pojo.event.conditions.CheckboxListCondition
-import com.tencent.devops.store.pojo.event.conditions.ConditionOption
-import com.tencent.devops.store.pojo.event.conditions.EnumInputCondition
-import com.tencent.devops.store.pojo.event.conditions.InputCondition
-import com.tencent.devops.store.pojo.event.conditions.SelectCondition
-import com.tencent.devops.store.pojo.event.conditions.TriggerCondition
-import com.tencent.devops.store.pojo.event.enums.ConditionOperator
-import com.tencent.devops.store.pojo.event.enums.MappingSource
+import com.tencent.devops.store.pojo.trigger.EventFieldMappingItem
+import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
+import com.tencent.devops.store.pojo.trigger.conditions.CheckboxListCondition
+import com.tencent.devops.store.pojo.trigger.conditions.ConditionOption
+import com.tencent.devops.store.pojo.trigger.conditions.EnumInputCondition
+import com.tencent.devops.store.pojo.trigger.conditions.InputCondition
+import com.tencent.devops.store.pojo.trigger.conditions.SelectCondition
+import com.tencent.devops.store.pojo.trigger.conditions.TriggerCondition
+import com.tencent.devops.store.pojo.trigger.enums.ConditionOperator
+import com.tencent.devops.store.pojo.trigger.enums.MappingSource
 
 object TriggerEventConverter {
     fun convertAtomForm(triggerEventConfig: TriggerEventConfig): AtomForm {

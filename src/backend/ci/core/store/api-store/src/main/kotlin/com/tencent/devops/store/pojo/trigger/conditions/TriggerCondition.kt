@@ -1,10 +1,10 @@
-package com.tencent.devops.store.pojo.event.conditions
+package com.tencent.devops.store.pojo.trigger.conditions
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
-import com.tencent.devops.store.pojo.event.enums.ConditionOperator
+import com.tencent.devops.store.pojo.trigger.enums.ConditionOperator
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,

@@ -1,6 +1,6 @@
-package com.tencent.devops.store.pojo.event
+package com.tencent.devops.store.pojo.trigger
 
-import com.tencent.devops.store.pojo.event.conditions.TriggerCondition
+import com.tencent.devops.store.pojo.trigger.conditions.TriggerCondition
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "触发事件基础信息")

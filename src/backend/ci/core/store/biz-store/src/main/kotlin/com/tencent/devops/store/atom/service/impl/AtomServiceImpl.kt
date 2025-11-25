@@ -1443,4 +1443,32 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
+
+    override fun getPipelineAtomCount(
+        userId: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        projectCode: String,
+        category: String?,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean,
+        fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?
+    ) = atomDao.getPipelineAtomCount(
+        dslContext = dslContext,
+        serviceScope = serviceScope,
+        jobType = jobType,
+        os = os,
+        projectCode = projectCode,
+        category = category,
+        classifyId = classifyId,
+        recommendFlag = recommendFlag,
+        keyword = keyword,
+        fitOsFlag = fitOsFlag,
+        queryProjectAtomFlag = queryProjectAtomFlag,
+        queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+    )
 }

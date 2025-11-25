@@ -1,6 +1,6 @@
-package com.tencent.devops.store.pojo.event
+package com.tencent.devops.store.pojo.trigger
 
-import com.tencent.devops.store.pojo.event.enums.MappingSource
+import com.tencent.devops.store.pojo.trigger.enums.MappingSource
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**

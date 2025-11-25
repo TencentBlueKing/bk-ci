@@ -195,3 +195,6 @@ const val BK_ATOM_QUALITY_INDEX = "atomQualityIndex" // 插件质量指标
 const val BK_STORE_TRUSTWORTHY_INDEX = "storeTrustworthyIndex" // 可信组件指标
 const val BK_STORE_TRUSTWORTHY_TIPS = "storeTrustworthyTips" // 可信组件，已纳入工具保障组治理范围
 const val USE_REPO_COMMITS_FOR_RELEASE_NOTES = "useRepoCommitsForReleaseNotes"
+const val BK_STORE_CLOUD_DESKTOP_TRIGGER = "storeCloudDesktopTrigger" // 云桌面应用触发器
+const val BK_STORE_COMMON_TRIGGER = "storeCommonTrigger" // 通用触发器
+const val BK_STORE_ALL_TRIGGER = "storeAllTrigger" // 全部触发器

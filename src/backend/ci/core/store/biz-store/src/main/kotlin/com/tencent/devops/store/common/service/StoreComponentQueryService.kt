@@ -138,4 +138,12 @@ interface StoreComponentQueryService {
         storeCode: String,
         version: String
     ): Result<String?>
+
+    /**
+     * 获取满足条件的组件数量
+     */
+    fun getComponentCount(
+        userId: String,
+        queryComponentsParam: QueryComponentsParam
+    ): Int
 }

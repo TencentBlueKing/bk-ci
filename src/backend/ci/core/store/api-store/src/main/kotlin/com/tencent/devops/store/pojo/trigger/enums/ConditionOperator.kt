@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.event.enums;
+package com.tencent.devops.store.pojo.trigger.enums;
 
 import io.swagger.v3.oas.annotations.media.Schema
 

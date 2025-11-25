@@ -22,7 +22,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
-import com.tencent.devops.store.event.utils.TriggerEventConverter
+import com.tencent.devops.store.trigger.utils.TriggerEventConverter
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -34,7 +34,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
-import com.tencent.devops.store.pojo.event.TriggerEventConfig
+import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

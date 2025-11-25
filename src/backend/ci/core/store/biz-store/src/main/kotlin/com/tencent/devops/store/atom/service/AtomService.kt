@@ -219,4 +219,22 @@ interface AtomService {
      * @return 插件默认版本号
      */
     fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
+
+    /**
+     * 获取满足条件的插件数量
+     */
+    fun getPipelineAtomCount(
+        userId: String,
+        serviceScope: String?,
+        jobType: String?,
+        os: String?,
+        projectCode: String,
+        category: String? = AtomCategoryEnum.TASK.name,
+        classifyId: String?,
+        recommendFlag: Boolean?,
+        keyword: String?,
+        queryProjectAtomFlag: Boolean = true,
+        fitOsFlag: Boolean? = true,
+        queryFitAgentBuildLessAtomFlag: Boolean? = true
+    ): Long
 }
