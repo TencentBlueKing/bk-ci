@@ -73,7 +73,9 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("syntax-dialect")
     override var syntaxDialect: String? = null,
     @JsonProperty("fail-if-variable-invalid")
-    override var failIfVariableInvalid: Boolean? = null
+    override var failIfVariableInvalid: Boolean? = null,
+    @JsonProperty("cancel-policy")
+    override var cancelPolicy: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -97,7 +99,8 @@ data class PreTemplateScriptBuildYamlV3Parser(
             disablePipeline = disablePipeline,
             syntaxDialect = syntaxDialect,
             failIfVariableInvalid = failIfVariableInvalid,
-            extends = extends
+            extends = extends,
+            cancelPolicy = cancelPolicy
         )
     }
 

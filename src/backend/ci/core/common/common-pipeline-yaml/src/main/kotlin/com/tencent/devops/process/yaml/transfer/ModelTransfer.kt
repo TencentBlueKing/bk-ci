@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
@@ -122,7 +123,8 @@ class ModelTransfer @Autowired constructor(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
             ),
-            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false)
+            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
+            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy)
         )
     }
 
@@ -331,6 +333,8 @@ class ModelTransfer @Autowired constructor(
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
             modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
+        yaml.cancelPolicy =
+            modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }

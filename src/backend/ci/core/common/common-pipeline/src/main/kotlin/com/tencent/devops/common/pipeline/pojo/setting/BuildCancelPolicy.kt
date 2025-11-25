@@ -37,10 +37,21 @@ enum class BuildCancelPolicy(val value: String) {
     @Schema(title = "仅限触发人或拥有流水线管理权限的用户可取消")
     RESTRICTED("RESTRICTED");
 
+    fun yamlCode() = when (this) {
+        EXECUTE_PERMISSION -> "broad"
+        RESTRICTED -> "restricted"
+    }
+
     companion object {
         fun parse(value: String?): BuildCancelPolicy {
             return when (value) {
                 RESTRICTED.value -> RESTRICTED
+                else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
+            }
+        }
+        fun codeParse(value: String?): BuildCancelPolicy {
+            return when (value) {
+                "restricted" -> RESTRICTED
                 else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
             }
         }
