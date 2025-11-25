@@ -45,12 +45,13 @@ class RemotedevBkRepoClient @Autowired constructor(
         region: BkRepoRegion,
         projectId: String,
         repoName: String,
-        userId: String
+        userId: String,
+        media: Boolean
     ): String? {
-        val config = bkRepoConfig.getRegionConfig(region)
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val request = Request.Builder()
             .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
@@ -59,19 +60,19 @@ class RemotedevBkRepoClient @Autowired constructor(
         return doRequest(config, request).resolveResponse<Response<String>>()?.data
     }
 
-    fun existProject(region: BkRepoRegion, projectId: String): Boolean? {
-        val config = bkRepoConfig.getRegionConfig(region)
+    fun existProject(region: BkRepoRegion, projectId: String, media: Boolean): Boolean? {
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val url = "${config.url}/repository/api/project/exist/$projectId"
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, BKREPO_ROOT_USERID).toHeaders())
+            .headers(getCommonHeaders(region, BKREPO_ROOT_USERID, media).toHeaders())
             .get()
             .build()
         return doRequest(config, request).resolveResponse<Response<Boolean?>>()!!.data
     }
 
-    fun createProject(region: BkRepoRegion, userId: String, projectId: String) {
-        val config = bkRepoConfig.getRegionConfig(region)
+    fun createProject(region: BkRepoRegion, userId: String, projectId: String, media: Boolean) {
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val requestData = CreateProjectData(
             name = projectId,
             displayName = projectId,
@@ -79,7 +80,7 @@ class RemotedevBkRepoClient @Autowired constructor(
         )
         val request = Request.Builder()
             .url("${config.url}/repository/api/project/create")
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(config, request).resolveResponse<Response<Void>>()
@@ -108,13 +109,14 @@ class RemotedevBkRepoClient @Autowired constructor(
     fun nodeSearch(
         region: BkRepoRegion,
         userId: String,
-        body: NodeSearchBody
+        body: NodeSearchBody,
+        media: Boolean
     ): Page<BkRepoNodeDetail>? {
-        val config = bkRepoConfig.getRegionConfig(region)
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val url = "${config.url}/repository/api/node/search"
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(objectMapper.writeValueAsString(body).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(config, request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
@@ -287,8 +289,8 @@ class RemotedevBkRepoClient @Autowired constructor(
         return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
     }
 
-    private fun getCommonHeaders(region: BkRepoRegion, userId: String): MutableMap<String, String> {
-        val config = bkRepoConfig.getRegionConfig(region)
+    private fun getCommonHeaders(region: BkRepoRegion, userId: String, media: Boolean = false): MutableMap<String, String> {
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = config.headerUserAuth
         headers["X-BKREPO-UID"] = userId
