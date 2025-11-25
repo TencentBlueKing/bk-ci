@@ -426,15 +426,13 @@ func (w *EnvPollingWatcher) Stop() {
 var watcher *EnvPollingWatcher = nil
 
 func InitEnvPolling() {
-	pollInterval := 3 * time.Second
-
-	watcher = NewEnvPollingWatcher(pollInterval)
-
+	watcher = NewEnvPollingWatcher(3 * time.Second)
 	if err := watcher.Start(); err != nil {
 		logs.WithError(err).Error("start env polling error")
 		return
 	}
 	defer watcher.Stop()
+	logs.Info("env polling stop")
 }
 
 func FetchEnvFromPolling() map[string]string {
