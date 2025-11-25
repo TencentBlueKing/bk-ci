@@ -1,5 +1,7 @@
 package com.tencent.devops.common.pipeline.pojo.atom.form.components
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentRelyOperation
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -7,6 +9,20 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 插件输入项组件接口，定义组件通用配置属性
  */
 @Schema(title = "插件表单-字段组件")
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes(
+    JsonSubTypes.Type(value = CheckboxComponent::class, name = CheckboxComponent.classType),
+    JsonSubTypes.Type(value = CheckboxListComponent::class, name = CheckboxListComponent.classType),
+    JsonSubTypes.Type(value = EnumInputComponent::class, name = EnumInputComponent.classType),
+    JsonSubTypes.Type(value = GroupComponent::class, name = GroupComponent.classType),
+    JsonSubTypes.Type(value = GroupItemComponent::class, name = GroupItemComponent.classType),
+    JsonSubTypes.Type(value = SelectInputComponent::class, name = SelectInputComponent.classType),
+    JsonSubTypes.Type(value = VueInputComponent::class, name = VueInputComponent.classType)
+)
 interface AtomFormComponent {
     val label: String?
     val type: String

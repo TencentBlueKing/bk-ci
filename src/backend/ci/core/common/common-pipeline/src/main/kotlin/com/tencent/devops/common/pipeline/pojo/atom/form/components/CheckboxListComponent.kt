@@ -30,7 +30,11 @@ data class CheckboxListComponent(
     @JsonIgnore
     override val key: String,
     val list: List<CheckBoxListComponentOption>? = null
-) : AtomFormComponent
+) : AtomFormComponent {
+    companion object {
+        const val classType = "atom-checkbox-list"
+    }
+}
 
 data class CheckBoxListComponentOption(
     @get:Schema(description = "选项ID")

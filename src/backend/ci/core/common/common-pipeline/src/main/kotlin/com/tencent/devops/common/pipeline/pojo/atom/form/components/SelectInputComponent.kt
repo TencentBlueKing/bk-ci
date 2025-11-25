@@ -33,7 +33,11 @@ data class SelectInputComponent(
     val optionsConf: SelectInputComponentConfig? = null,
     @get:Schema(description = "下拉选选项集合")
     val options: List<SelectInputComponentOption>? = null
-) : AtomFormComponent
+) : AtomFormComponent {
+    companion object {
+        const val classType = "select-input"
+    }
+}
 
 /**
  * select-input/devops-select组件的配置参数

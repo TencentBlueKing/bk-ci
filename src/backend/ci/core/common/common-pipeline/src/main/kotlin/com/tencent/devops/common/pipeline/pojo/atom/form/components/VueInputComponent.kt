@@ -34,5 +34,6 @@ data class VueInputComponent(
     companion object {
         // 当输入的字符串希望展示成******方式时使用，值为 password
         const val INPUT_TYPE_PASSWORD = "password"
+        const val classType = "vuex-input"
     }
 }

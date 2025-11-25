@@ -1,6 +1,5 @@
 package com.tencent.devops.common.pipeline.pojo.atom.form.components
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -48,4 +47,8 @@ data class GroupItemComponent(
         key = key,
         component = component
     )
+
+    companion object {
+        const val classType = "groupItem"
+    }
 }

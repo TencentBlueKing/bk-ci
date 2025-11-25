@@ -33,7 +33,11 @@ data class EnumInputComponent(
     val list: List<EnumInputOptions>? = listOf(),
     @get:Schema(description = "每行展示个数")
     val lineNumber: Int? = null
-) : AtomFormComponent
+) : AtomFormComponent {
+    companion object {
+        const val classType = "enum-input"
+    }
+}
 
 data class EnumInputOptions(
     val value: String,

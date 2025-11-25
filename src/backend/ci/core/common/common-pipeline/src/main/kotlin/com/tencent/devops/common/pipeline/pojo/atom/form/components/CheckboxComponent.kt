@@ -31,4 +31,8 @@ data class CheckboxComponent(
     @JsonIgnore
     override val key: String,
     val text: String? = null,
-) : AtomFormComponent
+) : AtomFormComponent {
+    companion object {
+        const val classType = "atom-checkbox"
+    }
+}

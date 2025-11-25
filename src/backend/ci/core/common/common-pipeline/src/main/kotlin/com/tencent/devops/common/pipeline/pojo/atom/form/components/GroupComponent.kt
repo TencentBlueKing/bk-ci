@@ -31,4 +31,8 @@ data class GroupComponent(
     override val key: String,
     @get:Schema(title = "子组件")
     val children: List<GroupItemComponent>? = listOf()
-) : AtomFormComponent
+) : AtomFormComponent {
+    companion object {
+        const val classType = "group"
+    }
+}
