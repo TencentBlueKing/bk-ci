@@ -9,8 +9,8 @@ object ThumbnailRedisKeys {
     const val THUMBNAIL_UPLOAD_PREFIX = "remotedev:thumbnail:upload:"
     const val THUMBNAIL_UPLOAD_LIMIT_PREFIX = "remotedev:thumbnail:upload-limit:"
     const val THUMBNAIL_TTL_SECONDS = 600L // 10分钟
-    const val THUMBNAIL_UPLOAD_LIMIT_TTL_SECONDS = 2L // 2秒
-    const val THUMBNAIL_DOWNLOAD_LIMIT_TTL_SECONDS = 10L // 2秒
+    const val THUMBNAIL_UPLOAD_LIMIT_TTL_SECONDS = 1L // 2秒
+    const val THUMBNAIL_DOWNLOAD_LIMIT_TTL_SECONDS = 10L // 10秒
 }
 
 /**
