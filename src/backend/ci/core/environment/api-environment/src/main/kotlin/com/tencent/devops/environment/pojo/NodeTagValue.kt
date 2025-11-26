@@ -103,3 +103,12 @@ data class NodeTagUpdateReqValue(
     @get:Schema(title = "节点值名")
     val tagValueName: String
 )
+
+@Schema(title = "节点标签和动态环境")
+data class NodeTagAndDynEnv(
+    @get:Schema(title = "标签")
+    val tags: List<NodeTag>,
+    // TODO: issue-12354 等待动态环境实现
+    @get:Schema(title = "动态环境")
+    val envs: List<String>
+)
