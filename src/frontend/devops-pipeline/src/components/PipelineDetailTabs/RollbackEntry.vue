@@ -257,7 +257,7 @@
                     version,
                 }
                 const query = {
-                    ...(rollback
+                    ...(rollback || this.isRollback
                         ? {
                             type: 'rollback',
                             versionName: this.versionName,
