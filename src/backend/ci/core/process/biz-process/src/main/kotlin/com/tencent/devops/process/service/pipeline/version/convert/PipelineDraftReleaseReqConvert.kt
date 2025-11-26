@@ -77,7 +77,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             }
             logger.info(
                 "Start to convert draft release request|$projectId|$pipelineId|" +
-                        "$version|$enablePac|$targetAction|${yamlInfo?.repoHashId}|${yamlInfo?.filePath}|$targetBranch"
+                    "$version|$enablePac|$targetAction|${yamlInfo?.repoHashId}|${yamlInfo?.filePath}|$targetBranch"
             )
             val pipelineInfo = pipelineInfoService.getPipelineInfo(
                 projectId = projectId,
@@ -167,7 +167,8 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 versionStatus = versionStatus,
                 branchName = branchName,
                 versionAction = PipelineVersionAction.RELEASE_DRAFT,
-                repoHashId = yamlInfo?.repoHashId
+                repoHashId = yamlInfo?.repoHashId,
+                description = description
             ).copy(
                 yamlFileInfo = yamlInfo?.let { PipelineYamlFileInfo(it) },
                 enablePac = enablePac,
