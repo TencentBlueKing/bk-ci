@@ -14,7 +14,7 @@ class RemoteDevBkRepoConfig {
     fun devxBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
     @Bean
-    @ConfigurationProperties(prefix = "bkrepo.devxMedia")
+    @ConfigurationProperties(prefix = "bkrepo.devxmedia")
     fun devxMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
     @Bean
