@@ -774,7 +774,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         )
         // 存量的实例化版本，不支持一键回滚
-        if (resource.model.template == null && pipelineInfo.version != version) {
+        if (resource.model.template != null && pipelineInfo.version != version) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK
             )
