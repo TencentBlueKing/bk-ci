@@ -257,8 +257,12 @@
                     version,
                 }
                 const query = {
-                    type: 'rollback',
-                    versionName: this.versionName,
+                    ...(this.isRollback
+                        ? {
+                            type: 'rollback',
+                            versionName: this.versionName,
+                        } : {}
+                    ),
                     ...(!this.isTemplate
                         ? {
                             tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
