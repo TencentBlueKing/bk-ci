@@ -111,9 +111,6 @@ interface UserWorkspaceResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

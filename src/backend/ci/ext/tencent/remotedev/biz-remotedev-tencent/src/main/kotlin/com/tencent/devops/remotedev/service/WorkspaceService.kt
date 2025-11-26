@@ -396,14 +396,12 @@ class WorkspaceService @Autowired constructor(
 
     fun getProjectWorkspaceListGroupByOrg(
         userId: String,
-        projectId: String,
         page: Int?,
         pageSize: Int?,
         search: WorkspaceSearch?
     ): List<WorkspaceGroupByOrg> {
         // 1. 参考 getWorkspaceListNew，增加 notStatus 过滤
         val updatedSearch = (search ?: WorkspaceSearch()).apply {
-            this.projectId = listOf(projectId)
             notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
                 ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
