@@ -1,5 +1,6 @@
 package com.tencent.devops.store.trigger.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
@@ -13,7 +14,6 @@ import com.tencent.devops.store.pojo.common.BK_STORE_CLOUD_DESKTOP_TRIGGER
 import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
-import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerGroupInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,7 +31,7 @@ class TriggerEventService @Autowired constructor(
             storeType = StoreTypeEnum.TRIGGER_EVENT
         ) ?: throw InvalidParamException("storeId[$storeId] not found")
         val atomForm = detailInfo.extData?.get(KEY_ATOM_FORM)?.let {
-            JsonUtil.mapTo(it as Map<String, Any>, AtomForm::class.java)
+            JsonUtil.anyTo(it, object : TypeReference<AtomForm>() {})
         }
         return atomForm
     }

@@ -61,7 +61,7 @@ object TriggerEventConverter {
 
         return AtomForm(
             atomCode = "",
-            input = inputs.associateBy { it.key }
+            input = inputs.associateBy { it.key ?: "" }
         )
     }
 
