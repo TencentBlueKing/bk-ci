@@ -17,12 +17,12 @@
             <span
                 v-if="isRunning"
                 v-bk-tooltips="{
-                    disabled: !(canExecute && canCancelBuild === false),
+                    disabled: !isStrictCancelPolicy,
                     content: $t('cancelBuildPermTip')
                 }"
             >
                 <bk-button
-                    :disabled="loading || (canExecute && canCancelBuild === false)"
+                    :disabled="loading || isStrictCancelPolicy"
                     :icon="loading ? 'loading' : ''"
                     outline
                     theme="warning"
@@ -34,7 +34,7 @@
                             projectId,
                             resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EXECUTE
+                            action: isStrictCancelPolicy ? RESOURCE_ACTION.MANAGE : RESOURCE_ACTION.EXECUTE
                         }
                     }"
                 >
@@ -224,6 +224,9 @@
             },
             canCancelBuild () {
                 return this.execDetail?.cancelBuildPerm ?? true
+            },
+            isStrictCancelPolicy () {
+                return this.canExecute && this.canCancelBuild === false
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
