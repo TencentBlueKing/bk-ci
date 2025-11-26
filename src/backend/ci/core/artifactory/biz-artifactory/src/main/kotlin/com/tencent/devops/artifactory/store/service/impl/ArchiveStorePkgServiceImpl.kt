@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -160,7 +161,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) },
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
                 val pkgRepoPath = generatePkgRepoPath(
                     storeCode = storeCode,
@@ -171,6 +173,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 )
                 storePkgEnvInfo.pkgRepoPath = pkgRepoPath
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
+                storePkgEnvInfo.sha256Content = packageFileInfo.sha256Content
                 storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
@@ -215,7 +218,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(PackageFileInfo::shaContent.name to packageFileInfo.shaContent)
+                    props = mapOf(
+                        PackageFileInfo::shaContent.name to packageFileInfo.shaContent,
+                        PackageFileInfo::sha256Content.name to packageFileInfo.sha256Content
+                    )
                 )
             }
         }
@@ -345,22 +351,27 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkPermissionFlag: Boolean
     ): String {
-        val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
-            storeCode = storeCode,
-            storeType = storeType,
-            version = version,
-            projectCode = projectId,
-            userId = userId,
-            instanceId = instanceId
-        )
-        val storeBaseInfo = validateResult.data
-        if (validateResult.isNotOk() || storeBaseInfo == null) {
-            throw ErrorCodeException(
-                errorCode = validateResult.status.toString(),
-                defaultMessage = validateResult.message
+        var storeStatus: String? = null
+        if (checkPermissionFlag) {
+            val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
+                projectCode = projectId,
+                userId = userId,
+                instanceId = instanceId
             )
+            val storeBaseInfo = validateResult.data
+            if (validateResult.isNotOk() || storeBaseInfo == null) {
+                throw ErrorCodeException(
+                    errorCode = validateResult.status.toString(),
+                    defaultMessage = validateResult.message
+                )
+            }
+            storeStatus = storeBaseInfo.status
         }
         var finalOsName = osName
         if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
@@ -378,7 +389,17 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         val storePkgEnvInfo = storePkgEnvInfos[0]
-        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
+        val queryCacheFlag = if (storeStatus != null) {
+            storeStatus !in StoreStatusEnum.getTestStatusList()
+        } else {
+            val status = client.get(ServiceStoreComponentResource::class).getStoreUpgradeStatusInfo(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.name,
+                version = version
+            ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            status !in StoreStatusEnum.getTestStatusList()
+        }
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,

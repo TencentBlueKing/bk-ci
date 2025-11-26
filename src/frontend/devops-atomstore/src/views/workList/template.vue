@@ -372,7 +372,14 @@
                 }, {})
             },
             projectFilters () {
-                return this.renderList.map(item => ({
+                const uniqueItems = this.renderList.reduce((accumulator, item) => {
+                    if (!accumulator.find(i => i.projectCode === item.projectCode)) {
+                        accumulator.push(item)
+                    }
+                    return accumulator
+                }, [])
+
+                return uniqueItems.map(item => ({
                     text: item.projectName,
                     value: item.projectName
                 }))
