@@ -763,17 +763,24 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
-        // 补全模型信息
-        val fixedModel = pipelineInfoFacadeService.getFixedModel(
-            targetVersion, projectId, pipelineId, userId, pipelineInfo
+        val isPipelineInstanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+            projectId = projectId,
+            pipelineId = pipelineId
         )
         // 存量的实例化版本，不支持一键回滚
-        // 判断补全后的 model 是否包含模板信息，如果有且不是最新版本，则不允许回滚
-        if (fixedModel.template != null && pipelineInfo.version != version) {
+        if (isPipelineInstanceFromTemplate && targetVersion.model.template == null) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK
             )
         }
+        // 补全模型信息
+        val fixedModel = pipelineInfoFacadeService.getFixedModel(
+            resource = targetVersion,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            pipelineInfo = pipelineInfo
+        )
         val resource = pipelineRepositoryService.rollbackDraftFromVersion(
             userId = userId,
             projectId = projectId,
