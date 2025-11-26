@@ -2035,5 +2035,6 @@
   "currentRef": "当前版本/当前 Commit",
   "noVariablesAvailable": "暂无变量",
   "showStageProgress": "展示 Stage 进度",
-  "showBuildInfo": "展示构建信息"
+  "showBuildInfo": "展示构建信息",
+  "rollbackToVersion": "回滚至版本{0}"
 }

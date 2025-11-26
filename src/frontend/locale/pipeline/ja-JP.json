@@ -2038,5 +2038,6 @@
   "currentRef": "現在のバージョン/現在のコミット",
   "noVariablesAvailable": "利用可能な変数がありません",
   "showStageProgress": "ステージの進捗を表示",
-  "showBuildInfo": "ビルド情報を表示"
+  "showBuildInfo": "ビルド情報を表示",
+  "rollbackToVersion": "バージョン {0} へのロールバック"
 }

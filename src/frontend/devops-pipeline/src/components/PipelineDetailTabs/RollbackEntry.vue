@@ -251,26 +251,25 @@
                 }
             },
             goEdit (version) {
-                if (this.isTemplate) {
-                    this.$router.push({
-                        name: 'templateEdit',
-                        params: {
-                            ...this.$route.params,
-                            version: version
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'pipelinesEdit',
-                        params: {
-                            ...this.$route.params,
-                            version
-                        },
-                        query: {
-                            tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
-                        }
-                    })
+                const routerName = this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+                const params = {
+                    ...this.$route.params,
+                    version,
                 }
+                const query = {
+                    type: 'rollback',
+                    versionName: this.versionName,
+                    ...(!this.isTemplate
+                        ? {
+                            tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                        } : {}
+                    )
+                }
+                this.$router.push({
+                    name: routerName,
+                    params,
+                    query
+                })
             }
         }
     }

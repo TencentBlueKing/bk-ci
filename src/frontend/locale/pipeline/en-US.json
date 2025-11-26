@@ -2036,5 +2036,6 @@
   "currentRef": "Current version/Current Commit",
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
-  "showBuildInfo": "Show Build Information"
+  "showBuildInfo": "Show Build Information",
+  "rollbackToVersion": "Rollback to version {0}"
 }
