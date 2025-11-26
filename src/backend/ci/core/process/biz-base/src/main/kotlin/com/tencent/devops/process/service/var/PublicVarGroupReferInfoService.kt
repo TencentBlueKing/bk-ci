@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.toLocalDateTime
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
@@ -49,6 +50,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -77,7 +79,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao,
-    private val sampleEventDispatcher: SampleEventDispatcher
+    private val sampleEventDispatcher: SampleEventDispatcher,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) {
 
     companion object {
@@ -560,6 +563,18 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         }
         // 检查参数ID是否存在重复
         validateParamIds(params)
+
+        // 校验公共变量组使用权限
+        model.publicVarGroups?.let { publicVarGroups ->
+            publicVarGroups.forEach { publicVarGroup ->
+                publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+                    userId = publicVarGroupReferDTO.userId,
+                    projectId = publicVarGroupReferDTO.projectId,
+                    permission = AuthPermission.USE,
+                    groupName = publicVarGroup.groupName
+                )
+            }
+        }
 
         // 查询历史引用记录
         val historicalReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(

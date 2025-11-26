@@ -57,7 +57,7 @@ class RbacPublicVarGroupPermissionService constructor(
             )
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                defaultMessage = "用户无权限操作公共变量组"
+                params = arrayOf(userId, projectId)
             )
         }
         return true
