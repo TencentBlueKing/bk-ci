@@ -294,7 +294,7 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String
     ): TransferResponse {
         watcher.start("step_1|FULL_YAML2MODEL start")
-        PipelineTransferAspectLoader.checkLockResourceJob(aspects)
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
         yamlSchemaCheck.check(data.oldYaml)
         val pipelineInfo = pipelineId?.let {
             pipelineInfoDao.convert(
@@ -374,7 +374,7 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String
     ): TransferResponse {
         watcher.start("step_1|TEMPLATE_YAML2MODEL_PIPELINE start")
-        PipelineTransferAspectLoader.checkLockResourceJob(aspects)
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
         yamlSchemaCheck.check(data.oldYaml)
         watcher.start("step_2|parse template")
         val pYml = loadYaml(data.oldYaml)
