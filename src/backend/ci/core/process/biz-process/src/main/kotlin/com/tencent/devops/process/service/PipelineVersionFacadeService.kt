@@ -192,6 +192,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineRecentUseService.record(userId, projectId, pipelineId)
             pipelineYamlFacadeService.yamlExistInDefaultBranch(projectId, pipelineId)
         }
+        // 获取当前最新版本的设置
+        val pipelineSetting = pipelineRepositoryService.getSetting(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
             pipelineName = detailInfo.pipelineName,
@@ -221,7 +226,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
-            locked = detailInfo.locked
+            locked = detailInfo.locked,
+            buildCancelPolicy = pipelineSetting?.buildCancelPolicy
         )
     }
 
