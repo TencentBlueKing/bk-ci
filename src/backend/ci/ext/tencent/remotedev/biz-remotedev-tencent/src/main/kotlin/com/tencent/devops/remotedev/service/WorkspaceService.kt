@@ -422,7 +422,8 @@ class WorkspaceService @Autowired constructor(
         
         // 6. 合并组织架构映射
         val ownerToOrgMap = corporateOrgMap + taiOrgMap
-        
+        logger.info("ownerToOrgMap|$ownerToOrgMap")
+
         // 7. 按项目和组织架构分组
         val grouped = workspaces
             .groupBy { it.projectId }
