@@ -22,7 +22,7 @@
                 }"
             >
                 <bk-button
-                    :disabled="loading || canCancelBuild === false"
+                    :disabled="loading || (canExecute && canCancelBuild === false)"
                     :icon="loading ? 'loading' : ''"
                     outline
                     theme="warning"
