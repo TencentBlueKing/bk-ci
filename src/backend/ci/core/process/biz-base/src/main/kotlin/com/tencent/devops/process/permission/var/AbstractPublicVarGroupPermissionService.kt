@@ -42,10 +42,22 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
             logger.warn("User $userId has no permission to ${permission.value} var group in project $projectId")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                defaultMessage = "用户无权限操作公共变量组"
+                params = arrayOf(userId, projectId)
             )
         }
         return true
+    }
+
+    override fun checkPublicVarGroupPermissions(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return authProjectApi.checkProjectManager(
+            userId = userId,
+            serviceCode = publicVarGroupAuthServiceCode,
+            projectCode = projectId
+        )
     }
 
     override fun getPublicVarGroupPermissions(

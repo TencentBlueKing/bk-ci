@@ -70,16 +70,28 @@ class RbacPublicVarGroupPermissionService constructor(
     ): PublicVarGroupPermissions {
         // 逐个检查权限
         val canEdit = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.EDIT, groupName
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT,
+            groupName = groupName
         )
         val canView = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.VIEW, groupName
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            groupName = groupName
         )
         val canDelete = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.DELETE, groupName
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.DELETE,
+            groupName = groupName
         )
         val canUse = checkPublicVarGroupPermission(
-            userId, projectId, AuthPermission.USE, groupName
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.USE,
+            groupName = groupName
         )
 
         return PublicVarGroupPermissions(
@@ -130,6 +142,21 @@ class RbacPublicVarGroupPermissionService constructor(
             resourceType = RESOURCE_TYPE,
             projectCode = projectId,
             resourceCode = groupName
+        )
+    }
+
+    override fun checkPublicVarGroupPermissions(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = publicVarGroupAuthServiceCode,
+            resourceType = RESOURCE_TYPE,
+            projectCode = projectId,
+            resourceCode = projectId,
+            permission = permission
         )
     }
 

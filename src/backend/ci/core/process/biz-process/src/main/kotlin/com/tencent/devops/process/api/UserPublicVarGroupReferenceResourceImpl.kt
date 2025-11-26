@@ -27,13 +27,13 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupReferenceResource
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
@@ -48,10 +48,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
     private val publicVarGroupService: PublicVarGroupService,
     private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
-    private val publicVarReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarReferInfoService: PublicVarGroupReferInfoService,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupReferenceResource {
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun listVarReferInfo(
         userId: String,
         projectId: String,
@@ -62,6 +62,13 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicGroupVarRefDO>> {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            groupName = groupName
+        )
         return Result(publicVarGroupReferInfoService.listVarReferInfo(
             PublicVarGroupInfoQueryReqDTO(
                 projectId = projectId,
@@ -75,12 +82,18 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_EDIT)
     override fun getChangePreview(
         userId: String,
         projectId: String,
         publicVarGroup: PublicVarGroupVO
     ): Result<List<PublicVarReleaseDO>> {
+        // 校验编辑权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT,
+            groupName = publicVarGroup.groupName
+        )
         return Result(publicVarGroupService.getChangePreview(
             userId = userId,
             projectId = projectId,
@@ -88,7 +101,6 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_USE)
     override fun listPipelineVarGroupInfo(
         userId: String,
         projectId: String,
@@ -96,6 +108,12 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int
     ): Result<List<PipelineRefPublicVarGroupDO>> {
+        // 校验使用权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.USE
+        )
         return publicVarGroupService.listPipelineVariables(
             userId = userId,
             projectId = projectId,
@@ -105,15 +123,19 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelineRefPublicVarGroupDO>> {
+        // 校验列表权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
         return publicVarGroupService.listProjectVarGroupInfo(
             userId = userId,
             projectId = projectId
         )
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_USE)
     override fun listResourceVarReferInfo(
         userId: String,
         projectId: String,
@@ -123,6 +145,13 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
         groupName: String,
         version: Int?
     ): Result<List<PublicVarDO>> {
+        // 校验使用权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.USE,
+            groupName = groupName
+        )
         return Result(publicVarReferInfoService.listResourceVarReferInfo(
             projectId = projectId,
             referId = referId,

@@ -27,13 +27,13 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
@@ -47,16 +47,22 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
     private val publicVarGroupService: PublicVarGroupService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupResource {
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_CREATE)
     override fun addGroup(
         userId: String,
         projectId: String,
         operateType: OperateTypeEnum,
         publicVarGroup: PublicVarGroupVO
     ): Result<String> {
+        // 校验创建权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
         return Result(
             publicVarGroupService.addGroup(
                 PublicVarGroupDTO(
@@ -69,7 +75,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun getGroups(
         userId: String,
         projectId: String,
@@ -81,6 +86,12 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
+        // 校验列表权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
@@ -96,18 +107,28 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_LIST)
     override fun getGroupNames(userId: String, projectId: String): Result<List<String>> {
+        // 校验列表权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
         return Result(publicVarGroupService.listGroupNames(projectId))
     }
 
-    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun importGroup(
         userId: String,
         projectId: String,
         operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
     ): Result<String> {
+        // 校验创建权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
         return Result(publicVarGroupService.importGroup(
             userId = userId,
             projectId = projectId,
@@ -116,13 +137,19 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun exportGroup(
         userId: String,
         projectId: String,
         groupName: String,
         version: Int?
     ): Response {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            groupName = groupName
+        )
         return publicVarGroupService.exportGroup(
             projectId = projectId,
             groupName = groupName,
@@ -130,8 +157,14 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         )
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_DELETE)
     override fun deleteGroup(userId: String, projectId: String, groupName: String): Result<Boolean> {
+        // 校验删除权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.DELETE,
+            groupName = groupName
+        )
         return Result(publicVarGroupService.deleteGroup(
             userId = userId,
             projectId = projectId,
@@ -139,8 +172,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,
             projectId = projectId,
@@ -148,12 +186,17 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    @AuditEntry(actionId = ActionId.PUBLIC_VARIABLE_VIEW)
     override fun convertYamlToGroup(
         userId: String,
         projectId: String,
         yaml: PublicVarGroupYamlStringVO
     ): Result<PublicVarGroupVO> {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(publicVarGroupService.convertYamlToGroup(
             userId = userId,
             projectId = projectId,
