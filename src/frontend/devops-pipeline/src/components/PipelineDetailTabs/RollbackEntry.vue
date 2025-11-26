@@ -237,7 +237,7 @@
                     }
 
                     if (res.version) {
-                        this.goEdit(res.version)
+                        this.goEdit(res.version, true)
                     }
                 } catch (error) {
                     this.handleError(error, {
@@ -250,14 +250,14 @@
                     this.loading = false
                 }
             },
-            goEdit (version) {
+            goEdit (version, rollback = false) {
                 const routerName = this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
                 const params = {
                     ...this.$route.params,
                     version,
                 }
                 const query = {
-                    ...(this.isRollback
+                    ...(rollback
                         ? {
                             type: 'rollback',
                             versionName: this.versionName,
