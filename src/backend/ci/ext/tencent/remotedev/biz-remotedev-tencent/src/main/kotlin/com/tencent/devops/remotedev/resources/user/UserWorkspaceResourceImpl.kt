@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
+import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
