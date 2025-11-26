@@ -34,7 +34,7 @@
                             projectId,
                             resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipelineId,
-                            action: isStrictCancelPolicy ? RESOURCE_ACTION.MANAGE : RESOURCE_ACTION.EXECUTE
+                            action: RESOURCE_ACTION.EXECUTE
                         }
                     }"
                 >
@@ -177,6 +177,7 @@
 </template>
 
 <script>
+    import { BUILD_CANCEL_POLICY } from '@/store/constants'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
@@ -222,11 +223,8 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
-            canCancelBuild () {
-                return this.execDetail?.cancelBuildPerm ?? true
-            },
             isStrictCancelPolicy () {
-                return this.canExecute && this.canCancelBuild === false
+                return this.pipelineInfo?.buildCancelPolicy === BUILD_CANCEL_POLICY.RESTRICTED && this.execDetail?.cancelBuildPerm === false
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
