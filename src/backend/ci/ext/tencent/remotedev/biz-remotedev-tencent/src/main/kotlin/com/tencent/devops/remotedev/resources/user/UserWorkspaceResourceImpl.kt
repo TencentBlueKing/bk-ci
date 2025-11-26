@@ -143,6 +143,16 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
     }
 
+    override fun getWorkspaceListGroupByOrg(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch?
+    ): Result<List<WorkspaceGroupByOrg>> {
+        return Result(workspaceService.getProjectWorkspaceListGroupByOrg(userId, projectId, page, pageSize, search))
+    }
+
     override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {
         return Result(workspaceService.getEnvs4PublicWorkspace(userId))
     }

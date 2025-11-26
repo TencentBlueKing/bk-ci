@@ -37,6 +37,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
+import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -102,6 +103,26 @@ interface UserWorkspaceResource {
         pageSize: Int?,
         search: WorkspaceSearch
     ): Result<Page<Workspace>>
+
+    @Operation(summary = "获取按组织架构分组的工作空间列表")
+    @POST
+    @Path("/workspaces/group_by_org")
+    fun getWorkspaceListGroupByOrg(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "6666")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "搜索条件", required = false)
+        search: WorkspaceSearch?
+    ): Result<List<WorkspaceGroupByOrg>>
 
     @Operation(summary = "获取用户公共云桌面环境")
     @GET
