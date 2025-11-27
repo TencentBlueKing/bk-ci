@@ -24,6 +24,7 @@
   "true": "はい",
   "false": "いいえ",
   "cancel": "キャンセル",
+  "cancelBuildPermTip": "トリガー者、パイプライン所有者、プロジェクト管理者のみが実行中のビルドをキャンセルできます。ポリシーを変更する場合は、パイプライン所有者にお問い合わせください",
   "userError": "ユーザー設定エラー",
   "systemError": "システム実行エラー",
   "thirdPartyError": "サードパーティシステムエラー",
@@ -311,6 +312,7 @@
     "label": "ラベル",
     "manageLabel": "ラベルを管理",
     "runLock": "実行設定",
+    "buildCancelPolicyLabel": "ビルドキャンセルポリシー",
     "trigger": "トリガー",
     "enableStatus": "有効状態",
     "addTrigger": "トリガーを追加",
@@ -335,6 +337,10 @@
     "disableSetting": "無効化設定",
     "stopWhenNewCome": "実行中のビルドをキャンセル",
     "lockGroupDesc": "この設定に基づいてグループ化されます。有効範囲は現在のプロジェクトの下のパイプラインです。慎重に設定してください。起動段階で値が確定できる変数（例：${{ci.pipeline_id}}、${{ci.branch}}、${{variables.a}}（前提として、a の値が起動時点で既に明確である場合）など）を使用することができます。",
+    "buildCancelPolicyOptions": {
+      "EXECUTE_PERMISSION": "実行権限を持つユーザーは任意のビルドをキャンセルできます",
+      "RESTRICTED": "トリガー者またはパイプライン管理権限を持つユーザーのみキャンセル可能"
+    },
     "notify": "通知",
     "auth": "権限",
     "authManage": "権限管理",

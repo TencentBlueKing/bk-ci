@@ -24,6 +24,7 @@
   "true": "是",
   "false": "否",
   "cancel": "取消",
+  "cancelBuildPermTip": "仅触发人、流水线拥有者和项目管理员可以取消正在运行的构建，若需修改策略请联系流水线拥有者",
   "userError": "用户配置错误",
   "systemError": "系统运行错误",
   "thirdPartyError": "第三方系统错误",
@@ -334,6 +335,11 @@
     "disableSetting": "禁用设置",
     "stopWhenNewCome": "取消正在运行的构建",
     "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持在启动阶段能确定值的变量，比如 ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (前提是a在启动时值已明确)等",
+    "buildCancelPolicyLabel": "取消构建策略",
+    "buildCancelPolicyOptions": {
+      "EXECUTE_PERMISSION": "拥有执行权限的用户可取消任意构建",
+      "RESTRICTED": "仅限触发人或拥有流水线管理权限的用户可取消"
+    },
     "notify": "通知",
     "auth": "权限",
     "authManage": "权限管理",
