@@ -154,9 +154,9 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     packageFileName = packageFile.name,
                     packageFilePath = "$BK_CI_ATOM_DIR/$pkgLocalPath",
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
-                atomEnvRequest.shaContent = packageFileInfo.shaContent
+                atomEnvRequest.shaContent = packageFileInfo.sha256Content
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
             }
@@ -215,7 +215,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.shaContent)
+                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.sha256Content)
                 )
             }
         }

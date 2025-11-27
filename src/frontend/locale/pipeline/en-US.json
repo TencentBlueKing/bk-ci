@@ -24,6 +24,7 @@
   "true": "True",
   "false": "False",
   "cancel": "Cancel",
+  "cancelBuildPermTip": "Only the trigger user, pipeline owner, and project admin can cancel running builds. To modify the policy, please contact the pipeline owner",
   "create": "New",
   "add": "Add",
   "clone": "Clone",
@@ -316,6 +317,7 @@
     "emptyPipelineName": "Please enter pipeline name",
     "label": "Label",
     "runLock": "Run Settings",
+    "buildCancelPolicyLabel": "Build Cancel Policy",
     "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
     "descPlaceholder": "Please add a description within 100 letters",
     "largestNum": "Maximum Number Of Queues",
@@ -337,6 +339,10 @@
     "parallelSetting": "Concurrency Settings",
     "stopWhenNewCome": "Cancel the running build",
     "lockGroupDesc": "A concurrency group can be any string or expression, and the effective scope is under the current project. Support variables with values that can be determined during the startup phase, such as ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (provided that the value of a is clear at startup), etc",
+    "buildCancelPolicyOptions": {
+      "EXECUTE_PERMISSION": "Users with execute permission can cancel any build",
+      "RESTRICTED": "Only the trigger user or users with pipeline management permission can cancel"
+    },
     "notify": "Notifications",
     "auth": " Permissions",
     "authManage": "Permission Management",
@@ -610,7 +616,7 @@
     "Upgrading": "Upgrading",
     "UpgradeFailed": "Upgrade Failed",
     "goView": "View",
-    "goUpgrade": "Upgrade", 
+    "goUpgrade": "Upgrade",
     "goRelease": "Publish",
     "storeFlag": "Already listed in the store, ",
     "upgradeFlag": "There is a version available for upgrade, ",
@@ -665,7 +671,7 @@
     "referenceTemplateVersion": "Referenced Template Version",
     "copyTemplate": "Copy Template",
     "currentStatus": "Current Status",
-    "buildParam": "Input Parameter", 
+    "buildParam": "Input Parameter",
     "notBuildParam": "Non-parameter",
     "currentInstance": "Current Instance",
     "cancelParticipant": "Click to deselect parameter",
@@ -676,9 +682,15 @@
     "setUnfollow": "Click to unsync from template",
     "defaultValue": "default value",
     "triggerSettings": "trigger settings",
+    "toStoreUpdate": "Go to store to release new version",
+    "versionReleaseSuc": "{0} release successful",
+    "manualUpdate": "The template has been released to the store. You can go to the store to release a new version.",
+    "autoUpdate": "The template has been released to the store, and the release strategy is automatic. The template in the store will be automatically updated to {0}.",
     "recommendVersion": "recommended version",
     "followTemplateTips": "Will automatically sync {0} changes from new template versions during instance upgrades.",
-    "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading."
+    "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading.",
+    "setTimeCron": "Set timing rule",
+    "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -2030,5 +2042,7 @@
   "currentRef": "Current version/Current Commit",
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
-  "showBuildInfo": "Show Build Information"
+  "showBuildInfo": "Show Build Information",
+  "rollbackToVersion": "Rollback to version {0}",
+  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }

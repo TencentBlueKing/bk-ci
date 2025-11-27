@@ -442,7 +442,11 @@ object ProcessMessageCode {
 
     const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
-    const val USER_NO_CANCEL_BUILD_PERMISSION = "2101337" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
+    const val ERROR_JOB_ID_DUPLICATE = "2101337" // Job ID在流水线下需全局唯一，存在重复ID[$0]的Job，保存失败!
+    const val ERROR_STEP_ID_DUPLICATE = "2101338" // Step ID在Job下需全局唯一，Job[$0]下存在重复ID[$1]的Step，保存失败!
+    // 存量的实例化版本，不支持一键回滚
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK = "2101339"
+    const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

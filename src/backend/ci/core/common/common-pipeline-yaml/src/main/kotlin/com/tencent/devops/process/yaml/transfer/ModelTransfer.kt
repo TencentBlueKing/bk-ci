@@ -69,10 +69,10 @@ import com.tencent.devops.process.yaml.v3.models.on.IPreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 @Suppress("ComplexMethod")
@@ -227,7 +227,9 @@ class ModelTransfer @Autowired constructor(
                         stepId = it.key,
                         disabled = it.value.disabled,
                         cron = it.value.cron?.let { c -> listOf(c) },
-                        variables = it.value.variables
+                        variables = it.value.variables?.map { v ->
+                            TemplateVariable(key = v.key, value = v.value)
+                        }
                     )
                 },
                 recommendedVersion = template.recommendedVersion?.let {
@@ -394,7 +396,7 @@ class ModelTransfer @Autowired constructor(
                             ExtendsTriggerConfig(
                                 disabled = it.disabled,
                                 cron = it.cron?.firstOrNull(),
-                                variables = it.variables
+                                variables = it.variables?.associateBy({ v -> v.key }, { v -> v.value })
                             )
                         }
                     )?.ifEmpty { null },

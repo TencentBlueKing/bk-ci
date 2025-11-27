@@ -25,22 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template.v2
+package com.tencent.devops.repository.resources.scm
 
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.process.pojo.PipelineIdAndName
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.scm.UserGitRepositoryResource
+import com.tencent.devops.repository.service.scm.IGitService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "流水线模版实例化发布预览请求")
-data class PreFetchTemplateInstanceReleaseReq(
-    @get:Schema(title = "流水线ID和名称", required = true)
-    val pipelineIdAndNames: List<PipelineIdAndName>,
-    @get:Schema(title = "启用PAC", required = true)
-    val enablePac: Boolean = false,
-    @get:Schema(title = "提交动作", required = true)
-    val targetAction: CodeTargetAction? = null,
-    @get:Schema(title = "代码库hashId", required = true)
-    val repoHashId: String? = null,
-    @get:Schema(title = "指定提交的分支", required = true)
-    val targetBranch: String? = null
-)
+@RestResource
+class UserGitRepositoryResourceImpl @Autowired constructor(
+    private val gitService: IGitService
+) : UserGitRepositoryResource {
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String> {
+        return gitService.getRecentGitCommitMessages(
+            userId = userId,
+            branch = branch,
+            codeSrc = codeSrc,
+            gitProjectId = gitProjectId,
+            commitNumber = commitNumber,
+            prefixes = prefixes,
+            keywords = keywords
+        )
+    }
+}

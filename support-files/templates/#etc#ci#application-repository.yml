@@ -36,6 +36,9 @@ scm:
       account: devops
       email: devops@devops.com
       secret: devops123
+    queryCommitNumLimit:
+      min: 1
+      max: 10
   external:
     #gitlab v4.
     gitlab:

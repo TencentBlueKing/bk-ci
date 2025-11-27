@@ -66,6 +66,15 @@ enum class AtomStatusEnum(val status: Int) {
             return INIT.name
         }
 
+        fun getAtomByStatus(status: Int): AtomStatusEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.status == status) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+
         fun getProcessingStatusList(): List<Byte> {
             return listOf(
                 INIT.status.toByte(),
