@@ -674,7 +674,7 @@
     "buildParam": "入参",
     "notBuildParam": "非入参",
     "currentInstance": "此实例中",
-    "cancelParticipant": "点击可取消设置，变更为非入参",
+    "cancelParticipant": "点击可变更为非入参",
     "setParticipant": "点击恢复为入参",
     "unfollow": "不跟随模板",
     "follow": "跟随模板",
@@ -688,7 +688,9 @@
     "autoUpdate": "该模板已发布到商店，且发布策略为自动发布，商店中的模板将自动更新至{0}",
     "recommendVersion": "推荐版本号",
     "followTemplateTips": "升级实例时，将自动跟随模版新版本变更{0}。",
-    "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。"
+    "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。",
+    "setTimeCron": "设置定时规则",
+    "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -2039,5 +2041,7 @@
   "currentRef": "当前版本/当前 Commit",
   "noVariablesAvailable": "暂无变量",
   "showStageProgress": "展示 Stage 进度",
-  "showBuildInfo": "展示构建信息"
+  "showBuildInfo": "展示构建信息",
+  "rollbackToVersion": "回滚至版本{0}",
+  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。"
 }

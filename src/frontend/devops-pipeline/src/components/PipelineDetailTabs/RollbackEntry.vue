@@ -181,26 +181,24 @@
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestTemplateSummary: 'atom/requestTemplateSummary',
                 rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
-                rollbackTemplateVersion: 'templates/rollbackTemplateVersion'
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
+                checkTemplatePipelineRollback: 'templates/checkTemplatePipelineRollback'
             }),
-            handleClick () {
+            async handleClick () {
                 if (this.isRollback) {
                     if (this.isTemplatePipeline) {
-                        this.$bkInfo({
-                            subTitle: this.$t('templateRollbackBackTips'),
-                            confirmFn: () => {
-                                this.$router.push({
-                                    name: 'instanceEntry',
-                                    params: {
-                                        type: 'upgrade',
-                                        projectId: this.projectId,
-                                        templateId: this.pipelineInfo?.templateId,
-                                        version: this.pipelineInfo?.templateVersion
-                                    },
-                                    hash: `#${this.rollbackId}`
-                                })
-                            }
+                        const res = await this.checkTemplatePipelineRollback({
+                            ...this.$route.params,
+                            version: this.version
                         })
+                        if (res.data) {
+                            this.showDraftConfirmDialog()
+                        } else {
+                            this.$showTips({
+                                theme: 'error',
+                                message: this.$t('template.templatePipelineRollbackNotAllowedTips')
+                            })
+                        }
                     } else {
                         this.showDraftConfirmDialog()
                     }
@@ -239,7 +237,7 @@
                     }
 
                     if (res.version) {
-                        this.goEdit(res.version)
+                        this.goEdit(res.version, true)
                     }
                 } catch (error) {
                     this.handleError(error, {
@@ -252,27 +250,30 @@
                     this.loading = false
                 }
             },
-            goEdit (version) {
-                if (this.isTemplate) {
-                    this.$router.push({
-                        name: 'templateEdit',
-                        params: {
-                            ...this.$route.params,
-                            version: version
-                        }
-                    })
-                } else {
-                    this.$router.push({
-                        name: 'pipelinesEdit',
-                        params: {
-                            ...this.$route.params,
-                            version
-                        },
-                        query: {
-                            tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
-                        }
-                    })
+            goEdit (version, rollback = false) {
+                const routerName = this.isTemplate ? 'templateEdit' : 'pipelinesEdit'
+                const params = {
+                    ...this.$route.params,
+                    version,
                 }
+                const query = {
+                    ...(rollback || this.isRollback
+                        ? {
+                            type: 'rollback',
+                            versionName: this.versionName,
+                        } : {}
+                    ),
+                    ...(!this.isTemplate
+                        ? {
+                            tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                        } : {}
+                    )
+                }
+                this.$router.push({
+                    name: routerName,
+                    params,
+                    query
+                })
             }
         }
     }
