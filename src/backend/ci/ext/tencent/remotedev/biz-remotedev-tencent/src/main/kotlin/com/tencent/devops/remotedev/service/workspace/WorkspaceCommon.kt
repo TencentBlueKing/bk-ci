@@ -787,16 +787,14 @@ class WorkspaceCommon @Autowired constructor(
 
     // 创建实例成功后异步执行流水线
     fun executeCreateWorkspacePipeline(
-        ip: String,
+        ips: Set<String>,
         user: String
     ) {
         try {
             val infoS = redisCache.get(PIPELINE_CREATE_WORKSPACE_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
-            val resIps = mutableSetOf<String>()
-            resIps.add(ip)
             val newParam = mutableMapOf<String, String>()
-            newParam["job_ip_list"] = resIps.joinToString(separator = " ")
+            newParam["job_ip_list"] = ips.joinToString(separator = " ")
 
             AsyncExecute.dispatch(
                 streamBridge,
