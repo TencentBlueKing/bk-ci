@@ -94,7 +94,8 @@ class TriggerEventService @Autowired constructor(
             serviceScope = null,
             page = page,
             pageSize = pageSize,
-            queryProjectAtomFlag = false
+            queryProjectAtomFlag = false,
+            category = AtomCategoryEnum.TRIGGER.name
         ).data
     }
 
