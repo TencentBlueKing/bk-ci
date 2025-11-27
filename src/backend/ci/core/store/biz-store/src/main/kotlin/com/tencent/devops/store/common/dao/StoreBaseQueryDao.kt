@@ -557,6 +557,7 @@ class StoreBaseQueryDao {
                 VERSION.`as`(KEY_VERSION),
                 STATUS.`as`(KEY_ATOM_STATUS)
             )
+                    .from(this)
                     .where(STORE_CODE.eq(storeCode))
                     .and(STORE_TYPE.eq(storeType.type.toByte()))
                     .let {
