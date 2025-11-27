@@ -107,6 +107,37 @@ BEGIN
         ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
         ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_SETTING
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_TEMPLATE_SETTING_VERSION
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
 COMMIT;
 
 END <CI_UBF>
