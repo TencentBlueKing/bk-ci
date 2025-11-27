@@ -81,8 +81,9 @@
 <script>
     import NamingConventionTip from '@/components/namingConventionTip.vue'
     import { convertTime } from '@/utils/util'
+    import { BUILD_CANCEL_POLICY_DEFAULT } from '@/store/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    
+
     export default {
         components: {
             NamingConventionTip
@@ -189,6 +190,7 @@
 
             executeConfRows () {
                 const runLockType = this.basicInfo?.runLockType?.toLowerCase?.()
+                const buildCancelPolicy = this.basicInfo?.buildCancelPolicy || BUILD_CANCEL_POLICY_DEFAULT
                 return [
                     {
                         key: 'customBuildNum',
@@ -207,7 +209,11 @@
                             key: 'parallelConfDetail'
                         }]
                         : []
-                    )
+                    ),
+                    {
+                        key: 'settings.buildCancelPolicyLabel',
+                        value: this.$t(`settings.buildCancelPolicyOptions.${buildCancelPolicy}`)
+                    }
                 ]
             },
             parallelSettingRows () {

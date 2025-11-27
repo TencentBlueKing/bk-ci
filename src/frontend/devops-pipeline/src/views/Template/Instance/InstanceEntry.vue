@@ -184,7 +184,7 @@
         const list = instanceList.value.map(i => i)
         proxy.$set(list[index], 'filePath', value)
         
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, list)
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
     }
     function checkInstanceListInValid () {
         let valid = true
@@ -242,8 +242,8 @@
                     resetBuildNo: item?.resetBuildNo ?? false,
                     timerTrigger: item.timerTrigger,
                     filePath: item.filePath,
-                    overrideTemplateField: item.overrideTemplateField,
-                    triggerConfigs: item.triggerConfigs
+                    overrideTemplateField: item?.overrideTemplateField,
+                    triggerConfigs: item?.triggerConfigs
                 }
             })
             const res = await proxy.$store.dispatch(`templates/${fn}`, {
@@ -270,14 +270,18 @@
     function handleBatchChange (params) {
         const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
 
-        for (const instance of instanceList.value) {
-            for (const p of instance.param) {
-                if (updateMap.has(p.id)) {
-                    p.defaultValue = updateMap.get(p.id)
-                }
-            }
-        }
-        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, instanceList.value)
+        const updatedList = instanceList.value.map(instance => ({
+            ...instance,
+            param: instance.param.map(p => ({
+                ...p,
+                defaultValue: updateMap.has(p.id) ? updateMap.get(p.id) : p.defaultValue
+            }))
+        }))
+        
+        proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+            list: updatedList,
+            init: false
+        })
     }
    
 </script>
