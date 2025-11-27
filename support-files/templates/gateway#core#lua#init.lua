@@ -104,6 +104,9 @@ config = {
     external_auth = {
         base_url = "",
         token = ""
+    },
+    frontend = {
+        host = "__BK_CI_FRONTEND_HOST__",
     }
 }
 

@@ -1,4 +1,3 @@
-   
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 -- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
@@ -33,6 +32,9 @@ else
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
 
-ngx.header["X-DEVOPS-TAG"] = tag
+if tag and string.sub(tag, 1, 11) == "kubernetes-" then
+    tag = string.sub(tag, 12)
+end
+ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. tag .. '.svc.cluster.local'
 
 ngx.exit(200)
