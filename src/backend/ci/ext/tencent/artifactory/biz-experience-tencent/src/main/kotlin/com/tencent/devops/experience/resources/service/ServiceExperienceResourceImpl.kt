@@ -159,7 +159,6 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         experienceHashId: String,
         forceNew: Boolean
     ): Result<AppExperienceDetail> {
-        checkParam(userId, "", experienceHashId)
         val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization, forceNew)
         return Result(result)
     }
@@ -180,7 +179,6 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         endDateEnd: Long?,
         creator: String?
     ): Result<Pagination<ExperienceChangeLog>> {
-        checkParam(userId, "", experienceHashId)
         val result = experienceAppService.changeLog(
             userId = userId,
             experienceHashId = experienceHashId,
@@ -201,7 +199,6 @@ class ServiceExperienceResourceImpl @Autowired constructor(
     }
 
     override fun downloadUrl(userId: String, organization: String?, experienceHashId: String): Result<DownloadUrl> {
-        checkParam(userId, "", experienceHashId)
         val result = experienceAppService.downloadUrl(userId, experienceHashId, organization)
         return Result(result)
     }
