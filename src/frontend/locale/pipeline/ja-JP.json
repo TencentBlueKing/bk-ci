@@ -2039,5 +2039,6 @@
   "noVariablesAvailable": "利用可能な変数がありません",
   "showStageProgress": "ステージの進捗を表示",
   "showBuildInfo": "ビルド情報を表示",
-  "rollbackToVersion": "バージョン {0} へのロールバック"
+  "rollbackToVersion": "バージョン {0} へのロールバック",
+  "constraintPipelineEditTips": "このパイプラインは制約モードになっており、入力パラメータのデフォルト値、通知、その他の設定を変更できます。オーケストレーションのアップグレードについては、テンプレートインスタンス化インターフェースをご覧ください。"
 }

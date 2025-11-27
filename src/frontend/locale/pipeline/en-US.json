@@ -2037,5 +2037,6 @@
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
-  "rollbackToVersion": "Rollback to version {0}"
+  "rollbackToVersion": "Rollback to version {0}",
+  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }
