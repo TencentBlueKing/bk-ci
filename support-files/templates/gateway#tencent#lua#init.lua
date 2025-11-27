@@ -132,7 +132,10 @@ config = {
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
     tof_token = "__BK_CI_TOF_TOKEN__",
-    double_check = true
+    double_check = true,
+    frontend = {
+        host = "frontend-bk-ci-frontend"
+    }
 }
 
 -- 特殊域名
