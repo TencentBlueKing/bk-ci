@@ -71,7 +71,7 @@ spec:
               sbin/nginx -g 'daemon off;';
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -79,7 +79,7 @@ spec:
             successThreshold: 1
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
