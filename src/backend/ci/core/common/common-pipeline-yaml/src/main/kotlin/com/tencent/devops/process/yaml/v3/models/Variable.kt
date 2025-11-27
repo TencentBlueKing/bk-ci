@@ -76,7 +76,7 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
     val const: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")
@@ -181,6 +181,9 @@ data class VariableDatasource(
     @JsonProperty("item-target-url")
     val itemTargetUrl: String? = null
 )
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class VariableTemplate(val name: String, val version: String? = null)
 
 enum class VariablePropType(val value: String) {
     VUEX_INPUT("vuex-input"),
