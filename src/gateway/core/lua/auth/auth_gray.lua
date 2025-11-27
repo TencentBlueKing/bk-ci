@@ -33,4 +33,6 @@ else
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
 
+ngx.header["X-DEVOPS-TAG"] = tag
+
 ngx.exit(200)
