@@ -5,6 +5,7 @@ import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.store.api.trigger.UserTriggerResource
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.trigger.TriggerGroupInfo
 import com.tencent.devops.store.trigger.service.TriggerEventService
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,24 +23,60 @@ class UserTriggerEventResourceImp @Autowired constructor(
         return Result(triggerEventService.types(userId, classifyId, projectCode))
     }
 
-    override fun atoms(
-        projectCode: String,
+    override fun commonTrigger(
         userId: String,
-        type: String?,
+        projectCode: String,
         classifyId: String?,
         keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
         return Result(
-            triggerEventService.atoms(
+            triggerEventService.commonTrigger(
                 projectCode = projectCode,
                 userId = userId,
-                type = type,
                 classifyId = classifyId,
                 keyword = keyword,
                 page = page ?: 1,
                 pageSize = pageSize ?: 20
+            )
+        )
+    }
+
+    override fun baseTrigger(
+        userId: String,
+        projectCode: String,
+        keyword: String?,
+        page: Int?,
+        pageSize: Int?,
+        type: String?
+    ): Result<AtomResp<AtomRespItem>?> {
+        return Result(
+            triggerEventService.baseTrigger(
+                projectCode = projectCode,
+                userId = userId,
+                keyword = keyword,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                type = type
+            )
+        )
+    }
+
+    override fun triggerDetail(
+        userId: String,
+        type: String,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ): Result<PipelineAtom?> {
+        return Result(
+            triggerEventService.triggerDetail(
+                type = type,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                userId = userId
             )
         )
     }
