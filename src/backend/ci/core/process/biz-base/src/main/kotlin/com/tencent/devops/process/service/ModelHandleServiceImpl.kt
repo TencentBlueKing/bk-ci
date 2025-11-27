@@ -77,7 +77,7 @@ class ModelHandleServiceImpl @Autowired constructor(
             redisLock.lock()
             logger.info("Start detecting variable references for resource: $resourceId|$resourceVersion")
 
-            val model = getResourcModel(
+            val model = getResourcsModel(
                 projectId = projectId,
                 resourceType = resourceType,
                 resourceId = resourceId,
@@ -150,7 +150,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getResourcModel(
+    private fun getResourcsModel(
         projectId: String,
         resourceId: String,
         resourceType: String,
