@@ -150,7 +150,7 @@ class RbacPublicVarGroupPermissionService constructor(
         projectId: String,
         permission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val resourcePermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = publicVarGroupAuthServiceCode,
             resourceType = RESOURCE_TYPE,
@@ -158,6 +158,14 @@ class RbacPublicVarGroupPermissionService constructor(
             resourceCode = projectId,
             permission = permission
         )
+        if (!resourcePermission) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        logger.info("checkPublicVarGroupPermissions userId=$userId, projectId=$projectId, permission=$permission, resourcePermission=$resourcePermission")
+        return resourcePermission
     }
 
     companion object {
