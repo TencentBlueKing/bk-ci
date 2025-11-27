@@ -35,6 +35,6 @@ end
 if tag and string.sub(tag, 1, 11) == "kubernetes-" then
     tag = string.sub(tag, 12)
 end
-ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. tag .. '.svc.cluster.local'
+ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. '.' .. tag .. '.svc.cluster.local'
 
 ngx.exit(200)
