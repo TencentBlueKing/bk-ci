@@ -113,7 +113,7 @@ interface UserTriggerResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "分类", required = true)
-        @QueryParam("type")
+        @PathParam("type")
         type: String,
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")

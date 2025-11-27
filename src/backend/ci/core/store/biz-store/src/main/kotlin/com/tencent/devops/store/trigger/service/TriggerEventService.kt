@@ -26,7 +26,7 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerEventService @Autowired constructor(
     private val atomService: AtomService,
-    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentQueryService: StoreComponentQueryService
 ) {
     fun previewEvent(userId: String, storeId: String): AtomForm? {
         val detailInfo = storeComponentQueryService.getComponentDetailInfoById(
@@ -50,7 +50,8 @@ class TriggerEventService @Autowired constructor(
             keyword = null,
             os = null,
             recommendFlag = null,
-            serviceScope = null
+            serviceScope = null,
+            queryProjectAtomFlag = false
         ).toInt()
         val componentCount = storeComponentQueryService.getComponentCount(
             userId = userId,
@@ -128,7 +129,7 @@ class TriggerEventService @Autowired constructor(
                         version = marketItem.version,
                         defaultVersion = marketItem.version,
                         classType = MarketCommonTriggerElement.classType,
-                        serviceScope = listOf("PIPELINE"),
+                        serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
                         os = marketItem.os ?: emptyList(),
                         logoUrl = marketItem.logoUrl,
                         icon = marketItem.logoUrl,
@@ -173,7 +174,7 @@ class TriggerEventService @Autowired constructor(
         atomCode: String,
         version: String
     ): PipelineAtom? {
-        return when(type) {
+        return when (type) {
             BK_STORE_COMMON_TRIGGER -> {
                 atomService.getPipelineAtom(
                     projectCode = projectCode,
@@ -184,6 +185,7 @@ class TriggerEventService @Autowired constructor(
             }
 
             BK_STORE_CLOUD_DESKTOP_TRIGGER -> {
+
                 storeComponentQueryService.getComponentDetailInfoByCode(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT.name,
@@ -197,13 +199,17 @@ class TriggerEventService @Autowired constructor(
                         classType = "marketBuild",
                         atomStatus = storeDetailInfo.status,
                         creator = userId,
-                        createTime = System.currentTimeMillis(),
-                        updateTime = System.currentTimeMillis(),
-                        versionList = emptyList(),
+                        createTime = 0,
+                        updateTime = 0,
+                        versionList = storeComponentQueryService.getComponentVersionList(
+                            userId = userId,
+                            storeType = StoreTypeEnum.TRIGGER_EVENT,
+                            storeCode = atomCode
+                        ),
                         logoUrl = storeDetailInfo.logoUrl,
                         icon = storeDetailInfo.logoUrl,
                         summary = storeDetailInfo.summary,
-                        serviceScope = listOf("CI"),
+                        serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
                         jobType = "AGENT",
                         os = emptyList(),
                         classifyId = storeDetailInfo.classify?.id,
@@ -214,12 +220,12 @@ class TriggerEventService @Autowired constructor(
                         atomType = storeDetailInfo.rdType ?: "SELF_DEVELOPED",
                         description = storeDetailInfo.description,
                         atomLabelList = emptyList(),
-                        defaultFlag = false,
+                        defaultFlag = true,
                         latestFlag = storeDetailInfo.latestFlag,
-                        htmlTemplateVersion = "1.0",
+                        htmlTemplateVersion = "1.1",
                         buildLessRunFlag = false,
                         weight = 0,
-                        props = emptyMap(),
+                        props = storeDetailInfo.extData?.get(KEY_ATOM_FORM) as Map<String, Any>? ?: mapOf(),
                         data = emptyMap(),
                         recommendFlag = storeDetailInfo.recommendFlag,
                         frontendType = FrontendTypeEnum.NORMAL,
@@ -233,6 +239,6 @@ class TriggerEventService @Autowired constructor(
     }
 
     companion object {
-        const val ALL_TRIGGER = "all"
+        const val SERVICE_SCOPE_PIPELINE = "PIPELINE"
     }
 }

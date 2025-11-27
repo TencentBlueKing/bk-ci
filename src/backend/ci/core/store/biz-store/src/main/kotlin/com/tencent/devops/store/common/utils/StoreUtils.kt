@@ -151,6 +151,10 @@ object StoreUtils {
         return "${storeType}_RELEASE_SPEC_BUS_SERVICE"
     }
 
+    fun getVersionServiceBeanName(storeType: StoreTypeEnum): String {
+        return "${storeType}_VERSION_SERVICE"
+    }
+
     fun checkEditCondition(status: String): Boolean {
         val componentFinalStatusList = listOf(
             StoreStatusEnum.AUDIT_REJECT.name,
