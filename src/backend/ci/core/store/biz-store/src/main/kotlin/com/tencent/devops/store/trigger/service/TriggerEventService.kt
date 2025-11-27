@@ -93,7 +93,8 @@ class TriggerEventService @Autowired constructor(
             recommendFlag = null,
             serviceScope = null,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            queryProjectAtomFlag = false
         ).data
     }
 
