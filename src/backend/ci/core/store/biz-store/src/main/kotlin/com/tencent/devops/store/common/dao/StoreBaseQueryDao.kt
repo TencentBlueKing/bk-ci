@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
@@ -35,6 +36,7 @@ import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -489,7 +491,6 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
-        status: StoreStatusEnum? = null,
         page: Int? = null,
         pageSize: Int? = null
     ): Result<TStoreBaseRecord> {
@@ -497,12 +498,6 @@ class StoreBaseQueryDao {
             val baseStep = dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .let {
-                    if (status != null) {
-                        it.and(STATUS.eq(status.name))
-                    }
-                    it
-                }
                 .orderBy(CREATE_TIME.desc())
             if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -546,6 +541,36 @@ class StoreBaseQueryDao {
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getVersionsByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        status: StoreStatusEnum? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<out Record> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.select(
+                VERSION.`as`(KEY_VERSION),
+                STATUS.`as`(KEY_ATOM_STATUS)
+            )
+                    .where(STORE_CODE.eq(storeCode))
+                    .and(STORE_TYPE.eq(storeType.type.toByte()))
+                    .let {
+                        if (status != null) {
+                            it.and(STATUS.eq(status.name))
+                        }
+                        it
+                    }
+                    .orderBy(CREATE_TIME.desc())
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 }

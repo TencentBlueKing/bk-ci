@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.common.service.AbstractComponentVersionService
+import com.tencent.devops.store.common.service.impl.DefaultComponentVersionService
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
@@ -165,5 +167,15 @@ object StoreUtils {
         )
         // 判断最近一个组件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
         return componentFinalStatusList.contains(status)
+    }
+
+    fun getVersionService(storeType: StoreTypeEnum): AbstractComponentVersionService {
+        val beanName = StoreUtils.getVersionServiceBeanName(storeType)
+        return if (SpringContextUtil.isBeanExist(beanName)) {
+            SpringContextUtil.getBean(AbstractComponentVersionService::class.java, beanName)
+        } else {
+            // 获取默认的成员bean对象
+            SpringContextUtil.getBean(DefaultComponentVersionService::class.java)
+        }
     }
 }

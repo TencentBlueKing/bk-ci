@@ -910,12 +910,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeCode: String,
         storeStatusEnum: StoreStatusEnum?
     ): List<VersionInfo> {
-        val records = storeBaseQueryDao.getComponentsByCode(
+        val records = storeBaseQueryDao.getVersionsByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType
         )
-        return getVersionService(storeType).convertVersionList(records = records)
+        return StoreUtils.getVersionService(storeType).convertVersionList(records = records)
     }
 
     private fun isUpdateRequired(
@@ -1320,16 +1320,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 JsonUtil.to(str, object : TypeReference<Map<String, Any>>() {})
             }
             else -> str
-        }
-    }
-
-    private fun getVersionService(storeType: StoreTypeEnum): AbstractComponentVersionService {
-        val beanName = StoreUtils.getVersionServiceBeanName(storeType)
-        return if (SpringContextUtil.isBeanExist(beanName)) {
-            SpringContextUtil.getBean(AbstractComponentVersionService::class.java, beanName)
-        } else {
-            // 获取默认的成员bean对象
-            SpringContextUtil.getBean(DefaultComponentVersionService::class.java)
         }
     }
 }

@@ -9,6 +9,7 @@ import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.jooq.Record
+import org.jooq.Result
 
 /**
  * 组件版本号服务
@@ -17,7 +18,7 @@ abstract class AbstractComponentVersionService {
     /**
      * 转化组件版本信息，并按照主版本号进行分组
      */
-    open fun convertVersionList(records: List<Record>): List<VersionInfo> {
+    open fun convertVersionList(records: Result<out Record>): List<VersionInfo> {
         val versionList = mutableListOf<VersionInfo>()
         var tmpVersionPrefix = ""
         records.forEach {
@@ -42,7 +43,11 @@ abstract class AbstractComponentVersionService {
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
-            if (tmpVersionPrefix != versionPrefix && (it[KEY_BRANCH_TEST_FLAG] as Boolean?) != true) {
+            // 处理分支版本
+            if (
+                    tmpVersionPrefix != versionPrefix &&
+                    (it.indexOf(KEY_BRANCH_TEST_FLAG) == -1 || (it[KEY_BRANCH_TEST_FLAG] as Boolean?) != true)
+            ) {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*"))
                 // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix

@@ -772,7 +772,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         } else {
             null
         }
-        val versionList = mutableListOf<VersionInfo>()
         // 查询插件版本信息
         val versionRecords = if (projectCode != null) {
             val defaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
@@ -790,35 +789,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomStatusList = atomStatusList
             )
         }
-        var tmpVersionPrefix = ""
-        versionRecords?.forEach {
-            val atomVersion = it[KEY_VERSION] as String
-            val index = atomVersion.indexOf(".")
-            val versionPrefix = atomVersion.substring(0, index + 1)
-            var versionName = atomVersion
-            var latestVersionName = VersionUtils.convertLatestVersionName(atomVersion)
-            val atomStatus = it[KEY_ATOM_STATUS] as Byte
-            val atomVersionStatusList = listOf(
-                AtomStatusEnum.TESTING.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        val versionList = versionRecords?.let {
+            StoreUtils.getVersionService(StoreTypeEnum.ATOM).convertVersionList(
+                records = it
             )
-            if (atomVersionStatusList.contains(atomStatus)) {
-                // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
-                val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
-                val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = "$storeAtomStatusPrefix$atomStatusName"
-                )
-                versionName = "$atomVersion ($atomStatusMsg)"
-                latestVersionName = "$latestVersionName ($atomStatusMsg)"
-            }
-            if (tmpVersionPrefix != versionPrefix && (it[KEY_BRANCH_TEST_FLAG] as Boolean) != true) {
-                versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
-                tmpVersionPrefix = versionPrefix
-            }
-            versionList.add(VersionInfo(versionName, atomVersion)) // 添加具体的版本号
-        }
+        } ?: listOf()
         return Result(versionList)
     }
 
