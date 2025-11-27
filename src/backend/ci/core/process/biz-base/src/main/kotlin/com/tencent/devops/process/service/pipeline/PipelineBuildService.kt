@@ -468,7 +468,7 @@ class PipelineBuildService(
         return client.get(ServiceDeptResource::class).listUserInfos(
             memberIds = listOf(userId),
             tenantId = tenantId
-        ).data?.get(0)?.displayName ?: userId
+        ).data?.getOrNull(0)?.displayName ?: userId
     }
 
     fun failIfVariableInvalid(pipelineParamMap: MutableMap<String, BuildParameters>) {
