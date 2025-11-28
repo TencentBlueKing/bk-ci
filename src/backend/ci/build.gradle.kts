@@ -1,6 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "1.0.0"
-    detektCheck
+    id("com.tencent.devops.boot") version "1.1.0"
     nexusPublishing
     licenseReport // 检查License合规
 }
@@ -132,6 +131,8 @@ allprojects {
                 entry("devops-scm-api")
                 entry("devops-scm-spring-boot-starter")
             }
+            // lettuce 6.4.1 有BUG
+            dependency("io.lettuce:lettuce-core:6.4.2.RELEASE")
         }
     }
 
