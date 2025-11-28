@@ -2006,7 +2006,7 @@
   "noVariablesAvailable": "暂无变量",
   "publicVar": {
     "publicVariable": "公共变量",
-    "publicVarTips": "仅为项目下变量的公共定义，不支持用于跨流水线数据传递",
+    "publicVarTips": "申明项目下的公共变量。流水线运行时的赋值变更仅在对应的运行中生效，不会影响其他流水线中的使用。",
     "addParamGroup": "新增变量组",
     "editParamGroup": "编辑变量组",
     "importParamGroup": "导入变量组",
@@ -2020,7 +2020,7 @@
     "lastModifiedBy": "更新人",
     "lastModifiedDate": "更新时间",
     "operation": "操作",
-    "importParamGroupLabel": "支持.yaml 类型文件，文件小于2 M。格式请参考 {0}",
+    "importParamGroupLabel": "支持.yaml 类型文件，文件小于2M。格式请参考 {0}",
     "templateFile": "模板文件",
     "release": "去发布",
     "basicInfo": "基础信息",
@@ -2064,7 +2064,8 @@
     "updateConstTips": "修改常量: {0}",
     "updateDesc": "[描述修改为] {0}",
     "updateDefault": "[默认值修改为] {0}",
-    "publishedTips": "修改将自动应用到所有使用此常量的流水线/模版，请谨慎操作！",
+    "constantDefaultValueChangeTips": "修改将自动应用到所有使用此常量的流水线/模版，请谨慎操作！",
+    "paramDefaultValueChangeTips": "修改将自动应用到所有使用此变量的流水线/模版，请谨慎操作！",
     "modifiedTitle": "修改内容",
     "referencesTitle": "相关流水线/模板",
     "lastModifiedUser": "最近更新人",
@@ -2079,7 +2080,21 @@
     "update": "修改",
     "varDesc": "变量描述",
     "constantDesc": "常量描述",
-    "referencesTips": "以下流水线/模板都将同步更新此常量属性",
+    "releasePreview": {
+      "VARIABLE": {
+        "UPDATE": "以下流水线/模板都将{0}此变量属性",
+        "DELETE": "以下流水线/模板将{0}此变量"
+      },
+      "CONSTANT": {
+        "UPDATE": "以下流水线/模板都将{0}此常量属性",
+        "DELETE": "以下流水线/模板将{0}此常量"
+      },
+      "syncUpdate": "同步更新",
+      "canNotUse": "不能再使用",
+      "newContent": "新增内容",
+      "variableContent": "变量内容",
+      "constantContent": "常量内容"
+    },
     "manageGroup": "管理变量组",
     "addVarGroup": "添加变量组",
     "varGroup": "变量组",
@@ -2091,11 +2106,15 @@
     "viewGroup": "查看变量组",
     "varGroupName": "变量组：{0}",
     "changeConstDefaultValueTips": "常量值变更后将影响流水线/模板执行逻辑",
+    "changeVariableDefaultValueTips": "默认值变更后将影响流水线/模板执行逻辑",
+    "changeFieldValueTips": "属性变更后将影响流水线/模板执行逻辑",
     "paramRemoveByGroupTips": "此变量已从变量组：公共变量组 {0} 中删除",
     "removeParamInPipeline": "从流水线移出",
     "beenCited": "是否已引用",
     "removeParamTitle": "确认删除此变量吗？",
     "paramGroupIdRule": "由英文字母、数字、下划线组成，且以英文字母开头，3～32个字符",
-    "paramReferenceStatus": "变量引用情况"
+    "paramReferenceStatus": "变量引用情况",
+    "repeatTips": "流水线（{0}）中存在同名变量，请先修改流水线变量或重选公共变量组",
+    "publicVarGroup": "公共变量组 - {0}"
   }
 }

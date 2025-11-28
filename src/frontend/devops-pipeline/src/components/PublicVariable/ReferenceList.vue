@@ -4,12 +4,15 @@
             type="info"
             :title="$t('publicVar.referenceTips')"
         />
-        <div class="reference-table-wrapper">
+        <div
+            class="reference-table-wrapper"
+        >
             <p class="title">
                 {{ $t('publicVar.referenceTitle') }}
             </p>
             <bk-table
                 :data="renderData"
+                v-bkloading="{ isLoading }"
                 :pagination="pagination"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
@@ -49,7 +52,7 @@
 </template>
 
 <script setup>
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { convertTime } from '@/utils/util'
     import UseInstance from '@/hook/useInstance'
     const { proxy } = UseInstance()
@@ -57,6 +60,7 @@
         groupData: Object
     })
     const referenceList = ref([])
+    const isLoading = ref(false)
     const pagination = ref({
         current: 1,
         limit: 20,
@@ -70,8 +74,17 @@
             }
         })
     })
+    watch(() => props.groupData.groupName, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            fetchReferenceList()
+        }
+    }, {
+        deep: true,
+        immediate: true
+    })
     async function fetchReferenceList () {
         try {
+            isLoading.value = true
             const res = await proxy.$store.dispatch('publicVar/getReferenceList', {
                 groupName: props.groupData?.groupName,
                 params: {
@@ -89,6 +102,8 @@
                 theme: 'error',
                 message: e.message || e
             })
+        } finally {
+            isLoading.value = false
         }
     }
     function handleToPipeline (row) {
@@ -104,9 +119,6 @@
         pagination.value.limit = limit
         fetchReferenceList()
     }
-    onMounted(() => {
-        fetchReferenceList()
-    })
 </script>
 
 <style lang="scss">

@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { CODE_MODE } from '@/utils/pipelineConst'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
@@ -185,13 +185,21 @@
     })
     const { proxy } = UseInstance()
     const formRef = ref(null)
+    const isLoading = ref(false)
     const isEditPage = computed(() => props.showType === EDIT_VARIABLE)
     const publicVars = computed(() => props.groupData?.publicVars ?? [])
     const publicVarMode = computed(() => proxy.$store.state?.publicVar?.publicVarMode)
     const publicVarYaml = computed(() => proxy.$store.state?.publicVar?.publicVarYaml)
     const isCodeMode = computed(() => publicVarMode.value === CODE_MODE)
     const operateType = computed(() => proxy.$store.state.publicVar.operateType)
-    
+    watch(() => props.groupData.groupName, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            fetchVariablesByGroupName()
+        }
+    }, {
+        deep: true,
+        immediate: true
+    })
     const formRules = {
         groupName: [
             {
@@ -271,6 +279,7 @@
     async function fetchVariablesByGroupName () {
         if (!props.groupData?.groupName || props.isRelease || operateType.value === OPERATE_TYPE.CREATE) return
         try {
+            isLoading.value = true
             const res = await proxy.$store.dispatch('publicVar/getVariables', {
                 groupName: props.groupData?.groupName
             })
@@ -286,6 +295,8 @@
             })
         } catch (e) {
             console.error(e)
+        } finally {
+            isLoading.value = false
         }
     }
     function handleChangeGroupData (name, value) {
@@ -316,10 +327,6 @@
 
     defineExpose({
         validateForm
-    })
-
-    onMounted(() => {
-        fetchVariablesByGroupName()
     })
 </script>
 

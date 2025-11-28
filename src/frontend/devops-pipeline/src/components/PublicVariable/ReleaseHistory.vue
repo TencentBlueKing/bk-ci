@@ -1,6 +1,7 @@
 <template>
     <section class="reference-history-main">
         <bk-table
+            v-bkloading="{ isLoading }"
             :data="renderData"
             :pagination="pagination"
             @page-change="handlePageChange"
@@ -24,75 +25,20 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="{ row }">
-                    <template v-if="row.isCreated">
-                        {{
-                            row.publishContent.type === VARIABLE
-                                ? $t('publicVar.newVariableTips', [row.publishContent.varName])
-                                : $t('publicVar.newConstTips', [row.publishContent.varName])
-                        }}
-                    </template>
-                    <template v-else-if="row.isDeleted">
-                        {{
-                            row.publishContent.type === VARIABLE
-                                ? $t('publicVar.deleteVariableTips', [row.publishContent.varName])
-                                : $t('publicVar.deleteConstTips', [row.publishContent.varName])
-                        }}
-                    </template>
-                    <template v-else-if="row.isUpdated">
-                        <bk-popover
-                            placement="top"
-                            max-width="300"
-                            ext-cls="publish-content-popover"
-                        >
-                            <div>
-                                <span>
-                                    {{
-                                        row.publishContent.type === VARIABLE
-                                            ? $t('publicVar.updateVariableTips', [row.publishContent.varName])
-                                            : $t('publicVar.updateConstTips', [row.publishContent.varName])
-                                    }}
-                                </span>
-                                <span>
-                                    {{ $t('publicVar.updateDesc', [row.publishContent.desc]) }}
-                                </span>
-                                <span>
-                                    {{ $t('publicVar.updateDefault', [row.publishContent.defaultValue]) }}
-                                </span>
-                            </div>
-                            <div slot="content">
-                                <p>
-                                    {{
-                                        row.publishContent.type === VARIABLE
-                                            ? $t('publicVar.updateVariableTips', [row.publishContent.varName])
-                                            : $t('publicVar.updateConstTips', [row.publishContent.varName])
-                                    }}
-                                </p>
-                                <p>
-                                    {{ $t('publicVar.updateDesc', [row.publishContent.desc]) }}
-                                </p>
-                                <p>
-                                    {{ $t('publicVar.updateDefault', [row.publishContent.defaultValue]) }}
-                                </p>
-                            </div>
-                        </bk-popover>
-                    </template>
+                    <span>{{ row.content }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column
                 :label="$t('publicVar.versionDesc')"
                 prop="desc"
                 show-overflow-tooltip
-            >
-                <template slot-scope="{ row }">
-                    {{ row.desc || '--' }}
-                </template>
-            </bk-table-column>
+            />
         </bk-table>
     </section>
 </template>
 
 <script setup>
-    import { ref, computed, onMounted } from 'vue'
+    import { ref, computed, watch } from 'vue'
     import { convertTime } from '@/utils/util'
     import {
         OPERATE_TYPE,
@@ -105,6 +51,7 @@
         groupData: Object
     })
     const releaseHistoryList = ref([])
+    const isLoading = ref(false)
     const pagination = ref({
         current: 1,
         limit: 20,
@@ -112,19 +59,28 @@
     })
     const renderData = computed(() => {
         return releaseHistoryList.value.map(i => {
-            const publishContent = JSON.parse(i.content)
+            // const publishContent = JSON.parse(i.content)
             return {
                 ...i,
                 pubTime: convertTime(i.pubTime),
-                publishContent,
-                isCreated: publishContent.operate === OPERATE_TYPE.CREATE,
-                isUpdated: publishContent.operate === OPERATE_TYPE.UPDATE,
-                isDeleted: publishContent.operate === OPERATE_TYPE.DELETE,
+                // publishContent,
+                // isCreated: publishContent.operate === OPERATE_TYPE.CREATE,
+                // isUpdated: publishContent.operate === OPERATE_TYPE.UPDATE,
+                // isDeleted: publishContent.operate === OPERATE_TYPE.DELETE,
             }
         })
     })
+    watch(() => props.groupData.groupName, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+            fetchReleaseHistory()
+        }
+    }, {
+        deep: true,
+        immediate: true
+    })
     async function fetchReleaseHistory () {
         try {
+            isLoading.value = true
             const res = await proxy.$store.dispatch('publicVar/getReferenceHistory', {
                 groupName: props.groupData?.groupName,
                 page: pagination.value.current,
@@ -137,6 +93,8 @@
                 theme: 'error',
                 message: e.message || e
             })
+        } finally {
+            isLoading.value = false
         }
     }
     function handlePageChange (page) {
@@ -148,9 +106,6 @@
         pagination.value.limit = limit
         fetchReleaseHistory()
     }
-    onMounted(() => {
-        fetchReleaseHistory()
-    })
 </script>
 
 <style lang="scss">

@@ -2005,7 +2005,7 @@
   "noVariablesAvailable": "No Variables Available",
   "publicVar": {
     "publicVariable": "Public Variables",
-    "publicVarTips": "Only serves as common definitions for project variables; cannot be used for cross-pipeline data transfer",
+    "publicVarTips": "Declare public variables under the project. Changes to their assignments during pipeline runtime only take effect in the corresponding runtime and will not affect their use in other pipelines.",
     "addParamGroup": "Add Variable Group",
     "editParamGroup": "Edit Variable Group",
     "importParamGroup": "Import Variable Group",
@@ -2063,7 +2063,8 @@
     "updateConstTips": "Updated constant: {0}",
     "updateDesc": "[Description changed to] {0}",
     "updateDefault": "[Default value changed to] {0}",
-    "publishedTips": "Changes will automatically apply to ALL pipelines/templates using this constant. Proceed with caution!",
+    "constantDefaultValueChangeTips": "Changes will automatically apply to ALL pipelines/templates using this constant. Proceed with caution!",
+    "paramDefaultValueChangeTips": "The changes will be automatically applied to all pipelines/templates that use this variable, so please proceed with caution!",
     "modifiedTitle": "Modifications",
     "referencesTitle": "Related Pipelines/Templates",
     "lastModifiedUser": "Last Modified By",
@@ -2078,7 +2079,21 @@
     "update": "Edit",
     "varDesc": "Var Desc",
     "constantDesc": "Const Desc",
-    "referencesTips": "Linked pipelines/templates will update this constant",
+    "releasePreview": {
+      "VARIABLE": {
+        "UPDATE": "The following pipelines/templates will {0} this variable property.",
+        "DELETE": "TThe following pipeline/template will {0} this variable."
+      },
+      "CONSTANT": {
+        "UPDATE": "The following pipelines/templates will {0} this constant property.",
+        "DELETE": "The following pipeline/template will {0} this constant."
+      },
+      "syncUpdate": "synchronously update",
+      "canNotUse": "no longer be able to use",
+      "newContent": "New Content",
+      "variableContent": "Variable Content",
+      "constantContent": "Constant Content"
+    },
     "manageGroup": "Manage Variable Groups",
     "addVarGroup": "Add Variable Group",
     "varGroup": "Variable Group",
@@ -2090,11 +2105,15 @@
     "viewGroup": "View variable group",
     "varGroupName": "Variable Group: {0}",
     "changeConstDefaultValueTips": "Changing constant values will affect the execution logic of pipelines/templates",
+    "changeVariableDefaultValueTips": "Changing the default value will affect the pipeline/template execution logic.",
+    "changeFieldValueTips": "The attribute change will affect the pipeline/template execution logic.",
     "paramRemoveByGroupTips": "This variable has been removed from the variable group: Public Variable Group {0}",
     "removeParamInPipeline": "Remove",
     "beenCited": "Reference status",
     "removeParamTitle": "Are you sure you want to delete this variable?",
     "paramGroupIdRule": "Only begin with letters, and only contain letters, numbers, and underscores",
-    "paramReferenceStatus": "Param Usage Status"
+    "paramReferenceStatus": "Param Usage Status",
+    "repeatTips": "If there is a variable with the same name in the pipeline ({0}), please modify the pipeline variable or reselect the common variable group.",
+    "publicVarGroup": "Public Variable Group - {0}"
   }
 }

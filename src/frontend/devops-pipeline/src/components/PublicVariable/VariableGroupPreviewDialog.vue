@@ -39,86 +39,77 @@
                 v-bkloading="{ isLoading }"
                 class="right-wrapper"
             >
-                <div class="title">
-                    {{ $t('publicVar.modifiedTitle') }}
-                </div>
-                <div class="change-content">
-                    <div class="row-item">
-                        <span class="key">
-                            {{ curVarData.type === VARIABLE ? $t('newui.pipelineParam.varAlias') : $t('newui.pipelineParam.constAlias') }}
-                        </span>
-                        <template v-if="curVarData?.content?.changes?.alias">
+                <template v-if="curVarData?.content?.operate === OPERATE_TYPE.UPDATE">
+                    <div class="title">
+                        {{ $t('publicVar.modifiedTitle') }}
+                    </div>
+                    <div class="change-content">
+                        <div
+                            v-for="(value, key) in curVarData?.content?.changes"
+                            class="row-item"
+                            :key="key"
+                        >
+                            <span class="key">
+                                <i
+                                    v-if="changeFieldsNeedTips.includes(key) && (key === 'defaultValue' ? value?.newValue : value?.oldValue !== value?.newValue)"
+                                    class="bk-icon icon-exclamation-circle-shape tooltips-icon"
+                                    v-bk-tooltips="changeFieldValueTips(key)"
+                                />
+                                {{ fieldTitleMap[key] }}
+                            </span>
                             <span class="value">
-                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'alias')?.oldValue }}</span>
+                                <span class="current-value">{{ key === 'defaultValue' ? value?.oldValue : proxy.$t(`${value.oldValue}`) }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'alias').newValue }}</span>
+                                <span class="after-value">{{ key === 'defaultValue' ? value?.newValue : proxy.$t(`${value.newValue}`) }}</span>
                             </span>
-                        </template>
-                        <template v-else>
-                            <span class="value">
-                                <span class="after-value">{{ curVarData?.content?.alias ?? '--' }}</span>
-                            </span>
-                        </template>
+                        </div>
                     </div>
-                    <div class="row-item">
-                        <span class="key">
-                            {{ curVarData.type === VARIABLE ? $t('publicVar.varDesc') : $t('publicVar.constantDesc') }}
-                        </span>
-                        <template v-if="curVarData?.content?.changes?.desc">
-                            <span class="value">
-                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'desc')?.oldValue }}</span>
-                                <Logo
-                                    class="arrow-right-icon"
-                                    size="18"
-                                    name="arrow-right"
-                                />
-                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'desc').newValue }}</span>
-                            </span>
-                        </template>
-                        <template v-else>
-                            <span class="value">
-                                <span class="after-value">{{ curVarData?.content?.desc ?? '--' }}</span>
-                            </span>
-                        </template>
+                </template>
+                <template v-else>
+                    <div class="title">
+                        {{ curVarData?.content?.operate === OPERATE_TYPE.CREATE
+                            ? proxy.$t('publicVar.releasePreview.newContent')
+                        : curVarData.type === VARIABLE ? proxy.$t('publicVar.releasePreview.variableContent')
+                        : proxy.$t('publicVar.releasePreview.constantContent') }}
                     </div>
-                    <div class="row-item">
-                        <span class="key">
-                            <i
-                                v-if="curVarData.type === CONSTANT && curVarData?.getChangesByField(curVarData, 'defaultValue')?.newValue"
-                                class="bk-icon icon-exclamation-circle-shape tooltips-icon"
-                                v-bk-tooltips="$t('publicVar.changeConstDefaultValueTips')"
-                            />
-                            {{ curVarData.type === VARIABLE ? $t('publicVar.defaultValue') : $t('newui.pipelineParam.constValue') }}
-                        </span>
-                        <template v-if="curVarData?.content?.changes?.defaultValue">
-                            <span class="value">
-                                <span class="current-value">{{ curVarData?.getChangesByField(curVarData, 'defaultValue')?.oldValue }}</span>
-                                <Logo
-                                    class="arrow-right-icon"
-                                    size="18"
-                                    name="arrow-right"
-                                />
-                                <span class="after-value">{{ curVarData?.getChangesByField(curVarData, 'defaultValue')?.newValue }}</span>
+                    <div class="change-content">
+                        <div
+                            v-for="(value, key) in curVarData?.content?.showInfo"
+                            class="row-item"
+                            :key="key"
+                        >
+                            <span class="key">
+                                {{ fieldTitleMap[key] }}
                             </span>
-                        </template>
-                        <template v-else>
                             <span class="value">
-                                <span class="after-value">{{ curVarData?.content?.defaultValue ?? '--' }}</span>
+                                <span class="after-value">{{ value }}</span>
                             </span>
-                        </template>
+                        </div>
                     </div>
-                </div>
-                <div class="references-list">
+                </template>
+                <div
+                    class="references-list"
+                    v-if="curVarData?.content?.operate !== OPERATE_TYPE.CREATE"
+                >
                     <div class="title">
                         <div>
                             {{ $t('publicVar.referencesTitle') }}
-                            <span class="references-tips">
-                                {{ $t('publicVar.referencesTips') }}
-                            </span>
+                            <i18n
+                                :path="`publicVar.releasePreview.${curVarData.type}.${curVarData?.content?.operate}`"
+                                tag="span"
+                                class="references-tips"
+                                slot="title"
+                            >
+                                <span class="highlight">
+                                    {{ curVarData.content?.operate === OPERATE_TYPE.UPDATE
+                                        ? proxy.$t('publicVar.releasePreview.syncUpdate')
+                                    : proxy.$t('publicVar.releasePreview.canNotUse') }}
+                                </span>
+                            </i18n>
                         </div>
                     </div>
                     <render-related-table
@@ -149,7 +140,8 @@
     import { convertTime } from '@/utils/util'
     import {
         VARIABLE,
-        CONSTANT
+        CONSTANT,
+        OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
     const { proxy } = UseInstance()
     const props = defineProps({
@@ -164,7 +156,31 @@
         top: window.innerHeight < 800 ? '20' :  window.innerHeight > 1000 ? '8%' : '80'
     })
     const curVarData = computed(() => props.previewData[activeIdx.value] ?? {})
+    const fieldTitleMap = computed(() => {
+        return {
+            'alias': curVarData.value.type === VARIABLE ? proxy.$t('newui.pipelineParam.varAlias') : proxy.$t('newui.pipelineParam.constAlias'),
+            'desc': curVarData.value.type === VARIABLE ? proxy.$t('publicVar.varDesc') : proxy.$t('publicVar.constantDesc'),
+            'defaultValue': curVarData.value.type === VARIABLE ? proxy.$t('publicVar.defaultValue') : proxy.$t('newui.pipelineParam.constValue'),
+            'readOnly': proxy.$t('editPage.readOnlyOnRun'),
+            'required': proxy.$t('newui.isBuildParam'),
+            'valueNotEmpty': proxy.$t('editPage.required')
+        }
+    })
+    // 默认值、运行时只读、是否必填、是否为入参， 属性值变更时提示
+    const changeFieldsNeedTips = computed(() => ['defaultValue', 'readOnly', 'required', 'valueNotEmpty'])
+    const changeFieldValueTips = (key) => {
+        if (key === 'defaultValue' && curVarData.value.type === VARIABLE) {
+            return proxy.$t('publicVar.changeVariableDefaultValueTips')
+        }
+        if (key === 'defaultValue' && curVarData.value.type === CONSTANT) {
+            return proxy.$t('publicVar.changeConstDefaultValueTips')
+        }
+        return proxy.$t('publicVar.changeFieldValueTips')
+    }
     watch(() => curVarData.value, () => {
+        if (curVarData.value?.content?.operate === OPERATE_TYPE.CREATE) {
+            return
+        }
         isLoading.value = true
         Promise.all([
             fetchReferenceList('PIPELINE'),
@@ -357,10 +373,14 @@
                 margin-bottom: 8px;
             }
             .references-tips {
+                display: inline-flex;
                 color: #979BA5;
                 font-size: 12px;
                 margin-left: 16px;
                 font-weight: 400;
+                .highlight {
+                    color:#eaa53b;
+                }
             }
             .change-content {
                 font-size: 12px;

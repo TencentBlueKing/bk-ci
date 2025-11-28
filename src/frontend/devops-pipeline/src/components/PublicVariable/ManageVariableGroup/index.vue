@@ -182,14 +182,14 @@
         const requiredParam = selectedVariableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
         const otherParam = selectedVariableList.value.filter(i => i.type === VARIABLE && !i.buildFormProperty.required)
         const constantParam = selectedVariableList.value.filter(i => i.type === CONSTANT)
-
         return [
             ...(
                 requiredParam.length ? [
                     {
                         title: proxy.$t('newui.pipelineParam.buildParam'),
                         data: requiredParam,
-                        key: VARIABLE
+                        key: VARIABLE,
+                        repeatTips: getRepeatTips(requiredParam)
                     }
                 ] : []
             ),
@@ -198,7 +198,8 @@
                     {
                         title: proxy.$t('newui.pipelineParam.otherVar'),
                         data: otherParam,
-                        key: VARIABLE
+                        key: VARIABLE,
+                        repeatTips: getRepeatTips(otherParam)
                     }
                 ] : []
             ),
@@ -207,7 +208,8 @@
                     {
                         title: proxy.$t('publicVar.constant'),
                         data: constantParam,
-                        key: CONSTANT
+                        key: CONSTANT,
+                        repeatTips: getRepeatTips(constantParam)
                     }
                 ] : []
             )
@@ -293,14 +295,18 @@
         newGroups.value = {
             groupName: id
         }
-        selectedVariableList.value = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo',  {
+        const res = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo',  {
             referId: proxy.$route.params.pipelineId,
             params: {
                 referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
-                referVersion: proxy.$route.params.version,
+                referVersion: proxy.$route.params.version || proxy.$store.state.atom?.pipelineInfo?.version,
                 groupName: id
             }
         })
+        selectedVariableList.value = res.map(i => ({
+            ...i,
+            isRepeat: !!(props.globalParams.find(param => param.name === i.buildFormProperty.id))
+        }))
     }
     async function fetchAllVarGroupByGroupName () {
         try {
@@ -308,6 +314,7 @@
                 return {
                     ...i,
                     isDeleted: !varGroupList.value.find(group => group.groupName === i.groupName),
+                    isRepeat: !!(props.globalParams.find(param => param?.name === i?.buildFormProperty?.id))
                 }
             })
             allProjectVarGroup.value = list.map((data, index) => ({
@@ -390,6 +397,29 @@
     }
     function hideSlider () {
         proxy.$emit('update:isShow', false)
+    }
+
+    function getRepeatTips (list = []) {
+        const isRepeatParamId = list?.find(param => param.isRepeat)?.varName || ''
+        const repeatParam = props.globalParams.find(param => param.name === isRepeatParamId)
+        if (repeatParam) {
+            const isRequiredParam = repeatParam.required
+            const isConstantParam = repeatParam.constant
+            const category = repeatParam.category ? repeatParam.category : proxy.$t('notGrouped')
+            let tips = ''
+            if (isConstantParam) {
+                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.constParam')}-${category}`])
+            }
+            if (isRequiredParam) {
+                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.buildParam')}-${category}`])
+            } else {
+                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.otherVar')}-${category}`])
+            }
+            
+            return repeatParam.varGroupName ? proxy.$t('publicVar.repeatTips', [proxy.$t('publicVar.publicVarGroup', [repeatParam.varGroupName])])
+                : tips
+        }
+        return ''
     }
 </script>
 

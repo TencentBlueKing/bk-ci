@@ -55,6 +55,7 @@
                     v-for="data in renderVariableList"
                     :key="data.key"
                 >
+                    {{ data[0] }}
                     <variable-table
                         show-ref
                         :data="data"
@@ -165,7 +166,7 @@
                 referId: proxy.$route.params.pipelineId,
                 params: {
                     referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
-                    referVersion: proxy.$route.params.version,
+                    referVersion: proxy.$route.params.version || proxy.$store.state.atom?.pipelineInfo?.version,
                     groupName: props.data.groupName
                 }
             })
@@ -186,6 +187,13 @@
 
 <style lang="scss">
 .render-var-group-main {
+    &:hover {
+        .category-collapse-trigger,
+        .collapse-content {
+            background: #F0F1F5 !important;
+        }
+    }
+  
     .category-collapse-trigger {
         display: flex;
         position: relative;

@@ -2008,7 +2008,7 @@
   "noVariablesAvailable": "利用可能な変数がありません",
   "publicVar": {
     "publicVariable": "パブリック変数",
-    "publicVarTips": "プロジェクト内の変数の共通定義のみであり、クロスパイプラインのデータ伝送には使用できません",
+    "publicVarTips": "プロジェクト内でパブリック変数を宣言します。パイプライン実行時に変数の割り当てを変更した場合、その変更は対応するランタイムにのみ反映され、他のパイプラインでの使用には影響しません。",
     "addParamGroup": "新しい変数グループを追加",
     "editParamGroup": "変数グループを編集",
     "importParamGroup": "変数グループをインポート",
@@ -2066,7 +2066,8 @@
     "updateConstTips": "定数を変更: {0}",
     "updateDesc": "[説明を変更しました] {0}",
     "updateDefault": "[デフォルト値を変更しました] {0}",
-    "publishedTips": "この変更は、この定数を使用しているすべてのパイプライン/テンプレートに自動的に適用されます。操作には注意してください！",
+    "constantDefaultValueChangeTips": "この変更は、この定数を使用しているすべてのパイプライン/テンプレートに自動的に適用されます。操作には注意してください！",
+    "paramDefaultValueChangeTips": "変更は、この変数を使用するすべてのパイプライン/テンプレートに自動的に適用されるため、注意して続行してください。",
     "modifiedTitle": "変更内容",
     "referencesTitle": "関連するパイプライン/テンプレート",
     "lastModifiedUser": "最終更新者",
@@ -2081,7 +2082,21 @@
     "update": "更新",
     "varDesc": "変数の説明",
     "constantDesc": "定数の説明",
-    "referencesTips": "以下のパイプライン/テンプレートは、この定数の属性をすべて同期して更新します",
+    "releasePreview": {
+      "VARIABLE": {
+        "UPDATE": "次のパイプライン/テンプレートは、この変数属性を{0}します。",
+        "DELETE": "次のパイプライン/テンプレートでは、この変数は{0}。"
+      },
+      "CONSTANT": {
+        "UPDATE": "次のパイプライン/テンプレートは、この定数属性を{0}します。",
+        "DELETE": "次のパイプライン/テンプレートでは、この定数は{0}。"
+      },
+      "syncUpdate": "同期的に更新",
+      "canNotUse": "使用できなくなります",
+      "newContent": "新しいコンテンツ",
+      "variableContent": "変数コンテンツ",
+      "constantContent": "定数コンテンツ"
+    },
     "manageGroup": "変数グループの管理",
     "addVarGroup": "変数グループを追加",
     "varGroup": "変数グループ",
@@ -2093,11 +2108,15 @@
     "viewGroup": "変数グループを表示",
     "varGroupName": "変数グループ: {0}",
     "changeConstDefaultValueTips": "定数の値を変更すると、パイプライン/テンプレートの実行ロジックに影響します",
+    "changeVariableDefaultValueTips": "デフォルト値を変更すると、パイプライン/テンプレートの実行ロジックに影響します。",
+    "changeFieldValueTips": "属性の変更は、パイプライン/テンプレートの実行ロジックに影響します。",
     "paramRemoveByGroupTips": "この変数は変数グループ「パブリック変数グループ {0}」から削除されました",
     "removeParamInPipeline": "パイプラインから削除",
     "beenCited": "参照されているか",
     "removeParamTitle": "この変数の削除を確認しますか？",
     "paramGroupIdRule": "英字、数字、アンダースコアで構成され、英字で始まり、3～32文字",
-    "paramReferenceStatus": "変数参照状況"
+    "paramReferenceStatus": "変数参照状況",
+    "repeatTips": "パイプラインに同じ名前の変数 ({0}) がある場合は、パイプライン変数を変更するか、共通変数グループを再度選択してください。",
+    "publicVarGroup": "公共変数グループ - {0}"
   }
 }

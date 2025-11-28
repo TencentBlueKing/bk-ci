@@ -240,7 +240,7 @@
                             class="warning-icon"
                             name="warning-circle"
                         />
-                        {{ $t('publicVar.publishedTips') }}
+                        {{ param.constant ? $t('publicVar.publishedTips') : $t('publicVar.paramDefaultValueChangeTips') }}
                     </p>
                 </form-field>
             </template>

@@ -1,6 +1,7 @@
 <template>
     <section class="pipeline-public-var-main">
         <bk-alert
+            v-if="showPublicVarTips"
             class="public-var-tips"
             type="info"
             closable
@@ -19,7 +20,6 @@
                         theme="primary"
                         icon="plus"
                         class="mr10"
-                        :disabled="showDetail"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -34,7 +34,6 @@
                     </bk-button>
                     <bk-button
                         @click="handleShowImportDialog"
-                        :disabled="showDetail"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -51,7 +50,6 @@
                     ref="searchSelect"
                     class="search-input"
                     v-model="searchValue"
-                    :readonly="showDetail"
                     :data="searchList"
                     clearable
                     :show-condition="false"
@@ -59,12 +57,17 @@
                 />
             </div>
             <bk-table
-                class="public-list-table"
+                :class="{
+                    'public-list-table': true,
+                    'show-detail': showDetail
+                }"
                 :data="renderTableData"
                 height="100%"
                 v-bkloading="{ isLoading }"
                 :row-class-name="rowClassName"
+                :row-style="rowStyle"
                 :pagination="pagination"
+                @row-click="handleRowClick"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
             >
@@ -77,6 +80,16 @@
                     <template slot-scope="{ row }">
                         <a
                             class="group-name-link"
+                            v-perm="{
+                                hasPermission: row?.permission?.canView,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RESOURCE_TYPE.VARIABLE,
+                                    resourceCode: row.groupName,
+                                    action: VARIABLE_RESOURCE_ACTION.VIEW
+                                }
+                            }"
                             @click="handleViewDetail(row)"
                         >
                             {{ row.groupName }}
@@ -91,6 +104,16 @@
                     <template slot-scope="{ row }">
                         <bk-button
                             text
+                            v-perm="{
+                                hasPermission: row?.permission?.canView,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RESOURCE_TYPE.VARIABLE,
+                                    resourceCode: row.groupName,
+                                    action: VARIABLE_RESOURCE_ACTION.VIEW
+                                }
+                            }"
                             @click="handleViewRef(row)"
                         >
                             {{ row.referCount ?? '--' }}
@@ -177,6 +200,7 @@
                 </empty-exception>
             </bk-table>
             <param-group-detail
+                ref="paramGroupDetailRef"
                 :is-show.sync="showDetail"
                 :title="detailTitle"
                 :show-tips="showPublicVarTips"
@@ -196,11 +220,12 @@
 
 <script setup>
     import { ref, watch, computed, onMounted } from 'vue'
-    import { convertTime, randomString } from '@/utils/util'
+    import { convertTime, randomString, navConfirm } from '@/utils/util'
     import {
         ADD_VARIABLE,
         EDIT_VARIABLE,
-        OPERATE_TYPE
+        OPERATE_TYPE,
+        PUBLIC_VAR_TIPS_CLOSED_TIME
     } from '@/store/modules/publicVar/constants'
     import {
         RESOURCE_TYPE,
@@ -220,12 +245,14 @@
     const showType = ref('')
     const detailTitle = ref('')
     const showImportDialog = ref(false)
-    const showPublicVarTips = ref(true)
+    const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000 // 三个月的毫秒数
+    const showPublicVarTips = ref(checkShouldShowTips())
     const readOnly = ref(false)
     const tableData = ref([])
     const newNameFlag = ref('')
     const activeNameFlag = ref('')
     const defaultTab = ref('basicInfo')
+    const paramGroupDetailRef = ref(null)
     const pagination = ref({
         current: 1,
         count: 0,
@@ -237,6 +264,15 @@
     const searchList = computed(() => {
         return [
             {
+                name: proxy.$t('publicVar.varId'),
+                id: 'filterByVarName',
+                default: true
+            },
+            {
+                name: proxy.$t('publicVar.varAlias'),
+                id: 'filterByVarAlias'
+            },
+            {
                 name: proxy.$t('publicVar.paramGroupId'),
                 id: 'filterByGroupName'
             },
@@ -247,14 +283,6 @@
             {
                 name: proxy.$t('publicVar.lastModifiedBy'),
                 id: 'filterByUpdater'
-            },
-            {
-                name: proxy.$t('publicVar.varId'),
-                id: 'filterByVarName'
-            },
-            {
-                name: proxy.$t('publicVar.varAlias'),
-                id: 'filterByVarAlias'
             }
         ]
     })
@@ -317,12 +345,36 @@
     })
 
     function handleShowImportDialog () {
-        if (showDetail.value) return
         showImportDialog.value = true
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.CREATE)
     }
-    function handleViewDetail (row) {
-        if (showDetail.value) return
+
+    async function confirmLeaveDetail () {
+        // 如果当前已经在详情页，检查是否有未保存的变更
+        if (showDetail.value && paramGroupDetailRef.value?.hasGroupDataChanged()) {
+            try {
+                const leave = await navConfirm({
+                    content: proxy.$t('editPage.closeConfirmMsg'),
+                    type: 'warning',
+                    cancelText: proxy.$t('cancel')
+                })
+                if (!leave) {
+                    // 用户取消，不切换
+                    return false
+                }
+            } catch (e) {
+                // 用户取消
+                return false
+            }
+        }
+        return true
+    }
+
+    async function handleViewDetail (row) {
+        const canLeave = await confirmLeaveDetail()
+        if (!canLeave) return
+        paramGroupDetailRef.value?.resetInitialGroupData?.()
+
         activeNameFlag.value = row.groupName
         showDetail.value = true
         readOnly.value = true
@@ -336,8 +388,11 @@
     function handleClearSearchValue () {
         searchValue.value = []
     }
-    function handleAddGroup (groupData = {}) {
-        if (showDetail.value) return
+    async function handleAddGroup (groupData = {}) {
+        const canLeave = await confirmLeaveDetail()
+        if (!canLeave) return
+        
+        paramGroupDetailRef.value?.resetInitialGroupData?.()
         showDetail.value = true
         showType.value = ADD_VARIABLE
         readOnly.value = false
@@ -347,6 +402,7 @@
             ...groupData
         })
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.CREATE)
+        paramGroupDetailRef.value?.init?.()
     }
     function handleEditGroup (row) {
         showDetail.value = true
@@ -363,6 +419,7 @@
             updateTime: row.updateTime,
             modifier: row.modifier
         })
+        paramGroupDetailRef.value?.init?.()
     }
     function handlePageChange (page) {
         pagination.value.current = page
@@ -373,8 +430,45 @@
         pagination.value.limit = limit
         fetchVariableGroupList()
     }
+
+    function handleRowClick (row) {
+        if (!showDetail.value) return
+        handleViewDetail(row)
+    }
+    /**
+     * 检查是否应该显示提示
+     * 如果用户关闭过提示，且距离关闭时间不足三个月，则不显示
+     */
+    function checkShouldShowTips () {
+        try {
+            const closedTime = localStorage.getItem(PUBLIC_VAR_TIPS_CLOSED_TIME)
+            if (!closedTime) {
+                return true
+            }
+            const closedTimestamp = parseInt(closedTime, 10)
+            const currentTime = Date.now()
+            const timeDiff = currentTime - closedTimestamp
+            // 如果距离关闭时间超过三个月，则重新显示
+            return timeDiff >= THREE_MONTHS_MS
+        } catch (e) {
+            console.error('读取本地缓存失败:', e)
+            return true
+        }
+    }
+    
+    /**
+     * 关闭提示并记录关闭时间到本地缓存
+     */
     function handleClosePublicVarTips () {
         showPublicVarTips.value = false
+        localStorage.setItem(PUBLIC_VAR_TIPS_CLOSED_TIME, Date.now().toString())
+    }
+    function rowStyle () {
+        if (showDetail.value) {
+            return {
+                'cursor': 'pointer'
+            }
+        }
     }
     function rowClassName ({ row }) {
         if (row.groupName === newNameFlag.value && !showImportDialog.value && !showDetail.value) return 'is-new'
@@ -421,12 +515,13 @@
         }
     }
     async function handleCopyGroup (data, item) {
+        const publicVars = await getVariablesByGroupName(item.data.groupName)
         const groupData = {
             ...item.data,
             groupName: `${item.data.groupName}_${randomString(4)}`,
-            publicVars: await getVariablesByGroupName(item.data.groupName)
+            publicVars
         }
-        await handleAddGroup(groupData)
+        handleAddGroup(groupData)
     }
     async function handleExportGroup (data, item) {
         try {
@@ -438,8 +533,11 @@
             console.error(e)
         }
     }
-    function handleViewRef (row) {
-        if (showDetail.value) return
+    async function handleViewRef (row) {
+        const canLeave = await confirmLeaveDetail()
+        if (!canLeave) return
+
+        paramGroupDetailRef.value?.resetInitialGroupData?.()
         activeNameFlag.value = row.groupName
         showDetail.value = true
         readOnly.value = true
@@ -555,13 +653,9 @@
         }
     }
     .public-list-table {
-        // &.show-detail {
-            // width: 370px !important;
-            // z-index: 5000;
-            // table tbody tr {
-            //     cursor: pointer !important;
-            // }
-        // }
+        &.show-detail {
+            width: 370px !important;
+        }
         .group-name-link {
             color: #3a84ff;
             cursor: pointer;
