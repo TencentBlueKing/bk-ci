@@ -14,7 +14,7 @@
                 :key="item[settingKey]"
                 :id="item[settingKey]"
                 :name="item[displayKey]"
-                :disabled="item.disabled"
+                :disabled="item.disabled || (readOnly && readOnlyCheck)"
             >
                 <slot
                     name="option-item"
@@ -43,7 +43,7 @@
                     value: value[childrenKey],
                     searchUrl: childrenSearchUrl,
                     replaceKey: cascadeProps.children.replaceKey,
-                    disabled: disabled,
+                    disabled: disabled || (readOnly && readOnlyCheck),
                     placeholder: placeholder,
                     handleChange: (name, value) => handleUpdateChildrenValue(name, value)
                 }
@@ -53,8 +53,8 @@
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
     import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'selector',
         components: {
@@ -145,7 +145,7 @@
                 const props = {
                     value: this.value[this.parentKey],
                     loading: this.isLoading,
-                    disabled: this.disabled || this.readOnly,
+                    disabled: this.disabled || (this.readOnly && this.readOnlyCheck),
                     searchable: this.searchable,
                     multiple: this.multiSelect,
                     clearable: this.clearable,
@@ -273,8 +273,5 @@
                 color: $primaryColor !important;
             }
         }
-    }
-    .is-diff-param {
-        border-color: #FF9C01 !important;
     }
 </style>

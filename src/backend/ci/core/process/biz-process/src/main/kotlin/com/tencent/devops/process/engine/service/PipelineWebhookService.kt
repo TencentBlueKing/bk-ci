@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -50,6 +51,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -75,6 +77,7 @@ class PipelineWebhookService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -90,6 +93,20 @@ class PipelineWebhookService @Autowired constructor(
         version: Int?,
         userId: String
     ) {
+        val pipelineResourceVersion = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: run {
+            logger.info("pipeline resource not found|$projectId|$pipelineId|$version")
+            return
+        }
+        if (pipelineResourceVersion.status == VersionStatus.COMMITTING) {
+            logger.info("pipeline resource is committing status, skip|$projectId|$pipelineId|$version")
+            return
+        }
         val model = getModel(projectId, pipelineId, version)
         if (model == null) {
             logger.info("$pipelineId|$version|model is null")

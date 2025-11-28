@@ -330,7 +330,11 @@ class QueueInterceptor @Autowired constructor(
                     task = task,
                     latestBuildId = latestBuildId,
                     latestStartUser = latestStartUser,
-                    runningCount = runningCount,
+                    runningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                        projectId = projectId,
+                        concurrencyGroup = concurrencyGroup,
+                        status = listOf(BuildStatus.RUNNING)
+                    ).count { it.first == task.pipelineInfo.pipelineId },
                     // #7681 在history表中取出当前流水线下相同并发组排队的数量。
                     queueCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                         projectId = projectId,

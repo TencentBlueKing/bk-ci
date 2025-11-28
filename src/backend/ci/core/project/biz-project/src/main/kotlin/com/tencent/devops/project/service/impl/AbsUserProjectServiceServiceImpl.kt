@@ -411,6 +411,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             serviceCode = pipelineAuthServiceCode,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
+            resourceCode = pipelineId,
             permission = permission
         )
         if (!hasPermission) {

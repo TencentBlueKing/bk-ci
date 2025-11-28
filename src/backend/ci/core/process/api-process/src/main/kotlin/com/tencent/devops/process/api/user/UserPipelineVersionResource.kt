@@ -342,6 +342,24 @@ interface UserPipelineVersionResource {
         version: Int
     ): Result<PipelineVersionSimple>
 
+    @Operation(summary = "判断是否能回滚到指定的版本")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/canRollback")
+    fun canRollbackFromVersion(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "回回滚目标版本", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Result<Boolean>
+
     @Operation(summary = "导出流水线模板")
     @GET
     @Path("{pipelineId}/projects/{projectId}/export")
