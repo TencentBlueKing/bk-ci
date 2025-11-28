@@ -31,9 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_OS
-import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -45,7 +43,6 @@ import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -63,8 +60,6 @@ import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
-import com.tencent.devops.store.common.service.AbstractClassifyService
-import com.tencent.devops.store.common.service.AbstractComponentVersionService
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
@@ -75,16 +70,12 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.HOTTEST
-import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.KEY_URL_SCHEME
@@ -95,7 +86,6 @@ import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
-import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -908,12 +898,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        storeStatusEnum: StoreStatusEnum?
+        storeStatus: StoreStatusEnum?
     ): List<VersionInfo> {
         val records = storeBaseQueryDao.getVersionsByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = storeType
+            storeType = storeType,
+            status = storeStatus
         )
         return StoreUtils.getVersionService(storeType).convertVersionList(records = records)
     }

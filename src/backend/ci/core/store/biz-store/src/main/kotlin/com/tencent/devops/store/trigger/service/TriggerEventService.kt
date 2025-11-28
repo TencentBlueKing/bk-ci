@@ -18,6 +18,7 @@ import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerGroupInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -204,7 +205,8 @@ class TriggerEventService @Autowired constructor(
                         versionList = storeComponentQueryService.getComponentVersionList(
                             userId = userId,
                             storeType = StoreTypeEnum.TRIGGER_EVENT,
-                            storeCode = atomCode
+                            storeCode = atomCode,
+                            storeStatus = StoreStatusEnum.RELEASED
                         ),
                         logoUrl = storeDetailInfo.logoUrl,
                         icon = storeDetailInfo.logoUrl,

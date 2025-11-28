@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 import com.tencent.devops.common.pipeline.enums.StartType
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "TGit事件触发", description = MarketCommonTriggerElement.classType)
+@Schema(title = "创作流触发事件", description = MarketCommonTriggerElement.classType)
 data class MarketCommonTriggerElement(
     @get:Schema(title = "任务名称", required = true)
     override val name: String = "TGit事件触发",
@@ -40,6 +40,8 @@ data class MarketCommonTriggerElement(
     override var status: String? = null,
     @get:Schema(title = "插件用户ID", required = false)
     override var stepId: String? = null,
+    @get:Schema(title = "组件标识", required = false)
+    val atomCode: String,
     @get:Schema(title = "数据", required = true)
     val data: Map<String, Any>
 ) : WebHookTriggerElement(name, id, status) {

@@ -155,6 +155,6 @@ interface StoreComponentQueryService {
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        storeStatusEnum: StoreStatusEnum? = null
+        storeStatus: StoreStatusEnum? = null
     ): List<VersionInfo>
 }
