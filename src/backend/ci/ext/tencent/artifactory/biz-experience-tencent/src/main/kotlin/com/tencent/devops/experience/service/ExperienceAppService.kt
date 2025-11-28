@@ -122,7 +122,7 @@ class ExperienceAppService(
         )
     }
 
-    fun listV3(userId: String, platform: Int, organization: String?): com.tencent.devops.experience.pojo.ExperienceList {
+    fun listV3(userId: String, platform: Int, organization: String?): ExperienceList {
         logger.debug("listV3 , userId:$userId , platform:$platform , organization:$organization")
         val privateExperiences = list(userId, 0, 100, true, platform, organization).records
         val publicExperiences = if (null == organization) {
