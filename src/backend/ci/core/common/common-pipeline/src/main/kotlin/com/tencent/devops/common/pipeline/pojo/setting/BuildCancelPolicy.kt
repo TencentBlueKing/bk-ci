@@ -38,8 +38,8 @@ enum class BuildCancelPolicy(val value: String) {
     RESTRICTED("RESTRICTED");
 
     fun yamlCode() = when (this) {
-        EXECUTE_PERMISSION -> "broad"
-        RESTRICTED -> "restricted"
+        EXECUTE_PERMISSION -> "BROAD"
+        RESTRICTED -> "RESTRICTED"
     }
 
     companion object {
@@ -51,7 +51,7 @@ enum class BuildCancelPolicy(val value: String) {
         }
         fun codeParse(value: String?): BuildCancelPolicy {
             return when (value) {
-                "restricted" -> RESTRICTED
+                "RESTRICTED" -> RESTRICTED
                 else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
             }
         }
