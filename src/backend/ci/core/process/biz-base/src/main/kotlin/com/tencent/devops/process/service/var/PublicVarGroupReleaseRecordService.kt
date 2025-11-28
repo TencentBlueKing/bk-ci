@@ -274,14 +274,21 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             newVars.none { it.varName == oldVar.varName }
         }
         deletedVars.forEach { oldVar ->
+            val showInfo = mapOf(
+                "alias" to oldVar.alias,
+                "desc" to oldVar.desc,
+                "defaultValue" to oldVar.defaultValue,
+                "readOnly" to oldVar.buildFormProperty.readOnly,
+                "referCount" to oldVar.referCount,
+                "required" to oldVar.buildFormProperty.required,
+                "valueNotEmpty" to oldVar.buildFormProperty.valueNotEmpty
+            )
             val content = JsonUtil.toJson(
                 mapOf(
                     "operate" to OperateTypeEnum.DELETE,
                     "varName" to oldVar.varName,
-                    "alias" to oldVar.alias,
-                    "defaultValue" to oldVar.defaultValue,
-                    "desc" to oldVar.desc,
-                    "type" to oldVar.type.name
+                    "type" to oldVar.type.name,
+                    "showInfo" to showInfo
                 )
             )
 
@@ -302,14 +309,21 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             newVar.varName !in oldVars.map { it.varName }
         }
         addedVars.forEach { newVar ->
+            val showInfo = mapOf(
+                "alias" to newVar.alias,
+                "desc" to newVar.desc,
+                "defaultValue" to newVar.defaultValue,
+                "referCount" to newVar.referCount,
+                "required" to newVar.buildFormProperty.required,
+                "readOnly" to newVar.buildFormProperty.readOnly,
+                "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
+            )
             val content = JsonUtil.toJson(
                 mapOf(
                     "operate" to OperateTypeEnum.CREATE,
                     "varName" to newVar.varName,
-                    "alias" to newVar.alias,
-                    "defaultValue" to newVar.defaultValue,
-                    "desc" to newVar.desc,
-                    "type" to newVar.type.name
+                    "type" to newVar.type.name,
+                    "showInfo" to showInfo
                 )
             )
 
@@ -372,15 +386,22 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             }
 
             if (changes.isNotEmpty()) {
+                val showInfo = mapOf(
+                    "alias" to newVar.alias,
+                    "desc" to newVar.desc,
+                    "required" to newVar.buildFormProperty.required,
+                    "readOnly" to newVar.buildFormProperty.readOnly,
+                    "defaultValue" to newVar.defaultValue,
+                    "referCount" to newVar.referCount,
+                    "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
+                )
                 val content = JsonUtil.toJson(
                     mapOf(
                         "operate" to OperateTypeEnum.UPDATE,
                         "varName" to newVar.varName,
                         "changes" to changes,
-                        "desc" to newVar.desc,
                         "type" to newVar.type.name,
-                        "alias" to newVar.alias,
-                        "defaultValue" to newVar.defaultValue
+                        "showInfo" to showInfo
                     )
                 )
 

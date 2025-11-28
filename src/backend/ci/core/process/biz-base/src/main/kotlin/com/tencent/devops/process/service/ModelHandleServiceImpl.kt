@@ -1,7 +1,6 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
@@ -12,9 +11,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
-import com.tencent.devops.process.dao.`var`.PublicVarDao
-import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
-import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.EXPIRED_TIME_IN_SECONDS
 import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
@@ -30,10 +26,6 @@ class ModelHandleServiceImpl @Autowired constructor(
     private val publicVarReferInfoService: PublicVarReferInfoService,
     private val varRefDetailDao: VarRefDetailDao,
     private val dslContext: DSLContext,
-    private val publicVarDao: PublicVarDao,
-    private val publicVarGroupDao: PublicVarGroupDao,
-    private val publicVarReferInfoDao: PublicVarReferInfoDao,
-    private val client: Client,
     private val redisOperation: RedisOperation,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineTemplateResourceDao: PipelineTemplateResourceDao
@@ -65,8 +57,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         projectId: String,
         resourceId: String,
         resourceType: String,
-        resourceVersion: Int,
-        resourceVersionName: String?
+        resourceVersion: Int
     ) {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
@@ -77,7 +68,7 @@ class ModelHandleServiceImpl @Autowired constructor(
             redisLock.lock()
             logger.info("Start detecting variable references for resource: $resourceId|$resourceVersion")
 
-            val model = getResourcsModel(
+            val model = getResourceModel(
                 projectId = projectId,
                 resourceType = resourceType,
                 resourceId = resourceId,
@@ -92,7 +83,6 @@ class ModelHandleServiceImpl @Autowired constructor(
 
             varRefDetails.forEach { varRefDetail ->
                 varRefDetail.referVersion = resourceVersion
-                resourceVersionName?.let { it -> varRefDetail.resourceVersionName = it }
             }
 
             logger.info("handleModelVarReferences for varRefDetails: $varRefDetails")
@@ -118,9 +108,9 @@ class ModelHandleServiceImpl @Autowired constructor(
                 varRefDetails = varRefDetails
             )
             logger.info("Variable references update completed for resource: $resourceId")
-        } catch (e: Throwable) {
-            logger.warn("Error while detecting variable references for resource: $resourceId", e)
-            throw e
+        } catch (ignored: Throwable) {
+            logger.warn("Error while detecting variable references for resource: $resourceId", ignored)
+            throw ignored
         } finally {
             redisLock.unlock()
         }
@@ -150,7 +140,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getResourcsModel(
+    private fun getResourceModel(
         projectId: String,
         resourceId: String,
         resourceType: String,

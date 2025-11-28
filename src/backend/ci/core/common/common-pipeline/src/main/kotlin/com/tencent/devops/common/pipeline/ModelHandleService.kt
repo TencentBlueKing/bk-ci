@@ -32,7 +32,6 @@ interface ModelHandleService {
         projectId: String,
         resourceId: String,
         resourceType: String,
-        resourceVersion: Int,
-        resourceVersionName: String? = null
+        resourceVersion: Int
     )
 }
