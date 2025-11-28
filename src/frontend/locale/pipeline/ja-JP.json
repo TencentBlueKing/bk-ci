@@ -1978,13 +1978,12 @@
     "removeUnarchivablePipelines": "アーカイブできないパイプラインを除去"
   },
   "cron": {
-    "分": "分",
-    "时": "時",
-    "日": "日",
-    "周": "週",
-    "月": "月",
-    "下次：": "次回：",
-    "小时": "時間"
+    "everyMinute": "毎分",
+    "everyHour": "毎時",
+    "everyDay": "毎日",
+    "everyWeek": "毎週",
+    "everyMonth": "毎月",
+    "errorTips": "タイミングルールは空にできないか、形式が正しくありません"
   },
   "validVariableFormat": "有効な変数形式を入力してください",
   "enterRepoAlias": "コードリポジトリの別名を入力してください",
