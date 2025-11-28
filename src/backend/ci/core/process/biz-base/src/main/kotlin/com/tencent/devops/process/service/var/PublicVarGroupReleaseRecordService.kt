@@ -279,7 +279,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 "desc" to oldVar.desc,
                 "defaultValue" to oldVar.defaultValue,
                 "readOnly" to oldVar.buildFormProperty.readOnly,
-                "referCount" to oldVar.referCount,
                 "required" to oldVar.buildFormProperty.required,
                 "valueNotEmpty" to oldVar.buildFormProperty.valueNotEmpty
             )
@@ -313,7 +312,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 "alias" to newVar.alias,
                 "desc" to newVar.desc,
                 "defaultValue" to newVar.defaultValue,
-                "referCount" to newVar.referCount,
                 "required" to newVar.buildFormProperty.required,
                 "readOnly" to newVar.buildFormProperty.readOnly,
                 "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
@@ -392,7 +390,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                     "required" to newVar.buildFormProperty.required,
                     "readOnly" to newVar.buildFormProperty.readOnly,
                     "defaultValue" to newVar.defaultValue,
-                    "referCount" to newVar.referCount,
                     "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
                 )
                 val content = JsonUtil.toJson(
