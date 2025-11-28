@@ -36,6 +36,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func Exists(file string) bool {
@@ -155,18 +156,44 @@ func Unzip(archive, target string) error {
 	}
 	defer func() { _ = reader.Close() }()
 
-	if err := os.MkdirAll(target, os.ModePerm); err != nil {
+	// 获取目标目录的绝对路径
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(absTarget, os.ModePerm); err != nil {
 		return err
 	}
 
 	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name)
+		// 清理文件名中的路径遍历字符
+		cleanName := filepath.Clean(file.Name)
+		
+		// 构建完整路径并获取绝对路径
+		path := filepath.Join(absTarget, cleanName)
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+
+		// 验证解压路径是否在目标目录内,防止 Zip Slip 攻击
+		// 使用 filepath.Rel 来检查相对路径关系
+		rel, err := filepath.Rel(absTarget, absPath)
+		if err != nil {
+			return err
+		}
+		// 如果相对路径以 .. 开头,说明目标路径在目标目录之外
+		if strings.HasPrefix(rel, ".."+string(filepath.Separator)) || rel == ".." {
+			return errors.New("illegal file path: " + file.Name)
+		}
+
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, os.ModePerm)
+			os.MkdirAll(absPath, os.ModePerm)
 			continue
 		}
 
-		err2 := unzipFile(file, path)
+		err2 := unzipFile(file, absPath)
 		if err2 != nil {
 			return err2
 		}
@@ -176,6 +203,11 @@ func Unzip(archive, target string) error {
 }
 
 func unzipFile(file *zip.File, path string) error {
+	// 确保父目录存在
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return err
+	}
+
 	fileReader, err := file.Open()
 	if err != nil {
 		return err
