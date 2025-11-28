@@ -377,9 +377,12 @@ bk:
 
 bkci:
   security:
-    public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
-    private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
-    enable: "__BK_CI_JWT_ENABLE__"
+    auth-enable: "__BK_CI_JWT_ENABLE__"
+    properties:
+      - kid: "__BK_CI_JWT_KID__"
+        public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
+        private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
+        active: true
   defaultLocale: __BK_CI_DEFAULT_LOCALE__
   supportLanguages: __BK_CI_SUPPORT_LANGUAGES__
   rabbitQuorumEnable: __BK_CI_RABBIT_QUORUM_ENABLE__
