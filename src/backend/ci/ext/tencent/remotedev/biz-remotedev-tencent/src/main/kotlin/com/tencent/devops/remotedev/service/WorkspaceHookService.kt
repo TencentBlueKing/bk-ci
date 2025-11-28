@@ -105,6 +105,7 @@ class WorkspaceHookService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceHookService::class.java)
+        // "C:\tools\hooks\cdshk.exe"  script {{PROJECT_ID}} --log cdshk.log
         const val DEFAULT_EXIT_HOOK_COMMAND = "remotedev:hook:defaultExitCommand" // 默认退出钩子命令模板
     }
 
@@ -205,8 +206,10 @@ class WorkspaceHookService @Autowired constructor(
         // 从配置读取默认退出钩子命令模板
         val defaultExitCommandTemplate = cacheService.get(DEFAULT_EXIT_HOOK_COMMAND)
 
-        // 将模板中的 $ 替换为实际的 projectId（仅当模板不为空时）
-        val defaultExitCommand = defaultExitCommandTemplate?.takeIf { it.isNotEmpty() }?.replace("$", projectId)
+        // 将模板中的 {{PROJECT_ID}} 替换为实际的 projectId（仅当模板不为空时）
+        val defaultExitCommand = defaultExitCommandTemplate
+            ?.takeIf { it.isNotEmpty() }
+            ?.replace("{{PROJECT_ID}}", projectId)
 
         val actions = hooks.filter { it.enable }.groupBy { it.executionType }.map { (executionType, group) ->
             val executables = group.map { it.executableCommand() }.toMutableList()
