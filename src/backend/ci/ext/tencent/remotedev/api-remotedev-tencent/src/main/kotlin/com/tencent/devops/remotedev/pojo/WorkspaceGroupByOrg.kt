@@ -36,6 +36,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class WorkspaceGroupByOrg(
     @get:Schema(title = "项目ID")
     val projectId: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String,
     @get:Schema(title = "组织架构列表")
     val organizations: List<OrganizationGroup>
 )

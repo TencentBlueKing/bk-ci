@@ -422,9 +422,14 @@ class WorkspaceService @Autowired constructor(
         
         // 6. 合并组织架构映射
         val ownerToOrgMap = corporateOrgMap + taiOrgMap
-        logger.info("ownerToOrgMap|$ownerToOrgMap")
 
-        // 7. 按项目和组织架构分组
+        // 7. 批量获取项目名称
+        val projectIds = workspaces.mapNotNull { it.projectId }.toSet()
+        val projectInfoData = client.get(ServiceProjectResource::class)
+            .listOnlyByProjectCode(projectIds).data ?: emptyList()
+        val projectNameMap = projectInfoData.associateBy({ it.projectCode }, { it.projectName })
+
+        // 8. 按项目和组织架构分组
         val grouped = workspaces
             .groupBy { it.projectId }
             .map { (projId, projWorkspaces) ->
@@ -441,6 +446,7 @@ class WorkspaceService @Autowired constructor(
                 
                 WorkspaceGroupByOrg(
                     projectId = projId ?: "",
+                    projectName = projectNameMap[projId] ?: "",
                     organizations = orgGroups
                 )
             }
