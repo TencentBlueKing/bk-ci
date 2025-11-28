@@ -114,10 +114,6 @@ class ServiceImageResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
-        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
-    }
-
     override fun getImageInfo(
         userId: String,
         projectId: String,
