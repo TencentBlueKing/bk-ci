@@ -272,13 +272,25 @@ class PublicVarGroupService @Autowired constructor(
             filterByVarAlias = queryReq.filterByVarAlias
         )
 
+        // 如果用户指定了变量名或别名筛选条件，但没有匹配结果，直接返回空页面
+        val hasVarFilter = !queryReq.filterByVarName.isNullOrBlank() || !queryReq.filterByVarAlias.isNullOrBlank()
+        if (hasVarFilter && groupNames.isEmpty()) {
+            return Page(
+                count = 0,
+                page = page,
+                pageSize = pageSize,
+                totalPages = 0,
+                records = emptyList()
+            )
+        }
+
         val totalCount = publicVarGroupDao.countGroupsByProjectId(
             dslContext = dslContext,
             projectId = projectId,
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames
+            groupNames = groupNames.takeIf { it.isNotEmpty() }
         )
 
         val records = publicVarGroupDao.listGroupsByProjectIdPage(
@@ -289,7 +301,7 @@ class PublicVarGroupService @Autowired constructor(
             filterByGroupName = queryReq.filterByGroupName,
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
-            groupNames = groupNames
+            groupNames = groupNames.takeIf { it.isNotEmpty() }
         ).map { po ->
             // 统计所有关联变量组的唯一referId数量
             val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
