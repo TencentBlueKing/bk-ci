@@ -35,11 +35,13 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class MacOSDispatchType(
     @JsonProperty("value") var macOSEvn: String,
+    var macOSHwSpec: String? = "",
     var systemVersion: String? = "",
     var xcodeVersion: String? = ""
 ) : DispatchType("$systemVersion:$xcodeVersion", DispatchRouteKeySuffix.MACOS) {
     override fun cleanDataBeforeSave() {
         this.macOSEvn = this.macOSEvn.trim()
+        this.macOSHwSpec = this.macOSHwSpec?.trim()
         this.systemVersion = this.systemVersion?.trim()
         this.xcodeVersion = this.xcodeVersion?.trim()
     }
