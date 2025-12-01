@@ -150,24 +150,35 @@ class WhiteListService @Autowired constructor(
         return limit + get
     }
 
+    /**
+     * 检查CDS Mesh白名单状态
+     * 优先级顺序（从高到低）：
+     * 1. Workspace级别SSL模式 (CDS_SSL_WORKSPACE)
+     * 2. Workspace级别黑名单 (NOT_CDS_MESH_WORKSPACE)
+     * 3. Project级别Mesh (CDS_MESH_PROJECT)
+     * 4. Workspace级别Mesh (CDS_MESH_WORKSPACE)
+     * 5. 默认禁用
+     */
     fun checkInCdsMeshWhiteList(
         projectId: String,
         workspaceName: String
     ): Int {
+        // 定义检查规则：按优先级顺序检查
+        val checkRules = listOf(
+            Triple(workspaceName, WhiteListType.CDS_SSL_WORKSPACE, CdsMeshStatus.SSL),
+            Triple(workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE, CdsMeshStatus.DISABLED),
+            Triple(projectId, WhiteListType.CDS_MESH_PROJECT, CdsMeshStatus.MESH),
+            Triple(workspaceName, WhiteListType.CDS_MESH_WORKSPACE, CdsMeshStatus.MESH)
+        )
 
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
-            return CdsMeshStatus.DISABLED.value
+        // 按优先级顺序检查，找到第一个匹配的规则
+        for ((name, type, status) in checkRules) {
+            if (whiteListDao.get(dslContext, name, type) != null) {
+                return status.value
+            }
         }
-        if (whiteListDao.get(dslContext, projectId, WhiteListType.CDS_MESH_PROJECT) != null) {
-            return CdsMeshStatus.MESH.value
-        }
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_MESH_WORKSPACE) != null) {
-            return CdsMeshStatus.MESH.value
-        }
-        // 检查是否启用 SSL 模式
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_SSL_WORKSPACE) != null) {
-            return CdsMeshStatus.SSL.value
-        }
+
+        // 默认返回禁用状态
         return CdsMeshStatus.DISABLED.value
     }
 
