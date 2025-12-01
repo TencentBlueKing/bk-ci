@@ -164,7 +164,6 @@ class RbacPublicVarGroupPermissionService constructor(
                 params = arrayOf(userId, projectId)
             )
         }
-        logger.info("checkPublicVarGroupPermissions userId=$userId, projectId=$projectId, permission=$permission, resourcePermission=$resourcePermission")
         return resourcePermission
     }
 
