@@ -268,7 +268,7 @@
             })
         }
     }, { deep: true })
-    watch(() => defaultTab.value, (val) => {
+    watch(() => props.defaultTab, (val) => {
         viewTab.value = val
     })
     function init () {
