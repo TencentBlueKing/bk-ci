@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.trigger.scm
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
@@ -44,13 +46,16 @@ import org.springframework.stereotype.Service
 class PipelineWebHookEventListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineYamlService: PipelineYamlService,
-    private val webhookTriggerBuildService: WebhookTriggerBuildService,
-    private val webhookGrayService: WebhookGrayService
+    private val webhookGrayService: WebhookGrayService,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) : WebHookEventListener {
 
     override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
         // 不是灰度仓库,不执行新逻辑
         if (!webhookGrayService.isGrayRepo(scmCode = repository.scmCode, repository.projectName)) {
+            logger.info(
+                "not gray repo handled by pipelineWebhookService|${repository.scmCode}|${repository.projectName}"
+            )
             return
         }
         // 传统流水线需要执行预匹配逻辑
@@ -73,6 +78,13 @@ class PipelineWebHookEventListener @Autowired constructor(
             )
         }
 
+        val requestTime = System.currentTimeMillis()
+        if (triggerPipelines.size >= 50) {
+            logger.warn(
+                "Repository webhook triggered too many pipelines|${repository.projectId}|${repository.repoHashId}|" +
+                        "${repository.projectName}|${triggerPipelines.size} pipelines triggered"
+            )
+        }
         triggerPipelines.forEach { (projectId, pipelineId, version) ->
             // 流水线开启PAC,并且代码库开启PAC,在pac监听器处理
             pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
@@ -84,13 +96,15 @@ class PipelineWebHookEventListener @Autowired constructor(
                     return@forEach
                 }
             }
-            webhookTriggerBuildService.trigger(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                eventId = eventId,
-                repository = repository,
-                webhook = webhook
+            sampleEventDispatcher.dispatch(
+                ScmWebhookTriggerEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    eventId = eventId,
+                    repository = repository,
+                    requestTime = requestTime
+                )
             )
         }
     }

@@ -65,7 +65,10 @@ class PacWebhookEventListener(
     }
 
     override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
-        if (!webhookGrayService.isPacGrayRepo(repository.scmCode, repository.projectName)) {
+        if (!webhookGrayService.isPacGrayRepo(repository.getScmType(), repository.getExternalId())) {
+            logger.info(
+                "not gray repo handled by pipelineWebhookService|${repository.scmCode}|${repository.projectName}"
+            )
             return
         }
         if (repository.enablePac != true) return
