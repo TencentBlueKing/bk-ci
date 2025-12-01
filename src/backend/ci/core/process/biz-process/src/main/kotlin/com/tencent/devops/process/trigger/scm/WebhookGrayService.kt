@@ -28,7 +28,11 @@
 package com.tencent.devops.process.trigger.scm
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.repository.api.ServiceRepositoryPacResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -38,10 +42,16 @@ import java.util.concurrent.TimeUnit
  */
 @Service
 class WebhookGrayService @Autowired constructor(
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
 
     private val grayRepoCache = Caffeine.newBuilder()
+        .maximumSize(MAX_SIZE)
+        .expireAfterAccess(30, TimeUnit.SECONDS)
+        .build<String, Boolean?>()
+
+    private val pacGrayRepoCache = Caffeine.newBuilder()
         .maximumSize(MAX_SIZE)
         .expireAfterAccess(30, TimeUnit.SECONDS)
         .build<String, Boolean?>()
@@ -50,6 +60,10 @@ class WebhookGrayService @Autowired constructor(
      * 判断是否是scm灰度项目
      */
     fun isGrayRepo(scmCode: String, serverRepoName: String): Boolean {
+        // 新的代码库平台,不需要走灰度逻辑,默认直接开启灰度
+        if (!needGrayScmCode(scmCode)) {
+            return true
+        }
         val grayRepoKey = "$scmCode:$serverRepoName"
         return grayRepoCache.getIfPresent(grayRepoKey) ?: run {
             val hash = (serverRepoName.hashCode() and Int.MAX_VALUE) % 100
@@ -64,14 +78,31 @@ class WebhookGrayService @Autowired constructor(
         }
     }
 
+    private fun needGrayScmCode(scmCode: String): Boolean {
+        return listOf(
+            ScmType.CODE_SVN.name,
+            ScmType.CODE_GIT.name,
+            ScmType.GITHUB.name,
+            ScmType.CODE_TGIT.name,
+            ScmType.CODE_P4.name
+        ).contains(scmCode)
+    }
+
     /**
-     * 判断是否是scm灰度项目
+     * 只要开启pac,就执行pac灰度逻辑
      */
-    fun isPacGrayRepo(scmCode: String, serverRepoName: String): Boolean {
-        val grayRepoKey = "$scmCode:$serverRepoName:pac"
-        return grayRepoCache.getIfPresent(grayRepoKey) ?: run {
-            val result = isGrayRepoWhite(scmCode, serverRepoName, true)
-            grayRepoCache.put(grayRepoKey, result)
+    fun isPacGrayRepo(scmTye: ScmType, externalId: String): Boolean {
+        val cacheKey = "$scmTye:$externalId"
+        return pacGrayRepoCache.getIfPresent(cacheKey) ?: run {
+            val result = try {
+                client.get(ServiceRepositoryPacResource::class).getPacRepository(
+                    externalId = externalId, scmType = scmTye
+                ).data != null
+            } catch (ignored: Exception) {
+                logger.error("Failed to get pac repository|$scmTye|$externalId", ignored)
+                false
+            }
+            pacGrayRepoCache.put(cacheKey, result)
             result
         }
     }
@@ -155,5 +186,7 @@ class WebhookGrayService @Autowired constructor(
         private const val SCM_GRAY_WEIGHT_PREFIX = "process:scm:gray:weight:"
 
         private const val MAX_SIZE = 5000L
+
+        private val logger = LoggerFactory.getLogger(WebhookGrayService::class.java)
     }
 }

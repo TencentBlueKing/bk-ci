@@ -48,6 +48,8 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
+import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -55,6 +57,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -642,8 +645,17 @@ class PipelineTriggerEventDao {
                         object : TypeReference<Map<String, String>>() {})
                 },
                 createTime = createTime,
-                eventBody = eventBody?.let {
-                    JsonUtil.to(it, Webhook::class.java)
+                eventBody = try {
+                    eventBody?.let {
+                        JsonUtil.to(it, TriggerEventBody::class.java)
+                    }
+                } catch (ignored: Exception) {
+                    logger.warn("convert event body failed, eventBody: $eventBody", ignored)
+                    eventBody?.let {
+                        ScmWebhookEventBody(
+                            webhook = JsonUtil.to(it, Webhook::class.java)
+                        )
+                    }
                 }
             )
         }
@@ -713,5 +725,9 @@ class PipelineTriggerEventDao {
                     )
                 }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTriggerEventDao::class.java)
     }
 }

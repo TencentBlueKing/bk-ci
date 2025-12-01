@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
 import com.tencent.devops.repository.dao.RepositoryWebhookRequestDao
 import com.tencent.devops.repository.pojo.RepoCondition
@@ -18,8 +19,10 @@ import com.tencent.devops.repository.service.hub.ScmWebhookApiService
 import com.tencent.devops.scm.api.pojo.HookRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @SuppressWarnings("ALL")
@@ -34,6 +37,7 @@ class RepositoryWebhookService @Autowired constructor(
         scmCode: String,
         request: WebhookParseRequest
     ): WebhookData? {
+        val requestId = MDC.get(TraceTag.BIZID)
         val hookRequest = with(request) {
             HookRequest(headers, body, queryParams)
         }
@@ -45,20 +49,36 @@ class RepositoryWebhookService @Autowired constructor(
         logger.info(
             "webhook parse result|scmCode:$scmCode|id:${serverRepo.id}|fullName:${serverRepo.fullName}"
         )
-        if (serverRepo.fullName.isNullOrBlank()) {
+        if (serverRepo.fullName.isBlank()) {
             throw ErrorCodeException(
                 errorCode = ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
             )
         }
-        val repoExternalId = serverRepo.id?.toString()
+        val repoExternalId = serverRepo.id.toString()
         val condition = RepoCondition(projectName = serverRepo.fullName, gitProjectId = repoExternalId)
-        val repositories =
-            codeRepositoryManager.listByCondition(
-                scmCode = scmCode,
-                repoCondition = condition,
-                offset = 0,
-                limit = 500
-            ) ?: emptyList()
+        val repositories = codeRepositoryManager.listByCondition(
+            scmCode = scmCode,
+            repoCondition = condition,
+            offset = 0,
+            limit = 500
+        ) ?: emptyList()
+
+        if (repositories.isNotEmpty()) {
+            saveWebhookRequest(
+                repositoryWebhookRequest = RepositoryWebhookRequest(
+                    requestId = requestId,
+                    externalId = webhook.repository().id.toString(),
+                    eventType = webhook.eventType,
+                    triggerUser = webhook.userName,
+                    eventMessage = "",
+                    repositoryType = repositories.first().getScmType().name,
+                    requestHeader = request.headers,
+                    requestParam = request.queryParams,
+                    requestBody = request.body,
+                    createTime = LocalDateTime.now()
+                )
+            )
+        }
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook
@@ -97,8 +117,8 @@ class RepositoryWebhookService @Autowired constructor(
         // 所有代码库都尝试失败,则返回原始数据
         if (allExpired) {
             logger.info(
-                "all repository auth attempts failed, return original webhook data|scmCode:$scmCode|id:${serverRepo.id}|" +
-                        "fullName:${serverRepo.fullName}"
+                "all repository auth attempts failed, return original webhook data|" +
+                        "$scmCode|${serverRepo.id}|${serverRepo.fullName}"
             )
         }
         return WebhookData(
