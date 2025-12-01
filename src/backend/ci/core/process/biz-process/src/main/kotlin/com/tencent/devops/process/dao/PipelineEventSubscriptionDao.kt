@@ -71,13 +71,15 @@ class PipelineEventSubscriptionDao {
     fun listEventSubscriber(
         dslContext: DSLContext,
         eventSource: String,
-        eventType: String
+        eventType: String,
+        eventCode: String
     ): List<PipelineEventSubscriber> {
         with(TPipelineEventSubscription.T_PIPELINE_EVENT_SUBSCRIPTION) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID, CHANNEL)
                 .from(this)
                 .where(EVENT_SOURCE.eq(eventSource))
                 .and(EVENT_TYPE.eq(eventType))
+                .and(EVENT_CODE.eq(eventCode))
                 .fetch().map {
                     PipelineEventSubscriber(
                         projectId = it.value1(),

@@ -59,7 +59,8 @@ class MarketEventRequestService constructor(
                 val subscribers = pipelineEventSubscriptionDao.listEventSubscriber(
                     dslContext = dslContext,
                     eventType = eventType,
-                    eventSource = envHashId
+                    eventSource = envHashId,
+                    eventCode = eventCode
                 )
                 subscribers.forEach { subscriber ->
                     sampleEventDispatcher.dispatch(
