@@ -66,12 +66,12 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
         // TODO: 如何跟envId对应起来?
         val eventSource = inputMap["ci.event.source"]?.toString()
         val eventType = inputMap["ci.event.type"]?.toString()
-        if (!eventSource.isNullOrBlank()) {
+        if (eventSource.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL
             )
         }
-        if (!eventType.isNullOrBlank()) {
+        if (eventType.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_NULL
             )
@@ -81,8 +81,8 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
             pipelineId = pipelineId,
             taskId = element.id!!,
             eventCode = element.atomCode,
-            eventSource = eventSource!!,
-            eventType = eventType!!,
+            eventSource = eventSource,
+            eventType = eventType,
             channelCode = channelCode
         )
         pipelineEventSubscriptionDao.save(
