@@ -50,6 +50,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
     }
 
     fun genericWebhookTrigger(event: GenericWebhookTriggerEvent) {
+        logger.info("receive generic webhook request event[${JsonUtil.toJson(this, false)}]")
         with(event) {
             val context = WebhookTriggerContext(projectId = projectId, pipelineId = pipelineId, eventId = eventId)
             try {
