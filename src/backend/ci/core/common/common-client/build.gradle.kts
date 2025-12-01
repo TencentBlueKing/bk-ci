@@ -40,8 +40,8 @@ dependencies {
     }
     api("io.github.openfeign:feign-okhttp")
     api("io.github.openfeign:feign-jackson")
-    api("io.github.openfeign.form:feign-form")
-    api("io.github.openfeign.form:feign-form-spring")
+//    api("io.github.openfeign.form:feign-form")
+//    api("io.github.openfeign.form:feign-form-spring")
     api("io.github.openfeign:feign-spring")
     if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
         print("use common-kubernetes")
