@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class MarketEventTriggerMatcher @Autowired constructor(
-    val serviceStoreComponentResource: ServiceStoreComponentResource,
+    val client: Client,
     val marketEventVariablesResolver: MarketEventVariablesResolver
 ) {
 
@@ -35,7 +36,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         val atomCode = element.atomCode
         val version = element.version
         logger.info("start to match event trigger|$projectId|$pipelineId|$atomCode@$version|${element.id}")
-        val componentDetail = serviceStoreComponentResource.getComponentDetailInfoByCode(
+        val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDetailInfoByCode(
             userId = "",
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
