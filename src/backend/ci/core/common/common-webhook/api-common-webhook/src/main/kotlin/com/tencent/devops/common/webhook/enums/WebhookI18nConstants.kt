@@ -158,4 +158,7 @@ object WebhookI18nConstants {
 
     // 代码库开启PAC事件描述
     const val ENABLE_PAC_EVENT_DESC = "bkRepoEnablePacEventDesc"
+
+    // [<fieldValue>]<fieldLabel>不匹配
+    const val FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
 }

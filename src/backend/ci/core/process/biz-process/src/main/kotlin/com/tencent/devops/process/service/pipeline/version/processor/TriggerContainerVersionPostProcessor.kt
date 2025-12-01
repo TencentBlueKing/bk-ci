@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.element.trigger.MarketCommonTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -40,7 +40,7 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
         val params = pipelineRepositoryService.getTriggerParams(triggerContainer)
         triggerContainer.elements.forEach { element ->
             when (element) {
-                is MarketCommonTriggerElement -> {
+                is MarketBuildLessAtomElement -> {
                     saveEventSubscription(
                         userId = context.userId,
                         projectId = pipelineResourceVersion.projectId,
@@ -59,10 +59,11 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
-        element: MarketCommonTriggerElement,
+        element: MarketBuildLessAtomElement,
         params: Map<String, String>
     ) {
         val inputMap = element.data["input"] as Map<String, Any>
+        // TODO: 如何跟envId对应起来?
         val eventSource = inputMap["ci.event.source"]?.toString()
         val eventType = inputMap["ci.event.type"]?.toString()
         if (!eventSource.isNullOrBlank()) {

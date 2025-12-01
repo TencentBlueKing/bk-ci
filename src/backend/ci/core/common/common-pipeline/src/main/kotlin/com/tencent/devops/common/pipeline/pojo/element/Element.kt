@@ -55,7 +55,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmSvnWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.MarketCommonTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
@@ -96,8 +95,7 @@ import org.json.JSONObject
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmGitWebHookTriggerElement::class, name = CodeScmGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeScmSvnWebHookTriggerElement::class, name = CodeScmSvnWebHookTriggerElement.classType),
-    JsonSubTypes.Type(value = StepTemplateElement::class, name = StepTemplateElement.classType),
-    JsonSubTypes.Type(value = MarketCommonTriggerElement::class, name = MarketCommonTriggerElement.classType)
+    JsonSubTypes.Type(value = StepTemplateElement::class, name = StepTemplateElement.classType)
 )
 @Suppress("ALL")
 @Schema(title = "Element 基类")

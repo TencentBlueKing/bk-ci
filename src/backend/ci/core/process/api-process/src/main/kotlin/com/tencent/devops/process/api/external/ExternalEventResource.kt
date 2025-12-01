@@ -38,6 +38,9 @@ interface ExternalEventResource {
         @Parameter(description = "x-devops-cds-ip")
         @HeaderParam("x-devops-cds-ip")
         cdsIp: String,
+        @Parameter(description = "x-devops-event-type")
+        @HeaderParam("x-devops-event-type")
+        eventType: String,
         @Parameter(description = "事件编码")
         @PathParam("eventCode")
         eventCode: String,

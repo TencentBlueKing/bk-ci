@@ -18,6 +18,7 @@ class ExternalEventResourceImpl @Autowired constructor(
         projectId: String,
         workspaceName: String,
         cdsIp: String,
+        eventType: String,
         eventCode: String,
         body: String
     ): Result<Boolean> {
@@ -28,7 +29,8 @@ class ExternalEventResourceImpl @Autowired constructor(
                 workspaceName = workspaceName,
                 cdsIp = cdsIp,
                 eventCode = eventCode,
-                body = body
+                body = body,
+                eventType = eventType
             )
         )
         return Result(true)

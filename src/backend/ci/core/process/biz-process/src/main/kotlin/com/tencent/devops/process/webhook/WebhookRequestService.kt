@@ -30,6 +30,7 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -51,6 +52,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service

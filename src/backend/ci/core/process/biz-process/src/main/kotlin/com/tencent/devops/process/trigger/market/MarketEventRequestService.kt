@@ -1,14 +1,18 @@
 package com.tencent.devops.process.trigger.market
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.RemoteDevWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.RemoteDevWebhookTriggerEvent
+import org.jooq.DSLContext
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -18,13 +22,21 @@ import java.time.LocalDateTime
  */
 @Service
 class MarketEventRequestService constructor(
+    private val client: Client,
+    private val dslContext: DSLContext,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val sampleEventDispatcher: SampleEventDispatcher,
+    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao
 ) {
     fun handleRemoteDevWebhookRequestEvent(event: RemoteDevWebhookRequestEvent) {
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
-            val envIdList = listOf<String>()
+            client.get(ServiceEnvironmentResource::class).listRawByEnvNames(
+                projectId = projectId,
+                envNames = listOf(workspaceName),
+                userId = userId
+            )
+            val envIdList = listOf("env_1", "env_2")
             val eventDesc = ""
             val requestId = MDC.get(TraceTag.BIZID)
             val requestTime = System.currentTimeMillis()
@@ -44,7 +56,11 @@ class MarketEventRequestService constructor(
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 // 2. 获取事件订阅者
-                val subscribers = listOf<PipelineEventSubscriber>()
+                val subscribers = pipelineEventSubscriptionDao.listEventSubscriber(
+                    dslContext = dslContext,
+                    eventType = eventType,
+                    eventSource = envHashId
+                )
                 subscribers.forEach { subscriber ->
                     sampleEventDispatcher.dispatch(
                         RemoteDevWebhookTriggerEvent(

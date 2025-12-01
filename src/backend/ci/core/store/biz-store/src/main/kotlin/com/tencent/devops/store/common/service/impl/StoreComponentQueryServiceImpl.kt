@@ -592,12 +592,26 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
-    override fun getComponentDetailInfoByCode(userId: String, storeType: String, storeCode: String): StoreDetailInfo? {
-        return storeBaseQueryDao.getLatestComponentByCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType)
-        )?.let {
+    override fun getComponentDetailInfoByCode(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String?
+    ): StoreDetailInfo? {
+        return if (version.isNullOrBlank()) {
+            storeBaseQueryDao.getLatestComponentByCode(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType)
+            )
+        } else {
+            storeBaseQueryDao.getComponent(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType),
+                version = version
+            )
+        }?.let {
             getComponentDetailInfoById(userId, StoreTypeEnum.valueOf(storeType), it.id)
         }
     }

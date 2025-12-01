@@ -3,7 +3,6 @@ package com.tencent.devops.process.trigger.market
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
@@ -17,7 +16,6 @@ import com.tencent.devops.process.trigger.event.GenericWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.RemoteDevWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.utils.PipelineVarUtil
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +34,19 @@ class MarketEventTriggerBuildService @Autowired constructor(
 ) {
 
     fun remoteDevWebhookTrigger(event: RemoteDevWebhookTriggerEvent) {
-
+        with(event) {
+            genericWebhookTrigger(
+                GenericWebhookTriggerEvent(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    eventId = eventId,
+                    version = null,
+                    eventCode = eventCode,
+                    eventSource = envHashId,
+                    requestTime = requestTime
+                )
+            )
+        }
     }
 
     fun genericWebhookTrigger(event: GenericWebhookTriggerEvent) {
@@ -68,17 +78,10 @@ class MarketEventTriggerBuildService @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                     )
                 val model = resource.model
-
-                val variables = mutableMapOf<String, String>()
-                val container = model.stages[0].containers[0] as TriggerContainer
-                // 解析变量
-                container.params.forEach { param ->
-                    variables[param.id] = param.defaultValue.toString()
-                }
-                // 填充[variables.]前缀
-                variables.putAll(PipelineVarUtil.fillVariableMap(variables))
+                val triggerContainer = model.getTriggerContainer()
+                val variables = pipelineRepositoryService.getTriggerParams(model.getTriggerContainer())
                 val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
-                container.elements.filterIsInstance<MarketBuildLessAtomElement>().forEach elements@{ element ->
+                triggerContainer.elements.filterIsInstance<MarketBuildLessAtomElement>().forEach elements@{ element ->
                     if (!element.elementEnabled() || element.atomCode != eventCode) {
                         return@elements
                     }
@@ -113,6 +116,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                             )
                             return
                         }
+
                         else -> {
                             return@elements
                         }
@@ -131,7 +135,6 @@ class MarketEventTriggerBuildService @Autowired constructor(
             }
         }
     }
-
 
 
     companion object {

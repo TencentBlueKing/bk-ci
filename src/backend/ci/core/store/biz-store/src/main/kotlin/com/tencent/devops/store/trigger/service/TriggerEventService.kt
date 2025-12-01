@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
-import com.tencent.devops.common.pipeline.pojo.element.trigger.MarketCommonTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.atom.AtomResp
@@ -129,7 +129,7 @@ class TriggerEventService @Autowired constructor(
                         atomCode = marketItem.code,
                         version = marketItem.version,
                         defaultVersion = marketItem.version,
-                        classType = MarketCommonTriggerElement.classType,
+                        classType = MarketBuildLessAtomElement.classType,
                         serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
                         os = marketItem.os ?: emptyList(),
                         logoUrl = marketItem.logoUrl,
@@ -186,11 +186,11 @@ class TriggerEventService @Autowired constructor(
             }
 
             BK_STORE_CLOUD_DESKTOP_TRIGGER -> {
-
                 storeComponentQueryService.getComponentDetailInfoByCode(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT.name,
                     storeCode = atomCode,
+                    version = version
                 )?.let { storeDetailInfo ->
                     PipelineAtom(
                         id = storeDetailInfo.storeId,

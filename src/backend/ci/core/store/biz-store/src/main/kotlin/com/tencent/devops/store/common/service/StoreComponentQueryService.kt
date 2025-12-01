@@ -90,7 +90,8 @@ interface StoreComponentQueryService {
     fun getComponentDetailInfoByCode(
         userId: String,
         storeType: String,
-        storeCode: String
+        storeCode: String,
+        version: String? = null
     ): StoreDetailInfo?
 
     /**
