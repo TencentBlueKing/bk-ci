@@ -300,7 +300,11 @@ open class DefaultModelCheckPlugin constructor(
                 checkJobControlNodeConcurrency(container)
             }
 
-            container.elements.forEach { e ->
+            container.elements.forEach elementCheck@{ e ->
+                // 触发器Container不校验market element
+                if(container is TriggerContainer && e is MarketBuildLessAtomElement) {
+                    return@elementCheck
+                }
                 container.checkElement(
                     stage = this,
                     element = e,
