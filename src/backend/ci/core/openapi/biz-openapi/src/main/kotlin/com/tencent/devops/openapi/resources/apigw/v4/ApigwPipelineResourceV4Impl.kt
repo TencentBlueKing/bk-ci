@@ -226,7 +226,8 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        filterByPipelineName: String?
     ): Result<Page<Pipeline>> {
         logger.info("OPENAPI_PIPELINE_V4|$userId|get list by user|$projectId|$page|$pageSize")
         return client.get(ServicePipelineResource::class).list(
@@ -235,7 +236,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             channelCode = apiGatewayUtil.getChannelCode(),
-            checkPermission = true
+            filterByPipelineName = filterByPipelineName
         )
     }
 
