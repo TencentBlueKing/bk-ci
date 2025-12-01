@@ -40,13 +40,10 @@ class MarketEventRequestService constructor(
                 userId = userId
             )
             val envIdList = listOf("env_1", "env_2")
-            val eventDesc = JsonUtil.toJson(
-                I18Variable(
-                    code = BK_REMOTE_DEV_TRIGGER_DESC,
-                    params = listOf(cdsIp, eventType)
-                ),
-                false
-            )
+            val eventDesc = I18Variable(
+                code = BK_REMOTE_DEV_TRIGGER_DESC,
+                params = listOf(cdsIp, eventType)
+            ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             val requestTime = System.currentTimeMillis()
             envIdList.forEach { envHashId ->
