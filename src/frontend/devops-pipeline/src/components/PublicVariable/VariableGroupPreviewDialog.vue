@@ -157,10 +157,15 @@
     })
     const curVarData = computed(() => props.previewData[activeIdx.value] ?? {})
     const fieldTitleMap = computed(() => {
+        const isVariable = curVarData.value.type === VARIABLE
+        const varAlias = proxy.$t(isVariable ? 'newui.pipelineParam.varAlias' : 'newui.pipelineParam.constAlias')
+        const varDesc = proxy.$t(isVariable ? 'publicVar.varDesc' : 'publicVar.constantDesc')
+        const defaultValue = proxy.$t(isVariable ? 'publicVar.defaultValue' : 'newui.pipelineParam.constValue')
+    
         return {
-            'alias': curVarData.value.type === VARIABLE ? proxy.$t('newui.pipelineParam.varAlias') : proxy.$t('newui.pipelineParam.constAlias'),
-            'desc': curVarData.value.type === VARIABLE ? proxy.$t('publicVar.varDesc') : proxy.$t('publicVar.constantDesc'),
-            'defaultValue': curVarData.value.type === VARIABLE ? proxy.$t('publicVar.defaultValue') : proxy.$t('newui.pipelineParam.constValue'),
+            'alias': varAlias,
+            'desc': varDesc,
+            'defaultValue': defaultValue,
             'readOnly': proxy.$t('editPage.readOnlyOnRun'),
             'required': proxy.$t('newui.isBuildParam'),
             'valueNotEmpty': proxy.$t('editPage.required')

@@ -75,7 +75,6 @@
             fetchReleaseHistory()
         }
     }, {
-        deep: true,
         immediate: true
     })
     async function fetchReleaseHistory () {

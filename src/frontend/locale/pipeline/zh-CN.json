@@ -2114,7 +2114,8 @@
     "removeParamTitle": "确认删除此变量吗？",
     "paramGroupIdRule": "由英文字母、数字、下划线组成，且以英文字母开头，3～32个字符",
     "paramReferenceStatus": "变量引用情况",
-    "repeatTips": "流水线（{0}）中存在同名变量，请先修改流水线变量或重选公共变量组",
-    "publicVarGroup": "公共变量组 - {0}"
+    "repeatParamTips": "流水线（{0}）中存在同名变量，请先修改流水线变量或重选公共变量组",
+    "publicVarGroup": "公共变量组 - {0}",
+    "repeatTips": "存在同名变量冲突问题，请移除对应的变量组，或删除同名变量后再添加。"
   }
 }

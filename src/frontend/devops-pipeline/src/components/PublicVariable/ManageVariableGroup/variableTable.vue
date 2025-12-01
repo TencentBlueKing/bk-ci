@@ -77,7 +77,7 @@
             v-if="hasRepeat"
             class="repeat-tips"
         >
-            {{ data?.repeatTips }}
+            {{ data?.repeatParamTips }}
         </p>
     </div>
 </template>

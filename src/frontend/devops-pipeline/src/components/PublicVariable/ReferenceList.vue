@@ -79,7 +79,6 @@
             fetchReferenceList()
         }
     }, {
-        deep: true,
         immediate: true
     })
     async function fetchReferenceList () {

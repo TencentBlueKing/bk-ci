@@ -197,7 +197,6 @@
             fetchVariablesByGroupName()
         }
     }, {
-        deep: true,
         immediate: true
     })
     const formRules = {

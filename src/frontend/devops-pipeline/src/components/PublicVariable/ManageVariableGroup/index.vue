@@ -189,7 +189,7 @@
                         title: proxy.$t('newui.pipelineParam.buildParam'),
                         data: requiredParam,
                         key: VARIABLE,
-                        repeatTips: getRepeatTips(requiredParam)
+                        repeatParamTips: getRepeatTips(requiredParam)
                     }
                 ] : []
             ),
@@ -199,7 +199,7 @@
                         title: proxy.$t('newui.pipelineParam.otherVar'),
                         data: otherParam,
                         key: VARIABLE,
-                        repeatTips: getRepeatTips(otherParam)
+                        repeatParamTips: getRepeatTips(otherParam)
                     }
                 ] : []
             ),
@@ -209,7 +209,7 @@
                         title: proxy.$t('publicVar.constant'),
                         data: constantParam,
                         key: CONSTANT,
-                        repeatTips: getRepeatTips(constantParam)
+                        repeatParamTips: getRepeatTips(constantParam)
                     }
                 ] : []
             )
@@ -367,6 +367,17 @@
         showAddComp.value = true
     }
     function handleAppend () {
+        // 检查是否有重复参数
+        const hasRepeat = selectedVariableList.value.some(item => item.isRepeat === true)
+        if (hasRepeat) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: proxy.$t('publicVar.repeatTips')
+            })
+            return
+        }
+        
+        console.log(selectedVariableList.value, '123123')
         showAddComp.value = false
         try {
             groupsMap.value.varGroups.push(newGroups.value)
@@ -408,15 +419,16 @@
             const category = repeatParam.category ? repeatParam.category : proxy.$t('notGrouped')
             let tips = ''
             if (isConstantParam) {
-                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.constParam')}-${category}`])
-            }
-            if (isRequiredParam) {
-                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.buildParam')}-${category}`])
+                tips = proxy.$t('publicVar.repeatParamTips', [`${proxy.$t('newui.pipelineParam.constParam')}-${category}`])
             } else {
-                tips = proxy.$t('publicVar.repeatTips', [`${proxy.$t('newui.pipelineParam.otherVar')}-${category}`])
+                if (isRequiredParam) {
+                    tips = proxy.$t('publicVar.repeatParamTips', [`${proxy.$t('newui.pipelineParam.buildParam')}-${category}`])
+                } else {
+                    tips = proxy.$t('publicVar.repeatParamTips', [`${proxy.$t('newui.pipelineParam.otherVar')}-${category}`])
+                }
             }
             
-            return repeatParam.varGroupName ? proxy.$t('publicVar.repeatTips', [proxy.$t('publicVar.publicVarGroup', [repeatParam.varGroupName])])
+            return repeatParam.varGroupName ? proxy.$t('publicVar.repeatParamTips', [proxy.$t('publicVar.publicVarGroup', [repeatParam.varGroupName])])
                 : tips
         }
         return ''

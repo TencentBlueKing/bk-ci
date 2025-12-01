@@ -303,7 +303,6 @@
         
         // 检查基本信息是否变化
         if (current.groupName !== initial.groupName || current.desc !== initial.desc) {
-            console.log(1)
             return true
         }
         
@@ -313,12 +312,10 @@
         
         // 数量不同
         if (currentVars.length !== initialVars.length) {
-            console.log(2)
             return true
         }
         
         // 深度对比每个变量
-        console.log(3)
         return JSON.stringify(currentVars) !== JSON.stringify(initialVars)
     }
     
