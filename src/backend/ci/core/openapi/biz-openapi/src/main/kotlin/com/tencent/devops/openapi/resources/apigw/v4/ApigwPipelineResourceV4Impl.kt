@@ -235,7 +235,8 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
             projectId = projectId,
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            filterByPipelineName = filterByPipelineName
         )
     }
 
