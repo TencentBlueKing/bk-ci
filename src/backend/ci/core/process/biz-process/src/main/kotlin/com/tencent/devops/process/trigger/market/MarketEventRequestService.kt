@@ -1,10 +1,13 @@
 package com.tencent.devops.process.trigger.market
 
+import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -37,7 +40,13 @@ class MarketEventRequestService constructor(
                 userId = userId
             )
             val envIdList = listOf("env_1", "env_2")
-            val eventDesc = ""
+            val eventDesc = JsonUtil.toJson(
+                I18Variable(
+                    code = BK_REMOTE_DEV_TRIGGER_DESC,
+                    params = listOf(cdsIp, eventType)
+                ),
+                false
+            )
             val requestId = MDC.get(TraceTag.BIZID)
             val requestTime = System.currentTimeMillis()
             envIdList.forEach { envHashId ->

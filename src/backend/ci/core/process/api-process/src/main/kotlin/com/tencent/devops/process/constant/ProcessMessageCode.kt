@@ -717,4 +717,7 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 云桌面触发事件描述
+    const val BK_REMOTE_DEV_TRIGGER_DESC = "bkRemoteDevTriggerDesc"
 }
