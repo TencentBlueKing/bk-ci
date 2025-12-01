@@ -154,7 +154,7 @@ class DevCloudMacosService @Autowired constructor(
                     DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
                     DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
                     XCODE_VERSION to (xcodeVersion ?: ""),
-                    DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: "")
+                   // DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: "")
                 )
             )
         }
