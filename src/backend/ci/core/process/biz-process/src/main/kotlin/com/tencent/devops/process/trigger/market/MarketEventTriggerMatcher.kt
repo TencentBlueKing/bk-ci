@@ -11,6 +11,7 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
@@ -55,12 +56,15 @@ class MarketEventTriggerMatcher @Autowired constructor(
             incomingQueryParamMap = webhookRequest.queryParams,
             incomingBody = webhookRequest.body
         )
+        val fieldMap = eventConfig.fieldMapping.associate { it.sourcePath to it.targetField }
         // 3. 获取插件配置的值
         eventConfig.conditions.forEach { condition ->
+            val envValue = fieldMap[condition.refField]
             // 触发变量值
-            val triggerValue = triggerParams[condition.refField] as String? ?: ""
+            val triggerValue = triggerParams[envValue] ?: ""
+            val input = element.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
             // 目标变量值
-            val targetValue = element.data[condition.key()]?.let {
+            val targetValue = input[condition.key()]?.let {
                 when (it) {
                     is String -> EnvUtils.parseEnv(it, variables)
                     is List<*> -> it.map { item ->
