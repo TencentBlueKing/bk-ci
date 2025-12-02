@@ -1,7 +1,10 @@
 package com.tencent.devops.process.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -33,12 +36,12 @@ interface ExternalEventResource {
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @Parameter(description = "x-devops-workspace-name")
-        @HeaderParam("x-devops-workspace-name")
+        @HeaderParam(AUTH_HEADER_WORKSPACE_NAME)
         workspaceName: String,
         @Parameter(description = "x-devops-cds-ip")
-        @HeaderParam("x-devops-cds-ip")
+        @HeaderParam(AUTH_HEADER_CDS_IP)
         cdsIp: String,
-        @Parameter(description = "x-devops-event-type")
+        @Parameter(description = AUTH_HEADER_EVENT_TYPE)
         @HeaderParam("x-devops-event-type")
         eventType: String,
         @Parameter(description = "事件编码")

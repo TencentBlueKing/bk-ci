@@ -1,11 +1,15 @@
 package com.tencent.devops.process.trigger.market
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
@@ -58,7 +62,17 @@ class MarketEventRequestService constructor(
                     eventDesc = eventDesc,
                     requestId = requestId,
                     createTime = LocalDateTime.now(),
-                    eventBody = event.body
+                    eventBody = JsonUtil.toJson(
+                        WebhookRequest(
+                            headers = mapOf(
+                                AUTH_HEADER_WORKSPACE_NAME to workspaceName,
+                                AUTH_HEADER_CDS_IP to cdsIp,
+                                AUTH_HEADER_EVENT_TYPE to eventType
+                            ),
+                            body = event.body,
+                            queryParams = mapOf(),
+                        )
+                    )
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 // 2. 获取事件订阅者
