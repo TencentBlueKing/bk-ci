@@ -300,6 +300,7 @@
                 :width="tableWidthMap.latestExec"
                 min-width="180"
                 :label="$t('latestExec')"
+                :render-header="latestExecHeader"
                 prop="latestExec"
             >
                 <span
@@ -317,7 +318,7 @@
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
                             <span
-                                class="pipeline-cell-link pipeline-exec-msg-title"
+                                class="pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
                                 v-perm="{
                                     hasPermission: (props.row.permissions && props.row.permissions.canView) || isArchiveView,
@@ -332,9 +333,27 @@
                                 :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
                                 @click="$router.push(props.row.latestBuildRoute)"
                             >
-                                <b>#{{ props.row.latestBuildNum }}</b>
-                                |
-                                <span>{{ props.row.lastBuildMsg }}</span>
+                                <b class="pipeline-cell-link">#{{ props.row.latestBuildNum }}</b>
+                                <b
+                                    class="pipeline-cell-link"
+                                    style="width: 10px; text-align: center;"
+                                >|</b>
+                                <span
+                                    v-if="!latestExecIsStageProgress || isArchiveView"
+                                    class="last-build-msg"
+                                >{{ props.row.lastBuildMsg }}</span>
+                                <span
+                                    v-else
+                                    style="display: inline-block;"
+                                >
+                                    <stage-steps
+                                        class="latest-stage-status"
+                                        v-if="props.row.latestBuildStageStatus"
+                                        :steps="props.row.latestBuildStageStatus"
+                                        :build-id="props.row.latestBuildId"
+                                    ></stage-steps>
+                                    <span v-else>--</span>
+                                </span>
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
@@ -588,6 +607,7 @@
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import StageSteps from '@/components/StageSteps'
     import { convertTime, isShallowEqual, prettyDateTimeFormat } from '@/utils/util'
     import { mapGetters, mapState } from 'vuex'
 
@@ -596,6 +616,7 @@
             Logo,
             ExtMenu,
             PipelineStatusIcon,
+            StageSteps,
             PipelineListEmpty
         },
         mixins: [pipelineActionMixin],
@@ -630,7 +651,8 @@
                 selectedTableColumn: [],
                 showCollectIndex: -1,
                 visibleLabelCountList: {},
-                isShowDeleteMigrateArchiveDialog: false
+                isShowDeleteMigrateArchiveDialog: false,
+                latestExecIsStageProgress: localStorage.getItem('latestExecIsStageProgress') === 'true' || false,
             }
         },
         computed: {
@@ -830,6 +852,51 @@
         },
         methods: {
             prettyDateTimeFormat,
+            latestExecHeader () {
+                const h = this.$createElement
+                if (this.isArchiveView) {
+                    return h('span',this.$t('latestExec'))
+                }
+                return h('div',{style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                }}, [
+                    h('span',
+                      this.$t('latestExec')
+                    ),
+                    h('p',{
+                        on: {
+                            click: this.switchExecView
+                        },
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#3a84ff',
+                            cursor: 'pointer',
+                            margin: '0 10px'
+                        }
+                    },[
+                        h('i', {
+                            style: {
+                                paddingBottom: '10px',
+                                margin: '0 10px',
+                                marginRight: '15px',
+                                borderBottom: '1px solid #C4C6CC',
+                                transform: 'rotate(90deg)',
+                            },
+                            attrs: {
+                                class: 'bk-icon icon-sort'
+                            }
+                        }),
+                        h('span', {}, `${!this.latestExecIsStageProgress ? this.$t('showStageProgress') : this.$t('showBuildInfo')}`)
+                    ]
+                    ),
+                ])
+            },
+            async switchExecView () {
+                this.latestExecIsStageProgress = !this.latestExecIsStageProgress
+                localStorage.setItem('latestExecIsStageProgress', this.latestExecIsStageProgress)
+            },
             getkeyByValue (obj, value) {
                 return Object.keys(obj).find(key => obj[key] === value)
             },
@@ -1143,12 +1210,20 @@
                     @include ellipsis();
                     flex: 1;
                     cursor: pointer;
-                    > span {
+                    display: inline-flex;
+                    align-items: center;
+                    vertical-align: middle;
+                    line-height: normal;
+
+                    .last-build-msg {
                         color: #63656e;
                         &:hover {
                             color: $primaryColor;
                         }
                     }
+                }
+                .latest-stage-status {
+                    line-height: 1;
                 }
                 .pipeline-exec-msg-desc {
                     display: grid;

@@ -32,6 +32,7 @@ object ActionId {
     const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
     const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
     const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+    const val PIPELINE_TEMPLATE_VIEW = "pipeline_template_view"
 
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"

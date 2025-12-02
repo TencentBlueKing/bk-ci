@@ -677,10 +677,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         } else {
             marketAtomDao.getMaxVersionAtomByCode(dslContext, atomCode)?.version
         }
-        val releaseType = if (record.atomStatus == AtomStatusEnum.INIT.status.toByte()) {
-            null
+
+        val isAtomInitStatus = record.atomStatus == AtomStatusEnum.INIT.status.toByte()
+
+        val (releaseType, lastVersionContent) = if (isAtomInitStatus) {
+            Pair(null, null)
         } else {
-            marketAtomVersionLogDao.getAtomVersion(dslContext, record.id).releaseType
+            val log = marketAtomVersionLogDao.getAtomVersion(dslContext, record.id)
+            Pair(log.releaseType, log.content)
         }
         val showReleaseType = if (releaseType != null) {
             ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
@@ -691,7 +695,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeType = StoreTypeEnum.ATOM,
             cancelFlag = cancelFlag,
             releaseType = showReleaseType,
-            version = showVersion
+            version = showVersion,
+            lastVersionContent = lastVersionContent
         )
         return Result(showVersionInfo)
     }

@@ -14,9 +14,11 @@ import {
     UPDATE_USE_TEMPLATE_SETTING
 } from './constants'
 export default {
-    [SET_INSTANCE_LIST]: (state, list) => {
+    [SET_INSTANCE_LIST]: (state, { list, init = true }) => {
         Vue.set(state, 'instanceList', list)
-        Vue.set(state, 'initialInstanceList', deepClone(list))
+        if (init) {
+            Vue.set(state, 'initialInstanceList', deepClone(list))
+        }
     },
     [UPDATE_INSTANCE_LIST]: (state, { index, value }) => {
         const newList = state.instanceList.map(i => JSON.parse(JSON.stringify(i)))

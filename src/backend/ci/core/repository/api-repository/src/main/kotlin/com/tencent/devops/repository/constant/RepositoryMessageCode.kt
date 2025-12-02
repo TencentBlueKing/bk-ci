@@ -116,6 +116,10 @@ object RepositoryMessageCode {
     const val ERROR_AUTHORIZATION_USER_INFO_EXPIRED = "2115064" // [{0}]授权用户信息已失效
     const val ERROR_USER_NO_PERMISSION_OAUTH_ACCOUNT = "2115065" // 用户 [{0}] 没有 oauth 账户 [{1}] 的使用权限
 
+    const val ERROR_SCM_API_NOT_READ_PERMISSION = "2115066" // 用户/凭证[{0}]没有仓库[{1}]访问权限
+    const val ERROR_SCM_API_UNKNOWN_EXCEPTION = "2115067" // 调用[{0}]接口失败，异常信息: {1}
+    const val ERROR_SCM_API_FILE_NOT_FOUND = "2115069" // 分支[{1}]上不存在文件[{2}]
+
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
     const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns" // 更新检测任务

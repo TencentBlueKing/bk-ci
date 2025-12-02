@@ -3,8 +3,8 @@
         <form-field
             v-bind="param"
             :required="param.required && isExecPreview"
-            :is-error="errors.has('devops' + param.name)"
-            :error-msg="errors.first('devops' + param.name)"
+            :is-error="errors.has(param.fieldName)"
+            :error-msg="errors.first(param.fieldName)"
             :label="param.label || param.id"
             :show-operate-btn="showOperateBtn"
             :handle-use-default-value="() => handleUseDefaultValue(param.id)"
@@ -17,7 +17,7 @@
                     flex
                     click-unfold
                     show-select-all
-                    v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.id })"
+                    v-bind="Object.assign({}, param, { id: undefined, name: param.fieldName })"
                     :handle-change="handleParamUpdate"
                     :placeholder="param.placeholder"
                     :disabled="disabled || param.isDelete"
@@ -32,9 +32,15 @@
                         'is-delete-param': param.isDelete
                     }"
                 />
+                <span
+                    v-if="isInParamSet"
+                    class="devops-icon icon-minus-circle remove-param-item-icon"
+                    v-bk-tooltips="$t('removeInputParam')"
+                    @click="handleRemoveParamItem(param.id)"
+                ></span>
             </section>
             <span
-                v-if="!errors.has('devops' + param.name)"
+                v-if="!errors.has(param.fieldName)"
                 :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']"
                 :title="param.desc"
             >
@@ -59,7 +65,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import { isObject } from '@/utils/util'
+    import { COMMON_PARAM_PREFIX, isObject } from '@/utils/util'
     export default {
         components: {
             Selector,
@@ -105,10 +111,17 @@
             isExecPreview: {
                 type: Boolean,
                 default: true
+            },
+            isInParamSet: {
+                type: Boolean,
+                default: false
             }
         },
         methods: {
-            isObject
+            isObject,
+            handleRemoveParamItem (id)  {
+                this.$emit('remove-param', id)
+            }
         }
     }
 </script>
@@ -123,6 +136,13 @@
         .metadata-box {
             position: relative;
             display: none;
+        }
+        .remove-param-item-icon {
+            position: absolute;
+            right: 0px;
+            top: -20px;
+            font-size: 14px;
+            cursor: pointer;
         }
 
         .bk-select {
@@ -160,4 +180,6 @@
     .is-change-param {
         background: #FDF4E8 !important;
     }
+
+    
 </style>

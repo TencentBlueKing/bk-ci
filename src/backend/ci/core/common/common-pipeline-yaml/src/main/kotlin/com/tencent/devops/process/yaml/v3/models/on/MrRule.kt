@@ -38,8 +38,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
-    val name: String? = null,
-    val enable: Boolean? = true,
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
     @get:Schema(title = "source-branches")
     @JsonProperty("source-branches")
     val sourceBranches: List<String>? = null,
@@ -93,4 +94,4 @@ data class MrRule(
     @JsonProperty("skip-wip")
     @get:Schema(title = "skip-wip")
     var skipWip: Boolean? = null
-)
+) : Rule(id, name, enable)

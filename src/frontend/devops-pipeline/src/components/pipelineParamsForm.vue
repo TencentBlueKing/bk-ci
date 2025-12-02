@@ -7,6 +7,7 @@
                     v-for="key in sortedCategories"
                     :key="key"
                     :name="key"
+                    :vertical="sortCategoryVertical"
                 >
                     <template slot="content">
                         <div
@@ -17,6 +18,7 @@
                                 v-bind="param"
                                 :param="param"
                                 ref="categoryRenderParam"
+                                :is-in-param-set="isInParamSet"
                                 :is-exec-preview="isExecPreview"
                                 :disabled="disabled || param.isFollowTemplate"
                                 :show-operate-btn="showOperateBtn"
@@ -25,6 +27,7 @@
                                 :highlight-changed-param="highlightChangedParam"
                                 :handle-param-update="handleParamUpdate"
                                 :handle-follow-template="(id) => handleFollowTemplate(followTemplateKey, id)"
+                                @remove-param="handleRemoveParamItem"
                             />
                         </div>
                     </template>
@@ -82,7 +85,7 @@
         SVN_TAG,
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
-    import { isObject, isShallowEqual } from '@/utils/util'
+    import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
 
     export default {
         components: {
@@ -108,6 +111,14 @@
             },
             highlightChangedParam: Boolean,
             sortCategory: {
+                type: Boolean,
+                default: false
+            },
+            sortCategoryVertical: {
+                type: Boolean,
+                default: false
+            },
+            isInParamSet: {
                 type: Boolean,
                 default: false
             },
@@ -147,6 +158,9 @@
             }
         },
         computed: {
+            paramPrefix () {
+                return COMMON_PARAM_PREFIX
+            },
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
@@ -226,6 +240,7 @@
                         ...param,
                         component: this.getParamComponentType(param),
                         name: param.id,
+                        fieldName: this.paramPrefix + param.id,
                         required: param.valueNotEmpty,
                         value: this.paramValues[param.id],
                         ...restParam,
@@ -305,7 +320,7 @@
             },
 
             getParamByName (name) {
-                return this.paramList.find(param => `devops${param.name}` === name)
+                return this.paramList.find(param => param.fieldName === name)
             },
             handleParamUpdate (name, value) {
                 const param = this.getParamByName(name)
@@ -316,6 +331,9 @@
             },
             showFileUploader (type) {
                 return isFileParam(type) && this.$route.path.indexOf('preview') > -1
+            },
+            handleRemoveParamItem (id)  {
+                this.$emit('remove-param', id)
             },
             getAffectedBy (originUrl) {
                 try {

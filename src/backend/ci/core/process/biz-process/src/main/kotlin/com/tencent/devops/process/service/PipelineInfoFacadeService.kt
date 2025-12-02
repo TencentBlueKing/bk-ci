@@ -55,15 +55,19 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
+import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -98,29 +102,25 @@ import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.util.FileExportUtil
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import java.io.File
-import java.io.FileInputStream
-import java.net.URLEncoder
-import java.time.LocalDateTime
-import java.util.LinkedList
-import java.util.concurrent.TimeUnit
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -129,6 +129,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.FileInputStream
+import java.net.URLEncoder
+import java.time.LocalDateTime
+import java.util.LinkedList
+import java.util.concurrent.TimeUnit
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 @Suppress("ALL")
 @Service
@@ -153,7 +161,9 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val yamlFacadeService: PipelineYamlFacadeService,
     private val operationLogService: PipelineOperationLogService,
     private val pipelineAuthorizationService: PipelineAuthorizationService,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -229,10 +239,16 @@ class PipelineInfoFacadeService @Autowired constructor(
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return if (storageType == PipelineStorageType.YAML) {
             val suffix = PipelineStorageType.YAML.fileSuffix
-            exportStringToFile(targetVersion.yaml ?: "", "${settingInfo.pipelineName}$suffix")
+            FileExportUtil.exportStringToFile(
+                targetVersion.yaml ?: "",
+                "${settingInfo.pipelineName}$suffix"
+            )
         } else {
             val suffix = PipelineStorageType.MODEL.fileSuffix
-            exportStringToFile(JsonUtil.toSortJson(modelAndSetting), "${settingInfo.pipelineName}$suffix")
+            FileExportUtil.exportStringToFile(
+                JsonUtil.toSortJson(modelAndSetting),
+                "${settingInfo.pipelineName}$suffix"
+            )
         }
     }
 
@@ -452,22 +468,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         ).pipelineId
     }
 
-    private fun exportStringToFile(content: String, fileName: String): Response {
-        // 流式下载
-        val fileStream = StreamingOutput { output ->
-            val sb = StringBuilder()
-            sb.append(content)
-            output.write(sb.toString().toByteArray())
-            output.flush()
-        }
-        val encodeName = URLEncoder.encode(fileName, "UTF-8")
-        return Response
-            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $encodeName")
-            .header("Cache-Control", "no-cache")
-            .build()
-    }
-
     fun getPipelineNameVersion(projectId: String, pipelineId: String): Pair<String, Int> {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
@@ -646,7 +646,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("createTemplate")
-                    templateService.createRelationBtwTemplate(
+                    val (templateVersion, templateVersionName) = pipelineTemplateRelatedService.createRelation(
                         userId = userId,
                         projectId = projectId,
                         templateId = templateId,
@@ -852,6 +852,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
             channelCode = ChannelCode.BS,
+            checkTemplate = false,
             yaml = yamlWithVersion,
             savedSetting = savedSetting,
             versionStatus = versionStatus,
@@ -901,7 +902,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                         pipelineId = pipelineId,
                         targetVersion = branchVersion.copy(
                             model = getFixedModel(
-                                branchVersion.model, projectId, pipelineId, userId, pipelineInfo
+                                resource = branchVersion,
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                userId = userId,
+                                pipelineInfo = pipelineInfo,
                             )
                         ),
                         ignoreBase = true,
@@ -1142,7 +1147,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 projectId = projectId,
                 model = copyMode,
                 channelCode = channelCode,
-                setting = settingInfo
+                setting = settingInfo?.copy(
+                    labels = pipelineCopy.labels
+                )
             ).pipelineId
             return newPipelineId
         } catch (e: JsonParseException) {
@@ -1526,21 +1533,21 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getPipelineResourceVersion(
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
             includeDraft = includeDraft
-        )?.model ?: throw ErrorCodeException(
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
-        return getFixedModel(model, projectId, pipelineId, userId, pipelineInfo)
+        return getFixedModel(resource, projectId, pipelineId, userId, pipelineInfo)
     }
 
     fun getFixedModel(
-        model: Model,
+        resource: PipelineResourceVersion,
         projectId: String,
         pipelineId: String,
         userId: String,
@@ -1548,7 +1555,9 @@ class PipelineInfoFacadeService @Autowired constructor(
         archiveFlag: Boolean? = false
     ): Model {
         try {
+            val model = resource.model
             val triggerContainer = model.getTriggerContainer()
+            val isLatestVersion = resource.version == pipelineInfo.version
             val finalDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
             // #10958 每次存储model都需要忽略当前的推荐版本号值，在返回前端时重查
             triggerContainer.buildNo?.apply {
@@ -1585,12 +1594,14 @@ class PipelineInfoFacadeService @Autowired constructor(
 
             // 部分老的模板实例没有templateId，需要手动加上
             if (model.instanceFromTemplate == true) {
-                model.templateId = templateService.getTemplateIdByPipeline(
+                fixModelTemplate(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    queryDslContext = finalDslContext
+                    model = model,
+                    isLatestVersion = isLatestVersion
                 )
             }
+
             // 静态组
             model.staticViews = pipelineViewGroupService.listViewByPipelineId(
                 userId = userId,
@@ -1608,6 +1619,45 @@ class PipelineInfoFacadeService @Autowired constructor(
                 defaultMessage = "Fail to get the pipeline",
                 params = arrayOf(e.message ?: "unknown")
             )
+        }
+    }
+
+    private fun fixModelTemplate(
+        model: Model,
+        projectId: String,
+        pipelineId: String,
+        isLatestVersion: Boolean
+    ) {
+        val triggerContainer = model.getTriggerContainer()
+        val pipelineTemplateRelated = pipelineTemplateRelatedService.get(
+            projectId = projectId, pipelineId = pipelineId
+        )
+        if (pipelineTemplateRelated == null) {
+            return
+        }
+        model.templateId = pipelineTemplateRelated.templateId
+        // 如果是最新版本,并且模版信息,说明是老的实例化流水线,需要补全模版信息
+        if (isLatestVersion && model.template == null) {
+            pipelineTemplateResourceService.getOrNull(
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                version = pipelineTemplateRelated.version
+            )?.let {
+                model.template = TemplateInstanceDescriptor(
+                    templateRefType = TemplateRefType.ID,
+                    templateId = pipelineTemplateRelated.templateId,
+                    templateVersionName = it.versionName,
+                    templateVariables = triggerContainer.params.filter { param ->
+                        param.value != null && param.constant != true
+                    }.map { param ->
+                        TemplateVariable(key = param.id, value = param.value!!)
+                    }
+                )
+            }
+        }
+        // 老的模版实例参数和设置都是流水线自定义,不跟随模版
+        if (model.overrideTemplateField == null) {
+            model.overrideTemplateField = TemplateInstanceField.initFromTrigger(triggerContainer = triggerContainer)
         }
     }
 

@@ -5,6 +5,7 @@
     import UseInstance from '@/hook/useInstance'
     import ToggleRequiredParamPopover from '@/components/ToggleRequiredParamPopover.vue'
     import ToggleFollowTemplatePopover from '@/components/ToggleFollowTemplatePopover.vue'
+    import { COMMON_PARAM_PREFIX } from '@/utils/util'
 
     const props = defineProps({
         label: {
@@ -246,7 +247,7 @@
             <slot></slot>
             <template v-if="props.isError">
                 <slot name="errorTip">
-                    <p class="bk-form-help is-danger">{{ props.errorMsg }}</p>
+                    <p class="bk-form-help is-danger">{{ props.errorMsg?.replaceAll?.(COMMON_PARAM_PREFIX, '') }}</p>
                 </slot>
             </template>
         </div>
