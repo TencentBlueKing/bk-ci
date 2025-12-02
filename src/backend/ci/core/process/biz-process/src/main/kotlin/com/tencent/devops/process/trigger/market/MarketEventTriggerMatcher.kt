@@ -76,7 +76,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
                 triggerValue = triggerValue
             )
             logger.info(
-                "$projectId|$pipelineId|${element.id}|${condition.refField}" +
+                "$projectId|$pipelineId|${element.id}|${condition.refField}|" +
                         "triggerOn:${triggerValue}|${condition.operator}|${targetValue}|$match"
             )
             if (!match) {
