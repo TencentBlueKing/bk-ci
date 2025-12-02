@@ -11,4 +11,8 @@ data class ScmWebhookEventBody(
     val queryParams: Map<String, String>? = null,
     @get:Schema(description = "webhook请求体")
     val webhook: Webhook
-) : TriggerEventBody
+) : TriggerEventBody {
+    companion object {
+        const val classType = "scm"
+    }
+}
