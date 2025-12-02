@@ -113,6 +113,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             ConditionOperator.IN -> {
                 when (targetValue) {
                     is List<*> -> targetValue.contains(triggerValue)
+                    is String -> targetValue.split(",").contains(triggerValue)
                     else -> false
                 }
             }
@@ -120,6 +121,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             ConditionOperator.NOT_IN -> {
                 when (targetValue) {
                     is List<*> -> !targetValue.contains(triggerValue)
+                    is String -> !targetValue.split(",").contains(triggerValue)
                     else -> false
                 }
             }
@@ -127,6 +129,9 @@ class MarketEventTriggerMatcher @Autowired constructor(
             ConditionOperator.LIKE -> {
                 when (targetValue) {
                     is List<*> -> targetValue.any {
+                        doLike(it, triggerValue)
+                    }
+                    is String -> targetValue.split(",").any{
                         doLike(it, triggerValue)
                     }
 
@@ -137,6 +142,9 @@ class MarketEventTriggerMatcher @Autowired constructor(
             ConditionOperator.NOT_LIKE -> {
                 when (targetValue) {
                     is List<*> -> targetValue.none {
+                        doLike(it, triggerValue)
+                    }
+                    is String -> !targetValue.split(",").any{
                         doLike(it, triggerValue)
                     }
 
