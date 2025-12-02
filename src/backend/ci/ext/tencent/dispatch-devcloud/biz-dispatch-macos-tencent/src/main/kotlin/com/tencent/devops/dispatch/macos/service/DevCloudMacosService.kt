@@ -58,10 +58,11 @@ class DevCloudMacosService @Autowired constructor(
         val buildId = dispatchMessage.event.buildId
 
         var taskId = ""
+        val realUrl = toIdcUrl("$devCloudUrl/api/mac/vm/create")
         val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
-        logger.info("$buildId DevCloud creatVM request body: $body")
+        logger.info("$buildId DevCloud creatVM request realUrl: $realUrl body: $body")
         val request = Request.Builder()
-            .url(toIdcUrl("$devCloudUrl/api/mac/vm/create"))
+            .url(realUrl)
             .headers(
                 SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.event.userId)
                     .toHeaders()
