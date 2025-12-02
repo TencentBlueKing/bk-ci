@@ -543,6 +543,42 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
+     * 批量统计多个变量组的引用数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNames 变量组名称列表
+     * @param referType 引用类型（可选）
+     * @return Map<String, Int> 变量组名称到引用数量的映射
+     */
+    fun batchCountByGroupNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>,
+        referType: PublicVerGroupReferenceTypeEnum? = null
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) {
+            return emptyMap()
+        }
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                GROUP_NAME.`in`(groupNames)
+            )
+            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
+
+            return dslContext.select(GROUP_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(conditions)
+                .groupBy(GROUP_NAME)
+                .fetch()
+                .associate { record ->
+                    record.getValue(GROUP_NAME) to (record.getValue(1, Int::class.java) ?: 0)
+                }
+        }
+    }
+
+    /**
      * 更新变量组引用信息
      */
     fun updateVarGroupReferInfo(

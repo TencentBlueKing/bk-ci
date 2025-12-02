@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.common.pipeline.pojo.VarRefDetail
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.utils.ModelVarRefUtils
 import com.tencent.devops.common.redis.RedisLock
@@ -98,7 +97,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                 varRefDetailDao.batchSave(dslContext, varRefDetails)
             }
             // 处理公共变量组变量引用
-            handlePublicVarGroupReferences(
+            publicVarReferInfoService.handlePublicVarGroupReferences(
                 userId = userId,
                 projectId = projectId,
                 model = model,
@@ -114,30 +113,6 @@ class ModelHandleServiceImpl @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
-    }
-
-    /**
-     * 处理公共变量组变量引用
-     * 调用PublicVarReferInfoService处理变量组引用的增删改
-     */
-    private fun handlePublicVarGroupReferences(
-        userId: String,
-        projectId: String,
-        model: Model,
-        resourceId: String,
-        resourceType: String,
-        resourceVersion: Int,
-        varRefDetails: List<VarRefDetail>
-    ) {
-        publicVarReferInfoService.handlePublicVarGroupReferences(
-            userId = userId,
-            projectId = projectId,
-            model = model,
-            resourceId = resourceId,
-            resourceType = resourceType,
-            resourceVersion = resourceVersion,
-            varRefDetails = varRefDetails
-        )
     }
 
     private fun getResourceModel(

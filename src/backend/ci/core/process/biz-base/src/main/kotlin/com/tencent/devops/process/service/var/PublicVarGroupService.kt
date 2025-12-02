@@ -293,7 +293,7 @@ class PublicVarGroupService @Autowired constructor(
             groupNames = groupNames.takeIf { it.isNotEmpty() }
         )
 
-        val records = publicVarGroupDao.listGroupsByProjectIdPage(
+        val groupPOs = publicVarGroupDao.listGroupsByProjectIdPage(
             dslContext = dslContext,
             projectId = projectId,
             page = page,
@@ -302,19 +302,25 @@ class PublicVarGroupService @Autowired constructor(
             filterByGroupDesc = queryReq.filterByGroupDesc,
             filterByUpdater = queryReq.filterByUpdater,
             groupNames = groupNames.takeIf { it.isNotEmpty() }
-        ).map { po ->
-            // 统计所有关联变量组的唯一referId数量
-            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
+        )
+
+        // 批量查询所有变量组的引用数量
+        val groupNamesInPage = groupPOs.map { it.groupName }
+        val referCountMap = if (groupNamesInPage.isNotEmpty()) {
+            publicVarGroupReferInfoDao.batchCountByGroupNames(
                 dslContext = dslContext,
                 projectId = projectId,
-                groupName = po.groupName,
-                referType = null,
-                version = null
+                groupNames = groupNamesInPage,
+                referType = null
             )
+        } else {
+            emptyMap()
+        }
 
+        val records = groupPOs.map { po ->
             PublicVarGroupDO(
                 groupName = po.groupName,
-                referCount = actualReferCount,
+                referCount = referCountMap[po.groupName] ?: 0,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,
