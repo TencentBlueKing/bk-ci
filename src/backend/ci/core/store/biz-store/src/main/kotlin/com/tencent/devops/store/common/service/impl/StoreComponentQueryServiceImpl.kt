@@ -607,9 +607,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         val storeType = storeInfoQuery.storeType
-        val page = storeInfoQuery.page
-        val pageSize = storeInfoQuery.pageSize
-        val projectCode = storeInfoQuery.projectCode
         storeInfoQuery.validate()
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
