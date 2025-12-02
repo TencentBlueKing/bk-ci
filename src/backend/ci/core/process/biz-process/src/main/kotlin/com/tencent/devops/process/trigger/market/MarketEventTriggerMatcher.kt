@@ -37,7 +37,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         val version = element.version
         logger.info("start to match event trigger|$projectId|$pipelineId|$atomCode@$version|${element.id}")
         val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDetailInfoByCode(
-            userId = "",
+            userId = "admin",
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
             version = version
