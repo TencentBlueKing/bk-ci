@@ -1040,8 +1040,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             // 返回所有变量，有关联就设置referCount
             return groupVars.map { varPO ->
                 val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
-                buildFormProperty.varGroupVersion =
-                    if (varGroupRecord.version != -1) varGroupRecord.version else null
+                buildFormProperty.varGroupVersion = version
                 PublicVarDO(
                     varName = varPO.varName,
                     alias = varPO.alias,
