@@ -174,7 +174,8 @@
     })
 
     const projectId = computed(() => proxy.$route.params?.projectId)
-    // const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    const pipelineId = computed(() => proxy.$route.params?.pipelineId)
+    const templateId = computed(() => proxy.$route.params?.templateId)
     // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups || [])
     const renderSelectedVariableList = computed(() => {
@@ -296,7 +297,7 @@
             groupName: id
         }
         const res = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo',  {
-            referId: proxy.$route.params.pipelineId,
+            referId: pipelineId.value ?? templateId.value,
             params: {
                 referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
                 referVersion: proxy.$route.params.version || proxy.$store.state.atom?.pipelineInfo?.version,

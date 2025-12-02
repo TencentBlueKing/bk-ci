@@ -163,7 +163,7 @@
         try {
             isLoading.value = true
             const variableList = await proxy.$store.dispatch('publicVar/getResourceVarReferenceInfo', {
-                referId: proxy.$route.params.pipelineId,
+                referId: proxy.$route.params.pipelineId ?? proxy.$route.params.templateId,
                 params: {
                     referType: proxy.$route.name === 'pipelinesEdit' ? 'PIPELINE' : 'TEMPLATE',
                     referVersion: proxy.$route.params.version || proxy.$store.state.atom?.pipelineInfo?.version,
