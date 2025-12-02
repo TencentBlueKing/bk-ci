@@ -154,19 +154,17 @@ class MarketEventTriggerMatcher @Autowired constructor(
         }
     }
 
-    private fun doLike(targetValue: Any?, triggerValue: String): Boolean {
+    private fun doLike(targetValue: String?, triggerValue: String): Boolean {
         return try {
             when (targetValue) {
                 is String -> {
-                    val pattern = targetValue.replace("%", ".*")
+                    val pattern = ".*$targetValue.*"
                     if (pattern.isBlank()) {
                         triggerValue.isBlank()
                     } else {
                         Regex(pattern).matches(triggerValue)
                     }
                 }
-
-                is Number -> targetValue.toString() == triggerValue
                 null -> triggerValue.isBlank()
                 else -> false
             }
