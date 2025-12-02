@@ -33,7 +33,7 @@ class MarketEventVariablesResolver {
                 }
 
                 MappingSource.BODY -> {
-                    jsonNode[targetField]?.let {
+                    jsonNode[fieldMapping.sourcePath]?.let {
                         resolvedVariables[targetField] = it as String
                     }
                 }
