@@ -14,8 +14,8 @@ class MarketEventVariablesResolver {
         incomingHeaders: Map<String, String>?,
         incomingQueryParamMap: Map<String, String>?,
         incomingBody: String
-    ): Map<String, String> {
-        val resolvedVariables = mutableMapOf<String, String>()
+    ): Map<String, Any> {
+        val resolvedVariables = mutableMapOf<String, Any>()
         val jsonNode = flattenToMap(JsonUtil.toMap(incomingBody))
         fieldMappings.forEach { fieldMapping ->
             val targetField = fieldMapping.targetField
@@ -34,7 +34,7 @@ class MarketEventVariablesResolver {
 
                 MappingSource.BODY -> {
                     jsonNode[fieldMapping.sourcePath]?.let {
-                        resolvedVariables[targetField] = it as String
+                        resolvedVariables[targetField] = it
                     }
                 }
             }
@@ -96,9 +96,13 @@ class MarketEventVariablesResolver {
                     (obj as Array<*>).toList()
                 } else {
                     obj as Collection<*>
-                }
+                }.filterNotNull()
                 collection.forEachIndexed { index, item ->
                     result.putAll(flattenObject(item, "$prefix[$index]", separator))
+                }
+                // 基础类型数组，保持原样
+                if (!collection.any { !ReflectUtil.isNativeType(it) && it !is String }) {
+                    result[prefix] = obj
                 }
             }
             // 对象

@@ -20,9 +20,26 @@ data class InputCondition(
     override val required: Boolean? = false,
     @get:Schema(title = "描述")
     override val desc: String?,
-    override val component: AtomFormComponentType = AtomFormComponentType.VUE_INPUT
+    override val component: AtomFormComponentType = AtomFormComponentType.VUE_INPUT,
+    val multiple: Boolean? = false,
+    val separator: String? = InputConditionSeparator.COMMA.value
 ) : TriggerCondition {
     companion object {
         const val classType = "vueInput"
+    }
+}
+
+enum class InputConditionSeparator constructor(
+    val value: String
+) {
+    // 英文逗号分隔符
+    COMMA(","),
+    // 英文分号分隔符
+    SEMICOLON(";");
+
+    companion object {
+        fun fromValue(value: String): InputConditionSeparator? {
+            return values().find { it.value == value }
+        }
     }
 }

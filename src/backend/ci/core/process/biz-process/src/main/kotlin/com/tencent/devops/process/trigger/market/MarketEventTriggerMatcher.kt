@@ -89,7 +89,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
                     outputVars = mapOf(),
                     failedReason = I18Variable(
                         WebhookI18nConstants.FIELD_CONDITION_NOT_MATCH,
-                        params = listOf(condition.label, triggerValue)
+                        params = listOf(condition.label, triggerValue.toString())
                     ).toJsonStr()
                 )
             }
@@ -104,59 +104,76 @@ class MarketEventTriggerMatcher @Autowired constructor(
 
     fun match(
         operator: ConditionOperator,
-        triggerValue: String,
+        triggerValue: Any,
         targetValue: Any?
     ): Boolean {
         return when (operator) {
-            ConditionOperator.EQ -> triggerValue == targetValue.toString()
-            ConditionOperator.NOT_EQ -> triggerValue != targetValue.toString()
-            ConditionOperator.IN -> {
-                when (targetValue) {
-                    is List<*> -> targetValue.contains(triggerValue)
-                    is String -> targetValue.split(",").contains(triggerValue)
-                    else -> false
+            ConditionOperator.EQ -> handleEquals(triggerValue, targetValue)
+            ConditionOperator.NOT_EQ -> !handleEquals(triggerValue, targetValue)
+            ConditionOperator.IN -> handleContains(triggerValue, targetValue)
+            ConditionOperator.NOT_IN -> !handleContains(triggerValue, targetValue)
+            ConditionOperator.LIKE -> handleLike(triggerValue, targetValue)
+            ConditionOperator.NOT_LIKE -> !handleLike(triggerValue, targetValue)
+        }
+    }
+
+    private fun handleEquals(triggerValue: Any, targetValue: Any?): Boolean {
+        return triggerValue.toString() == targetValue.toString()
+    }
+
+    private fun handleContains(triggerValue: Any, targetValue: Any?): Boolean {
+        val targetList = when (targetValue) {
+            is List<*> -> targetValue.filterIsInstance<String>()
+            is String -> targetValue.split(",").map { it.trim() }
+            else -> return false
+        }
+        
+        return when (triggerValue) {
+            is List<*> -> targetList.any { triggerValue.contains(it) }
+            is String -> targetList.contains(triggerValue)
+            else -> false
+        }
+    }
+
+    private fun handleLike(triggerValue: Any, targetValue: Any?): Boolean {
+        val targetPatterns = when (targetValue) {
+            is List<*> -> targetValue.filterIsInstance<String>()
+            is String -> targetValue.split(",").map { it.trim() }
+            else -> return false
+        }
+        
+        return when (triggerValue) {
+            is List<*> -> {
+                val triggerList = triggerValue.filterIsInstance<String>()
+                targetPatterns.any { targetPattern ->
+                    triggerList.any { triggerText -> doLike(targetPattern, triggerText) }
                 }
             }
-
-            ConditionOperator.NOT_IN -> {
-                when (targetValue) {
-                    is List<*> -> !targetValue.contains(triggerValue)
-                    is String -> !targetValue.split(",").contains(triggerValue)
-                    else -> false
-                }
-            }
-
-            ConditionOperator.LIKE -> {
-                when (targetValue) {
-                    is List<*> -> targetValue.any {
-                        doLike(it, triggerValue)
-                    }
-                    is String -> targetValue.split(",").any{
-                        doLike(it, triggerValue)
-                    }
-
-                    else -> false
-                }
-            }
-
-            ConditionOperator.NOT_LIKE -> {
-                when (targetValue) {
-                    is List<*> -> targetValue.none {
-                        doLike(it, triggerValue)
-                    }
-                    is String -> !targetValue.split(",").any{
-                        doLike(it, triggerValue)
-                    }
-
-                    else -> false
-                }
-            }
+            is String -> targetPatterns.any { targetPattern -> doLike(targetPattern, triggerValue) }
+            else -> false
         }
     }
 
     private fun doLike(targetValue: Any?, triggerValue: String): Boolean {
-        val pattern = (targetValue as String? ?: "").replace("%", ".*")
-        return Regex(pattern).matches(triggerValue)
+        return try {
+            when (targetValue) {
+                is String -> {
+                    val pattern = targetValue.replace("%", ".*")
+                    if (pattern.isBlank()) {
+                        triggerValue.isBlank()
+                    } else {
+                        Regex(pattern).matches(triggerValue)
+                    }
+                }
+
+                is Number -> targetValue.toString() == triggerValue
+                null -> triggerValue.isBlank()
+                else -> false
+            }
+        } catch (ignored: Exception) {
+            logger.warn("LIKE pattern matching failed: target[$targetValue], trigger[$triggerValue]", ignored)
+            false
+        }
     }
 
     companion object {

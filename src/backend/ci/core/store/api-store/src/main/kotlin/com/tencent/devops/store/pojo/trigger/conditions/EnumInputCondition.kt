@@ -15,7 +15,7 @@ data class EnumInputCondition(
     @get:Schema(title = "条件字段")
     override val refField: String,
     @get:Schema(title = "逻辑操作")
-    override val operator: ConditionOperator,
+    override val operator: ConditionOperator = ConditionOperator.EQ,
     @get:Schema(title = "是否必填")
     override val required: Boolean?,
     @get:Schema(title = "描述")
