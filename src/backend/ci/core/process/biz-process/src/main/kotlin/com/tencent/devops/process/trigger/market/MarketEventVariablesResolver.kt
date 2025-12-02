@@ -16,7 +16,7 @@ class MarketEventVariablesResolver {
         incomingBody: String
     ): Map<String, String> {
         val resolvedVariables = mutableMapOf<String, String>()
-        val jsonNode = flattenToMap(incomingBody)
+        val jsonNode = flattenToMap(JsonUtil.toMap(incomingBody))
         fieldMappings.forEach { fieldMapping ->
             val targetField = fieldMapping.targetField
             when (fieldMapping.source) {
