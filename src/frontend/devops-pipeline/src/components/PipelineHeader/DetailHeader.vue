@@ -14,16 +14,33 @@
                 'is-debug-exec-detail': isDebugExec
             }]"
         >
-            <bk-button
+            <span
                 v-if="isRunning"
-                :disabled="loading"
-                :icon="loading ? 'loading' : ''"
-                outline
-                theme="warning"
-                @click="handleCancel"
+                v-bk-tooltips="{
+                    disabled: !isStrictCancelPolicy,
+                    content: $t('cancelBuildPermTip')
+                }"
             >
-                {{ $t("cancel") }}
-            </bk-button>
+                <bk-button
+                    :disabled="loading || isStrictCancelPolicy"
+                    :icon="loading ? 'loading' : ''"
+                    outline
+                    theme="warning"
+                    @click="handleCancel"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: RESOURCE_TYPE.PIPELINE,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                >
+                    {{ $t("cancel") }}
+                </bk-button>
+            </span>
             <template v-else-if="!isDebugExec">
                 <bk-dropdown-menu
                     trigger="click"
@@ -160,6 +177,7 @@
 </template>
 
 <script>
+    import { BUILD_CANCEL_POLICY } from '@/store/constants'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
@@ -204,6 +222,9 @@
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            isStrictCancelPolicy () {
+                return this.pipelineInfo?.buildCancelPolicy === BUILD_CANCEL_POLICY.RESTRICTED && this.execDetail?.cancelBuildPerm === false
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning

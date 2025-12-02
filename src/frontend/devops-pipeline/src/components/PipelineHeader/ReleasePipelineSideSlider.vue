@@ -676,6 +676,12 @@
             },
             isCommitToMaster () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
+            },
+            releaseType () {
+                return this.$route.query?.type
+            },
+            versionName () {
+                return this.$route.query?.versionName
             }
         },
         watch: {
@@ -779,6 +785,14 @@
                 handler: function () {
                     this.customVersionName = ''
                 }
+            },
+            releaseType: {
+                handler: function (val) {
+                    if (val && this.versionName) {
+                        this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
+                    }
+                },
+                immediate: true
             }
         },
         mounted () {
