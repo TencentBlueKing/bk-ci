@@ -12,7 +12,7 @@ data class DevCloudMacosVmModelResponse(
     @get:Schema(title = "响应消息")
     val actionMessage: String,
     @get:Schema(title = "数据列表")
-    val Data: List<DevCloudMacosVmModelData>?
+    val data: List<DevCloudMacosVmModelData>?
 )
 
 /**

@@ -36,6 +36,6 @@ class UserMacosVmModelResourceImpl @Autowired constructor(
             return Result(emptyList())
         }
         
-        return Result(response.Data ?: emptyList())
+        return Result(response.data ?: emptyList())
     }
 }
