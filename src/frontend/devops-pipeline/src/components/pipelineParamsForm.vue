@@ -89,8 +89,6 @@
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
     import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
-    import { mapGetters } from 'vuex'
-
 
     export default {
         components: {
@@ -167,9 +165,6 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', [
-                'getExecuteParams'
-            ]),
             paramPrefix () {
                 return COMMON_PARAM_PREFIX
             },
