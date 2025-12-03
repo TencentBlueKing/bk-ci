@@ -1206,7 +1206,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeType = storeType
                     ),
                     publicFlag = storeBaseInfo.publicFlag,
-                    channelCode = ChannelCode.BS
+                    channelCode = ChannelCode.getRequestChannelCode()
                 )
             }
         }

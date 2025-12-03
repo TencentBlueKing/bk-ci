@@ -100,10 +100,6 @@ interface UserPipelineSettingResource {
     fun getDefaultSetting(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "渠道", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_CHANNEL)
-        @DefaultValue("BS")
-        channelCode: ChannelCode? = null
+        userId: String
     ): Result<PipelineSetting>
 }

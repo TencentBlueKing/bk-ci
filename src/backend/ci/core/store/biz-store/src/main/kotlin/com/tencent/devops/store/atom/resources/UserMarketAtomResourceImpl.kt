@@ -121,7 +121,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     }
 
     override fun installAtom(userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
-        return marketAtomService.installAtom(userId, ChannelCode.BS, installAtomReq)
+        return marketAtomService.installAtom(userId, ChannelCode.getRequestChannelCode(), installAtomReq)
     }
 
     override fun getInstalledProjects(

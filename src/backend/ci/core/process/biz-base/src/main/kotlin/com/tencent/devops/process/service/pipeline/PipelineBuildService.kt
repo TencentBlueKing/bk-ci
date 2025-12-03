@@ -31,10 +31,12 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -43,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
@@ -62,6 +65,8 @@ import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_URL
@@ -105,7 +110,8 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val client: Client
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -212,7 +218,6 @@ class PipelineBuildService(
             }
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
-
             initPipelineParamMap(
                 buildId = buildId,
                 startType = startType,
@@ -223,7 +228,7 @@ class PipelineBuildService(
                 projectVO = projectVO,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                pipelineAuthorizer = if (pipeline.channelCode == ChannelCode.BS) {
+                pipelineAuthorizer = if (channelCode == ChannelCode.BS || channelCode == ChannelCode.CREATIVE_STREAM) {
                     pipelineRepositoryService.getPipelineOauthUser(
                         projectId = pipeline.projectId,
                         pipelineId = pipeline.pipelineId
@@ -425,6 +430,23 @@ class PipelineBuildService(
                 value = it,
                 readOnly = true
             )
+        }
+        startValues?.get(CREATIVE_STREAM_NODE_AGENT_ID)?.let {
+            // 获取节点的操作系统
+            val nodeOs = client.get(ServiceThirdPartyAgentResource::class)
+                .getAgentById(pipeline.projectId, HashUtil.encodeLongId(it.toLong())).data?.os?.uppercase()
+            pipelineParamMap[CREATIVE_STREAM_NODE_AGENT_ID] = BuildParameters(
+                key = CREATIVE_STREAM_NODE_AGENT_ID,
+                value = it,
+                readOnly = true
+            )
+            nodeOs?.let {
+                pipelineParamMap[CREATIVE_STREAM_NODE_OS] = BuildParameters(
+                    key = CREATIVE_STREAM_NODE_OS,
+                    value = nodeOs,
+                    readOnly = true
+                )
+            }
         }
 
         // 链路

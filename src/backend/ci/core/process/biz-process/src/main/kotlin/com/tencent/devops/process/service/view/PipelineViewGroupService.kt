@@ -654,7 +654,7 @@ class PipelineViewGroupService @Autowired constructor(
                     offset = offset,
                     limit = step,
                     deleteFlag = if (includeDelete) null else false,
-                    channelCode = ChannelCode.BS
+                    channelCode = ChannelCode.getRequestChannelCode()
                 ) ?: emptyList<TPipelineInfoRecord>()
                 if (subPipelineInfos.isEmpty()) {
                     break
@@ -858,7 +858,7 @@ class PipelineViewGroupService @Autowired constructor(
                     dslContext = dslContext,
                     projectId = projectId,
                     excludePipelineIds = classifiedPipelineIds,
-                    channelCode = ChannelCode.BS,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     filterPipelineIds = authPipelines
                 )
             summaries.add(

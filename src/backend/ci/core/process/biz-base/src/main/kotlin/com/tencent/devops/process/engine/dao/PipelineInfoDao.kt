@@ -289,7 +289,7 @@ class PipelineInfoDao {
         projectCode: String,
         limit: Int,
         offset: Int,
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -311,7 +311,7 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         pipelineName: String?,
         projectCode: String,
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Int {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()

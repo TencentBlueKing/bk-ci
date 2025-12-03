@@ -67,7 +67,7 @@ class PipelineSettingVersionService @Autowired constructor(
         pipelineId: String,
         userId: String?,
         detailInfo: PipelineDetailInfo?,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         version: Int,
         archiveFlag: Boolean? = false
     ): PipelineSetting {

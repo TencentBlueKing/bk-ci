@@ -314,7 +314,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                             buildId = buildId,
                             pipelineId = pipelineId,
                             projectId = projectId,
-                            channelCode = ChannelCode.BS
+                            channelCode = pipelineInfo.channelCode
                         ).data
                         builder.buildId(buildId)
                             .status(PipelineTriggerStatus.SUCCEED.name)
@@ -568,13 +568,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         val startEpoch = System.currentTimeMillis()
+        val channelCode = pipelineInfo.channelCode
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
                 pipelineParamMap = HashMap(pipelineParamMap),
-                channelCode = pipelineInfo.channelCode,
+                channelCode = channelCode,
                 isMobile = false,
                 resource = resource,
                 signPipelineVersion = version,
@@ -584,7 +585,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId.id,
-                variables = webhookCommit.params
+                variables = webhookCommit.params,
+                channelCode = channelCode
             )
             // #2958 webhook触发在触发原子上输出变量
             buildLogPrinter.addLines(

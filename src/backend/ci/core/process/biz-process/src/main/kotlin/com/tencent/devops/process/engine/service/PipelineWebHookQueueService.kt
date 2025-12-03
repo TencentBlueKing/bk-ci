@@ -139,7 +139,13 @@ class PipelineWebHookQueueService @Autowired constructor(
         }
     }
 
-    fun onWebHookTrigger(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+    fun onWebHookTrigger(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, Any>,
+        channelCode: ChannelCode
+    ) {
         try {
             execute(
                 projectId = projectId,
@@ -178,7 +184,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                                 pipelineId = pipelineId,
                                 projectId = projectId,
                                 buildId = queue.buildId,
-                                channelCode = ChannelCode.BS
+                                channelCode = channelCode
                             )
                         }
                         dslContext.transaction { configuration ->

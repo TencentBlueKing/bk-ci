@@ -174,7 +174,13 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+        pipelineBuildFacadeService.buildManualShutdown(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.getRequestChannelCode()
+        )
         return Result(true)
     }
 
@@ -193,6 +199,7 @@ class UserBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        val channelCode = ChannelCode.getRequestChannelCode()
         pipelineBuildFacadeService.buildManualReview(
             userId = userId,
             projectId = projectId,
@@ -200,8 +207,8 @@ class UserBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
             stepId = null
         )
         return Result(true)
@@ -293,7 +300,7 @@ class UserBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(buildDetail)
@@ -319,7 +326,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 archiveFlag = archiveFlag
             )
         )
@@ -342,7 +349,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = ChannelCode.BS
+                channelCode = ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -365,7 +372,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNo = buildNo,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 debugVersion = debugVersion
             )
         )
@@ -390,7 +397,7 @@ class UserBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 debugVersion = debugVersion,
                 archiveFlag = archiveFlag
             )
@@ -404,7 +411,7 @@ class UserBuildResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = false
         )
     }
@@ -427,7 +434,7 @@ class UserBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = check,
             debugVersion = debugVersion
         )

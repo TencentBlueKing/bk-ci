@@ -38,6 +38,7 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
@@ -66,7 +67,8 @@ class WebhookRequestService(
     private val grayService: WebhookGrayService,
     private val simpleDispatcher: SampleEventDispatcher,
     private val webhookGrayCompareService: WebhookGrayCompareService,
-    private val webhookManager: WebhookManager
+    private val webhookManager: WebhookManager,
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
 
     companion object {
@@ -238,12 +240,19 @@ class WebhookRequestService(
             logger.info("the buildInfo of github check run is error")
             return
         }
+        val (userId, projectId, pipelineId, buildId) = buildInfo
+        val channelCode = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            delete = null
+        )?.channel?.let { ChannelCode.valueOf(it) } ?: ChannelCode.getRequestChannelCode()
         client.get(ServiceBuildResource::class).retry(
-            userId = buildInfo[0],
-            projectId = buildInfo[1],
-            pipelineId = buildInfo[2],
-            buildId = buildInfo[3],
-            channelCode = ChannelCode.BS
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
         )
     }
 

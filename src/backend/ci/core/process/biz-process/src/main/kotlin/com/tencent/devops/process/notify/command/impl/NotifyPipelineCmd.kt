@@ -55,7 +55,7 @@ abstract class NotifyPipelineCmd @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            channelCode = ChannelCode.BS,
+            channelCode = pipelineInfo.channelCode,
             checkPermission = false
         )
         val failTask = getFailTaskName(detail)

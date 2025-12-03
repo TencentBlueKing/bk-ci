@@ -223,15 +223,14 @@ class PipelineTriggerEventAspect(
         startType: StartType?,
         pipelineParamMap: MutableMap<String, BuildParameters>?
     ): Boolean {
-        if (pipeline == null || userId == null || channelCode == null || startType == null) {
-            return true
+        // 不是BS渠道的不需要记录,webhook的在webhook触发时已记录,在这不需要记录;重试不需要记录
+        return when {
+            pipeline == null || userId == null || channelCode == null || startType == null -> true
+            channelCode != ChannelCode.BS && channelCode != ChannelCode.CREATIVE_STREAM -> true
+            startType == StartType.WEB_HOOK -> true
+            pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null -> true
+            else -> false
         }
-        // 不是BS渠道的不需要记录,webhook的在webhook触发时已记录,在这不需要记录
-        if (channelCode != ChannelCode.BS || startType == StartType.WEB_HOOK) {
-            return true
-        }
-        // 重试不需要记录
-        return pipelineParamMap != null && pipelineParamMap[PIPELINE_RETRY_BUILD_ID] != null
     }
 
     @Suppress("ComplexCondition")

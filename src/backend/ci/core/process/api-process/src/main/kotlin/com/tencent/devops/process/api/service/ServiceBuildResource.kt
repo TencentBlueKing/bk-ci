@@ -614,7 +614,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<BuildHistoryVariables>
 
     @Operation(summary = "获取构建中的变量值")
@@ -636,7 +636,7 @@ interface ServiceBuildResource {
         buildId: String,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
@@ -655,7 +655,7 @@ interface ServiceBuildResource {
         buildId: Set<String>,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -678,7 +678,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         @QueryParam("startBeginTime")
         startBeginTime: String? = null,
         @QueryParam("endBeginTime")
@@ -707,7 +707,7 @@ interface ServiceBuildResource {
         @QueryParam("version")
         debugVersion: Int? = null,
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<List<String>>
 
     @Operation(summary = "根据流水线id获取最新执行信息")
@@ -783,10 +783,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
-        buildNum: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildNum: String
     ): Result<BuildHistory?>
 
     @Operation(summary = "手动触发启动阶段")

@@ -41,8 +41,10 @@ class ChannelUtils @Autowired constructor(
             ChannelCode.GIT
         } else if (consulTag.contains("auto")) {
             ChannelCode.GONGFENGSCAN
+        } else if (consulTag.contains("creative")) {
+            ChannelCode.CREATIVE_STREAM
         } else {
-            ChannelCode.BS
+            ChannelCode.getRequestChannelCode()
         }
     }
 }

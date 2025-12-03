@@ -54,7 +54,6 @@ class PipelineStatusService(
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
             pipelineId = pipelineId
         ) ?: return null
         val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId) ?: return null

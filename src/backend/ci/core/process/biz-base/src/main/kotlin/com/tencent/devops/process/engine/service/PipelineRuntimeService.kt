@@ -1428,7 +1428,8 @@ class PipelineRuntimeService @Autowired constructor(
                 actionType = ActionType.START,
                 startBuildStatus = BuildStatus.QUEUE,
                 startType = StartType.toStartType(buildInfo.trigger),
-                debug = buildInfo.debug
+                debug = buildInfo.debug,
+                channelCode = buildInfo.channelCode
             ).apply {
                 buildNoType = null // 该字段是需要遍历Model获得，不过在审核阶段为null，目前不影响功能逻辑。
             }.sendBuildStartEvent()

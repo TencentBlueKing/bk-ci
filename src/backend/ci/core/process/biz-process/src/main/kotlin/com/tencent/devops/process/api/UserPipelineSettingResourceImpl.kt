@@ -82,7 +82,7 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
         return Result(pipelineSettingFacadeService.getCommonSetting(userId))
     }
 
-    override fun getDefaultSetting(userId: String, channelCode: ChannelCode?): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.getDefaultSetting(userId, channelCode))
+    override fun getDefaultSetting(userId: String): Result<PipelineSetting> {
+        return Result(pipelineSettingFacadeService.getDefaultSetting(userId))
     }
 }

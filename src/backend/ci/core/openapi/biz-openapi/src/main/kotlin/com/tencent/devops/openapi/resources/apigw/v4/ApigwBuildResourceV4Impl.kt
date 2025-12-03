@@ -403,7 +403,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             stepId = stepId
         )
     }
