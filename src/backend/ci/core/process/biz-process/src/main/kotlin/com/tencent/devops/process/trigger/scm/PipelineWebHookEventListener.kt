@@ -85,16 +85,17 @@ class PipelineWebHookEventListener @Autowired constructor(
                         "${repository.projectName}|${triggerPipelines.size} pipelines triggered"
             )
         }
+        val yamlPipelines = pipelineYamlService.getAllYamlPipeline(
+            projectId = repository.projectId!!,
+            repoHashId = repository.repoHashId!!
+        ).map { it.pipelineId }
         triggerPipelines.forEach { (projectId, pipelineId, version) ->
-            // 流水线开启PAC,并且代码库开启PAC,在pac监听器处理
-            pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-                if (it.repoHashId == repository.repoHashId) {
-                    logger.info(
-                        "handling in pac webhook listener|" +
-                                "projectId:$projectId|pipelineId:$pipelineId|repoHashId:${it.repoHashId}"
-                    )
-                    return@forEach
-                }
+            // 流水线开启PAC,并且流水线是当前代码库创建的,在pac监听器处理
+            if (yamlPipelines.contains(pipelineId)) {
+                logger.info(
+                    "yaml pipeline handle in pac webhook listener|$projectId|$pipelineId|${repository.repoHashId}"
+                )
+                return@forEach
             }
             sampleEventDispatcher.dispatch(
                 ScmWebhookTriggerEvent(

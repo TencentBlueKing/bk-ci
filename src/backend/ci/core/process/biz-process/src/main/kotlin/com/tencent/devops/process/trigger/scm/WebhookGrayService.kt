@@ -51,6 +51,11 @@ class WebhookGrayService @Autowired constructor(
         .expireAfterAccess(30, TimeUnit.SECONDS)
         .build<String, Boolean?>()
 
+    private val pacGrayRepoCache = Caffeine.newBuilder()
+        .maximumSize(MAX_SIZE)
+        .expireAfterAccess(30, TimeUnit.SECONDS)
+        .build<String, Boolean?>()
+
     /**
      * 判断是否是scm灰度项目
      */
@@ -87,13 +92,18 @@ class WebhookGrayService @Autowired constructor(
      * 只要开启pac,就执行pac灰度逻辑
      */
     fun isPacGrayRepo(scmTye: ScmType, externalId: String): Boolean {
-        return try {
-            client.get(ServiceRepositoryPacResource::class).getPacRepository(
-                externalId = externalId, scmType = scmTye
-            ).data != null
-        } catch (ignored: Exception) {
-            logger.error("Failed to get pac repository|$scmTye|$externalId", ignored)
-            false
+        val cacheKey = "$scmTye:$externalId"
+        return pacGrayRepoCache.getIfPresent(cacheKey) ?: run {
+            val result = try {
+                client.get(ServiceRepositoryPacResource::class).getPacRepository(
+                    externalId = externalId, scmType = scmTye
+                ).data != null
+            } catch (ignored: Exception) {
+                logger.error("Failed to get pac repository|$scmTye|$externalId", ignored)
+                false
+            }
+            pacGrayRepoCache.put(cacheKey, result)
+            result
         }
     }
 

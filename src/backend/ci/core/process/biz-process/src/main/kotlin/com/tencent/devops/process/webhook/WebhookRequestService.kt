@@ -167,8 +167,8 @@ class WebhookRequestService(
                     repoHashId = it
                 )
             } ?: return
-            // 新代码源灰度流量控制
-            if (supportScmWebhook(repository)) {
+            val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
+            if (grayRepo) {
                 logger.info("The current replay event will execute the new trigger logic")
                 // 读取当前回放操作依赖的trigger event
                 pipelineTriggerEventDao.getEventByRequestId(
@@ -273,6 +273,6 @@ class WebhookRequestService(
         val supportRepo = listOf(ScmType.SCM_GIT, ScmType.SCM_SVN)
             .contains(repository.getScmType())
         val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
-        return supportRepo && grayRepo
+        return supportRepo || grayRepo
     }
 }
