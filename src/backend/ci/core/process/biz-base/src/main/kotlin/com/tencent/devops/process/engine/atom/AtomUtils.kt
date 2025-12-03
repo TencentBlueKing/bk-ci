@@ -195,7 +195,7 @@ object AtomUtils {
     }
 
     fun isHisAtomElement(element: Element) =
-        element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
+        element !is MarketBuildAtomElement || element !is MarketBuildLessAtomElement
 
     fun getInputTypeConfigMap(taskCommonSettingConfig: TaskCommonSettingConfig): Map<String, Int> {
         val inputTypeConfigMap = mutableMapOf(
