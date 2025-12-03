@@ -408,6 +408,10 @@ export default {
         if (execDetail?.model?.stages) {
             execDetail.model.stages = execDetail.model.stages.slice(1)
         }
+        // Ensure cancelBuildPerm exists
+        if (execDetail && !Object.prototype.hasOwnProperty.call(execDetail, 'cancelBuildPerm')) {
+            execDetail.cancelBuildPerm = state.execDetail?.cancelBuildPerm ?? true
+        }
         Object.assign(state, {
             execDetail
         })

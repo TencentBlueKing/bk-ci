@@ -888,7 +888,7 @@
                                 class: 'bk-icon icon-sort'
                             }
                         }),
-                        h('span', {}, `${this.latestExecIsStageProgress ? this.$t('showStageProgress') : this.$t('showBuildInfo')}`)
+                        h('span', {}, `${!this.latestExecIsStageProgress ? this.$t('showStageProgress') : this.$t('showBuildInfo')}`)
                     ]
                     ),
                 ])

@@ -1,3 +1,4 @@
+import com.github.jk1.license.render.ReportRenderer
 import com.github.jk1.license.render.TextReportRenderer
 
 /*
@@ -47,7 +48,7 @@ licenseReport {
     excludeBoms = true
 
     // 第三方依赖license声明
-    renderers = arrayOf(TextReportRenderer(/* filename = */ "THIRD-PARTY-NOTICES.txt"))
+    renderers = arrayOf<ReportRenderer>(TextReportRenderer(/* filename = */ "THIRD-PARTY-NOTICES.txt"))
 
     // 对一些协议的全称写法不同,导致造成识别上的差异而失败需要进行补充允许, 以及对一些特殊的包进行说明和手动豁免
     allowedLicensesFile = File("${rootProject.projectDir}/buildSrc/src/main/resources/allowed-licenses.json")

@@ -294,7 +294,7 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String
     ): TransferResponse {
         watcher.start("step_1|FULL_YAML2MODEL start")
-        PipelineTransferAspectLoader.checkLockResourceJob(aspects)
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
         yamlSchemaCheck.check(data.oldYaml)
         val pipelineInfo = pipelineId?.let {
             pipelineInfoDao.convert(
@@ -374,7 +374,7 @@ class PipelineTransferYamlService @Autowired constructor(
         userId: String
     ): TransferResponse {
         watcher.start("step_1|TEMPLATE_YAML2MODEL_PIPELINE start")
-        PipelineTransferAspectLoader.checkLockResourceJob(aspects)
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
         yamlSchemaCheck.check(data.oldYaml)
         watcher.start("step_2|parse template")
         val pYml = loadYaml(data.oldYaml)
@@ -445,13 +445,17 @@ class PipelineTransferYamlService @Autowired constructor(
         return elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
+    /**
+     * @param force 是否强制更新
+     */
     fun buildPreview(
         userId: String,
         projectId: String,
         pipelineId: String,
         resource: PipelineResourceVersion,
         editPermission: Boolean? = null,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        force: Boolean = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
@@ -469,7 +473,7 @@ class PipelineTransferYamlService @Autowired constructor(
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        val yaml = if (editPermission == false || resource.yaml.isNullOrBlank()) {
+        val yaml = if (force || editPermission == false || resource.yaml.isNullOrBlank()) {
             transfer(
                 userId = userId,
                 projectId = projectId,

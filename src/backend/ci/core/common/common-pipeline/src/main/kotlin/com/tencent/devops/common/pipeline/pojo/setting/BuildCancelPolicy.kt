@@ -25,22 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template.v2
+package com.tencent.devops.common.pipeline.pojo.setting
 
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.process.pojo.PipelineIdAndName
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线模版实例化发布预览请求")
-data class PreFetchTemplateInstanceReleaseReq(
-    @get:Schema(title = "流水线ID和名称", required = true)
-    val pipelineIdAndNames: List<PipelineIdAndName>,
-    @get:Schema(title = "启用PAC", required = true)
-    val enablePac: Boolean = false,
-    @get:Schema(title = "提交动作", required = true)
-    val targetAction: CodeTargetAction? = null,
-    @get:Schema(title = "代码库hashId", required = true)
-    val repoHashId: String? = null,
-    @get:Schema(title = "指定提交的分支", required = true)
-    val targetBranch: String? = null
-)
+@Schema(title = "构建取消权限策略")
+enum class BuildCancelPolicy(val value: String) {
+    @Schema(title = "拥有执行权限的用户可取消任意构建")
+    EXECUTE_PERMISSION("EXECUTE_PERMISSION"),
+
+    @Schema(title = "仅限触发人或拥有流水线管理权限的用户可取消")
+    RESTRICTED("RESTRICTED");
+
+    fun yamlCode() = when (this) {
+        EXECUTE_PERMISSION -> "BROAD"
+        RESTRICTED -> "RESTRICTED"
+    }
+
+    companion object {
+        fun parse(value: String?): BuildCancelPolicy {
+            return when (value) {
+                RESTRICTED.value -> RESTRICTED
+                else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
+            }
+        }
+        fun codeParse(value: String?): BuildCancelPolicy {
+            return when (value) {
+                "RESTRICTED" -> RESTRICTED
+                else -> EXECUTE_PERMISSION // 默认值，保持向后兼容
+            }
+        }
+    }
+}
