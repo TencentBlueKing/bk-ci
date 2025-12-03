@@ -820,7 +820,8 @@ private fun stubTransfer(generator: PipelineTemplateGenerator) {
             templateModel = any(),
             templateSetting = any(),
             params = any(),
-            yaml = null
+            yaml = null,
+            fallbackOnError = any()
         )
     } answers {
         val tm = arg<ITemplateModel?>(4)
