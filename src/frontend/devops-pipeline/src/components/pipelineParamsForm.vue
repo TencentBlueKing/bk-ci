@@ -89,6 +89,8 @@
         TEXTAREA
     } from '@/store/modules/atom/paramsConfig'
     import { COMMON_PARAM_PREFIX, isObject, isShallowEqual } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+
 
     export default {
         components: {
@@ -99,6 +101,10 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            allPipelineParamValues: {
+                type: Object,
+                default: null
             },
             paramValues: {
                 type: Object,
@@ -161,6 +167,9 @@
             }
         },
         computed: {
+            ...mapGetters('pipelines', [
+                'getExecuteParams'
+            ]),
             paramPrefix () {
                 return COMMON_PARAM_PREFIX
             },
@@ -181,7 +190,7 @@
                                 multiSelect: isMultiple,
                                 value: isMultiple && !Array.isArray(val) ? [] : val,
                                 allIdString: true,
-                                paramValues: this.paramValues,
+                                paramValues: this.allPipelineParamValues || this.paramValues,
                                 affected,
                                 affectedChanged,
                                 affectTips: affectedChanged && Object.keys(affected).length > 0 ? this.$t('relyChanged', [Object.keys(affected).join('/')]) : ''
