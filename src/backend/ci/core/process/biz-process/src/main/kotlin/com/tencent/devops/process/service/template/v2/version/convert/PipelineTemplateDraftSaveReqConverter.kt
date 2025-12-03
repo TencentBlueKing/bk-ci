@@ -72,18 +72,17 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateDraftSaveReq
         with(request) {
-            val params = if (storageType == PipelineStorageType.MODEL && type == PipelineTemplateType.PIPELINE) {
-                (model as Model).getTriggerContainer().params
-            } else {
-                request.params
-            }
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,
                 projectId = projectId,
                 storageType = storageType,
                 templateType = type,
                 templateModel = model,
-                params = params,
+                params = if (storageType == PipelineStorageType.MODEL && type == PipelineTemplateType.PIPELINE) {
+                    (model as Model).getTriggerContainer().params
+                } else {
+                    request.params
+                },
                 templateSetting = templateSetting,
                 yaml = yaml,
                 fallbackOnError = true

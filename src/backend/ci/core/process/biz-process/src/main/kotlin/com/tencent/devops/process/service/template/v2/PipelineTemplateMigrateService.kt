@@ -391,9 +391,6 @@ class PipelineTemplateMigrateService(
 
         // 步骤 3.2: 执行模型转换
         val modelTransferResult = performModelTransfer(context, currentTemplate, versionSequence, versionInfo)
-
-        // 步骤 3.3: 根据转换结果创建新的 PipelineTemplateResource
-        val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
         val pipelineTemplateResource = createPipelineTemplateResource(
             versionInfo = versionInfo,
             latestTemplate = context.latestTemplate,
@@ -401,7 +398,6 @@ class PipelineTemplateMigrateService(
             versionSequence = versionSequence,
             pipelineVersion = counters.pipelineVersion,
             triggerVersion = counters.triggerVersion,
-            params = currentTemplateModel.getTriggerContainer().params,
             modelTransferResult = modelTransferResult,
             marketTemplateStatus = context.marketTemplateStatus
         )
@@ -672,7 +668,6 @@ class PipelineTemplateMigrateService(
         versionInfo: TemplateVersion,
         latestTemplate: TTemplateRecord,
         currentTemplate: TTemplateRecord,
-        params: List<BuildFormProperty>,
         modelTransferResult: PTemplateModelTransferResult,
         versionSequence: Int,
         pipelineVersion: Int,
@@ -713,7 +708,7 @@ class PipelineTemplateMigrateService(
             srcTemplateProjectId = srcTemplateProjectId,
             srcTemplateId = srcTemplateId,
             srcTemplateVersion = srcTemplateVersion,
-            params = params,
+            params = modelTransferResult.params,
             model = modelTransferResult.templateModel,
             yaml = modelTransferResult.yamlWithVersion?.yamlStr,
             status = if (versionInfo.nameDuplicated) {
