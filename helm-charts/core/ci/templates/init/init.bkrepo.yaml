@@ -36,7 +36,7 @@ spec:
               # 定义通用函数
               function check_repo_project_exists() {
                 local project_name=$1
-                curl -s -XGET "$REPO_QUERY_PROJECT_PATH" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep -q "displayName.*$project_name"
+                curl -s -XGET "$REPO_QUERY_PROJECT_PATH/{{ $projectHead }}$project_name" -u {{ .Values.config.bkRepoUsername }}:{{ .Values.config.bkRepoPassword }} -H "X-BK-TENANT-ID: {{ $tenantId }}" | grep "data"|grep "true"
               }
 
               function check_repo_generic_exists() {
@@ -57,7 +57,7 @@ spec:
               }
 
               # 初始化路径变量
-              REPO_QUERY_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/project/list"
+              REPO_QUERY_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/project/exist/"
               REPO_QUERY_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/info/"
               REPO_CREATE_PROJECT_PATH="{{ .Values.config.bkRepoApiUrl }}/api/repository/api/project"
               REPO_CREATE_GENERIC_PATH="{{ .Values.config.bkRepoApiUrl }}/repository/api/repo/create"
