@@ -452,7 +452,7 @@ class PipelineTemplateMigrateService(
     }
 
     /**
-     * [辅助函数 3.2] - 执行模型转换，失败则抛出异常。
+     * [辅助函数 3.2] - 执行模型转换，失败则进行兜底处理。
      */
     private fun performModelTransfer(
         context: MigrationContext,
@@ -469,31 +469,20 @@ class PipelineTemplateMigrateService(
         val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
         val currentTemplateParams = currentTemplateModel.getTriggerContainer().params
 
-        return try {
-            logger.debug("model Transfer model: {} ", JsonUtil.toJson(currentTemplateModel))
-            logger.debug("model Transfer setting: {}", JsonUtil.toJson(currentSetting))
-            pipelineTemplateGenerator.transfer(
-                userId = context.latestTemplate.creator,
-                projectId = context.latestTemplate.projectId,
-                storageType = PipelineStorageType.MODEL,
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = currentTemplateModel,
-                templateSetting = currentSetting,
-                params = currentTemplateParams,
-                yaml = null
-            )
-        } catch (ex: Exception) {
-            logger.warn(
-                "Model transfer failed for templateId={}, version={}: {}",
-                context.templateId, currentTemplate.version, ex.message, ex
-            )
-            PTemplateModelTransferResult(
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = currentTemplateModel,
-                templateSetting = currentSetting,
-                yamlWithVersion = null
-            )
-        }
+        logger.debug("model Transfer model: {} ", JsonUtil.toJson(currentTemplateModel))
+        logger.debug("model Transfer setting: {}", JsonUtil.toJson(currentSetting))
+
+        return pipelineTemplateGenerator.transfer(
+            userId = context.latestTemplate.creator,
+            projectId = context.latestTemplate.projectId,
+            storageType = PipelineStorageType.MODEL,
+            templateType = PipelineTemplateType.PIPELINE,
+            templateModel = currentTemplateModel,
+            templateSetting = currentSetting,
+            params = currentTemplateParams,
+            yaml = null,
+            fallbackOnError = true
+        )
     }
 
     /**

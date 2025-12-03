@@ -128,27 +128,17 @@ class PipelineTemplateCopyCreateReqConverter @Autowired constructor(
                 )
             }
 
-            val transferResult = try {
-                pipelineTemplateGenerator.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    storageType = PipelineStorageType.MODEL,
-                    templateType = srcTemplateInfo.type,
-                    templateModel = srcTemplateResource.model,
-                    templateSetting = setting,
-                    params = srcTemplateResource.params,
-                    yaml = null
-                )
-            } catch (ex: Exception) {
-                logger.warn("TRANSFER_TEMPLATE_YAML_FAILED|$projectId|$templateId", ex)
-                PTemplateModelTransferResult(
-                    templateType = srcTemplateInfo.type,
-                    templateModel = srcTemplateResource.model,
-                    templateSetting = setting,
-                    params = srcTemplateResource.params ?: emptyList(),
-                    yamlWithVersion = null
-                )
-            }
+            val transferResult = pipelineTemplateGenerator.transfer(
+                userId = userId,
+                projectId = projectId,
+                storageType = PipelineStorageType.MODEL,
+                templateType = srcTemplateInfo.type,
+                templateModel = srcTemplateResource.model,
+                templateSetting = setting,
+                params = srcTemplateResource.params,
+                yaml = null,
+                fallbackOnError = true
+            )
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = newTemplateId,

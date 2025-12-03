@@ -77,30 +77,17 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
             } else {
                 request.params
             }
-            val transferResult = try {
-                pipelineTemplateGenerator.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    storageType = storageType,
-                    templateType = type,
-                    templateModel = model,
-                    params = params,
-                    templateSetting = templateSetting,
-                    yaml = yaml
-                )
-            } catch (ex: Exception) {
-                if (storageType == PipelineStorageType.YAML) {
-                    throw ex
-                } else {
-                    PTemplateModelTransferResult(
-                        templateType = type!!,
-                        templateModel = model!!,
-                        templateSetting = templateSetting!!,
-                        params = params ?: emptyList(),
-                        yamlWithVersion = null
-                    )
-                }
-            }
+            val transferResult = pipelineTemplateGenerator.transfer(
+                userId = userId,
+                projectId = projectId,
+                storageType = storageType,
+                templateType = type,
+                templateModel = model,
+                params = params,
+                templateSetting = templateSetting,
+                yaml = yaml,
+                fallbackOnError = true
+            )
             val templateInfo = if (templateId != null) {
                 pipelineTemplateInfoService.get(
                     projectId = projectId,
