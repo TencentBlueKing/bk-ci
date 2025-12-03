@@ -137,6 +137,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
+                        :all-pipeline-param-values="allExecuteParams"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -421,6 +422,9 @@
                     const item = diffs[key]
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
+            },
+            allExecuteParams () {
+                return this.getExecuteParams(this.pipelineId)
             }
         },
         watch: {

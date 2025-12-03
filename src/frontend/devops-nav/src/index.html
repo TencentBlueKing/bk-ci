@@ -266,7 +266,7 @@
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js"></script>
-  
+
   <script>
     loadJsAssets(true)
   </script>
@@ -282,9 +282,9 @@
       var cUrl =
         location.origin +
         location.pathname +
-        + location.pathname.endsWith('/') ? '' : '/'
+        + (location.pathname.endsWith('/') ? '' : '/')
         + '_logout/'
-        encodeURIComponent(location.search)
+      encodeURIComponent(location.search)
       if (/=%s/.test(loginUrl)) {
         return loginUrl.replace(/%s/, cUrl)
       } else {
