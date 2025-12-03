@@ -681,7 +681,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             triggerContainer.params = BuildPropertyCompatibilityTools.mergeProperties(
                 from = triggerContainer.templateParams!!.map { it.copy(constant = true) },
                 to = triggerContainer.params
-            )
+            ).toMutableList()
             triggerContainer.templateParams = null
         }
     }
