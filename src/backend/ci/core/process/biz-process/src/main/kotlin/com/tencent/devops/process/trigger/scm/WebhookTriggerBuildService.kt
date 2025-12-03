@@ -29,12 +29,14 @@ package com.tencent.devops.process.trigger.scm
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
+import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -44,7 +46,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
-import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
@@ -64,13 +66,13 @@ import org.springframework.stereotype.Service
 @Service
 class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineBuildService: PipelineBuildService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
-    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
+    private val client: Client
 ) {
     fun trigger(event: ScmWebhookTriggerEvent) {
         with(event) {
@@ -269,23 +271,26 @@ class WebhookTriggerBuildService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: pipelineInfo.lastModifyUser
-        val buildId = pipelineBuildService.startPipeline(
+        val buildId = client.getGateway(ServiceWebhookBuildResource::class).webhookStartPipeline(
             userId = userId,
-            pipeline = pipelineInfo,
-            startType = StartType.WEB_HOOK,
-            pipelineParamMap = convertBuildParameters(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                triggerContainer = resource.model.getTriggerContainer(),
-                startParams = startParams
-            ),
-            channelCode = pipelineInfo.channelCode,
-            isMobile = false,
-            resource = resource,
-            signPipelineVersion = resource.version,
-            frequencyLimit = false
-        )
+            projectId = projectId,
+            pipelineId = pipelineId,
+            request = WebhookStartPipelineRequest(
+                pipelineInfo = pipelineInfo,
+                startType = StartType.WEB_HOOK,
+                pipelineParamMap = convertBuildParameters(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    triggerContainer = resource.model.getTriggerContainer(),
+                    startParams = startParams
+                ),
+                channelCode = pipelineInfo.channelCode,
+                resource = resource,
+                signPipelineVersion = resource.version,
+                frequencyLimit = false
+            )
+        ).data
         logger.info(
             "success to trigger by webhook|${context.eventId}|$projectId|$pipelineId|${resource.version}"
         )
