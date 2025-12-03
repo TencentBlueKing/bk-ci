@@ -77,7 +77,9 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.OrganizationGroup
 import com.tencent.devops.remotedev.pojo.ProjectAccessDevicePermissionsResp
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
@@ -85,6 +87,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WhiteListType
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
@@ -368,7 +371,6 @@ class WorkspaceService @Autowired constructor(
         pageSize: Int?,
         search: WorkspaceSearch?
     ): Page<ProjectWorkspace> {
-        logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
         val theSearch = search?.apply {
@@ -392,11 +394,109 @@ class WorkspaceService @Autowired constructor(
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 
+    fun getProjectWorkspaceListGroupByOrg(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch?
+    ): List<WorkspaceGroupByOrg> {
+        // 1. 参考 getWorkspaceListNew，增加 notStatus 过滤
+        val updatedSearch = (search ?: WorkspaceSearch()).apply {
+            notStatus = notStatus?.plus(WorkspaceStatus.DISTRIBUTING)?.plus(WorkspaceStatus.PREPARING)
+                ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
+        }
+        
+        // 2. 获取工作空间列表（使用 getWorkspaceList 返回 Workspace 对象）
+        val workspaces = getWorkspaceList(userId, page, pageSize, updatedSearch).records
+        
+        // 3. 提取所有拥有者
+        val owners = workspaces.mapNotNull { it.owner }.toSet()
+        
+        // 4. 分离集团员工和太湖账户
+        val corporateOwners = owners.filter { !it.endsWith("@tai") }.toSet()
+        val taiOwners = owners.filter { it.endsWith("@tai") }.toSet()
+        
+        // 5. 批量获取组织架构信息
+        val corporateOrgMap = getCorporateUserOrganizations(corporateOwners)
+        val taiOrgMap = getTaiUserOrganizations(taiOwners)
+        
+        // 6. 合并组织架构映射
+        val ownerToOrgMap = corporateOrgMap + taiOrgMap
+
+        // 7. 批量获取项目名称
+        val projectIds = workspaces.mapNotNull { it.projectId }.toSet()
+        val projectInfoData = client.get(ServiceProjectResource::class)
+            .listOnlyByProjectCode(projectIds).data ?: emptyList()
+        val projectNameMap = projectInfoData.associateBy({ it.projectCode }, { it.projectName })
+
+        // 8. 按项目和组织架构分组
+        val grouped = workspaces
+            .groupBy { it.projectId }
+            .map { (projId, projWorkspaces) ->
+                val orgGroups = projWorkspaces
+                    .groupBy { workspace ->
+                        ownerToOrgMap[workspace.owner] ?: "未知组织"
+                    }
+                    .map { (orgName, orgWorkspaces) ->
+                        OrganizationGroup(
+                            orgName = orgName,
+                            workspaces = orgWorkspaces
+                        )
+                    }
+                
+                WorkspaceGroupByOrg(
+                    projectId = projId ?: "",
+                    projectName = projectNameMap[projId] ?: "",
+                    organizations = orgGroups
+                )
+            }
+        
+        return grouped
+    }
+
+    /**
+     * 获取集团员工的组织架构信息
+     */
+    private fun getCorporateUserOrganizations(owners: Set<String>): Map<String, String> {
+        if (owners.isEmpty()) return emptyMap()
+        
+        return owners.mapNotNull { owner ->
+            try {
+                val userInfo = client.get(ServiceDeptResource::class).getUserInfo(
+                    userId = owner,
+                    name = owner
+                ).data
+                
+                // 取 deptInfo 列表的最后一个元素
+                val lastDept = userInfo?.deptInfo?.lastOrNull()
+                
+                if (lastDept != null) {
+                    owner to (lastDept.fullName ?: "未知部门")
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to get organization for corporate user $owner", e)
+                null
+            }
+        }.toMap()
+    }
+
+    /**
+     * 获取太湖账户的组织架构信息
+     * 所有太湖账户统一标记为"离岸合作伙伴"
+     */
+    private fun getTaiUserOrganizations(owners: Set<String>): Map<String, String> {
+        if (owners.isEmpty()) return emptyMap()
+        
+        // 所有太湖账户统一标记为"离岸合作伙伴"
+        return owners.associateWith { "离岸合作伙伴" }
+    }
+
     fun getProjectWorkspaceList4Op(
         userId: String,
         data: ProjectWorkspaceFetchData
     ): Page<ProjectWorkspace> {
-        logger.info("op get project ${data.projectId} workspace list {}", data)
         val pageNotNull = data.page ?: 1
         val pageSizeNotNull = data.pageSize ?: 6666
         val fastSelect = data.ips?.find { it -> it.any { it in 'A'..'Z' } } == null

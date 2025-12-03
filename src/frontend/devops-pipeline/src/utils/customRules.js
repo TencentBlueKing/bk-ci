@@ -37,12 +37,11 @@ const customeRules = {
     },
     notInList: {
         validate: function (value, args) {
-            if (args.indexOf(value) === -1) {
-                return true
-            } else {
-                return false
+            if (Array.isArray(args)) {
+                return !args.some(item => decodeURIComponent(item) === value)
             }
-        }
+            return true
+        },
     },
     // 不同时为空
     atlestNotEmpty: {

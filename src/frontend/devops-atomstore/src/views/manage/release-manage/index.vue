@@ -11,7 +11,10 @@
             render-directive="if"
             :key="panel.name"
         >
-            <component :is="panel.component" />
+            <component
+                :is="panel.component"
+                :has-promission="hasPromission"
+            />
         </bk-tab-panel>
     </bk-tab>
 </template>
@@ -21,7 +24,7 @@
     import codeCheck from '@/views/manage/release-manage/code-check.vue'
     import environment from '@/views/manage/release-manage/environment.vue'
     import version from '@/views/manage/release-manage/version.vue'
-    import { computed, defineComponent, getCurrentInstance, ref } from 'vue'
+    import { computed, defineComponent, getCurrentInstance, onMounted, ref } from 'vue'
 
     export default defineComponent({
         components: {
@@ -45,8 +48,31 @@
                         : []
                 )
             ]
+            const hasPromission = ref(false)
+
+            onMounted(() => {
+                if (type.value === 'template') {
+                    getTemplateUserValidate()
+                }
+            })
+
+            async function getTemplateUserValidate () {
+                try {
+                    const { code } = vm.proxy.$route.params
+                    const res = await vm.proxy.$store.dispatch('store/templateUserValidate', {
+                        templateCode: code
+                    })
+                    hasPromission.value = res
+                } catch (err) {
+                    vm.proxy.$bkMessage({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
+            }
             return {
                 activePanel,
+                hasPromission,
                 panels
             }
         }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_FILE_SHA256_CONTENT
 import com.tencent.devops.common.api.constant.KEY_FILE_SHA_CONTENT
 import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.STATUS
@@ -478,16 +479,27 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
             osName = installedPkgFileShaContentRequest.osName,
             osArch = installedPkgFileShaContentRequest.osArch
         )?.get(0) ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-        val storeBaseEnvExtDataPO = StoreBaseEnvExtDataPO(
-            id = UUIDUtil.generate(),
-            envId = baseEnvRecord.id,
-            storeId = storeId,
-            fieldName = "${KEY_FILE_SHA_CONTENT}_${installedPkgFileShaContentRequest.signFileName}",
-            fieldValue = installedPkgFileShaContentRequest.fileShaContent,
-            creator = userId,
-            modifier = userId
+        val signFileName = installedPkgFileShaContentRequest.signFileName
+        val storeBaseEnvExtDataPOs = listOf(
+            StoreBaseEnvExtDataPO(
+                id = UUIDUtil.generate(),
+                envId = baseEnvRecord.id,
+                storeId = storeId,
+                fieldName = "${KEY_FILE_SHA_CONTENT}_$signFileName",
+                fieldValue = installedPkgFileShaContentRequest.fileShaContent,
+                creator = userId,
+                modifier = userId
+            ), StoreBaseEnvExtDataPO(
+                id = UUIDUtil.generate(),
+                envId = baseEnvRecord.id,
+                storeId = storeId,
+                fieldName = "${KEY_FILE_SHA256_CONTENT}_$signFileName",
+                fieldValue = installedPkgFileShaContentRequest.fileSha256Content,
+                creator = userId,
+                modifier = userId
+            )
         )
-        storeBaseEnvExtManageDao.batchSave(dslContext, listOf(storeBaseEnvExtDataPO))
+        storeBaseEnvExtManageDao.batchSave(dslContext, storeBaseEnvExtDataPOs)
         return Result(true)
     }
 

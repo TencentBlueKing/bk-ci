@@ -143,6 +143,16 @@
         },
 
         watch: {
+            value: {
+                handler (newVal, oldVal) {
+                    if (newVal !== oldVal) {
+                        this.$nextTick(() => {
+                            this.initData()
+                        })
+                    }
+                },
+                deep: true
+            },
             paramValues: {
                 handler (value, oldValue) {
                     this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && this.getValidaVar(value.subBranch)

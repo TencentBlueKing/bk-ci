@@ -13,7 +13,7 @@ spec:
           serviceAccountName: {{ include "bkci.names.fullname" . }}-deployment-edit
           containers:
           - name: auto-restart-gateway
-            image: bitnami/kubectl
+            image: mirrors.tencent.com/stuben/bitnami-kubectl:latest
             resources:
               limits:
                 cpu: 100m

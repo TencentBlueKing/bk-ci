@@ -54,14 +54,15 @@
 
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
-    import { PublishInfo, TemplateInfo } from '@/components/editContent'
+    import { PublishInfo, TemplateInfo, VisibleRange } from '@/components/editContent'
     import { mapActions } from 'vuex'
 
     export default {
         components: {
             breadCrumbs,
             TemplateInfo,
-            PublishInfo
+            PublishInfo,
+            VisibleRange
         },
         data () {
             return {
@@ -76,6 +77,7 @@
                     templateVersion: '',
                     publishStrategy: 'MANUAL',
                     fullScopeVisible: true,
+                    deptInfos: [],
                     templateName: '',
                     templateType: 'PIPELINE',
                     releaseFlag: false,
@@ -119,6 +121,12 @@
                         isShowInfo: this.hasSourceInfo || this.type === 'edit'
                     }
                 }, {
+                    name: 'VisibleRange',
+                    component: VisibleRange,
+                    props: {
+                        templateForm: this.templateForm
+                    }
+                }, {
                     name: 'PublishInfo',
                     component: PublishInfo,
                     props: {
@@ -156,6 +164,7 @@
                     const res = await this.requestTemplateDetail(this.templateCode)
                     Object.assign(this.templateForm, res, {
                         fullScopeVisible: res.storeVisibleDept.fullScopeVisible,
+                        deptInfos: res.storeVisibleDept.deptInfos,
                         categoryIdList: res.categoryList.map(item => item.id),
                         labelIdList: res.labelList.map(item => item.id)
                     })
@@ -197,7 +206,8 @@
                 const TemplateInfoValid = await this.$refs.TemplateInfo[0].validate()
                 const PublishInfo = await this.$refs.PublishInfo[0].validate()
                 const isTemplateInfoCheckValid = this.$refs.TemplateInfo[0].checkValid()
-                return TemplateInfoValid && PublishInfo && isTemplateInfoCheckValid
+                const isVisibleRangeCheckValid = this.$refs.VisibleRange[0].checkValid()
+                return TemplateInfoValid && PublishInfo && isTemplateInfoCheckValid && isVisibleRangeCheckValid
             },
             async submit () {
                 const valid = await this.isValid()

@@ -35,4 +35,5 @@ dependencies {
     api(project(":ext:tencent:auth:api-auth-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
+    api(project(":ext:tencent:remotedev:api-remotedev-tencent"))
 }

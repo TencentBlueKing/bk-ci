@@ -194,7 +194,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         buildVariables: BuildVariables
     ): String {
         uploadAtomPkgFile(atomCode, atomVersion, file, destPath, buildVariables)
-        return file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        return file.inputStream().use { ShaUtils.sha256InputStream(it) }
     }
 
     override fun uploadAtomPkgFile(

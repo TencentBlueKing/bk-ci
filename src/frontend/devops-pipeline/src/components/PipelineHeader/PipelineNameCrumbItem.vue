@@ -12,7 +12,11 @@
                 class="pipeline-name-crumb-select-trigger"
                 slot="trigger"
             >
-                <span @click="goHistory">{{ pipelineName }}</span>
+                <span
+                    @click="goHistory"
+                    :title="pipelineName"
+                    class="breadcrumb-title"
+                >{{ pipelineName }}</span>
                 <bk-badge
                     dot
                     :visible="!!constraintInfo?.upgradeFlag"
@@ -306,7 +310,7 @@
             justify-content: center;
             grid-gap: 8px;
             font-size: 14px;
-            line-height: 1;
+            line-height: 22px;
             .devops-icon.icon-shift {
                 color: #979BA5;
                 display: inline-flex;
@@ -319,5 +323,11 @@
                 justify-content: center;
             }
         }
+    }
+    .breadcrumb-title {
+        max-width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 </style>

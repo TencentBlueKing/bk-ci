@@ -70,23 +70,23 @@
             </bk-button>
         </footer>
 
-        <organization-dialog
+        <VisibleRangeDialog
             :show-dialog="showDialog"
             :is-loading="false"
             @saveHandle="saveHandle"
             @cancelHandle="cancelHandle"
         >
-        </organization-dialog>
+        </VisibleRangeDialog>
     </section>
 </template>
 
 <script>
     import upload from '@/components/upload'
-    import organizationDialog from '@/components/organization-dialog'
+    import VisibleRangeDialog from '@/components/VisibleRangeDialog'
 
     export default {
         components: {
-            organizationDialog,
+            VisibleRangeDialog,
             upload
         },
 

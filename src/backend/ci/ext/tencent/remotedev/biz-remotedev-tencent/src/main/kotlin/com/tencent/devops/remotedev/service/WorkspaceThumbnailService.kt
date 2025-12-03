@@ -9,6 +9,7 @@ import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
 import com.tencent.devops.remotedev.constant.BkRepoConstants
 import com.tencent.devops.remotedev.constant.ThumbnailRedisKeys
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.CdsMeshStatus
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
 import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
@@ -139,11 +140,13 @@ class WorkspaceThumbnailService @Autowired constructor(
                 }
 
                 // 检查是否单向网络
-                if (whiteListService.checkInCdsMeshWhiteList(
+                val meshStatus = CdsMeshStatus.fromValue(
+                    whiteListService.checkInCdsMeshWhiteList(
                         workspaceInfo.projectId,
                         workspaceInfo.workspaceName
-                    ) != 1
-                ) {
+                    )
+                )
+                if (!meshStatus.isSingleNetwork()) {
                     logger.warn("workspace is not single network: workspaceName=$workspaceName")
                     return@forEach
                 }
@@ -231,7 +234,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
             workspaceNames.forEach { workspaceName ->
                 try {
-                    // 2s内同画质只允许上传一次
+                    // 1s内同画质只允许上传一次
                     val limitKey = ThumbnailCacheKey(workspaceName).toUploadLimitRedisKey(screenId, size)
                     val limit = redisOperation.get(limitKey)
                     if (limit != null) {

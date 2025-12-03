@@ -532,7 +532,7 @@
             hideSidePanel () {
                 this.showLog = false
             },
-            handlePiplineClick (args) {
+            handlePipelineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: args
