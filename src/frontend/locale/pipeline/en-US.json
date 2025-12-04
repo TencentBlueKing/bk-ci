@@ -268,7 +268,6 @@
     "deleteViewTips": "Confirm to delete this parameter value combination ( {0} )?",
     "deleteNoticeTips": "Deletion cannot be undone, please proceed with caution!"
   },
-
   "restore": {
     "recycleBin": "Recycle Bin",
     "restore": "Restore",
@@ -1720,7 +1719,6 @@
   "inSetNoRequiredParamTips": "{0} parameters ({1}) are no longer input parameters, ignored and not filled; ",
   "inSetDeletedParamTips": "{0} parameters ({1}) have been deleted, ignored and not filled.",
   "resetDefault": "Restore Default",
-
   "useLastParams": "Use Last Parameter Values",
   "next": "Next",
   "prev": "Prev",
@@ -1963,15 +1961,6 @@
   "addLabels": "Add Label",
   "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
   "pipelineDataBoard": "EPlus",
-  "cron": {
-    "分": "Minute",
-    "时": "Hour",
-    "日": "Day",
-    "周": "Week",
-    "月": "Month",
-    "下次：": "Next:",
-    "小时": "Hour"
-  },
   "enterRepoAlias": "Please enter the repository alias",
   "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
   "addParam": "Add",
@@ -1988,7 +1977,7 @@
   "pipelineTemplate": "Pipeline",
   "allSource": "All",
   "customSource": "Custom",
-  "marketSource": "Store",  
+  "marketSource": "Store",
   "releaseTemplate": "Release Template",
   "checkTemplate": "Check Template",
   "archive": {
@@ -2025,6 +2014,14 @@
     "continuousFailure": "continued failure",
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
+  },
+  "cron": {
+    "everyMinute": "Per minute",
+    "everyHour": "Per hour",
+    "everyDay": "Per day",
+    "everyWeek": "Per week",
+    "everyMonth": "Per month",
+    "errorTips": "The timing rule cannot be empty or the format is incorrect"
   },
   "validVariableFormat": "Please enter a valid variable format",
   "attributeValue": "Attribute Value",

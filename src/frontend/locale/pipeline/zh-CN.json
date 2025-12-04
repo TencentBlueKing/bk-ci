@@ -266,7 +266,7 @@
     "addConditions": "添加视图条件",
     "typeTips": "项目视图仅能由项目管理员添加、编辑、删除",
     "conditionEmpty": "视图条件不能为空",
-    "deleteViewTips": "确认删除该入参值组合 ( {0} )？" ,
+    "deleteViewTips": "确认删除该入参值组合 ( {0} )？",
     "deleteNoticeTips": "删除操作无法撤回，请谨慎操作！"
   },
   "restore": {
@@ -620,9 +620,9 @@
     "goView": "去查看",
     "goUpgrade": "去升级",
     "goRelease": "去发布",
-    "storeFlag":"已上架研发商店，",
-    "upgradeFlag":"有版本可升级，",
-    "publishFlag":"有新版本可以发布到研发商店，",
+    "storeFlag": "已上架研发商店，",
+    "upgradeFlag": "有版本可升级，",
+    "publishFlag": "有新版本可以发布到研发商店，",
     "upgradeOnStore": "去研发商店升级",
     "upgradeTemplate": "模板升级",
     "templateUpgradeSuccess": "模板升级成功",
@@ -1953,15 +1953,6 @@
   "pipelineNameConventions": "流水线命名规范：",
   "addLabels": "添加标签",
   "pipelineDataBoard": "数据看板",
-  "cron": {
-    "分": "分",
-    "时": "时",
-    "日": "日",
-    "周": "周",
-    "月": "月",
-    "下次：": "下次：",
-    "小时": "小时"
-  },
   "enterRepoAlias": "请输入代码库别名",
   "pacRepoNotSet": "将自动监听所属PAC代码库，无需设置",
   "addParam": "添加参数",
@@ -2017,6 +2008,14 @@
     "views": "点击查看",
     "dataUpdateT1": "（数据T+1更新)"
   },
+  "cron": {
+    "everyMinute": "每分钟",
+    "everyHour": "每小时",
+    "everyDay": "每天",
+    "everyWeek": "每周",
+    "everyMonth": "每月",
+    "errorTips": "定时规则不能为空或格式不正确"
+  },
   "validVariableFormat": "请输入有效的变量格式",
   "attributeValue": "属性值",
   "attributeName": "属性名",
@@ -2027,7 +2026,7 @@
   "noArchivedPipelines": "暂无已存档流水线，不用操作",
   "notParamsTip": "该参数已不再是入参或已被删除，执行时不能再传入。可手动删除，或保存后自动从此参数列表中删除。",
   "saveAsParamSet": "保存当前参数组合",
-  "oneKeyFill" : "一键填参",
+  "oneKeyFill": "一键填参",
   "manageParamSets": "管理入参值组合",
   "totalParamSets": "共 {0} 个组合",
   "paramSetDescription": "入参值组合用于手动执行时快速将入参填充为预定好的值",
