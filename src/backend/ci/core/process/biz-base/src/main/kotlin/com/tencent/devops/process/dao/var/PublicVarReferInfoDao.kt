@@ -37,6 +37,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarReferInfoDao {
 
+    companion object {
+        // 默认版本标识（动态版本）
+        private const val DYNAMIC_VERSION = -1
+    }
+
+    /**
+     * 批量保存变量引用信息
+     * @param dslContext 数据库上下文
+     * @param pipelinePublicVarReferPOs 变量引用PO列表
+     */
     fun batchSave(
         dslContext: DSLContext,
         pipelinePublicVarReferPOs: List<ResourcePublicVarReferPO>
@@ -83,6 +93,14 @@ class PublicVarReferInfoDao {
         }
     }
 
+    /**
+     * 根据引用ID删除变量引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersionName 引用版本名称（可选）
+     */
     fun deleteByReferId(
         dslContext: DSLContext,
         projectId: String,
@@ -105,6 +123,13 @@ class PublicVarReferInfoDao {
         }
     }
 
+    /**
+     * 根据引用ID删除所有版本的变量引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     */
     fun deleteByReferIdWithoutVersion(
         dslContext: DSLContext,
         projectId: String,
@@ -120,6 +145,13 @@ class PublicVarReferInfoDao {
         }
     }
 
+    /**
+     * 批量根据引用ID列表删除所有版本的变量引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID列表
+     * @param referType 引用类型
+     */
     fun deleteByReferIdsWithoutVersion(
         dslContext: DSLContext,
         projectId: String,
@@ -138,6 +170,15 @@ class PublicVarReferInfoDao {
         }
     }
 
+    /**
+     * 删除引用记录（排除指定的变量组）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersionName 引用版本名称
+     * @param excludedGroupNames 需要排除的变量组名列表
+     */
     fun deleteByReferIdExcludingGroupNames(
         dslContext: DSLContext,
         projectId: String,
@@ -160,6 +201,15 @@ class PublicVarReferInfoDao {
         }
     }
 
+    /**
+     * 根据引用ID和变量组删除变量引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param groupName 变量组名
+     * @param referVersion 引用版本
+     */
     fun deleteByReferIdAndGroup(
         dslContext: DSLContext,
         projectId: String,

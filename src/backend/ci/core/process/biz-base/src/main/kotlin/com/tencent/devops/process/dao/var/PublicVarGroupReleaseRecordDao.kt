@@ -36,6 +36,11 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupReleaseRecordDao {
 
+    /**
+     * 批量插入发布记录
+     * @param dslContext 数据库上下文
+     * @param records 发布记录PO列表
+     */
     fun batchInsert(dslContext: DSLContext, records: List<ResourcePublicVarGroupReleaseRecordPO>) {
         if (records.isEmpty()) return
 
@@ -77,6 +82,12 @@ class PublicVarGroupReleaseRecordDao {
         }
     }
 
+    /**
+     * 根据变量组名删除所有发布记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     */
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
         with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             dslContext.deleteFrom(this)
@@ -86,6 +97,13 @@ class PublicVarGroupReleaseRecordDao {
         }
     }
 
+    /**
+     * 统计变量组的发布记录数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @return 记录数量
+     */
     fun countByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Long {
         with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
             return dslContext.selectCount()
@@ -97,7 +115,11 @@ class PublicVarGroupReleaseRecordDao {
     }
 
     /**
-     * 按版本分组统计数量
+     * 统计变量组的不同版本数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @return 版本数量
      */
     fun countVersionsByGroupName(dslContext: DSLContext, projectId: String, groupName: String): Long {
         with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
@@ -111,6 +133,15 @@ class PublicVarGroupReleaseRecordDao {
         }
     }
 
+    /**
+     * 分页查询变量组的发布记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 发布记录PO列表
+     */
     fun listByGroupNamePage(
         dslContext: DSLContext,
         projectId: String,
@@ -145,6 +176,15 @@ class PublicVarGroupReleaseRecordDao {
         }
     }
 
+    /**
+     * 分页查询变量组的发布历史（简化版）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 发布历史DO列表
+     */
     fun listGroupReleaseHistory(
         dslContext: DSLContext,
         projectId: String,
@@ -181,7 +221,12 @@ class PublicVarGroupReleaseRecordDao {
     }
 
     /**
-     * 按版本分组查询所有记录
+     * 查询指定版本的所有发布记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @return 发布记录DO列表
      */
     fun listAllRecordsByVersion(
         dslContext: DSLContext,
@@ -216,7 +261,13 @@ class PublicVarGroupReleaseRecordDao {
     }
 
     /**
-     * 获取所有不同的版本号列表（分页）
+     * 分页查询变量组的所有不同版本号
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 版本号列表（按版本号降序）
      */
     fun listDistinctVersions(
         dslContext: DSLContext,

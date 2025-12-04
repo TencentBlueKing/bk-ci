@@ -38,6 +38,11 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarDao {
 
+    /**
+     * 批量保存公共变量
+     * @param dslContext 数据库上下文
+     * @param publicVarGroupPOs 公共变量PO列表
+     */
     fun batchSave(
         dslContext: DSLContext,
         publicVarGroupPOs: List<PublicVarPO>
@@ -87,6 +92,13 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 根据变量名关键字查询变量组名称列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param keyword 变量名关键字
+     * @return 变量组名称列表（去重）
+     */
     fun listGroupNamesByVarName(
         dslContext: DSLContext,
         projectId: String,
@@ -101,6 +113,13 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 根据变量别名关键字查询变量组名称列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param keyword 变量别名关键字
+     * @return 变量组名称列表（去重）
+     */
     fun listGroupNamesByVarAlias(
         dslContext: DSLContext,
         projectId: String,
@@ -115,6 +134,15 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 根据变量组名和版本查询变量列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varNameList 变量名列表（可选，用于过滤特定变量）
+     * @return 公共变量PO列表
+     */
     fun listVarByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -156,6 +184,12 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 根据变量组名删除所有版本的变量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     */
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             dslContext.deleteFrom(this)
@@ -165,6 +199,14 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 查询指定变量组和版本的所有变量名
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @return 变量名列表（去重）
+     */
     fun queryVarNamesByGroupName(
         dslContext: DSLContext,
         projectId: String,

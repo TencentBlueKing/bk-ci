@@ -41,8 +41,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupReferInfoDao {
 
+    companion object {
+        // 默认版本标识（动态版本）
+        private const val DYNAMIC_VERSION = -1
+    }
+
     /**
      * 构建基础查询条件
+     * @param table 表对象
+     * @param projectId 项目ID
+     * @return 基础条件列表
      */
     private fun buildBaseConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -51,6 +59,13 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 构建引用相关的查询条件
+     * @param table 表对象
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersion 引用版本
+     * @param referVersionName 引用版本名称
+     * @return 条件列表
      */
     private fun buildReferConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -68,6 +83,11 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 构建变量组相关的查询条件
+     * @param table 表对象
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @return 条件列表
      */
     private fun buildGroupConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -79,12 +99,23 @@ class PublicVarGroupReferInfoDao {
         version?.let { add(table.VERSION.eq(it)) }
     }
 
+    /**
+     * 分页查询变量组引用信息
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referType 引用类型
+     * @param version 版本号（默认-1表示动态版本，null表示查询所有版本）
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 变量组引用信息PO列表
+     */
     fun listVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
-        version: Int? = -1,
+        version: Int? = DYNAMIC_VERSION,
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
@@ -275,6 +306,11 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 将数据库记录转换为变量组引用PO对象
+     * @param publicVarGroupReferInfoRecord 数据库记录
+     * @return 变量组引用PO对象
+     */
     private fun convertResourcePublicVarGroupReferPO(
         publicVarGroupReferInfoRecord: TResourcePublicVarGroupReferInfoRecord
     ) = ResourcePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
@@ -297,6 +333,16 @@ class PublicVarGroupReferInfoDao {
             )
         })
 
+    /**
+     * 统计变量组引用数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param groupName 变量组名（可选）
+     * @param referVersionName 引用版本名称（可选）
+     * @return 引用数量
+     */
     fun countByPublicVarGroupRef(
         dslContext: DSLContext,
         projectId: String,
@@ -322,6 +368,15 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 删除引用记录（排除指定的变量组）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param referVersionName 引用版本名称
+     * @param excludedGroupNames 需要排除的变量组名列表
+     */
     fun deleteByReferIdExcludingGroupNames(
         dslContext: DSLContext,
         projectId: String,
@@ -348,6 +403,13 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 根据引用ID删除所有引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     */
     fun deleteByReferId(
         dslContext: DSLContext,
         projectId: String,
@@ -384,6 +446,15 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 根据引用ID和变量组删除引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param groupName 变量组名
+     * @param referVersion 引用版本
+     */
     fun deleteByReferIdAndGroup(
         dslContext: DSLContext,
         projectId: String,
@@ -403,6 +474,11 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 批量保存变量组引用信息（支持更新）
+     * @param dslContext 数据库上下文
+     * @param resourcePublicVarGroupReferPOS 变量组引用PO列表
+     */
     fun batchSave(
         dslContext: DSLContext,
         resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO>
@@ -451,12 +527,21 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
+    /**
+     * 统计变量组的引用数量（按referId去重）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referType 引用类型
+     * @param version 版本号（默认-1表示动态版本，null表示所有版本）
+     * @return 引用数量
+     */
     fun countByGroupName(
         dslContext: DSLContext,
         projectId: String,
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?,
-        version: Int? = -1
+        version: Int? = DYNAMIC_VERSION
     ): Int {
         with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             // 当version不为null时才添加版本条件

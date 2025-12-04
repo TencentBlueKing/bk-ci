@@ -37,8 +37,15 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupDao {
 
+    companion object {
+        // 默认版本标识
+        private const val DYNAMIC_VERSION = -1
+    }
+
     /**
      * 将数据库记录转换为PublicVarGroupPO对象的公共方法
+     * @param record 数据库记录
+     * @return PublicVarGroupPO对象
      */
     private fun mapRecordToPublicVarGroupPO(record: org.jooq.Record): PublicVarGroupPO {
         return PublicVarGroupPO(
@@ -58,6 +65,11 @@ class PublicVarGroupDao {
         )
     }
 
+    /**
+     * 保存变量组信息
+     * @param dslContext 数据库上下文
+     * @param publicVarGroupPO 变量组PO对象
+     */
     fun save(
         dslContext: DSLContext,
         publicVarGroupPO: PublicVarGroupPO
@@ -81,6 +93,13 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 获取变量组的最新版本号
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @return 最新版本号，如果不存在则返回null
+     */
     fun getLatestVersionByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -97,6 +116,10 @@ class PublicVarGroupDao {
 
     /**
      * 批量获取多个组的最新版本
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNames 变量组名列表
+     * @return Map<变量组名, 版本号>
      */
     fun getLatestVersionsByGroupNames(
         dslContext: DSLContext,
@@ -116,6 +139,12 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 查询项目下所有最新版本的变量组
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @return 变量组PO列表
+     */
     fun listGroupsByProjectId(
         dslContext: DSLContext,
         projectId: String
@@ -128,6 +157,12 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 查询项目下所有最新版本的变量组名称
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @return 变量组名称列表
+     */
     fun listGroupsNameByProjectId(
         dslContext: DSLContext,
         projectId: String
@@ -142,6 +177,12 @@ class PublicVarGroupDao {
 
     /**
      * 构建变量组查询的公共条件
+     * @param projectId 项目ID
+     * @param filterByGroupName 按变量组名过滤（模糊匹配）
+     * @param filterByGroupDesc 按描述过滤（模糊匹配）
+     * @param filterByUpdater 按更新人过滤（模糊匹配）
+     * @param groupNames 按变量组名列表过滤（精确匹配）
+     * @return 查询条件列表
      */
     private fun buildGroupQueryConditions(
         projectId: String,
@@ -173,6 +214,18 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 分页查询项目下的变量组（最新版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param filterByGroupName 按变量组名过滤
+     * @param filterByGroupDesc 按描述过滤
+     * @param filterByUpdater 按更新人过滤
+     * @param groupNames 按变量组名列表过滤
+     * @return 变量组PO列表
+     */
     fun listGroupsByProjectIdPage(
         dslContext: DSLContext,
         projectId: String,
@@ -201,6 +254,16 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 统计项目下符合条件的变量组数量（最新版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param filterByGroupName 按变量组名过滤
+     * @param filterByGroupDesc 按描述过滤
+     * @param filterByUpdater 按更新人过滤
+     * @param groupNames 按变量组名列表过滤
+     * @return 变量组数量
+     */
     fun countGroupsByProjectId(
         dslContext: DSLContext,
         projectId: String,
@@ -225,6 +288,15 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 根据变量组名查询变量组记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号（可选）
+     * @param versionName 版本名称（可选）
+     * @return 变量组PO对象，如果不存在则返回null
+     */
     fun getRecordByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -251,6 +323,14 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 统计变量组记录数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号（可选，为null时查询最新版本）
+     * @return 记录数量
+     */
     fun countRecordByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -272,6 +352,12 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 根据变量组名删除所有版本的变量组
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     */
     fun deleteByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -285,6 +371,14 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 直接设置变量组的引用计数（非增量更新）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param referCount 引用计数值
+     */
     fun updateReferCount(
         dslContext: DSLContext,
         projectId: String,
@@ -331,6 +425,13 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 更新变量组的最新版本标识
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param latestFlag 最新版本标识
+     */
     fun updateLatestFlag(
         dslContext: DSLContext,
         projectId: String,
@@ -348,6 +449,13 @@ class PublicVarGroupDao {
         }
     }
 
+    /**
+     * 更新变量组名下所有版本的引用计数（非增量更新）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referCount 引用计数值
+     */
     fun updateVarGroupNameReferCount(
         dslContext: DSLContext,
         projectId: String,
