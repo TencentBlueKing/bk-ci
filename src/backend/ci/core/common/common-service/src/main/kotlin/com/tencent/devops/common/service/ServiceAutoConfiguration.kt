@@ -35,6 +35,8 @@ import com.tencent.devops.common.service.prometheus.UndertowThreadMetrics
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.observation.ObservationRegistry
+import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -80,4 +82,24 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun undertowThreadMetrics() = UndertowThreadMetrics()
+
+    @Bean
+    fun observationFilerPostProcessor() =
+        object : BeanPostProcessor {
+            override fun postProcessAfterInitialization(
+                bean: Any,
+                beanName: String,
+            ): Any {
+                if (bean is ObservationRegistry) {
+                    bean.observationConfig().observationFilter { context ->
+                        if (context.name == "spring.rabbit.listener") {
+                            // delivery tag is a growing integer value, therefore not really suitable for metric tags
+                            context.removeLowCardinalityKeyValue("messaging.rabbitmq.message.delivery_tag")
+                        }
+                        context
+                    }
+                }
+                return bean
+            }
+        }
 }
