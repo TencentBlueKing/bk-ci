@@ -1,89 +1,28 @@
 <template>
-    <div
-        class="cron-ci"
-        :class="[
-            { 'is-error': isError },
-            `error-${errorField}`,
-            `select-${selectIndex}`
-        ]"
-    >
-        <div class="time-describe">
-            <span
-                v-for="item in timeMap"
-                :key="item.key"
-                :class="['time-text', item.key]"
-                @click="handleTimeTextChange(item.key)"
-            >
-                {{ item.label }}
-            </span>
-        </div>
-        <div class="time-input">
-            <input
-                ref="input"
-                class="input"
-                type="text"
-                :value="nativeValue"
-                @blur="handleBlur"
-                @input="handleInput"
-                @keyup.left="handleSelectText"
-                @keyup.right="handleSelectText"
-                @mousedown="handleSelectText"
-            >
-        </div>
-        <component
-            :is="renderText"
-            v-if="parseValue.length > 1"
-            :data="parseValue"
+    <div class="timer-crontab">
+        <bk-crontab
+            v-model="cronValue"
+            :local="curLocal"
+            :language-package="languagePackage"
+            :shortcuts="shortcuts"
+            @change="handleChangeCron"
+            @error="handleError"
         />
-        <div
-            v-if="nextTime.length > 0"
-            class="time-next"
-            :class="{ active: isTimeMore }"
+        <p
+            v-if="showError && hasInternalError"
+            class="error-msg"
         >
-            <div class="label">
-                {{ $t('cron.下次：') }}
-            </div>
-            <div class="value">
-                <div
-                    v-for="(time, index) in nextTime"
-                    :key="`${time}_${index}`"
-                >
-                    {{ time }}
-                </div>
-            </div>
-            <div
-                class="arrow"
-                @click="handleShowMore"
-            >
-                <i
-                    class="devops-icon icon-angle-down arrow-button"
-                />
-            </div>
-        </div>
+            {{ $t('cron.errorTips') }}
+        </p>
     </div>
 </template>
 <script>
-    import CronExpression from 'cron-parser-custom'
-    import { prettyDateTimeFormat } from '@/utils/util'
-    import Translate from '@/utils/cron/translate'
-    import renderTextCn from './components/render-text-cn.vue'
-    import renderTextEn from './components/render-text-en.vue'
-
-    const labelIndexMap = {
-        minute: 0,
-        hour: 1,
-        dayOfMonth: 2,
-        month: 3,
-        dayOfWeek: 4,
-        0: 'minute',
-        1: 'hour',
-        2: 'dayOfMonth',
-        3: 'month',
-        4: 'dayOfWeek'
-    }
-
+    import BkCrontab from '@blueking/crontab/vue2'
+    import '@blueking/crontab/vue2/vue2.css'
     export default {
-        name: '',
+        components: {
+            BkCrontab
+        },
         props: {
             value: {
                 type: String,
@@ -96,288 +35,136 @@
             handleChange: {
                 type: Function,
                 default: () => {}
+            },
+            keepError: {
+                type: Boolean,
+                default: true
+            },
+            showError: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
             return {
-                selectIndex: '',
-                nativeValue: this.value.join(' '),
-                nextTime: [],
-                parseValue: [],
-                errorField: '',
-                isError: false,
-                isTimeMore: false
+                hasInternalError: false,
+                internalValue: '' // 保存组件内部的值（包括错误的值）
             }
         },
         computed: {
-            curLocale () {
-                return this.$i18n.locale || 'zh-CN'
+            cronValue: {
+                get () {
+                    if (this.hasInternalError && this.keepError) {
+                        return this.internalValue
+                    }
+                    return Array.isArray(this.value) ? this.value.join('') : ''
+                },
+                set (val) {
+                    this.internalValue = val
+                }
             },
-            renderText () {
-                return this.curLocale === 'zh-CN' ? renderTextCn : renderTextEn
+            curLocal () {
+                const localeAliasMap = {
+                    'zh-CN': 'zh-CN',
+                    'en-US': 'en',
+                    'ja-jp': 'ja-jp'
+                }
+                return localeAliasMap[this.$i18n.locale] || 'zh-CN'
             },
-            timeMap () {
+            languagePackage () {
+                return {
+                    'ja-jp': {
+                        '下次': '次回',
+                        '分': '分',
+                        '时': '時',
+                        '日': '日',
+                        '月': '月',
+                        '周': '週',
+                        '每分钟': '1 分ごと',
+                        '每小时': '1 時間ごと',
+                        '每天': '1 日ごと',
+                        '每月': '1 か月ごと',
+                        '每周': '1 週間ごと',
+                        '快捷选项': 'クイックオプション',
+                        '任意值': '任意の値',
+                        '枚举值': '列挙値',
+                        '范围值': '範囲値',
+                        '每隔一段时间': '一定間隔で',
+                        '允许值': '許可される値',
+                        '每分钟执行': '1 分ごとに実行',
+                        '每小时执行': '1 時間ごとに実行',
+                        '每天执行': '1 日ごとに実行',
+                        '每月执行': '1 か月ごとに実行',
+                        '每周执行': '1 週間ごとに実行',
+                        '5,10：5 号和 10 号执行': '5, 10：5 日と 10 日に実行',
+                        '1-10：从 1 号到 10 号周期执行': '1-10：1 日から 10 日まで周期的に実行',
+                        '5/10：从 5 号开始，每隔 10 天执行': '5/10：5 日から開始し、10 日ごとに実行',
+                        'mon-sun': '月曜日-日曜日',
+                        '5,7：周五和周日执行': '5, 7：金曜日と日曜日に実行',
+                        '1-5：从周一到周五周期执行': '1-5：月曜日から金曜日まで周期的に実行',
+                        '2/2：从周二开始，每隔 2 天执行': '2/2：火曜日から開始し、2 日ごとに実行',
+                        '5,10：5 点和 10 点执行': '5, 10：5 時と 10 時に実行',
+                        '0-10：从 0 点到 10 点周期执行': '0-10：0 時から 10 時まで周期的に実行',
+                        '5/10：从 5 点开始，每隔 10 小时执行': '5/10：5 時から開始し、10 時間ごとに実行',
+                        '5,10：第 5 分钟和第 10 分钟执行': '5, 10：5 分と 10 分に実行',
+                        '0-10：从 0 分钟到 10 分钟周期执行': '0-10：0 分から 10 分まで周期的に実行',
+                        '5/10：从第 5 分钟开始，每隔 10 分钟执行': '5/10：5 分から開始し、10 分ごとに実行',
+                        '1-10：从 1 月到 10 月周期执行': '1-10：1 月から 10 月まで周期的に実行',
+                        '5/10：从 5 月开始，每隔 10 个月执行': '5/10：5 月から開始し、10 か月ごとに実行',
+                        '5,10：5 月和 10 月执行': '5, 10：5 月と 10 月に実行'
+                    }
+                }
+            },
+            shortcuts () {
                 return [
                     {
-                        label: this.$t('cron.分'),
-                        key: 'minute'
+                        label: this.$t('cron.everyMinute'),
+                        value: '* * * * *'
                     },
                     {
-                        label: this.$t('cron.时'),
-                        key: 'hour'
+                        label: this.$t('cron.everyHour'),
+                        value: '0 * * * *'
                     },
                     {
-                        label: this.$t('cron.日'),
-                        key: 'dayOfMonth'
+                        label: this.$t('cron.everyDay'),
+                        value: '0 0 * * *'
                     },
                     {
-                        label: this.$t('cron.月'),
-                        key: 'month'
+                        label: this.$t('cron.everyMonth'),
+                        value: '0 0 1 * *'
                     },
                     {
-                        label: this.$t('cron.周'),
-                        key: 'dayOfWeek'
+                        label: this.$t('cron.everyWeek'),
+                        value: '0 0 * * 0'
                     }
                 ]
             }
         },
-        mounted () {
-            if (!this.nativeValue) {
-                return
-            }
-            this.checkAndTranslate(this.nativeValue)
-        },
         methods: {
-            /**
-             * @desc 检测crontab格式和翻译
-             */
-            checkAndTranslate (value) {
-                const interval = CronExpression.parse(`0 ${value.trim()}`, {
-                    currentDate: new Date()
-                })
-
-                let i = 5
-                this.nextTime = []
-                while (i > 0) {
-                    this.nextTime.push(prettyDateTimeFormat(interval.next().toString()))
-                    i -= 1
+            handleChangeCron (value) {
+                this.hasInternalError = false
+                this.handleChange(this.name, !!value ? [value] : [])
+            },
+            handleError () {
+                if (!this.internalValue && Array.isArray(this.value) && this.value.length > 0) {
+                    // 如果internalValue为空，尝试从value中获取
+                    this.internalValue = this.value.join('')
                 }
-
-                this.errorField = ''
-                this.isError = false
-                this.parseValue = Translate(value, this.curLocale)
-            },
-            /**
-             * @desc 选中crontab字段
-             * @param {String} lable 选中的字段名
-             */
-            handleTimeTextChange (label) {
-                if (!this.nativeValue) {
-                    return
-                }
-                const timeItem = this.nativeValue
-                const index = labelIndexMap[label]
-                if (timeItem.length < index) {
-                    return
-                }
-                const preStrLength = timeItem.slice(0, index).length + index
-                const endPosition = preStrLength + timeItem[index].length
-                setTimeout(() => {
-                    this.selectIndex = label
-                    this.$refs.input.focus()
-                    this.$refs.input.selectionStart = preStrLength
-                    this.$refs.input.selectionEnd = endPosition
-                })
-            },
-            /**
-             * @desc 输入框失去焦点
-             */
-            handleBlur () {
-                this.selectIndex = ''
-            },
-            /**
-             * @desc 选中输入框文本
-             * @param {Object} event 文本选择事件
-             */
-            handleSelectText (event) {
-                const $target = event.target
-                const value = $target.value?.trim()
-                this.nativeValue = value
-                if (!value) return
-                setTimeout(() => {
-                    const cursorStart = $target.selectionStart
-                    const cursorStr = value.slice(0, cursorStart)
-                    const checkBackspce = cursorStr.match(/ /g)
-                    if (checkBackspce) {
-                        this.selectIndex = labelIndexMap[checkBackspce.length]
-                    } else {
-                        this.selectIndex = labelIndexMap['0']
-                    }
-                })
-            },
-            /**
-             * @desc 输入框输入
-             * @param {Object} event 输入框input事件
-             */
-            handleInput (event) {
-                const $target = event.target
-                const value = $target.value?.trim()
-                this.nativeValue = value
-
-                try {
-                    this.checkAndTranslate(value)
-                    this.handleChange(this.name, [value])
-                } catch (error) {
-                    this.parseValue = []
-                    this.nextTime = []
-                    const all = [
-                        'minute',
-                        'hour',
-                        'dayOfMonth',
-                        'month',
-                        'dayOfWeek'
-                    ]
-                    if (all.includes(error.message)) {
-                        this.errorField = error.message
-                    }
-                    this.isError = true
-                    this.handleChange(this.name, [])
-                }
-            },
-            /**
-             * @desc 展示下次执行时间列表
-             */
-            handleShowMore () {
-                this.isTimeMore = !this.isTimeMore
+                // 标记组件有格式错误
+                this.hasInternalError = true
+                // 触发 crontabArrayRule 校验失败
+                this.handleChange(this.name, 'error')
             }
         }
     }
 </script>
-<style lang='scss'>
-.cron-ci {
-    background: #f5f7fa;
-    padding: 16px 20px;
-    position: relative;
-    &.is-error {
-        .time-input {
-            .input {
-                border-color: #ff5656;
-            }
-        }
-    }
 
-    /* stylelint-disable selector-class-pattern */
-    &.error-month .month,
-    &.error-dayOfMonth .dayOfMonth,
-    &.error-dayOfWeek .dayOfWeek,
-    &.error-hour .hour,
-    &.error-minute .minute {
-        color: #ff5656 !important;
-    }
-
-    &.select-month .month,
-    &.select-dayOfMonth .dayOfMonth,
-    &.select-dayOfWeek .dayOfWeek,
-    &.select-hour .hour,
-    &.select-minute .minute {
-        color: #3a84ff;
-    }
-
-    .time-describe {
-        display: flex;
-        justify-content: center;
-    }
-
-    .time-text {
-        padding: 0 19px;
-        font-size: 12px;
-        line-height: 22px;
-        color: #c4c6cc;
-        cursor: pointer;
-        transition: all 0.1s;
-
-        &.active {
-            color: #3a84ff;
-        }
-
-        &.field-error {
-            color: #ff5656;
-        }
-    }
-
-    .time-input {
-        .input {
-            width: 100%;
-            height: 48px;
-            padding: 0 30px;
-            font-size: 24px;
-            line-height: 48px;
-            word-spacing: 30px;
-            color: #63656e;
-            text-align: center;
-            border: 1px solid #3a84ff;
-            border-radius: 2px;
-            outline: none;
-
-            &::selection {
-                color: #3a84ff;
-                background: transparent;
-            }
-        }
-    }
-
-    .time-parse {
-        padding: 10px 0;
-        margin-top: 8px;
-        font-size: 0;
-        line-height: 18px;
-        color: #63656e;
-        text-align: center;
-
-        span {
+<style lang="scss">
+    .timer-crontab {
+        .error-msg {
+            color: #ff4d4f;
             font-size: 12px;
-            white-space: break-spaces;
+            margin-top: 4px;
         }
     }
-
-    .time-next {
-        display: flex;
-        height: 18px;
-        overflow: hidden;
-        font-size: 12px;
-        line-height: 18px;
-        color: #979ba5;
-        text-align: center;
-        transition: height 0.2s linear;
-        align-content: center;
-        justify-content: center;
-        &.active {
-            height: 90px;
-
-            .arrow {
-                align-items: flex-end;
-
-                .arrow-button {
-                    transform: rotateZ(-180deg);
-                }
-            }
-        }
-        .arrow-button {
-            display: block;
-            margin-left: 2px;
-        }
-        .value {
-            text-align: left;
-        }
-
-        .arrow {
-            display: flex;
-            padding-top: 2px;
-            padding-bottom: 2px;
-            padding-left: 2px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-    }
-}
 </style>
