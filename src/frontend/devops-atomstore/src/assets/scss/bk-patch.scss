@@ -566,6 +566,12 @@
 		cursor: pointer;
 		color: $primaryColor;
 	}
+	.is-disabled {
+		span {
+			cursor: not-allowed;
+			color: #c4c6cc;
+		}
+	}
 }
 
 .audit-tips {

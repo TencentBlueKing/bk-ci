@@ -619,6 +619,7 @@ object ScriptYmlUtils {
             ifField = formatIfField(preStep.ifField),
             ifModify = preStep.ifModify,
             uses = preStep.uses,
+            namespace = preStep.namespace,
             with = preStep.with,
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
@@ -789,7 +790,8 @@ object ScriptYmlUtils {
         val res = TriggerOn(
             push = pushRule(preTriggerOn),
             tag = tagRule(preTriggerOn),
-            mr = mrRule(preTriggerOn),
+            mr = mrRule(preTriggerOn.mr),
+            mrMerged = mrRule(preTriggerOn.mrMerged),
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
@@ -1036,10 +1038,9 @@ object ScriptYmlUtils {
     }
 
     private fun mrRule(
-        preTriggerOn: IPreTriggerOn
+        mr: Any?
     ): MrRule? {
-        if (preTriggerOn.mr != null) {
-            val mr = preTriggerOn.mr!!
+        if (mr != null) {
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),

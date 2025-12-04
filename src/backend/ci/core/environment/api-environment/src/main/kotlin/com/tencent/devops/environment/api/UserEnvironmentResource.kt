@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -377,12 +379,15 @@ interface UserEnvironmentResource {
         projectId: String,
         @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
+        @BkField(minLength = 3, maxLength = 20, required = true)
         envHashId: String,
         @Parameter(description = "节点 hashId", required = true)
         @PathParam("nodeHashId")
+        @BkField(minLength = 3, maxLength = 20, required = true)
         nodeHashId: String,
         @Parameter(description = "启动或者停用", required = true)
         @QueryParam("enableNode")
+        @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean
     ): Result<Boolean>
 }

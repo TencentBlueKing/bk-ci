@@ -24,6 +24,7 @@
   "true": "是",
   "false": "否",
   "cancel": "取消",
+  "cancelBuildPermTip": "仅触发人、流水线拥有者和项目管理员可以取消正在运行的构建，若需修改策略请联系流水线拥有者",
   "userError": "用户配置错误",
   "systemError": "系统运行错误",
   "thirdPartyError": "第三方系统错误",
@@ -334,6 +335,11 @@
     "disableSetting": "禁用设置",
     "stopWhenNewCome": "取消正在运行的构建",
     "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持在启动阶段能确定值的变量，比如 ${'{{'}ci.pipeline_id{'}}'}、${'{{'}ci.branch{'}}'}、${'{{'}variables.a{'}}'} (前提是a在启动时值已明确)等",
+    "buildCancelPolicyLabel": "取消构建策略",
+    "buildCancelPolicyOptions": {
+      "EXECUTE_PERMISSION": "拥有执行权限的用户可取消任意构建",
+      "RESTRICTED": "仅限触发人或拥有流水线管理权限的用户可取消"
+    },
     "notify": "通知",
     "auth": "权限",
     "authManage": "权限管理",
@@ -668,7 +674,7 @@
     "buildParam": "入参",
     "notBuildParam": "非入参",
     "currentInstance": "此实例中",
-    "cancelParticipant": "点击可取消设置，变更为非入参",
+    "cancelParticipant": "点击可变更为非入参",
     "setParticipant": "点击恢复为入参",
     "unfollow": "不跟随模板",
     "follow": "跟随模板",
@@ -676,9 +682,15 @@
     "setUnfollow": "点击可取消跟随模板",
     "defaultValue": "默认值",
     "triggerSettings": "触发器设置",
+    "toStoreUpdate": "去商店上架新版本",
+    "versionReleaseSuc": "{0} 发布成功",
+    "manualUpdate": "该模板已发布到商店，可以去商店上架新版本",
+    "autoUpdate": "该模板已发布到商店，且发布策略为自动发布，商店中的模板将自动更新至{0}",
     "recommendVersion": "推荐版本号",
     "followTemplateTips": "升级实例时，将自动跟随模版新版本变更{0}。",
-    "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。"
+    "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。",
+    "setTimeCron": "设置定时规则",
+    "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -2029,5 +2041,7 @@
   "currentRef": "当前版本/当前 Commit",
   "noVariablesAvailable": "暂无变量",
   "showStageProgress": "展示 Stage 进度",
-  "showBuildInfo": "展示构建信息"
+  "showBuildInfo": "展示构建信息",
+  "rollbackToVersion": "回滚至版本{0}",
+  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。"
 }

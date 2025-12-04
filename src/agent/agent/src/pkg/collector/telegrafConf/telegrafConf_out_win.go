@@ -35,6 +35,8 @@ const TelegrafConf = `
   projectId = "{{.ProjectId}}"
   agentId = "{{.AgentId}}"
   agentSecret = "{{.AgentSecret}}"
+  cpuProductInfo = "{{.CPUProductInfo}}"
+  gpuProductInfo = "{{.GPUProductInfo}}"
 [agent]
   interval = "1m"
   round_interval = true

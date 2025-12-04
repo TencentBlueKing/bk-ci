@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -88,7 +89,8 @@ class ScmRepositoryApiService @Autowired constructor(
     private val repositoryOauthService: RepositoryOauthService,
     private val p4Config: P4Config,
     private val scmConfig: ScmConfig,
-    private val githubService: IGithubService
+    private val githubService: IGithubService,
+    private val profile: Profile
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
@@ -518,7 +520,7 @@ class ScmRepositoryApiService @Autowired constructor(
                 } else {
                     listOf()
                 },
-                name = "",
+                name = "${SCM_REPO_WEBHOOK_NAME}_${profile.getEnv().name.lowercase()}",
                 path = if (subPath.isNullOrBlank()) {
                     null
                 } else {
@@ -630,5 +632,6 @@ class ScmRepositoryApiService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmRepositoryApiService::class.java)
+        private const val SCM_REPO_WEBHOOK_NAME = "bk_ci_devops_trigger"
     }
 }

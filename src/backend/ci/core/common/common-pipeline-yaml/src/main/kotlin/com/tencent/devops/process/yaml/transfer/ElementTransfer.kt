@@ -563,6 +563,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         step.with?.get(RunAtomParam::charsetType.name)?.toString()
                     )
                 )
+                step.namespace?.let { data["namespace"] = it }
                 MarketBuildAtomElement(
                     id = step.taskId,
                     name = step.name ?: "run",
@@ -619,6 +620,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     uses = null,
+                    namespace = element.data["namespace"]?.toString()?.ifBlank { null },
                     with = TransferUtil.simplifyParams(transferCache.getAtomDefaultValue(uses), input).apply {
                         this.remove(CheckoutAtomParam::repositoryType.name)
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
@@ -635,6 +637,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     name = element.name,
                     id = element.stepId,
                     uses = null,
+                    namespace = element.data["namespace"]?.toString()?.ifBlank { null },
                     with = TransferUtil.simplifyParams(
                         transferCache.getAtomDefaultValue(uses),
                         input.filterNot {

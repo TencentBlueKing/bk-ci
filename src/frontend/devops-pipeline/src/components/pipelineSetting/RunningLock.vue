@@ -120,7 +120,7 @@
                                     @change="val => handleBaseInfoChange('maxConRunningQueueSize', val ? Number(val) : null)"
                                 />
                             </bk-form-item>
-        
+
                             <bk-form-item
                                 :required="isMultipleLock"
                                 :label="$t('settings.concurrentTimeout')"
@@ -174,7 +174,7 @@
                                     @change="val => handleBaseInfoChange('concurrencyGroup', val)"
                                 />
                             </bk-form-item>
-        
+
                             <bk-form-item property="concurrencyCancelInProgress">
                                 <bk-checkbox
                                     :disabled="!(editable || isOverride)"
@@ -225,6 +225,34 @@
                 </constraint-wraper>
             </bk-form-item>
 
+            <bk-form-item>
+                <constraint-wraper
+                    :classify="CLASSIFY_ENUM.SETTING"
+                    field="buildCancelPolicy"
+                    :label="$t('settings.buildCancelPolicyLabel')"
+                >
+                    <template v-slot:constraint-area="{ props: { isOverride } }">
+                        <bk-radio-group
+                            :value="pipelineSetting.buildCancelPolicy"
+                            @change="val => handleBaseInfoChange('buildCancelPolicy', val)"
+                        >
+                            <div
+                                v-for="(value, key) in BUILD_CANCEL_POLICY"
+                                :key="key"
+                                class="run-lock-radio-item"
+                            >
+                                <bk-radio
+                                    :disabled="!(editable || isOverride)"
+                                    :value="value"
+                                >
+                                    {{ $t(`settings.buildCancelPolicyOptions.${value}`) }}
+                                </bk-radio>
+                            </div>
+                        </bk-radio-group>
+                    </template>
+                </constraint-wraper>
+            </bk-form-item>
+
             <!-- <bk-form-item :label="$t('settings.disableSetting')">
                 <span @click="handleLockTypeChange(runTypeMap.LOCK)">
                     <bk-radio
@@ -243,6 +271,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
+    import { BUILD_CANCEL_POLICY } from '@/store/constants'
     import Vue from 'vue'
 
     export default {
@@ -262,6 +291,9 @@
         computed: {
             CLASSIFY_ENUM () {
                 return CLASSIFY_ENUM
+            },
+            BUILD_CANCEL_POLICY () {
+                return BUILD_CANCEL_POLICY
             },
             proxyFailIfVariableInvalid: {
                 get () {
@@ -343,7 +375,7 @@
             }
         },
         methods: {
-            
+
             handleLockTypeChange (runLockType) {
                 this.handleRunningLockChange({
                     runLockType,

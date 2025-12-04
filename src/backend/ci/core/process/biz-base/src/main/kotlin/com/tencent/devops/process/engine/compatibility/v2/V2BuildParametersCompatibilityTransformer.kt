@@ -62,6 +62,14 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
             // 如果编排中指定为常量，则必须以编排的默认值为准，不支持触发时传参覆盖
             val value = when {
                 param.constant == true -> {
+                    // perf：常量值还能被修改问题优化 #12313
+                    val overrideValue = paramValues[key] ?: paramValues[param.id]
+                    if (overrideValue != null && param.defaultValue != overrideValue) {
+                        logger.info(
+                            "OPERATIONAL_DATA_COLLECTION|CONSTANT_VARIABLE_MODIFY|$userId|$projectId|" +
+                                "$pipelineId|[${param.id}]overrideValue=$overrideValue"
+                        )
+                    }
                     // 常量需要在启动是强制设为只读
                     param.readOnly = true
                     param.defaultValue
@@ -86,12 +94,13 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                         param.value ?: param.defaultValue
                     }
                 }
+
                 else -> {
                     val overrideValue = paramValues[key] ?: paramValues[param.id]
                     if (!param.required && overrideValue != null) {
                         logger.warn(
                             "BKSystemErrorMonitor|parseTriggerParam|$userId|$projectId|$pipelineId|[$key] " +
-                                    "not required, overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
+                                "not required, overrideValue=$overrideValue, defaultValue=${param.defaultValue}"
                         )
                     }
                     overrideValue ?: param.defaultValue

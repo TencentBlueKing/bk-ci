@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -79,7 +80,8 @@ class PipelineSettingVersionDao {
                 PIPELINE_AS_CODE_SETTINGS,
                 VERSION,
                 MAX_CON_RUNNING_QUEUE_SIZE,
-                FAIL_IF_VARIABLE_INVALID
+                FAIL_IF_VARIABLE_INVALID,
+                BUILD_CANCEL_POLICY
             ).values(
                 id,
                 setting.projectId,
@@ -103,7 +105,8 @@ class PipelineSettingVersionDao {
                 },
                 version,
                 setting.maxConRunningQueueSize ?: -1,
-                setting.failIfVariableInvalid
+                setting.failIfVariableInvalid,
+                setting.buildCancelPolicy.value
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -121,6 +124,7 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 })
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
                 .execute()
         }
     }
@@ -273,7 +277,8 @@ class PipelineSettingVersionDao {
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                     },
-                    failIfVariableInvalid = t.failIfVariableInvalid
+                    failIfVariableInvalid = t.failIfVariableInvalid,
+                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy)
                 )
             }
         }

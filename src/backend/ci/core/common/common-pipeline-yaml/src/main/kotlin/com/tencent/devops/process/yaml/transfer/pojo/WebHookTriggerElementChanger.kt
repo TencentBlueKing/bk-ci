@@ -292,7 +292,13 @@ data class WebHookTriggerElementChanger(
             data.data.input.actions
         } else listOf(),
         enable = data.elementEnabled(),
-        scmCode = data.data.input.scmCode
+        scmCode = data.data.input.scmCode,
+        includeIssueAction = if (data.data.input.eventType == CodeEventType.ISSUES) {
+            data.data.input.actions
+        } else listOf(),
+        includeNoteTypes = data.data.input.includeNoteTypes,
+        includeNoteComment = data.data.input.includeNoteComment,
+        includeCrState = data.data.input.includeCrState
     )
 
     constructor(data: CodeScmSvnWebHookTriggerElement) : this(

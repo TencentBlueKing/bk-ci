@@ -777,7 +777,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
         try {
             let url = `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`
             if (archiveFlag !== undefined && archiveFlag !== null) {
