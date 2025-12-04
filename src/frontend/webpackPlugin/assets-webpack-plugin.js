@@ -25,41 +25,79 @@ class assetsPlugin {
         this.isDev = props.isDev ?? false
     }
     apply (compiler) {
-        compiler.hooks.compilation.tap('assetsPlugin', async (compilation) => {
-            console.log('The compiler is starting a new compilation...')
-            let assets
-            // Static Plugin interface |compilation |HOOK NAME | register listener
-            await HtmlWebpackPlugin.getHooks(compilation).beforeAssetTagGeneration.tapAsync(
-                'assetsPlugin', // <-- Set a meaningful name here for stacktraces
-                (data, cb) => {
-                    // Manipulate the content
-                    assets = data.assets
-                    
-                    // Tell webpack to move on
-                    cb(null, data)
-                }
+        console.log('[assets-webpack-plugin] Plugin initialized')
+        
+        compiler.hooks.emit.tapAsync('assetsPlugin', (compilation, callback) => {
+            console.log('[assets-webpack-plugin] emit hook triggered')
+            
+            // Find the main HTML file (frontend#console#index.html)
+            const htmlFileName = Object.keys(compilation.assets).find(name =>
+                name.includes('frontend#console#index.html')
+                || (name.endsWith('index.html') && !name.includes('static/'))
             )
-
-            HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
-                'assetsPlugin', // <-- Set a meaningful name here for stacktraces
-                (data, cb) => {
-                    // Manipulate the content
-                    const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
-                    if (assetsPos > -1) {
-                        const devBundle = this.isDev ? `
-                            <script type="text/javascript" src="${'//dev.devops.woa.com/assetsBundles.js'}"></script>
-                        ` : ''
-                        data.html = `${data.html.slice(0, assetsPos)} 
-                        ${devBundle}<script type='text/javascript' src='${assets.js[0]}'></script>
-                        <script type='text/javascript'>window.jsAssets = ${JSON.stringify(assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
-
-                        
+            
+            console.log('[assets-webpack-plugin] HTML file:', htmlFileName)
+            
+            if (!htmlFileName) {
+                console.log('[assets-webpack-plugin] No main HTML file found')
+                callback()
+                return
+            }
+            
+            // Get main entrypoint assets
+            const mainEntrypoint = compilation.entrypoints.get('main')
+            let jsFiles = []
+            let cssFiles = []
+            
+            if (mainEntrypoint) {
+                const entryFiles = mainEntrypoint.getFiles()
+                jsFiles = entryFiles.filter(file => file.endsWith('.js'))
+                cssFiles = entryFiles.filter(file => file.endsWith('.css'))
+            } else {
+                // Fallback: get JS files from assets
+                jsFiles = Object.keys(compilation.assets)
+                    .filter(name => name.endsWith('.js') && !name.includes('dll') && !name.includes('static/'))
+                    .filter(name => name.includes('main.') || name.includes('bk-magic-vue-chunk'))
+                    .sort((a, b) => {
+                        // Put bk-magic-vue-chunk first, then main
+                        if (a.includes('bk-magic-vue-chunk')) return -1
+                        if (b.includes('bk-magic-vue-chunk')) return 1
+                        return 0
+                    })
+            }
+            
+            console.log('[assets-webpack-plugin] JS files:', jsFiles)
+            console.log('[assets-webpack-plugin] CSS files:', cssFiles)
+            
+            if (jsFiles.length > 0) {
+                const htmlAsset = compilation.assets[htmlFileName]
+                let html = htmlAsset.source()
+                
+                const assetsPos = html.indexOf('<!-- end devops:assets -->')
+                console.log('[assets-webpack-plugin] assetsPos:', assetsPos)
+                
+                if (assetsPos > -1) {
+                    const devBundle = this.isDev ? `
+                        <script type="text/javascript" src="${'//dev.devops.woa.com/assetsBundles.js'}"></script>
+                    ` : ''
+                    
+                    const injectedCode = `${devBundle}<script type='text/javascript' src='${jsFiles[0]}'></script>
+                    <script type='text/javascript'>window.jsAssets = ${JSON.stringify(jsFiles.slice(1))};</script>\n`
+                    
+                    html = `${html.slice(0, assetsPos)} 
+                    ${injectedCode}${html.slice(assetsPos)}`
+                    
+                    // Update the asset
+                    compilation.assets[htmlFileName] = {
+                        source: () => html,
+                        size: () => html.length
                     }
                     
-                    // Tell webpack to move on
-                    cb(null, data)
+                    console.log('[assets-webpack-plugin] HTML modified successfully')
                 }
-            )
+            }
+            
+            callback()
         })
     }
 }
