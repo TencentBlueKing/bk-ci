@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDraftSaveReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
