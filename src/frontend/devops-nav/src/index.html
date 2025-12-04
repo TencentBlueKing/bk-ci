@@ -279,9 +279,7 @@
           : LOGIN_SERVICE_URL
 
       const loginUrl = loginUrlPlaceholder.startsWith('//') ? `${location.protocol}${loginUrlPlaceholder}` : loginUrlPlaceholder
-      var cUrl =
-        `${location.origin}${location.pathname}${location.pathname.endsWith('/') ? '' : '/'}_logout/`
-      encodeURIComponent(location.search)
+      var cUrl = `${location.origin}${location.pathname}${encodeURIComponent(location.search)}`
       if (/=%s/.test(loginUrl)) {
         return loginUrl.replace(/%s/, cUrl)
       } else {
