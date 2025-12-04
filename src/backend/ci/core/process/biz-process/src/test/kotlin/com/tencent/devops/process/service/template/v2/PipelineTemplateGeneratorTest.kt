@@ -254,22 +254,22 @@ class PipelineTemplateGeneratorTest {
 
         // Then
         assertNotNull(result)
-        
+
         // 1. 验证 templateParams 已被置空
         assertNull(templateModel.getTriggerContainer().templateParams)
-        
+
         // 2. 验证参数数量正确（原来1个param + 1个templateParam = 2个）
         val expectedSize = originalParamsSize + originalTemplateParamsSize
         assertEquals(expectedSize, result.params.size)
         assertEquals(expectedSize, templateModel.getTriggerContainer().params.size)
-        
+
         // 3. 验证 templateParam 已合并到 params 中
         val mergedParam = result.params.find { it.id == templateParamId }
         assertNotNull(mergedParam, "templateParam 应该被合并到 params 中")
-        
+
         // 4. 验证合并后的 templateParam 被标记为 constant = true
         assertEquals(true, mergedParam?.constant, "合并后的 templateParam 应该被标记为 constant = true")
-        
+
         // 5. 验证原有的 param 仍然存在
         val originalParam = result.params.find { it.id == "param1" }
         assertNotNull(originalParam, "原有的 param 应该仍然存在")
@@ -310,26 +310,30 @@ class PipelineTemplateGeneratorTest {
 
         // Then
         assertNotNull(result)
-        
+
         // 1. 验证 templateParams 已被置空
         assertNull(templateModel.getTriggerContainer().templateParams)
-        
-        // 2. 验证参数去重：原来有 2 个 params (param1, duplicateParam) 
+
+        // 2. 验证参数去重：原来有 2 个 params (param1, duplicateParam)
         //    + 2 个 templateParams (duplicateParam, templateParam1)
         //    去重后应该有 3 个 (param1, duplicateParam 保留 params 的值, templateParam1)
         assertEquals(3, result.params.size)
-        
+
         // 3. 验证同名参数保留 params 的值（mergeProperties 中 to 参数优先）
         val duplicateParam = result.params.find { it.id == "duplicateParam" }
         assertNotNull(duplicateParam)
-        assertEquals("paramsValue", duplicateParam?.defaultValue, 
-            "同名参数应该保留 params 中的值（params 优先级高于 templateParams）")
-        
+        assertEquals(
+            "paramsValue", duplicateParam?.defaultValue,
+            "同名参数应该保留 params 中的值（params 优先级高于 templateParams）"
+        )
+
         // 4. 验证来自 templateParams 的独有参数被正确添加并标记为 constant
         val templateParam = result.params.find { it.id == "templateParam1" }
         assertNotNull(templateParam, "templateParams 中的独有参数应该被添加")
-        assertEquals(true, templateParam?.constant, 
-            "来自 templateParams 的参数应该被标记为 constant = true")
+        assertEquals(
+            true, templateParam?.constant,
+            "来自 templateParams 的参数应该被标记为 constant = true"
+        )
     }
 
     @Test
@@ -442,7 +446,7 @@ class PipelineTemplateGeneratorTest {
         val templateModel = createMockPipelineModelWithTemplateParams()
         val templateSetting = createMockSetting()
         val exception = RuntimeException("Transfer failed")
-        
+
         // 记录 templateParam 的 ID 以便后续验证
         val templateParamId = templateModel.getTriggerContainer().templateParams?.firstOrNull()?.id
 
@@ -475,11 +479,11 @@ class PipelineTemplateGeneratorTest {
         assertEquals(templateModel, result.templateModel)
         assertEquals(templateSetting, result.templateSetting)
         assertNull(result.yamlWithVersion) // 转换失败，返回 null
-        
+
         // 验证即使转换失败，参数仍被合并
         assertNull(templateModel.getTriggerContainer().templateParams, "templateParams 应该被置空")
         assertEquals(2, result.params.size, "应该有2个参数（1个原始 + 1个合并的模板参数）")
-        
+
         // 验证 templateParam 确实被合并到 params 中
         val mergedTemplateParam = result.params.find { it.id == templateParamId }
         assertNotNull(mergedTemplateParam, "templateParam 应该被合并到 params 中")
