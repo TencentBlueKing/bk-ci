@@ -55,7 +55,12 @@ class assetsPlugin {
                     if (a.includes('bk-magic-vue-chunk') && !b.includes('bk-magic-vue-chunk')) return -1
                     if (!a.includes('bk-magic-vue-chunk') && b.includes('bk-magic-vue-chunk')) return 1
                     return 0
-                }).map(name => `/console/${name}`)
+                }).map(name => {
+                    if (name.includes('.dll.js')) {
+                        return `/console/static/${name}`
+                    }
+                    return `/console/${name}`
+                })
             
             
             console.log('[assets-webpack-plugin] JS files:', jsFiles)
