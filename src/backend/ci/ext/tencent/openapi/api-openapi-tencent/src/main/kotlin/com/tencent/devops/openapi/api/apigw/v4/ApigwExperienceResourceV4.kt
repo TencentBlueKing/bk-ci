@@ -25,27 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.api.service
+package com.tencent.devops.openapi.api.apigw.v4
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
-import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
-import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
-import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ExperienceList
-import com.tencent.devops.experience.pojo.ExperienceServiceCreate
-import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.v3.oas.annotations.Operation
@@ -55,158 +49,29 @@ import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
-import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "SERVICE_EXPERIENCE", description = "版本体验-发布体验")
-@Path("/service/experiences")
+@Tag(name = "OPEN_API_EXPERIENCE_V4", description = "OPEN-API-版本体验V4")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/experience/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("artifactory")
-interface ServiceExperienceResource {
-    @Operation(summary = "创建体验")
-    @Path("/{projectId}/")
-    @POST
-    fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "发布详情", required = true)
-        experience: ExperienceServiceCreate
-    ): Result<String>
-
-    @Operation(summary = "获取体验列表数量")
-    @Path("/list/count")
-    @POST
-    fun count(
-        @Parameter(description = "项目ID集合", required = false)
-        projectIds: Set<String>? = setOf(),
-        @Parameter(description = "", required = false)
-        @QueryParam("expired")
-        expired: Boolean? = false
-    ): Result<Map<String, Int>>
-
-    @Operation(summary = "获取体验详情")
-    @Path("/projects/{projectId}/experienceIds/{experienceHashId}")
-    @GET
-    fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "体验HashId", required = false)
-        @PathParam("experienceHashId")
-        experienceHashId: String
-    ): Result<Experience>
-
-    @Operation(summary = "是否有体验权限")
-    @Path("/experienceIds/{experienceHashId}/check")
-    @GET
-    fun check(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @Parameter(description = "体验HashId", required = false)
-        @PathParam("experienceHashId")
-        experienceHashId: String,
-        @Parameter(description = "组织", required = false)
-        @QueryParam("organization")
-        organization: String?
-    ): Result<Boolean>
-
-    @Operation(summary = "通过bundleId获取公开体验跳转信息")
-    @Path("/jumpInfo")
-    @GET
-    fun jumpInfo(
-        @Parameter(description = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @Parameter(description = "bundleId", required = true)
-        @QueryParam("bundleIdentifier")
-        bundleIdentifier: String,
-        @Parameter(description = "平台", required = true)
-        @QueryParam("platform")
-        platform: String
-    ): Result<ExperienceJumpInfo>
-
-    @Operation(summary = "获取构建中的体验的信息")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
-    @GET
-    fun listForBuild(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String?,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<List<ExperienceInfoForBuild>>
-
-    @Operation(summary = "编辑体验")
-    @Path("/{projectId}/{experienceHashId}")
-    @PUT
-    fun edit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "发布HashId", required = false)
-        @PathParam("experienceHashId")
-        experienceHashId: String,
-        @Parameter(description = "发布详情", required = true)
-        experience: ExperienceUpdate
-    ): Result<Boolean>
-
-    @Operation(summary = "下架体验")
-    @Path("/{projectId}/{experienceHashId}/offline")
-    @PUT
-    fun offline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String?,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "发布HashId", required = false)
-        @PathParam("experienceHashId")
-        experienceHashId: String
-    ): Result<Boolean>
-
-    @Operation(summary = "上架体验")
-    @Path("/{projectId}/{experienceHashId}/online")
-    @PUT
-    fun online(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String?,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "发布HashId", required = false)
-        @PathParam("experienceHashId")
-        experienceHashId: String
-    ): Result<Boolean>
-
-    @Operation(summary = "获取体验列表--v3")
-    @Path("/v3/list")
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
+interface ApigwExperienceResourceV4 {
+    
+    @Operation(summary = "获取体验列表--v3", tags = ["v4_app_experience_listV3"])
+    @Path("/list")
     @GET
     fun listV3(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -218,10 +83,16 @@ interface ServiceExperienceResource {
         organization: String? = null
     ): Result<ExperienceList>
 
-    @Operation(summary = "获取体验详情")
-    @Path("/experienceIds/{experienceHashId}/detail")
+    @Operation(summary = "获取体验详情", tags = ["v4_app_experience_detail"])
+    @Path("/{experienceHashId}/detail")
     @GET
     fun detail(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -242,10 +113,16 @@ interface ServiceExperienceResource {
         forceNew: Boolean = true
     ): Result<AppExperienceDetail>
 
-    @Operation(summary = "历史版本")
-    @Path("/experienceIds/{experienceHashId}/changeLog")
+    @Operation(summary = "历史版本", tags = ["v4_app_experience_changeLog"])
+    @Path("/{experienceHashId}/changeLog")
     @GET
     fun changeLog(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -290,10 +167,16 @@ interface ServiceExperienceResource {
         creator: String? = null
     ): Result<Pagination<ExperienceChangeLog>>
 
-    @Operation(summary = "创建外部直接下载链接")
-    @Path("/experienceIds/{experienceHashId}/downloadUrl")
+    @Operation(summary = "创建外部直接下载链接", tags = ["v4_app_experience_downloadUrl"])
+    @Path("/{experienceHashId}/downloadUrl")
     @POST
     fun downloadUrl(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -305,10 +188,16 @@ interface ServiceExperienceResource {
         experienceHashId: String
     ): Result<DownloadUrl>
 
-    @Operation(summary = "获取项目体验列表")
+    @Operation(summary = "获取项目体验列表", tags = ["v4_app_experience_history"])
     @Path("/projects/{projectId}/history")
     @GET
     fun history(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -320,10 +209,16 @@ interface ServiceExperienceResource {
         projectId: String
     ): Result<List<AppExperienceSummary>>
 
-    @Operation(summary = "获取项目用户组信息和组所有人员")
+    @Operation(summary = "获取项目用户组信息和组所有人员", tags = ["v4_app_experience_projectGroupAndUsers"])
     @Path("/projects/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -332,10 +227,16 @@ interface ServiceExperienceResource {
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
 
-    @Operation(summary = "获取上一次体验的参数")
+    @Operation(summary = "获取上一次体验的参数", tags = ["v4_app_experience_lastParams"])
     @Path("/lastParams")
     @GET
     fun lastParams(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -350,10 +251,16 @@ interface ServiceExperienceResource {
         bundleIdentifier: String
     ): Result<ExperienceLastParams>
 
-    @Operation(summary = "列出外部用户列表")
+    @Operation(summary = "列出外部用户列表", tags = ["v4_app_experience_outerList"])
     @Path("/outer/list")
     @GET
     fun outerList(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -362,10 +269,16 @@ interface ServiceExperienceResource {
         projectId: String
     ): Result<List<OuterSelectorVO>>
 
-    @Operation(summary = "体验对应的安装包列表")
-    @Path("/experienceIds/{experienceHashId}/installPackages")
+    @Operation(summary = "体验对应的安装包列表", tags = ["v4_app_experience_installPackages"])
+    @Path("/{experienceHashId}/installPackages")
     @GET
     fun installPackages(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
