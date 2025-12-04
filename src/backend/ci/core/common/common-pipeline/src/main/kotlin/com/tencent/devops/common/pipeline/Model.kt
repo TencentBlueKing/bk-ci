@@ -67,15 +67,9 @@ data class Model(
     var staticViews: List<String> = emptyList(),
     @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @get:Schema(title = "模板地址", required = true)
-    override var template: String? = null,
-    @get:Schema(title = "模板版本", required = true)
-    override var ref: String? = null,
-    @get:Schema(title = "模板入参", required = true)
-    override var variables: Map<String, String>? = null,
     @get:Schema(title = "模板资源", required = true)
     val resources: Resources? = null
-) : IModelTemplate {
+) {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 

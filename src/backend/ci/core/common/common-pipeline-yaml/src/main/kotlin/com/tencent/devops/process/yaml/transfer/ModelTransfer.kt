@@ -46,7 +46,6 @@ import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.enums.SyntaxDialectType
 import com.tencent.devops.process.yaml.v3.models.Concurrency
-import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.Notices
@@ -206,7 +205,6 @@ class ModelTransfer @Autowired constructor(
                 }
             )
         }
-        checkExtends(yamlInput.yaml.templateFilter().extends, model)
         yamlInput.aspectWrapper.setModel4Model(model, PipelineTransferAspectWrapper.AspectType.AFTER)
         return model
     }
@@ -239,14 +237,6 @@ class ModelTransfer @Autowired constructor(
                     arrayOf("only support v3")
                 )
             }
-        }
-        if (modelInput.model.template != null) {
-            yaml.extends = Extends(
-                modelInput.model.template!!,
-                modelInput.model.ref,
-                modelInput.model.variables
-            )
-            return yaml
         }
 
         val triggerOn = makeTriggerOn(modelInput)
@@ -470,13 +460,5 @@ class ModelTransfer @Autowired constructor(
             }
         }
         return labels
-    }
-
-    private fun checkExtends(extends: Extends?, model: Model) {
-        if (extends != null) {
-            model.template = extends.template
-            model.ref = extends.ref
-            model.variables = extends.variables
-        }
     }
 }

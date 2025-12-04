@@ -30,7 +30,6 @@ package com.tencent.devops.common.pipeline.container
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
@@ -42,7 +41,7 @@ import io.swagger.v3.oas.annotations.media.Schema
     JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
     JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
 )
-interface Container : IModelTemplate {
+interface Container {
     var id: String? // seq id
     var name: String
     var elements: List<Element>

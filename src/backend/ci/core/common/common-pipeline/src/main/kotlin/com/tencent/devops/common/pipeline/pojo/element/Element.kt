@@ -30,7 +30,6 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -157,11 +156,8 @@ abstract class Element(
     open var classifyName: String? = null,
     @get:Schema(title = "任务运行进度", required = false)
     open var progressRate: Double? = null,
-    override var template: String? = null,
-    override var ref: String? = null,
-    override var variables: Map<String, String>? = null,
     var asyncStatus: String? = null
-) : IModelTemplate {
+) {
 
     open fun getAtomCode() = getClassType()
 
