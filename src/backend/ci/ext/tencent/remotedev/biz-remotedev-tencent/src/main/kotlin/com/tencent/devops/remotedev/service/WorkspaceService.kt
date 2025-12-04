@@ -1369,21 +1369,26 @@ class WorkspaceService @Autowired constructor(
             .setInstanceName(workspace.workspaceName)
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        val resourceId = if (userId != workspace.createUserId) {
+        
+        // 一次性查询所有 workspace shared 信息，避免多次数据库查询
+        val sharedInfoList = if (userId != workspace.createUserId || workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
                 workspaceName = workspace.workspaceName,
-                sharedUsers = listOf(userId)
-            ).firstOrNull()?.resourceId
+                sharedUsers = null,
+                assignType = null
+            )
+        } else {
+            emptyList()
+        }
+        
+        val resourceId = if (userId != workspace.createUserId) {
+            sharedInfoList.firstOrNull { it.sharedUser == userId }?.resourceId
         } else {
             workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspace.workspaceName)?.resourceId
         }
         val owner = if (workspace.ownerType.projectUse()) {
-            workspaceSharedDao.fetchWorkspaceSharedInfo(
-                dslContext = dslContext,
-                workspaceName = workspace.workspaceName,
-                assignType = WorkspaceShared.AssignType.OWNER
-            ).firstOrNull()?.sharedUser
+            sharedInfoList.firstOrNull { it.type == WorkspaceShared.AssignType.OWNER }?.sharedUser
         } else {
             workspace.createUserId
         }
