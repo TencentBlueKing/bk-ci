@@ -37,7 +37,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.MigrationStatus
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
@@ -391,9 +390,6 @@ class PipelineTemplateMigrateService(
 
         // 步骤 3.2: 执行模型转换
         val modelTransferResult = performModelTransfer(context, currentTemplate, versionSequence, versionInfo)
-
-        // 步骤 3.3: 根据转换结果创建新的 PipelineTemplateResource
-        val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
         val pipelineTemplateResource = createPipelineTemplateResource(
             versionInfo = versionInfo,
             latestTemplate = context.latestTemplate,
@@ -401,7 +397,6 @@ class PipelineTemplateMigrateService(
             versionSequence = versionSequence,
             pipelineVersion = counters.pipelineVersion,
             triggerVersion = counters.triggerVersion,
-            params = currentTemplateModel.getTriggerContainer().params,
             modelTransferResult = modelTransferResult,
             marketTemplateStatus = context.marketTemplateStatus
         )
@@ -452,7 +447,7 @@ class PipelineTemplateMigrateService(
     }
 
     /**
-     * [辅助函数 3.2] - 执行模型转换，失败则抛出异常。
+     * [辅助函数 3.2] - 执行模型转换，失败则进行兜底处理。
      */
     private fun performModelTransfer(
         context: MigrationContext,
@@ -469,31 +464,20 @@ class PipelineTemplateMigrateService(
         val currentTemplateModel = JsonUtil.to(currentTemplate.template, Model::class.java)
         val currentTemplateParams = currentTemplateModel.getTriggerContainer().params
 
-        return try {
-            logger.debug("model Transfer model: {} ", JsonUtil.toJson(currentTemplateModel))
-            logger.debug("model Transfer setting: {}", JsonUtil.toJson(currentSetting))
-            pipelineTemplateGenerator.transfer(
-                userId = context.latestTemplate.creator,
-                projectId = context.latestTemplate.projectId,
-                storageType = PipelineStorageType.MODEL,
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = currentTemplateModel,
-                templateSetting = currentSetting,
-                params = currentTemplateParams,
-                yaml = null
-            )
-        } catch (ex: Exception) {
-            logger.warn(
-                "Model transfer failed for templateId={}, version={}: {}",
-                context.templateId, currentTemplate.version, ex.message, ex
-            )
-            PTemplateModelTransferResult(
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = currentTemplateModel,
-                templateSetting = currentSetting,
-                yamlWithVersion = null
-            )
-        }
+        logger.debug("model Transfer model: {} ", JsonUtil.toJson(currentTemplateModel))
+        logger.debug("model Transfer setting: {}", JsonUtil.toJson(currentSetting))
+
+        return pipelineTemplateGenerator.transfer(
+            userId = context.latestTemplate.creator,
+            projectId = context.latestTemplate.projectId,
+            storageType = PipelineStorageType.MODEL,
+            templateType = PipelineTemplateType.PIPELINE,
+            templateModel = currentTemplateModel,
+            templateSetting = currentSetting,
+            params = currentTemplateParams,
+            yaml = null,
+            fallbackOnError = true
+        )
     }
 
     /**
@@ -683,7 +667,6 @@ class PipelineTemplateMigrateService(
         versionInfo: TemplateVersion,
         latestTemplate: TTemplateRecord,
         currentTemplate: TTemplateRecord,
-        params: List<BuildFormProperty>,
         modelTransferResult: PTemplateModelTransferResult,
         versionSequence: Int,
         pipelineVersion: Int,
@@ -724,7 +707,7 @@ class PipelineTemplateMigrateService(
             srcTemplateProjectId = srcTemplateProjectId,
             srcTemplateId = srcTemplateId,
             srcTemplateVersion = srcTemplateVersion,
-            params = params,
+            params = modelTransferResult.params,
             model = modelTransferResult.templateModel,
             yaml = modelTransferResult.yamlWithVersion?.yamlStr,
             status = if (versionInfo.nameDuplicated) {
