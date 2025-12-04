@@ -68,6 +68,9 @@ class PublicVarService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
+        
+        // 正则表达式常量
+        private val VAR_NAME_REGEX = Regex("^[0-9a-zA-Z_]+$")
     }
 
     fun addGroupPublicVar(context: DSLContext = dslContext, publicVarDTO: PublicVarDTO): Boolean {
@@ -203,9 +206,8 @@ class PublicVarService @Autowired constructor(
         if (varNames.size != varNames.distinct().size) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE)
         }
-        // 检查变量名格式是否符合要求
-        val verNameRegex = Regex("^[0-9a-zA-Z_]+$")
-        if (!publicVars.all { verNameRegex.matches(it.varName) }) {
+        // 检查变量名格式是否符合要求（由字母、数字、下划线组成）
+        if (!publicVars.all { VAR_NAME_REGEX.matches(it.varName) }) {
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR)
         }
     }
@@ -270,6 +272,9 @@ class PublicVarService @Autowired constructor(
 
     /**
      * 对比变量组版本差异
+     * @param oldVarNames 旧版本变量名集合
+     * @param newVarNames 新版本变量名集合
+     * @return 差异结果，包含需要删除、更新和新增的变量
      */
     private fun compareVarGroupVersions(
         oldVarNames: Set<String>,

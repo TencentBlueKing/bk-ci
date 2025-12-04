@@ -57,12 +57,17 @@ class PublicVarReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarReferInfoService::class.java)
+        
+        // 版本相关常量
+        private const val DYNAMIC_VERSION = -1  // 动态版本标识
     }
 
     /**
      * 处理公共变量组引用
-     * 根据Model中的publicVarGroups和varRefDetails，同步T_RESOURCE_PUBLIC_VAR_REFER_INFO表的引用记录
-     * 并更新T_RESOURCE_PUBLIC_VAR表的REFER_COUNT字段
+     * 主要功能：
+     * 1. 根据Model中的publicVarGroups和varRefDetails，同步T_RESOURCE_PUBLIC_VAR_REFER_INFO表的引用记录
+     * 2. 更新T_RESOURCE_PUBLIC_VAR表的REFER_COUNT字段
+     * 3. 处理变量组的新增、删除和更新操作
      *
      * @param userId 用户ID
      * @param projectId 项目ID
@@ -169,7 +174,9 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 构建公共变量映射
-     * @return Map<varGroupName, Set<varName>>
+     * 从流水线模型中提取所有公共变量，按变量组名分组
+     * @param model 流水线模型
+     * @return Map<varGroupName, Set<varName>> 变量组名到变量名集合的映射
      */
     private fun buildPublicVarMap(model: Model): Map<String, Set<String>> {
         val triggerContainer = model.getTriggerContainer()
@@ -181,6 +188,13 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 清理不在Model中的变量组引用
+     * 对比数据库中的引用记录与Model中的变量组，删除已不存在的引用
+     * @param projectId 项目ID
+     * @param resourceId 资源ID
+     * @param referType 引用类型
+     * @param resourceVersion 资源版本
+     * @param modelVarGroups Model中的变量组列表
+     * @param existingGroupKeys 数据库中已存在的变量组键集合
      */
     private fun cleanupObsoleteGroupReferences(
         projectId: String,

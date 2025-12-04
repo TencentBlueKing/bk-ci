@@ -82,9 +82,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
+        
         // 批量操作相关常量
         private const val DEFAULT_BATCH_SIZE = 100
         private const val MAX_RETRY_TIMES = 3
+        
+        // 默认版本号（表示动态版本）
+        private const val DYNAMIC_VERSION = -1
     }
 
     @Value("\${publicVarGroup.urlTemplates.base:#{null}}")
@@ -98,6 +102,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
     /**
      * 更新引用计数（批量处理）
+     * 按组名和版本分组去重后，批量更新引用计数
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param referInfos 引用信息列表
@@ -116,6 +121,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             val groupsToUpdate = referInfos
                 .map { Pair(it.groupName, it.version) }
                 .distinct()
+
+            logger.info("Updating reference counts for ${groupsToUpdate.size} groups in projectId: $projectId")
 
             // 批量更新引用计数
             groupsToUpdate.forEach { (groupName, version) ->
@@ -153,14 +160,14 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         try {
             // 计算实际引用数
             val actualReferCount = if (latestFlag) {
-                // latestFlag = true：最新版本，统计动态引用（version=-1）
-                val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
-                    dslContext = context,
-                    projectId = projectId,
-                    groupName = groupName,
-                    referType = null,
-                    version = -1 // 动态版本引用
-                )
+            // latestFlag = true：最新版本，统计动态引用（version=-1）
+            val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
+                dslContext = context,
+                projectId = projectId,
+                groupName = groupName,
+                referType = null,
+                version = DYNAMIC_VERSION
+            )
                 val specificReferCount = publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,

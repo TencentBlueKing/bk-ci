@@ -182,8 +182,11 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     }
 
     /**
-     * 组合多条发布记录的 content
-     * 格式：新增变量: var1、var2，新增常量: const1、const2，修改变量: var3、var4，删除变量: var5
+     * 组合多条发布记录的content
+     * 将多条发布记录按操作类型和变量类型分类汇总，生成统一的描述文本
+     * 输出格式：新增变量: var1、var2，新增常量: const1、const2，修改变量: var3、var4，删除变量: var5
+     * @param records 发布记录列表
+     * @return 组合后的描述文本
      */
     private fun combineReleaseContents(records: List<PublicVarReleaseDO>): String {
         // 使用 Map 结构来组织变量分类，key 为 "操作类型_变量类型"
@@ -199,7 +202,10 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     }
 
     /**
-     * 解析单条记录并分类到 varMap 中
+     * 解析单条记录并分类到varMap中
+     * 从记录的content中提取操作类型、变量名和变量类型，按照"操作类型_变量类型"的格式分类存储
+     * @param record 发布记录
+     * @param varMap 分类存储的Map，键为"操作类型_变量类型"，值为变量名列表
      */
     private fun parseAndClassifyRecord(
         record: PublicVarReleaseDO,
@@ -220,6 +226,10 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 构建输出文本
+     * 按照预定义的顺序（新增变量、新增常量、修改变量、修改常量、删除变量、删除常量）
+     * 将分类好的变量组合成一条描述文本
+     * @param varMap 分类后的变量映射
+     * @return 格式化后的描述文本
      */
     private fun buildOutputText(varMap: Map<String, List<String>>): String {
         // 提前获取国际化文本，避免重复调用
@@ -420,6 +430,10 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 比较两个BuildFormProperty对象是否相等
+     * 只比较关键属性：required、readOnly、valueNotEmpty
+     * @param prop1 第一个属性对象
+     * @param prop2 第二个属性对象
+     * @return 是否相等
      */
     private fun isBuildFormPropertyEqual(prop1: BuildFormProperty, prop2: BuildFormProperty): Boolean {
         return prop1.required == prop2.required &&
@@ -429,6 +443,9 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 将PublicVarPO转换为PublicVarDO
+     * 将数据库实体对象转换为业务对象，包括解析buildFormProperty JSON字符串
+     * @param varPOs 数据库实体对象列表
+     * @return 业务对象列表
      */
     fun convertPOToDO(varPOs: List<PublicVarPO>): List<PublicVarDO> {
         return varPOs.map { po ->

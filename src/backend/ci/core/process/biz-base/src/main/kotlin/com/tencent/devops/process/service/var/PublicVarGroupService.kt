@@ -67,6 +67,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
+import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
@@ -100,9 +101,16 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) {
     companion object {
-        const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
-        const val EXPIRED_TIME_IN_SECONDS = 5L
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
+        
+        // 锁相关常量
+        private const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
+        private const val PUBLIC_VER_GROUP_DELETE_LOCK_KEY = "PUBLIC_VER_GROUP_DELETE_LOCK"
+        private const val LOCK_EXPIRED_TIME_IN_SECONDS = 5L
+        
+        // 正则表达式常量
+        private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
+        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
     }
 
     fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
@@ -112,7 +120,7 @@ class PublicVarGroupService @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
+            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -411,8 +419,8 @@ class PublicVarGroupService @Autowired constructor(
     fun deleteGroup(userId: String, projectId: String, groupName: String): Boolean {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_DELETE_${projectId}_$groupName",
-            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
+            lockKey = "${PUBLIC_VER_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -573,7 +581,7 @@ class PublicVarGroupService @Autowired constructor(
      * 处理变量PO列表，转换为PublicVarGroupVariable
      */
     private fun processVarPOs(
-        varPOs: List<*>,
+        varPOs: List<PublicVarPO>,
         groupName: String,
         groupVersion: Int,
         publicVarGroupVariables: MutableList<PublicVarGroupVariable>,
@@ -582,7 +590,7 @@ class PublicVarGroupService @Autowired constructor(
     ): Int {
         var index = currentIndex
         varPOs.forEach { po ->
-            val varName = (po as? com.tencent.devops.process.pojo.`var`.po.PublicVarPO)?.varName ?: return@forEach
+            val varName = (po as? PublicVarPO)?.varName ?: return@forEach
 
             if (processedVarNames.contains(varName)) {
                 throw ErrorCodeException(
@@ -770,11 +778,13 @@ class PublicVarGroupService @Autowired constructor(
 
     /**
      * 验证YAML格式
+     * 验证规则：
+     * 1. 变量组名称：以英文字母开头，由字母、数字、下划线组成，长度3-32字符
+     * 2. 变量名：以字母或下划线开头，由字母、数字、下划线组成
      */
     private fun validateYamlFormat(parserVO: PublicVarGroupYamlParser) {
-
-        // 验证变量组名称格式（以英文字母开头，由字母、数字、下划线组成，长度3-32字符）
-        if (parserVO.name.isBlank() || !parserVO.name.matches(Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$"))) {
+        // 验证变量组名称格式
+        if (parserVO.name.isBlank() || !parserVO.name.matches(GROUP_NAME_REGEX)) {
             throw ErrorCodeException(
                 errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT
             )
@@ -782,7 +792,7 @@ class PublicVarGroupService @Autowired constructor(
 
         // 验证变量名格式
         parserVO.variables.keys.forEach { varName ->
-            if (varName.isBlank() || !varName.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*$"))) {
+            if (varName.isBlank() || !varName.matches(VAR_NAME_REGEX)) {
                 throw ErrorCodeException(
                     errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT,
                     params = arrayOf(varName)
