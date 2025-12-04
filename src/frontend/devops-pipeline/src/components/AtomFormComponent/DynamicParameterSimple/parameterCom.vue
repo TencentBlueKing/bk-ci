@@ -14,6 +14,17 @@
                     class="bk-icon icon-info-circle label-desc"
                     v-bk-tooltips.top="{ content: desc, allowHTML: false }"
                 />
+                <span
+                    v-if="showTypeSwitcher"
+                    @click="handleChangeType"
+                    :class="['change-type', !isVarInputMode ? 'open-var' : 'close-var']"
+                    v-bk-tooltips="{ content: !isVarInputMode ? $t('switchToVarMode') : $t('closeVarMode') }"
+                >
+                    <Logo
+                        size="14"
+                        name="isSetAsVariable"
+                    />
+                </span>
             </p>
             <bk-input
                 v-if="type === 'input'"
@@ -21,39 +32,65 @@
                 :clearable="!disabled"
                 :disabled="disabled"
                 :value="value"
-                :placeholder="placeholder"
+                :placeholder="placeholder || $t('settings.itemPlaceholder')"
                 @change="(newValue) => $emit('update-value', newValue)"
             />
-            <section
-                v-else
-                class="parameter-select input-main"
+            <enum-input
+                v-else-if="type === 'enum-input' && !isVarInputMode"
+                class="input-main"
+                name="value"
+                :list="list"
+                :disabled="disabled"
+                :value="enumValue"
+                :handle-change="handleEnumChange"
+            />
+            <bk-select
+                v-else-if="type === 'select' && !isVarInputMode"
+                :disabled="disabled"
+                v-model="selectValue"
+                :placeholder="placeholder || $t('selectTips')"
+                @change="(newValue) => $emit('update-value', newValue)"
+                ext-cls="select-custom input-main"
+                ext-popover-cls="select-popover-custom"
+                searchable
             >
-                <bk-select
-                    :disabled="disabled"
-                    v-model="value"
-                    :placeholder="placeholder"
-                    @change="(newValue) => $emit('update-value', newValue)"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    searchable
+                <bk-option
+                    v-for="option in options"
+                    :key="option.id"
+                    :id="option.id"
+                    :name="option.name"
                 >
-                    <bk-option
-                        v-for="option in options"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name"
-                    >
-                    </bk-option>
-                </bk-select>
-            </section>
+                </bk-option>
+            </bk-select>
+            <bk-input
+                v-else-if="isVarInputMode"
+                :class="['input-main', isError ? 'error-input' : '']"
+                :clearable="!disabled"
+                v-model="displayValue"
+                @blur="handleVarBlur"
+                @clear="handleVarClear"
+                :disabled="disabled"
+                :placeholder="pipelineDialect === 'CLASSIC' ? $t('placeholderVar') : $t('placeholderConstraintVar')"
+            ></bk-input>
+
+            <span class="error-text">
+                {{ isError ? $t('validVariableFormat') : '' }}
+            </span>
         </section>
     </section>
 </template>
 
 <script>
     import mixins from '../mixins'
+    import Logo from '@/components/Logo'
+    import EnumInput from '@/components/atomFormField/EnumInput'
 
     export default {
+        components: {
+            EnumInput,
+            Logo,
+        },
+
         mixins: [mixins],
 
         props: {
@@ -80,10 +117,111 @@
             options: {
                 type: Array
             },
+            list: {
+                type: Array,
+                default: () => ([])
+            },
             placeholder: {
                 type: String,
                 default: ''
             }
+        },
+
+        data () {
+            return {
+                isVarInputMode: false,
+                displayValue: '',
+                selectValue: this.value,
+                enumValue: '',
+                isError: false
+            }
+        },
+
+        computed: {
+            showTypeSwitcher () {
+                return ['select', 'enum-input'].includes(this.type)
+            }
+        },
+
+        watch: {
+            value: {
+                handler (newValue) {
+                    const isVar = this.getValidaVar(newValue)
+                    const inList = this.list?.some(i => i.value === newValue)
+                    const defaultVal = this.list[0]?.value
+
+                    const handleVarMode = () => {
+                        this.isVarInputMode = true
+                        this.displayValue = newValue
+                    }
+
+                    if (this.type === 'enum-input') {
+                        if (newValue ==='' ||  (isVar && !inList)) {
+                            handleVarMode()
+                        } else {
+                            this.enumValue = newValue
+                            if (newValue !== defaultVal && !inList) {
+                                handleVarMode()
+                                this.handleVarBlur(newValue)
+                            }
+                        }
+                    } else {
+                        if (isVar && !inList) {
+                            handleVarMode()
+                        } else {
+                            if (this.isMultiple) {
+                                const valArr = this.value ? this.value.split(',') : []
+                                this.selectValue = valArr
+                            } else {
+                                this.selectValue = this.value
+                            }
+                        }
+                    }
+                },
+                immediate:true
+            }
+        },
+
+        methods: {
+            handleEnumChange (name, value){
+                this.enumValue = value
+                this.$emit('update-value', value)
+            },
+
+            handleChangeType () {
+                this.isVarInputMode = !this.isVarInputMode
+                this.isError = false
+                if (this.type === 'enum-input' && !this.isVarInputMode) {
+                    const defaultVal = this.list[0]?.value
+                    this.$emit('update-value', defaultVal)
+                } else {
+                    this.displayValue = ''
+                    this.selectValue = this.isMultiple ? [] : ''
+                    this.$emit('update-value', '')
+                }
+            },
+
+            handleVarClear () {
+                this.isError = false
+                this.$emit('update-value', '')
+            },
+
+            handleVarBlur (newValue) {
+                let displayValue = ''
+                let isError = false
+                
+                if (newValue !== '') {
+                    if (this.getValidaVar(newValue)) {
+                        displayValue = newValue
+                    } else {
+                        isError = true
+                    }
+                }
+                
+                this.displayValue = displayValue
+                this.isError = isError
+                this.$emit('update-value', this.displayValue)
+            },
         }
     }
 </script>
@@ -91,14 +229,18 @@
 <style lang="scss" scoped>
     .param-input-home {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         flex: 1;
         .param-hyphen {
             margin-right: 11px;
+            margin-bottom: 16px;
         }
     }
     .parameter-input {
         flex: 1;
+        & > *:not(.error-text) {
+           line-height: 30px;
+        }
         .input-label {
             display: flex;
             align-items: center;
@@ -113,6 +255,41 @@
             > i {
                 margin-left: 8px;
                 flex-shrink: 0;
+            }
+            .change-type {
+                display: inline-block;
+                margin-left: 8px;
+                width: 18px;
+                height: 18px;
+                line-height: 20px;
+                text-align: center;
+                margin-top: 2px;
+                border-radius: 2px;
+                cursor: pointer;
+            }
+            .open-var {
+                background: #EAEBF0;
+                svg {
+                    color: #979BA5;
+                }
+                &:hover {
+                    background-color: #DCDEE5;
+                }
+                &:hover svg{
+                    color: #4D4F56;
+                }
+            }
+            .close-var {
+                background: #E1ECFF;
+                svg {
+                    color: #3A84FF;
+                }
+                &:hover {
+                    background-color: #CDDFFE;
+                }
+                &:hover svg{
+                    color: #1768EF;
+                }
             }
         }
         .input-main {
@@ -162,4 +339,19 @@
             }
         }
     }
+</style>
+<style lang="scss">
+.param-input-home {
+    .error-text {
+        color: #ff5656;
+        display: inline-block;
+        height: 16px;
+        line-height: 16px;
+    }
+    .error-input {
+        .bk-form-input {
+            border-color: #ff5656 !important;
+        }
+    }
+}
 </style>

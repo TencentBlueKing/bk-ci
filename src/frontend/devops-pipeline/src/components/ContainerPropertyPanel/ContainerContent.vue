@@ -169,6 +169,7 @@
                     :env-project-id="buildResourceProj"
                     :pipeline="pipeline"
                     :container-index="containerIndex"
+                    :pipeline-dialect="pipelineDialect"
                     :stage-index="stageIndex"
                     :stage="stage"
                     :has-error="errors.has('buildResource')"
@@ -388,6 +389,7 @@
                 <job-matrix
                     v-if="!isTriggerContainer(container)"
                     :enable-matrix="container.matrixGroupFlag"
+                    :pipeline-dialect="pipelineDialect"
                     :matrix-control-option="container.matrixControlOption"
                     :update-container-params="handleContainerChange"
                     :set-parent-validate="setContainerValidate"
@@ -401,6 +403,7 @@
                     :update-container-params="handleContainerChange"
                     :set-parent-validate="setContainerValidate"
                     @setKeyValueValidate="setContainerValidate"
+                    :pipeline-dialect="pipelineDialect"
                     :disabled="!editable"
                     :stage="stage"
                     :stage-index="stageIndex"
@@ -411,6 +414,7 @@
                 <job-mutual
                     v-if="!isTriggerContainer(container)"
                     :mutex-group="container.mutexGroup"
+                    :pipeline-dialect="pipelineDialect"
                     :update-container-params="handleContainerChange"
                     :set-parent-validate="setContainerValidate"
                     :disabled="!editable"
@@ -437,7 +441,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Vue from 'vue'
-    import { mapActions, mapGetters } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import ContainerAppSelector from './ContainerAppSelector'
     import ContainerEnvNode from './ContainerEnvNode'
     import DevcloudOption from './DevcloudOption'
@@ -510,6 +514,17 @@
                 'isDockerBuildResource',
                 'isPublicDevCloudContainer'
             ]),
+            ...mapState('atom', [
+                'pipelineSetting',
+            ]),
+            pipelineDialect () {
+                if (this.pipelineSetting?.pipelineAsCodeSettings) {
+                    const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting?.pipelineAsCodeSettings
+                    return inheritedDialect ? projectDialect : pipelineDialect
+                } else {
+                    return 'CLASSIC'
+                }
+            },
             imageTypeList () {
                 return [
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },

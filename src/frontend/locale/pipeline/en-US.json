@@ -366,7 +366,7 @@
     "noticeGroup": "Groups",
     "emptyNoticeGroup": "Groups to be notified are empty",
     "additionUser": "Additional Users",
-    "additionUserPlaceholder": "Support environment variables (${var}), multiple environment variables are separated by commas",
+    "additionUserPlaceholder": "Support environment variables (${'{'}var{'}'}), multiple environment variables are separated by commas",
     "noticeContent": "Content",
     "noticeGroupIds": "Wework Group IDs",
     "pipelineLink": "Attached pipeline link in the content",
@@ -1889,7 +1889,7 @@
   "differenceItem": "Difference Item",
   "expressionFormat": "Expression Format",
   "traditionalFormat": "Single or Double Curly Braces",
-  "traditionalFormatExample": "e.g., ${var}, ${'{{'}var{'}}'}",
+  "traditionalFormatExample": "e.g.,${'{'}var{'}'}, ${'{{'}var{'}}'}",
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${'{{'}variables.var{'}}'}",
   "expressionFunction": "Expression Functions",
@@ -2042,6 +2042,12 @@
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
+  "switchToVarMode": "Click to switch to variable input mode",
+  "closeVarMode": "Click to close variable input mode",
+  "placeholderConstraintVar": "Please enter the variable, such as ${{var}}",
+  "placeholderVar": "Please enter the variable, such as ${{var}} or ${var}",
+  "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }
+
