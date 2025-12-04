@@ -134,7 +134,7 @@ class ConfigCacheService @Autowired constructor(
 
     // Windows 资源配置缓存相关方法
     fun getWindowsResourceType(withUnavailable: Boolean, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {
-        val key = "type_${withUnavailable}_${onlySpecModel}"
+        val key = "type_${withUnavailable}_$onlySpecModel"
         return windowsResourceTypeCache.get(key) ?: emptyList()
     }
 

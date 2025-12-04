@@ -166,5 +166,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "云区域Id")
     val regionId: Int?,
     @get:Schema(title = "节点id")
-    val nodeHashId: String?
+    val nodeHashId: String?,
+    @get:Schema(title = "resourceId")
+    val resourceId: String?
 ) : WorkspaceRecordInf
