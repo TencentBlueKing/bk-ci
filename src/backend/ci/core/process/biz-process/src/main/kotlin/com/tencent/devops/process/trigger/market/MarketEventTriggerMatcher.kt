@@ -96,6 +96,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         }
         // 4. 映射的值与插件配置的值进行匹配
         val startParams = mutableMapOf<String, Any>()
+        startParams.putAll(triggerParams)
         return WebhookAtomResponse(
             matchStatus = MatchStatus.SUCCESS,
             outputVars = startParams

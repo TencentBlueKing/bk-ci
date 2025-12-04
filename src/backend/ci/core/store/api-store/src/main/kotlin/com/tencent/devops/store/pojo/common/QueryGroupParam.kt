@@ -25,36 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.constant.INIT_VERSION
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import jakarta.validation.Valid
 
-@Schema(title = "工作台-组件基础信息请求报文体")
-data class StoreBaseCreateRequest(
-    @get:Schema(title = "store组件代码", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeCode: String,
-    @get:Schema(title = "store组件类型", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "store组件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
-    val name: String,
-    @get:Schema(title = "版本号", required = true)
-    var version: String = INIT_VERSION,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: MutableMap<String, Any>? = null,
-    @get:Schema(title = "特性信息", required = false)
-    @Valid
-    val baseFeatureInfo: StoreBaseFeatureRequest? = null,
-    @get:Schema(title = "环境信息列表", required = false)
-    @Valid
-    val baseEnvInfos: List<StoreBaseEnvRequest>? = null,
-    @get:Schema(title = "归属应用标识", required = false)
-    val ownerStoreCode: String? = null
+@Schema(title = "研发商店-分组统计条件")
+data class QueryGroupParam(
+    @get:Schema(title = "分组字段", required = true)
+    val groupBy: StoreGroupByEnum,
+    @get:Schema(title = "查询条件-组件类型", required = true)
+    val storeType: StoreTypeEnum
 )

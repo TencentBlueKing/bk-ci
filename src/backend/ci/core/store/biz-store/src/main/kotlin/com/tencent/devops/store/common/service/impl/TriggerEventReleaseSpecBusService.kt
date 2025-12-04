@@ -18,10 +18,14 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
+import com.tencent.devops.store.constant.StoreMessageCode.OWNER_STORE_CODE_NOT_NULL
+import com.tencent.devops.store.constant.StoreMessageCode.TRIGGER_EVENT_CONFIG_EXIST
 import com.tencent.devops.store.trigger.utils.TriggerEventConverter
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
@@ -42,11 +46,33 @@ import org.springframework.stereotype.Service
 @Service("TRIGGER_EVENT_RELEASE_SPEC_BUS_SERVICE")
 @SuppressWarnings("TooManyFunctions")
 class TriggerEventReleaseSpecBusService @Autowired constructor(
-    private val storeCommonService: StoreCommonService
+    private val storeCommonService: StoreCommonService,
+    private val storeComponentQueryService: StoreComponentQueryService
 ): StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")
-        storeCreateRequest.baseInfo.extBaseInfo?.let {
+        val baseInfo = storeCreateRequest.baseInfo
+        if (baseInfo.ownerStoreCode.isNullOrEmpty()) {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = OWNER_STORE_CODE_NOT_NULL
+                )
+            )
+        }
+        // 校验唯一性（ownerStoreCode + storeCode）
+        storeComponentQueryService.getComponentBaseInfo(
+            storeType = baseInfo.storeType,
+            storeCode = baseInfo.storeCode,
+            ownerStoreCode = baseInfo.ownerStoreCode
+        )?.let {
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = TRIGGER_EVENT_CONFIG_EXIST,
+                    params = arrayOf(baseInfo.ownerStoreCode ?: "", baseInfo.storeCode)
+                )
+            )
+        }
+        baseInfo.extBaseInfo?.let {
             // 根据入参生成触发器task.json
             val extBaseParam = generateAtomForm(it)
             it.putAll(extBaseParam)

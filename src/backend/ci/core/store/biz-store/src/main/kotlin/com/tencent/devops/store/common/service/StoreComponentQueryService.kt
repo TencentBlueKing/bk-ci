@@ -33,6 +33,8 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.QueryGroupParam
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -91,7 +93,8 @@ interface StoreComponentQueryService {
         userId: String,
         storeType: String,
         storeCode: String,
-        version: String? = null
+        version: String? = null,
+        ownerStoreCode: String? = null
     ): StoreDetailInfo?
 
     /**
@@ -142,12 +145,12 @@ interface StoreComponentQueryService {
     ): Result<String?>
 
     /**
-     * 获取满足条件的组件数量
+     * 统计分组信息
      */
-    fun getComponentCount(
+    fun getComponentGroupCount(
         userId: String,
-        queryComponentsParam: QueryComponentsParam
-    ): Int
+        queryGroupParam: QueryGroupParam
+    ): List<Pair<String, Int>>
 
     /**
      * 获取满足条件的组件版本信息
@@ -158,4 +161,16 @@ interface StoreComponentQueryService {
         storeCode: String,
         storeStatus: StoreStatusEnum? = null
     ): List<VersionInfo>
+
+    /**
+     * 获取满足条件的组件基础信息
+     */
+    fun getComponentBaseInfo(
+        storeType: StoreTypeEnum,
+        storeCode: String? = null,
+        storeId: String? = null,
+        storeStatus: StoreStatusEnum? = null,
+        ownerStoreCode: String? = null,
+        keywork: String? = null
+    ): StoreBaseInfo?
 }

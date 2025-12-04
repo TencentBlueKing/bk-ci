@@ -12,12 +12,14 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
 import com.tencent.devops.store.pojo.common.BK_STORE_CLOUD_DESKTOP_TRIGGER
 import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
-import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerGroupInfo
@@ -54,27 +56,41 @@ class TriggerEventService @Autowired constructor(
             serviceScope = null,
             queryProjectAtomFlag = false
         ).toInt()
-        val componentCount = storeComponentQueryService.getComponentCount(
+        // 按照归属应用分组
+        val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
             userId = userId,
-            queryComponentsParam = QueryComponentsParam(
-                storeType = StoreTypeEnum.TRIGGER_EVENT.name,
-                classifyCode = classifyId
+            queryGroupParam = QueryGroupParam(
+                storeType = StoreTypeEnum.TRIGGER_EVENT,
+                groupBy = StoreGroupByEnum.OWNER_STORE_CODE
             )
         )
-        return listOf(
+        // 触发事件总数
+        val componentCount = componentGroupCount.count { it.second > 0 }
+        val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
+        // 查询归属应用信息
+        val ownerAppInfos = storeComponentQueryService.queryComponents(
+            userId = userId,
+            storeInfoQuery = StoreInfoQuery(
+                normalStoreCodes = ownerAppCodes,
+                queryProjectComponentFlag = false,
+                page = 1,
+                pageSize = ownerAppCodes.size,
+                storeType = StoreTypeEnum.DEVX.name
+            )
+        ).records.associate { it.code to it.name }
+        val finalComponentGroup = componentGroupCount.map {
+            TriggerGroupInfo(
+                type = it.first,
+                name = ownerAppInfos[it.first] ?: it.first,
+                count = it.second
+            )
+        }
+        return mutableListOf(
             TriggerGroupInfo(
                 type = BK_STORE_ALL_TRIGGER,
                 count = commonTriggerCount + componentCount
-            ),
-            TriggerGroupInfo(
-                type = BK_STORE_COMMON_TRIGGER,
-                count = commonTriggerCount
-            ),
-            TriggerGroupInfo(
-                type = BK_STORE_CLOUD_DESKTOP_TRIGGER,
-                count = componentCount
             )
-        )
+        ).plus(finalComponentGroup)
     }
 
     fun commonTrigger(
@@ -136,10 +152,10 @@ class TriggerEventService @Autowired constructor(
                         icon = marketItem.logoUrl,
                         classifyCode = marketItem.classifyCode ?: "",
                         classifyName = marketItem.classifyCode ?: "",
-                        category = marketItem.category ?: "TASK",
+                        category = marketItem.category ?: AtomCategoryEnum.TRIGGER.name,
                         summary = marketItem.summary,
                         docsLink = marketItem.docsLink,
-                        atomType = marketItem.rdType ?: "SELF_DEVELOPED",
+                        atomType = marketItem.rdType ?: AtomTypeEnum.SELF_DEVELOPED.name,
                         atomStatus = marketItem.status,
                         description = marketItem.summary,
                         publisher = marketItem.publisher,

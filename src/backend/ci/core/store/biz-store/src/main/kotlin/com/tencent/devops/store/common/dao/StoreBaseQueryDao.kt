@@ -39,6 +39,8 @@ import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
+import com.tencent.devops.store.pojo.common.QueryGroupParam
+import com.tencent.devops.store.pojo.common.enums.StoreGroupByEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -101,11 +103,30 @@ class StoreBaseQueryDao {
     fun getLatestComponentByCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        ownerStoreCode: String? = null,
+        storeStatus: StoreStatusEnum? = null,
+        keyword: String? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(
+                    mutableListOf(
+                        STORE_CODE.eq(storeCode),
+                        STORE_TYPE.eq(storeType.type.toByte())
+                    ).let {
+                        if (!ownerStoreCode.isNullOrEmpty()) {
+                            it.add(STORE_CODE.eq(ownerStoreCode))
+                        }
+                        if (storeStatus != null) {
+                            it.add(STATUS.eq(storeStatus.name))
+                        }
+                        if (!keyword.isNullOrEmpty()) {
+                            it.add(NAME.like("%$keyword%"))
+                        }
+                        it
+                    }
+                )
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
         }
@@ -165,15 +186,23 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeCode: String,
         version: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        ownerStoreCode: String? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             dslContext.selectFrom(this)
-                .where(conditions)
+                .where(
+                    mutableListOf(
+                        STORE_TYPE.eq(storeType.type.toByte()),
+                        STORE_CODE.eq(storeCode),
+                        VERSION.like(VersionUtils.generateQueryVersion(version))
+                    ).let{
+                        if (!ownerStoreCode.isNullOrEmpty()) {
+                            it.add(STORE_CODE.eq(ownerStoreCode))
+                        }
+                        it
+                    }
+                )
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -572,6 +601,43 @@ class StoreBaseQueryDao {
             } else {
                 baseStep.fetch()
             }
+        }
+    }
+
+    /**
+     * 分组统计组件数量
+     */
+    fun getComponentGroupCount(
+        dslContext: DSLContext,
+        queryGroupParam: QueryGroupParam,
+        storeCodes: Set<String>
+    ): List<Pair<String, Int>> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val groupField = when(queryGroupParam.groupBy) {
+                StoreGroupByEnum.OWNER_STORE_CODE -> {
+                    OWNER_STORE_CODE
+                }
+                StoreGroupByEnum.STORE_CODE -> {
+                    STORE_CODE
+                }
+                else -> {
+                    STORE_TYPE
+                }
+            }
+            dslContext.select(groupField, DSL.count())
+                    .from(this)
+                    .where(
+                        listOf(
+                            STORE_TYPE.eq(queryGroupParam.storeType.type.toByte()),
+                            STORE_CODE.`in`(storeCodes),
+                            OWNER_STORE_CODE.isNotNull
+                        )
+                    )
+                    .groupBy(groupField)
+                    .fetch()
+                    .map {
+                        Pair(it.value1() as String, it.value2())
+                    }
         }
     }
 }
