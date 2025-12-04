@@ -607,6 +607,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         val storeType = storeInfoQuery.storeType
+
         storeInfoQuery.validate()
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
@@ -624,7 +625,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    storeInfoQuery =  storeInfoQuery.copy(
+                    storeInfoQuery = storeInfoQuery.copy(
                         queryProjectComponentFlag = false,
                         sortType = StoreSortTypeEnum.UPDATE_TIME
                     ),
@@ -642,7 +643,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    storeInfoQuery =storeInfoQuery.copy(
+                    storeInfoQuery = storeInfoQuery.copy(
                         queryProjectComponentFlag = false,
                         sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
                     ),
@@ -666,7 +667,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                         doList(
                             userId = userId,
                             userDeptList = userDeptList,
-                            storeInfoQuery =  storeInfoQuery.copy(
+                            storeInfoQuery = storeInfoQuery.copy(
                                 classifyId = it.id,
                                 queryProjectComponentFlag = false,
                                 sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
