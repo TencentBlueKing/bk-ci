@@ -198,7 +198,10 @@ class WebhookTriggerBuildService @Autowired constructor(
             requestTime?.let {
                 val timeConsumingMills = System.currentTimeMillis() - it
                 if (timeConsumingMills >= 1000) {
-                    logger.warn("new Webhook trigger execution time exceeds threshold|$eventId|$projectId|$pipelineId")
+                    logger.warn(
+                        "new Webhook trigger execution time exceeds threshold|" +
+                                "$eventId|$projectId|$pipelineId|${repository.projectName}|$timeConsumingMills"
+                    )
                 }
                 pipelineTriggerMeasureService.recordTaskExecutionTime(
                     name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,

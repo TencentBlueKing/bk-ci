@@ -54,7 +54,8 @@ class PipelineWebHookEventListener @Autowired constructor(
         // 不是灰度仓库,不执行新逻辑
         if (!webhookGrayService.isGrayRepo(scmCode = repository.scmCode, repository.projectName)) {
             logger.info(
-                "not gray repo handled by pipelineWebhookService|${repository.scmCode}|${repository.projectName}"
+                "not gray repo handled by WebhookTriggerService.trigger|" +
+                        "${repository.scmCode}|${repository.projectName}"
             )
             return
         }

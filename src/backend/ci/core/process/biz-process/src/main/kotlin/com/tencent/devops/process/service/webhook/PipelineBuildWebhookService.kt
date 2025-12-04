@@ -171,7 +171,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     if (timeConsumingMills >= 1000) {
                         logger.warn(
                             "old Webhook trigger execution time exceeds threshold|" +
-                                    "${matcher.getRepoName()}|$projectId|$pipelineId"
+                                    "${matcher.getRepoName()}|$projectId|$pipelineId|$timeConsumingMills"
                         )
                     }
                     pipelineTriggerMeasureService.recordTaskExecutionTime(
