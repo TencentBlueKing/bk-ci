@@ -34,9 +34,11 @@ import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.prometheus.UndertowThreadMetrics
 import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import io.micrometer.core.instrument.Meter
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.observation.ObservationRegistry
-import org.springframework.beans.factory.config.BeanPostProcessor
+import io.micrometer.core.instrument.Tags
+import io.micrometer.core.instrument.config.MeterFilter
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -47,6 +49,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 import org.springframework.core.env.Environment
+
 
 /**
  *
@@ -84,22 +87,23 @@ class ServiceAutoConfiguration {
     fun undertowThreadMetrics() = UndertowThreadMetrics()
 
     @Bean
-    fun observationFilerPostProcessor() =
-        object : BeanPostProcessor {
-            override fun postProcessAfterInitialization(
-                bean: Any,
-                beanName: String,
-            ): Any {
-                if (bean is ObservationRegistry) {
-                    bean.observationConfig().observationFilter { context ->
-                        if (context.name == "spring.rabbit.listener") {
-                            // delivery tag is a growing integer value, therefore not really suitable for metric tags
-                            context.removeLowCardinalityKeyValue("messaging.rabbitmq.message.delivery_tag")
-                        }
-                        context
+    fun ignoreRabbitMqDeliveryTagForListenerOnly(): MeterFilter {
+        return object : MeterFilter {
+            override fun map(id: Meter.Id): Meter.Id {
+                if (id.name.startsWith("spring.rabbit.listener")) {
+                    logger.debug("ignore rabbitmq delivery tag , name: {} , tags: {}", id.name, id.tags)
+                    // 过滤掉指定的 tag，使用 withTags 替代已废弃的 withoutTag
+                    val filteredTags = id.tags.filter {
+                        it.key != "messaging.rabbitmq.message.delivery_tag"
                     }
+                    return Meter.Id(id.name, Tags.of(filteredTags), id.baseUnit, id.description, id.type)
                 }
-                return bean
+                return id
             }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceAutoConfiguration::class.java)
+    }
 }
