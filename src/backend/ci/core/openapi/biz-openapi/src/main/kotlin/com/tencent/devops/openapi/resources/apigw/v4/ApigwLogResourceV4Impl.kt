@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
@@ -70,12 +71,14 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         executeCount: Int?,
         jobId: String?,
         stepId: String?,
+        reverse: Boolean?,
+        logType: LogType?,
         archiveFlag: Boolean?
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V4|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|" +
                 "$containerHashId|$jobId|$stepId" +
-                "|$executeCount"
+                "|$executeCount|$reverse|$archiveFlag"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -86,9 +89,11 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             containerHashId = containerHashId,
             executeCount = executeCount,
             debug = debug,
+            logType = logType,
             jobId = if (elementId.isNullOrBlank() && stepId.isNullOrBlank()) jobId else null,
             stepId = stepId,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            reverse = reverse
         )
     }
 
