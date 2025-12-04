@@ -1369,15 +1369,8 @@ class WorkspaceService @Autowired constructor(
             .setInstanceName(workspace.workspaceName)
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        val resourceId = if (userId != workspace.createUserId) {
-            workspaceSharedDao.fetchWorkspaceSharedInfo(
-                dslContext = dslContext,
-                workspaceName = workspace.workspaceName,
-                sharedUsers = listOf(userId)
-            ).firstOrNull()?.resourceId
-        } else {
-            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspace.workspaceName)?.resourceId
-        }
+        
+        val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,
