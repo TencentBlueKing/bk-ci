@@ -82,7 +82,8 @@ class PipelineVersionValidator @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+                val preCount =
+                    pipelineRepositoryService.countByProjectIds(setOf(projectId), pipelineBasicInfo.channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(

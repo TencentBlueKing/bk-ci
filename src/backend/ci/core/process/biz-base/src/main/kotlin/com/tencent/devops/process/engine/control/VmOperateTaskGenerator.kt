@@ -95,7 +95,7 @@ class VmOperateTaskGenerator {
         var timeoutVar: String? = null
         if (container is VMBuildContainer) {
             val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
-            val baseOS = container.baseOS.name
+            val baseOS = container.baseOS?.name
             atomCode = "$START_VM_TASK_ATOM-$buildType-$baseOS"
             taskType = EnvControlTaskType.VM.name
             taskName = "Prepare_Job#${container.id!!}"

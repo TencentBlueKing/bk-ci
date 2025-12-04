@@ -63,10 +63,14 @@ class RbacPipelinePermissionService(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
+        
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = authResourceType ?: resourceType,
+            resourceType = finalAuthResourceType,
             permission = permission,
             projectCode = projectId
         )
@@ -79,10 +83,14 @@ class RbacPipelinePermissionService(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$authResourceType")
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
+        
+        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$finalAuthResourceType")
         val startEpoch = System.currentTimeMillis()
         try {
-            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, authResourceType)
+            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, finalAuthResourceType)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
@@ -93,7 +101,7 @@ class RbacPipelinePermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                    "$userId|$projectId|$pipelineId|$permission|$authResourceType"
+                    "$userId|$projectId|$pipelineId|$permission|$finalAuthResourceType"
             )
         }
     }

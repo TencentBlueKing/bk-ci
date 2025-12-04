@@ -634,7 +634,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun generateReplacePipelineModel(
         pipelineModel: Model,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         projectId: String,
         busId: String,
         fromAtomCode: String,

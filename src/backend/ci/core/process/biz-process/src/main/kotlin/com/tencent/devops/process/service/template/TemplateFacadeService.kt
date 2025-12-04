@@ -1728,7 +1728,7 @@ class TemplateFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     model = instanceModel,
-                    channelCode = ChannelCode.BS,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     checkPermission = true,
                     fixPipelineId = null,
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
@@ -2000,14 +2000,14 @@ class TemplateFacadeService @Autowired constructor(
                     )
                 }
             }
-            val result = pipelineInfoFacadeService.editPipeline(
+            pipelineInfoFacadeService.editPipeline(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = templateInstanceUpdate.pipelineId,
                 model = instanceModel,
                 // TODO #9145 修改流水线实例时的yaml覆盖逻辑
                 yaml = null,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 checkTemplate = false
             )

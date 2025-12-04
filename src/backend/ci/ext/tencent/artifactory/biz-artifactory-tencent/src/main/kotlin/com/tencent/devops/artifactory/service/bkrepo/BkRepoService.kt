@@ -252,8 +252,7 @@ class BkRepoService @Autowired constructor(
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
-                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
-                    channelCode = ChannelCode.BS
+                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo")
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
                     I18nUtil.getCodeLanMessage(

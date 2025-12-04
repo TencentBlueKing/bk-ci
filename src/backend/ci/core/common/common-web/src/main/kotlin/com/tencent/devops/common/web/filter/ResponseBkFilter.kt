@@ -24,35 +24,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.utils
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+package com.tencent.devops.common.web.filter
 
-@Component
-@RefreshScope
-class ApiGatewayUtil @Autowired constructor(
-    private val bkTag: BkTag
-) {
-    @Value("\${api.gateway.auth:#{false}}")
-    private val apiGatewayAuth: Boolean = false
+import com.tencent.devops.common.api.context.ChannelContext
+import com.tencent.devops.common.web.RequestFilter
+import jakarta.ws.rs.container.ContainerRequestContext
+import jakarta.ws.rs.container.ContainerResponseContext
+import jakarta.ws.rs.container.ContainerResponseFilter
+import jakarta.ws.rs.ext.Provider
 
-    fun isAuth() = apiGatewayAuth
-
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream") || consulTag.contains("gitci")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else if (consulTag.contains("creative")) {
-            ChannelCode.CREATIVE_STREAM
-        } else {
-            ChannelCode.getRequestChannelCode()
-        }
+@Provider
+@RequestFilter
+class ResponseBkFilter : ContainerResponseFilter {
+    
+    override fun filter(
+        requestContext: ContainerRequestContext,
+        responseContext: ContainerResponseContext
+    ) {
+        // 删除渠道ThreadLocal变量
+        ChannelContext.clear()
     }
 }

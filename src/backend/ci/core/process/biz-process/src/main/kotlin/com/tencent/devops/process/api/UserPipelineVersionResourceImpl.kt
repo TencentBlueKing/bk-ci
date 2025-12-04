@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
+import com.tencent.devops.common.pipeline.pojo.PipelineBaseInfoCreateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
@@ -184,6 +185,25 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 request = request
+            )
+        )
+    }
+
+    override fun createPipelineBaseInfo(
+        userId: String,
+        projectId: String,
+        baseInfo: PipelineBaseInfoCreateReq
+    ): Result<DeployPipelineResult> {
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            AuthPermission.CREATE
+        )
+        return Result(
+            pipelineVersionFacadeService.createPipelineBaseInfo(
+                userId = userId,
+                projectId = projectId,
+                baseInfo = baseInfo
             )
         )
     }

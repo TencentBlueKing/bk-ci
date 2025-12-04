@@ -253,7 +253,7 @@ class PipelineListFacadeService @Autowired constructor(
             page = null,
             pageSize = null,
             sortType = PipelineSortType.CREATE_TIME,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = false
         )
 
@@ -289,7 +289,7 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelines = mutableListOf<Pipeline>()
         val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             pipelineIds = resultPipelineIds
         )
         if (buildPipelineRecords.isNotEmpty) {
@@ -444,7 +444,7 @@ class PipelineListFacadeService @Autowired constructor(
             }
             val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
                 projectId = projectId,
-                channelCode = ChannelCode.BS,
+                channelCode = ChannelCode.getRequestChannelCode(),
                 pipelineIds = hasPermissionList,
                 pipelineFilterParamList = pipelineFilterParams(
                     projectId, filterByPipelineName, null, null
@@ -989,10 +989,11 @@ class PipelineListFacadeService @Autowired constructor(
         val permissionFlag = if (isControlPipelineListPermission) true else null
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
         val recentUsePipelines = pipelineRecentUseService.listPipelineIds(userId, projectId)
+        val channelCode = ChannelCode.getRequestChannelCode()
         val totalCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             authPipelines = authPipelines,
             favorPipelines = favorPipelines,
             viewId = PIPELINE_VIEW_ALL_PIPELINES,
@@ -1003,7 +1004,7 @@ class PipelineListFacadeService @Autowired constructor(
         val myFavoriteCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             authPipelines = authPipelines,
             favorPipelines = favorPipelines,
             viewId = PIPELINE_VIEW_FAVORITE_PIPELINES,
@@ -1014,7 +1015,7 @@ class PipelineListFacadeService @Autowired constructor(
         val myPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             authPipelines = authPipelines,
             favorPipelines = favorPipelines,
             viewId = PIPELINE_VIEW_MY_PIPELINES,
@@ -1025,7 +1026,7 @@ class PipelineListFacadeService @Autowired constructor(
         val recentUseCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             authPipelines = authPipelines,
             favorPipelines = favorPipelines,
             viewId = PIPELINE_VIEW_RECENT_USE,
@@ -1268,7 +1269,7 @@ class PipelineListFacadeService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             sortType = PipelineSortType.CREATE_TIME,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             viewId = currentViewId,
             checkPermission = true
         )
@@ -1316,14 +1317,14 @@ class PipelineListFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelines: Set<String>,
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): List<Pipeline> {
         val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
         try {
             watcher.start("s_r_summary")
             val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
                 projectId = projectId,
-                channelCode = channelCode ?: ChannelCode.BS,
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
                 pipelineIds = pipelines
             )
             watcher.start("perm_r_perm")
@@ -1410,7 +1411,8 @@ class PipelineListFacadeService @Autowired constructor(
                         taskCount = it.taskCount,
                         isDelete = it.delete,
                         instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
-                        id = it.id
+                        id = it.id,
+                        channelCode = ChannelCode.valueOf(it.channel)
                     )
                 )
             }
@@ -2094,12 +2096,13 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getByPipelineIds(
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        projectId: String? = null
     ): List<SimplePipeline> {
         val pipelineInfos = pipelineInfoDao.listInfoByPipelineIds(
             dslContext = dslContext,
             pipelineIds = pipelineIds,
-            projectId = null
+            projectId = projectId
         )
         return generateSimplePipelines(pipelineInfos)
     }
@@ -2125,7 +2128,8 @@ class PipelineListFacadeService @Autowired constructor(
                     isDelete = it.delete,
                     instanceFromTemplate = false,
                     id = it.id,
-                    createUser = it.creator
+                    createUser = it.creator,
+                    channelCode = ChannelCode.valueOf(it.channel)
                 )
             )
         }
@@ -2280,7 +2284,7 @@ class PipelineListFacadeService @Autowired constructor(
         return pipelineInfoDao.countExcludePipelineIds(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             excludePipelineIds = pipelineIds
         ).toLong()
     }
@@ -2297,17 +2301,18 @@ class PipelineListFacadeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId
         )
+        val channelCode = ChannelCode.getRequestChannelCode()
         val count = pipelineInfoDao.countExcludePipelineIds(
             dslContext = dslContext,
             projectId = projectId,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             excludePipelineIds = pipelineIds
         )
         val records = pipelineInfoDao.listByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
             excludePipelineIds = pipelineIds,
-            channelCode = ChannelCode.BS,
+            channelCode = channelCode,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )?.map {

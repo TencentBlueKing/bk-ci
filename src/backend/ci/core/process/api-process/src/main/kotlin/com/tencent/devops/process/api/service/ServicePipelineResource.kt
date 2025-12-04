@@ -291,7 +291,7 @@ interface ServicePipelineResource {
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         @DefaultValue("BS")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
@@ -356,7 +356,7 @@ interface ServicePipelineResource {
         pageSize: Int? = null,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
         checkPermission: Boolean? = true,
@@ -381,7 +381,7 @@ interface ServicePipelineResource {
         pipelineId: String,
         @Parameter(description = "channel", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode()
     ): Result<Pipeline?>
 
     @Operation(summary = "获取流水线完整状态")
@@ -543,7 +543,10 @@ interface ServicePipelineResource {
     fun getPipelineInfoByPipelineId(
         @Parameter(description = "流水线id列表", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @Parameter(description = "项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<SimplePipeline?>?
 
     @Operation(summary = "根据项目ID获取流水线标签关系列表")

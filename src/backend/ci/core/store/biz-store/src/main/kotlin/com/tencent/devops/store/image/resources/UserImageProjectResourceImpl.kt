@@ -54,7 +54,7 @@ class UserImageProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCodeList = installImageReq.projectCodeList,
             imageCode = installImageReq.imageCode,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             interfaceName = "/user/market/image/install"
         )
     }

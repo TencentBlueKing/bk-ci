@@ -24,35 +24,48 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.utils
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+package com.tencent.devops.common.api.context
 
-@Component
-@RefreshScope
-class ApiGatewayUtil @Autowired constructor(
-    private val bkTag: BkTag
-) {
-    @Value("\${api.gateway.auth:#{false}}")
-    private val apiGatewayAuth: Boolean = false
-
-    fun isAuth() = apiGatewayAuth
-
-    fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getLocalTag()
-        return if (consulTag.contains("stream") || consulTag.contains("gitci")) {
-            ChannelCode.GIT
-        } else if (consulTag.contains("auto")) {
-            ChannelCode.GONGFENGSCAN
-        } else if (consulTag.contains("creative")) {
-            ChannelCode.CREATIVE_STREAM
-        } else {
-            ChannelCode.getRequestChannelCode()
+/**
+ * Channel上下文管理，用于统一管理请求头中的X-DEVOPS-CHANNEL信息
+ * 支持HTTP请求、跨服务调用、MQ消息、异步调用等场景
+ */
+object ChannelContext {
+    private val channelThreadLocal = ThreadLocal<String?>()
+    
+    /**
+     * 从ThreadLocal获取Channel（HTTP请求场景）
+     */
+    fun getChannel(): String? {
+        return channelThreadLocal.get()
+    }
+    
+    /**
+     * 设置Channel（用于显式传递，跨服务调用、MQ等场景）
+     */
+    fun setChannel(channel: String?) {
+        channelThreadLocal.set(channel)
+    }
+    
+    /**
+     * 清除ThreadLocal
+     */
+    fun clear() {
+        channelThreadLocal.remove()
+    }
+    
+    /**
+     * 在指定上下文中执行代码（用于异步、跨线程场景）
+     */
+    fun <T> withChannel(channel: String?, block: () -> T): T {
+        val oldChannel = getChannel()
+        try {
+            setChannel(channel)
+            return block()
+        } finally {
+            setChannel(oldChannel)
         }
     }
 }
+

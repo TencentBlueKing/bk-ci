@@ -144,6 +144,7 @@ import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckCo
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -206,9 +207,16 @@ class PipelineBuildFacadeService(
         userId: String?,
         projectId: String,
         pipelineId: String,
-        params: List<BuildFormProperty>
+        params: List<BuildFormProperty>,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
-        return paramFacadeService.filterParams(userId, projectId, pipelineId, params)
+        return paramFacadeService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = params,
+            channelCode = channelCode
+        )
     }
 
     fun buildManualStartupInfo(
@@ -302,11 +310,13 @@ class PipelineBuildFacadeService(
         val params = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = resource.version,
             userId = userId,
             triggerParams = triggerContainer.params,
             checkPermission = false, // 已校验权限
             debug = debug,
-            manualBuildMsg = manualBuildMsg
+            manualBuildMsg = manualBuildMsg,
+            channelCode = channelCode
         )
 
         val currentBuildNo = triggerContainer.buildNo?.apply {
@@ -369,7 +379,7 @@ class PipelineBuildFacadeService(
         failedContainer: Boolean? = false, // 仅重试所有失败Job
         skipFailedTask: Boolean? = false, // 跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）
         isMobile: Boolean = false,
-        channelCode: ChannelCode? = ChannelCode.BS,
+        channelCode: ChannelCode? = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean? = true,
         checkManualStartup: Boolean? = false
     ): BuildId {
@@ -898,7 +908,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         projectId: String,
         approve: Boolean,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean = true
     ): Boolean {
         if (checkPermission) {
@@ -1359,16 +1369,14 @@ class PipelineBuildFacadeService(
         return getBuildDetail(
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId,
-            channelCode = channelCode
+            buildId = buildId
         )
     }
 
     fun getBuildDetail(
         projectId: String,
         pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode
+        buildId: String
     ): ModelDetail {
         val newModel = buildRecordService.getBuildRecord(
             projectId = projectId,
@@ -1450,7 +1458,7 @@ class PipelineBuildFacadeService(
             params = arrayOf("buildNo=$buildNo")
         )
         return getBuildDetail(
-            projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
         )
     }
 
@@ -1509,7 +1517,6 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = null,
-            channelCode = channelCode,
             archiveFlag = archiveFlag,
             encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
@@ -1526,7 +1533,6 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         executeCount: Int?,
-        channelCode: ChannelCode,
         archiveFlag: Boolean? = false,
         encryptedFlag: Boolean? = false
     ): ModelRecord {
@@ -1609,7 +1615,6 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount,
-            channelCode = channelCode,
             archiveFlag = archiveFlag,
             encryptedFlag = true
         )
@@ -2063,7 +2068,7 @@ class PipelineBuildFacadeService(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 1000
 
-        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.getRequestChannelCode()
         val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -2325,8 +2330,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        buildId: String?,
-        channelCode: ChannelCode
+        buildId: String?
     ): BuildHistory? {
         val statusSet = mutableSetOf<BuildStatus>()
         if (buildNum == -1) {
@@ -2355,8 +2359,7 @@ class PipelineBuildFacadeService(
     fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
-        buildId: String?,
-        channelCode: ChannelCode
+        buildId: String?
     ): BuildHistory? {
         val buildInfo = buildId?.let {
             pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
@@ -2821,7 +2824,8 @@ class PipelineBuildFacadeService(
                 StartType.MANUAL
             },
             pipelineInfo = readyToBuildPipelineInfo,
-            pipelineResourceVersion = resource
+            pipelineResourceVersion = resource,
+            channelCode = buildInfo.channelCode
         )
     }
 
@@ -2833,7 +2837,8 @@ class PipelineBuildFacadeService(
         startParameters: MutableMap<String, String>,
         pipelineInfo: PipelineInfo? = null,
         pipelineResourceVersion: PipelineResourceVersion? = null,
-        userId: String
+        userId: String,
+        channelCode: ChannelCode
     ) = when (startType) {
         StartType.WEB_HOOK -> {
             // webhook触发
@@ -2860,7 +2865,7 @@ class PipelineBuildFacadeService(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = ChannelCode.BS,
+                channelCode = channelCode,
                 values = startParameters,
                 startType = startType
             )
@@ -2983,6 +2988,7 @@ class PipelineBuildFacadeService(
         val properties = getBuildManualParams(
             projectId = projectId,
             pipelineId = pipelineId,
+            version = model.latestVersion,
             userId = userId,
             debug = false,
             checkPermission = true,
@@ -3124,11 +3130,13 @@ class PipelineBuildFacadeService(
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
+        version: Int,
         userId: String?,
         debug: Boolean,
         checkPermission: Boolean,
         triggerParams: List<BuildFormProperty>,
-        manualBuildMsg: String? = null
+        manualBuildMsg: String? = null,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): List<BuildFormProperty> {
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val permission = AuthPermission.EXECUTE
@@ -3171,12 +3179,51 @@ class PipelineBuildFacadeService(
                 propertyType = BuildPropertyType.BUILD.name
             )
         )
+        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            // 查出环境信息
+            val envName = pipelineRepositoryService.getBuildEnvRecord(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )?.envName
+            envName?.let {
+                val payload = mapOf(
+                    "type" to "remote",
+                    "url" to "/environment/api/user/environment/$projectId/listNodesNew?page=-1&envName=$it",
+                    "dataPath" to "data.records",
+                    "paramName" to "displayName",
+                    "paramId" to "agentId"
+                )
+                params.add(
+                    BuildFormProperty(
+                        id = CREATIVE_STREAM_NODE_AGENT_ID,
+                        required = true,
+                        type = BuildFormPropertyType.ENUM,
+                        defaultValue = "",
+                        value = "",
+                        options = null,
+                        desc = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_DESC),
+                        repoHashId = null,
+                        relativePath = null,
+                        scmType = null,
+                        containerType = null,
+                        glob = null,
+                        properties = null,
+                        label = I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CREATIVE_STREAM_NODE_LABEL),
+                        propertyType = BuildPropertyType.BUILD.name,
+                        valueNotEmpty = true,
+                        payload = payload
+                    )
+                )
+            }
+        }
         params.addAll(
             filterParams(
                 userId = if (checkPermission) userId else null,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                params = triggerParams
+                params = triggerParams,
+                channelCode = channelCode
             )
         )
 
@@ -3216,7 +3263,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 values = startParameters,
-                channelCode = ChannelCode.BS
+                channelCode = buildInfo.channelCode
             ).id
         }
     }

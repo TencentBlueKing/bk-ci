@@ -52,12 +52,16 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT)
+        
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = checkTokenService.getSystemToken() ?: "",
             action = permission.value,
             projectCode = projectId,
-            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = finalAuthResourceType.value
         ).data ?: false
     }
 
@@ -68,11 +72,15 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
+        // 如果authResourceType为null，则从ChannelContext自动获取
+        val finalAuthResourceType = authResourceType 
+            ?: AuthResourceType.getAuthResourceTypeByChannel(AuthResourceType.PIPELINE_DEFAULT)
+        
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             permission = permission,
-            authResourceType = authResourceType
+            authResourceType = finalAuthResourceType
         )
     }
 

@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.dialect.PipelineDialectUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
@@ -69,6 +70,7 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
@@ -243,7 +245,11 @@ class InitializeMatrixGroupStageCmd(
                 matrixOption = checkAndFetchOption(modelContainer.matrixControlOption)
                 matrixConfig = matrixOption.convertMatrixConfig(variables)
                 contextCaseList = matrixConfig.getAllCombinations()
-
+                variables[CREATIVE_STREAM_NODE_OS]
+                    ?.takeIf { it.isNotBlank() && modelContainer.baseOS != null }
+                    ?.let { nodeOs ->
+                        modelContainer.baseOS = VMBaseOS.valueOf(nodeOs)
+                    }
                 if (contextCaseList.size > MATRIX_CASE_MAX_COUNT) {
                     throw ExecuteException(
                         "Matrix case(${contextCaseList.size}) exceeds " +

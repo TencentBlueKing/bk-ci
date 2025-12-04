@@ -238,6 +238,10 @@ const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
 
+const val CREATIVE_STREAM_NODE_AGENT_ID = "BK_CI_CREATIVE_STREAM_NODE_AGENT_ID"
+
+const val CREATIVE_STREAM_NODE_OS = "BK_CI_CREATIVE_STREAM_NODE_OS"
+
 /**
  * 保存流水线编排的最大个数
  */

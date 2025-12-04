@@ -66,6 +66,6 @@ interface ServiceTimerBuildResource {
         params: Map<String, String>,
         @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Result<String?>
 }

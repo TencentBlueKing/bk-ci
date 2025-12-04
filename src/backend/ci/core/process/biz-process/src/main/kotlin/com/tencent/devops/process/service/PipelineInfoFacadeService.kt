@@ -463,7 +463,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = model,
             setting = pipelineModelAndSetting.setting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = true
         ).pipelineId
     }
@@ -589,7 +589,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = projectCacheService.getProject(projectId)
             if (projectVO?.pipelineLimit != null) {
-                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
+                val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), channelCode)
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
@@ -790,7 +790,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
             setting = newSetting,
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             yaml = yamlWithVersion,
             versionStatus = versionStatus,
             branchName = branchName,
@@ -851,7 +851,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = newResource.model.copy(name = pipelineName),
-            channelCode = ChannelCode.BS,
+            channelCode = ChannelCode.getRequestChannelCode(),
             checkTemplate = false,
             yaml = yamlWithVersion,
             savedSetting = savedSetting,
@@ -1710,7 +1710,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    channelCode = channelCode ?: ChannelCode.BS
+                    channelCode = channelCode ?: ChannelCode.getRequestChannelCode()
                 )
                 modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
                 watcher.start("s_c_yaml_del")

@@ -122,7 +122,7 @@ object ExportJob {
                                     messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
                                 ),
                                 container = null,
-                                agentSelector = listOf(job.baseOS.name.toLowerCase()),
+                                agentSelector = job.baseOS?.let { self -> listOf(self.name.lowercase()) },
                                 needs = job.buildEnv
                             )
                         }
