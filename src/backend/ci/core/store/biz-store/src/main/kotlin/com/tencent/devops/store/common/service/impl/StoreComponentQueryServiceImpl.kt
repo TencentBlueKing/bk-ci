@@ -626,7 +626,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                     userId = userId,
                     userDeptList = userDeptList,
                     storeInfoQuery = storeInfoQuery.copy(
-                        queryProjectComponentFlag = false,
                         sortType = StoreSortTypeEnum.UPDATE_TIME
                     ),
                     urlProtocolTrim = urlProtocolTrim
@@ -644,7 +643,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                     userId = userId,
                     userDeptList = userDeptList,
                     storeInfoQuery = storeInfoQuery.copy(
-                        queryProjectComponentFlag = false,
                         sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
                     ),
                     urlProtocolTrim = urlProtocolTrim
@@ -669,7 +667,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                             userDeptList = userDeptList,
                             storeInfoQuery = storeInfoQuery.copy(
                                 classifyId = it.id,
-                                queryProjectComponentFlag = false,
                                 sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
                             ),
                             urlProtocolTrim = urlProtocolTrim
