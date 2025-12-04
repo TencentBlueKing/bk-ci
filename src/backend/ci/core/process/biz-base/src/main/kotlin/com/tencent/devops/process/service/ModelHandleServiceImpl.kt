@@ -11,7 +11,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.service.`var`.PublicVarGroupService.Companion.EXPIRED_TIME_IN_SECONDS
 import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
 import org.jooq.DSLContext
@@ -33,6 +32,7 @@ class ModelHandleServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ModelHandleServiceImpl::class.java)
         private const val MODEL_VAR_REF_LOCK_KEY = "MODEL_VAR_REF_LOCK_KEY"
+        private const val LOCK_EXPIRED_TIME_IN_SECONDS = 5L
     }
 
     override fun handleModelParams(
@@ -61,7 +61,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "$MODEL_VAR_REF_LOCK_KEY:$projectId:$resourceType:$resourceId:$resourceVersion",
-            expiredTimeInSeconds = EXPIRED_TIME_IN_SECONDS
+            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
         )
         try {
             redisLock.lock()
