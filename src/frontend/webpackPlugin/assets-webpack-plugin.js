@@ -44,30 +44,21 @@ class assetsPlugin {
                 return
             }
             
-            // Get main entrypoint assets
-            const mainEntrypoint = compilation.entrypoints.get('main')
-            let jsFiles = []
-            let cssFiles = []
+            // Fallback: get JS files from assets
+            const jsFiles = Object.keys(compilation.assets)
+                .filter(name => name.endsWith('.js') && !name.includes('static/'))
+                .filter(name => name.includes('main.') || name.includes('bk-magic-vue-chunk'))
+                .sort((a, b) => {
+                    // Put dll first, bk-magic-vue-chunk second, then main
+                    if (a.includes('dll') && !b.includes('dll')) return -1
+                    if (!a.includes('dll') && b.includes('dll')) return 1
+                    if (a.includes('bk-magic-vue-chunk') && !b.includes('bk-magic-vue-chunk')) return -1
+                    if (!a.includes('bk-magic-vue-chunk') && b.includes('bk-magic-vue-chunk')) return 1
+                    return 0
+                }).map(name => `/console/${name}`)
             
-            if (mainEntrypoint) {
-                const entryFiles = mainEntrypoint.getFiles()
-                jsFiles = entryFiles.filter(file => file.endsWith('.js'))
-                cssFiles = entryFiles.filter(file => file.endsWith('.css'))
-            } else {
-                // Fallback: get JS files from assets
-                jsFiles = Object.keys(compilation.assets)
-                    .filter(name => name.endsWith('.js') && !name.includes('dll') && !name.includes('static/'))
-                    .filter(name => name.includes('main.') || name.includes('bk-magic-vue-chunk'))
-                    .sort((a, b) => {
-                        // Put bk-magic-vue-chunk first, then main
-                        if (a.includes('bk-magic-vue-chunk')) return -1
-                        if (b.includes('bk-magic-vue-chunk')) return 1
-                        return 0
-                    })
-            }
             
             console.log('[assets-webpack-plugin] JS files:', jsFiles)
-            console.log('[assets-webpack-plugin] CSS files:', cssFiles)
             
             if (jsFiles.length > 0) {
                 const htmlAsset = compilation.assets[htmlFileName]
