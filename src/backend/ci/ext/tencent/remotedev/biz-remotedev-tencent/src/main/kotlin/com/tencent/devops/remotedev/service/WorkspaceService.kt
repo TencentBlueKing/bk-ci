@@ -1372,7 +1372,11 @@ class WorkspaceService @Autowired constructor(
         
         val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
-            permissionService.getWorkspaceOwner(workspace.workspaceName).firstOrNull() ?: ""
+            workspaceSharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspace.workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ).firstOrNull()?.sharedUser
         } else {
             workspace.createUserId
         }
