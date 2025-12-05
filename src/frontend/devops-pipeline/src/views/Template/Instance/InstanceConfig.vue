@@ -497,14 +497,13 @@
     function compareParams (instance, template) {
         const instanceParams = instance?.param ?? []
         const templateParams = template?.param ?? []
-        const templateParamsMap = templateParams.reduce((acc, item) => {
-            acc[item.id] = item
-            return acc
-        }, {})
+        
+        const templateParamsMap = new Map(templateParams.map(t => [t.id, t]))
         const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param?.reduce((acc, item) => {
             acc[item.id] = item
             return acc
         }, {})
+        
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
@@ -523,12 +522,12 @@
         instanceParams?.forEach(i => {
             // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
             if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                const newValue = templateParamsMap.get(i.id)?.defaultValue
                 i.defaultValue = newValue ?? i.defaultValue
             }
         })
         for (const item of instanceParams) {
-            const templateParamItem = templateParamsMap[item.id]
+            const templateParamItem = templateParamsMap.get(item.id)
             const initialInstanceParamItem = initialInstanceParams[item.id]
            
             if (!templateParamItem) {
@@ -563,10 +562,11 @@
         // 非入参的参数直接赋值模板配置的入参默认值
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
+        
         if (!instanceBuildNo?.required && templateBuildNo?.required) {
             instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
-                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                    const newValue = templateParamsMap.get(i.id)?.defaultValue
                     i.defaultValue = newValue ?? i.defaultValue
                 }
             })
@@ -576,17 +576,17 @@
         if (instanceBuildNo?.isFollowTemplate) {
             instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
-                    const templateParam = templateParams.find(t => t.id === i.id)
+                    const templateParam = templateParamsMap.get(i.id)
                     const initialInstanceParamItem = initialInstanceParams?.[i.id]
                     if (templateParam) {
-                        const templateDefaultValue = Number(templateParam.defaultValue)
-                        const initialInstanceDefaultValue = Number(initialInstanceParamItem?.defaultValue)
+                        const templateDefaultValue = templateParam.defaultValue
+                        const initialInstanceDefaultValue = initialInstanceParamItem?.defaultValue
                         
                         // 更新默认值为模板值
-                        i.defaultValue = templateParam.defaultValue
+                        i.defaultValue = templateDefaultValue
                         
-                        // 如果与初始值不同，标记为变更
-                        if (!i.isNew && templateDefaultValue !== initialInstanceDefaultValue) {
+                        // 如果与初始值不同，标记为变更（使用字符串比较，避免 NaN 问题）
+                        if (!i.isNew && String(templateDefaultValue) !== String(initialInstanceDefaultValue)) {
                             i.isChange = true
                         }
                     }

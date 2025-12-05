@@ -292,7 +292,7 @@
                 return this.$route.params.templateId
             },
             requiredTips () {
-                return this.$route.params.templateId
+                return this.templateId
                     ? this.$t('editPage.templateBuildParamTips')
                     : this.$t('newui.pipelineParam.buildParamTips')
             }
