@@ -89,7 +89,8 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         val codeCount = storeBaseQueryDao.countByCondition(
             dslContext = dslContext,
             storeType = storeType,
-            storeCode = storeCode
+            storeCode = storeCode,
+            ownerStoreCode = storeBaseCreateRequest.ownerStoreCode
         )
         if (codeCount > 0) {
             throw ErrorCodeException(
@@ -99,7 +100,12 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         }
         val name = storeBaseCreateRequest.name
         // 判断组件名称是否存在
-        val nameCount = storeBaseQueryDao.countByCondition(dslContext = dslContext, storeType = storeType, name = name)
+        val nameCount = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            name = name,
+            ownerStoreCode = storeBaseCreateRequest.ownerStoreCode
+        )
         if (nameCount > 0) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,

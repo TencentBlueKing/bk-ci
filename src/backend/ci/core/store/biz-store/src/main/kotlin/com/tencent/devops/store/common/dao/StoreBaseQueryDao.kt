@@ -275,7 +275,8 @@ class StoreBaseQueryDao {
         storeCode: String? = null,
         version: String? = null,
         status: StoreStatusEnum? = null,
-        classifyId: String? = null
+        classifyId: String? = null,
+        ownerStoreCode: String? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -294,6 +295,9 @@ class StoreBaseQueryDao {
             }
             classifyId?.let {
                 conditions.add(CLASSIFY_ID.eq(it))
+            }
+            if (!ownerStoreCode.isNullOrBlank()) {
+                conditions.add(STORE_CODE.eq(ownerStoreCode))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
