@@ -308,4 +308,12 @@ object DateTimeUtil {
         }
         return localDate
     }
+
+    fun localDateTimeToString(localDateTime: LocalDateTime?, formatStr: String = YYYY_MM_DD_HH_MM_SS): String? {
+        if (localDateTime == null) {
+            return null
+        }
+        val format = SimpleDateFormat(formatStr)
+        return format.format(convertLocalDateTimeToDate(localDateTime))
+    }
 }
