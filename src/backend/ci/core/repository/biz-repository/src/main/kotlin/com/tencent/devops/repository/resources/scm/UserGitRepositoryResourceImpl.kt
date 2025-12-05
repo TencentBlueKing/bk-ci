@@ -30,12 +30,14 @@ package com.tencent.devops.repository.resources.scm
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.UserGitRepositoryResource
+import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitRepositoryResourceImpl @Autowired constructor(
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val gitOauthService: IGitOauthService
 ) : UserGitRepositoryResource {
 
     override fun getRecentGitCommitMessages(
