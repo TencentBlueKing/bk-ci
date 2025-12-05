@@ -267,6 +267,10 @@
                 }
             },
             async handleClick (type = 'reBuild') {
+                // 如果是rePlay且canReplay为false，不进行后续逻辑
+                if (type === 'rePlay' && !this.canReplay) {
+                    return
+                }
                 const h = this.$createElement
                 const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
                 this.$bkInfo({
