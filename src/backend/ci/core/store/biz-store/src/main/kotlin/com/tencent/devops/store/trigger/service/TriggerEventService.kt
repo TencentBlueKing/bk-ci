@@ -75,7 +75,8 @@ class TriggerEventService @Autowired constructor(
                 queryProjectComponentFlag = false,
                 page = 1,
                 pageSize = ownerAppCodes.size,
-                storeType = StoreTypeEnum.DEVX.name
+                storeType = StoreTypeEnum.DEVX.name,
+                queryTestFlag = false
             )
         ).records.associate { it.code to it.name }
         val finalComponentGroup = componentGroupCount.map {
