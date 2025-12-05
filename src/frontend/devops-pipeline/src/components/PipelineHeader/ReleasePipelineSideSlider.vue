@@ -69,6 +69,23 @@
                     v-bkloading="{ isLoading: isLoading || releasing }"
                     class="release-pipeline-pac-form"
                 >
+                    <!-- 构建号重置提醒 -->
+                    <bk-alert
+                        v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
+                        type="warning"
+                        closable
+                    >
+                        <div slot="title">
+                            <i18n path="template.resetBuildNoConfirmMessage">
+                                <strong
+                                    style="color: #FF9C01;"
+                                >
+                                    {{ resetBuildNoInstanceCount }}
+                                </strong>
+                            </i18n>
+                        </div>
+                    </bk-alert>
+                    
                     <div
                         v-if="showPacSwitcherConfig"
                         class="release-pipeline-pac-conf"
@@ -673,6 +690,10 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            resetBuildNoInstanceCount () {
+                // 统计勾选了"发布正式版本后立即重置为基线值"且推荐版本号是必填的实例数量
+                return this.instanceList.filter(i => i.resetBuildNo && i.buildNo?.required).length
             },
             isCommitToMaster () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
