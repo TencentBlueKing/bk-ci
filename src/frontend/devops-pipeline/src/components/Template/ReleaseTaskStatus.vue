@@ -168,7 +168,8 @@
     import {
         RELEASE_STATUS,
         SET_RELEASE_BASE_ID,
-        SET_RELEASE_ING
+        SET_RELEASE_ING,
+        SHOW_TASK_DETAIL
     } from '@/store/modules/templates/constants'
     import { computed, onUnmounted, ref, watch } from 'vue'
     import ReleaseFailedMessage from './ReleaseFailedMessage'

@@ -495,34 +495,40 @@
         }
     })
     function compareParams (instance, template) {
-        const instanceParams = instance?.param ?? []
+        // 深拷贝参数数组，后续会修改对象属性（如 defaultValue、isChange 等）
+        const instanceParams = (instance?.param ?? []).map(p => ({ ...p }))
         const templateParams = template?.param ?? []
-        const templateParamsMap = templateParams.reduce((acc, item) => {
-            acc[item.id] = item
-            return acc
-        }, {})
+        
+        const templateParamsMap = new Map(templateParams.map(t => [t.id, t]))
         const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1].param?.reduce((acc, item) => {
             acc[item.id] = item
             return acc
         }, {})
+        
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
             if (!instanceParamItem) {
                 // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
-                const newItem = { ...item, isNew: true }
+                // 根据 instanceRequired 和 item.required 决定新参数的 required 属性
+                const newItemRequired = item.required && item.instanceRequired
+                const newItem = {
+                    ...item,
+                    isNew: true,
+                    required: newItemRequired
+                }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
             }
         }
         instanceParams?.forEach(i => {
             // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
             if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                const newValue = templateParamsMap.get(i.id)?.defaultValue
                 i.defaultValue = newValue ?? i.defaultValue
             }
         })
         for (const item of instanceParams) {
-            const templateParamItem = templateParamsMap[item.id]
+            const templateParamItem = templateParamsMap.get(item.id)
             const initialInstanceParamItem = initialInstanceParams[item.id]
            
             if (!templateParamItem) {
@@ -557,14 +563,36 @@
         // 非入参的参数直接赋值模板配置的入参默认值
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
+        
         if (!instanceBuildNo?.required && templateBuildNo?.required) {
             instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
-                    const newValue = templateParams.find(t => t.id === i.id)?.defaultValue
+                    const newValue = templateParamsMap.get(i.id)?.defaultValue
                     i.defaultValue = newValue ?? i.defaultValue
                 }
             })
         }
+        
+        // 如果推荐版本号跟随模板，则将所有版本号相关参数的默认值更新为模板的默认值
+        if (instanceBuildNo?.isFollowTemplate) {
+            instanceParams?.forEach(i => {
+                if (allVersionKeyList.includes(i.id)) {
+                    const templateParam = templateParamsMap.get(i.id)
+                    const initialInstanceParamItem = initialInstanceParams?.[i.id]
+                    if (templateParam) {
+                        const templateDefaultValue = templateParam.defaultValue
+                        const initialInstanceDefaultValue = initialInstanceParamItem?.defaultValue
+                        
+                        // 更新默认值为模板值
+                        i.defaultValue = templateDefaultValue
+                        if (!i.isNew && String(templateDefaultValue) !== String(initialInstanceDefaultValue)) {
+                            i.isChange = true
+                        }
+                    }
+                }
+            })
+        }
+        
         return instanceParams
     }
 
@@ -695,13 +723,17 @@
         })
     }
     function handleCheckChange (value) {
+        // 获取原始实例的 buildNo
+        const initialBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
+        
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
                 buildNo: {
                     ...curInstance.value?.buildNo,
-                    currentBuildNo: value ? curInstance.value.buildNo?.buildNo : curInstance.value.buildNo?.currentBuildNo
+                    // 如果勾选，使用当前的 buildNo；如果取消勾选，恢复原始值
+                    currentBuildNo: value ? curInstance.value.buildNo?.buildNo : initialBuildNo
                 },
                 resetBuildNo: value
             }
