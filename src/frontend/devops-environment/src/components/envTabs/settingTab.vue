@@ -118,7 +118,6 @@
             ...mapActions('environment', [
                 'requestShareEnvProjectList',
                 'removeProjectShare',
-                'requestProjects',
                 'shareEnv'
             ]),
             async fetchEnvProjects () {

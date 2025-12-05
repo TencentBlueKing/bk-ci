@@ -55,3 +55,7 @@ CHANGELOG/bundledVersionLog*.json
 
 
 pre-*-bkcodeai
+
+# CodeBuddy 忽略文件
+.codebuddy/
+bkcodeai.json

@@ -1,7 +1,11 @@
 <template>
     <resize-layout :container-width="containerWidth">
-        <GroupAside slot="aside" />
-        <router-view slot="content" />
+        <template #aside>
+            <group-aside />
+        </template>
+        <template #content>
+            <router-view />
+        </template>
     </resize-layout>
 </template>
 
@@ -10,6 +14,7 @@
     import ResizeLayout from '@/components/ResizeLayout.vue'
 
     export default {
+        name: 'EnvIndex',
         components: {
             GroupAside,
             ResizeLayout
@@ -21,3 +26,7 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+
+</style>

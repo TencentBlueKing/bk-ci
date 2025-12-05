@@ -317,10 +317,8 @@ const actions = {
         })
     },
 
-    requestShareEnvProjectList (_, { projectId, envHashId, ...query }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, {
-            params: query
-        })
+    requestShareEnvProjectList (_, { projectId, envHashId, params }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, { params })
     },
 
     requestProjects (_, { projectId, envHashId, page, pageSize, search }) {
@@ -370,6 +368,13 @@ const actions = {
             return response
         })
     },
+    requestEnvNodeList ({ commit }, { projectId, envHashId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/listNodesNew?${queryString}`).then(response => {
+            return response
+        })
+
+    }
 }
 
 export default actions

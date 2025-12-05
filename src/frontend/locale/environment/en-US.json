@@ -381,5 +381,9 @@
     "重置成功": "Reset Successful",
     "没有能导入的节点": "No nodes available for import",
     "未选择构建节点，不支持修改": "No build nodes selected, modification not supported",
-    "未选择部署节点，不支持重置": "No deployment nodes selected, reset not supported"
+    "未选择部署节点，不支持重置": "No deployment nodes selected, reset not supported",
+    "chargePerson": "Person in charge",
+    "fieldCannotEmpty": "Fields cannot be empty",
+    "deployTask": "Deploy tasks",
+    "relatedNodes": "Related Nodes"
 }

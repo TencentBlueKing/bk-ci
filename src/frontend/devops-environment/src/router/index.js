@@ -22,13 +22,14 @@
 const envHome = () => import(/* webpackChunkName: 'envHome' */ '../views/index.vue')
 
 // 环境列表
-const envList = () => import(/* webpackChunkName: 'envList' */ '../views/env_list')
+const envEntry = () => import(/* webpackChunkName: 'envList' */ '../views/env/index.vue')
+const envDetail = () => import(/* webpackChunkName: 'envList' */ '../views/env/env_detail.vue')
 
 // 新增环境
 const createEnv = () => import(/* webpackChunkName: 'createEnv' */ '../views/create_env')
 
 // 环境详情
-const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
+// const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
 
 // 节点入口
 const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
@@ -44,19 +45,20 @@ const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/n
 
 const routes = [
     {
-        path: 'environment/:projectId?',
+        path: 'environment/:projectId?/:resType?',
         component: envHome,
         children: [
             {
-                path: '',
+                path: 'env',
                 name: 'envList',
-                component: envList,
-                meta: {
-                    title: 'environmentList',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
+                component: envEntry,
+                children: [
+                    {
+                        path: ':envType/:envId?/:tabName?',
+                        name: 'envDetail',
+                        component: envDetail
+                    }
+                ]
             },
             {
                 path: 'createEnv',
@@ -70,17 +72,17 @@ const routes = [
                     activeName: 'envList'
                 }
             },
-            {
-                path: 'envDetail/:envId',
-                name: 'envDetail',
-                component: envDetail,
-                meta: {
-                    title: 'environmentDetail',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
-            },
+            // {
+            //     path: 'envDetail/:envId',
+            //     name: 'envDetail',
+            //     component: envDetail,
+            //     meta: {
+            //         title: 'environmentDetail',
+            //         logo: 'environment',
+            //         header: 'environmentManage',
+            //         to: 'envList'
+            //     }
+            // },
             {
                 path: 'node',
                 component: nodeEntry,
