@@ -495,7 +495,8 @@
         }
     })
     function compareParams (instance, template) {
-        const instanceParams = instance?.param ?? []
+        // 深拷贝参数数组，后续会修改对象属性（如 defaultValue、isChange 等）
+        const instanceParams = (instance?.param ?? []).map(p => ({ ...p }))
         const templateParams = template?.param ?? []
         
         const templateParamsMap = new Map(templateParams.map(t => [t.id, t]))
@@ -584,8 +585,6 @@
                         
                         // 更新默认值为模板值
                         i.defaultValue = templateDefaultValue
-                        
-                        // 如果与初始值不同，标记为变更（使用字符串比较，避免 NaN 问题）
                         if (!i.isNew && String(templateDefaultValue) !== String(initialInstanceDefaultValue)) {
                             i.isChange = true
                         }
