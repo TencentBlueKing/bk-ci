@@ -1,0 +1,250 @@
+<template>
+    <section class="render-variable-table-main">
+        <details open>
+            <summary class="category-collapse-trigger">
+                <bk-icon
+                    type="right-shape"
+                    class="icon-angle-right"
+                />
+                {{ data.title }}
+            </summary>
+            <div
+                class="collapse-content"
+            >
+                <bk-table
+                    class="variable-list-table"
+                    :data="data.data"
+                    max-height="350"
+                    :row-class-name="rowClassName"
+                >
+                    <bk-table-column
+                        :label="$t('newui.pipelineParam.varName')"
+                        prop="varName"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="{ row }">
+                            <span
+                                :class="['var-name', {
+                                    'is-required': row.buildFormProperty.valueNotEmpty
+                                }]"
+                            >
+                                {{ row?.varName }}
+                                <span
+                                    v-if="row.buildFormProperty.readOnly"
+                                    class="read-only"
+                                >
+                                    {{ $t('readonlyParams') }}
+                                </span>
+                            </span>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('publicVar.varAlias')"
+                        prop="alias"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="{ row }">
+                            {{ row.alias || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('desc')"
+                        prop="desc"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="{ row }">
+                            {{ row.desc || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('type')"
+                        prop="type"
+                    >
+                        <template slot-scope="{ row }">
+                            {{ $t(`storeMap.${DEFAULT_PARAM[row.buildFormProperty.type]?.typeDesc}`) ?? row.type }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('publicVar.defaultValue')"
+                        prop="defaultValue"
+                        show-overflow-tooltip
+                    >
+                        <template slot-scope="{ row }">
+                            {{ row.defaultValue || '--' }}
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('publicVar.referenceStatus')"
+                        prop="referCount"
+                    >
+                        <template slot-scope="{ row }">
+                            <bk-button
+                                text
+                                @click="handleShowReference(row.varName)"
+                            >
+                                {{ row.referCount || 0 }}
+                            </bk-button>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        v-if="!readOnly"
+                        :label="$t('publicVar.operation')"
+                        prop="operation"
+                        fixed="right"
+                        width="180"
+                    >
+                        <template slot-scope="{ row }">
+                            <bk-button
+                                text
+                                class="mr5"
+                                @click="data.handleEditParam(data.key, row.varName)"
+                            >
+                                {{ $t('edit') }}
+                            </bk-button>
+                            <bk-button
+                                text
+                                class="mr5"
+                                @click="data.handleCopyParam(data.key, row.buildFormProperty)"
+                            >
+                                {{ $t('copy') }}
+                            </bk-button>
+                            <bk-popconfirm
+                                ref="removePopConfirmRef"
+                                :popover-options="{ appendTo: 'parent' }"
+                                :title="$t('publicVar.removeParamTitle')"
+                                :confirm-text="$t('delete')"
+                                :cancel-text="$t('cancel')"
+                                trigger="click"
+                                width="200"
+                                ext-cls="delete-param-popconfrim"
+                                ext-popover-cls="delete-param-popconfrim-content"
+                                @confirm="data.handleDeleteParam(row.varName)"
+                            >
+                                <bk-button
+                                    text
+                                    :disabled="!!row.referCount"
+                                >
+                                    {{ $t('delete') }}
+                                </bk-button>
+                            </bk-popconfirm>
+                        </template>
+                    </bk-table-column>
+                    <empty-exception
+                        v-if="!readOnly"
+                        slot="empty"
+                        :type="exceptionType"
+                    >
+                        <template
+                            slot="sub-content"
+                        >
+                            <bk-button
+                                text
+                                class="empty-tips"
+                                @click="data?.emptyBtnFn()"
+                            >
+                                {{ data.emptyBtnText }}
+                            </bk-button>
+                        </template>
+                    </empty-exception>
+                </bk-table>
+            </div>
+        </details>
+        
+        <!-- 变量引用弹窗 -->
+        <param-reference-dialog
+            :visible.sync="referenceDialogVisible"
+            :var-name="currentVarName"
+            :group-name="groupName"
+        />
+    </section>
+</template>
+
+<script setup>
+    import { ref } from 'vue'
+    import EmptyException from '@/components/common/exception'
+    import ParamReferenceDialog from './ParamReferenceDialog.vue'
+    import {
+        DEFAULT_PARAM
+    } from '@/store/modules/atom/paramsConfig'
+    
+    const props = defineProps({
+        isShow: Boolean,
+        data: Object,
+        readOnly: Boolean,
+        newParamId: String,
+        groupName: String
+    })
+    
+    const referenceDialogVisible = ref(false)
+    const currentVarName = ref('')
+    
+    function rowClassName ({ row }) {
+        if (row.varName === props.newParamId) return 'is-new'
+        return ''
+    }
+    
+    function handleShowReference (varName) {
+        currentVarName.value = varName
+        referenceDialogVisible.value = true
+    }
+</script>
+
+<style lang="scss">
+.render-variable-table-main {
+    .category-collapse-trigger {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        height: 32px;
+        background: #EAEBF0;
+        border-radius: 2px 2px 0 0;
+        padding: 0 16px;
+        font-size: 12px;
+        color: #4D4F56;
+        font-weight: 700;
+        .icon-angle-right {
+            font-size: 10px;
+            margin-right: 5px;
+            transform: rotate(90deg);
+            color: #979BA5;
+        }
+    }
+    details:not([open]) .collapse-content {
+        display: none;
+    }
+
+    details:not([open]) .category-collapse-trigger .icon-angle-right {
+        transform: rotate(0deg);
+    }
+    .variable-list-table {
+        .is-new {
+            background-color: #f2fff4 !important;
+        }
+        .bk-table-empty-text {
+            padding: 15px 0 !important;
+        }
+        .var-name.is-required {
+            padding-left: 8px;
+            &::before {
+                content: "* ";
+                color: red;
+                position: absolute;
+                left: 14px;
+                top: 14px;
+            }
+        }
+        .read-only {
+            display: inline-block;
+            margin-right: 4px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: #63656E;
+            background: #F0F1F5;
+            border-radius: 2px;
+            margin: 0 4px 0 -2px;
+            padding: 0 4px;
+            transform: scale(0.83);
+        }
+    }
+}
+</style>
