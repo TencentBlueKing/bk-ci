@@ -173,4 +173,12 @@ interface StoreComponentQueryService {
         ownerStoreCode: String? = null,
         keywork: String? = null
     ): StoreBaseInfo?
+
+    /**
+     * 获取满足条件的组件基础信息
+     */
+    fun getComponentBaseInfoList(
+        storeType: StoreTypeEnum,
+        storeCodes: Set<String>
+    ): List<StoreBaseInfo>
 }

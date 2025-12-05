@@ -132,6 +132,30 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getLatestComponentByCodes(
+        dslContext: DSLContext,
+        storeCodes: Set<String>,
+        storeType: StoreTypeEnum,
+        storeStatus: StoreStatusEnum? = null
+    ): Result<TStoreBaseRecord> {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                    .where(
+                        mutableListOf(
+                            STORE_CODE.`in`(storeCodes),
+                            STORE_TYPE.eq(storeType.type.toByte()),
+                            LATEST_FLAG.eq(true)
+                        ).let {
+                            if (storeStatus != null) {
+                                it.add(STATUS.eq(storeStatus.name))
+                            }
+                            it
+                        }
+                    )
+                    .fetch()
+        }
+    }
+
     fun getValidComponentsByCodes(
         dslContext: DSLContext,
         storeCodes: Collection<String>,

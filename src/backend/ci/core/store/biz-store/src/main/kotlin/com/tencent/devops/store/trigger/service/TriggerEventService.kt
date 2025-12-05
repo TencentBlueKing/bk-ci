@@ -68,17 +68,10 @@ class TriggerEventService @Autowired constructor(
         val componentCount = componentGroupCount.count { it.second > 0 }
         val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
         // 查询归属应用信息
-        val ownerAppInfos = storeComponentQueryService.queryComponents(
-            userId = userId,
-            storeInfoQuery = StoreInfoQuery(
-                normalStoreCodes = ownerAppCodes,
-                queryProjectComponentFlag = false,
-                page = 1,
-                pageSize = ownerAppCodes.size,
-                storeType = StoreTypeEnum.DEVX.name,
-                queryTestFlag = false
-            )
-        ).records.associate { it.code to it.name }
+        val ownerAppInfos = storeComponentQueryService.getComponentBaseInfoList(
+            storeType = StoreTypeEnum.DEVX,
+            storeCodes = ownerAppCodes
+        ).associate { it.storeCode to it.storeName }
         val finalComponentGroup = componentGroupCount.map {
             TriggerGroupInfo(
                 type = it.first,

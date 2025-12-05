@@ -49,6 +49,7 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
@@ -974,20 +975,35 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeId = it
             )
         }
-        return baseRecord?.let {
-            StoreBaseInfo(
-                storeId = baseRecord.id,
-                storeCode = baseRecord.storeCode,
-                storeName = baseRecord.name,
-                storeType = StoreTypeEnum.getStoreTypeObj(baseRecord.storeType.toInt()),
-                version = baseRecord.version,
-                status = baseRecord.status,
-                logoUrl = baseRecord.logoUrl,
-                publisher = baseRecord.publisher,
-                classifyId = baseRecord.classifyId
-            )
+        return baseRecord?.convertStoreBaseInfo()
+    }
+
+    override fun getComponentBaseInfoList(
+        storeType: StoreTypeEnum,
+        storeCodes: Set<String>
+    ) = if (storeCodes.isEmpty()) {
+        listOf()
+    } else{
+        storeBaseQueryDao.getLatestComponentByCodes(
+            dslContext = dslContext,
+            storeCodes = storeCodes,
+            storeType = storeType
+        ).map {
+            it.convertStoreBaseInfo()
         }
     }
+
+    private fun TStoreBaseRecord.convertStoreBaseInfo() = StoreBaseInfo(
+        storeId = id,
+        storeCode = storeCode,
+        storeName = name,
+        storeType = StoreTypeEnum.getStoreTypeObj(storeType.toInt()),
+        version = version,
+        status = status,
+        logoUrl = logoUrl,
+        publisher = publisher,
+        classifyId = classifyId
+    )
 
     private fun isUpdateRequired(
         storeId: String,
