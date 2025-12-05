@@ -185,15 +185,6 @@ class ClientVersionFilter constructor(
         val recordVersion = clientVersion["$ip-$user"]
         logger.info("recordClientVersion|$ip|$user|$version|$recordVersion|$macAddress|$startVersion|$os")
         if (macAddress.format().isNotBlank()) {
-            val currentWorkspaceNames = workspaceJoinDao.limitFetchProjectWorkspace(
-                dslContext = dslContext,
-                queryType = QueryType.CLIENT,
-                limit = PageUtil.convertPageSizeToSQLLimit(1, 1000),
-                search = WorkspaceSearch(
-                    viewers = listOf(user),
-                    onFuzzyMatch = false
-                )
-            )?.map { it.workspaceName } ?: emptyList()
             clientDao.createOrUpdate(
                 dslContext = dslContext,
                 macAddress = macAddress,
@@ -201,7 +192,7 @@ class ClientVersionFilter constructor(
                 version = version.format(),
                 startVersion = startVersion.format(),
                 currentProjectIds = workspaceJoinDao.fetchProjectFromUser(dslContext, user),
-                currentWorkspaceNames = currentWorkspaceNames.toSet(),
+                currentWorkspaceNames = mutableSetOf(), // 之前设计的按实例灰度，基本没用到，去掉这部分sql查询
                 os = ClientOS.parse(os)
             )
         } else {
