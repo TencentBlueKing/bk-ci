@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserGitRepositoryResourceImpl @Autowired constructor(
     private val gitService: IGitService,
-    private val gitOauthService: IGitOauthService
 ) : UserGitRepositoryResource {
 
     override fun getRecentGitCommitMessages(
