@@ -38,8 +38,8 @@ import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
@@ -287,7 +287,18 @@ interface UserThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String,
+        @Parameter(description = "环境变量名", required = false)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "环境变量值", required = false)
+        @QueryParam("envValue")
+        envValue: String?,
+        @Parameter(description = "是否安全变量", required = false)
+        @QueryParam("source")
+        source: Boolean?,
+        @Parameter(description = "最后修改人", required = false)
+        lastUpdateUser: String?
     ): Result<List<EnvVar>>
 
     @Operation(summary = "设置agent构建并发数")
@@ -412,7 +423,7 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<ThirdPartyAgentAction>>
+    ): Result<Page<OfflinePeriod>>
 
     @Operation(summary = "获取 CPU 使用率图表数据")
     @GET

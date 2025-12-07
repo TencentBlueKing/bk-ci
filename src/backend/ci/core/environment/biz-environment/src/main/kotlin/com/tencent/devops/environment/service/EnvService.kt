@@ -73,6 +73,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -96,6 +97,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -193,6 +195,10 @@ class EnvService @Autowired constructor(
                 getEnvironment(userId, projectId, envHashId),
                 envUpdateInfo
             )
+        envUpdateInfo.envVars?.forEach {
+            it.lastUpdateUser = userId
+            it.lastUpdateTime = LocalDateTime.now()
+        }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 
@@ -523,6 +529,52 @@ class EnvService @Autowired constructor(
         )
     }
 
+    override fun getEnvEnvVar(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        envName: String?,
+        envValue: String?,
+        secure: Boolean?,
+        lastUpdateUser: String?,
+        checkPermission: Boolean
+    ): List<EnvVar> {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (checkPermission && !environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
+        }
+        val env = envDao.get(dslContext, projectId, envId)
+        ActionAuditContext.current()
+            .setInstanceId(envId.toString())
+            .setInstanceName(env.envName)
+        var envs: List<EnvVar> = if (env.envVars.isNullOrBlank()) {
+            listOf()
+        } else {
+            ObjectMapper().readValue(env.envVars)
+        }
+        if (!envName.isNullOrBlank()) {
+            envs = envs.filter { it.name == envName }
+        }
+        if (!envValue.isNullOrBlank()) {
+            envs = envs.filter { it.value == envValue }
+        }
+        if (secure != null) {
+            envs = envs.filter { it.secure == secure }
+        }
+        if (lastUpdateUser != null) {
+            envs = envs.filter { it.lastUpdateUser == lastUpdateUser }
+        }
+        return envs
+    }
+
     override fun listRawEnvByHashIds(
         userId: String,
         projectId: String,
@@ -698,7 +750,11 @@ class EnvService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         envHashIds: List<String>?,
-        envName: String?
+        envName: String?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo> {
         val envIds = envHashIds?.map { HashUtil.decodeIdToLong(it) }
             ?: if (envName != null) {
@@ -726,12 +782,24 @@ class EnvService @Autowired constructor(
             nodeDao.listNodesByIdListWithPageLimit(
                 dslContext = dslContext,
                 projectId = projectId,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                nodeStatus = nodeStatus,
                 limit = sqlLimit.limit,
                 offset = sqlLimit.offset,
                 nodeIds = nodeIdMaps.keys
             )
         } else {
-            nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
+            nodeDao.listByIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                nodeIds = nodeIdMaps.keys,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                nodeStatus = nodeStatus
+            )
         }
         if (nodeList.isEmpty()) {
             return Page(0, 0, 0, emptyList())
@@ -1104,6 +1172,7 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envId = envId,
             name = null,
+            creator = null,
             offset = 0,
             limit = count + 1
         ).map { it.sharedProjectId }
@@ -1123,6 +1192,7 @@ class EnvService @Autowired constructor(
         projectId: String,
         envHashId: String,
         name: String?,
+        creator: String?,
         page: Int = 1,
         pageSize: Int = 20
     ): Page<SharedProjectInfo> {
@@ -1134,7 +1204,15 @@ class EnvService @Autowired constructor(
         }
         val offset = limitTmp * (page - 1)
         val sharedProjectInfos = mutableListOf<SharedProjectInfo>()
-        val records = envShareProjectDao.listPage(dslContext, projectId, envId, name, offset, limitTmp + 1)
+        val records = envShareProjectDao.listPage(
+            dslContext = dslContext,
+            projectId = projectId,
+            envId = envId,
+            name = name,
+            creator = creator,
+            offset = offset,
+            limit = limitTmp + 1
+        )
         records.map {
             sharedProjectInfos.add(
                 SharedProjectInfo(

@@ -41,8 +41,8 @@ import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
-import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
@@ -188,11 +188,30 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getAgentEnvs(userId: String, projectId: String, nodeHashId: String): Result<List<EnvVar>> {
+    override fun getAgentEnvs(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        envName: String?,
+        envValue: String?,
+        source: Boolean?,
+        lastUpdateUser: String?
+    ): Result<List<EnvVar>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.getAgentEnv(projectId, nodeHashId))
+        return Result(
+            thirdPartyAgentService.getAgentEnv(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                envName = envName,
+                envValue = envValue,
+                secure = source,
+                lastUpdateUser = lastUpdateUser,
+                checkPermission = true
+            )
+        )
     }
 
     override fun setAgentParallelTaskCount(
@@ -315,7 +334,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         nodeHashId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<ThirdPartyAgentAction>> {
+    ): Result<Page<OfflinePeriod>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
