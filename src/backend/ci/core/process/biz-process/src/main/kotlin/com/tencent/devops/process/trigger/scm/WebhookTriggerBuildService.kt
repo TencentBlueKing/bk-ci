@@ -79,7 +79,7 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val simpleRateLimiter: SimpleRateLimiter,
     private val sampleEventDispatcher: SampleEventDispatcher
 ) {
-    @Value("\${scm.webhook.trigger.max.count:${SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
+    @Value("\${scm.webhook.trigger.max.count}:${SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
 
     fun trigger(event: ScmWebhookTriggerEvent) {
