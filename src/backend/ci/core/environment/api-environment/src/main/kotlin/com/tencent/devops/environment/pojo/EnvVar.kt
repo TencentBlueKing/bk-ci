@@ -29,6 +29,7 @@ package com.tencent.devops.environment.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Schema(title = "环境变量")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -38,5 +39,9 @@ data class EnvVar(
     @get:Schema(title = "变量值", required = true)
     val value: String,
     @get:Schema(title = "是否安全变量", required = true)
-    val secure: Boolean
+    val secure: Boolean,
+    @get:Schema(title = "最后修改人", required = false)
+    var lastUpdateUser: String?,
+    @get:Schema(title = "最后修改时间", required = false)
+    var lastUpdateTime: LocalDateTime?
 )

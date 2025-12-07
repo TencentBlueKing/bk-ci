@@ -45,6 +45,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -52,6 +53,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.EnvService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -142,6 +144,29 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.getEnvironment(userId, projectId, envHashId))
     }
 
+    override fun getEnvEnvs(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        envName: String?,
+        envValue: String?,
+        source: Boolean?,
+        lastUpdateUser: String?
+    ): Result<List<EnvVar>> {
+        checkParam(userId, projectId, envHashId)
+        return Result(
+            envService.getEnvEnvVar(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                envName = envName,
+                envValue = envValue,
+                secure = source,
+                lastUpdateUser = lastUpdateUser
+            )
+        )
+    }
+
     @AuditEntry(actionId = ActionId.ENVIRONMENT_DELETE)
     override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
         if (envHashId.isBlank()) {
@@ -164,6 +189,10 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     override fun listNodesNew(
         userId: String,
         projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
         page: Int?,
         pageSize: Int?,
         envHashId: String
@@ -171,7 +200,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, listOf(envHashId), null))
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = listOf(envHashId),
+                envName = null,
+                nodeIp = nodeIp,
+                displayName = displayName,
+                createdUser = createdUser,
+                nodeStatus = nodeStatus
+            )
+        )
     }
 
     override fun listNodesNewByName(
@@ -184,7 +226,18 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (envName.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, null, envName))
+        return Result(envService.listAllEnvNodesNew(
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            envHashIds = null,
+            envName = envName,
+            nodeIp = null,
+            displayName = null,
+            createdUser = null,
+            nodeStatus = null
+        ))
     }
 
     @BkTimed(extraTags = ["operate", "createNode"])
@@ -254,18 +307,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envHashId: String,
         name: String?,
+        creator: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
         return Result(
             envService.listShareEnv(
-                userId,
-                projectId,
-                envHashId,
-                name,
-                page ?: 1,
-                pageSize ?: 20
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                name = name,
+                creator = creator,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }

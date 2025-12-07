@@ -294,12 +294,32 @@ class NodeDao {
         }
     }
 
-    fun listByIds(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): List<TNodeRecord> {
+    fun listByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIds: Collection<Long>,
+        nodeIp: String? = null,
+        displayName: String? = null,
+        createdUser: String? = null,
+        nodeStatus: NodeStatus? = null
+    ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .fetch()
         }
     }
@@ -307,15 +327,31 @@ class NodeDao {
     fun listNodesByIdListWithPageLimit(
         dslContext: DSLContext,
         projectId: String,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        nodeStatus: NodeStatus?,
         limit: Int,
         offset: Int,
         nodeIds: Collection<Long>
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
-                .orderBy(NODE_ID.desc())
+            if (!nodeIp.isNullOrEmpty()) {
+                dsl.and(NODE_IP.like("%$nodeIp%"))
+            }
+            if (!displayName.isNullOrEmpty()) {
+                dsl.and(DISPLAY_NAME.like("%$displayName%"))
+            }
+            if (!createdUser.isNullOrEmpty()) {
+                dsl.and(CREATED_USER.like("%$createdUser%"))
+            }
+            if (nodeStatus != null) {
+                dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            return dsl.orderBy(NODE_ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

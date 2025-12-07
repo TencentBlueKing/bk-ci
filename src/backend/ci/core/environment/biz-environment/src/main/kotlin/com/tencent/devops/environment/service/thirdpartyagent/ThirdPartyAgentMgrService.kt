@@ -399,6 +399,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(nodeHashId)
             )
+        envs.forEach {
+            it.lastUpdateUser = userId
+            it.lastUpdateTime = LocalDateTime.now()
+        }
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
             agentIds = setOf(agentRecord.id),
@@ -407,13 +411,28 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun getAgentEnv(
+        userId: String,
         projectId: String,
         nodeHashId: String,
         envName: String?,
         envValue: String?,
-        secure: Boolean?
+        secure: Boolean?,
+        lastUpdateUser: String?,
+        checkPermission: Boolean
     ): List<EnvVar> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (checkPermission &&
+            !environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = nodeId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+            )
+        }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
             ?: throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
@@ -432,6 +451,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         if (secure != null) {
             envs = envs.filter { it.secure == secure }
+        }
+        if (lastUpdateUser != null) {
+            envs = envs.filter { it.lastUpdateUser == lastUpdateUser }
         }
         return envs
     }
@@ -650,6 +672,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         offlineStartTime = action.actionTime
                     }
                 }
+
                 "ONLINE" -> {
                     // 如果之前有离线记录，则形成一个离线时间段
                     offlineStartTime?.let { startTime ->

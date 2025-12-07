@@ -194,18 +194,22 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         nodeHashId: String,
         envName: String?,
         envValue: String?,
-        source: Boolean?
+        source: Boolean?,
+        lastUpdateUser: String?
     ): Result<List<EnvVar>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(
             thirdPartyAgentService.getAgentEnv(
+                userId = userId,
                 projectId = projectId,
                 nodeHashId = nodeHashId,
                 envName = envName,
                 envValue = envValue,
-                secure = source
+                secure = source,
+                lastUpdateUser = lastUpdateUser,
+                checkPermission = true
             )
         )
     }

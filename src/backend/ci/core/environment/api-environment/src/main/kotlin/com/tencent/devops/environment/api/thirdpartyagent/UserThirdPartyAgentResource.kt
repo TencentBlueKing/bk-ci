@@ -296,7 +296,9 @@ interface UserThirdPartyAgentResource {
         envValue: String?,
         @Parameter(description = "是否安全变量", required = false)
         @QueryParam("source")
-        source: Boolean?
+        source: Boolean?,
+        @Parameter(description = "最后修改人", required = false)
+        lastUpdateUser: String?
     ): Result<List<EnvVar>>
 
     @Operation(summary = "设置agent构建并发数")
