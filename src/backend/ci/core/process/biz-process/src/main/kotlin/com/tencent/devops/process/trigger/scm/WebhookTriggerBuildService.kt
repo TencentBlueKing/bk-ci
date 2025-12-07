@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
+import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.constant.MeasureConstant
@@ -53,6 +54,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
@@ -72,32 +74,48 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineYamlVersionResolver: PipelineYamlVersionResolver,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
-    private val client: Client
+    private val client: Client,
+    private val simpleRateLimiter: SimpleRateLimiter
 ) {
     fun trigger(event: ScmWebhookTriggerEvent) {
-        with(event) {
-            logger.info(
-                "start to trigger webhook trigger|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
+        // 同一个事件,同一个项目
+        val lockKey = "ScmWebhookRateLimit:${event.eventId}:${event.projectId}"
+        var acquire = false
+        try {
+            acquire = simpleRateLimiter.acquire(
+                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
             )
-            val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
-                projectId = projectId, eventId = eventId
-            ) ?: run {
-                logger.info("trigger event not found|$eventId")
-                return
+            if (!acquire) {
+
             }
-            val webhook = triggerEvent.eventBody?.let { (it as ScmWebhookEventBody).webhook } ?: run {
-                logger.info("webhook event body is empty|$eventId")
-                return
+            with(event) {
+                logger.info(
+                    "start to trigger webhook trigger|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
+                )
+                val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
+                    projectId = projectId, eventId = eventId
+                ) ?: run {
+                    logger.info("trigger event not found|$eventId")
+                    return
+                }
+                val webhook = triggerEvent.eventBody?.let { (it as ScmWebhookEventBody).webhook } ?: run {
+                    logger.info("webhook event body is empty|$eventId")
+                    return
+                }
+                trigger(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = version,
+                    eventId = eventId,
+                    repository = repository,
+                    webhook = webhook,
+                    requestTime = requestTime
+                )
             }
-            trigger(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                eventId = eventId,
-                repository = repository,
-                webhook = webhook,
-                requestTime = requestTime
-            )
+        } finally {
+            if (acquire) {
+                simpleRateLimiter.release(lockKey = lockKey)
+            }
         }
     }
 
