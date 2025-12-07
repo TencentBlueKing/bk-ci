@@ -168,7 +168,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 } finally {
                     val timeConsumingMills = System.currentTimeMillis() - requestTime
-                    if (timeConsumingMills >= 1000) {
+                    if (timeConsumingMills >= 60 * 1000) {
                         logger.warn(
                             "old Webhook trigger execution time exceeds threshold|" +
                                     "${matcher.getRepoName()}|$projectId|$pipelineId|$timeConsumingMills"

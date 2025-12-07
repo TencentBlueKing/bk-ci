@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -54,7 +55,6 @@ import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.mq.PipelineYamlFileEvent
 import com.tencent.devops.repository.pojo.Repository
@@ -63,6 +63,7 @@ import io.micrometer.core.instrument.Tags
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -75,22 +76,28 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
     private val client: Client,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val sampleEventDispatcher: SampleEventDispatcher
 ) {
+    @Value("\${scm.webhook.trigger.max.count:${SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
+    private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
+
     fun trigger(event: ScmWebhookTriggerEvent) {
         // 同一个事件,同一个项目
         val lockKey = "ScmWebhookRateLimit:${event.eventId}:${event.projectId}"
         var acquire = false
         try {
             acquire = simpleRateLimiter.acquire(
-                PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
+                scmWebhookTriggerMaxCount, lockKey = lockKey
             )
             if (!acquire) {
-
+                logger.info("scm webhook trigger acquire rate limit|$lockKey")
+                event.retry()
+                return
             }
             with(event) {
                 logger.info(
-                    "start to trigger webhook trigger|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
+                    "start to trigger pipeline|$eventId|$projectId|$pipelineId|$version|${repository.repoHashId}"
                 )
                 val triggerEvent = pipelineTriggerEventService.getTriggerEvent(
                     projectId = projectId, eventId = eventId
@@ -117,6 +124,12 @@ class WebhookTriggerBuildService @Autowired constructor(
                 simpleRateLimiter.release(lockKey = lockKey)
             }
         }
+    }
+
+    private fun  ScmWebhookTriggerEvent.retry() {
+        logger.info("ENGINE|$eventId|$projectId|$pipelineId|RETRY_TO_WEBHOOK_TRIGGER")
+        this.delayMills = DEFAULT_DELAY
+        sampleEventDispatcher.dispatch(this)
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -215,7 +228,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         } finally {
             requestTime?.let {
                 val timeConsumingMills = System.currentTimeMillis() - it
-                if (timeConsumingMills >= 1000) {
+                if (timeConsumingMills >= 60 * 1000) {
                     logger.warn(
                         "new Webhook trigger execution time exceeds threshold|" +
                                 "$eventId|$projectId|$pipelineId|${repository.projectName}|$timeConsumingMills"
@@ -354,5 +367,7 @@ class WebhookTriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
+        private const val SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT = 50
+        private const val DEFAULT_DELAY = 1000
     }
 }
