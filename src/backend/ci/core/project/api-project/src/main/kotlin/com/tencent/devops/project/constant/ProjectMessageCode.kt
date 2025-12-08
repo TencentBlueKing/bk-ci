@@ -103,6 +103,8 @@ object ProjectMessageCode {
     const val ERROR_PIPELINE_NAME_FORMAT_TOO_LONG = "2119055" // 流水线命名规范不能超过200个字符
     const val ERROR_PRODUCT_INVALID = "2119056" // 根据运营产品 [id]name 找不到有效的 KPI 业务，请选择正确的运营产品
     const val ERROR_PRODUCT_NOT_BELONG_TO_BG = "2119057" // 运营产品[{0}]不归属[{1}],请重新选择正确的运营产品
+    const val ERROR_KPI_PRODUCT_NOT_EXIST = "2119058" // KPI产品不存在
+    const val ERROR_KPI_PRODUCT_INVALID = "2119059" // KPI产品无效
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

@@ -39,7 +39,7 @@ class UserKpiProductResourceImpl @Autowired constructor(
     private val projectOperationalProductService: ProjectOperationalProductService
 ) : UserKpiProductResource {
 
-    override fun getKpiProducts(userId: String): Result<List<CrosProductVO>> {
-        return Result(projectOperationalProductService.getKpiProducts())
+    override fun getKpiProducts(userId: String, kpiName: String?): Result<List<CrosProductVO>> {
+        return Result(projectOperationalProductService.getKpiProducts(kpiName))
     }
 }

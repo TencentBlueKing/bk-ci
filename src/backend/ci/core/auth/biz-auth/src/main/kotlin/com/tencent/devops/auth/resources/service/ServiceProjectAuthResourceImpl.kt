@@ -32,6 +32,7 @@ import com.tencent.devops.auth.pojo.vo.AuthProjectVO
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.PermissionAuthorizationService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.BkManagerCheck
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
@@ -45,7 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService,
-    val permissionAuthorizationService: PermissionAuthorizationService
+    val permissionAuthorizationService: PermissionAuthorizationService,
+    val permissionResourceService: PermissionResourceService
 ) : ServiceProjectAuthResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectUsers(
@@ -235,6 +237,18 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionAuthorizationService.listUserProjectsWithAuthorization(
                 userId = userId
+            )
+        )
+    }
+
+    override fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        return Result(
+            permissionResourceService.modifyProjectEnabled(
+                projectCode = projectCode,
+                enabled = enabled
             )
         )
     }

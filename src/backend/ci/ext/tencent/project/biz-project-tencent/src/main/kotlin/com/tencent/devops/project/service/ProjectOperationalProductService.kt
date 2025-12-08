@@ -52,6 +52,8 @@ class ProjectOperationalProductService(
 
     private val productInfoList = mutableListOf<OperationalProductVO>()
 
+    private val crosProductList = mutableListOf<CrosProductVO>()
+
     @Value("\${obs.url:#{null}}")
     private var obsUrl: String = ""
 
@@ -94,6 +96,8 @@ class ProjectOperationalProductService(
             // 同步时，清空缓存，防止数据重复
             productInfoList.clear()
             bgName2ProductList.clear()
+            crosProductList.clear()
+            crosProductList.addAll(crosProductVOs)
             obsProductList.forEach { obsProductInfo ->
                 val planProductInfo = planProductList.firstOrNull {
                     it.planProductId == obsProductInfo.planProductId
@@ -191,7 +195,8 @@ class ProjectOperationalProductService(
         }
     }
 
-    private fun getCrosProduct(): List<CrosProductVO> {
+    // 获取KPI产品列表
+    fun getCrosProduct(): List<CrosProductVO> {
         val request = Request.Builder().url(crosUrl).get().build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
@@ -221,19 +226,31 @@ class ProjectOperationalProductService(
 
     /**
      * 获取KPI产品列表
+     * @param kpiName KPI产品名称（模糊搜索），为空时返回全部
      */
-    fun getKpiProducts(): List<CrosProductVO> {
-        return try {
-            getCrosProduct()
-        } catch (e: Exception) {
-            logger.warn("getKpiProducts failed: ${e.message}")
-            emptyList()
+    fun getKpiProducts(kpiName: String? = null): List<CrosProductVO> {
+        val products = if (crosProductList.isNotEmpty()) {
+            crosProductList.toList()
+        } else {
+            try {
+                getCrosProduct()
+            } catch (e: Exception) {
+                logger.warn("getKpiProducts failed: ${e.message}")
+                emptyList()
+            }
+        }
+
+        // 如果指定了 kpiName，则进行模糊搜索
+        return if (kpiName.isNullOrBlank()) {
+            products
+        } else {
+            products.filter {
+                it.kpiName.contains(kpiName, ignoreCase = true) ||
+                    it.kpiCode.contains(kpiName, ignoreCase = true)
+            }.distinct()
         }
     }
 
-    /**
-     * 获取蓝盾项目数据列表
-     */
     fun getBkCostsProjectInfo(
         devopsId: String,
         page: Int = 1,

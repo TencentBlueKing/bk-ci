@@ -477,12 +477,14 @@ class TxProjectServiceImpl @Autowired constructor(
                     if (channelCode == ProjectChannelCode.BS) {
                         validateProductIdNotNull()
                         validateProduct()
+                        validateKpiProduct()
                     }
                 }
 
                 ProjectOperation.UPDATE -> {
                     validateProductIdNotNull()
                     validateProduct()
+                    validateKpiProduct()
                 }
 
                 else -> {}
@@ -528,7 +530,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun ProjectProductValidateDTO.validateProduct() {
         // 检查运营产品是否存在
-        val productInfo = getProductByProductId(productId!!) ?: throw ErrorCodeException(
+        getProductByProductId(productId!!) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
             defaultMessage = MessageUtil.getMessageByLocale(
                 messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
@@ -555,17 +557,49 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             }
         }
-        //  检查产品是否关联KPI，并开启PMC
-        if (bgId == IEG_BG_ID && (productInfo.iCosProductCode.isNullOrBlank() || productInfo.crosCheck != true)) {
+
+    }
+
+    /**
+     * 校验 KPI 产品是否存在且有效
+     * 如果 kpiCode 为空，则跳过校验
+     */
+    private fun ProjectProductValidateDTO.validateKpiProduct() {
+        // 如果 kpiCode 为空，跳过校验
+        if (kpiCode.isNullOrBlank()) {
+            return
+        }
+
+        // 获取 KPI 产品列表
+        val kpiProducts = projectOperationalProductService.getKpiProducts()
+        if (kpiProducts.isEmpty()) {
+            logger.warn(
+                "validateKpiProduct|$englishName|kpiProducts is empty, skip validation|kpiCode=$kpiCode"
+            )
+            return
+        }
+
+        // 检查 KPI 产品是否存在
+        val kpiProduct = kpiProducts.firstOrNull { it.kpiCode == kpiCode }
+        if (kpiProduct == null) {
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                errorCode = ProjectMessageCode.ERROR_KPI_PRODUCT_NOT_EXIST,
+                params = arrayOf(kpiCode!!),
                 defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = ProjectMessageCode.ERROR_PRODUCT_INVALID,
+                    messageCode = ProjectMessageCode.ERROR_KPI_PRODUCT_NOT_EXIST,
                     language = I18nUtil.getLanguage(userId)
-                ),
-                params = arrayOf(
-                    productId?.toString().orEmpty(),
-                    productInfo.productName.orEmpty()
+                )
+            )
+        }
+
+        // 检查 KPI 产品是否有效（crosCheck == 1 表示有效）
+        if (kpiProduct.crosCheck != 1) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_KPI_PRODUCT_INVALID,
+                params = arrayOf(kpiCode!!, kpiName ?: kpiProduct.kpiName),
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ProjectMessageCode.ERROR_KPI_PRODUCT_INVALID,
+                    language = I18nUtil.getLanguage(userId)
                 )
             )
         }
@@ -573,7 +607,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
-        private const val IEG_BG_ID = 956L
         private const val VALIDATION_ENABLED = "validate:product:bg:enable"
     }
 }

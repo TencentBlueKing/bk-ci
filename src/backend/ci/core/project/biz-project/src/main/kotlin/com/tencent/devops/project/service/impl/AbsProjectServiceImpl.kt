@@ -360,7 +360,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
-                    bgName = bgName
+                    bgName = bgName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName
                 )
             )
             validateProperties(properties)
@@ -735,7 +737,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
-                    bgName = bgName
+                    bgName = bgName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName
                 )
             )
             validateProjectOrganization(

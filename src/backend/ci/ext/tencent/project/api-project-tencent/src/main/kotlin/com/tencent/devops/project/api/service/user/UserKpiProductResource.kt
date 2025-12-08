@@ -39,6 +39,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_KPI_PRODUCT", description = "KPI产品信息")
@@ -53,6 +54,9 @@ interface UserKpiProductResource {
     fun getKpiProducts(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @Parameter(description = "KPI产品名称（模糊搜索）", required = false)
+        @QueryParam("kpiName")
+        kpiName: String? = null
     ): Result<List<CrosProductVO>>
 }

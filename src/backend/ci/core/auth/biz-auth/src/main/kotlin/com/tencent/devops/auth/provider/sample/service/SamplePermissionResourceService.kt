@@ -51,7 +51,8 @@ class SamplePermissionResourceService constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        enabled: Boolean?
     ): Boolean {
         permissionAuthorizationService.modifyResourceAuthorization(
             listOf(
@@ -147,4 +148,9 @@ class SamplePermissionResourceService constructor(
         resourceType: String,
         resourceCode: String
     ): AuthResourceInfo? = null
+
+    override fun modifyProjectEnabled(
+        projectCode: String,
+        enabled: Boolean
+    ) = true
 }
