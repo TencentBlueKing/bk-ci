@@ -556,6 +556,12 @@ class CreateControl @Autowired constructor(
                     )
                 }
 
+                // 创建实例成功后异步执行流水线
+                workspaceCommon.executeCreateWorkspacePipeline(
+                    ips = setOf(ip),
+                    user = event.userId
+                )
+
                 if (ws.ownerType.projectPublicUse()) {
                     val winInfo = checkNotNull(
                         workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)
@@ -905,6 +911,12 @@ class CreateControl @Autowired constructor(
                     pipelineId = info.pipelineId,
                     values = newParam
                 )
+            )
+
+            // 创建实例成功后异步执行流水线
+            workspaceCommon.executeCreateWorkspacePipeline(
+                ips = resIps,
+                user = userId
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)

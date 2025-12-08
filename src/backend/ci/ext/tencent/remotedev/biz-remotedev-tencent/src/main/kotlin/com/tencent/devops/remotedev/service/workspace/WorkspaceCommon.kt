@@ -77,6 +77,7 @@ import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CREATE_WORKSPACE_INFO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
@@ -781,6 +782,31 @@ class WorkspaceCommon @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("execute make disk mount pipeline error", e)
+        }
+    }
+
+    // 创建实例成功后异步执行流水线
+    fun executeCreateWorkspacePipeline(
+        ips: Set<String>,
+        user: String
+    ) {
+        try {
+            val infoS = redisCache.get(PIPELINE_CREATE_WORKSPACE_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+            val newParam = mutableMapOf<String, String>()
+            newParam["job_ip_list"] = ips.joinToString(separator = " ")
+
+            AsyncExecute.dispatch(
+                streamBridge,
+                AsyncPipelineEvent(
+                    userId = info.userId ?: user,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("execute create workspace pipeline error", e)
         }
     }
 

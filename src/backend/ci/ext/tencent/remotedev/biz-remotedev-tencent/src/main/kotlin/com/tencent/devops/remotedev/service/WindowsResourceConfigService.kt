@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.common.QuotaType
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.remotedev.pojo.remotedev.ResourceVmRespDataMachineResource
+import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.remotedev.utils.CommonUtil
 import org.jooq.DSLContext
@@ -69,7 +70,8 @@ class WindowsResourceConfigService @Autowired constructor(
     private val client: Client,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
-    private val windowsGpuResourceDao: WindowsGpuResourceDao
+    private val windowsGpuResourceDao: WindowsGpuResourceDao,
+    private val configCacheService: ConfigCacheService
 ) {
 
     companion object {
@@ -308,12 +310,12 @@ class WindowsResourceConfigService @Autowired constructor(
 
     fun getAllZone(): List<WindowsResourceZoneConfig> {
         logger.info("get all windows resource zone")
-        return windowsResourceZoneDao.fetchAll(dslContext, true)
+        return configCacheService.getWindowsResourceZone()
     }
 
     fun getAllType(withUnavailable: Boolean?, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {
         logger.info("get all windows resource type")
-        return windowsResourceTypeDao.fetchAll(dslContext, withUnavailable ?: false, onlySpecModel)
+        return configCacheService.getWindowsResourceType(withUnavailable ?: false, onlySpecModel)
     }
 
     fun getTypeConfig(
@@ -361,7 +363,10 @@ class WindowsResourceConfigService @Autowired constructor(
         ).firstOrNull { it.zoneShortName.startsWith(zoneId) }
     }
 
-    fun getAllSpecZone() = windowsResourceZoneDao.fetchAllSpec(dslContext)
+    fun getAllSpecZone(): List<WindowsResourceZoneConfig> {
+        logger.info("get all spec windows resource zone")
+        return configCacheService.getWindowsResourceSpecZone()
+    }
 
     fun getAllSpecZoneShortName() = getAllSpecZone().map { it.zoneShortName }
 
@@ -376,6 +381,8 @@ class WindowsResourceConfigService @Autowired constructor(
         logger.info("WorkspaceTemplateService|addWindowsResource|windowsResourceConfig|$windowsResourceConfig")
         // 模板信息写入DB
         windowsResourceTypeDao.save(dslContext, windowsResourceConfig)
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceTypeCache()
         return true
     }
 
@@ -384,6 +391,8 @@ class WindowsResourceConfigService @Autowired constructor(
         logger.info("WorkspaceTemplateService|addWindowsResourceZone|windowsResourceConfig|$windowsResourceConfig")
         // 模板信息写入DB
         windowsResourceZoneDao.save(dslContext, windowsResourceConfig)
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceZoneCache()
         return true
     }
 
@@ -403,6 +412,8 @@ class WindowsResourceConfigService @Autowired constructor(
             config = windowsResourceConfig,
             dslContext = dslContext
         )
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceTypeCache()
         return true
     }
 
@@ -422,6 +433,8 @@ class WindowsResourceConfigService @Autowired constructor(
             config = windowsResourceConfig,
             dslContext = dslContext
         )
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceZoneCache()
         return true
     }
 
@@ -434,7 +447,8 @@ class WindowsResourceConfigService @Autowired constructor(
             id = id,
             dslContext = dslContext
         )
-
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceTypeCache()
         return true
     }
 
@@ -447,7 +461,8 @@ class WindowsResourceConfigService @Autowired constructor(
             id = id,
             dslContext = dslContext
         )
-
+        // 清除缓存
+        configCacheService.invalidateWindowsResourceZoneCache()
         return true
     }
 

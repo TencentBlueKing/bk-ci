@@ -87,6 +87,8 @@ data class PipelineSetting(
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     var failIfVariableInvalid: Boolean? = false,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy = BuildCancelPolicy.EXECUTE_PERMISSION,
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
@@ -137,6 +139,7 @@ data class PipelineSetting(
                     inheritedDialect = inheritedDialectSetting,
                     pipelineDialect = pipelineDialectSetting
                 ),
+                buildCancelPolicy = BuildCancelPolicy.RESTRICTED, // 新建流水线默认使用受限策略
                 creator = creator,
                 updater = creator
             )

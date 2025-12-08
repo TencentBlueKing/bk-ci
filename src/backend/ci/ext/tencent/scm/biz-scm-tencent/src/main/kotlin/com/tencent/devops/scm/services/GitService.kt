@@ -32,11 +32,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_QUERY_COUNT_RANGE
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
 import com.tencent.devops.common.api.constant.ID
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -116,14 +120,6 @@ import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
-import java.io.File
-import java.net.HttpRetryException
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -140,6 +136,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
+import java.io.File
+import java.net.HttpRetryException
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -168,6 +172,12 @@ class GitService @Autowired constructor(
 
     @Value("\${gitCI.tokenExpiresIn:#{null}}")
     private val tokenExpiresIn: Int? = 86400
+
+    @Value("\${scm.git.queryCommitNumLimit.min:1}")
+    private var min: Int = 1
+
+    @Value("\${scm.git.queryCommitNumLimit.max:10}")
+    private var max: Int = 10
 
     private val clientId: String = gitConfig.clientId
     private val clientSecret: String = gitConfig.clientSecret
@@ -2692,5 +2702,67 @@ class GitService @Autowired constructor(
             .setCredentialsProvider(credentialsProvider)
             .call()
         cloneRepo.close()
+    }
+
+    fun getRecentGitCommitMessages(
+        userId: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String> {
+        if (commitNumber !in min..max) {
+            throw ErrorCodeException(
+                errorCode = ERROR_QUERY_COUNT_RANGE,
+                params = arrayOf(min.toString(), max.toString()),
+                defaultMessage = "commitNumber must be" +
+                        " between $min and $max, but got $commitNumber"
+            )
+        }
+        val projectId = gitProjectId ?: run {
+            if (codeSrc.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    errorCode = PARAMETER_IS_NULL,
+                    params = arrayOf("codeSrc"),
+                    defaultMessage = "codeSrc parameter is invalid"
+                )
+            }
+            val projectName = GitUtils.getProjectName(codeSrc)
+            getGitProjectInfo(projectName, token, TokenTypeEnum.OAUTH)
+                .data?.id ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ENGINEERING_REPO_NOT_EXIST,
+                params = arrayOf(projectName),
+                defaultMessage = "Cannot find git projectId for codeSrc($codeSrc)"
+            )
+        }
+        val commits = getCommits(
+            gitProjectId = projectId,
+            branch = branch ?: MASTER,
+            token = token,
+            tokenType = TokenTypeEnum.OAUTH,
+            page = 1,
+            perPage = commitNumber,
+            since = null,
+            until = null,
+            filePath = null
+        )
+        return Result(processCommits(commits = commits, prefixes = prefixes, keywords = keywords))
+    }
+
+    fun processCommits(commits: List<Commit>, prefixes: String?, keywords: String?): String {
+        // 根据请求条件过滤
+        val filteredCommits = commits.filter { commit ->
+            !GitUtils.isFilterCommitMessage(message = commit.message, prefixes = prefixes, keywords = keywords)
+        }
+
+        return filteredCommits.mapIndexed { index, commit ->
+            val message = commit.message ?: ""
+            val trimmedMessage = message.trimEnd('\n')
+            "${index + 1}. $trimmedMessage\n"
+        }.joinToString("")
     }
 }

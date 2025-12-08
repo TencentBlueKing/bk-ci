@@ -829,4 +829,29 @@ class TencentGitServiceImpl @Autowired constructor(
             ref = ref
         ).data ?: ""
     }
+
+    override fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String> {
+        val tokenRecord = gitTokenDao.getAccessToken(dslContext, userId) ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(userId)
+        )
+        val token = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
+        return client.getScm(ServiceGitResource::class).getRecentGitCommitMessages(
+            userId = userId,
+            branch = branch,
+            codeSrc = codeSrc,
+            gitProjectId = gitProjectId,
+            commitNumber = commitNumber,
+            token = token,
+            prefixes = prefixes,
+            keywords = keywords
+        )
+    }
 }

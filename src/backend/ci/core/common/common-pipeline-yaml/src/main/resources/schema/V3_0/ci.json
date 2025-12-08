@@ -2539,6 +2539,9 @@
     },
     "syntax-dialect" : {
       "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
+    },
+    "cancel-policy" : {
+      "type" : "string"
     }
   },
   "definitions" : {

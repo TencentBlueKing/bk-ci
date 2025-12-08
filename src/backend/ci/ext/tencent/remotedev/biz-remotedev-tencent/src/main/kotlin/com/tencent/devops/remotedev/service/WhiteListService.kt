@@ -154,6 +154,10 @@ class WhiteListService @Autowired constructor(
         projectId: String,
         workspaceName: String
     ): Int {
+        // 检查是否启用 SSL 模式
+        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_SSL_WORKSPACE) != null) {
+            return CdsMeshStatus.SSL.value
+        }
 
         if (whiteListDao.get(dslContext, workspaceName, WhiteListType.NOT_CDS_MESH_WORKSPACE) != null) {
             return CdsMeshStatus.DISABLED.value
@@ -164,10 +168,7 @@ class WhiteListService @Autowired constructor(
         if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_MESH_WORKSPACE) != null) {
             return CdsMeshStatus.MESH.value
         }
-        // 检查是否启用 SSL 模式
-        if (whiteListDao.get(dslContext, workspaceName, WhiteListType.CDS_SSL_WORKSPACE) != null) {
-            return CdsMeshStatus.SSL.value
-        }
+
         return CdsMeshStatus.DISABLED.value
     }
 

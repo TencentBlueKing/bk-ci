@@ -417,15 +417,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         englishName: String,
         accessToken: String?
     ): ProjectVO? {
-        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val record = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName
+        ) ?: throw OperationException("project $englishName not found")
         val projectVO = ProjectUtils.packagingBean(record)
         val englishNames = getProjectFromAuth(userId, accessToken)
-        if (englishNames.isEmpty()) {
-            return null
-        }
-        if (!englishNames.contains(projectVO.englishName)) {
-            logger.warn("The user don't have the permission to get the project $englishName")
-            return null
+        if (englishNames.isEmpty() || !englishNames.contains(projectVO.englishName)) {
+            logger.warn("The user don't have the permission to visit the project")
+            throw OperationException("The user don't have the permission to visit the project")
         }
         return projectVO
     }

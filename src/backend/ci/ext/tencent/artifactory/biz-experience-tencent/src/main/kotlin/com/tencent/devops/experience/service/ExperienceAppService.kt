@@ -69,6 +69,7 @@ import com.tencent.devops.experience.pojo.AppExperienceInstallPackage
 import com.tencent.devops.experience.pojo.AppExperienceSummary
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
+import com.tencent.devops.experience.pojo.ExperienceList
 import com.tencent.devops.experience.pojo.P2PConnectEvent
 import com.tencent.devops.experience.pojo.P2PUserPoolVO
 import com.tencent.devops.experience.pojo.enums.Source
@@ -119,6 +120,19 @@ class ExperienceAppService(
             platform = platform,
             isOuter = organization == ORGANIZATION_OUTER
         )
+    }
+
+    fun listV3(userId: String, platform: Int, organization: String?): ExperienceList {
+        logger.debug("listV3 , userId:$userId , platform:$platform , organization:$organization")
+        val privateExperiences = list(userId, 0, 100, true, platform, organization).records
+        val publicExperiences = if (null == organization) {
+            publicExperiences(userId, platform, 0, 100)
+        } else {
+            emptyList()
+        }
+        val redPointCount = privateExperiences.count { it.redPointEnabled } +
+                publicExperiences.count { it.redPointEnabled }
+        return ExperienceList(privateExperiences, publicExperiences, redPointCount)
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")

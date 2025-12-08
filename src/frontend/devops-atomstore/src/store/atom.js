@@ -20,6 +20,7 @@
 const prefix = 'store/api'
 const projectPrefix = 'project/api'
 const artifactoryPrefix = 'artifactory/api'
+const repositoryPrefix = 'repository/api'
 const Vue = window.Vue
 const vue = new Vue()
 
@@ -188,6 +189,14 @@ export const actions = {
      */
     requestAtomDetail ({ commit }, { atomId }) {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/${atomId}`)
+    },
+
+    /**
+     * 版本日志获取
+     */
+    requestAtomLog ({ commit }, params) {
+        const query = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${repositoryPrefix}/user/git/commitMessages/get?${query}`)
     },
 
     /**
