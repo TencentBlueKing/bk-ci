@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreBuildService
@@ -38,6 +39,8 @@ import com.tencent.devops.store.common.service.StoreErrorCodeService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
@@ -55,6 +58,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val storeErrorCodeService: StoreErrorCodeService,
     private val storeMemberService: StoreMemberService,
     private val classifyService: ClassifyService,
+    private val atomReleaseService: AtomReleaseService,
     private val storeComponentManageService: StoreComponentManageService,
     private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : ServiceStoreResource {
@@ -137,5 +141,16 @@ class ServiceStoreResourceImpl @Autowired constructor(
 
     override fun getClassifyList(storeType: StoreTypeEnum): Result<List<Classify>> {
         return classifyService.getAllClassify(storeType.type.toByte())
+    }
+
+    override fun addMarketAtom(userId: String, marketAtomCreateRequest: MarketAtomCreateRequest): Result<String> {
+        return atomReleaseService.addMarketAtom(userId, marketAtomCreateRequest)
+    }
+
+    override fun updateMarketAtomTest(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String?> {
+        return atomReleaseService.creatAtomBranchTestVersion(userId, marketAtomUpdateRequest)
     }
 }
