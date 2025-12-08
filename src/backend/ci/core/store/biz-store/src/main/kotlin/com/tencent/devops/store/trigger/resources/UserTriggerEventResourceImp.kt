@@ -48,8 +48,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
         projectCode: String,
         keyword: String?,
         page: Int?,
-        pageSize: Int?,
-        type: String?
+        pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
         return Result(
             triggerEventService.baseTrigger(
@@ -57,28 +56,25 @@ class UserTriggerEventResourceImp @Autowired constructor(
                 userId = userId,
                 keyword = keyword,
                 page = page ?: 1,
-                pageSize = pageSize ?: 20,
-                type = type
+                pageSize = pageSize ?: 20
             )
         )
     }
 
     override fun triggerDetail(
         userId: String,
-        type: String,
         projectCode: String,
-        ownerStoreCode: String,
+        sourceCode: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
         return Result(
             triggerEventService.triggerDetail(
-                type = type,
                 projectCode = projectCode,
                 atomCode = atomCode,
                 version = version,
                 userId = userId,
-                ownerStoreCode = ownerStoreCode
+                sourceCode = sourceCode
             )
         )
     }

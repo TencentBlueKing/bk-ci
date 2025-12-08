@@ -14,7 +14,6 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
-import com.tencent.devops.store.pojo.common.BK_STORE_CLOUD_DESKTOP_TRIGGER
 import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryGroupParam
@@ -116,8 +115,7 @@ class TriggerEventService @Autowired constructor(
         projectCode: String,
         keyword: String?,
         page: Int,
-        pageSize: Int,
-        type: String?
+        pageSize: Int
     ): AtomResp<AtomRespItem>? {
         return storeComponentQueryService.queryComponents(
             userId = userId,
@@ -180,13 +178,12 @@ class TriggerEventService @Autowired constructor(
 
     fun triggerDetail(
         userId: String,
-        type: String,
         projectCode: String,
         atomCode: String,
         version: String,
-        ownerStoreCode: String
+        sourceCode: String
     ): PipelineAtom? {
-        return when (type) {
+        return when (sourceCode) {
             BK_STORE_COMMON_TRIGGER -> {
                 atomService.getPipelineAtom(
                     projectCode = projectCode,
@@ -201,7 +198,7 @@ class TriggerEventService @Autowired constructor(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT.name,
                     storeCode = atomCode,
-                    ownerStoreCode = ownerStoreCode,
+                    ownerStoreCode = sourceCode,
                     version = version
                 )?.let { storeDetailInfo ->
                     PipelineAtom(
