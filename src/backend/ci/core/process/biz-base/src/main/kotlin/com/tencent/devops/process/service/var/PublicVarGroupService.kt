@@ -312,23 +312,11 @@ class PublicVarGroupService @Autowired constructor(
             groupNames = groupNames.takeIf { it.isNotEmpty() }
         )
 
-        // 批量查询所有变量组的引用数量
-        val groupNamesInPage = groupPOs.map { it.groupName }
-        val referCountMap = if (groupNamesInPage.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchCountByGroupNames(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupNames = groupNamesInPage,
-                referType = null
-            )
-        } else {
-            emptyMap()
-        }
-
+        // 直接使用表中的REFER_COUNT字段，避免实时统计
         val records = groupPOs.map { po ->
             PublicVarGroupDO(
                 groupName = po.groupName,
-                referCount = referCountMap[po.groupName] ?: 0,
+                referCount = po.referCount ?: 0,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,
