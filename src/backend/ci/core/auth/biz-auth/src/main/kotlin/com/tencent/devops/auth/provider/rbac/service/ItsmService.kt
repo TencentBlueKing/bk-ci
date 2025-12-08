@@ -77,16 +77,19 @@ class ItsmService constructor(
         authSecrecy: Int,
         subjectScopes: List<SubjectScopeInfo>,
         productName: String,
+        kpiProductName: String? = null,
         isCreateProject: Boolean = true
     ): ItsmContentDTO {
-        logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName")
-        val itsmColumns = listOf(
+        logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName|$kpiProductName")
+        val itsmColumns = mutableListOf(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
                 I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("productName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("kpiProductName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_KPI_PRODUCT)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("organization")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("authSecrecy")
@@ -106,6 +109,7 @@ class ItsmService constructor(
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
         value["productName"] = ItsmStyle.builder().value(productName).build()
+        value["kpiProductName"] = ItsmStyle.builder().value(kpiProductName ?: "").build()
         value["authSecrecy"] =
             ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()

@@ -83,6 +83,7 @@ import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -433,9 +434,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        // 获取审批信息以读取 KPI 字段
+        val projectApprovalInfo = projectApprovalService.get(englishName)
         val projectInfo = ProjectUtils.packagingBean(
             tProjectRecord = record,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            kpiCode = projectApprovalInfo?.kpiCode,
+            kpiName = projectApprovalInfo?.kpiName
         )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
@@ -456,7 +461,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
             }
         }
-        val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
+        val tipsStatus = getAndUpdateTipsStatus(
+            userId = userId,
+            projectId = englishName,
+            projectApprovalInfo = projectApprovalInfo
+        )
         return projectInfo.copy(
             tipsStatus = tipsStatus,
             productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
@@ -464,7 +473,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
-        val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
+        return getAndUpdateTipsStatus(
+            userId = userId,
+            projectId = projectId,
+            projectApprovalInfo = projectApprovalService.get(projectId)
+        )
+    }
+
+    protected fun getAndUpdateTipsStatus(
+        userId: String,
+        projectId: String,
+        projectApprovalInfo: ProjectApprovalInfo?
+    ): Int {
+        if (projectApprovalInfo == null) return ProjectTipsStatus.NOT_SHOW.status
         return with(projectApprovalInfo) {
             // 项目创建成功和编辑审批成功,只有第一次进入页面需要展示tips,后面都不需要展示
             val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.APPROVED.status &&
@@ -491,11 +512,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } else {
             null
         }
+        // 从历史记录获取"修改前"的 KPI 值
+        val latestApprovedHistory = projectUpdateHistoryDao.getLatestApprovedHistory(
+            dslContext = dslContext,
+            englishName = englishName
+        )
+        // 优先使用历史记录中的 afterKpiCode（上次审批通过后的值）作为"修改前"的值
+        val beforeKpiCode = latestApprovedHistory?.afterKpiCode
+        val beforeKpiName = latestApprovedHistory?.afterKpiName
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
             projectOrganizationInfo = rightProjectOrganization,
-            beforeProductName = beforeProductName?.productName
+            beforeProductName = beforeProductName?.productName,
+            beforeKpiCode = beforeKpiCode,
+            beforeKpiName = beforeKpiName
         )
     }
 
@@ -627,12 +658,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                 }
                 // 记录项目更新记录
+                // 获取最近一条已审批通过的历史记录，用于获取"修改前"的 KPI 值
+                val latestApprovedHistory = projectUpdateHistoryDao.getLatestApprovedHistory(
+                    dslContext = dslContext,
+                    englishName = englishName
+                )
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
                     englishName = englishName,
                     beforeProjectName = projectInfo.projectName,
                     afterProjectName = projectUpdateInfo.projectName,
                     beforeProductId = projectInfo.productId,
                     afterProductId = projectUpdateInfo.productId,
+                    beforeKpiCode = latestApprovedHistory?.beforeKpiCode ?: latestApprovedHistory?.afterKpiCode,
+                    afterKpiCode = projectUpdateInfo.kpiCode,
+                    beforeKpiName = latestApprovedHistory?.beforeKpiName ?: latestApprovedHistory?.afterKpiName,
+                    afterKpiName = projectUpdateInfo.kpiName,
                     beforeOrganization = with(projectInfo) {
                         getOrganizationStr(bgName, businessLineName, deptName, centerName)
                     },
