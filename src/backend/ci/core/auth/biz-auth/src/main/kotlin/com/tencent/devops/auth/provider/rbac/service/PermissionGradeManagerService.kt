@@ -190,7 +190,8 @@ class PermissionGradeManagerService @Autowired constructor(
                         name = ALL_MEMBERS_NAME
                     )
                 ),
-                productName = projectApprovalInfo.productName!!
+                productName = projectApprovalInfo.productName!!,
+                kpiProductName = projectApprovalInfo.kpiName
             )
             val gradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
                 .builder()
@@ -318,6 +319,7 @@ class PermissionGradeManagerService @Autowired constructor(
                     )
                 ),
                 productName = projectApprovalInfo.productName!!,
+                kpiProductName = projectApprovalInfo.kpiName,
                 isCreateProject = false
             )
 
