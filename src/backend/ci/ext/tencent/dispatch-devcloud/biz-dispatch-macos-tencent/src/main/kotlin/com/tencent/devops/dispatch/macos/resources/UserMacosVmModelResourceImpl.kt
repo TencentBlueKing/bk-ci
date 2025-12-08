@@ -22,7 +22,7 @@ class UserMacosVmModelResourceImpl @Autowired constructor(
     }
 
     override fun getVmModelList(request: DevCloudMacosVmModelRequest): Result<List<DevCloudMacosVmModelData>> {
-        logger.info("Get VM model list with request: platform=${request.platform}, t1=${request.projectId}, t2=${request.pipelineId}")
+        logger.info("Get VM model list with request: platform=${request.platform}, t1=${request.t1}, t2=${request.t2}")
         
         val response = devCloudMacosService.getVmModel(request, "")
         
