@@ -11,6 +11,7 @@ import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.TaskResponse
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelRsp
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
@@ -330,7 +331,7 @@ class DevCloudMacosService @Autowired constructor(
 
     fun getAllVmModels(
         creator: String
-    ): DevCloudMacosVmModelResponse? {
+    ): DMAllVmModelRsp? {
         val url = "$devCloudUrl/api/mac/vm/model/all"
 
         val httpRequest = Request.Builder()
@@ -352,10 +353,10 @@ class DevCloudMacosService @Autowired constructor(
                     return null
                 }
 
-                return JsonUtil.to(responseContent, DevCloudMacosVmModelResponse::class.java)
+                return JsonUtil.to(responseContent, DMAllVmModelRsp::class.java)
             }
         } catch (e: Exception) {
-            logger.error("Failed to get VM model from DevCloud, url: $url", e)
+            logger.error("Failed to getAllVmModes from DevCloud, url: $url", e)
             return null
         }
     }
