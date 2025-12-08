@@ -180,6 +180,7 @@ class VariableTransfer {
                 props = props ?: VariableProps()
                 props.group = it.category
             }
+            val allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
                     CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
@@ -188,6 +189,7 @@ class VariableTransfer {
                 },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
+                asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
                 const = const,
                 props = if (props?.empty() == false) props else null,
                 ifCondition = it.displayCondition?.ifEmpty { null }
@@ -267,11 +269,12 @@ class VariableTransfer {
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
             check(key, variable)
+            val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.props?.label,
-                    required = variable.allowModifyAtStartup ?: true,
+                    required = allowModifyAtStartup,
                     constant = variable.const ?: false,
                     type = type,
                     defaultValue = when {
@@ -306,7 +309,10 @@ class VariableTransfer {
                     },
                     valueNotEmpty = variable.props?.required ?: false,
                     payload = variable.props?.payload,
-                    displayCondition = variable.ifCondition ?: emptyMap()
+                    displayCondition = variable.ifCondition ?: emptyMap(),
+                    asInstanceInput = if (allowModifyAtStartup) {
+                        variable.asInstanceInput ?: true
+                    } else null
                 )
             )
         }
