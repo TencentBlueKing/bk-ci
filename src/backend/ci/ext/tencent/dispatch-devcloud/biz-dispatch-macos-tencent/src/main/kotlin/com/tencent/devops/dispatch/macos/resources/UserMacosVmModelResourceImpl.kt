@@ -32,10 +32,27 @@ class UserMacosVmModelResourceImpl @Autowired constructor(
         }
         
         if (response.actionCode != 200) {
-            logger.error("Get VM model list failed, actionCode: ${response.actionCode}, message: ${response.actionMessage}")
+            logger.error("Get VM model list failed, actionCode: ${response.actionCode}, " +
+                    "message: ${response.actionMessage}")
             return Result(emptyList())
         }
         
         return Result(response.data ?: emptyList())
+    }
+
+    override fun getAllVmModels(): Result<String> {
+        val response = devCloudMacosService.getAllVmModels("")
+
+        if (response == null) {
+            logger.error("Failed to getAllVmModes from DevCloud")
+            return Result("")
+        }
+
+        if (response.actionCode != 200) {
+            logger.error("GetAllVmModes failed, actionCode: ${response.actionCode}, message: ${response.actionMessage}")
+            return Result("")
+        }
+
+        return Result("")
     }
 }

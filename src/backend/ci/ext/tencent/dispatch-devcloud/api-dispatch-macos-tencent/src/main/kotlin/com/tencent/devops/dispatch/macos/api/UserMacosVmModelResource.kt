@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -28,4 +29,9 @@ interface UserMacosVmModelResource {
         @Parameter(description = "请求参数", required = true)
         request: DevCloudMacosVmModelRequest
     ): Result<List<DevCloudMacosVmModelData>>
+
+    @GET
+    @Path("/all")
+    @Operation(summary = "获取所有macOS VM Model类型")
+    fun getAllVmModels(): Result<String>
 }
