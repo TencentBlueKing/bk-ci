@@ -1940,7 +1940,6 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode,
         checkPermission: Boolean = true,
         updateTimeDesc: Boolean? = null,
         debugVersion: Int? = null
@@ -1952,7 +1951,7 @@ class PipelineBuildFacadeService(
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 50
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,

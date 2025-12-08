@@ -434,7 +434,6 @@ class UserBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             page = page,
             pageSize = pageSize,
-            channelCode = ChannelCode.getRequestChannelCode(),
             checkPermission = check,
             debugVersion = debugVersion
         )
