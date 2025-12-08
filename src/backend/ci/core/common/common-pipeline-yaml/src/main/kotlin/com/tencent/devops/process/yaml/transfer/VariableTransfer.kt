@@ -180,7 +180,6 @@ class VariableTransfer {
                 props = props ?: VariableProps()
                 props.group = it.category
             }
-            val allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
                     CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
