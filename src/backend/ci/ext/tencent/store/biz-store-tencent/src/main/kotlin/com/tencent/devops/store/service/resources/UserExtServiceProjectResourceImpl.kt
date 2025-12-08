@@ -51,7 +51,7 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
             userId = userId,
             projectCodeList = installExtServiceReq.projectCodeList,
             serviceCode = installExtServiceReq.serviceCode,
-            channelCode = ChannelCode.BS
+            channelCode = ChannelCode.getRequestChannelCode()
         )
     }
 

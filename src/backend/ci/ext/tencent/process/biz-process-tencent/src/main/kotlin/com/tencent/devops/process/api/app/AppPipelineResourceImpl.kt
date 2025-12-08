@@ -66,7 +66,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 userId,
                 page ?: -1,
                 pageSize ?: -1,
-                channelCode ?: ChannelCode.BS
+                channelCode ?: ChannelCode.getRequestChannelCode()
             )
         )
     }
@@ -85,7 +85,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 projectId,
                 page,
                 pageSize,
-                channelCode ?: ChannelCode.BS,
+                channelCode ?: ChannelCode.getRequestChannelCode(),
                 sortType ?: PipelineSortType.CREATE_TIME
             )
         )
@@ -111,7 +111,7 @@ class AppPipelineResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 page = page,
                 pageSize = pageSize,
-                channelCode = channelCode ?: ChannelCode.BS,
+                channelCode = channelCode ?: ChannelCode.getRequestChannelCode(),
                 checkPermission = true,
                 materialBranch = materialBranch,
                 debug = debug,

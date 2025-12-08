@@ -36,11 +36,13 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUICK_APPROVAL_MOA
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUICK_APPROVAL_PC
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -49,6 +51,8 @@ import org.springframework.stereotype.Service
 @Service
 class TXPipelineMoaService @Autowired constructor(
     private var client: Client,
+    private val dslContext: DSLContext,
+    private var pipelineInfoDao: PipelineInfoDao,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
@@ -157,6 +161,8 @@ class TXPipelineMoaService @Autowired constructor(
                 }
             }
         }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
+        val channelCode = pipelineInfo?.let { ChannelCode.valueOf(it.channel) } ?: ChannelCode.getRequestChannelCode()
         // 执行人工审核插件
         pipelineBuildFacadeService.buildManualReview(
             userId = extServiceMoaWorkItemReq.handler,
@@ -165,8 +171,8 @@ class TXPipelineMoaService @Autowired constructor(
             buildId = buildId,
             elementId = elementId,
             params = params,
-            channelCode = ChannelCode.BS,
-            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS),
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
             stepId = null
         )
         return Result(true)

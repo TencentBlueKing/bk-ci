@@ -63,7 +63,7 @@ class AppPipelineService @Autowired constructor(
         userId: String,
         page: Int,
         pageSize: Int,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode()
     ): Page<AppProject> {
         var beginTime = System.currentTimeMillis()
         val projectIds = authProjectApi.getUserProjects(pipelineAuthServiceCode, userId, null)
@@ -95,7 +95,7 @@ class AppPipelineService @Autowired constructor(
         projectId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         sortType: PipelineSortType = PipelineSortType.CREATE_TIME,
         checkPermission: Boolean = true
     ): PipelinePage<AppPipeline> {
@@ -162,7 +162,7 @@ class AppPipelineService @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode = ChannelCode.BS,
+        channelCode: ChannelCode = ChannelCode.getRequestChannelCode(),
         checkPermission: Boolean = true,
         materialBranch: List<String>?,
         debug: Boolean?,

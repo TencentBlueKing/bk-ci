@@ -18,6 +18,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -495,13 +496,17 @@ class ExpertSupportService @Autowired constructor(
                     else -> newParam[k] = v
                 }
             }
-
+            val projectId = info.projectId
+            val pipelineId = info.pipelineId
+            val channelCode = client.get(ServicePipelineResource::class)
+                .getPipelineInfoByPipelineId(pipelineId, projectId)?.data?.channelCode
+                ?: ChannelCode.getRequestChannelCode()
             client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = info.userId ?: "",
-                projectId = info.projectId,
-                pipelineId = info.pipelineId,
+                projectId = projectId,
+                pipelineId = pipelineId,
                 values = newParam,
-                channelCode = ChannelCode.BS,
+                channelCode = channelCode,
                 buildNo = null,
                 startType = StartType.SERVICE
             )

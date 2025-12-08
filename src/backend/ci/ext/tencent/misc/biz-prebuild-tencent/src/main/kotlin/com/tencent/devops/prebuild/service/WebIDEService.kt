@@ -297,7 +297,7 @@ class WebIDEService @Autowired constructor(
             webIDEStatusDao.updatePipelineId(dslContext, userId, ip, pipelineId)
         }
         val buildId = client.get(ServiceBuildResource::class)
-            .manualStartup(userId, projectId, pipelineId, mapOf(), ChannelCode.BS).data!!.id
+            .manualStartup(userId, projectId, pipelineId, mapOf(), ChannelCode.getRequestChannelCode()).data!!.id
         logger.info("succ create build, id:$buildId")
         return BuildId(buildId)
     }
@@ -364,7 +364,12 @@ class WebIDEService @Autowired constructor(
 
         val model = createPipelineModel(userId, projectId, agentId, agentIp)
         val pipeLineId =
-            client.get(ServicePipelineResource::class).create(userId, projectId, model, ChannelCode.BS).data!!.id
+            client.get(ServicePipelineResource::class).create(
+                userId = userId,
+                projectId = projectId,
+                pipeline = model,
+                channelCode = ChannelCode.getRequestChannelCode()
+            ).data!!.id
         logger.info("pipelineId: $pipeLineId")
         return pipeLineId
     }
