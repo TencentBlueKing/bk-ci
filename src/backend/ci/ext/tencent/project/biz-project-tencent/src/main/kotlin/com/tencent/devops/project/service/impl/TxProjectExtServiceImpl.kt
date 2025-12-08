@@ -13,6 +13,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -28,7 +29,8 @@ class TxProjectExtServiceImpl(
     private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectDispatcher: SampleEventDispatcher,
     private val authProperties: BkAuthProperties,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val projectOperationalProductService: ProjectOperationalProductService
 ) : AbsProjectExtServiceImpl() {
 
     companion object {
@@ -63,6 +65,9 @@ class TxProjectExtServiceImpl(
                 projectInfo = projectCreateInfo
             )
         )
+
+        // 同步 KPI 产品绑定到 bkCosts
+        projectOperationalProductService.syncKpiProductOnCreate(projectCreateInfo)
     }
 
     override fun createOldAuthProject(

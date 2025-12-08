@@ -33,6 +33,7 @@ import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED", "TooGenericExceptionCaught")
 class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
-    val bkAccessTokenApi: BkAccessTokenApi
+    val bkAccessTokenApi: BkAccessTokenApi,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
@@ -80,6 +82,8 @@ class TencentProjectEventListener @Autowired constructor(
             projectUpdateInfo = event.projectInfo,
             accessToken = accessToken
         )
+        // 同步 KPI 产品绑定到 bkCosts
+        projectOperationalProductService.syncKpiProductOnUpdate(event.projectInfo)
     }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
