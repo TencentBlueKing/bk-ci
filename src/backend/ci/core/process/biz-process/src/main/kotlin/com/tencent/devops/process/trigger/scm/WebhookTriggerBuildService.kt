@@ -79,12 +79,12 @@ class WebhookTriggerBuildService @Autowired constructor(
     private val simpleRateLimiter: SimpleRateLimiter,
     private val sampleEventDispatcher: SampleEventDispatcher
 ) {
-    @Value("\${scm.webhook.trigger.max.count:${SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}}")
+    @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
 
     fun trigger(event: ScmWebhookTriggerEvent) {
-        // 同一个事件,同一个项目
-        val lockKey = "ScmWebhookRateLimit:${event.eventId}:${event.projectId}"
+        // 同一个项目,最大处理并发数
+        val lockKey = "ScmWebhookRateLimit:${event.projectId}"
         var acquire = false
         try {
             acquire = simpleRateLimiter.acquire(
@@ -126,7 +126,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         }
     }
 
-    private fun  ScmWebhookTriggerEvent.retry() {
+    private fun ScmWebhookTriggerEvent.retry() {
         logger.info("ENGINE|$eventId|$projectId|$pipelineId|RETRY_TO_WEBHOOK_TRIGGER")
         this.delayMills = DEFAULT_DELAY
         sampleEventDispatcher.dispatch(this)
@@ -367,7 +367,7 @@ class WebhookTriggerBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
-        private const val SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT = 50
+        private const val SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT = 100
         private const val DEFAULT_DELAY = 1000
     }
 }
