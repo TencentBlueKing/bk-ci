@@ -307,7 +307,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                             pipelineId = pipelineId,
                             buildId = buildId,
                             matcher = matcher,
-                            repo = repo
+                            repo = repo,
+                            channelCode = pipelineInfo.channelCode
                         )
                         val buildDetail = client.getGateway(ServiceBuildResource::class).getBuildDetail(
                             userId = userId,
