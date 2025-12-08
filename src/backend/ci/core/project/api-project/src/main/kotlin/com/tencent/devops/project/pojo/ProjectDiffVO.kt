@@ -136,5 +136,13 @@ data class ProjectDiffVO(
     @get:Schema(title = "构建日志归档阈值(单位:万)")
     val loggingLineLimit: Int? = null,
     @get:Schema(title = "审批中构建日志归档阈值(单位:万)")
-    val afterLoggingLineLimit: Int? = null
+    val afterLoggingLineLimit: Int? = null,
+    @get:Schema(title = "KPI产品编码")
+    val kpiCode: String? = null,
+    @get:Schema(title = "审批中KPI产品编码")
+    val afterKpiCode: String? = null,
+    @get:Schema(title = "KPI产品名称")
+    val kpiName: String? = null,
+    @get:Schema(title = "审批中KPI产品名称")
+    val afterKpiName: String? = null
 )
