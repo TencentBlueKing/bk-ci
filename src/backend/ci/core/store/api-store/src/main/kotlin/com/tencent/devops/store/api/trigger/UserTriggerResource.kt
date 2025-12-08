@@ -112,7 +112,7 @@ interface UserTriggerResource {
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "组件来源", required = true)
+        @Parameter(description = "归属组件标识", required = true)
         @PathParam("sourceCode")
         sourceCode: String,
         @Parameter(description = "插件代码", required = true)

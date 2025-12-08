@@ -101,5 +101,9 @@ data class MarketItem(
     @get:Schema(title = "是否需要更新", required = false)
     val updateFlag: Boolean? = null,
     @get:Schema(title = "扩展字段集合", required = false)
-    val extData: Map<String, Any>? = null
+    val extData: Map<String, Any>? = null,
+    @get:Schema(title = "宿主应用名", required = false)
+    val ownerStoreName: String ? = null,
+    @get:Schema(title = "流水线个数")
+    val pipelineCnt: Int? = null
 )

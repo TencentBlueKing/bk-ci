@@ -50,6 +50,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
+import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
@@ -60,6 +62,7 @@ import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.CategoryService
@@ -1277,6 +1280,25 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val storeIndexInfosMap =
             storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
         val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
+        // 获取宿主应用信息
+        val ownerStoreCodes = storeInfos.mapNotNull { it[tStoreBase.OWNER_STORE_CODE] }.toSet()
+        val ownerStoreInfos = getComponentBaseInfoList(
+            storeType = StoreTypeEnum.DEVX,
+            storeCodes = ownerStoreCodes
+        ).associate {  it.storeCode to it.storeName }
+        // 获取关联的流水线数量
+        val storeCodes = storeInfos.map {
+            val ownerStoreCode = it[tStoreBase.OWNER_STORE_CODE]
+            if (ownerStoreCode.isNullOrBlank()) {
+                it[tStoreBase.STORE_CODE]
+            } else {
+                "$ownerStoreCode#${it[tStoreBase.STORE_CODE]}"
+            }
+        }.toSet()
+        val pipelineCount = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+            atomCodes = storeCodes.joinToString(","),
+            projectCode = projectCode
+        ).data
         watcher.start("handleStoreInfos")
         storeInfos.forEach { record ->
             val storeId = record[tStoreBase.ID]
@@ -1284,6 +1306,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val statistic = storeStatisticData[storeCode]
             val version = record[tStoreBase.VERSION]
             val status = record[tStoreBase.STATUS]
+            val ownerStoreCode = record[tStoreBase.OWNER_STORE_CODE]
             // 组件是否已安装
             val installed = storeInfoQuery.installed ?: run {
                 projectCode?.let { installedInfoMap?.contains(storeCode) }
@@ -1308,6 +1331,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             ).firstOrNull()?.fieldValue?.toBoolean()
             val extData = getBaseExtData(storeId, storeCode, storeTypeEnum)
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
+            // 宿主应用名 to 组件关联流水线数量
+            val (ownerStoreName, pipelineCount) = if (ownerStoreCode.isNullOrBlank()) {
+                null to (pipelineCount?.get(storeCode) ?: 0)
+            } else {
+                ownerStoreInfos[ownerStoreCode] to (pipelineCount?.get("$ownerStoreCode#$storeCode") ?: 0)
+            }
             val marketItem = MarketItem(
                 id = storeId,
                 name = record[tStoreBase.NAME],
@@ -1345,7 +1374,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 indexInfos = storeIndexInfosMap[storeCode],
                 recentExecuteNum = statistic?.recentExecuteNum,
                 hotFlag = statistic?.hotFlag,
-                extData = extData
+                extData = extData,
+                ownerStoreName = ownerStoreName,
+                pipelineCnt = pipelineCount
             )
             results.add(marketItem)
         }

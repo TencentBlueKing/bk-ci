@@ -83,7 +83,9 @@ class MarketEventTriggerBuildService @Autowired constructor(
                 val variables = pipelineRepositoryService.getTriggerParams(model.getTriggerContainer())
                 val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
                 triggerContainer.elements.filterIsInstance<MarketBuildLessAtomElement>().forEach elements@{ element ->
-                    if (!element.elementEnabled() || element.atomCode != eventCode) {
+                    // atomCode
+                    val elementEventCode = element.atomCode.substringAfter("#")
+                    if (!element.elementEnabled() || elementEventCode != eventCode) {
                         return@elements
                     }
 
