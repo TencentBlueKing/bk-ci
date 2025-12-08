@@ -11,9 +11,9 @@ data class DevCloudMacosVmModelRequest(
     @get:Schema(title = "平台")
     val platform: String,
     @get:Schema(title = "t1参数")
-    @JsonProperty("t1")
-    val projectId: String,
+    @JsonProperty("projectId")
+    val t1: String,
     @get:Schema(title = "t2参数")
-    @JsonProperty("t2")
-    val pipelineId: String
+    @JsonProperty("pipelineId")
+    val t2: String
 )
