@@ -64,7 +64,7 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
     ) {
         val inputMap = element.data["input"] as Map<String, Any>
         // TODO: 如何跟envId对应起来?
-        val eventSource = inputMap["ci.event.source"]?.toString()
+        val eventSource = inputMap["ci.event.source"]?.toString() ?: "devops_remote_dev" // 先写死，后续调整
         val eventType = inputMap["ci.event.type"]?.toString()
         if (eventSource.isNullOrBlank()) {
             throw ErrorCodeException(

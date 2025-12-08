@@ -43,7 +43,7 @@ class MarketEventRequestService constructor(
                 envNames = listOf(workspaceName),
                 userId = userId
             )
-            val envIdList = listOf("env_1", "env_2")
+            val envIdList = listOf("devops_remote_dev")
             val eventDesc = I18Variable(
                 code = BK_REMOTE_DEV_TRIGGER_DESC,
                 params = listOf(cdsIp, eventType)
@@ -99,7 +99,6 @@ class MarketEventRequestService constructor(
                 }
             }
         }
-
     }
 
     fun handleGenericWebhookRequestEvent(event: GenericWebhookRequestEvent) {

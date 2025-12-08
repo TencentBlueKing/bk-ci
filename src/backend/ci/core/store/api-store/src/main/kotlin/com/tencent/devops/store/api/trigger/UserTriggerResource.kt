@@ -104,7 +104,7 @@ interface UserTriggerResource {
 
     @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")
     @GET
-    @Path("/{type}/{projectCode}/{atomCode}/{version}")
+    @Path("/{type}/{projectCode}/{ownerStoreCode}/{atomCode}/{version}")
     @BkInterfaceI18n(
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
@@ -118,6 +118,9 @@ interface UserTriggerResource {
         @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("ownerStoreCode")
+        ownerStoreCode: String,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,

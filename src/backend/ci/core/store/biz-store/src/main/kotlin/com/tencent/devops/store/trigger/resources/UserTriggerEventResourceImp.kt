@@ -67,6 +67,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
         userId: String,
         type: String,
         projectCode: String,
+        ownerStoreCode: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
@@ -76,7 +77,8 @@ class UserTriggerEventResourceImp @Autowired constructor(
                 projectCode = projectCode,
                 atomCode = atomCode,
                 version = version,
-                userId = userId
+                userId = userId,
+                ownerStoreCode = ownerStoreCode
             )
         )
     }

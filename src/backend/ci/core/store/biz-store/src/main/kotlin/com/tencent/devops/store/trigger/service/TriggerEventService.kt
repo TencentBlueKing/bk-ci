@@ -183,7 +183,8 @@ class TriggerEventService @Autowired constructor(
         type: String,
         projectCode: String,
         atomCode: String,
-        version: String
+        version: String,
+        ownerStoreCode: String
     ): PipelineAtom? {
         return when (type) {
             BK_STORE_COMMON_TRIGGER -> {
@@ -195,11 +196,12 @@ class TriggerEventService @Autowired constructor(
                 ).data
             }
 
-            BK_STORE_CLOUD_DESKTOP_TRIGGER -> {
+            else -> {
                 storeComponentQueryService.getComponentDetailInfoByCode(
                     userId = userId,
                     storeType = StoreTypeEnum.TRIGGER_EVENT.name,
                     storeCode = atomCode,
+                    ownerStoreCode = ownerStoreCode,
                     version = version
                 )?.let { storeDetailInfo ->
                     PipelineAtom(
@@ -245,8 +247,6 @@ class TriggerEventService @Autowired constructor(
                     )
                 }
             }
-
-            else -> null
         }
     }
 
