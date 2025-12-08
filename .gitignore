@@ -60,3 +60,7 @@ pre-*-bkcodeai
 .cursor/
 specs/
 .specify/
+.cursorrules
+openspec/
+AGENTS.md
+CODEBUDDY.md
