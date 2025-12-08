@@ -328,6 +328,38 @@ class DevCloudMacosService @Autowired constructor(
         }
     }
 
+    fun getAllVmModels(
+        creator: String
+    ): DevCloudMacosVmModelResponse? {
+        val url = "$devCloudUrl/api/mac/vm/model/all"
+
+        val httpRequest = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(httpRequest).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("DevCloud getAllVmModel http code is ${response.code}, response: $responseContent")
+
+                if (!response.isSuccessful) {
+                    logger.error(
+                        "Failed to request DevCloud getAllVmModel, http response code: ${response.code}, " +
+                                "msg: $responseContent"
+                    )
+                    return null
+                }
+
+                return JsonUtil.to(responseContent, DevCloudMacosVmModelResponse::class.java)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get VM model from DevCloud, url: $url", e)
+            return null
+        }
+    }
+
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 }
