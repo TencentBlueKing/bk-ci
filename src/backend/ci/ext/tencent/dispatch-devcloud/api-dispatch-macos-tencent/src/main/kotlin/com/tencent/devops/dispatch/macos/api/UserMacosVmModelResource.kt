@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.macos.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelData
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmModelData
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmModelRequest
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -33,5 +34,5 @@ interface UserMacosVmModelResource {
     @GET
     @Path("/all")
     @Operation(summary = "获取所有macOS VM Model类型")
-    fun getAllVmModels(): Result<String>
+    fun getAllVmModels(): Result<DMAllVmModelData>
 }
