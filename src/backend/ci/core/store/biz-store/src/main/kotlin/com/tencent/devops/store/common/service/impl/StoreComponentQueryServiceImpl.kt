@@ -1287,18 +1287,19 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCodes = ownerStoreCodes
         ).associate {  it.storeCode to it.storeName }
         // 获取关联的流水线数量
-        val storeCodes = storeInfos.map {
+        val pipelineCount = storeInfos.map {
             val ownerStoreCode = it[tStoreBase.OWNER_STORE_CODE]
             if (ownerStoreCode.isNullOrBlank()) {
                 it[tStoreBase.STORE_CODE]
             } else {
                 "$ownerStoreCode#${it[tStoreBase.STORE_CODE]}"
             }
-        }.toSet()
-        val pipelineCount = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
-            atomCodes = storeCodes.joinToString(","),
-            projectCode = projectCode
-        ).data
+        }.toSet().associateWith {
+            client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(
+                atomCode = it,
+                projectCode = null
+            ).data
+        }
         watcher.start("handleStoreInfos")
         storeInfos.forEach { record ->
             val storeId = record[tStoreBase.ID]
@@ -1333,9 +1334,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
             // 宿主应用名 to 组件关联流水线数量
             val (ownerStoreName, pipelineCount) = if (ownerStoreCode.isNullOrBlank()) {
-                null to (pipelineCount?.get(storeCode) ?: 0)
+                null to (pipelineCount[storeCode] ?: 0)
             } else {
-                ownerStoreInfos[ownerStoreCode] to (pipelineCount?.get("$ownerStoreCode#$storeCode") ?: 0)
+                ownerStoreInfos[ownerStoreCode] to (pipelineCount["$ownerStoreCode#$storeCode"] ?: 0)
             }
             val marketItem = MarketItem(
                 id = storeId,
