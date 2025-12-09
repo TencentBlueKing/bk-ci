@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
@@ -126,6 +127,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -2174,6 +2176,143 @@ class PipelineBuildFacadeService(
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
                 pipelineVersion = result.pipelineVersion
+            )
+        } finally {
+            jmxApi.execute(ProcessJmxApi.LIST_NEW_BUILDS_DETAIL, System.currentTimeMillis() - apiStartEpoch)
+        }
+    }
+
+    /**
+     * 轻量级构建历史查询：
+     * - 复用现有查询条件和权限控制逻辑
+     * - 返回轻量数据结构，减少不必要的数据传输
+     * - 保持与现有接口相同的查询能力
+     */
+    fun getLightHistoryBuild(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String? = null,
+        checkPermission: Boolean = true,
+        startUser: List<String>? = null,
+        updateTimeDesc: Boolean? = null,
+        archiveFlag: Boolean? = false,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?,
+        triggerUser: List<String>?,
+        debug: Boolean?
+    ): Page<LightBuildHistory> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 50
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 1000
+
+        val queryDslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT)
+        val apiStartEpoch = System.currentTimeMillis()
+        try {
+            if (checkPermission) {
+                val userPipelinePermissionCheckStrategy =
+                    UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+                UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+                    userId = userId!!,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.VIEW
+                )
+            }
+
+            // 查询总数
+            val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                materialAlias = materialAlias,
+                materialUrl = materialUrl,
+                materialBranch = materialBranch,
+                materialCommitId = materialCommitId,
+                materialCommitMessage = materialCommitMessage,
+                status = status,
+                trigger = trigger,
+                queueTimeStartTime = queueTimeStartTime,
+                queueTimeEndTime = queueTimeEndTime,
+                startTimeStartTime = startTimeStartTime,
+                startTimeEndTime = startTimeEndTime,
+                endTimeStartTime = endTimeStartTime,
+                endTimeEndTime = endTimeEndTime,
+                totalTimeMin = totalTimeMin,
+                totalTimeMax = totalTimeMax,
+                remark = remark,
+                buildNoStart = buildNoStart,
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg,
+                startUser = startUser,
+                queryDslContext = queryDslContext,
+                debug = debug,
+                triggerAlias = triggerAlias,
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
+            )
+
+            // 查询构建历史记录
+            val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                offset = offset,
+                limit = limit,
+                materialAlias = materialAlias,
+                materialUrl = materialUrl,
+                materialBranch = materialBranch,
+                materialCommitId = materialCommitId,
+                materialCommitMessage = materialCommitMessage,
+                status = status,
+                trigger = trigger,
+                queueTimeStartTime = queueTimeStartTime,
+                queueTimeEndTime = queueTimeEndTime,
+                startTimeStartTime = startTimeStartTime,
+                startTimeEndTime = startTimeEndTime,
+                endTimeStartTime = endTimeStartTime,
+                endTimeEndTime = endTimeEndTime,
+                totalTimeMin = totalTimeMin,
+                totalTimeMax = totalTimeMax,
+                remark = remark,
+                buildNoStart = buildNoStart,
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg,
+                startUser = triggerUser,
+                updateTimeDesc = updateTimeDesc,
+                queryDslContext = queryDslContext,
+                debug = debug,
+                triggerAlias = triggerAlias,
+                triggerBranch = triggerBranch,
+                triggerUser = triggerUser
+            )
+            return Page(
+                page = pageNotNull,
+                pageSize = limit,
+                count = newTotalCount+0L,
+                records = newHistoryBuilds,
             )
         } finally {
             jmxApi.execute(ProcessJmxApi.LIST_NEW_BUILDS_DETAIL, System.currentTimeMillis() - apiStartEpoch)

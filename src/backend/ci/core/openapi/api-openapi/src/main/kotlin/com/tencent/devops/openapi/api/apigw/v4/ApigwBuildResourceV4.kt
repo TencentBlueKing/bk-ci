@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -47,6 +48,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.v3.oas.annotations.Operation
@@ -54,6 +56,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.ExampleObject
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -336,6 +339,109 @@ interface ApigwBuildResourceV4 {
         @QueryParam("triggerBranch")
         triggerBranch: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
+
+    @Operation(summary = "获取流水线轻量构建历史", tags = ["v4_user_build_list_simple", "v4_app_build_list_simple"])
+    @GET
+    @Path("/build_histories/simple")
+    fun getLightHistoryBuild(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(
+            description = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, example = "null"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null,
+        @Parameter(description = "源材料代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>?,
+        @Parameter(description = "代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String?,
+        @Parameter(description = "源材料分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>?,
+        @Parameter(description = "源材料commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String?,
+        @Parameter(description = "源材料commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String?,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>?,
+        @Parameter(description = "触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>?,
+        @Parameter(description = "排队于-开始时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long?,
+        @Parameter(description = "排队于-结束时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long?,
+        @Parameter(description = "开始于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long?,
+        @Parameter(description = "开始于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long?,
+        @Parameter(description = "结束于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long?,
+        @Parameter(description = "结束于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long?,
+        @Parameter(description = "耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long?,
+        @Parameter(description = "耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long?,
+        @Parameter(description = "备注", required = false)
+        @QueryParam("remark")
+        remark: String?,
+        @Parameter(description = "构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int?,
+        @Parameter(description = "构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int?,
+        @Parameter(description = "构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String?,
+        @Parameter(description = "执行人", required = false)
+        @QueryParam("startUser")
+        startUser: List<String>?,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        @DefaultValue("false")
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null
+    ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
     @GET

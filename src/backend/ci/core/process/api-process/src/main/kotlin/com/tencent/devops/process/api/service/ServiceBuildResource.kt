@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -54,6 +55,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -65,6 +67,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -530,6 +533,112 @@ interface ServiceBuildResource {
         @QueryParam("triggerUser")
         triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
+
+    @Operation(summary = "获取流水线轻量构建历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/history/simple")
+    fun getLightHistoryBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @Parameter(
+            description = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, example = "20"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null,
+        @Parameter(description = "代码库别名", required = false)
+        @QueryParam("materialAlias")
+        materialAlias: List<String>? = null,
+        @Parameter(description = "代码库URL", required = false)
+        @QueryParam("materialUrl")
+        materialUrl: String? = null,
+        @Parameter(description = "分支", required = false)
+        @QueryParam("materialBranch")
+        materialBranch: List<String>? = null,
+        @Parameter(description = "commitId", required = false)
+        @QueryParam("materialCommitId")
+        materialCommitId: String? = null,
+        @Parameter(description = "commitMessage", required = false)
+        @QueryParam("materialCommitMessage")
+        materialCommitMessage: String? = null,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>? = null,
+        @Parameter(description = "触发方式", required = false)
+        @QueryParam("trigger")
+        trigger: List<StartType>? = null,
+        @Parameter(description = "排队于-开始时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeStartTime")
+        queueTimeStartTime: Long? = null,
+        @Parameter(description = "排队于-结束时间(时间戳形式)", required = false)
+        @QueryParam("queueTimeEndTime")
+        queueTimeEndTime: Long? = null,
+        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long? = null,
+        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long? = null,
+        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long? = null,
+        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long? = null,
+        @Parameter(description = "耗时最小值", required = false)
+        @QueryParam("totalTimeMin")
+        totalTimeMin: Long? = null,
+        @Parameter(description = "耗时最大值", required = false)
+        @QueryParam("totalTimeMax")
+        totalTimeMax: Long? = null,
+        @Parameter(description = "备注", required = false)
+        @QueryParam("remark")
+        remark: String? = null,
+        @Parameter(description = "构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int? = null,
+        @Parameter(description = "构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int? = null,
+        @Parameter(description = "构建信息", required = false)
+        @QueryParam("buildMsg")
+        buildMsg: String? = null,
+        @Parameter(description = "执行人", required = false)
+        @QueryParam("startUser")
+        startUser: List<String>? = null,
+        @Parameter(description = "是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        @DefaultValue("false")
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "指定调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null,
+        @Parameter(description = "触发代码库", required = false)
+        @QueryParam("triggerAlias")
+        triggerAlias: List<String>? = null,
+        @Parameter(description = "触发分支", required = false)
+        @QueryParam("triggerBranch")
+        triggerBranch: List<String>? = null,
+        @Parameter(description = "触发人", required = false)
+        @QueryParam("triggerUser")
+        triggerUser: List<String>? = null
+    ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取构建详情")
     @GET
