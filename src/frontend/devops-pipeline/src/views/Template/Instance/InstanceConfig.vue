@@ -510,8 +510,8 @@
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
             if (!instanceParamItem) {
                 // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
-                // 根据 instanceRequired 和 item.required 决定新参数的 required 属性
-                const newItemRequired = item.required && item.instanceRequired
+                // 根据 asInstanceInput 和 item.required 决定新参数的 required 属性
+                const newItemRequired = item.required && item.asInstanceInput
                 const newItem = {
                     ...item,
                     isNew: true,
@@ -554,7 +554,7 @@
                             : itemDefaultValue !== initialInstanceDefaultValue
                     }
                 }
-                if (!item.required && templateParamItem.required) {
+                if (!item.required && templateParamItem.required && templateParamItem.asInstanceInput) {
                     item.required = true
                     item.isRequiredParam = true
                 }

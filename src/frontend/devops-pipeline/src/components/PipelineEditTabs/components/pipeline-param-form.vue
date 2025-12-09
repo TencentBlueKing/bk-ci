@@ -114,13 +114,13 @@
                     />
                     <atom-checkbox
                         v-if="!!templateId"
-                        name="instanceRequired"
+                        name="asInstanceInput"
                         class="ml10"
                         v-show="param.required"
                         :disabled="disabled"
                         :desc="$t('editPage.instanceRequiredTips')"
                         :text="$t('editPage.instanceRequired')"
-                        :value="param.instanceRequired"
+                        :value="param.asInstanceInput"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
