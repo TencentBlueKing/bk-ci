@@ -104,7 +104,7 @@
                 return this.$route.query.archiveFlag
             },
             allParams () {
-                const valueMap = this.params.reduce((acc, item) => {
+                const valueMap = this.buildParamProperities.reduce((acc, item) => {
                     acc[item.key] = item.value
                     return acc
                 }, {})
