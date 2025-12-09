@@ -105,7 +105,7 @@
             },
             allParams () {
                 const valueMap = this.buildParamProperities.reduce((acc, item) => {
-                    acc[item.key] = item.value
+                    acc[item.id] = item.value
                     return acc
                 }, {})
                 return this.buildParamProperities.map(item => {
