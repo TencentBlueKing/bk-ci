@@ -1318,7 +1318,10 @@
     "enableVersionControl": "Enable version control",
     "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name.",
     "controlOption": "Control Options",
-    "displayCondition": "Display Condition"
+    "displayCondition": "Display Condition",
+    "instanceRequired": "Defaults to instance input parameter",
+    "instanceRequiredTips": "This is set to the default value. It can be adjusted to be an instance parameter in the specific instance when instantiating the pipeline.",
+    "templateBuildParamTips": "Parameters set as input parameters to the template. Their values ​​can be modified during instantiation, and they can also be set as input parameters to the instance."
   },
   "storeMap": {
     "textarea": "Textarea",
