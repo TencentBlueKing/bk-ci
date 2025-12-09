@@ -607,9 +607,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
         val storeType = storeInfoQuery.storeType
-        val page = storeInfoQuery.page
-        val pageSize = storeInfoQuery.pageSize
-        val projectCode = storeInfoQuery.projectCode
+
         storeInfoQuery.validate()
         val watcher = Watcher("getMainPageComponents|$userId|$storeType")
         try {
@@ -627,13 +625,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    storeInfoQuery = StoreInfoQuery(
-                        storeType = storeType,
-                        projectCode = projectCode,
-                        queryProjectComponentFlag = false,
-                        sortType = StoreSortTypeEnum.UPDATE_TIME,
-                        page = page,
-                        pageSize = pageSize
+                    storeInfoQuery = storeInfoQuery.copy(
+                        sortType = StoreSortTypeEnum.UPDATE_TIME
                     ),
                     urlProtocolTrim = urlProtocolTrim
                 )
@@ -649,13 +642,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    storeInfoQuery = StoreInfoQuery(
-                        storeType = storeType,
-                        projectCode = projectCode,
-                        queryProjectComponentFlag = false,
-                        sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                        page = page,
-                        pageSize = pageSize
+                    storeInfoQuery = storeInfoQuery.copy(
+                        sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
                     ),
                     urlProtocolTrim = urlProtocolTrim
                 )
@@ -677,14 +665,9 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                         doList(
                             userId = userId,
                             userDeptList = userDeptList,
-                            storeInfoQuery = StoreInfoQuery(
-                                storeType = storeType,
-                                projectCode = projectCode,
+                            storeInfoQuery = storeInfoQuery.copy(
                                 classifyId = it.id,
-                                queryProjectComponentFlag = false,
-                                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                                page = page,
-                                pageSize = pageSize
+                                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT
                             ),
                             urlProtocolTrim = urlProtocolTrim
                         )
