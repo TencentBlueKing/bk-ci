@@ -479,7 +479,6 @@
         
         // 检查是否有新增的参数
         const hasNewParams = newInstance?.param?.some(p => p.isNew) || false
-        console.log(hasNewParams, 11111111111111)
         
         // 检查是否有新增的触发器
         const hasNewTriggers = newInstance?.triggerConfigs?.some(trigger => trigger.isNew) || false
@@ -496,7 +495,6 @@
             const storeParamIds = new Set(storeInstance.param?.map(p => p.id) || [])
             const newParamIds = newInstance.param?.filter(p => p.isNew).map(p => p.id) || []
             needUpdate = newParamIds.some(id => !storeParamIds.has(id))
-            console.log(newParamIds.some(id => !storeParamIds.has(id)), 'newParamIds.some(id => !storeParamIds.has(id))')
         }
         
         // 检查 store 中的 triggerConfigs 是否已经包含了新增触发器
