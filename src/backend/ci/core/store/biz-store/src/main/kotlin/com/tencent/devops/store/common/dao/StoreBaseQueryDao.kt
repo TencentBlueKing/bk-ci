@@ -222,7 +222,7 @@ class StoreBaseQueryDao {
                         VERSION.like(VersionUtils.generateQueryVersion(version))
                     ).let{
                         if (!ownerStoreCode.isNullOrEmpty()) {
-                            it.add(STORE_CODE.eq(ownerStoreCode))
+                            it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
                         }
                         it
                     }
