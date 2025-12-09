@@ -272,7 +272,15 @@ class RepoFileService @Autowired constructor(
                 fileApiService.getFileContent(
                     projectId = repo.projectId ?: "",
                     path = filePath,
-                    ref = reversion?.ifBlank { branch }?.ifBlank { null } ?: "master",
+                    ref = if (reversion.isNullOrBlank()) {
+                        if (branch.isNullOrBlank()) {
+                            "master"
+                        } else {
+                            branch
+                        }
+                    } else {
+                        reversion
+                    },
                     authRepository = AuthRepository(repo)
                 )?.content ?: ""
             }
