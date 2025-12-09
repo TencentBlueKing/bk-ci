@@ -469,24 +469,24 @@
         deep: true
     })
     
-    // 监听 curInstance 变化，当有新增的 param、buildNo、triggerConfigs 时，自动同步到 store
-    let isUpdatingStore = false
+    // 监听 curInstance 变化，当有新增的 param、buildNo、triggerConfigs 时，同步store
+    const isUpdatingStore = ref(false)
     watch(() => curInstance.value, (newInstance) => {
-        if (!newInstance || isUpdatingStore) return
+        if (!newInstance || isUpdatingStore.value) return
         
         const storeInstance = instanceList.value[activeIndex.value - 1]
         if (!storeInstance) return
         
         // 检查是否有新增的参数
-        const hasNewParams = newInstance.param?.some(p => p.isNew) || false
+        const hasNewParams = newInstance?.param?.some(p => p.isNew) || false
+        console.log(hasNewParams, 11111111111111)
         
         // 检查是否有新增的触发器
-        const hasNewTriggers = newInstance.triggerConfigs?.some(t => t.isNew) || false
+        const hasNewTriggers = newInstance?.triggerConfigs?.some(trigger => trigger.isNew) || false
         
         // 检查 buildNo 是否有变化
-        const buildNoChanged = JSON.stringify(newInstance.buildNo) !== JSON.stringify(storeInstance.buildNo)
+        const buildNoChanged = !isShallowEqual(newInstance?.buildNo, storeInstance?.buildNo)
         
-        // 如果没有任何新增或变化，不需要更新
         if (!hasNewParams && !hasNewTriggers && !buildNoChanged) return
         
         let needUpdate = false
@@ -496,6 +496,7 @@
             const storeParamIds = new Set(storeInstance.param?.map(p => p.id) || [])
             const newParamIds = newInstance.param?.filter(p => p.isNew).map(p => p.id) || []
             needUpdate = newParamIds.some(id => !storeParamIds.has(id))
+            console.log(newParamIds.some(id => !storeParamIds.has(id)), 'newParamIds.some(id => !storeParamIds.has(id))')
         }
         
         // 检查 store 中的 triggerConfigs 是否已经包含了新增触发器
@@ -510,17 +511,11 @@
             needUpdate = true
         }
         
-        if (!needUpdate) return
-        
         // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id（不跟随模板的参数）
         const newOverrideParamIds = newInstance.param
-            ?.filter(p => p.isNew && !p.asInstanceInput)
+            ?.filter(p => !p.isFollowTemplate)
             .map(p => p.id) || []
-        
-        const existingParamIds = storeInstance?.overrideTemplateField?.paramIds ?? []
-        const updatedParamIds = [...new Set([...existingParamIds, ...newOverrideParamIds])]
-        
-        isUpdatingStore = true
+        isUpdatingStore.value = true
         proxy.$nextTick(() => {
             proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
                 index: activeIndex.value - 1,
@@ -531,12 +526,12 @@
                     triggerConfigs: newInstance.triggerConfigs,
                     overrideTemplateField: {
                         ...storeInstance?.overrideTemplateField,
-                        paramIds: updatedParamIds
+                        paramIds: [...newOverrideParamIds]
                     }
                 }
             })
             setTimeout(() => {
-                isUpdatingStore = false
+                isUpdatingStore.value = false
             }, 0)
         })
     }, {
