@@ -304,12 +304,12 @@
     }
     function handleAddInstance (name) {
         const instanceParams = deepClone(curTemplateDetail.value)
-        // 处理新增实例时参数的 required 属性
-        // 只有当 asInstanceInput 为 true 且参数本身 required 为 true 时，才设置为入参
+        // 处理新增实例时参数的 isRequiredParam 属性
+        // 只有当 asInstanceInput 为 true , 才设置为入参
         if (instanceParams?.param?.length) {
             instanceParams.param = instanceParams.param.map(p => ({
                 ...p,
-                required: p.required && p.asInstanceInput
+                isRequiredParam: p.asInstanceInput
             }))
         }
         const newInstance = {

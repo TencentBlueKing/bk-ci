@@ -468,6 +468,82 @@
     }, {
         deep: true
     })
+    
+    // 监听 curInstance 变化，当有新增的 param、buildNo、triggerConfigs 时，自动同步到 store
+    let isUpdatingStore = false
+    watch(() => curInstance.value, (newInstance) => {
+        if (!newInstance || isUpdatingStore) return
+        
+        const storeInstance = instanceList.value[activeIndex.value - 1]
+        if (!storeInstance) return
+        
+        // 检查是否有新增的参数
+        const hasNewParams = newInstance.param?.some(p => p.isNew) || false
+        
+        // 检查是否有新增的触发器
+        const hasNewTriggers = newInstance.triggerConfigs?.some(t => t.isNew) || false
+        
+        // 检查 buildNo 是否有变化
+        const buildNoChanged = JSON.stringify(newInstance.buildNo) !== JSON.stringify(storeInstance.buildNo)
+        
+        // 如果没有任何新增或变化，不需要更新
+        if (!hasNewParams && !hasNewTriggers && !buildNoChanged) return
+        
+        let needUpdate = false
+        
+        // 检查 store 中的 param 是否已经包含了新增参数
+        if (hasNewParams) {
+            const storeParamIds = new Set(storeInstance.param?.map(p => p.id) || [])
+            const newParamIds = newInstance.param?.filter(p => p.isNew).map(p => p.id) || []
+            needUpdate = newParamIds.some(id => !storeParamIds.has(id))
+        }
+        
+        // 检查 store 中的 triggerConfigs 是否已经包含了新增触发器
+        if (!needUpdate && hasNewTriggers) {
+            const storeTriggerIds = new Set(storeInstance.triggerConfigs?.map(t => t.stepId) || [])
+            const newTriggerIds = newInstance.triggerConfigs?.filter(t => t.isNew).map(t => t.stepId) || []
+            needUpdate = newTriggerIds.some(id => !storeTriggerIds.has(id))
+        }
+        
+        // 如果 buildNo 有变化，也需要更新
+        if (!needUpdate && buildNoChanged) {
+            needUpdate = true
+        }
+        
+        if (!needUpdate) return
+        
+        // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id（不跟随模板的参数）
+        const newOverrideParamIds = newInstance.param
+            ?.filter(p => p.isNew && !p.asInstanceInput)
+            .map(p => p.id) || []
+        
+        const existingParamIds = storeInstance?.overrideTemplateField?.paramIds ?? []
+        const updatedParamIds = [...new Set([...existingParamIds, ...newOverrideParamIds])]
+        
+        isUpdatingStore = true
+        proxy.$nextTick(() => {
+            proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                index: activeIndex.value - 1,
+                value: {
+                    ...storeInstance,
+                    param: newInstance.param,
+                    buildNo: newInstance.buildNo,
+                    triggerConfigs: newInstance.triggerConfigs,
+                    overrideTemplateField: {
+                        ...storeInstance?.overrideTemplateField,
+                        paramIds: updatedParamIds
+                    }
+                }
+            })
+            setTimeout(() => {
+                isUpdatingStore = false
+            }, 0)
+        })
+    }, {
+        deep: true,
+        immediate: true
+    })
+    
     watch(() => curTemplateVersion.value, () => {
         // 切换版本，重置实例为初始状态
         isLoading.value = true
@@ -510,14 +586,22 @@
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
             if (!instanceParamItem) {
                 // 在 templateParams 中存在，但在 instanceParams 中不存在，标记为新增
-                // 根据 asInstanceInput 和 item.required 决定新参数的 required 属性
-                const newItemRequired = item.required && item.asInstanceInput
+                // 根据 asInstanceInput 决定新参数的 isRequiredParam 和 required 属性
                 const newItem = {
                     ...item,
                     isNew: true,
-                    required: newItemRequired
+                    isRequiredParam: item.asInstanceInput,
+                    required: item.required
                 }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
+            } else {
+                // 对于已存在的参数，保留 store 中的 isRequiredParam 值（用户可能已经修改过）
+                // 只在 isRequiredParam 未定义时，才使用 required 的值进行初始化
+                if (instanceParamItem.isRequiredParam === undefined) {
+                    instanceParamItem.isRequiredParam = instanceParamItem.required
+                }
+                // 更新 required 为模板的 required（模板定义的是否为入参）
+                instanceParamItem.required = item.required
             }
         }
         instanceParams?.forEach(i => {
@@ -553,10 +637,6 @@
                             ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
                             : itemDefaultValue !== initialInstanceDefaultValue
                     }
-                }
-                if (!item.required && templateParamItem.required && templateParamItem.asInstanceInput) {
-                    item.required = true
-                    item.isRequiredParam = true
                 }
             }
         }
