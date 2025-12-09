@@ -28,6 +28,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -48,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import org.slf4j.LoggerFactory
@@ -461,6 +463,75 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class)
             .getBuildIdFromBuildNumber(projectId, pipelineId, buildNumber).data
             ?: throw ParamBlankException("Invalid buildNumber")
+    }
+
+    override fun getLightHistoryBuild(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        updateTimeDesc: Boolean?,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?,
+        startUser: List<String>?,
+        archiveFlag: Boolean?,
+        triggerAlias: List<String>?,
+        triggerBranch: List<String>?
+    ): Result<Page<LightBuildHistory>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|get light history build|$projectId|$pipelineId")
+        return client.get(ServiceBuildResource::class).getLightHistoryBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = apiGatewayUtil.getChannelCode(),
+            updateTimeDesc = updateTimeDesc,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg,
+            startUser = startUser,
+            archiveFlag = archiveFlag,
+            triggerAlias = triggerAlias,
+            triggerBranch = triggerBranch,
+            triggerUser = startUser
+        )
     }
 
     companion object {
