@@ -116,7 +116,7 @@ class StoreBaseQueryDao {
                         STORE_TYPE.eq(storeType.type.toByte())
                     ).let {
                         if (!ownerStoreCode.isNullOrEmpty()) {
-                            it.add(STORE_CODE.eq(ownerStoreCode))
+                            it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
                         }
                         if (storeStatus != null) {
                             it.add(STATUS.eq(storeStatus.name))
