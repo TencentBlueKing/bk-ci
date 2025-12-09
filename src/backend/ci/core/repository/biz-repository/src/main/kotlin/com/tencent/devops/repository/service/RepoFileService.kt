@@ -129,7 +129,8 @@ class RepoFileService @Autowired constructor(
         branch: String?,
         subModule: String? = null,
         svnFullPath: Boolean = false,
-        credentialId: String
+        credentialId: String,
+        scmCode: String? = null
     ): String {
         logger.info("get repo($repoUrl) file content in: $filePath (reversion:$reversion, branch:$branch)")
         val repo = RepositoryUtils.buildRepository(
@@ -137,7 +138,8 @@ class RepoFileService @Autowired constructor(
             userName = "",
             scmType = scmType,
             repositoryUrl = repoUrl,
-            credentialId = credentialId
+            credentialId = credentialId,
+            scmCode = scmCode
         )
         return getFileContent(
             repo = repo,
