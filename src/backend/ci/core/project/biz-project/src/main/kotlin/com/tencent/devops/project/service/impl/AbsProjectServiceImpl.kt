@@ -662,7 +662,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
                 // 记录项目更新记录
-                // 获取最近一条已审批通过的历史记录，用于获取"修改前"的 KPI 值
                 val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
                     englishName = englishName,
