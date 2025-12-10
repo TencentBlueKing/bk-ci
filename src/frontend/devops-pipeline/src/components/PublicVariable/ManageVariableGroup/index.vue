@@ -178,7 +178,20 @@
     const templateId = computed(() => proxy.$route.params?.templateId)
     // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups || [])
-    const allExistingParams = computed(() => [...props.globalParams, ...groupsMap.value.variableList]) // 合并已保存的参数和待保存的参数列表，用于检测重复
+    const allExistingParams = computed(() => {
+        // 获取被删除的变量组名称列表
+        const deletedGroupNames = publicVarGroups.value
+            .filter(group => !groupsMap.value.varGroups.some(g => g.groupName === group.groupName))
+            .map(group => group.groupName)
+        
+        // 从 globalParams 中排除属于已删除变量组的参数
+        const filteredGlobalParams = props.globalParams.filter(param =>
+            !deletedGroupNames.includes(param.varGroupName)
+        )
+        
+        // 合并过滤后的全局参数和待保存的参数列表，用于检测重复
+        return [...filteredGlobalParams, ...groupsMap.value.variableList]
+    })
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量
         const requiredParam = selectedVariableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)

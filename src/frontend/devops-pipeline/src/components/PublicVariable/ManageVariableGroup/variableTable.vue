@@ -31,7 +31,7 @@
             <bk-table-column
                 :label="$t('desc')"
                 prop="desc"
-                width="180"
+                width="140"
                 show-overflow-tooltip
             >
                 <template slot-scope="{ row }">
