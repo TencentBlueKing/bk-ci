@@ -90,7 +90,6 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentTask
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.HeartbeatResponse
-import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
@@ -618,7 +617,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         nodeHashId: String,
         page: Int?,
         pageSize: Int?
-    ): Page<OfflinePeriod> {
+    ): Page<ThirdPartyAgentAction> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 100
         val sqlLimit =
@@ -658,48 +657,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     actionTime = it.actionTime.timestamp()
                 )
             }
-        // 按时间升序排序（从旧到新）
-        val sortedActions = agentActions.sortedBy { it.actionTime }
-
-        val offlinePeriods = mutableListOf<OfflinePeriod>()
-        var offlineStartTime: Long? = null
-
-        for (action in sortedActions) {
-            when (action.action) {
-                "OFFLINE" -> {
-                    // 记录离线开始时间
-                    if (offlineStartTime == null) {
-                        offlineStartTime = action.actionTime
-                    }
-                }
-
-                "ONLINE" -> {
-                    // 如果之前有离线记录，则形成一个离线时间段
-                    offlineStartTime?.let { startTime ->
-                        val duration = action.actionTime - startTime
-                        offlinePeriods.add(
-                            OfflinePeriod(
-                                offlineTime = startTime,
-                                onlineTime = action.actionTime,
-                                duration = duration
-                            )
-                        )
-                        offlineStartTime = null
-                    }
-                }
-            }
-        }
-        // TODO: issue-1235
-        // 如果最后一条记录是 OFFLINE，说明当前仍处于离线状态
-        // 可以选择是否包含这种情况，这里暂不处理
-
-        // 返回时按离线时间倒序排列（最新的在前）
-        return Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            count = agentActionCount,
-            records = offlinePeriods.sortedByDescending { it.offlineTime }
-        )
+        return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = agentActionCount, records = agentActions)
     }
 
     fun generateAgent(

@@ -40,6 +40,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
@@ -404,6 +405,7 @@ interface UserThirdPartyAgentResource {
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
 
+    @Deprecated("会被 listAgentOfflinePeriod 取代")
     @Operation(summary = "获取第三方构建机活动")
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentActions")
@@ -417,6 +419,27 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<ThirdPartyAgentAction>>
+
+    @Operation(summary = "获取第三方构建机离线时间段")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentOfflinePeriod")
+    fun listAgentOfflinePeriod(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Agent Hash ID", required = true)
+        @PathParam("agentHashId")
+        agentHashId: String,
         @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,

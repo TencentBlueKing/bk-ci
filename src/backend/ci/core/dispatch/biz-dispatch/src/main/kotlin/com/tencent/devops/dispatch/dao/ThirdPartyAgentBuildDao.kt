@@ -30,17 +30,19 @@ package com.tencent.devops.dispatch.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.field
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -125,6 +127,14 @@ class ThirdPartyAgentBuildDao {
                     .set(VM_SEQ_ID, vmSeqId)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
+                    .set(
+                        TIME_INTERVAL, field(
+                            "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                            Long::class.java,
+                            CREATED_TIME,
+                            now
+                        )
+                    )
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
@@ -202,9 +212,18 @@ class ThirdPartyAgentBuildDao {
         ids: Set<Long>
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            val now = LocalDateTime.now()
             return dslContext.update(this)
                 .set(STATUS, PipelineTaskStatus.FAILURE.status)
-                .set(UPDATED_TIME, LocalDateTime.now())
+                .set(UPDATED_TIME, now)
+                .set(
+                    TIME_INTERVAL, field(
+                        "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                        Long::class.java,
+                        CREATED_TIME,
+                        now
+                    )
+                )
                 .where(ID.`in`(ids))
                 .execute()
         }
@@ -241,13 +260,25 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun updateStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus): Int {
+    fun updateStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus, timeInterval: Long?): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.update(this)
+            val now = LocalDateTime.now()
+            val dsl = dslContext.update(this)
                 .set(STATUS, status.status)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(ID.eq(id))
-                .execute()
+                .set(UPDATED_TIME, now)
+            if (timeInterval != null) {
+                dsl.set(TIME_INTERVAL, timeInterval)
+            } else {
+                dsl.set(
+                    TIME_INTERVAL, timeInterval ?: field(
+                        "TIMESTAMPDIFF(SECOND, {0}, {1})",
+                        Long::class.java,
+                        CREATED_TIME,
+                        now
+                    )
+                )
+            }
+            return dsl.where(ID.eq(id)).execute()
         }
     }
 
@@ -443,6 +474,42 @@ class ThirdPartyAgentBuildDao {
                 .fetch().map {
                     it[AGENT_ID] to (it["COUNT"] as Int)
                 }.toMap()
+        }
+    }
+
+    fun fetchAgentBuildPipelineJob(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String
+    ): List<TPAPipelineBuild> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.select(
+                PIPELINE_ID,
+                PIPELINE_NAME,
+                JOB_ID,
+                TASK_NAME,
+                DSL.count().`as`("BUILD_COUNT"),
+                DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
+                DSL.min(CREATED_TIME).`as`("FIRST_BUILD_TIME"),
+                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL")
+            )
+                .from(this)
+                .where(PROJECT_ID.eq(projectId)).and(AGENT_ID.eq(agentId))
+                .groupBy(PIPELINE_ID, JOB_ID)
+                .orderBy(DSL.field("LAST_BUILD_TIME").desc())
+                .fetch()
+                .map {
+                    TPAPipelineBuild(
+                        pipelineId = it.value1(),
+                        pipelineName = it.value2(),
+                        jobId = it.value3(),
+                        jobName = it.value4(),
+                        buildCount = it.value5() as Int,
+                        lastBuildTime = it.value6(),
+                        firstBuildTime = it.value7(),
+                        avgTimeInterval = it.value8()?.toLong()
+                    )
+                }
         }
     }
 }

@@ -384,7 +384,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                             .routeKeySuffix?.routeKeySuffix,
                         executeCount = task.executeCount,
                         jobId = task.jobId,
-                        containerHashId = task.containerHashId
+                        containerHashId = task.containerHashId,
+                        jobTimeInterval = param.timeCost?.totalCost
                     )
                 )
                 defaultFailAtomResponse
