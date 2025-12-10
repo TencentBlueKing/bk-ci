@@ -436,11 +436,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
         // 获取审批信息以读取 KPI 字段
         val projectApprovalInfo = projectApprovalService.get(englishName)
+        // 优先从 bkCosts 获取实时的 KPI 信息
+        val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
         val projectInfo = ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectOrganizationInfo = rightProjectOrganization,
-            kpiCode = projectApprovalInfo?.kpiCode,
-            kpiName = projectApprovalInfo?.kpiName
+            kpiCode = realtimeKpiInfo?.first,
+            kpiName = realtimeKpiInfo?.second
         )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
@@ -512,14 +514,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } else {
             null
         }
-        // 从历史记录获取"修改前"的 KPI 值
-        val latestApprovedHistory = projectUpdateHistoryDao.getLatestApprovedHistory(
-            dslContext = dslContext,
-            englishName = englishName
-        )
-        // 优先使用历史记录中的 afterKpiCode（上次审批通过后的值）作为"修改前"的值
-        val beforeKpiCode = latestApprovedHistory?.afterKpiCode
-        val beforeKpiName = latestApprovedHistory?.afterKpiName
+        // 优先从 bkCosts 获取实时的 KPI 信息作为"修改前"的值
+        val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
+        val beforeKpiCode = realtimeKpiInfo?.first
+        val beforeKpiName = realtimeKpiInfo?.second
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
@@ -664,20 +662,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
                 // 记录项目更新记录
-                // 获取最近一条已审批通过的历史记录，用于获取"修改前"的 KPI 值
-                val latestApprovedHistory = projectUpdateHistoryDao.getLatestApprovedHistory(
-                    dslContext = dslContext,
-                    englishName = englishName
-                )
+                val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
                     englishName = englishName,
                     beforeProjectName = projectInfo.projectName,
                     afterProjectName = projectUpdateInfo.projectName,
                     beforeProductId = projectInfo.productId,
                     afterProductId = projectUpdateInfo.productId,
-                    beforeKpiCode = latestApprovedHistory?.beforeKpiCode ?: latestApprovedHistory?.afterKpiCode,
+                    beforeKpiCode = realtimeKpiInfo?.first,
                     afterKpiCode = projectUpdateInfo.kpiCode,
-                    beforeKpiName = latestApprovedHistory?.beforeKpiName ?: latestApprovedHistory?.afterKpiName,
+                    beforeKpiName = realtimeKpiInfo?.second,
                     afterKpiName = projectUpdateInfo.kpiName,
                     beforeOrganization = with(projectInfo) {
                         getOrganizationStr(bgName, businessLineName, deptName, centerName)
