@@ -179,14 +179,17 @@
     // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups || [])
     const allExistingParams = computed(() => {
-        // 获取被删除的变量组名称列表
-        const deletedGroupNames = publicVarGroups.value
-            .filter(group => !groupsMap.value.varGroups.some(g => g.groupName === group.groupName))
-            .map(group => group.groupName)
+        const currentGroupNamesSet = new Set(groupsMap.value.varGroups.map(g => g.groupName))
+        
+        const deletedGroupNamesSet = new Set(
+            publicVarGroups.value
+                .filter(group => !currentGroupNamesSet.has(group.groupName))
+                .map(group => group.groupName)
+        )
         
         // 从 globalParams 中排除属于已删除变量组的参数
         const filteredGlobalParams = props.globalParams.filter(param =>
-            !deletedGroupNames.includes(param.varGroupName)
+            !deletedGroupNamesSet.has(param.varGroupName)
         )
         
         // 合并过滤后的全局参数和待保存的参数列表，用于检测重复
