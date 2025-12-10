@@ -58,6 +58,9 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPABuildPipeline
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineJobBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -230,7 +233,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 }
 
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
-                thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
+                thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING, null)
 
                 try {
                     client.get(ServiceThirdPartyAgentResource::class)
@@ -416,7 +419,13 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(buildId: String, vmSeqId: String?, buildResult: Boolean, executeCount: Int?) {
+    fun finishBuild(
+        buildId: String,
+        vmSeqId: String?,
+        buildResult: Boolean,
+        executeCount: Int?,
+        timeInterval: Long?
+    ) {
         val now = LocalDateTime.now().timestampmilli()
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId, executeCount)
@@ -434,7 +443,7 @@ class ThirdPartyAgentService @Autowired constructor(
                     createTime = null,
                     endTime = now
                 )
-                finishBuild(record, buildResult)
+                finishBuild(record, buildResult, timeInterval)
             }
         } else {
             val record = thirdPartyAgentBuildDao.getWithExecuteCount(
@@ -453,7 +462,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 createTime = null,
                 endTime = now
             )
-            finishBuild(record, buildResult)
+            finishBuild(record, buildResult, timeInterval)
         }
     }
 
@@ -509,7 +518,7 @@ class ThirdPartyAgentService @Autowired constructor(
         )
     }
 
-    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
+    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean, timeInterval: Long?) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
                 "of seq(${record.vmSeqId}) and status(${record.status})"
@@ -533,8 +542,10 @@ class ThirdPartyAgentService @Autowired constructor(
             vmSeqId = record.vmSeqId
         )
         thirdPartyAgentBuildDao.updateStatus(
-            dslContext, record.id,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+            dslContext = dslContext,
+            id = record.id,
+            status = if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE,
+            timeInterval = timeInterval
         )
         with(record) {
             pipelineEventDispatcher.dispatch(
@@ -598,7 +609,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     PipelineTaskStatus.FAILURE
                 } else {
                     PipelineTaskStatus.DONE
-                }
+                },
+                timeInterval = null
             )
         }
 
@@ -899,6 +911,17 @@ class ThirdPartyAgentService @Autowired constructor(
         }.onFailure {
             logger.warn("agentStartup|sendNotifyMessageByTemplate|$projectId|$agentId")
         }
+    }
+
+    fun fetchBuildPipeline(
+        projectId: String,
+        agentId: String
+    ): List<TPAPipelineBuild> {
+        return thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(dslContext, projectId, agentId)
+    }
+
+    fun fetchPipelineJobBuild(): List<TPAPipelineJobBuild>{
+
     }
 
     companion object {

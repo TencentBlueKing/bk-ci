@@ -28,9 +28,7 @@
 package com.tencent.devops.environment.pojo.thirdpartyagent
 
 import io.swagger.v3.oas.annotations.media.Schema
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDateTime
 
 @Schema(title = "Agent活动（上下线）")
 data class ThirdPartyAgentAction(
@@ -44,33 +42,12 @@ data class ThirdPartyAgentAction(
     val actionTime: Long
 )
 
+@Schema(title = "Agent离线时间段数据")
 data class OfflinePeriod(
-    val offlineTime: Long, // 离线开始时间
-    val onlineTime: Long,        // 上线时间（离线结束时间）
-    val duration: Long           // 持续时长（秒）
-) {
-    fun getOfflineTimeStr(): String {
-        return formatTime(offlineTime)
-    }
-
-    fun getOnlineTimeStr(): String {
-        return formatTime(onlineTime)
-    }
-
-    fun getDurationStr(): String {
-        val days = duration / (24 * 3600)
-        val hours = (duration % (24 * 3600)) / 3600
-        val minutes = (duration % 3600) / 60
-
-        return buildString {
-            if (days > 0) append("${days}天")
-            if (hours > 0) append("${hours}时")
-            if (minutes > 0 || (days == 0L && hours == 0L)) append("${minutes}分")
-        }
-    }
-
-    private fun formatTime(timestamp: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        return sdf.format(Date(timestamp * 1000))
-    }
-}
+    @get:Schema(title = "离线开始时间", required = true)
+    val offlineTime: LocalDateTime,
+    @get:Schema(title = "上线时间（离线结束时间）", required = true)
+    val onlineTime: LocalDateTime,
+    @get:Schema(title = "持续时长（秒）", required = true)
+    val duration: Long
+)

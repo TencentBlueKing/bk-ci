@@ -43,6 +43,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
 import com.tencent.devops.environment.pojo.thirdpartyagent.OfflinePeriod
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
@@ -328,17 +329,31 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         )
     }
 
+    @Deprecated("会被 listAgentOfflinePeriod 取代")
     override fun listAgentActions(
         userId: String,
         projectId: String,
         nodeHashId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<OfflinePeriod>> {
+    ): Result<Page<ThirdPartyAgentAction>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(thirdPartyAgentService.listAgentActions(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    override fun listAgentOfflinePeriod(
+        userId: String,
+        projectId: String,
+        agentHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<OfflinePeriod>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(agentHashId)
+        return Result(tpaService.getAgentOfflinePeriods(agentHashId, page, pageSize))
     }
 
     override fun queryCpuUsageMetrix(

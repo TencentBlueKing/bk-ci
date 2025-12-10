@@ -106,6 +106,26 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
 
 -- ----------------------------
+-- Table structure for T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT_OFFLINE_PERIOD` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `AGENT_ID` bigint(20) NOT NULL COMMENT '构建机ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `OFFLINE_TIME` datetime NOT NULL COMMENT '下线时间',
+  `ONLINE_TIME` datetime DEFAULT NULL COMMENT '上线时间（NULL表示还未上线）',
+  `DURATION_SECONDS` bigint(20) DEFAULT NULL COMMENT '离线时长（秒）',
+  `CREATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `UPDATED_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`ID`),
+  KEY `idx_agent_offline_time` (`AGENT_ID`, `OFFLINE_TIME`),
+  KEY `idx_project_time` (`PROJECT_ID`, `OFFLINE_TIME`),
+  KEY `idx_online_time` (`ONLINE_TIME`),
+  KEY `idx_duration` (`DURATION_SECONDS`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent离线时段统计表';
+
+-- ----------------------------
 -- Table structure for T_ENV_NODE
 -- ----------------------------
 
