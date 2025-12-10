@@ -202,6 +202,9 @@ interface ServiceArtifactoryDownLoadResource {
         artifactoryType: ArtifactoryType,
         @Parameter(description = "路径", required = true)
         @QueryParam("path")
-        path: String
+        path: String,
+        @Parameter(description = "检查是否下载权限", required = true)
+        @QueryParam("checkDownload")
+        checkDownload: Boolean
     ): Result<AllowDownload>
 }

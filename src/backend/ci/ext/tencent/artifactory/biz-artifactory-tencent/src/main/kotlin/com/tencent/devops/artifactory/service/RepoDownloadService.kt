@@ -166,6 +166,7 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ip: String
+        ip: String,
+        checkDownload: Boolean
     ): AllowDownload
 }
