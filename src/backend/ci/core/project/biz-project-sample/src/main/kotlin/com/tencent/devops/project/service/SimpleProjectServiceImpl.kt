@@ -257,6 +257,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun updateProjectRouterTag(englishName: String) = Unit
 
+    override fun getRealtimeKpiInfo(englishName: String): Pair<String?, String?>? = null
+
     override fun validateProjectRelateProduct(
         projectProductValidateDTO: ProjectProductValidateDTO
     ) = Unit

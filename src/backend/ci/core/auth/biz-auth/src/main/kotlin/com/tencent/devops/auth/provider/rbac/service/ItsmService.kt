@@ -19,6 +19,7 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
+@Suppress("MaxLineLength")
 class ItsmService constructor(
     val bkHttpRequestService: BkHttpRequestService
 ) {
@@ -80,12 +81,16 @@ class ItsmService constructor(
         kpiProductName: String? = null,
         isCreateProject: Boolean = true
     ): ItsmContentDTO {
-        logger.info("build grade manager itsm content:$projectName|$projectId|$organization|$productName|$kpiProductName")
+        logger.info(
+            "build grade manager itsm content:" +
+                "$projectName|$projectId|$organization|$productName|$kpiProductName"
+        )
         val itsmColumns = mutableListOf(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)).type(TEXT_TYPE).build(),
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
+            ).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("productName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("kpiProductName")
