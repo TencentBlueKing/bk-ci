@@ -21,5 +21,9 @@ data class ProjectProductValidateDTO(
     @Schema(title = "bgId")
     val bgId: Long,
     @Schema(title = "bg名称")
-    val bgName: String
+    val bgName: String,
+    @Schema(title = "KPI产品编码")
+    val kpiCode: String? = null,
+    @Schema(title = "KPI产品名称")
+    val kpiName: String? = null
 )
