@@ -105,7 +105,7 @@
         .bk-table-body tr.bk-table-row.hover-row>td {
             background-color: #FFFFFF;
         }
-        .is-repeat {
+        .bk-table-body tr.is-repeat > td {
            background: #FFF0F0 !important;
         }
         .var-name.is-required {
