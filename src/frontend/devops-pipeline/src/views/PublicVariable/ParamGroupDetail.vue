@@ -168,7 +168,10 @@
         OTHER,
         OPERATE_TYPE
     } from '@/store/modules/publicVar/constants'
-    import { navConfirm } from '@/utils/util'
+    import {
+        navConfirm,
+        isShallowEqual
+    } from '@/utils/util'
     import UseInstance from '@/hook/useInstance'
     import BasicInfo from '@/components/PublicVariable/BasicInfo'
     import ReferenceList from '@/components/PublicVariable/ReferenceList'
@@ -280,7 +283,6 @@
         // 如果是新建模式（没有 groupName），立即保存初始状态
         if (operateType.value === OPERATE_TYPE.CREATE || !groupData.value?.groupName) {
             proxy.$nextTick(() => {
-                console.log(123)
                 initialGroupData.value = deepClone(groupData.value)
                 shouldSaveInitialData.value = false
             })
@@ -316,7 +318,7 @@
         }
         
         // 深度对比每个变量
-        return JSON.stringify(currentVars) !== JSON.stringify(initialVars)
+        return !isShallowEqual(currentVars, initialVars)
     }
     
     async function handleHidden () {

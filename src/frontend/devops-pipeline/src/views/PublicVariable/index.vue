@@ -404,14 +404,13 @@
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.CREATE)
         paramGroupDetailRef.value?.init?.()
     }
-    function handleEditGroup (row) {
-        showDetail.value = true
-        showType.value = EDIT_VARIABLE
-        readOnly.value = false
+    async function handleEditGroup (row) {
         activeNameFlag.value = row.groupName
-        defaultTab.value = 'basicInfo'
+        showType.value = EDIT_VARIABLE
         detailTitle.value = proxy.$t('publicVar.editParamGroup')
+        defaultTab.value = 'basicInfo'
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
+        
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...groupData.value,
             groupName: row.groupName,
@@ -419,7 +418,9 @@
             updateTime: row.updateTime,
             modifier: row.modifier
         })
-        paramGroupDetailRef.value?.init?.()
+        
+        readOnly.value = false
+        showDetail.value = true
     }
     function handlePageChange (page) {
         pagination.value.current = page
