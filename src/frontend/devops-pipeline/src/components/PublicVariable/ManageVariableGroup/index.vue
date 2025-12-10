@@ -178,6 +178,7 @@
     const templateId = computed(() => proxy.$route.params?.templateId)
     // const pipelineInfo = computed(() => proxy.$store?.state?.atom?.pipelineInfo)
     const publicVarGroups = computed(() => proxy.$store?.state?.atom?.pipeline?.publicVarGroups || [])
+    const allExistingParams = computed(() => [...props.globalParams, ...groupsMap.value.variableList]) // 合并已保存的参数和待保存的参数列表，用于检测重复
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量
         const requiredParam = selectedVariableList.value.filter(i => i.type === VARIABLE && i.buildFormProperty.required)
@@ -306,7 +307,7 @@
         })
         selectedVariableList.value = res.map(i => ({
             ...i,
-            isRepeat: !!(props.globalParams.find(param => param.name === i.buildFormProperty.id))
+            isRepeat: !!(allExistingParams.value.find(param => param.id === i.buildFormProperty.id))
         }))
     }
     async function fetchAllVarGroupByGroupName () {
@@ -315,7 +316,7 @@
                 return {
                     ...i,
                     isDeleted: !varGroupList.value.find(group => group.groupName === i.groupName),
-                    isRepeat: !!(props.globalParams.find(param => param?.name === i?.buildFormProperty?.id))
+                    isRepeat: !!(allExistingParams.value.find(param => param?.id === i?.buildFormProperty?.id))
                 }
             })
             allProjectVarGroup.value = list.map((data, index) => ({
@@ -378,7 +379,6 @@
             return
         }
         
-        console.log(selectedVariableList.value, '123123')
         showAddComp.value = false
         try {
             groupsMap.value.varGroups.push(newGroups.value)
@@ -412,8 +412,8 @@
     }
 
     function getRepeatTips (list = []) {
-        const isRepeatParamId = list?.find(param => param.isRepeat)?.varName || ''
-        const repeatParam = props.globalParams.find(param => param.name === isRepeatParamId)
+        const isRepeatParamId = list?.find(param => param.isRepeat)?.buildFormProperty?.id || ''
+        const repeatParam = allExistingParams.value.find(param => param.id === isRepeatParamId)
         if (repeatParam) {
             const isRequiredParam = repeatParam.required
             const isConstantParam = repeatParam.constant
