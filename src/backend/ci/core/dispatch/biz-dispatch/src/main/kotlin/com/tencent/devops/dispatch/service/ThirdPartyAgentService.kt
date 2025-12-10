@@ -58,7 +58,6 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPABuildPipeline
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineJobBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
@@ -918,10 +917,6 @@ class ThirdPartyAgentService @Autowired constructor(
         agentId: String
     ): List<TPAPipelineBuild> {
         return thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(dslContext, projectId, agentId)
-    }
-
-    fun fetchPipelineJobBuild(): List<TPAPipelineJobBuild>{
-
     }
 
     companion object {

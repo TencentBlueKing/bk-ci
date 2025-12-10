@@ -1000,7 +1000,13 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     fun finishBuild(event: PipelineAgentShutdownEvent) {
         tpaQueueService.finishQueue(event.buildId, event.vmSeqId)
-        thirdPartyAgentBuildService.finishBuild(event.buildId, event.vmSeqId, event.buildResult, event.executeCount)
+        thirdPartyAgentBuildService.finishBuild(
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            buildResult = event.buildResult,
+            executeCount = event.executeCount,
+            timeInterval = event.jobTimeInterval
+        )
     }
 
     companion object {
