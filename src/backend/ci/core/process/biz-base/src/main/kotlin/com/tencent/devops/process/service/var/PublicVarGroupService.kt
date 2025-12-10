@@ -312,11 +312,11 @@ class PublicVarGroupService @Autowired constructor(
             groupNames = groupNames.takeIf { it.isNotEmpty() }
         )
 
-        // 直接使用表中的REFER_COUNT字段，避免实时统计
+        // 直接使用表中的REFER_COUNT字段
         val records = groupPOs.map { po ->
             PublicVarGroupDO(
                 groupName = po.groupName,
-                referCount = po.referCount ?: 0,
+                referCount = po.referCount,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,

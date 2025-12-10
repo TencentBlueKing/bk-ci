@@ -141,12 +141,12 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
-     * 更新单个变量组的引用计数（线程安全）
+     * 更新单个变量组的引用计数
      * 注意：REFER_COUNT 字段现在表示实际引用该变量组的 referId 数量（去重后）
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名
-     * @param version 版本号
+     * @param version 版本号（如果是-1表示动态版本，需要查询最新版本号）
      * @param latestFlag 是否为最新版本标志，如果为true则查询最新版本
      */
     fun updateSingleGroupReferCount(
@@ -158,31 +158,46 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     ) {
         logger.info("updateSingleGroupReferCount for group: $groupName, version: $version, latestFlag: $latestFlag")
         try {
+            // 如果version是动态版本(-1)，需要查询最新版本号
+            val targetVersion = if (version == DYNAMIC_VERSION) {
+                publicVarGroupDao.getLatestVersionByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName
+                ) ?: run {
+                    logger.warn("Latest version not found for group: $groupName, skip update")
+                    return
+                }
+            } else {
+                version
+            }
+
             // 计算实际引用数
-            val actualReferCount = if (latestFlag) {
-            // latestFlag = true：最新版本，统计动态引用（version=-1）
-            val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                referType = null,
-                version = DYNAMIC_VERSION
-            )
+            val actualReferCount = if (latestFlag || version == DYNAMIC_VERSION) {
+                // latestFlag = true 或 version = -1：最新版本，统计动态引用（version=-1）+ 明确指定该版本号的引用
+                val dynamicReferCount = publicVarGroupReferInfoDao.countByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName,
+                    referType = null,
+                    version = DYNAMIC_VERSION
+                )
                 val specificReferCount = publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName,
                     referType = null,
-                    version = version // 明确指定该版本号的引用
+                    version = targetVersion // 明确指定该版本号的引用
                 )
                 dynamicReferCount + specificReferCount
             } else {
+                // 非最新版本：只统计明确指定该版本号的引用
                 publicVarGroupReferInfoDao.countByGroupName(
                     dslContext = context,
                     projectId = projectId,
                     groupName = groupName,
                     referType = null,
-                    version = version
+                    version = targetVersion
                 )
             }
 
@@ -191,7 +206,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 dslContext = context,
                 projectId = projectId,
                 groupName = groupName,
-                version = version, // 更新的是传入的版本号
+                version = targetVersion, // 更新的是实际的版本号（不是-1）
                 referCount = actualReferCount
             )
         } catch (e: Throwable) {
