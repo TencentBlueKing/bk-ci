@@ -181,4 +181,14 @@ interface StoreComponentQueryService {
         storeType: StoreTypeEnum,
         storeCodes: Set<String>
     ): List<StoreBaseInfo>
+
+    /**
+     * 根据组件标识获取组件要素信息，不校验用户权限
+     */
+    fun getComponentDataInfoByCode(
+        storeType: String,
+        storeCode: String,
+        version: String? = null,
+        ownerStoreCode: String? = null
+    ): StoreDetailInfo?
 }

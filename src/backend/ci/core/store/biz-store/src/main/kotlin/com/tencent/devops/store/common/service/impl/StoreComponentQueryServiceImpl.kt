@@ -522,14 +522,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val labels = storeLabelService.getLabelsByStoreId(storeBaseRecord.id)
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
 
-        val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
-        var extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
-        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType
-        )
-        extData = extData.plus(baseFeatureExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) }))
+        val extData = getComponentExtData(storeId, storeCode, storeType)
         val htmlTemplateVersion = extData[KEY_HTML_TEMPLATE_VERSION]
         val initProjectCode =
             if (htmlTemplateVersion != null && htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
@@ -596,6 +589,22 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         )
     }
 
+    private fun getComponentExtData(
+        storeId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Map<String, Any> {
+        val baseExtRecords = storeBaseExtQueryDao.getBaseExtByIds(dslContext, listOf(storeId))
+        var extData = baseExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) })
+        val baseFeatureExtRecords = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        extData = extData.plus(baseFeatureExtRecords.associateBy({ it.fieldName }, { formatJson(it.fieldValue) }))
+        return extData
+    }
+
     override fun getComponentDetailInfoByCode(
         userId: String,
         storeType: String,
@@ -603,22 +612,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         version: String?,
         ownerStoreCode: String?
     ): StoreDetailInfo? {
-        return if (version.isNullOrBlank()) {
-            storeBaseQueryDao.getLatestComponentByCode(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = StoreTypeEnum.valueOf(storeType),
-                ownerStoreCode = ownerStoreCode
-            )
-        } else {
-            storeBaseQueryDao.getComponent(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = StoreTypeEnum.valueOf(storeType),
-                version = version,
-                ownerStoreCode = ownerStoreCode
-            )
-        }?.let {
+        return getComponent(
+            version = version,
+            storeCode = storeCode,
+            storeType = storeType,
+            ownerStoreCode = ownerStoreCode
+        )?.let {
             getComponentDetailInfoById(userId, StoreTypeEnum.valueOf(storeType), it.id)
         }
     }
@@ -968,7 +967,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 storeCode = storeCode,
                 storeType = storeType,
                 ownerStoreCode = ownerStoreCode,
-                storeStatus = storeStatus
+                storeStatus = storeStatus,
+                keyword = keyword
             )
         } ?: storeId?.let {
             storeBaseQueryDao.getComponentById(
@@ -977,6 +977,56 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             )
         }
         return baseRecord?.convertStoreBaseInfo()
+    }
+
+    override fun getComponentDataInfoByCode(
+        storeType: String,
+        storeCode: String,
+        version: String?,
+        ownerStoreCode: String?
+    ): StoreDetailInfo? {
+        return getComponent(
+            version = version,
+            storeCode = storeCode,
+            storeType = storeType,
+            ownerStoreCode = ownerStoreCode
+        )?.let {
+            val finalStoreType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())
+            StoreDetailInfo(
+                storeCode = it.storeCode,
+                storeType = finalStoreType.name,
+                storeId = it.id,
+                name = it.name,
+                description = it.description,
+                extData = getComponentExtData(
+                    storeId = it.id,
+                    storeType = finalStoreType,
+                    storeCode = it.storeCode
+                )
+            )
+        }
+    }
+
+    private fun getComponent(
+        version: String?,
+        storeCode: String,
+        storeType: String,
+        ownerStoreCode: String?
+    ) = if (version.isNullOrBlank()) {
+        storeBaseQueryDao.getLatestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            ownerStoreCode = ownerStoreCode
+        )
+    } else {
+        storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            version = version,
+            ownerStoreCode = ownerStoreCode
+        )
     }
 
     override fun getComponentBaseInfoList(
@@ -1285,14 +1335,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCodes = ownerStoreCodes
         ).associate { it.storeCode to it.storeName }
         // 获取关联的流水线数量
-        val pipelineCount = storeInfos.map {
-            val ownerStoreCode = it[tStoreBase.OWNER_STORE_CODE]
-            if (ownerStoreCode.isNullOrBlank()) {
-                it[tStoreBase.STORE_CODE]
-            } else {
-                "$ownerStoreCode#${it[tStoreBase.STORE_CODE]}"
-            }
-        }.toSet().associateWith {
+        val pipelineCount = storeInfos.map {it[tStoreBase.STORE_CODE] }.toSet().associateWith {
             client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(
                 atomCode = it,
                 projectCode = null
@@ -1332,10 +1375,10 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
             // 宿主应用名 to 组件关联流水线数量
             val (ownerStoreName, pipelineCount) = if (ownerStoreCode.isNullOrBlank()) {
-                null to (pipelineCount[storeCode] ?: 0)
+                null
             } else {
-                ownerStoreInfos[ownerStoreCode] to (pipelineCount["$ownerStoreCode#$storeCode"] ?: 0)
-            }
+                ownerStoreInfos[ownerStoreCode]
+            } to (pipelineCount[storeCode] ?: 0)
             val marketItem = MarketItem(
                 id = storeId,
                 name = record[tStoreBase.NAME],

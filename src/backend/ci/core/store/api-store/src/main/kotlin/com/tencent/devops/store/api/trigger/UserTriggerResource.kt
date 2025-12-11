@@ -45,38 +45,8 @@ interface UserTriggerResource {
     fun types(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "插件分类id", required = false)
-        @QueryParam("classifyId")
-        classifyId: String?,
-        @Parameter(description = "项目编码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String
+        userId: String
     ): Result<List<TriggerGroupInfo>>
-
-    @Operation(summary = "触发器列表")
-    @GET
-    @Path("common")
-    fun commonTrigger(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目编码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String,
-        @Parameter(description = "插件分类id", required = false)
-        @QueryParam("classifyId")
-        classifyId: String?,
-        @Parameter(description = "插件搜索关键字", required = false)
-        @QueryParam("keyword")
-        keyword: String?,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<AtomResp<AtomRespItem>?>
 
     @Operation(summary = "触发器列表")
     @GET
@@ -85,9 +55,6 @@ interface UserTriggerResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
-        @QueryParam("projectCode")
-        projectCode: String,
         @Parameter(description = "插件搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -101,7 +68,7 @@ interface UserTriggerResource {
 
     @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")
     @GET
-    @Path("/{projectCode}/{sourceCode}/{atomCode}/{version}")
+    @Path("/{sourceCode}/{atomCode}/{version}")
     @BkInterfaceI18n(
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
@@ -109,9 +76,6 @@ interface UserTriggerResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
         @Parameter(description = "归属组件标识", required = true)
         @PathParam("sourceCode")
         sourceCode: String,

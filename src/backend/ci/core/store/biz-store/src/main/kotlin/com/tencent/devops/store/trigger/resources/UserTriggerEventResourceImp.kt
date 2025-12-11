@@ -19,40 +19,18 @@ class UserTriggerEventResourceImp @Autowired constructor(
         return Result(triggerEventService.previewEvent(userId, storeId))
     }
 
-    override fun types(userId: String, classifyId: String?, projectCode: String): Result<List<TriggerGroupInfo>> {
-        return Result(triggerEventService.types(userId, classifyId, projectCode))
-    }
-
-    override fun commonTrigger(
-        userId: String,
-        projectCode: String,
-        classifyId: String?,
-        keyword: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<AtomResp<AtomRespItem>?> {
-        return Result(
-            triggerEventService.commonTrigger(
-                projectCode = projectCode,
-                userId = userId,
-                classifyId = classifyId,
-                keyword = keyword,
-                page = page ?: 1,
-                pageSize = pageSize ?: 20
-            )
-        )
+    override fun types(userId: String): Result<List<TriggerGroupInfo>> {
+        return Result(triggerEventService.types(userId))
     }
 
     override fun baseTrigger(
         userId: String,
-        projectCode: String,
         keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
         return Result(
             triggerEventService.baseTrigger(
-                projectCode = projectCode,
                 userId = userId,
                 keyword = keyword,
                 page = page ?: 1,
@@ -63,14 +41,12 @@ class UserTriggerEventResourceImp @Autowired constructor(
 
     override fun triggerDetail(
         userId: String,
-        projectCode: String,
         sourceCode: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
         return Result(
             triggerEventService.triggerDetail(
-                projectCode = projectCode,
                 atomCode = atomCode,
                 version = version,
                 userId = userId,

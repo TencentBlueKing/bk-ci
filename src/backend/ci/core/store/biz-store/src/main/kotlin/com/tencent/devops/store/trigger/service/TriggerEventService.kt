@@ -6,7 +6,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
@@ -14,7 +13,6 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
-import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -27,7 +25,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class TriggerEventService @Autowired constructor(
-    private val atomService: AtomService,
     private val storeComponentQueryService: StoreComponentQueryService
 ) {
     fun previewEvent(userId: String, storeId: String): AtomForm? {
@@ -42,19 +39,7 @@ class TriggerEventService @Autowired constructor(
         return atomForm
     }
 
-    fun types(userId: String, classifyId: String?, projectCode: String): List<TriggerGroupInfo> {
-        val commonTriggerCount = atomService.getPipelineAtomCount(
-            userId = userId,
-            category = AtomCategoryEnum.TRIGGER.name,
-            classifyId = classifyId,
-            projectCode = projectCode,
-            jobType = null,
-            keyword = null,
-            os = null,
-            recommendFlag = null,
-            serviceScope = null,
-            queryProjectAtomFlag = false
-        ).toInt()
+    fun types(userId: String): List<TriggerGroupInfo> {
         // 按照归属应用分组
         val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
             userId = userId,
@@ -81,38 +66,13 @@ class TriggerEventService @Autowired constructor(
         return mutableListOf(
             TriggerGroupInfo(
                 type = BK_STORE_ALL_TRIGGER,
-                count = commonTriggerCount + componentCount
+                count = componentCount
             )
         ).plus(finalComponentGroup)
     }
 
-    fun commonTrigger(
-        projectCode: String,
-        userId: String,
-        classifyId: String?,
-        keyword: String?,
-        page: Int,
-        pageSize: Int
-    ): AtomResp<AtomRespItem>? {
-        return atomService.getPipelineAtoms(
-            projectCode = projectCode,
-            userId = userId,
-            classifyId = classifyId,
-            keyword = keyword,
-            jobType = null,
-            os = null,
-            recommendFlag = null,
-            serviceScope = null,
-            page = page,
-            pageSize = pageSize,
-            queryProjectAtomFlag = false,
-            category = AtomCategoryEnum.TRIGGER.name
-        ).data
-    }
-
     fun baseTrigger(
         userId: String,
-        projectCode: String,
         keyword: String?,
         page: Int,
         pageSize: Int
@@ -123,7 +83,8 @@ class TriggerEventService @Autowired constructor(
                 storeType = StoreTypeEnum.TRIGGER_EVENT.name,
                 page = page,
                 pageSize = pageSize,
-                queryProjectComponentFlag = false
+                queryProjectComponentFlag = false,
+                keyword = keyword
             )
         ).let {
             AtomResp(
@@ -178,72 +139,58 @@ class TriggerEventService @Autowired constructor(
 
     fun triggerDetail(
         userId: String,
-        projectCode: String,
         atomCode: String,
         version: String,
         sourceCode: String
     ): PipelineAtom? {
-        return when (sourceCode) {
-            BK_STORE_COMMON_TRIGGER -> {
-                atomService.getPipelineAtom(
-                    projectCode = projectCode,
-                    atomCode = atomCode,
-                    version = version,
-                    queryOfflineFlag = false
-                ).data
-            }
-
-            else -> {
-                storeComponentQueryService.getComponentDetailInfoByCode(
+        return storeComponentQueryService.getComponentDetailInfoByCode(
+            userId = userId,
+            storeType = StoreTypeEnum.TRIGGER_EVENT.name,
+            storeCode = atomCode,
+            ownerStoreCode = sourceCode,
+            version = version
+        )?.let { storeDetailInfo ->
+            PipelineAtom(
+                id = storeDetailInfo.storeId,
+                name = storeDetailInfo.name,
+                atomCode = storeDetailInfo.storeCode,
+                version = storeDetailInfo.version,
+                classType = "marketBuild",
+                atomStatus = storeDetailInfo.status,
+                creator = userId,
+                createTime = 0,
+                updateTime = 0,
+                versionList = storeComponentQueryService.getComponentVersionList(
                     userId = userId,
-                    storeType = StoreTypeEnum.TRIGGER_EVENT.name,
+                    storeType = StoreTypeEnum.TRIGGER_EVENT,
                     storeCode = atomCode,
-                    ownerStoreCode = sourceCode,
-                    version = version
-                )?.let { storeDetailInfo ->
-                    PipelineAtom(
-                        id = storeDetailInfo.storeId,
-                        name = storeDetailInfo.name,
-                        atomCode = storeDetailInfo.storeCode,
-                        version = storeDetailInfo.version,
-                        classType = "marketBuild",
-                        atomStatus = storeDetailInfo.status,
-                        creator = userId,
-                        createTime = 0,
-                        updateTime = 0,
-                        versionList = storeComponentQueryService.getComponentVersionList(
-                            userId = userId,
-                            storeType = StoreTypeEnum.TRIGGER_EVENT,
-                            storeCode = atomCode,
-                            storeStatus = StoreStatusEnum.RELEASED
-                        ),
-                        logoUrl = storeDetailInfo.logoUrl,
-                        icon = storeDetailInfo.logoUrl,
-                        summary = storeDetailInfo.summary,
-                        serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
-                        jobType = "AGENT",
-                        os = emptyList(),
-                        classifyId = storeDetailInfo.classify?.id,
-                        classifyCode = storeDetailInfo.classify?.classifyCode ?: "",
-                        classifyName = storeDetailInfo.classify?.classifyName ?: "",
-                        docsLink = null,
-                        category = storeDetailInfo.categoryList?.firstOrNull()?.categoryCode ?: "TASK",
-                        atomType = storeDetailInfo.rdType ?: "SELF_DEVELOPED",
-                        description = storeDetailInfo.description,
-                        atomLabelList = emptyList(),
-                        defaultFlag = true,
-                        latestFlag = storeDetailInfo.latestFlag,
-                        htmlTemplateVersion = "1.1",
-                        buildLessRunFlag = false,
-                        weight = 0,
-                        props = storeDetailInfo.extData?.get(KEY_ATOM_FORM) as Map<String, Any>? ?: mapOf(),
-                        data = emptyMap(),
-                        recommendFlag = storeDetailInfo.recommendFlag,
-                        frontendType = FrontendTypeEnum.NORMAL,
-                        visibilityLevel = "PRIVATE"
-                    )
-                }
-            }
+                    storeStatus = StoreStatusEnum.RELEASED
+                ),
+                logoUrl = storeDetailInfo.logoUrl,
+                icon = storeDetailInfo.logoUrl,
+                summary = storeDetailInfo.summary,
+                serviceScope = listOf(SERVICE_SCOPE_PIPELINE),
+                jobType = "AGENT",
+                os = emptyList(),
+                classifyId = storeDetailInfo.classify?.id,
+                classifyCode = storeDetailInfo.classify?.classifyCode ?: "",
+                classifyName = storeDetailInfo.classify?.classifyName ?: "",
+                docsLink = null,
+                category = storeDetailInfo.categoryList?.firstOrNull()?.categoryCode ?: "TASK",
+                atomType = storeDetailInfo.rdType ?: "SELF_DEVELOPED",
+                description = storeDetailInfo.description,
+                atomLabelList = emptyList(),
+                defaultFlag = true,
+                latestFlag = storeDetailInfo.latestFlag,
+                htmlTemplateVersion = "1.1",
+                buildLessRunFlag = false,
+                weight = 0,
+                props = storeDetailInfo.extData?.get(KEY_ATOM_FORM) as Map<String, Any>? ?: mapOf(),
+                data = emptyMap(),
+                recommendFlag = storeDetailInfo.recommendFlag,
+                frontendType = FrontendTypeEnum.NORMAL,
+                visibilityLevel = "PRIVATE"
+            )
         }
     }
 
