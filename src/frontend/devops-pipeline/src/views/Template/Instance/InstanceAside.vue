@@ -309,7 +309,7 @@
         if (instanceParams?.param?.length) {
             instanceParams.param = instanceParams.param.map(p => ({
                 ...p,
-                isRequiredParam: p.asInstanceInput
+                isRequiredParam: p.required && p.asInstanceInput
             }))
         }
         const newInstance = {

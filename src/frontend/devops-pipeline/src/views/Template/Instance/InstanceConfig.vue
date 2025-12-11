@@ -583,7 +583,7 @@
                 const newItem = {
                     ...item,
                     isNew: true,
-                    isRequiredParam: item.asInstanceInput,
+                    isRequiredParam: item.required && item.asInstanceInput,
                     required: item.required
                 }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
@@ -696,6 +696,11 @@
         return result
     }
     function compareBuild (instanceBuildNo, templateBuildNo) {
+        if (instanceBuildNo && !templateBuildNo.required) {
+            return {
+                ...templateBuildNo
+            }
+        }
         if (instanceBuildNo?.isFollowTemplate) {
             return {
                 ...instanceBuildNo,
@@ -709,12 +714,7 @@
                     ...templateBuildNo
                 }
             }
-            if (instanceBuildNo && templateBuildNo) {
-                return {
-                    ...instanceBuildNo,
-                    // required: templateBuildNo.required
-                }
-            }
+           
             return instanceBuildNo
         }
     }
