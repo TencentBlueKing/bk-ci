@@ -38,7 +38,6 @@ function _M:get_tag(ns_config)
         x_gateway_tag = ngx.var["arg_x-gateway-tag"]
     end
 
-
     -- 特殊tag处理
     x_gateway_tag = specialTagUtil:get_special_tag(gateway_project, devops_project_id, x_gateway_tag)
 
@@ -47,8 +46,7 @@ function _M:get_tag(ns_config)
     else
         -- 获取本地缓存
         local tag_cache = ngx.shared.tag_project_store
-        local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
-            tostring(gateway_project)
+        local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id)
         local tag_cache_value = tag_cache:get(tag_cache_key)
 
         -- 如果有缓存 ,则使用缓存变量
@@ -69,37 +67,29 @@ function _M:get_tag(ns_config)
                     redis_key = "project:setting:tag:v2"
                 end
                 -- 从redis获取tag
-                local hash_key = '\xAC\xED\x00\x05t\x00' ..
-                    string.char(devops_project_id:len()) ..
-                    devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
+                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
                     tag = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
                 end
-            end
-            -- 根据service路由
-            if tag == nil and devops_service ~= '' then
-                local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
-                if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                    tag = service_redis_cache_value
-                end
-            end
-            -- 根据ngx.var.project路由
-            if tag == nil and gateway_project then
-                local project_redis_cache_value = red:get("project:setting:project:tag:" .. gateway_project)
-                if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
-                    tag = project_redis_cache_value
-                end
-            end
-            -- 使用默认值
-            if tag == nil then
-                tag = default_tag
             end
             --- 将redis连接放回pool中
             red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
             -- 将redis拿到的tag保存在缓存
             tag_cache:set(tag_cache_key, tag, 60)
+        end
+        -- 根据service路由
+        if tag == nil and devops_service ~= '' then
+            tag = config.tag_service_table[devops_service]
+        end
+        -- 根据ngx.var.project路由
+        if tag == nil and gateway_project then
+            tag = config.tag_project_table[gateway_project]
+        end
+        -- 使用默认值
+        if tag == nil then
+            tag = default_tag
         end
     end
 
@@ -110,7 +100,8 @@ function _M:get_tag(ns_config)
 
     -- DEVNET区域对tag的转换
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
-    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and not tag.find(tag, '^ieg-codeccsvr-bkci-') then
+    if in_container and ngx.var.project ~= 'codecc' and ngx.var.devops_region == 'DEVNET' and
+        not tag.find(tag, '^ieg-codeccsvr-bkci-') then
         if string.find(tag, '^kubernetes-') then
             tag = string.sub(tag, 12)
         end
