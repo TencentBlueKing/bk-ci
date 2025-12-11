@@ -358,7 +358,7 @@ class ProjectTagService @Autowired constructor(
 
         val routerTag = projectInfo.routerTag ?: ""
         logger.info("Refresh router cache - projectId: $projectId, routerTag: $routerTag, source: checkProjectTag")
-        
+
         // 更新内存缓存（不更新Redis，由更新接口负责刷新redis）
         projectRouterCache.put(projectId, routerTag)
 
