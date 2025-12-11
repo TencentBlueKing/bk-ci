@@ -359,7 +359,7 @@
             instance.param = instance.param.map(p => {
                 return {
                     ...p,
-                    // readOnlyCheck: false // 取消只读参数的禁用逻辑
+                    readOnlyCheck: false // 取消只读参数的禁用逻辑
                 }
             })
         }
