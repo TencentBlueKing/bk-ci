@@ -248,6 +248,10 @@
                             :id="item.uid"
                             :name="item.name"
                             :disabled="!item.enabled"
+                            v-bk-tooltips="{
+                                content: $t('editPage.macOSHwSpecTip'),
+                                disabled: item.enabled
+                            }"
                             @click.native="chooseMacOSHwSpec(item.uid, !item.enabled)"
                         >
                         </bk-option>
