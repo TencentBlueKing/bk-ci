@@ -43,6 +43,8 @@ import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -67,10 +69,11 @@ class LabelServiceImpl @Autowired constructor(
 
     /**
      * 获取所有标签信息
-     * @param type 0:插件 1：模板
+     * @param type 类型
+     * @param serviceScope 服务范围
      */
-    override fun getAllLabel(type: Byte): Result<List<Label>?> {
-        val atomLabelList = labelDao.getAllLabel(dslContext, type)?.map { labelDao.convert(it) }
+    override fun getAllLabel(type: Byte, serviceScope: ServiceScopeEnum?): Result<List<Label>?> {
+        val atomLabelList = labelDao.getAllLabel(dslContext, type, serviceScope)?.map { labelDao.convert(it) }
         atomLabelList?.sortBy { it.labelName }
         return Result(atomLabelList)
     }
@@ -95,8 +98,14 @@ class LabelServiceImpl @Autowired constructor(
     override fun saveLabel(labelRequest: LabelRequest, type: Byte): Result<Boolean> {
         logger.info("saveLabel params:[$labelRequest|$type]")
         val labelCode = labelRequest.labelCode
+        val serviceScope = labelRequest.serviceScope
         // 判断标签代码是否存在
-        val codeCount = labelDao.countByCode(dslContext, labelCode, type)
+        val codeCount = labelDao.countByCode(
+            dslContext = dslContext,
+            labelCode = labelCode,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (codeCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -108,7 +117,12 @@ class LabelServiceImpl @Autowired constructor(
         }
         val labelName = labelRequest.labelName
         // 判断标签名称是否存在
-        val nameCount = labelDao.countByName(dslContext, labelName, type)
+        val nameCount = labelDao.countByName(
+            dslContext = dslContext,
+            labelName = labelName,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (nameCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -129,8 +143,14 @@ class LabelServiceImpl @Autowired constructor(
     override fun updateLabel(id: String, labelRequest: LabelRequest, type: Byte): Result<Boolean> {
         logger.info("updateLabel params:[$id|$labelRequest|$type]")
         val labelCode = labelRequest.labelCode
+        val serviceScope = labelRequest.serviceScope
         // 判断标签是否存在
-        val codeCount = labelDao.countByCode(dslContext, labelCode, type)
+        val codeCount = labelDao.countByCode(
+            dslContext = dslContext,
+            labelCode = labelCode,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (codeCount > 0) {
             // 判断更新标签名称是否属于自已
             val label = labelDao.getLabel(dslContext, id)
@@ -145,7 +165,12 @@ class LabelServiceImpl @Autowired constructor(
         }
         val labelName = labelRequest.labelName
         // 判断类型标签是否存在
-        val count = labelDao.countByName(dslContext, labelName, type)
+        val count = labelDao.countByName(
+            dslContext = dslContext,
+            labelName = labelName,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (count > 0) {
             // 判断更新的标签名称是否属于自已
             val label = labelDao.getLabel(dslContext, id)
@@ -190,6 +215,7 @@ class LabelServiceImpl @Autowired constructor(
                 labelCode = labelCode,
                 labelName = labelLanName,
                 labelType = labelType,
+                serviceScope = it[KEY_SERVICE_SCOPE] as? String,
                 createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )

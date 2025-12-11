@@ -34,17 +34,17 @@ import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAtomLabelResourceImpl @Autowired constructor(
     private val labelService: LabelService,
     private val atomLabelService: AtomLabelService
-) :
-    UserAtomLabelResource {
+) : UserAtomLabelResource {
 
-    override fun getAllAtomLabels(): Result<List<Label>?> {
-        return labelService.getAllLabel(StoreTypeEnum.ATOM.type.toByte())
+    override fun getAllAtomLabels(serviceScope: ServiceScopeEnum?): Result<List<Label>?> {
+        return labelService.getAllLabel(StoreTypeEnum.ATOM.type.toByte(), serviceScope)
     }
 
     override fun getAtomLabelsByAtomId(atomId: String): Result<List<Label>?> {

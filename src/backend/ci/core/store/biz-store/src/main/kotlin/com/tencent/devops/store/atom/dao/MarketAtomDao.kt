@@ -446,7 +446,7 @@ class MarketAtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
-                .set(JOB_TYPE, marketAtomUpdateRequest.jobType.name)
+                .set(JOB_TYPE, marketAtomUpdateRequest.jobType?.name)
                 .set(OS, JsonUtil.toJson(marketAtomUpdateRequest.os, formatted = false))
                 .set(CLASSIFY_ID, classifyId)
                 .set(SUMMARY, marketAtomUpdateRequest.summary)
@@ -526,7 +526,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRecord.atomCode,
                     atomRecord.serviceScope,
-                    atomRequest.jobType.name,
+                    atomRequest.jobType?.name,
                     JsonUtil.toJson(atomRequest.os, formatted = false),
                     classifyId,
                     atomRecord.docsLink,

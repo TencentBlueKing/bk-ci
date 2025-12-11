@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件市场工作台-升级插件请求报文体")
@@ -40,12 +42,16 @@ data class MarketAtomUpdateRequest(
     val atomCode: String,
     @get:Schema(title = "插件名称", required = true)
     val name: String,
+    @get:Schema(title = "服务范围配置列表", required = false)
+    val serviceScopeConfigs: List<ServiceScopeConfig>? = null,
     @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: AtomCategoryEnum,
-    @get:Schema(title = "所属插件分类代码", required = true)
-    val classifyCode: String,
-    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = true)
-    val jobType: JobTypeEnum = JobTypeEnum.AGENT,
+    @get:Schema(title = "所属插件分类代码", required = false)
+    @Deprecated("使用serviceScopeConfigs替代")
+    val classifyCode: String? = null,
+    @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+    @Deprecated("使用serviceScopeConfigs替代")
+    val jobType: JobTypeEnum? = null,
     @get:Schema(title = "支持的操作系统", required = true)
     val os: ArrayList<String> = arrayListOf(),
     @get:Schema(title = "插件简介", required = false)
@@ -67,7 +73,8 @@ data class MarketAtomUpdateRequest(
     @get:Schema(title = "发布者", required = true)
     val publisher: String = "",
     @get:Schema(title = "插件标签列表", required = false)
-    val labelIdList: ArrayList<String>?,
+    @Deprecated("使用serviceScopeConfigs替代")
+    val labelIdList: ArrayList<String>? = null,
     @get:Schema(title = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
     @get:Schema(title = "插件字段校验确认标识", required = false)
@@ -76,4 +83,21 @@ data class MarketAtomUpdateRequest(
     var branch: String? = null,
     @get:Schema(title = "是否属于分支测试版本", required = false)
     var isBranchTestVersion: Boolean = false
-)
+) {
+    fun toServiceScopeConfigs(): List<ServiceScopeConfig> {
+        // 如果提供了新格式，直接使用
+        if (!serviceScopeConfigs.isNullOrEmpty()) {
+            return serviceScopeConfigs
+        }
+
+        // 兼容老格式：使用兼容字段，默认服务范围为PIPELINE
+        return listOf(
+            ServiceScopeConfig(
+                serviceScope = ServiceScopeEnum.PIPELINE,
+                classifyCode = classifyCode ?: throw IllegalArgumentException("classifyCode is required"),
+                jobType = jobType ?: JobTypeEnum.AGENT,
+                labelIdList = labelIdList
+            )
+        )
+    }
+}

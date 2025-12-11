@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -50,18 +51,19 @@ class AtomLabelRelDao {
         dslContext: DSLContext,
         atomIds: Set<String>
     ): Result<out Record>? {
-        val a = TLabel.T_LABEL.`as`("a")
-        val b = TAtomLabelRel.T_ATOM_LABEL_REL.`as`("b")
+        val tLabel = TLabel.T_LABEL
+        val tAtomLabelRel = TAtomLabelRel.T_ATOM_LABEL_REL
         return dslContext.select(
-            a.ID.`as`(KEY_LABEL_ID),
-            a.LABEL_CODE.`as`(KEY_LABEL_CODE),
-            a.LABEL_NAME.`as`(KEY_LABEL_NAME),
-            a.TYPE.`as`(KEY_LABEL_TYPE),
-            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
-            b.ATOM_ID.`as`(KEY_ID)
-        ).from(a).join(b).on(a.ID.eq(b.LABEL_ID))
-            .where(b.ATOM_ID.`in`(atomIds))
+            tLabel.ID.`as`(KEY_LABEL_ID),
+            tLabel.LABEL_CODE.`as`(KEY_LABEL_CODE),
+            tLabel.LABEL_NAME.`as`(KEY_LABEL_NAME),
+            tLabel.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
+            tLabel.TYPE.`as`(KEY_LABEL_TYPE),
+            tLabel.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tLabel.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tAtomLabelRel.ATOM_ID.`as`(KEY_ID)
+        ).from(tLabel).join(tAtomLabelRel).on(tLabel.ID.eq(tAtomLabelRel.LABEL_ID))
+            .where(tAtomLabelRel.ATOM_ID.`in`(atomIds))
             .fetch()
     }
 

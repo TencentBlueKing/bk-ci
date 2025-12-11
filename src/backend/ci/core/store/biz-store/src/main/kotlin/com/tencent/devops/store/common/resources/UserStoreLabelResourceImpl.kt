@@ -25,9 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.store.common.resources
 
-enum class ServiceScopeEnum(val scopeType: String) {
-    PIPELINE("pipeline"),
-    QUALITY("quality")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreLabelResource
+import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.common.service.StoreLabelService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.label.Label
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserStoreLabelResourceImpl @Autowired constructor(
+    private val labelService: LabelService,
+    private val storeLabelService: StoreLabelService
+) : UserStoreLabelResource {
+
+    override fun getLabelList(storeType: String, serviceScope: ServiceScopeEnum?): Result<List<Label>?> {
+        return labelService.getAllLabel(StoreTypeEnum.valueOf(storeType).type.toByte(), serviceScope)
+    }
+
+    override fun getLabelListByStoreId(storeType: String, storeId: String): Result<List<Label>?> {
+        return Result(storeLabelService.getLabelsByStoreId(storeId))
+    }
 }

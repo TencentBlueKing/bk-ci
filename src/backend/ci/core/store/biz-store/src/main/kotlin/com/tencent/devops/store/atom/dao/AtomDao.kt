@@ -88,6 +88,8 @@ import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import java.net.URLDecoder
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -98,8 +100,8 @@ import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
-import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
+import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
 
@@ -444,10 +446,9 @@ class AtomDao : AtomBaseDao() {
         atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
         atomCode?.let { conditions.add(ATOM_CODE.contains(atomCode)) }
         atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
-        serviceScope?.let {
-            if (!"all".equals(serviceScope, true)) {
-                conditions.add(SERVICE_SCOPE.contains(serviceScope))
-            }
+        // 使用 JSON_CONTAINS 优化 SERVICE_SCOPE 查询性能
+        buildServiceScopeCondition(SERVICE_SCOPE, serviceScope)?.let {
+            conditions.add(it)
         }
         os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
         category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
@@ -605,11 +606,11 @@ class AtomDao : AtomBaseDao() {
                 fitOsFlag = fitOsFlag,
                 queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
             ) // 普通插件查询条件组装
-        val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
+        val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
         var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
         var initTestAtomCondition: MutableList<Condition>? = null
         if (!projectCode.isNullOrBlank() && (queryProjectAtomFlag || !keyword.isNullOrBlank())) {
-            queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
+            queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
             initTestAtomCondition =
                 queryTestAtomCondition(
                     ta = ta,
@@ -650,12 +651,12 @@ class AtomDao : AtomBaseDao() {
         val queryAtomStep = queryNormalAtomStep
             .where(normalAtomConditions)
             .union(
-                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
+                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope).where(defaultAtomCondition)
             )
         if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
             initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
-                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
+                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
                     .join(tspr)
                     .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
                     .where(initTestAtomCondition)
@@ -670,13 +671,28 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    /**
+     * 构建基础查询步骤（支持多服务范围分类）
+     * 
+     * @param dslContext DSL上下文
+     * @param ta TAtom 表
+     * @param tc TClassify 表
+     * @param taf TAtomFeature 表
+     * @param tsst TStoreStatisticsTotal 表
+     * @param serviceScope 服务范围，用于动态选择分类ID
+     * @return 查询步骤
+     */
     private fun getPipelineAtomBaseStep(
         dslContext: DSLContext,
         ta: TAtom,
         tc: TClassify,
         taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal
+        tsst: TStoreStatisticsTotal,
+        serviceScope: String? = null
     ): SelectOnConditionStep<Record> {
+        // 根据服务范围构建分类ID字段表达式
+        val classifyIdField = buildClassifyIdField(ta, serviceScope)
+        
         return dslContext.select(
             ta.ID.`as`(KEY_ID),
             ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
@@ -685,7 +701,7 @@ class AtomDao : AtomBaseDao() {
             ta.NAME.`as`(NAME),
             ta.OS.`as`(KEY_OS),
             ta.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
-            tc.ID.`as`(KEY_CLASSIFY_ID),
+            classifyIdField.`as`(KEY_CLASSIFY_ID),  // 使用动态分类ID字段
             tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
             ta.LOGO_URL.`as`(KEY_LOGO_URL),
@@ -713,8 +729,8 @@ class AtomDao : AtomBaseDao() {
             tsst.HOT_FLAG.`as`(KEY_HOT_FLAG)
         )
             .from(ta)
-            .join(tc)
-            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .leftJoin(tc)
+            .on(classifyIdField.eq(tc.ID))  // 使用动态分类ID字段 JOIN
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
             .leftJoin(tsst)
@@ -886,8 +902,13 @@ class AtomDao : AtomBaseDao() {
         queryFitAgentBuildLessAtomFlag: Boolean?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!serviceScope.isNullOrBlank() && !KEY_ALL.equals(serviceScope, true)) {
-            conditions.add(ta.SERVICE_SCOPE.contains(serviceScope))
+        // 使用 JSON_CONTAINS 优化 SERVICE_SCOPE 查询性能
+        buildServiceScopeCondition(ta.SERVICE_SCOPE, serviceScope)?.let {
+            conditions.add(it)
+        }
+        // 构建分类查询条件（支持多服务范围）
+        buildClassifyCondition(ta, classifyId, serviceScope)?.let {
+            conditions.add(it)
         }
         // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
         if (!jobType.isNullOrBlank()) {
@@ -1496,6 +1517,122 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(CREATE_TIME, ID)
             if (offset != null && limit != null) step.offset(offset).limit(limit)
             return step.fetch()
+        }
+    }
+
+    /**
+     * 构建 SERVICE_SCOPE 查询条件（优化版本，使用 JSON_CONTAINS 替代 contains）
+     * 
+     * 性能优化：
+     * - 使用 JSON_CONTAINS 进行精确匹配，避免字符串包含查询的全表扫描
+     * - 支持大小写兼容查询（标准格式为大写，兼容小写格式的现有数据）
+     * 
+     * 格式标准：
+     * - 统一使用大写格式存储，如 ["PIPELINE"]、"CREATIVE_STREAM"
+     * - 查询时同时匹配大写格式（标准格式）和小写格式（兼容现有数据）
+     * 
+     * @param serviceScopeField SERVICE_SCOPE 字段
+     * @param serviceScope 服务范围值，支持大小写（会自动标准化为大写）
+     * @return 查询条件，如果不需要过滤则返回 null
+     */
+    private fun buildServiceScopeCondition(
+        serviceScopeField: Field<String>,
+        serviceScope: String?
+    ): Condition? {
+        if (serviceScope.isNullOrBlank() || KEY_ALL.equals(serviceScope, ignoreCase = true)) {
+            return null
+        }
+        
+        // 标准化服务范围值（统一转换为大写格式）
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: serviceScope
+        
+        // 使用 JSON_CONTAINS 进行精确匹配（支持大小写兼容）
+        // 同时匹配大写格式（标准格式）和小写格式（兼容现有小写数据）
+        return DSL.or(
+            // 匹配大写格式（标准格式，如 ["PIPELINE"]）
+            DSL.field(
+                "JSON_CONTAINS({0}, {1})",
+                Boolean::class.java,
+                serviceScopeField,
+                DSL.inline("\"$normalizedScope\"")
+            ).eq(true),
+            // 匹配小写格式（兼容现有小写数据 ["pipeline"]）
+            DSL.field(
+                "JSON_CONTAINS({0}, {1})",
+                Boolean::class.java,
+                serviceScopeField,
+                DSL.inline("\"${normalizedScope.lowercase()}\"")
+            ).eq(true)
+        )
+    }
+    
+    /**
+     * 根据服务范围构建分类ID字段表达式
+     * 
+     * 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段（性能最好，有索引）
+     * 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
+     * 
+     * @param ta TAtom 表
+     * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则默认使用 PIPELINE
+     * @return 分类ID字段表达式（Field<String>）
+     */
+    private fun buildClassifyIdField(
+        ta: TAtom,
+        serviceScope: String?
+    ): Field<String> {
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: "PIPELINE"
+        
+        return if (normalizedScope == "PIPELINE") {
+            // PIPELINE 使用 CLASSIFY_ID 字段（性能最好，有索引）
+            ta.CLASSIFY_ID
+        } else {
+            // 其他服务范围从 CLASSIFY_ID_MAP 中提取
+            // 使用 COALESCE 回退到 CLASSIFY_ID（兼容处理）
+            DSL.field(
+                "COALESCE(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})), {2})",
+                String::class.java,
+                ta.CLASSIFY_ID_MAP,
+                DSL.inline("$.$normalizedScope"),
+                ta.CLASSIFY_ID  // 如果未找到，回退到 CLASSIFY_ID
+            )
+        }
+    }
+    
+    /**
+     * 构建分类查询条件（支持多服务范围）
+     * 
+     * 根据 serviceScope 参数动态构建分类过滤条件：
+     * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
+     * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
+     * 
+     * @param ta TAtom 表
+     * @param classifyId 分类ID
+     * @param serviceScope 服务范围
+     * @return 查询条件，如果不需要过滤则返回 null
+     */
+    private fun buildClassifyCondition(
+        ta: TAtom,
+        classifyId: String?,
+        serviceScope: String?
+    ): Condition? {
+        if (classifyId.isNullOrBlank()) return null
+        val servicePipelineScopeName = ServiceScopeEnum.PIPELINE.name
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: servicePipelineScopeName
+
+        // 构建 JSON_EXTRACT 表达式
+        val jsonExtractField = DSL.field(
+            "JSON_UNQUOTE(JSON_EXTRACT({0}, '$.{1}'))",
+            String::class.java,
+            ta.CLASSIFY_ID_MAP,
+            DSL.inline(normalizedScope)
+        )
+
+        return if (normalizedScope == servicePipelineScopeName) {
+            // PIPELINE: 使用 CLASSIFY_ID 或 CLASSIFY_ID_MAP
+            ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
+        } else {
+            // 其他服务范围: 只使用 CLASSIFY_ID_MAP
+            jsonExtractField.eq(classifyId)
         }
     }
 }
