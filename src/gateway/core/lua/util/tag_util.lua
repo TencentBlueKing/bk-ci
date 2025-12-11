@@ -74,9 +74,7 @@ function _M:get_tag(ns_config)
                     devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
                 local redRes = red:hget(redis_key, hash_key)
                 if redRes and redRes ~= ngx.null then
-                    local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project_id, hash_val, 60)
-                    tag = hash_val
+                    tag = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
                 end
             end
             -- 根据service路由
