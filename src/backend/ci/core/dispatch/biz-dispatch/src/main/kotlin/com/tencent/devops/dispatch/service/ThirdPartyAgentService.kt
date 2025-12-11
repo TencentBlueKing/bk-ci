@@ -59,7 +59,6 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineJobBuild
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -914,9 +913,33 @@ class ThirdPartyAgentService @Autowired constructor(
 
     fun fetchBuildPipeline(
         projectId: String,
-        agentId: String
-    ): List<TPAPipelineBuild> {
-        return thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(dslContext, projectId, agentId)
+        agentId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Page<TPAPipelineBuild> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val sqlLimit =
+            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 100
+        val count = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId
+        )
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
+                dslContext = dslContext,
+                projectId = projectId,
+                agentId = agentId,
+                limit = limit,
+                offset = offset
+            )
+        )
     }
 
     companion object {
