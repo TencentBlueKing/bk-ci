@@ -46,7 +46,7 @@ import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.ws.rs.core.Response
-import kotlin.reflect.jvm.kotlinFunction
+import java.util.concurrent.TimeUnit
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -57,6 +57,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import kotlin.reflect.jvm.kotlinFunction
 
 @Aspect
 @Component
@@ -79,6 +80,11 @@ class ApiAspect(
     private val apiTagCache = Caffeine.newBuilder()
         .maximumSize(500)
         .build<String/*method-name*/, String/*api-tag*/>()
+
+    private val projectConsulTagCache = Caffeine.newBuilder()
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .maximumSize(30000)
+        .build<String/*projectId*/, String/*tag*/>()
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -165,7 +171,9 @@ class ApiAspect(
 
         if (projectId != null) {
             // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
-            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+            val projectConsulTag = projectConsulTagCache.get(projectId) {
+                redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+            }
             if (!projectConsulTag.isNullOrEmpty()) {
                 bkTag.setGatewayTag(projectConsulTag)
             }
@@ -185,7 +193,7 @@ class ApiAspect(
             if (appCode != null && apigwType == "apigw-app" && !appCodeService.validAppCode(appCode, projectId)) {
                 throw PermissionForbiddenException(
                     message = "Permission denied: apigwType[$apigwType]," +
-                        "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
+                            "appCode[$appCode],ProjectId[$projectId] " + I18nUtil.getCodeLanMessage(
                         messageCode = OpenAPIMessageCode.APP_CODE_PERMISSION_DENIED_MESSAGE,
                         language = I18nUtil.getLanguage(userId)
                     )
