@@ -65,9 +65,6 @@ class UserProjectUserResourceImpl @Autowired constructor(
     }
 
     override fun tenantInfoForDisplay(userId: String, tenantId: String): Result<TenantInfoForDisplay> {
-        if (!TenantUtils.isMultiTenantMode()) {
-            throw RuntimeException("Tenant mode is not enabled")
-        }
         return Result(
             TenantInfoForDisplay(
                 tenantId = tenantId,

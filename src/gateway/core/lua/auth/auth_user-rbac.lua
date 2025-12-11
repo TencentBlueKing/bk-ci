@@ -22,7 +22,7 @@ if config.esb.enabled then
 end
 
 -- 获取租户ID
-local tenant_id = nil
+local tenant_id = 'default'
 if config.tenant.enabled then
     tenant_id = oauthUtil:verify_bk_token(bk_token).tenant_id
 end
