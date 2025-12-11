@@ -39,6 +39,7 @@ class DevCloudMacosService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudMacosService::class.java)
         private const val XCODE_VERSION = "devops_xcodeVersion"
+        private const val DEFAULT_HW_TYPE = "VMware"
     }
 
     @Value("\${macos.devCloud.appId:}")
@@ -156,7 +157,7 @@ class DevCloudMacosService @Autowired constructor(
                     DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
                     DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
                     XCODE_VERSION to (xcodeVersion ?: ""),
-                   // DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: "")
+                    DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: DEFAULT_HW_TYPE)
                 )
             )
         }
