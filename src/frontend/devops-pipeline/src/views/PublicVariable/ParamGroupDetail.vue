@@ -215,7 +215,6 @@
     const showReleaseSlider = ref(false)
     const previewData = ref([])
     const initialGroupData = ref(null) // 保存初始的 groupData 状态
-    const shouldSaveInitialData = ref(false) // 标记是否需要保存初始数据
     const groupData = computed(() => proxy.$store.state.publicVar.groupData)
     const isManage = computed(() => proxy.$store.state.pipelines.isManage)
     const projectId = computed(() => proxy.$route.params?.projectId)
@@ -256,43 +255,22 @@
         if (!val) {
             viewTab.value = 'basicInfo'
             initialGroupData.value = null
-            shouldSaveInitialData.value = false
         } else {
             init()
         }
     })
-    // 监听 publicVars 变化，在数据加载完成后保存初始状态
-    watch(() => publicVars.value, (newVars, oldVars) => {
-        // 只在需要保存初始数据且 publicVars 从空变为有数据时保存
-        if (shouldSaveInitialData.value && newVars?.length > 0 && (!oldVars || oldVars.length === 0)) {
-            proxy.$nextTick(() => {
-                initialGroupData.value = deepClone(groupData.value)
-                shouldSaveInitialData.value = false
-            })
-        }
-    }, { deep: true })
+    watch(() => (props.readOnly), (val) => {
+        init()
+    })
     watch(() => props.defaultTab, (val) => {
         viewTab.value = val
     })
     function init () {
         // 设置初始 tab
         viewTab.value = props.defaultTab || 'basicInfo'
-        // 侧边栏打开且非只读模式时，标记需要保存初始状态
-        shouldSaveInitialData.value = true
-            
-        // 如果是新建模式（没有 groupName），立即保存初始状态
-        if (operateType.value === OPERATE_TYPE.CREATE || !groupData.value?.groupName) {
-            proxy.$nextTick(() => {
-                initialGroupData.value = deepClone(groupData.value)
-                shouldSaveInitialData.value = false
-            })
-        } else if (publicVars.value?.length > 0) {
-            // 如果是编辑模式且 publicVars 已经存在（第二次打开的情况），直接保存
-            proxy.$nextTick(() => {
-                initialGroupData.value = deepClone(groupData.value)
-                shouldSaveInitialData.value = false
-            })
-        }
+        proxy.$nextTick(() => {
+            initialGroupData.value = deepClone(groupData.value)
+        })
     }
     // 检查 groupData 是否发生变化
     function hasGroupDataChanged () {
@@ -302,7 +280,6 @@
         
         const current = groupData.value
         const initial = initialGroupData.value
-        
         // 检查基本信息是否变化
         if (current.groupName !== initial.groupName || current.desc !== initial.desc) {
             return true
@@ -317,8 +294,7 @@
             return true
         }
         
-        // 深度对比每个变量
-        return !isShallowEqual(currentVars, initialVars)
+        return isShallowEqual(currentVars, initialVars)
     }
     
     async function handleHidden () {
@@ -560,7 +536,6 @@
 
     function resetInitialGroupData () {
         initialGroupData.value = null
-        shouldSaveInitialData.value = false
     }
 
     defineExpose({

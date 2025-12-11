@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-    import { ref, computed, watch } from 'vue'
+    import { ref, computed } from 'vue'
     import { CODE_MODE } from '@/utils/pipelineConst'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
@@ -192,13 +192,6 @@
     const publicVarYaml = computed(() => proxy.$store.state?.publicVar?.publicVarYaml)
     const isCodeMode = computed(() => publicVarMode.value === CODE_MODE)
     const operateType = computed(() => proxy.$store.state.publicVar.operateType)
-    watch(() => props.groupData.groupName, (newValue, oldValue) => {
-        if (newValue !== oldValue) {
-            fetchVariablesByGroupName()
-        }
-    }, {
-        immediate: true
-    })
     const formRules = {
         groupName: [
             {
@@ -275,29 +268,29 @@
         ]
     })
 
-    async function fetchVariablesByGroupName () {
-        if (!props.groupData?.groupName || props.isRelease || operateType.value === OPERATE_TYPE.CREATE) return
-        try {
-            isLoading.value = true
-            const res = await proxy.$store.dispatch('publicVar/getVariables', {
-                groupName: props.groupData?.groupName
-            })
-            proxy.$store.dispatch('publicVar/updateGroupData', {
-                ...props.groupData,
-                publicVars: res.map(i => ({
-                    ...i,
-                    buildFormProperty: {
-                        ...i.buildFormProperty,
-                        published: true
-                    }
-                }))
-            })
-        } catch (e) {
-            console.error(e)
-        } finally {
-            isLoading.value = false
-        }
-    }
+    // async function fetchVariablesByGroupName () {
+    //     if (!props.groupData?.groupName || props.isRelease || operateType.value === OPERATE_TYPE.CREATE) return
+    //     try {
+    //         isLoading.value = true
+    //         const res = await proxy.$store.dispatch('publicVar/getVariables', {
+    //             groupName: props.groupData?.groupName
+    //         })
+    //         proxy.$store.dispatch('publicVar/updateGroupData', {
+    //             ...props.groupData,
+    //             publicVars: res.map(i => ({
+    //                 ...i,
+    //                 buildFormProperty: {
+    //                     ...i.buildFormProperty,
+    //                     published: true
+    //                 }
+    //             }))
+    //         })
+    //     } catch (e) {
+    //         console.error(e)
+    //     } finally {
+    //         isLoading.value = false
+    //     }
+    // }
     function handleChangeGroupData (name, value) {
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...props.groupData,

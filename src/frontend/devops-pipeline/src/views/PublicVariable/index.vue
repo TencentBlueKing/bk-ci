@@ -410,13 +410,15 @@
         detailTitle.value = proxy.$t('publicVar.editParamGroup')
         defaultTab.value = 'basicInfo'
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
+        const publicVars = await getVariablesByGroupName(row.groupName, true)
         
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...groupData.value,
             groupName: row.groupName,
             desc: row.desc,
             updateTime: row.updateTime,
-            modifier: row.modifier
+            modifier: row.modifier,
+            publicVars
         })
         
         readOnly.value = false
@@ -499,7 +501,9 @@
             isLoading.value = false
         }
     }
-    async function getVariablesByGroupName (groupName) {
+    async function getVariablesByGroupName (groupName, published = false) {
+        // published = true 表示已发布的变量,更新变量时，变量名变量类型不可修改
+        // published = false 表示未发布的变量,更新变量时，变量名变量类型可修改 e: copy变量组
         try {
             const variables = await proxy.$store.dispatch('publicVar/getVariables', {
                 groupName,
@@ -508,7 +512,7 @@
                 ...i,
                 buildFormProperty: {
                     ...i.buildFormProperty,
-                    published: false
+                    published
                 }
             }))
         } catch (e) {
@@ -516,12 +520,14 @@
         }
     }
     async function handleCopyGroup (data, item) {
-        const publicVars = await getVariablesByGroupName(item.data.groupName)
+        const publicVars = await getVariablesByGroupName(item.data.groupName, false)
         const groupData = {
             ...item.data,
             groupName: `${item.data.groupName}_${randomString(4)}`,
             publicVars
         }
+
+        proxy.$store.dispatch('publicVar/updateGroupData', groupData)
         handleAddGroup(groupData)
     }
     async function handleExportGroup (data, item) {
