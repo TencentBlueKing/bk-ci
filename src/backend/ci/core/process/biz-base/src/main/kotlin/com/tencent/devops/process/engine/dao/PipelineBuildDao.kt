@@ -62,7 +62,7 @@ import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
-import org.jooq.Record13
+import org.jooq.Record15
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
@@ -79,7 +79,6 @@ class PipelineBuildDao {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
         private val lightMapper = PipelineBuildLightInfoJooqMapper()
-        private val lightDebugMapper = PipelineDebugBuildLightInfoJooqMapper()
         private const val DEFAULT_PAGE_SIZE = 50
     }
 
@@ -1223,115 +1222,60 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
         status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
         startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
         offset: Int,
         limit: Int,
         buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
-        updateTimeDesc: Boolean? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        buildNoEnd: Int?
     ): List<LightBuildHistory> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.select(
+                BUILD_ID, BUILD_NUM, START_TIME, END_TIME, STATUS, REMARK, EXECUTE_TIME,
+                EXECUTE_COUNT, CHANNEL, TRIGGER, ERROR_INFO, STAGE_STATUS, BUILD_PARAMETERS,TRIGGER_USER,START_USER
+            ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
 
-        return if (debug != true) {
-            with(T_PIPELINE_BUILD_HISTORY) {
-                val where = dslContext.select(BUILD_ID,BUILD_NUM,START_TIME,END_TIME,STATUS,REMARK,EXECUTE_TIME,
-                    EXECUTE_COUNT,CHANNEL,TRIGGER,ERROR_INFO,STAGE_STATUS,BUILD_PARAMETERS
-
-                    ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
-                makeCondition(
-                    where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
-                )
-
-                when (updateTimeDesc) {
-                    true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
-                    false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
-                    null -> where.orderBy(BUILD_NUM.desc())
-                }
-
-                where.limit(offset, limit).fetch(lightMapper)
+            if (!status.isNullOrEmpty()) {
+                where.and(STATUS.`in`(status.map { it.ordinal }))
             }
-        } else {
-            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-                val where = dslContext.select(BUILD_ID,BUILD_NUM,START_TIME,END_TIME,STATUS,REMARK,EXECUTE_TIME,
-                    EXECUTE_COUNT,CHANNEL,TRIGGER,ERROR_INFO,STAGE_STATUS,BUILD_PARAMETERS).from(this)
-                    .where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
-                makeDebugCondition(
-                    where = where,
-                    materialAlias = materialAlias,
-                    materialUrl = materialUrl,
-                    materialBranch = materialBranch,
-                    materialCommitId = materialCommitId,
-                    materialCommitMessage = materialCommitMessage,
-                    status = status,
-                    startUser = startUser,
-                    trigger = trigger,
-                    queueTimeStartTime = queueTimeStartTime,
-                    queueTimeEndTime = queueTimeEndTime,
-                    startTimeStartTime = startTimeStartTime,
-                    startTimeEndTime = startTimeEndTime,
-                    endTimeStartTime = endTimeStartTime,
-                    endTimeEndTime = endTimeEndTime,
-                    totalTimeMin = totalTimeMin,
-                    totalTimeMax = totalTimeMax,
-                    remark = remark,
-                    buildNoStart = buildNoStart,
-                    buildNoEnd = buildNoEnd,
-                    buildMsg = buildMsg,
-                    triggerAlias = triggerAlias,
-                    triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
-                )
-                when (updateTimeDesc) {
-                    true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
-                    false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
-                    null -> where.orderBy(BUILD_NUM.desc())
-                }
-
-                where.limit(offset, limit).fetch(lightDebugMapper)
+            if (startTimeStartTime != null && startTimeStartTime > 0) {
+                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
             }
+            if (buildNoStart != null && buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
+            if (buildNoEnd != null && buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
+            where.limit(offset, limit).fetch(lightMapper)
+        }
+    }
+
+    fun lightPipelineBuildHistoryCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+
+            if (!status.isNullOrEmpty()) {
+                where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            if (startTimeStartTime != null && startTimeStartTime > 0) {
+                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
+            }
+            if (buildNoStart != null && buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
+            if (buildNoEnd != null && buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
+            where.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -2229,36 +2173,8 @@ class PipelineBuildDao {
         }
     }
 
-    /**
-     *  LightBuildHistory(
-     *                     id = t.buildId,
-     *                     buildNum = t.buildNum,
-     *                     trigger = t.trigger,
-     *                     status = BuildStatus.entries[t.status].name,
-     *                     userId = t.triggerUser ?: t.startUser ?: "",
-     *                     startTime = t.startTime?.timestampmilli()?: 0L,
-     *                     endTime = t.endTime?.timestampmilli(),
-     *                     errorInfoList = try {
-     *                         if (t.errorInfo != null) {
-     *                             JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo>
-     *                         } else null
-     *                     } catch (ignored: Exception) {
-     *                         null
-     *                     },
-     *                     stageStatus = kotlin.runCatching {
-     *                         JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<LightStageStatus>
-     *                     }.getOrNull(),
-     *                     buildParameters = t.buildParameters?.let { self ->
-     *                         JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
-     *                     },
-     *                     remark = t.remark,
-     *                     variables = null,
-     *                     executeTime = t.executeTime ?: 0,
-     *                     retry = t.executeCount?.let { it > 1 } == true
-     *                 )
-     */
-    class PipelineBuildLightInfoJooqMapper : RecordMapper<Record13<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String>, LightBuildHistory> {
-        override fun map(record: Record13<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String>?): LightBuildHistory? {
+    class PipelineBuildLightInfoJooqMapper : RecordMapper<Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String,String,String>, LightBuildHistory> {
+        override fun map(record: Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String,String,String>?): LightBuildHistory? {
             val tTPipelineBuildHistory=TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
             return record?.let { t ->
                 LightBuildHistory(
@@ -2283,46 +2199,10 @@ class PipelineBuildDao {
                         JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
                     },
                     remark = t[tTPipelineBuildHistory.REMARK],
-                    variables = null,
                     executeTime = t[tTPipelineBuildHistory.EXECUTE_TIME] ?: 0,
                     retry = t[tTPipelineBuildHistory.EXECUTE_COUNT]?.let { it > 1 } == true
                 )
             }
         }
     }
-
-    class PipelineDebugBuildLightInfoJooqMapper : RecordMapper<Record13<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String>, LightBuildHistory> {
-        override fun map(record: Record13<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String>?): LightBuildHistory? {
-            val tPipelineBuildHistoryDebug= TPipelineBuildHistoryDebug.T_PIPELINE_BUILD_HISTORY_DEBUG
-            return record?.let { t ->
-                LightBuildHistory(
-                    id = t[tPipelineBuildHistoryDebug.BUILD_ID],
-                    buildNum = t[tPipelineBuildHistoryDebug.BUILD_NUM],
-                    trigger = t[tPipelineBuildHistoryDebug.TRIGGER],
-                    status = BuildStatus.entries[t[tPipelineBuildHistoryDebug.STATUS]].name,
-                    userId = t[tPipelineBuildHistoryDebug.TRIGGER_USER] ?: t[tPipelineBuildHistoryDebug.START_USER] ?: "",
-                    startTime = t[tPipelineBuildHistoryDebug.START_TIME]?.timestampmilli()?: 0L,
-                    endTime = t[tPipelineBuildHistoryDebug.END_TIME]?.timestampmilli(),
-                    errorInfoList = try {
-                        if (t[tPipelineBuildHistoryDebug.ERROR_INFO] != null) {
-                            JsonUtil.getObjectMapper().readValue(t[tPipelineBuildHistoryDebug.ERROR_INFO]) as List<ErrorInfo>
-                        } else null
-                    } catch (ignored: Exception) {
-                        null
-                    },
-                    stageStatus = kotlin.runCatching {
-                        JsonUtil.getObjectMapper().readValue(t[tPipelineBuildHistoryDebug.STAGE_STATUS]) as List<LightStageStatus>
-                    }.getOrNull(),
-                    buildParameters = t[tPipelineBuildHistoryDebug.BUILD_PARAMETERS]?.let { self ->
-                        JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
-                    },
-                    remark = t[tPipelineBuildHistoryDebug.REMARK],
-                    variables = null,
-                    executeTime = t[tPipelineBuildHistoryDebug.EXECUTE_TIME] ?: 0,
-                    retry = t[tPipelineBuildHistoryDebug.EXECUTE_COUNT]?.let { it > 1 } == true
-                )
-            }
-        }
-    }
-
 }

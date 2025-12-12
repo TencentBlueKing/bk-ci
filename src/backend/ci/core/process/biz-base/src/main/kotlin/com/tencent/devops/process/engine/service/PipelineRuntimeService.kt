@@ -2349,67 +2349,43 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         offset: Int,
         limit: Int,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
         status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
         startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?,
-        updateTimeDesc: Boolean? = null,
-        queryDslContext: DSLContext? = null,
-        debug: Boolean?,
-        triggerAlias: List<String>?,
-        triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        buildNoEnd: Int?
     ): List<LightBuildHistory> {
         // 限制最大一次拉1000，防止攻击
         return pipelineBuildDao.listLightPipelineBuildInfo(
-            dslContext = queryDslContext ?: dslContext,
+            dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
-            materialAlias = materialAlias,
-            materialUrl = materialUrl,
-            materialBranch = materialBranch,
-            materialCommitId = materialCommitId,
-            materialCommitMessage = materialCommitMessage,
             status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
             startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            totalTimeMin = totalTimeMin,
-            totalTimeMax = totalTimeMax,
-            remark = remark,
             offset = offset,
             limit = if (limit < 0) {
                 1000
             } else limit,
             buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
+        )
+    }
+
+    fun getLightPipelineBuildHistoryCount(
+        projectId: String,
+        pipelineId: String,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long? = null,
+        buildNoStart: Int? = null,
+        buildNoEnd: Int? = null,
+    ): Int {
+        return pipelineBuildDao.lightPipelineBuildHistoryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = status,
+            startTimeStartTime = startTimeStartTime,
+            buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
-            buildMsg = buildMsg,
-            startUser = startUser,
-            updateTimeDesc = updateTimeDesc,
-            debug = debug,
-            triggerAlias = triggerAlias,
-            triggerBranch = triggerBranch,
-            triggerUser = triggerUser
         )
     }
 }

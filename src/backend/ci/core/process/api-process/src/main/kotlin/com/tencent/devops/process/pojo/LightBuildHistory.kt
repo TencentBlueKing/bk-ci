@@ -60,9 +60,7 @@ data class LightBuildHistory(
     @get:Schema(title = "阶段 & 任务错误信息")
     val stageStatus: List<LightStageStatus>?,
     @get:Schema(title = "构建参数")
-    val buildParameters: List<LightBuildParameter>?,
-    @get:Schema(title = "变量键值对")
-    val variables: Map<String, String>?
+    val buildParameters: List<LightBuildParameter>?
 )
 
 /**
