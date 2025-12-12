@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.store.api.common.OpenStoreResource
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,8 +54,8 @@ class OpenStoreResourceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Boolean> {
-        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType.name)
-        if (redisOperation.isMember(storePublicFlagKey, storeCode)) {
+        // 使用缓存管理器检查是否是公共组件（优化性能）
+        if (PublicComponentCacheManager.isPublicComponent(redisOperation, storeType.name, storeCode)) {
             // 如果从缓存中查出该组件是公共组件则无需权限校验
             return Result(true)
         }

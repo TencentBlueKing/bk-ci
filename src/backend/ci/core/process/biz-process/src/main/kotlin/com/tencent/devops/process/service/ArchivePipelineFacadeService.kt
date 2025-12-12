@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -126,6 +127,8 @@ class ArchivePipelineFacadeService @Autowired constructor(
         }
         // 锁定流水线,不允许用户发起新构建等操作
         redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
+        // 清除该流水线的限制状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineId)
         return archivePipelineManageService.migrateData(
             userId = userId,
             projectId = projectId,
@@ -196,6 +199,8 @@ class ArchivePipelineFacadeService @Autowired constructor(
             // 锁定流水线,不允许用户发起新构建等操作
             redisOperation.addSetValue(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)
         }
+        // 批量添加后，清除这些流水线的限制状态缓存，立即生效
+        ApiAccessLimitCacheManager.invalidatePipelineLimitCache(pipelineIds)
         return archivePipelineManageService.batchMigrateData(
             userId = userId,
             projectId = projectId,

@@ -64,6 +64,7 @@ import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
@@ -109,12 +110,12 @@ import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import jakarta.ws.rs.core.Response
-import kotlin.reflect.KClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -861,15 +862,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     override fun isPublicAtom(atomCode: String): Boolean {
+        // 先检查 Redis 中是否存在，如果不存在则从数据库加载
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         if (!redisOperation.hasKey(storePublicFlagKey)) {
-            // 从db去查查默认插件
+            // 从数据库加载默认插件
             val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
             val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
-            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+            if (defaultAtomCodeList.isNotEmpty()) {
+                redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+            }
         }
-        // 判断是否是默认插件
-        return redisOperation.isMember(storePublicFlagKey, atomCode)
+        
+        // 使用缓存管理器检查是否是公共插件（优化性能）
+        return PublicComponentCacheManager.isPublicComponent(redisOperation, StoreTypeEnum.ATOM.name, atomCode)
     }
 
     override fun getValidOsNameFlag(atomEnvRequests: List<AtomEnvRequest>): Boolean {

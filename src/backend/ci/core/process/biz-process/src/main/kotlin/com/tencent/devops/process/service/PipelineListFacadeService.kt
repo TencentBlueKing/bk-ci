@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -914,12 +915,15 @@ class PipelineListFacadeService @Autowired constructor(
             ),
             pipelineIds = pipelineList.map { it.pipelineId }
         )
+        // 使用缓存管理器批量检查限制状态（优化性能）
+        val pipelineLimitMap = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+            redisOperation = redisOperation,
+            pipelineIds = pipelineList.map { it.pipelineId }.toTypedArray()
+        )
         return pipelineList.map { pipeline ->
             val pipelineId = pipeline.pipelineId
-            val limitFlag = redisOperation.isMember(
-                key = BkApiUtil.getApiAccessLimitPipelinesKey(),
-                item = pipelineId
-            )
+            // 从缓存结果中获取限制状态
+            val limitFlag = pipelineLimitMap[pipelineId] == true
             val permissions = if (limitFlag) {
                 PipelinePermissions(canManage = false, canView = true)
             } else {
@@ -934,10 +938,12 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelinePermissions {
-        val limitFlag = redisOperation.isMember(
-            key = BkApiUtil.getApiAccessLimitPipelinesKey(),
-            item = pipelineId
+        // 使用缓存管理器检查限制状态（优化性能）
+        val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+            redisOperation = redisOperation,
+            pipelineIds = arrayOf(pipelineId)
         )
+        val limitFlag = result[pipelineId] == true
         return if (limitFlag) {
             PipelinePermissions(canManage = false, canView = true)
         } else {
@@ -1542,10 +1548,11 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId, pipelineIds = pipelineIds.toList()
         )
 
-        // 获取归档中的流水线信息
-        val pipelineArchivingFlagMap = redisOperation.isMember(
-            key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-            items = pipelineIds.toTypedArray()
+        // 获取归档中的流水线信息（使用缓存管理器优化）
+        val pipelineArchivingFlagMap = ApiAccessLimitCacheManager.checkMigratingPipelines(
+            redisOperation = redisOperation,
+            moduleCode = SystemModuleEnum.PROCESS.name,
+            pipelineIds = pipelineIds.toTypedArray()
         )
 
         // 完善数据
