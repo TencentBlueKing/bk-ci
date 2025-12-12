@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.TaskResponse
@@ -121,7 +122,8 @@ class DevCloudMacosService @Autowired constructor(
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
         logger.info("dispatchType: ${dispatchMessage.event.dispatchType.value}")
-        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchMessage.event.dispatchType.value.split(":")
+        val dispatchType = dispatchMessage.event.dispatchType as MacOSDispatchType
+        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSHwSpec!!.split(":")
             .let { macOSEnv ->
                 when (macOSEnv.size) {
                     0 -> Triple(null, null, null)
