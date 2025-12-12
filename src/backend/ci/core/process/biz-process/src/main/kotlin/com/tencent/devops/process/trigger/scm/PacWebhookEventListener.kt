@@ -56,7 +56,6 @@ class PacWebhookEventListener(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookYamlDiffConverterManager: WebhookYamlDiffConverterManager,
-    private val webhookGrayService: WebhookGrayService,
     private val sampleEventDispatcher: SampleEventDispatcher,
 ) : WebHookEventListener {
 
@@ -65,9 +64,6 @@ class PacWebhookEventListener(
     }
 
     override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
-        if (!webhookGrayService.isPacGrayRepo(repository.scmCode, repository.projectName)) {
-            return
-        }
         if (repository.enablePac != true) return
         val projectId = repository.projectId!!
         val context = WebhookTriggerContext(

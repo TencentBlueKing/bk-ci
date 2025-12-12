@@ -336,7 +336,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf(repoHashId)
             )
             // TODO 代码源灰度验证,后续需删除
-            if (webhookGrayService.isPacGrayRepo(repository.scmCode, repository.projectName)) {
+            if (webhookGrayService.isPacGrayRepo(repository.getScmType(), repository.getExternalId())) {
                 return releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
             }
 
