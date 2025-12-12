@@ -3,7 +3,7 @@ package com.tencent.devops.process.trigger.market
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -12,8 +12,8 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
+import com.tencent.devops.process.trigger.event.CdsWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.GenericWebhookTriggerEvent
-import com.tencent.devops.process.trigger.event.RemoteDevWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import jakarta.ws.rs.core.Response
@@ -33,7 +33,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
     private val webhookTriggerBuildService: WebhookTriggerBuildService
 ) {
 
-    fun remoteDevWebhookTrigger(event: RemoteDevWebhookTriggerEvent) {
+    fun cdsWebhookTrigger(event: CdsWebhookTriggerEvent) {
         with(event) {
             genericWebhookTrigger(
                 GenericWebhookTriggerEvent(
@@ -49,6 +49,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod", "NestedBlockDepth")
     fun genericWebhookTrigger(event: GenericWebhookTriggerEvent) {
         logger.info("receive generic webhook request event[${JsonUtil.toJson(event, false)}]")
         with(event) {
@@ -82,10 +83,8 @@ class MarketEventTriggerBuildService @Autowired constructor(
                 val triggerContainer = model.getTriggerContainer()
                 val variables = pipelineRepositoryService.getTriggerParams(model.getTriggerContainer())
                 val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
-                triggerContainer.elements.filterIsInstance<MarketBuildLessAtomElement>().forEach elements@{ element ->
-                    // atomCode
-                    val elementEventCode = element.atomCode.substringAfter("#")
-                    if (!element.elementEnabled() || elementEventCode != eventCode) {
+                triggerContainer.elements.filterIsInstance<MarketEventAtomElement>().forEach elements@{ element ->
+                    if (!element.elementEnabled() || element.atomCode != eventCode) {
                         return@elements
                     }
 
@@ -138,7 +137,6 @@ class MarketEventTriggerBuildService @Autowired constructor(
             }
         }
     }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketEventTriggerBuildService::class.java)

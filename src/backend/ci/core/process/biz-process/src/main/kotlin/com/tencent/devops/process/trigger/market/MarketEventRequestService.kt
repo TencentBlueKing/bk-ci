@@ -13,13 +13,13 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
-import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
-import com.tencent.devops.process.trigger.event.RemoteDevWebhookRequestEvent
-import com.tencent.devops.process.trigger.event.RemoteDevWebhookTriggerEvent
+import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.CdsWebhookTriggerEvent
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -35,23 +35,26 @@ class MarketEventRequestService constructor(
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao
 ) {
-    fun handleRemoteDevWebhookRequestEvent(event: RemoteDevWebhookRequestEvent) {
+    fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
-            client.get(ServiceEnvironmentResource::class).listRawByEnvNames(
+            val envList = client.get(ServiceEnvironmentResource::class).listRawByEnvNames(
                 projectId = projectId,
                 envNames = listOf(workspaceName),
                 userId = userId
-            )
-            val envIdList = listOf("devops_remote_dev")
+            ).data ?: run {
+                logger.error("get env list failed|$projectId|$workspaceName")
+                return
+            }
             val eventDesc = I18Variable(
                 code = BK_REMOTE_DEV_TRIGGER_DESC,
                 params = listOf(cdsIp, eventType)
             ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             val requestTime = System.currentTimeMillis()
-            envIdList.forEach { envHashId ->
+            envList.forEach { env ->
                 val eventId = pipelineTriggerEventService.getEventId()
+                val envHashId = env.envHashId
                 val triggerEvent = PipelineTriggerEvent(
                     projectId = projectId,
                     eventId = eventId,
@@ -84,7 +87,7 @@ class MarketEventRequestService constructor(
                 )
                 subscribers.forEach { subscriber ->
                     sampleEventDispatcher.dispatch(
-                        RemoteDevWebhookTriggerEvent(
+                        CdsWebhookTriggerEvent(
                             userId = userId,
                             projectId = projectId,
                             pipelineId = subscriber.pipelineId,
@@ -104,5 +107,9 @@ class MarketEventRequestService constructor(
     fun handleGenericWebhookRequestEvent(event: GenericWebhookRequestEvent) {
         // 1. 查询eventCode对应的提供者信息
         // 2. 提取事件源和事件类型
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MarketEventRequestService::class.java)
     }
 }

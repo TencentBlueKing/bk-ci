@@ -6,7 +6,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(StreamBinding.REMOTEDEV_WEBHOOK_TRIGGER_EVENT)
-data class RemoteDevWebhookTriggerEvent(
+data class CdsWebhookTriggerEvent(
     @get:Schema(description = "用户ID")
     val userId: String,
     @get:Schema(description = "项目ID")

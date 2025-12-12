@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service
 class TriggerEventReleaseSpecBusService @Autowired constructor(
     private val storeCommonService: StoreCommonService,
     private val storeComponentQueryService: StoreComponentQueryService
-): StoreReleaseSpecBusService {
+) : StoreReleaseSpecBusService {
     override fun doStoreCreatePreBus(storeCreateRequest: StoreCreateRequest) {
         logger.info("doStoreCreatePreBus")
         val baseInfo = storeCreateRequest.baseInfo

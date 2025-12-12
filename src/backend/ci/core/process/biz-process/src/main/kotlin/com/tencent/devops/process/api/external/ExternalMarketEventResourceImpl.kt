@@ -5,15 +5,15 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
-import com.tencent.devops.process.trigger.event.RemoteDevWebhookRequestEvent
+import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ExternalEventResourceImpl @Autowired constructor(
+class ExternalMarketEventResourceImpl @Autowired constructor(
     private val simpleDispatcher: SampleEventDispatcher
-)  : ExternalEventResource {
-    override fun remoteDevWebhook(
+) : ExternalMarketEventResource {
+    override fun cdsWebhook(
         userId: String,
         projectId: String,
         workspaceName: String,
@@ -23,7 +23,7 @@ class ExternalEventResourceImpl @Autowired constructor(
         body: String
     ): Result<Boolean> {
         simpleDispatcher.dispatch(
-            RemoteDevWebhookRequestEvent(
+            CdsWebhookRequestEvent(
                 userId = userId,
                 projectId = projectId,
                 workspaceName = workspaceName,

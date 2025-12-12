@@ -220,7 +220,7 @@ class StoreBaseQueryDao {
                         STORE_TYPE.eq(storeType.type.toByte()),
                         STORE_CODE.eq(storeCode),
                         VERSION.like(VersionUtils.generateQueryVersion(version))
-                    ).let{
+                    ).let {
                         if (!ownerStoreCode.isNullOrEmpty()) {
                             it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
                         }
@@ -641,7 +641,7 @@ class StoreBaseQueryDao {
         storeCodes: Set<String>
     ): List<Pair<String, Int>> {
         return with(TStoreBase.T_STORE_BASE) {
-            val groupField = when(queryGroupParam.groupBy) {
+            val groupField = when (queryGroupParam.groupBy) {
                 StoreGroupByEnum.OWNER_STORE_CODE -> {
                     OWNER_STORE_CODE
                 }

@@ -22,7 +22,7 @@ import com.tencent.devops.store.pojo.trigger.conditions.EnumInputCondition
 import com.tencent.devops.store.pojo.trigger.conditions.InputCondition
 import com.tencent.devops.store.pojo.trigger.conditions.SelectCondition
 import com.tencent.devops.store.pojo.trigger.conditions.TriggerCondition
-import com.tencent.devops.store.pojo.trigger.enums.ConditionOperator
+import com.tencent.devops.store.pojo.trigger.enums.ConditionOperatorEnum
 import com.tencent.devops.store.pojo.trigger.enums.MappingSource
 
 object TriggerEventConverter {
@@ -92,7 +92,7 @@ object TriggerEventConverter {
             is CheckboxListCondition -> {
                 CheckboxListComponent(
                     label = condition.label,
-                    default = condition.default,
+                    default = condition.defaultValue,
                     list = condition.options?.map {
                         CheckBoxListComponentOption(
                             id = it.value,
@@ -108,7 +108,7 @@ object TriggerEventConverter {
             is EnumInputCondition -> {
                 EnumInputComponent(
                     label = condition.label,
-                    default = condition.default,
+                    default = condition.defaultValue,
                     list = condition.options?.map {
                         EnumInputOptions(
                             value = it.value,
@@ -124,7 +124,7 @@ object TriggerEventConverter {
             is InputCondition -> {
                 VueInputComponent(
                     label = condition.label,
-                    default = condition.default,
+                    default = condition.defaultValue,
                     desc = condition.desc,
                     required = condition.required,
                     key = condition.key()
@@ -134,7 +134,7 @@ object TriggerEventConverter {
             is SelectCondition -> {
                 SelectInputComponent(
                     label = condition.label,
-                    default = condition.default,
+                    default = condition.defaultValue,
                     options = condition.options?.map {
                         SelectInputComponentOption(
                             id = it.value,
@@ -173,9 +173,9 @@ fun main() {
                     )
                 ),
                 desc = "触发动作",
-                refField = "ci.action",
-                default = listOf("open"),
-                operator = ConditionOperator.NOT_IN,
+                targetField = "ci.action",
+                defaultValue = listOf("open"),
+                operator = ConditionOperatorEnum.NOT_IN,
                 required = false
             ),
             EnumInputCondition(
@@ -191,27 +191,27 @@ fun main() {
                     )
                 ),
                 desc = "触发事件",
-                refField = "ci.action",
-                default = null,
-                operator = ConditionOperator.IN,
+                targetField = "ci.action",
+                defaultValue = null,
+                operator = ConditionOperatorEnum.IN,
                 required = false
             ),
             InputCondition(
                 label = "路径",
                 group = "路径",
                 desc = "触发路径",
-                refField = "ci.action",
-                default = null,
-                operator = ConditionOperator.LIKE,
+                targetField = "ci.action",
+                defaultValue = null,
+                operator = ConditionOperatorEnum.LIKE,
                 required = false
             ),
             InputCondition(
                 label = "排除路径",
                 group = "路径",
                 desc = "排除路径",
-                refField = "ci.action",
-                default = null,
-                operator = ConditionOperator.NOT_LIKE,
+                targetField = "ci.action",
+                defaultValue = null,
+                operator = ConditionOperatorEnum.NOT_LIKE,
                 required = false
             ),
             SelectCondition(
@@ -227,9 +227,9 @@ fun main() {
                     )
                 ),
                 desc = "评论来源",
-                refField = "ci.action",
-                default = null,
-                operator = ConditionOperator.IN,
+                targetField = "ci.action",
+                defaultValue = null,
+                operator = ConditionOperatorEnum.IN,
                 required = false,
                 multiple = true
             )

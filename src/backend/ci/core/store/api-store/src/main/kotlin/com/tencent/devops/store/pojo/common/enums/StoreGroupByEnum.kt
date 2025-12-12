@@ -29,7 +29,6 @@ package com.tencent.devops.store.pojo.common.enums
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "研发商店-组件分组字段")
 enum class StoreGroupByEnum {
     OWNER_STORE_CODE, // 归属应用

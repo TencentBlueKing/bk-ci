@@ -51,7 +51,6 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
@@ -62,7 +61,6 @@ import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.CategoryService
@@ -986,7 +984,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeCodes: Set<String>
     ) = if (storeCodes.isEmpty()) {
         listOf()
-    } else{
+    } else {
         storeBaseQueryDao.getLatestComponentByCodes(
             dslContext = dslContext,
             storeCodes = storeCodes,
@@ -1285,7 +1283,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         val ownerStoreInfos = getComponentBaseInfoList(
             storeType = StoreTypeEnum.DEVX,
             storeCodes = ownerStoreCodes
-        ).associate {  it.storeCode to it.storeName }
+        ).associate { it.storeCode to it.storeName }
         // 获取关联的流水线数量
         val pipelineCount = storeInfos.map {
             val ownerStoreCode = it[tStoreBase.OWNER_STORE_CODE]

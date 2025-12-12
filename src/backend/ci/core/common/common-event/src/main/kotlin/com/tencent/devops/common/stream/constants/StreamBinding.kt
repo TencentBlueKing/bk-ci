@@ -169,7 +169,6 @@ object StreamBinding {
 
     const val REMOTEDEV_WEBHOOK_TRIGGER_EVENT = "engine.pipeline.remotedev.webhook.trigger.event"
 
-
     const val GENERIC_WEBHOOK_REQUEST_EVENT = "engine.pipeline.generic.webhook.event"
 
     // 流水线构建check-run事件
