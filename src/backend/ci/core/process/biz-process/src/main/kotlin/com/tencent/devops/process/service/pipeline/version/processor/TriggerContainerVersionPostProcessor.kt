@@ -75,8 +75,7 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
     ) {
         val atomCode = element.atomCode
         val version = element.version
-        val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDetailInfoByCode(
-            userId = "admin",
+        val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
             version = version
