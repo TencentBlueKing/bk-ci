@@ -12,10 +12,11 @@
                     <template slot="content">
                         <div
                             v-for="param in paramsListMap[key]"
+                            v-if="param.show"
                             :key="param.id"
                         >
                             <render-param
-                                v-if="param.show"
+                                
                                 v-bind="param"
                                 :param="param"
                                 ref="categoryRenderParam"
@@ -37,10 +38,11 @@
             <template v-else>
                 <div
                     v-for="param in paramList"
+                    v-if="param.show"
                     :key="param.id"
                 >
                     <render-param
-                        v-if="param.show"
+                        
                         v-bind="param"
                         :param="param"
                         ref="renderParam"
