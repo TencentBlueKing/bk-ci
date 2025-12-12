@@ -15,6 +15,7 @@
                             :key="param.id"
                         >
                             <render-param
+                                v-if="param.show"
                                 v-bind="param"
                                 :param="param"
                                 ref="categoryRenderParam"
@@ -39,6 +40,7 @@
                     :key="param.id"
                 >
                     <render-param
+                        v-if="param.show"
                         v-bind="param"
                         :param="param"
                         ref="renderParam"
