@@ -121,9 +121,10 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
-        logger.info("dispatchType: ${dispatchMessage.event.dispatchType.value}")
+
         val dispatchType = dispatchMessage.event.dispatchType as MacOSDispatchType
-        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSHwSpec!!.split(":")
+        logger.info("dispatchType: ${dispatchType.macOSEvn}")
+        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSEvn.split(":")
             .let { macOSEnv ->
                 when (macOSEnv.size) {
                     0 -> Triple(null, null, null)
