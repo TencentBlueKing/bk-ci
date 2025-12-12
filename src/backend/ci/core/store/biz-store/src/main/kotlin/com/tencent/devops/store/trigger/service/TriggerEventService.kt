@@ -49,7 +49,10 @@ class TriggerEventService @Autowired constructor(
             )
         )
         // 触发事件总数
-        val componentCount = componentGroupCount.count { it.second > 0 }
+        val componentCount = 0
+        componentGroupCount.forEach {
+            componentCount + it.second
+        }
         val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
         // 查询归属应用信息
         val ownerAppInfos = storeComponentQueryService.getComponentBaseInfoList(
@@ -74,6 +77,7 @@ class TriggerEventService @Autowired constructor(
     fun baseTrigger(
         userId: String,
         keyword: String?,
+        ownerStoreCode: String?,
         page: Int,
         pageSize: Int
     ): AtomResp<AtomRespItem>? {
@@ -84,7 +88,8 @@ class TriggerEventService @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 queryProjectComponentFlag = false,
-                keyword = keyword
+                keyword = keyword,
+                ownerStoreCode = ownerStoreCode
             )
         ).let {
             AtomResp(

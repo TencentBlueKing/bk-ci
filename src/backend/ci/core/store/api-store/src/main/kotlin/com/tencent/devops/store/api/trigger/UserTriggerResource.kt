@@ -21,7 +21,7 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
-@Tag(name = "USER_PIPELINE_CONTAINER", description = "触发资源")
+@Tag(name = "USER_PIPELINE_TRIGGER_RESOURCE", description = "触发资源")
 @Path("/user/market/trigger")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -58,6 +58,9 @@ interface UserTriggerResource {
         @Parameter(description = "插件搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
+        @Parameter(description = "归属应用标识", required = false)
+        @QueryParam("ownerStoreCode")
+        ownerStoreCode: String?,
         @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int?,

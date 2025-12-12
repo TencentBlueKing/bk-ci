@@ -290,6 +290,9 @@ class MarketStoreQueryDao {
             baseStep.leftJoin(tStoreCategoryRel).on(tStoreBase.ID.eq(tStoreCategoryRel.STORE_ID))
             conditions.add(tStoreCategoryRel.CATEGORY_ID.eq(it))
         }
+        if (!storeInfoQuery.ownerStoreCode.isNullOrBlank()) {
+            conditions.add(tStoreBase.OWNER_STORE_CODE.eq(storeInfoQuery.ownerStoreCode))
+        }
         return conditions
     }
 
