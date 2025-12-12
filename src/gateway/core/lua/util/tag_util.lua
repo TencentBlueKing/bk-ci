@@ -46,7 +46,7 @@ function _M:get_tag(ns_config)
     else
         -- 获取本地缓存
         local tag_cache = ngx.shared.tag_project_store
-        local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id)
+        local tag_cache_key = 'tag_cache_' .. tostring(gateway_project) .. '_' .. tostring(devops_service) .. '_' .. tostring(devops_project_id)
         local tag_cache_value = tag_cache:get(tag_cache_key)
 
         -- 如果有缓存 ,则使用缓存变量
@@ -76,20 +76,21 @@ function _M:get_tag(ns_config)
             --- 将redis连接放回pool中
             red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
-            -- 将redis拿到的tag保存在缓存
+            -- 根据service路由
+            if tag == nil and devops_service ~= '' then
+                tag = config.tag_service_table[devops_service]
+            end
+            -- 根据ngx.var.project路由
+            if tag == nil and gateway_project then
+                tag = config.tag_project_table[gateway_project]
+            end
+            -- 使用默认值
+            if tag == nil then
+                tag = default_tag
+            end
+
+            -- 将最终确定的tag保存在缓存（确保缓存非nil值，避免缓存穿透）
             tag_cache:set(tag_cache_key, tag, 60)
-        end
-        -- 根据service路由
-        if tag == nil and devops_service ~= '' then
-            tag = config.tag_service_table[devops_service]
-        end
-        -- 根据ngx.var.project路由
-        if tag == nil and gateway_project then
-            tag = config.tag_project_table[gateway_project]
-        end
-        -- 使用默认值
-        if tag == nil then
-            tag = default_tag
         end
     end
 
