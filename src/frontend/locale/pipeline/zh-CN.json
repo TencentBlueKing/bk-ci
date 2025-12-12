@@ -690,7 +690,8 @@
     "followTemplateTips": "升级实例时，将自动跟随模版新版本变更{0}。",
     "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。",
     "setTimeCron": "设置定时规则",
-    "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚"
+    "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚",
+    "resetBuildNoConfirmMessage": "共 {0} 条流水线的 [构建号] 字段在发布正式后将自动重置为基线值，请关注！若无需重置，请取消 [发布正式版本后立即重置为基线值] 的勾选状态。"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -1313,7 +1314,10 @@
     "enableVersionControl": "开启版本管理",
     "versionControlTip": "开启后，上传文件时，将在目录下自动生成版本路径，避免同名覆盖。",
     "controlOption": "控制选项",
-    "displayCondition": "何时展示本变量"
+    "displayCondition": "何时展示本变量",
+    "instanceRequired": "默认为实例入参",
+    "instanceRequiredTips": "此设置为默认值，可在实例化流水线时，在具体实例中调整是否为实例入参。",
+    "templateBuildParamTips": "设置为模版入参的参数，实例化时可以修改参数值，可以设置为实例的入参。"
   },
   "storeMap": {
     "textarea": "文本框",
