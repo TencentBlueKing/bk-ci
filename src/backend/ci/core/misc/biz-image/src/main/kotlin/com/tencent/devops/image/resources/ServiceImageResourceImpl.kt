@@ -88,26 +88,42 @@ class ServiceImageResourceImpl @Autowired constructor(
     override fun listProjectImages(
         userId: String,
         projectId: String,
-        searchKey: String?,
+        imageName: String,
         start: Int?,
         limit: Int?
-    ): Result<ImagePageData> {
-        val vSearchKey = searchKey ?: ""
+    ): Result<ImagePageData?> {
         val (vStart, vLimit) = pair(start, limit)
-        return Result(artifactoryService.listProjectImages(projectId, vSearchKey, vStart, vLimit))
+        return Result(
+            artifactoryService.listProjectImages(
+                userId = userId,
+                projectCode = projectId,
+                imageName = imageName,
+                start = vStart,
+                limit = vLimit
+            )
+        )
     }
 
-    override fun listAllPublicImages(userId: String, searchKey: String?): Result<ImageListResp> {
-        return Result(artifactoryService.listAllPublicImages(searchKey))
-    }
-
-    override fun listAllProjectImages(userId: String, projectId: String, searchKey: String?): Result<ImageListResp> {
-        return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
-    }
-
-    override fun getImageInfo(userId: String, imageRepo: String, tagStart: Int?, tagLimit: Int?): Result<DockerRepo?> {
+    override fun getImageInfo(
+        userId: String,
+        imageRepo: String,
+        projectId: String,
+        imageName: String,
+        tagStart: Int?,
+        tagLimit: Int?
+    ): Result<DockerRepo?> {
         val (vStart, vLimit) = pair(tagStart, tagLimit)
-        return Result(artifactoryService.getImageInfo(imageRepo, true, vStart, vLimit))
+        return Result(
+            artifactoryService.getImageInfo(
+                imageRepo = imageRepo,
+                includeTagDetail = true,
+                tagStart = vStart,
+                tagLimit = vLimit,
+                projectId = projectId,
+                imageName = imageName,
+                userId = userId
+            )
+        )
     }
 
     private fun pair(start: Int?, limit: Int?): Pair<Int, Int> {
@@ -116,8 +132,8 @@ class ServiceImageResourceImpl @Autowired constructor(
         return Pair(vStart, vLimit)
     }
 
-    override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
-        return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
+    override fun getTagInfo(userId: String, projectId: String, imageName: String, imageTag: String): Result<DockerTag?> {
+        return Result(artifactoryService.getTagInfo(userId,  projectId,imageName, imageTag))
     }
 
     override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
