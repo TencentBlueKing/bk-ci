@@ -120,7 +120,7 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
-        // TODO 变更默认值
+        logger.info("dispatchType: ${dispatchMessage.event.dispatchType.value}")
         var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchMessage.event.dispatchType.value.split(":")
             .let { macOSEnv ->
                 when (macOSEnv.size) {
@@ -130,6 +130,8 @@ class DevCloudMacosService @Autowired constructor(
                     else -> Triple(macOSEnv[0], macOSEnv[1], macOSEnv[2])
                 }
             }
+
+        logger.info("macOSHwSpec: $macOSHwSpec, systemVersion: $systemVersion, xcodeVersion: $xcodeVersion")
 
         val isStreamProject = dispatchMessage.event.projectId.startsWith("git_")
 
