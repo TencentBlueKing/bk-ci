@@ -1688,6 +1688,9 @@
               "allow-modify-at-startup" : {
                 "type" : "boolean"
               },
+              "as-instance-input" : {
+                "type" : "boolean"
+              },
               "value-not-empty" : {
                 "type" : "boolean"
               },
