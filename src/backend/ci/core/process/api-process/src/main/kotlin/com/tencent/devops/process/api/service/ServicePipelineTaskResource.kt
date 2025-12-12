@@ -150,4 +150,6 @@ interface ServicePipelineTaskResource {
         @PathParam("taskId")
         taskId: String
     ): Result<ContainerStartInfo?>
+
+//    @Operation(summary = "或者指定流水线和job的构建历史")
 }

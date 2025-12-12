@@ -477,10 +477,24 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun fetchAgentBuildPipelineJob(
+    fun countAgentBuildPipelineJob(
         dslContext: DSLContext,
         projectId: String,
         agentId: String
+    ): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
+                .and(AGENT_ID.eq(agentId))
+                .groupBy(PIPELINE_ID, JOB_ID).fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun fetchAgentBuildPipelineJob(
+        dslContext: DSLContext,
+        projectId: String,
+        agentId: String,
+        limit: Int,
+        offset: Int
     ): List<TPAPipelineBuild> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.select(
@@ -491,12 +505,20 @@ class ThirdPartyAgentBuildDao {
                 DSL.count().`as`("BUILD_COUNT"),
                 DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
                 DSL.min(CREATED_TIME).`as`("FIRST_BUILD_TIME"),
-                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL")
-            )
-                .from(this)
-                .where(PROJECT_ID.eq(projectId)).and(AGENT_ID.eq(agentId))
+                DSL.avg(TIME_INTERVAL).`as`("AVG_TIME_INTERVAL"),
+                DSL.field(
+                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
+                    Long::class.java,
+                    VM_SEQ_ID,
+                    ID
+                ).`as`("LAST_VM_SEQ_ID")
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(AGENT_ID.eq(agentId))
                 .groupBy(PIPELINE_ID, JOB_ID)
                 .orderBy(DSL.field("LAST_BUILD_TIME").desc())
+                .limit(limit)
+                .offset(offset)
                 .fetch()
                 .map {
                     TPAPipelineBuild(
@@ -507,7 +529,8 @@ class ThirdPartyAgentBuildDao {
                         buildCount = it.value5() as Int,
                         lastBuildTime = it.value6(),
                         firstBuildTime = it.value7(),
-                        avgTimeInterval = it.value8()?.toLong()
+                        avgTimeInterval = it.value8()?.toLong(),
+                        lastContainerId = it.value9()
                     )
                 }
         }
