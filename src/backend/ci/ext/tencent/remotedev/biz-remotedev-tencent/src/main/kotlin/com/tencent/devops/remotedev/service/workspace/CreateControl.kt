@@ -780,6 +780,14 @@ class CreateControl @Autowired constructor(
                 gameId = gameId.second
             )
         )
+
+        // 如果是克隆场景，异步克隆 bksec 安全策略
+        if (copy != null) {
+            workspaceCommon.cloneBkSecPolicy(
+                oldWorkspaceName = copy.workspaceName,
+                newWorkspaceName = ws.workspaceName
+            )
+        }
         return true
     }
 
