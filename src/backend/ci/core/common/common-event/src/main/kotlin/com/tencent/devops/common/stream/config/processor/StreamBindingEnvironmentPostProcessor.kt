@@ -29,6 +29,8 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
@@ -92,8 +94,13 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
                 setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
-                setProperty("$prefix.destination", event.destination)
-                setProperty("$prefix.binder", event.binder)
+                if (event.binder != StreamBinder.CUSTOM) {
+                    setProperty("$prefix.binder", event.binder)
+                    setProperty("$prefix.destination", event.destination)
+                } else {
+                    val namespace = KubernetesUtils.getNamespace()
+                    setProperty("$prefix.destination", "$namespace.${event.destination}")
+                }
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean方法
@@ -138,8 +145,13 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
-        setProperty("$bindingPrefix.destination", event.destination)
-        setProperty("$bindingPrefix.binder", event.binder)
+        if (event.binder != StreamBinder.CUSTOM) {
+            setProperty("$bindingPrefix.binder", event.binder)
+            setProperty("$bindingPrefix.destination", event.destination)
+        } else {
+            val namespace = KubernetesUtils.getNamespace()
+            setProperty("$bindingPrefix.destination", "$namespace.${event.destination}")
+        }
         setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列
