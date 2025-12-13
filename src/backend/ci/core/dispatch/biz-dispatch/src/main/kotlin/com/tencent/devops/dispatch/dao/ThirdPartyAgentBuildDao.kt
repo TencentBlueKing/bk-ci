@@ -487,6 +487,7 @@ class ThirdPartyAgentBuildDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
+                .and(JOB_ID.isNotNull)
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -501,19 +502,9 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.select(
                 PIPELINE_ID,
-                DSL.field(
-                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
-                    String::class.java,
-                    PIPELINE_NAME,
-                    ID
-                ).`as`("LATEST_PIPELINE_NAME"),
+                PIPELINE_NAME,
                 JOB_ID,
-                DSL.field(
-                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
-                    String::class.java,
-                    TASK_NAME,
-                    ID
-                ).`as`("LATEST_TASK_NAME"),
+                TASK_NAME,
                 DSL.count().`as`("BUILD_COUNT"),
                 DSL.max(CREATED_TIME).`as`("LAST_BUILD_TIME"),
                 DSL.min(CREATED_TIME).`as`("FIRST_BUILD_TIME"),
@@ -527,6 +518,7 @@ class ThirdPartyAgentBuildDao {
             ).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
+                .and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
                 .orderBy(DSL.field("LAST_BUILD_TIME").desc())
                 .limit(limit)
