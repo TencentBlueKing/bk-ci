@@ -477,23 +477,18 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    // TODO: 性能可能有问题，最后要看看
     fun countAgentBuildPipelineJob(
         dslContext: DSLContext,
         projectId: String,
         agentId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            val subQuery = dslContext.select(PIPELINE_ID, JOB_ID)
+            return dslContext.select(DSL.countDistinct(PIPELINE_ID, JOB_ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
                 .and(JOB_ID.isNotNull)
-                .groupBy(PIPELINE_ID, JOB_ID)
-                .asTable("sub")
-            return dslContext.selectCount()
-                .from(subQuery)
-                .fetchOne(0, Long::class.java) ?: 0L
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -525,7 +520,7 @@ class ThirdPartyAgentBuildDao {
                 .and(AGENT_ID.eq(agentId))
                 .and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
-                .orderBy(DSL.field("LAST_BUILD_TIME").desc())
+                .orderBy(ID.desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
