@@ -477,6 +477,7 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
+    // TODO: 性能可能有问题，最后要看看
     fun countAgentBuildPipelineJob(
         dslContext: DSLContext,
         projectId: String,
@@ -487,6 +488,7 @@ class ThirdPartyAgentBuildDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
+                .and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
                 .asTable("sub")
             return dslContext.selectCount()
