@@ -483,12 +483,15 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.select(DSL.countDistinct(PIPELINE_ID, JOB_ID))
+            val subQuery = dslContext.select(PIPELINE_ID, JOB_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .and(JOB_ID.isNotNull)
-                .fetchOne(0, Long::class.java)!!
+                .groupBy(PIPELINE_ID, JOB_ID)
+                .asTable("sub")
+            return dslContext.selectCount()
+                .from(subQuery)
+                .fetchOne(0, Long::class.java) ?: 0L
         }
     }
 
