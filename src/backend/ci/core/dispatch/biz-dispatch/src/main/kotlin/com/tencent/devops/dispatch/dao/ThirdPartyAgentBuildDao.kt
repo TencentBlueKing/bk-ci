@@ -483,9 +483,11 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Long {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
+            return dslContext.select(DSL.countDistinct(PIPELINE_ID, JOB_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_ID.eq(agentId))
-                .groupBy(PIPELINE_ID, JOB_ID).fetchOne(0, Long::class.java)!!
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
