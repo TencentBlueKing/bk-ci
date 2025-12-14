@@ -113,11 +113,12 @@
             const searchList = computed(() => [
                 {
                     name: proxy.$t('environment.project'),
-                    id: 'name'
+                    id: 'name',
+                    default: true
                 },
                 {
                     name: proxy.$t('environment.operateUser'),
-                    id: 'operator'
+                    id: 'creator'
                 }
             ])
             

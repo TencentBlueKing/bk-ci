@@ -240,15 +240,16 @@
                 return [
                     {
                         name: proxy.$t('environment.variableName'),
-                        id: 'name'
+                        id: 'evnName',
+                        default: true
                     },
                     {
                         name: proxy.$t('environment.variableValue'),
-                        id: 'value'
+                        id: 'envValue'
                     },
                     {
                         name: proxy.$t('environment.envInfo.type'),
-                        id: 'type',
+                        id: 'source',
                         children: [
                             { id: 'string', name: proxy.$t('environment.envInfo.clearText') },
                             { id: 'password', name: proxy.$t('environment.envInfo.cipherText') }

@@ -25,13 +25,16 @@
                     :key="index"
                 />
             </bk-tab>
-            <component :is="renderComponent" />
+            <component
+                :is="renderComponent"
+                :key="currentEnv.envType"
+            />
         </div>
     </div>
 </template>
 
 <script>
-    import { ref, watch, computed } from 'vue'
+    import { ref, watch, computed, onMounted } from 'vue'
     import {
         ENV_TYPE_MAP
     } from '@/store/constants'
@@ -56,7 +59,10 @@
         },
         setup () {
             const { proxy } = useInstance()
-            const { currentEnv } = useEnvDetail()
+            const {
+                currentEnv,
+                fetchEnvDetail
+            } = useEnvDetail()
             
             // 从路由参数中获取初始 tab，如果没有则默认为 'node'
             const initialTab = proxy.$route.params.tabName || 'node'
@@ -152,6 +158,7 @@
 
             // 监听 envId 变化，当 envId 存在但没有 tabName 时，添加默认的 tabName
             watch(() => proxy.$route.params.envId, (newEnvId) => {
+                fetchEnvDetail()
                 if (newEnvId && !proxy.$route.params.tabName) {
                     proxy.$router.replace({
                         name: 'envDetail',
@@ -164,7 +171,9 @@
                     })
                 }
             })
-
+            onMounted(() => {
+                fetchEnvDetail()
+            })
             return {
                 renderComponent,
                 currentEnv,

@@ -410,5 +410,9 @@
     "startTime": "启动时间",
     "endTime": "结束时间",
     "trigger": "触发人",
-    "noMore": "没有更多数据了"
+    "noMore": "没有更多数据了",
+    "success": "成功",
+    "failure": "失败",
+    "running": "执行中",
+    "expandList": "展开列表"
 }

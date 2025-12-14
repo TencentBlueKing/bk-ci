@@ -111,24 +111,34 @@
                     </div>
                 </section>
 
-                <list-table
-                    ref="listTable"
-                    :node-list="nodeList"
-                    :table-loading="tableLoading"
-                    :pagination="pagination"
-                    :search-value="searchValue"
-                    :tag-search-value="tagSearchValue"
-                    :date-time-range="dateTimeRange"
-                    :node-tag-list="nodeTagList"
-                    @page-change="handlePageChange"
-                    @page-limit-change="handlePageLimitChange"
-                    @sort-change="handleSortChange"
-                    @refresh="requestList"
-                    @updataCurEditNodeItem="updataCurEditNodeItem"
-                    @install-agent="installAgent"
-                    @clear-filter="clearFilter"
-                    @selected-change="handleSelectedChange"
-                />
+                <CollapseLayout
+                    class="mt20"
+                    storage-key="node_list"
+                >
+                    <list-table
+                        ref="listTable"
+                        :node-list="nodeList"
+                        :table-loading="tableLoading"
+                        :pagination="pagination"
+                        :search-value="searchValue"
+                        :tag-search-value="tagSearchValue"
+                        :date-time-range="dateTimeRange"
+                        :node-tag-list="nodeTagList"
+                        :is-flod="flod"
+                        @page-change="handlePageChange"
+                        @page-limit-change="handlePageLimitChange"
+                        @sort-change="handleSortChange"
+                        @refresh="requestList"
+                        @updataCurEditNodeItem="updataCurEditNodeItem"
+                        @install-agent="installAgent"
+                        @clear-filter="clearFilter"
+                        @selected-change="handleSelectedChange"
+                        @toggle-fold="toggleFlod"
+                    />
+                    <template slot="flod">
+                        {{ flod }}
+                    </template>
+                </CollapseLayout>
             </template>
         </section>
         <third-construct
@@ -298,11 +308,21 @@
     import { mapState, mapActions } from 'vuex'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import CollapseLayout from '@/components/CollapseLayout'
+    import useCollapseLayout from '@/hooks/useCollapseLayout'
     export default {
         components: {
             ListTable,
             thirdConstruct,
-            SearchSelect
+            SearchSelect,
+            CollapseLayout
+        },
+        setup () {
+            const { flod, toggleFlod } = useCollapseLayout('node_list', false)
+            return {
+                flod,
+                toggleFlod
+            }
         },
         data () {
             return {
@@ -389,11 +409,12 @@
                     ]
                 },
                 searchValue: [],
-                pagination: {
+                paginationData: {
                     current: 1,
                     count: 0,
                     limit: Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
-                    limitList: [10, 50, 100, 200]
+                    limitList: [10, 50, 100, 200],
+                    showTotalCount: true
                 },
                 requestParams: {},
                 dateTimeRange: [],
@@ -413,6 +434,13 @@
             ...mapState('environment', ['nodeTagList']),
             projectId () {
                 return this.$route.params.projectId
+            },
+            pagination () {
+                return {
+                    ...this.paginationData,
+                    small: this.flod,
+                    showLimit: !this.flod
+                }
             },
             userInfo () {
                 return window.userInfo
@@ -630,7 +658,7 @@
                             this.requestParams[i.id] = i.id
                         }
                     })
-                    this.pagination.current = 1
+                    this.paginationData.current = 1
                 } else {
                     this.requestParams = {}
                 }
@@ -824,7 +852,7 @@
                         }
                     })
                     this.currentTags = tags
-                    this.pagination.current = 1
+                    this.paginationData.current = 1
                 } else {
                     this.syncCurrentTags()
                 }
@@ -881,13 +909,13 @@
                         params: {
                             ...params,
                             ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
-                            page: this.pagination.current,
-                            pageSize: this.pagination.limit
+                            page: this.paginationData.current,
+                            pageSize: this.paginationData.limit
                         },
                         ...(this.currentTags.length ? { tags: this.currentTags } : {})
                     })
 
-                    this.pagination.count = res.count
+                    this.paginationData.count = res.count
                     this.nodeList = res.records.map(i => {
                         return {
                             isEnableEdit: i.nodeHashId === this.curEditNodeItem,
@@ -1129,14 +1157,14 @@
                 this.selectedNodes = selection
             },
             handlePageChange (page) {
-                this.pagination.current = page
+                this.paginationData.current = page
                 this.requestList(this.requestParams)
             },
             
             handlePageLimitChange (limit) {
                 localStorage.setItem(ENV_NODE_TABLE_LIMIT_CACHE, limit)
-                this.pagination.current = 1
-                this.pagination.limit = limit
+                this.paginationData.current = 1
+                this.paginationData.limit = limit
                 this.requestList(this.requestParams)
             },
 
@@ -1145,7 +1173,7 @@
                     ascending: 'ASC',
                     descending: 'DESC'
                 }
-                this.pagination.current = 1
+                this.paginationData.current = 1
                 this.requestParams.sortType = prop
                 this.requestParams.collation = orderMap[order]
                 this.requestList()
@@ -1181,7 +1209,7 @@
                     delete this.requestParams.latestBuildTimeStart
                     delete this.requestParams.latestBuildTimeEnd
                 }
-                this.pagination.current = 1
+                this.paginationData.current = 1
                 this.requestList()
             },
 
@@ -1226,7 +1254,11 @@
         overflow: hidden;
 
         .sub-view-port {
+            height: calc(100% - 100px);
             margin: 24px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         .create-node-btn {

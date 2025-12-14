@@ -50,27 +50,24 @@
                         />
                         <div class="task-title">
                             <span class="task-name">{{ task.name }}</span>
-                            <span class="task-desc">
+                            <span class="task-pipeline-name">
                                 <i class="bk-icon icon-pipeline" />
-                                {{ task.pipelineName }}
+                                <span
+                                    class="pipeline-text"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ task.pipelineName }}
+                                </span>
                             </span>
                         </div>
                         <div class="task-info">
-                            <div class="info-item">
-                                <span class="info-label">{{ executeLabel }}</span>
-                                <span class="info-value">{{ task.executeCount || 0 }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">{{ $t('environment.avgDuration') }}</span>
-                                <span class="info-value">{{ formatDuration(task.avgDuration) }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">{{ $t('environment.envInfo.creationTime') }}</span>
-                                <span class="info-value">{{ formatTime(task.createTime) }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">{{ $t('environment.nodeInfo.lastRunAs') }}</span>
-                                <span class="info-value">{{ formatTime(task.lastExecuteTime) }}</span>
+                            <div
+                                v-for="item in getTaskInfoItems(task)"
+                                :key="item.label"
+                                class="info-item"
+                            >
+                                <span class="info-label">{{ item.label }}</span>
+                                <span class="info-value">{{ item.value }}</span>
                             </div>
                         </div>
                     </div>
@@ -291,6 +288,28 @@
                     : '执行次数'
             })
             
+            // 获取任务信息项
+            const getTaskInfoItems = (task) => {
+                return [
+                    {
+                        label: executeLabel.value,
+                        value: task.executeCount || 0
+                    },
+                    {
+                        label: proxy.$t('environment.avgDuration'),
+                        value: task.avgDurationText || '--'
+                    },
+                    {
+                        label: proxy.$t('environment.envInfo.creationTime'),
+                        value: task.createTimeText || '--'
+                    },
+                    {
+                        label: proxy.$t('environment.nodeInfo.lastRunAs'),
+                        value: task.lastExecuteTimeText || '--'
+                    }
+                ]
+            }
+            
             // 格式化时长
             const formatDuration = (seconds) => {
                 if (!seconds && seconds !== 0) return '--'
@@ -313,9 +332,9 @@
             // 获取状态图标
             const getStatusIcon = (status) => {
                 const iconMap = {
-                    success: 'icon-check-circle-shape',
+                    success: 'icon-success-shape',
                     running: 'icon-circle-2-1',
-                    failed: 'icon-close-circle-shape'
+                    failed: 'icon-failed-shape'
                 }
                 return iconMap[status] || 'icon-circle'
             }
@@ -323,9 +342,9 @@
             // 获取状态文本
             const getStatusText = (status) => {
                 const textMap = {
-                    success: '成功',
-                    running: '执行中',
-                    failed: '失败'
+                    success: proxy.$t('environment.success'),
+                    running: proxy.$t('environment.running'),
+                    failed: proxy.$t('environment.failure')
                 }
                 return textMap[status] || status
             }
@@ -421,6 +440,11 @@
                     const res = await props.fetchTaskList(params)
                     const newTasks = (res.records || res || []).map(item => ({
                         ...item,
+                        // 预处理格式化数据
+                        avgDurationText: formatDuration(item.avgDuration),
+                        createTimeText: formatTime(item.createTime),
+                        lastExecuteTimeText: formatTime(item.lastExecuteTime),
+                        // 状态数据
                         isExpanded: false,
                         isLoadingDetail: false,
                         records: null,
@@ -540,6 +564,7 @@
                 executeLabel,
                 hasMore,
                 setTaskRef,
+                getTaskInfoItems,
                 formatDuration,
                 formatTime,
                 getStatusIcon,
@@ -619,6 +644,7 @@
                 display: flex;
                 align-items: center;
                 padding: 16px 90px 16px 16px;
+                height: 64px;
                 cursor: pointer;
                 transition: background-color 0.2s;
                 position: sticky;
@@ -646,17 +672,25 @@
                         color: #313238;
                         font-weight: 500;
                         display: block;
-                        margin-bottom: 4px;
+                        margin-bottom: 8px;
                     }
                     
-                    .task-desc {
+                    .task-pipeline-name {
                         font-size: 12px;
                         color: #979BA5;
                         display: flex;
                         align-items: center;
+                        min-width: 0;
                         
                         .bk-icon {
                             margin-right: 4px;
+                            flex-shrink: 0;
+                        }
+                        
+                        .pipeline-text {
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
                         }
                     }
                 }
@@ -665,20 +699,29 @@
                     display: flex;
                     align-items: center;
                     gap: 80px;
+                    flex-shrink: 0;
                     
                     .info-item {
                         display: flex;
                         flex-direction: column;
                         align-items: center;
                         font-size: 12px;
+                        width: 120px;
+                        flex-shrink: 0;
                         
                         .info-label {
                             color: #979BA5;
                             margin-bottom: 8px;
+                            white-space: nowrap;
                         }
                         
                         .info-value {
                             color: #313238;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            width: 100%;
+                            text-align: center;
                         }
                     }
                 }
@@ -703,16 +746,16 @@
                     gap: 4px;
                     
                     &.status-success {
-                        color: #2DCB56;
-                        
-                        .bk-icon {
-                            color: #2DCB56;
+                        .icon-success-shape {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background: #E5F6EA;
+                            border: 1px solid #3FC06D;
                         }
                     }
                     
                     &.status-running {
-                        color: #3A84FF;
-                        
                         .bk-icon {
                             color: #3A84FF;
                             animation: rotating 1s linear infinite;
@@ -720,10 +763,12 @@
                     }
                     
                     &.status-failed {
-                        color: #EA3536;
-                        
-                        .bk-icon {
-                            color: #EA3536;
+                        .icon-failed-shape {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background: #FFE6E6;
+                            border: 1px solid #EA3636;
                         }
                     }
                 }

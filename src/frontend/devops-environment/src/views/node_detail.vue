@@ -9,6 +9,7 @@
         <content-header class="info-header">
             <div slot="left">
                 <i
+                    v-if="!embed"
                     class="devops-icon icon-arrows-left"
                     @click="toNodeList"
                 ></i>
@@ -92,6 +93,14 @@
             nodeDetailTab,
             nodeOverviewChart
         },
+        props: {
+            projectIdProp: String,
+            nodeHashIdProp: String,
+            embed: {
+                type: Boolean,
+                default: false
+            }
+        },
         data () {
             return {
                 ENV_ACTIVE_NODE_TYPE,
@@ -117,10 +126,10 @@
                 'nodeDetails'
             ]),
             projectId () {
-                return this.$route.params.projectId
+                return this.projectIdProp || this.$route.params.projectId
             },
             nodeHashId () {
-                return this.$route.params.nodeHashId
+                return this.nodeHashIdProp || this.$route.params.nodeHashId
             },
             agentLink () {
                 return this.nodeDetails.os === 'WINDOWS' ? this.nodeDetails.agentUrl : this.nodeDetails.agentScript
@@ -129,6 +138,11 @@
         watch: {
             projectId: async function (val) {
                 this.$router.push({ name: 'envList' })
+            },
+            nodeHashId: async function (val) {
+                if (val) {
+                    await this.requestNodeDetail()
+                }
             },
             nodeDetails (val) {
                 this.basePrototypeList.forEach(item => {
@@ -141,6 +155,10 @@
         },
         methods: {
             toNodeList () {
+                if (this.embed) {
+                    this.$emit('close')
+                    return
+                }
                 const nodeType = localStorage.getItem(ENV_ACTIVE_NODE_TYPE) || ALLNODE
                 this.$router.push({
                     name: 'nodeList',
@@ -148,6 +166,7 @@
                 })
             },
             async requestNodeDetail () {
+                if (!this.projectId || !this.nodeHashId) return
                 this.loading.isLoading = true
 
                 try {

@@ -6,13 +6,14 @@ export default function useEnvDetail () {
     const { proxy } = useInstance()
     const envNodeList = ref([]) // 节点列表
     const envParamsList = ref([]) // 环境变量列表
+    const currentEnv = ref({})
     const envHashId = computed(() => proxy.$route.params?.envId)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const envList = computed(() => proxy.$store.getters['environment/getEnvList'] || [])
-    const currentEnv = computed(() => envList.value?.find(item => item.envHashId === envHashId.value))
     
     // 获取环境节点列表
     const fetchEnvNodeList = async (params) => {
+        if (!envHashId.value) return
         try {
             const res = await proxy.$store.dispatch('environment/requestEnvNodeList', {
                 projectId: projectId.value,
@@ -31,6 +32,7 @@ export default function useEnvDetail () {
 
     // 删除环境节点
     const requestRemoveNode = async (params) => {
+        if (!envHashId.value) return
         try {
             const res = await proxy.$store.dispatch('environment/toDeleteEnvNode', {
                 projectId: projectId.value,
@@ -44,11 +46,13 @@ export default function useEnvDetail () {
     }
     // 获取环境详情
     const fetchEnvDetail = async () => {
+        if (!envHashId.value) return
         try {
             const res = await proxy.$store.dispatch('environment/requestEnvDetail', {
                 projectId: projectId.value,
                 envHashId: envHashId.value
             })
+            currentEnv.value = res ?? {}
             envParamsList.value = res?.envVars ?? []
             return res
         } catch (e) {
