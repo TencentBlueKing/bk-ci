@@ -34,3 +34,8 @@ enum class EnvType {
     BUILD,
     CREATE
 }
+
+enum class EnvNodeType {
+    NODE,
+    TAG
+}

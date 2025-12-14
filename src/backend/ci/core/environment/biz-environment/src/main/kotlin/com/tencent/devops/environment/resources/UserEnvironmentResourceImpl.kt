@@ -43,6 +43,7 @@ import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar
@@ -226,18 +227,20 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (envName.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-        return Result(envService.listAllEnvNodesNew(
-            userId = userId,
-            projectId = projectId,
-            page = page,
-            pageSize = pageSize,
-            envHashIds = null,
-            envName = envName,
-            nodeIp = null,
-            displayName = null,
-            createdUser = null,
-            nodeStatus = null
-        ))
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = null,
+                envName = envName,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "createNode"])
@@ -256,7 +259,23 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, EnvAddNodesData(nodeHashIds, null))
+        return Result(true)
+    }
+
+    override fun addNodesNew(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        data: EnvAddNodesData
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        if (data.nodeHashIds.isNullOrEmpty() && data.tags.isNullOrEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+        envService.addEnvNodes(userId, projectId, envHashId, data)
         return Result(true)
     }
 

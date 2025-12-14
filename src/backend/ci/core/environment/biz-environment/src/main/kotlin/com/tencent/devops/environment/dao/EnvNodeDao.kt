@@ -66,6 +66,9 @@ class EnvNodeDao {
     }
 
     fun batchCount(dslContext: DSLContext, projectId: String, envIds: List<Long>): List<Record2<Long, Int>> {
+        if (envIds.isEmpty()) {
+            return emptyList()
+        }
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.select(ENV_ID, count())
                 .from(this)

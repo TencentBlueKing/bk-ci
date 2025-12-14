@@ -159,10 +159,6 @@ class NodeTagService @Autowired constructor(
                 )
             )
         }
-        // 只有第三方机器支持节点
-        if (nodeDao.get(dslContext, projectId, data.nodeId)?.nodeType != NodeType.THIRDPARTY.name) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
-        }
         // 检查标签是否支持多个值同时添加
         val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
             dslContext = dslContext,

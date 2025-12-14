@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -49,6 +50,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
@@ -67,10 +69,13 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOT
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
+import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar
@@ -82,6 +87,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.AgentType
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -106,6 +112,8 @@ class EnvService @Autowired constructor(
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
+    private val envTagDao: EnvTagDao,
+    private val nodeTagKeyDao: NodeTagKeyDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
@@ -286,15 +294,28 @@ class EnvService @Autowired constructor(
                 envRecordList = envRecordList
             )
         }
-        val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
-            .associateBy({ it.value1() }, { it.value2() })
+        val tagNodeCount = envTagDao.batchEnvTagNodeCount(
+            dslContext = dslContext,
+            envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
+            projectId = projectId
+        )
+        val nodeCountMap = envNodeDao.batchCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envRecordList.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
+        ).associateBy({ it.value1() }, { it.value2() })
         return envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                nodeCount = nodeCountMap[it.envId] ?: 0,
+                envNodeType = it.envNodeType,
+                nodeCount = if (it.envNodeType == EnvNodeType.TAG.name) {
+                    tagNodeCount[it.envId] ?: 0
+                } else {
+                    nodeCountMap[it.envId] ?: 0
+                },
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -321,15 +342,28 @@ class EnvService @Autowired constructor(
             return listOf()
         }
 
-        val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, validRecordList.map { it.envId })
-            .associateBy({ it.value1() }, { it.value2() })
+        val tagNodeCount = envTagDao.batchEnvTagNodeCount(
+            dslContext = dslContext,
+            envIds = envRecordList.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet(),
+            projectId = projectId
+        )
+        val nodeCountMap = envNodeDao.batchCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envRecordList.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
+        ).associateBy({ it.value1() }, { it.value2() })
         return validRecordList.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                nodeCount = nodeCountMap[it.envId] ?: 0,
+                envNodeType = it.envNodeType,
+                nodeCount = if (it.envNodeType == EnvNodeType.TAG.name) {
+                    tagNodeCount[it.envId] ?: 0
+                } else {
+                    nodeCountMap[it.envId] ?: 0
+                },
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -505,12 +539,17 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(envId.toString())
             .setInstanceName(env.envName)
-        val nodeCount = envNodeDao.count(dslContext, projectId, envId)
+        val nodeCount = if (env.envNodeType == EnvNodeType.TAG.name) {
+            envTagDao.batchEnvTagNodeCount(dslContext, setOf(envId), projectId)[envId]
+        } else {
+            envNodeDao.count(dslContext, projectId, envId)
+        }
         return EnvWithPermission(
             envHashId = HashUtil.encodeLongId(env.envId),
             name = env.envName,
             desc = env.envDesc,
             envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
+            envNodeType = env.envNodeType,
             nodeCount = nodeCount,
             envVars = jacksonObjectMapper().readValue(env.envVars),
             createdUser = env.createdUser,
@@ -605,6 +644,7 @@ class EnvService @Autowired constructor(
                 name = it.envName,
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                envNodeType = it.envNodeType,
                 nodeCount = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
@@ -643,7 +683,8 @@ class EnvService @Autowired constructor(
             val context = DSL.using(configuration)
             envDao.deleteEnv(context, envId)
             environmentPermissionService.deleteEnv(projectId, envId)
-            // 删除环境时需要同时删除 EnvNode和EnvShareProject相关数据
+            // 删除环境时需要同时删除EnvTag,EnvNode和EnvShareProject相关数据
+            envTagDao.deleteByEnvId(dslContext, envId)
             envNodeDao.deleteByEnvId(context, envId)
             envShareProjectDao.deleteByEnvId(context, envId)
         }
@@ -700,9 +741,20 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-
-        val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
-        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
+        // TODO: issue-12354 这里要确认下 tag 能不能有开启或者关闭，如果有多个标签如何处理
+        val envs = envDao.list(dslContext, projectId, envIds = envIds)
+        val envTagNodeRecordList = envTagDao.batchEnvTagNode(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
+        )
+        val envNodeRecordList = envNodeDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envs.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
+        )
+        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }.toMutableMap()
+        nodeIdMaps.putAll(envTagNodeRecordList.values.flatten().associateWith { true })
         val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
         if (nodeList.isEmpty()) {
             return emptyList()
@@ -775,8 +827,16 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
+        // TODO: issue-12354 这里要确认下 tag 能不能有开启或者关闭，如果有多个标签如何处理
+        val envs = envDao.list(dslContext, projectId, envIds = envIds)
+        val envTagNodeRecordList = envTagDao.batchEnvTagNode(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
+        )
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
-        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
+        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }.toMutableMap()
+        nodeIdMaps.putAll(envTagNodeRecordList.values.flatten().associateWith { true })
         val nodeList = if (-1 != page) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
             nodeDao.listNodesByIdListWithPageLimit(
@@ -862,7 +922,7 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        nodeHashIds: List<String>
+        data: EnvAddNodesData
     ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
@@ -871,6 +931,44 @@ class EnvService @Autowired constructor(
             )
         }
 
+        // TODO：issue-12354 要看看标签权限
+        // 添加标签
+        val tags = data.tags
+        if (!tags.isNullOrEmpty()) {
+            // TODO: issue-12354 env 里不知道要不要这个检查标签是否支持多个值同时添加
+            val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                keyIds = tags.map { it.tagKeyId }.toSet()
+            ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
+            val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
+            tags.forEach { tag ->
+                tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
+            }
+            tags.forEach { tag ->
+                if (tagKeys[tag.tagKeyId]?.first == false && (tagsMap[tag.tagKeyId]?.size ?: 0) > 1) {
+                    throw ErrorCodeException(
+                        errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
+                        params = arrayOf(tagKeys[tag.tagKeyId]?.second ?: "")
+                    )
+                }
+            }
+            ActionAuditContext.current()
+                .addInstanceInfo(envHashId, JsonUtil.toJson(tags), null, null)
+
+            val envId = HashUtil.decodeIdToLong(envHashId)
+            dslContext.transaction { config ->
+                val ctx = DSL.using(config)
+                envTagDao.deleteEnvTags(ctx, projectId, setOf(envId))
+                envTagDao.batchAddEnvTags(
+                    dslContext = ctx,
+                    projectId = projectId,
+                    envAndValueAndKeyIds = mapOf(envId to tags.associate { it.tagValueId to it.tagKeyId })
+                )
+            }
+        }
+
+        val nodeHashIds = data.nodeHashIds ?: return
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
         // 检查 node 权限
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
@@ -901,7 +999,7 @@ class EnvService @Autowired constructor(
 
         // 过滤已在环境中的节点
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
-        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
+        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds.toSet())
 
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
@@ -966,6 +1064,7 @@ class EnvService @Autowired constructor(
                     name = it.envName,
                     desc = it.envDesc,
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                    envNodeType = it.envNodeType,
                     nodeCount = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
                     createdUser = it.createdUser,
@@ -1004,6 +1103,7 @@ class EnvService @Autowired constructor(
                     name = it.envName,
                     desc = it.envDesc,
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                    envNodeType = it.envNodeType,
                     nodeCount = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
                     createdUser = it.createdUser,
@@ -1033,6 +1133,7 @@ class EnvService @Autowired constructor(
                 name = it.envName,
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                envNodeType = it.envNodeType,
                 nodeCount = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
@@ -1054,6 +1155,7 @@ class EnvService @Autowired constructor(
                 name = it.envName,
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                envNodeType = it.envNodeType,
                 nodeCount = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,

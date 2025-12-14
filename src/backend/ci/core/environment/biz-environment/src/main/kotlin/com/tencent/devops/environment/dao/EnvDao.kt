@@ -30,6 +30,7 @@ package com.tencent.devops.environment.dao
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
@@ -75,6 +76,7 @@ class EnvDao {
         envName: String,
         envDesc: String,
         envType: String,
+        envNodeType: EnvNodeType,
         envVars: String
     ): Long {
         val now = LocalDateTime.now()
@@ -93,7 +95,8 @@ class EnvDao {
                     UPDATED_USER,
                     CREATED_TIME,
                     UPDATED_TIME,
-                    IS_DELETED
+                    IS_DELETED,
+                    ENV_NODE_TYPE
                 ).values(
                     projectId,
                     envName,
@@ -104,7 +107,8 @@ class EnvDao {
                     userId,
                     now,
                     now,
-                    false
+                    false,
+                    envNodeType.name
                 ).returning(ENV_ID).fetchOne()!!.envId
                 val hashId = HashUtil.encodeLongId(envId)
                 transactionContext.update(this)

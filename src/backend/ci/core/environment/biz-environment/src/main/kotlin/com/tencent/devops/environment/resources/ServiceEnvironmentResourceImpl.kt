@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -120,7 +121,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        envService.addEnvNodes(userId, projectId, envHashId, EnvAddNodesData(nodeHashIds, null))
         return Result(true)
     }
 
