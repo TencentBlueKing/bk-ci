@@ -1232,7 +1232,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.select(
                 BUILD_ID, BUILD_NUM, START_TIME, END_TIME, STATUS, REMARK, EXECUTE_TIME,
-                EXECUTE_COUNT, CHANNEL, TRIGGER, ERROR_INFO, STAGE_STATUS, BUILD_PARAMETERS,TRIGGER_USER,START_USER
+                EXECUTE_COUNT, CHANNEL, TRIGGER, ERROR_INFO, STAGE_STATUS, BUILD_PARAMETERS, TRIGGER_USER, START_USER
             ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
 
             if (!status.isNullOrEmpty()) {
@@ -1261,7 +1261,8 @@ class PipelineBuildDao {
         buildNoEnd: Int?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            val where = dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+            val where =
+                dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
 
             if (!status.isNullOrEmpty()) {
                 where.and(STATUS.`in`(status.map { it.ordinal }))
@@ -2173,9 +2174,10 @@ class PipelineBuildDao {
         }
     }
 
-    class PipelineBuildLightInfoJooqMapper : RecordMapper<Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String,String,String>, LightBuildHistory> {
-        override fun map(record: Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String,String,String>?): LightBuildHistory? {
-            val tTPipelineBuildHistory=TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+    class PipelineBuildLightInfoJooqMapper :
+        RecordMapper<Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String, String, String>, LightBuildHistory> {
+        override fun map(record: Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String, String, String>?): LightBuildHistory? {
+            val tTPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
             return record?.let { t ->
                 LightBuildHistory(
                     id = t[tTPipelineBuildHistory.BUILD_ID],
@@ -2183,17 +2185,19 @@ class PipelineBuildDao {
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
                     status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].name,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
-                    startTime = t[tTPipelineBuildHistory.START_TIME]?.timestampmilli()?: 0L,
+                    startTime = t[tTPipelineBuildHistory.START_TIME]?.timestampmilli() ?: 0L,
                     endTime = t[tTPipelineBuildHistory.END_TIME]?.timestampmilli(),
                     errorInfoList = try {
                         if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {
-                            JsonUtil.getObjectMapper().readValue(t[tTPipelineBuildHistory.ERROR_INFO]) as List<ErrorInfo>
+                            JsonUtil.getObjectMapper()
+                                .readValue(t[tTPipelineBuildHistory.ERROR_INFO]) as List<ErrorInfo>
                         } else null
                     } catch (ignored: Exception) {
                         null
                     },
                     stageStatus = kotlin.runCatching {
-                        JsonUtil.getObjectMapper().readValue(t[tTPipelineBuildHistory.STAGE_STATUS]) as List<LightStageStatus>
+                        JsonUtil.getObjectMapper()
+                            .readValue(t[tTPipelineBuildHistory.STAGE_STATUS]) as List<LightStageStatus>
                     }.getOrNull(),
                     buildParameters = t[tTPipelineBuildHistory.BUILD_PARAMETERS]?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
