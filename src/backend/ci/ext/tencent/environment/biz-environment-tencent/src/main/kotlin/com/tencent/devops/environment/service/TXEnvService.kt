@@ -47,9 +47,12 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
+import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.enums.TXEnvType
@@ -68,6 +71,8 @@ class TXEnvService @Autowired constructor(
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
+    private val envTagDao: EnvTagDao,
+    private val nodeTagKeyDao: NodeTagKeyDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
@@ -79,6 +84,8 @@ class TXEnvService @Autowired constructor(
     envDao = envDao,
     nodeDao = nodeDao,
     envNodeDao = envNodeDao,
+    envTagDao = envTagDao,
+    nodeTagKeyDao = nodeTagKeyDao,
     thirdPartyAgentDao = thirdPartyAgentDao,
     slaveGatewayService = slaveGatewayService,
     environmentPermissionService = environmentPermissionService,
@@ -141,8 +148,9 @@ class TXEnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        nodeHashIds: List<String>
+        data: EnvAddNodesData
     ) {
+        val nodeHashIds = data.nodeHashIds ?: return
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
         if (env.envType == TXEnvType.DEVX.name) {
             // 暂时仅支持一个公共云桌面进入一个环境
@@ -154,7 +162,7 @@ class TXEnvService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ERROR_NODE_HAD_BEEN_ASSIGN)
             }
         }
-        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        super.addEnvNodes(userId, projectId, envHashId, data)
         if (env.envType == TXEnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                 userId = userId,
