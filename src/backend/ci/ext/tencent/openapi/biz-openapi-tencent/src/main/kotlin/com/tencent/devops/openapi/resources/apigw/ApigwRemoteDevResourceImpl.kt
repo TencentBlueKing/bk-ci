@@ -651,6 +651,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
     }
 
+    override fun getThumbnailEncryptedTicket(
+        userId: String,
+        workspaceName: String,
+        expiredSeconds: Long?
+    ): Result<String> {
+        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$expiredSeconds")
+        return client.get(ServiceRemoteDevResource::class).getThumbnailEncryptedTicket(
+            userId = userId,
+            workspaceName = workspaceName,
+            expiredSeconds = expiredSeconds
+        )
+    }
+
     override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {
         logger.info("getTaskStatus |$userId|$taskId")
         return client.get(ServiceRemoteDevResource::class).getTaskStatus(userId, taskId)

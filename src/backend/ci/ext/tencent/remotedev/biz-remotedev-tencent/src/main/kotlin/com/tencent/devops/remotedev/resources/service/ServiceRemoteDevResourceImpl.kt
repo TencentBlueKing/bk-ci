@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.EnableRemotedevData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.RemotedevProjectNew
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
@@ -797,8 +798,31 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
-        return Result(workspaceRecordService.getWorkspaceRecordTicket(workspaceName, token))
+    override fun getWorkspaceRecordTicket(
+        userId: String,
+        workspaceName: String,
+        token: String
+    ): Result<String> {
+        return Result(
+            workspaceRecordService.getWorkspaceRecordTicket(
+                workspaceName = workspaceName,
+                token = token,
+                type = WorkspaceRecordTicketType.RECORD
+            )
+        )
+    }
+
+    override fun getThumbnailEncryptedTicket(
+        userId: String,
+        workspaceName: String,
+        expiredSeconds: Long?
+    ): Result<String> {
+        return Result(
+            workspaceRecordService.getThumbnailEncryptedTicket(
+                workspaceName = workspaceName,
+                expiredSeconds = expiredSeconds
+            )
+        )
     }
 
     override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {

@@ -919,6 +919,23 @@ interface ApigwRemoteDevResource {
         token: String
     ): Result<String>
 
+    @Operation(
+        summary = "获取工作空间缩略图加密密钥"
+    )
+    @GET
+    @Path("/get_thumbnail_encrypted_ticket")
+    fun getThumbnailEncryptedTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "过期秒数", required = false)
+        @HeaderParam("expiredSeconds")
+        expiredSeconds: Long?
+    ): Result<String>
+
     @Operation(summary = "查询任务状态", tags = ["v4_app_remotedev_get_task_status"])
     @GET
     @Path("/get_task_status")
