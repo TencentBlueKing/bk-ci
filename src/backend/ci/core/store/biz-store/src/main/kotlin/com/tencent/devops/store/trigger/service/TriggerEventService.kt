@@ -49,9 +49,9 @@ class TriggerEventService @Autowired constructor(
             )
         )
         // 触发事件总数
-        val componentCount = 0
+        var componentCount = 0
         componentGroupCount.forEach {
-            componentCount + it.second
+            componentCount += it.second
         }
         val ownerAppCodes = componentGroupCount.map { it.first }.toSet()
         // 查询归属应用信息
