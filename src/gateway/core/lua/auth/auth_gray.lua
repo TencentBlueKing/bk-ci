@@ -35,6 +35,11 @@ end
 if tag and string.sub(tag, 1, 11) == "kubernetes-" then
     tag = string.sub(tag, 12)
 end
-ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. '.' .. tag .. '.svc.cluster.local'
+local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+if in_container then -- 容器化环境转发到对应ns的frontend服务
+    ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. '.' .. tag .. '.svc.cluster.local'
+else -- 非容器化环境转发到容器环境域名
+    ngx.header["X-FRONTEND-SERVICE"] = config.kubernetes.domain
+end
 
 ngx.exit(200)
