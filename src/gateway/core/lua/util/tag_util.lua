@@ -46,7 +46,8 @@ function _M:get_tag(ns_config)
     else
         -- 获取本地缓存
         local tag_cache = ngx.shared.tag_project_store
-        local tag_cache_key = 'tag_cache_' .. tostring(gateway_project) .. '_' .. tostring(devops_service) .. '_' .. tostring(devops_project_id)
+        local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
+            tostring(gateway_project)
         local tag_cache_value = tag_cache:get(tag_cache_key)
 
         -- 如果有缓存 ,则使用缓存变量
