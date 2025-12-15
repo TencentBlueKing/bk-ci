@@ -197,7 +197,11 @@ enum class PoolType {
             if (dispatcher is MacOSDispatchType) {
                 return RunsOn(
                     selfHosted = null,
-                    hwSpec = dispatcher.macOSHwSpec ?: "VMware",
+                    hwSpec = if (dispatcher.macOSHwSpec.isNullOrBlank()) {
+                        "VMware"
+                    } else {
+                        dispatcher.macOSHwSpec
+                    },
                     poolName = "macos-${dispatcher.systemVersion}",
                     xcode = dispatcher.xcodeVersion,
                     poolType = null
