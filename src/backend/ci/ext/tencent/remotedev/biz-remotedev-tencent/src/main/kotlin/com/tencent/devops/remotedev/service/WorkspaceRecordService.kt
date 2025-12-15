@@ -413,7 +413,7 @@ class WorkspaceRecordService @Autowired constructor(
         val ticketJson = objectMapper.writeValueAsString(ticketData)
 
         // 8. 使用RSA公钥加密
-        val rsaPublicKey = RsaUtil.generatePublicKey(Base64.getDecoder().decode(rsaPublicKeyStr))
+        val rsaPublicKey = RsaUtil.generatePublicKey(rsaPublicKeyStr.toByteArray())
         val encryptedTicket = RsaUtil.rsaEncrypt(ticketJson, rsaPublicKey)
 
         // 9. 缓存加密后的密钥（有效期内避免频繁生成）
