@@ -74,15 +74,16 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
         }
         baseInfo.extBaseInfo?.let {
             // 根据入参生成触发器task.json
-            val extBaseParam = generateAtomForm(it)
+            val extBaseParam = generateAtomForm(baseInfo.storeCode, it)
             it.putAll(extBaseParam)
         }
     }
 
     override fun doStoreUpdatePreBus(storeUpdateRequest: StoreUpdateRequest) {
-        storeUpdateRequest.baseInfo.extBaseInfo?.let {
+        val baseInfo = storeUpdateRequest.baseInfo
+        baseInfo.extBaseInfo?.let {
             // 根据入参生成触发器task.json
-            val extBaseParam = generateAtomForm(it)
+            val extBaseParam = generateAtomForm(baseInfo.storeCode, it)
             it.putAll(extBaseParam)
         }
     }
@@ -209,7 +210,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
     /**
      * 根据触发事件配置，生成对应的触发器表单配置
      */
-    private fun generateAtomForm(extBaseInfo: Map<String, Any>?): Map<String, Any> {
+    private fun generateAtomForm(storeCode: String, extBaseInfo: Map<String, Any>?): Map<String, Any> {
         val map = mutableMapOf<String, Any>()
         extBaseInfo?.get(KEY_TRIGGER_EVENT_CONFIG)?.let {
             try {
@@ -231,7 +232,7 @@ class TriggerEventReleaseSpecBusService @Autowired constructor(
                 logger.warn("fail to convert trigger event config[$it]", ignored)
                 null
             }?.let { eventConfig ->
-                val atomForm = TriggerEventConverter.convertAtomForm(eventConfig)
+                val atomForm = TriggerEventConverter.convertAtomForm(eventConfig, storeCode)
                 map[KEY_ATOM_FORM] = JsonUtil.toJson(atomForm, false)
             }
         }

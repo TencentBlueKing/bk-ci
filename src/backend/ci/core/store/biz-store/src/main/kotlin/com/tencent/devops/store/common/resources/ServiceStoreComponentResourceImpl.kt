@@ -42,6 +42,7 @@ import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -197,13 +198,15 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String?
+        version: String?,
+        status: StoreStatusEnum?
     ): Result<StoreDetailInfo?> {
         return Result(
             storeComponentQueryService.getComponentDataInfoByCode(
                 storeType = storeType.name,
                 storeCode = storeCode,
-                version = version
+                version = version,
+                status = status
             )
         )
     }

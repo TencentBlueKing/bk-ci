@@ -189,6 +189,7 @@ interface StoreComponentQueryService {
         storeType: String,
         storeCode: String,
         version: String? = null,
-        ownerStoreCode: String? = null
+        ownerStoreCode: String? = null,
+        status: StoreStatusEnum? = null
     ): StoreDetailInfo?
 }

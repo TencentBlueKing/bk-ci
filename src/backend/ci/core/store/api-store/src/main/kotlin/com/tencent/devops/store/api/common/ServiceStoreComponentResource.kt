@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -299,6 +300,9 @@ interface ServiceStoreComponentResource {
         storeCode: String,
         @Parameter(description = "组件版本", required = true)
         @PathParam("version")
-        version: String? = null
+        version: String? = null,
+        @Parameter(description = "版本状态", required = false)
+        @QueryParam("status")
+        status: StoreStatusEnum? = null
     ): Result<StoreDetailInfo?>
 }

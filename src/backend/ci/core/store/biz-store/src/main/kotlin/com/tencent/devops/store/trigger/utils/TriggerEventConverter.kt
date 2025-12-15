@@ -26,11 +26,11 @@ import com.tencent.devops.store.pojo.trigger.enums.ConditionOperatorEnum
 import com.tencent.devops.store.pojo.trigger.enums.MappingSource
 
 object TriggerEventConverter {
-    fun convertAtomForm(triggerEventConfig: TriggerEventConfig): AtomForm {
-        return convertAtomForm(triggerEventConfig.conditions)
+    fun convertAtomForm(triggerEventConfig: TriggerEventConfig, storeCode: String): AtomForm {
+        return convertAtomForm(triggerEventConfig.conditions, storeCode)
     }
 
-    fun convertAtomForm(conditions: List<TriggerCondition>): AtomForm {
+    fun convertAtomForm(conditions: List<TriggerCondition>, storeCode: String): AtomForm {
         val groupNames = conditions.map { it.group }
         val inputs = mutableListOf<AtomFormComponent>()
         // 已处理分组
@@ -60,7 +60,7 @@ object TriggerEventConverter {
         }
 
         return AtomForm(
-            atomCode = "",
+            atomCode = storeCode,
             input = inputs.associateBy { it.key ?: "" }
         )
     }
@@ -250,7 +250,8 @@ fun main() {
 
     println(JsonUtil.toJson(triggerEventConfig))
     val atomForm = TriggerEventConverter.convertAtomForm(
-        triggerEventConfig
+        triggerEventConfig,
+        ""
     )
 
     println(JsonUtil.toJson(atomForm))

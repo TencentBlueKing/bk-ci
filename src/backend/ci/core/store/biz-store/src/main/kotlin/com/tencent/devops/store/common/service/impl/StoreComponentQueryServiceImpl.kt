@@ -983,13 +983,15 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         storeType: String,
         storeCode: String,
         version: String?,
-        ownerStoreCode: String?
+        ownerStoreCode: String?,
+        status: StoreStatusEnum?
     ): StoreDetailInfo? {
         return getComponent(
             version = version,
             storeCode = storeCode,
             storeType = storeType,
-            ownerStoreCode = ownerStoreCode
+            ownerStoreCode = ownerStoreCode,
+            status = status
         )?.let {
             val finalStoreType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())
             StoreDetailInfo(
@@ -1011,13 +1013,15 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         version: String?,
         storeCode: String,
         storeType: String,
-        ownerStoreCode: String?
+        ownerStoreCode: String? = null,
+        status: StoreStatusEnum? = null
     ) = if (version.isNullOrBlank()) {
         storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = StoreTypeEnum.valueOf(storeType),
-            ownerStoreCode = ownerStoreCode
+            ownerStoreCode = ownerStoreCode,
+            storeStatus = status
         )
     } else {
         storeBaseQueryDao.getComponent(
@@ -1025,7 +1029,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeCode = storeCode,
             storeType = StoreTypeEnum.valueOf(storeType),
             version = version,
-            ownerStoreCode = ownerStoreCode
+            ownerStoreCode = ownerStoreCode,
+            status = status
         )
     }
 

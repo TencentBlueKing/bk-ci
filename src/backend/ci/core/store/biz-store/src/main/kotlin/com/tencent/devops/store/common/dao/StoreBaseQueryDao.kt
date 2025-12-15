@@ -211,7 +211,8 @@ class StoreBaseQueryDao {
         storeCode: String,
         version: String,
         storeType: StoreTypeEnum,
-        ownerStoreCode: String? = null
+        ownerStoreCode: String? = null,
+        status: StoreStatusEnum? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
@@ -223,6 +224,9 @@ class StoreBaseQueryDao {
                     ).let {
                         if (!ownerStoreCode.isNullOrEmpty()) {
                             it.add(OWNER_STORE_CODE.eq(ownerStoreCode))
+                        }
+                        status?.let { statusItem ->
+                            it.add(STATUS.eq(statusItem.name))
                         }
                         it
                     }

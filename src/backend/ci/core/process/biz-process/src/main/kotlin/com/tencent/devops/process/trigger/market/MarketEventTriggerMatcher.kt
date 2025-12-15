@@ -6,14 +6,16 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
-import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_TRIGGER_EVENT_CONFIG
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
 import com.tencent.devops.store.pojo.trigger.conditions.InputCondition
@@ -41,8 +43,15 @@ class MarketEventTriggerMatcher @Autowired constructor(
         val componentDetail = client.get(ServiceStoreComponentResource::class).getComponentDataInfoByCode(
             storeType = StoreTypeEnum.TRIGGER_EVENT,
             storeCode = atomCode,
-            version = version
-        ).data ?: throw InvalidParamException("component[$atomCode@$version] not found")
+            version = version,
+            status = StoreStatusEnum.RELEASED
+        ).data ?: return WebhookAtomResponse(
+            matchStatus = MatchStatus.ELEMENT_NOT_MATCH,
+            failedReason = I18Variable(
+                BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC,
+                params = listOf()
+            ).toJsonStr()
+        )
         // 事件配置
         val triggerConditionMap = componentDetail.extData?.get(KEY_TRIGGER_EVENT_CONFIG) as Map<String, Any>?
         if (triggerConditionMap.isNullOrEmpty()) {
@@ -126,8 +135,16 @@ class MarketEventTriggerMatcher @Autowired constructor(
                 return WebhookMatchResult(
                     isMatch = false,
                     reason = I18Variable(
-                        WebhookI18nConstants.FIELD_CONDITION_NOT_MATCH,
-                        params = listOf(condition.label, eventValue.toString())
+                        BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH,
+                        params = listOf(
+                            condition.label,
+                            eventValue.toString(),
+                            if (finalInputValue is List<*>) {
+                                finalInputValue.joinToString(", ")
+                            } else {
+                                finalInputValue.toString()
+                            }
+                        )
                     ).toJsonStr()
                 )
             }
