@@ -104,7 +104,9 @@ config = {
     external_auth = {
         base_url = "",
         token = ""
-    }
+    },
+    tag_service_table = {},
+    tag_project_table = {}
 }
 
 require("init_common")
