@@ -47,7 +47,9 @@ import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISABLE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -65,6 +67,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
@@ -104,6 +107,7 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -119,7 +123,9 @@ class EnvService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
     private val nodeService: NodeService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : IEnvService {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -316,6 +322,7 @@ class EnvService @Autowired constructor(
                 } else {
                     nodeCountMap[it.envId] ?: 0
                 },
+                tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -364,6 +371,7 @@ class EnvService @Autowired constructor(
                 } else {
                     nodeCountMap[it.envId] ?: 0
                 },
+                tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -539,18 +547,20 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(envId.toString())
             .setInstanceName(env.envName)
-        val nodeCount = if (env.envNodeType == EnvNodeType.TAG.name) {
-            envTagDao.batchEnvTagNodeCount(dslContext, setOf(envId), projectId)[envId]
-        } else {
-            envNodeDao.count(dslContext, projectId, envId)
-        }
+//        val nodeCount = if (env.envNodeType == EnvNodeType.TAG.name) {
+//            envTagDao.batchEnvTagNodeCount(dslContext, setOf(envId), projectId)[envId]
+//        } else {
+//            envNodeDao.count(dslContext, projectId, envId)
+//        }
+        val tags = envTagDao.fetchEnvTag(dslContext,projectId, envId)
         return EnvWithPermission(
             envHashId = HashUtil.encodeLongId(env.envId),
             name = env.envName,
             desc = env.envDesc,
             envType = if (env.envType == EnvType.TEST.name) EnvType.DEV.name else env.envType, // 兼容性代码
             envNodeType = env.envNodeType,
-            nodeCount = nodeCount,
+            nodeCount = null,
+            tags = tags,
             envVars = jacksonObjectMapper().readValue(env.envVars),
             createdUser = env.createdUser,
             createdTime = env.createdTime.timestamp(),
@@ -646,6 +656,7 @@ class EnvService @Autowired constructor(
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
                 nodeCount = null,
+                tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -741,7 +752,6 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-        // TODO: issue-12354 这里要确认下 tag 能不能有开启或者关闭，如果有多个标签如何处理
         val envs = envDao.list(dslContext, projectId, envIds = envIds)
         val envTagNodeRecordList = envTagDao.batchEnvTagNode(
             dslContext = dslContext,
@@ -827,7 +837,6 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-        // TODO: issue-12354 这里要确认下 tag 能不能有开启或者关闭，如果有多个标签如何处理
         val envs = envDao.list(dslContext, projectId, envIds = envIds)
         val envTagNodeRecordList = envTagDao.batchEnvTagNode(
             dslContext = dslContext,
@@ -897,7 +906,8 @@ class EnvService @Autowired constructor(
                 } else {
                     HashUtil.encodeLongId(thirdPartyAgent.id)
                 },
-                agentId = thirdPartyAgent?.id
+                agentId = thirdPartyAgent?.id,
+                lastModifyTime = it.lastModifyTime?.timestamp(),
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()
@@ -931,11 +941,17 @@ class EnvService @Autowired constructor(
             )
         }
 
-        // TODO：issue-12354 要看看标签权限
         // 添加标签
         val tags = data.tags
         if (!tags.isNullOrEmpty()) {
-            // TODO: issue-12354 env 里不知道要不要这个检查标签是否支持多个值同时添加
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ERROR_NODE_TAG_NO_EDIT_PERMISSSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
             val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -1066,6 +1082,7 @@ class EnvService @Autowired constructor(
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                     envNodeType = it.envNodeType,
                     nodeCount = null,
+                    tags = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
                     createdUser = it.createdUser,
                     createdTime = it.createdTime.timestamp(),
@@ -1105,6 +1122,7 @@ class EnvService @Autowired constructor(
                     envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                     envNodeType = it.envNodeType,
                     nodeCount = null,
+                    tags = null,
                     envVars = jacksonObjectMapper().readValue(it.envVars),
                     createdUser = it.createdUser,
                     createdTime = it.createdTime.timestamp(),
@@ -1135,6 +1153,7 @@ class EnvService @Autowired constructor(
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
                 nodeCount = null,
+                tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
@@ -1157,6 +1176,7 @@ class EnvService @Autowired constructor(
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 envNodeType = it.envNodeType,
                 nodeCount = null,
+                tags = null,
                 envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),

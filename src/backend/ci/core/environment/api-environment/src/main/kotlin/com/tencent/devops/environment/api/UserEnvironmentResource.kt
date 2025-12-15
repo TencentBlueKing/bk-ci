@@ -317,8 +317,6 @@ interface UserEnvironmentResource {
         data: EnvAddNodesData
     ): Result<Boolean>
 
-    // TODO: issue-12354 从环境删除标签
-
     @Operation(summary = "从环境删除节点")
     @POST
     @Path("/{projectId}/{envHashId}/deleteNodes")
