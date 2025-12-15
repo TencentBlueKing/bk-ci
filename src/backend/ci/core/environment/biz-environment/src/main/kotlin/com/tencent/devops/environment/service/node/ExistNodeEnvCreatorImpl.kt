@@ -34,10 +34,12 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
+import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import com.tencent.devops.environment.pojo.enums.NodeSource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -50,6 +52,7 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
+    private val envTagDao: EnvTagDao,
     private val environmentPermissionService: EnvironmentPermissionService
 ) : EnvCreator {
 
@@ -58,56 +61,97 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
     }
 
     override fun createEnv(projectId: String, userId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-
         if (envCreateInfo.source.name != id()) {
             throw IllegalArgumentException("wrong nodeSourceType [${envCreateInfo.source}] in [${id()}]")
         }
 
-        if (envCreateInfo.nodeHashIds == null || envCreateInfo.nodeHashIds!!.isEmpty()) {
+        // TODO: issue-12354 这里要看看怎么检查 Tag 权限
+        if (envCreateInfo.envNodeType == EnvNodeType.TAG && !envCreateInfo.nodeTags.isNullOrEmpty()) {
             var envId = 0L
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 envId = envDao.create(
-                    context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
-                    envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                    dslContext = context,
+                    userId = userId,
+                    projectId = projectId,
+                    envName = envCreateInfo.name,
+                    envDesc = envCreateInfo.desc,
+                    envType = envCreateInfo.envType.name,
+                    envNodeType = envCreateInfo.envNodeType,
+                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
                 )
-                environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
+                envTagDao.batchStoreEnvTag(
+                    dslContext = context,
+                    tags = envCreateInfo.nodeTags!!,
+                    envId = envId,
+                    projectId = projectId
+                )
+                environmentPermissionService.createEnv(
+                    userId = userId,
+                    projectId = projectId,
+                    envId = envId,
+                    envName = envCreateInfo.name
+                )
             }
             return EnvironmentId(HashUtil.encodeLongId(envId))
         }
 
-        val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
+        if (envCreateInfo.envNodeType == EnvNodeType.NODE && !envCreateInfo.nodeHashIds.isNullOrEmpty()) {
+            val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
+            // 检查 node 权限
+            val canUseNodeIds =
+                environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
+            val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
+            if (unauthorizedNodeIds.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION,
+                    params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+                )
+            }
 
-        // 检查 node 权限
-        val canUseNodeIds =
-            environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
-        val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
-        if (unauthorizedNodeIds.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION,
-                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
-            )
-        }
+            // 检查 node 是否存在
+            val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
+            val existNodeIds = existNodes.map { it.nodeId }.toSet()
+            val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
+            if (notExistNodeIds.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+                )
+            }
 
-        // 检查 node 是否存在
-        val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
-        val existNodeIds = existNodes.map { it.nodeId }.toSet()
-        val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
-        if (notExistNodeIds.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
-            )
+            var envId = 0L
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                envId = envDao.create(
+                    dslContext = context,
+                    userId = userId,
+                    projectId = projectId,
+                    envName = envCreateInfo.name,
+                    envDesc = envCreateInfo.desc,
+                    envType = envCreateInfo.envType.name,
+                    envNodeType = envCreateInfo.envNodeType,
+                    envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                )
+                envNodeDao.batchStoreEnvNode(context, nodeLongIds, envId, projectId)
+                environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
+            }
+            return EnvironmentId(HashUtil.encodeLongId(envId))
         }
 
         var envId = 0L
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             envId = envDao.create(
-                context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
-                envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                dslContext = context,
+                userId = userId,
+                projectId = projectId,
+                envName = envCreateInfo.name,
+                envDesc = envCreateInfo.desc,
+                envType = envCreateInfo.envType.name,
+                envNodeType = envCreateInfo.envNodeType,
+                envVars = ObjectMapper().writeValueAsString(envCreateInfo.envVars)
             )
-            envNodeDao.batchStoreEnvNode(context, nodeLongIds, envId, projectId)
             environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
         }
         return EnvironmentId(HashUtil.encodeLongId(envId))

@@ -29,6 +29,7 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar
@@ -100,7 +101,7 @@ interface IEnvService {
         nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo>
 
-    fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
+    fun addEnvNodes(userId: String, projectId: String, envHashId: String, data: EnvAddNodesData)
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission>
 }

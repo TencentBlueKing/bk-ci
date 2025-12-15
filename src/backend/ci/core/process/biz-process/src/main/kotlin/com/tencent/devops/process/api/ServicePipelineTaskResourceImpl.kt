@@ -137,4 +137,14 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getPipelineContainerBuilds(
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineBuildTask?>> {
+        TODO("要过来问下 record 表有执行次数，不太能用")
+    }
 }

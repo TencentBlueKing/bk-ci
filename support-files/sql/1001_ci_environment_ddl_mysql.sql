@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS `T_ENV` (
   `UPDATED_TIME` timestamp NULL DEFAULT NULL COMMENT '修改时间',
   `ENV_HASH_ID`  varchar(64) DEFAULT NULL COMMENT '环境哈希ID',
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除',
+  `ENV_NODE_TYPE` varchar(32) NOT NULL DEFAULT 'NODE' COMMENT '环境节点类型（节点静态环境{NODE}|标签动态环境{TAG}',
   PRIMARY KEY (`ENV_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境信息表';
@@ -137,6 +138,20 @@ CREATE TABLE IF NOT EXISTS `T_ENV_NODE` (
   PRIMARY KEY (`ENV_ID`,`NODE_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-节点映射表';
+
+-- ----------------------------
+-- Table structure for T_ENV_TAG
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_ENV_TAG` (
+  `ENV_ID` bigint(20) NOT NULL COMMENT '环境ID',
+  `TAG_KEY_ID` bigint(20) NOT NULL COMMENT '标签名ID',
+  `TAG_VALUE_ID` bigint(20) NOT NULL COMMENT '标签值ID',
+  `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
+  `ENABLE_TAG` bit(1) DEFAULT 1 NOT NULL COMMENT '是否启用标签',
+  PRIMARY KEY (`ENV_ID`,`TAG_KEY_ID`, `TAG_VALUE_ID`),
+  KEY `PROJECT_ID` (`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境-标签映射表';
 
 -- ----------------------------
 -- Table structure for T_NODE

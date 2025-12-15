@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar
@@ -282,6 +283,7 @@ interface UserEnvironmentResource {
         envName: String
     ): Result<Page<NodeBaseInfo>>
 
+    @Deprecated("动态环境全部上线后就废弃")
     @Operation(summary = "添加节点到环境")
     @POST
     @Path("/{projectId}/{envHashId}/addNodes")
@@ -298,6 +300,24 @@ interface UserEnvironmentResource {
         @Parameter(description = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
+
+    @Operation(summary = "添加节点到环境新")
+    @POST
+    @Path("/{projectId}/{envHashId}/addNodesNew")
+    fun addNodesNew(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        data: EnvAddNodesData
+    ): Result<Boolean>
+
+    // TODO: issue-12354 从环境删除标签
 
     @Operation(summary = "从环境删除节点")
     @POST
