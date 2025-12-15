@@ -44,7 +44,7 @@
                         <div
                             class="option-group-item"
                             v-for="(child, childIndex) in item.children"
-                            :key="child.id"
+                            :key="child.vKey"
                             :class="{
                                 active: child.active,
                                 selected: child.selected
@@ -217,6 +217,7 @@
                                 return {
                                     ...child,
                                     id: child[paramId],
+                                    vKey: `child-${child[paramId] ?? ''}-${childIndex}`,
                                     name: child[paramName],
                                     active: child.id === this.value,
                                     selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index
