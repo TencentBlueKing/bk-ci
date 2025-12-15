@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -132,7 +133,6 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
-            val requestTime = System.currentTimeMillis()
             if (triggerPipelines.size >= 50) {
                 logger.warn(
                     "Repository webhook triggered too many pipelines|" +
@@ -168,7 +168,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     status = PipelineTriggerReason.TRIGGER_FAILED
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 } finally {
-                    val timeConsumingMills = System.currentTimeMillis() - requestTime
+                    val timeConsumingMills = System.currentTimeMillis() - triggerEvent.createTime.timestampmilli()
                     if (timeConsumingMills >= 60 * 1000) {
                         logger.warn(
                             "old Webhook trigger execution time exceeds threshold|" +
