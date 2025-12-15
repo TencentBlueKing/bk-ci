@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -653,13 +654,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun getThumbnailEncryptedTicket(
         userId: String,
-        workspaceName: String,
+        workspaceName: String?,
+        cdsId: String?,
         expiredSeconds: Long?
-    ): Result<String> {
-        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$expiredSeconds")
+    ): Result<ThumbnailEncryptedTicketResp> {
+        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$cdsId|$expiredSeconds")
         return client.get(ServiceRemoteDevResource::class).getThumbnailEncryptedTicket(
             userId = userId,
             workspaceName = workspaceName,
+            cdsId = cdsId,
             expiredSeconds = expiredSeconds
         )
     }

@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -928,13 +929,16 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = false)
         @QueryParam("workspaceName")
-        workspaceName: String,
+        workspaceName: String?,
+        @Parameter(description = "CDS ID", required = false)
+        @QueryParam("cdsId")
+        cdsId: String?,
         @Parameter(description = "过期秒数", required = false)
         @HeaderParam("expiredSeconds")
         expiredSeconds: Long?
-    ): Result<String>
+    ): Result<ThumbnailEncryptedTicketResp>
 
     @Operation(summary = "查询任务状态", tags = ["v4_app_remotedev_get_task_status"])
     @GET

@@ -7,6 +7,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.remotedev.tables.TWorkspace
+import com.tencent.devops.model.remotedev.tables.TWorkspaceWindows
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.BkRepoRegion
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
@@ -17,6 +19,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceRecordTicketDao
 import com.tencent.devops.remotedev.dao.WorkspaceRecordUserApprovalDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfigType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
@@ -33,6 +37,7 @@ import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.util.Base64
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -355,31 +360,84 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     /**
-     * 获取THUMBNAIL类型的加密密钥
-     * 密钥格式：{"key": {真实加密密钥}, "timestamp": {秒级时间戳}, "expiredSeconds": {过期秒数}}
-     * 使用RSA公钥加密，并在有效期内缓存
+     * 获取工作空间缩略图加密密钥
      *
-     * @param workspaceName 工作空间名称
+     * 获取THUMBNAIL类型的密钥，并按照指定格式进行处理：
+     * 1. 获取或创建THUMBNAIL类型密钥
+     * 2. 构建JSON格式：{"key": {真实加密密钥}, "timestamp": {秒级时间戳}, "expiredSeconds": {过期秒数}}
+     * 3. 使用RSA公钥加密，并在有效期内缓存
+     *
+     * @param workspaceName 工作空间名称（与cdsId二选一）
+     * @param cdsId CDS ID（与workspaceName二选一）
      * @param expiredSeconds 过期秒数，默认600秒（10分钟）
-     * @return RSA加密后的密钥（Base64编码）
+     * @return 包含工作空间名称、AI数字孪生标识和加密密钥的响应对象
      */
-    fun getThumbnailEncryptedTicket(workspaceName: String, expiredSeconds: Long? = null): String {
-        // 1. 检查缓存
-        val actualExpiredSeconds = expiredSeconds ?: 600L // 默认10分钟有效期
-        val cacheKey = "$THUMBNAIL_ENCRYPTED_TICKET_CACHE_KEY_PREFIX$workspaceName:$actualExpiredSeconds"
-        val cachedTicket = redisOperation.get(cacheKey)
-        if (!cachedTicket.isNullOrBlank()) {
-            return cachedTicket
+    fun getThumbnailEncryptedTicket(
+        workspaceName: String?,
+        cdsId: String?,
+        expiredSeconds: Long? = null
+    ): ThumbnailEncryptedTicketResp {
+        // 0. 参数校验：workspaceName和cdsId必须二选一
+        if (workspaceName.isNullOrBlank() && cdsId.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.BASE_ERROR.errorCode,
+                params = arrayOf("workspaceName and cdsId cannot both be empty")
+            )
         }
 
-        // 2. 获取工作空间信息以确定region
-        val workspaceInfo = workspaceJoinDao.fetchAnyWindowsWorkspace(
-            dslContext = dslContext,
-            workspaceName = workspaceName
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            params = arrayOf(workspaceName)
-        )
+        val actualExpiredSeconds = expiredSeconds ?: 600L // 默认10分钟有效期
+
+        // 1. 根据workspaceName或cdsId获取工作空间信息
+        val workspaceInfo = if (!workspaceName.isNullOrBlank()) {
+            // 通过workspaceName查询
+            workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                checkField = listOf(
+                    TWorkspace.T_WORKSPACE.NAME,
+                    TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
+                ),
+                notStatus = listOf(
+                    WorkspaceStatus.PREPARING,
+                    WorkspaceStatus.DELETED,
+                    WorkspaceStatus.DELIVERING_FAILED
+                )
+            ).firstOrNull() ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        } else {
+            // 通过cdsId(hostIp)查询
+            workspaceJoinDao.fetchWindowsWorkspacesSimple(
+                dslContext = dslContext,
+                ip = cdsId,
+                checkField = listOf(
+                    TWorkspace.T_WORKSPACE.NAME,
+                    TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP
+                ),
+                notStatus = listOf(
+                    WorkspaceStatus.PREPARING,
+                    WorkspaceStatus.DELETED,
+                    WorkspaceStatus.DELIVERING_FAILED
+                )
+            ).firstOrNull() ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf("cdsId: $cdsId")
+            )
+        }
+
+        val actualWorkspaceName = workspaceInfo.workspaceName
+
+        // 2. 检查缓存
+        val cacheKey = "$THUMBNAIL_ENCRYPTED_TICKET_CACHE_KEY_PREFIX$actualWorkspaceName:$actualExpiredSeconds"
+        val cachedTicket = redisOperation.get(cacheKey)
+        if (!cachedTicket.isNullOrBlank()) {
+            return ThumbnailEncryptedTicketResp(
+                workspaceName = actualWorkspaceName,
+                aiDigitalTwinFlag = true, // TODO: 根据实际业务逻辑设置
+                cryptKey = cachedTicket
+            )
+        }
 
         // 3. 根据hostIp确定region
         val region = genRegion(workspaceInfo.hostIp)
@@ -387,19 +445,26 @@ class WorkspaceRecordService @Autowired constructor(
         // 4. 获取对应region的RSA公钥
         val rsaPublicKeyStr = bkRepoConfig.getRegionConfig(region).rsaPublicKey
         if (rsaPublicKeyStr.isBlank()) {
-            throw OperationException("RSA public key not configured for region: ${region.name}")
+            logger.error("RSA public key not configured for region: ${region.name}")
+            return ThumbnailEncryptedTicketResp(
+                workspaceName = actualWorkspaceName,
+                aiDigitalTwinFlag = false
+            )
         }
 
         // 5. 获取THUMBNAIL类型的密钥
         val record = workspaceRecordTicketDao.fetchAny(
             dslContext = dslContext,
-            workspaceName = workspaceName,
+            workspaceName = actualWorkspaceName,
             type = WorkspaceRecordTicketType.THUMBNAIL,
             enable = true
-        ) ?: throw ErrorCodeException(
-            errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
-            defaultMessage = "Thumbnail ticket not found for workspace: $workspaceName"
-        )
+        ) ?: run {
+            logger.warn("No THUMBNAIL ticket found for workspace: $actualWorkspaceName")
+            return ThumbnailEncryptedTicketResp(
+                workspaceName = actualWorkspaceName,
+                aiDigitalTwinFlag = false
+            )
+        }
 
         // 6. 解密密钥
         val decryptedKey = BkCryptoUtil.decryptSm4OrAes(aesKey, record.cert)
@@ -423,14 +488,16 @@ class WorkspaceRecordService @Autowired constructor(
             value = encryptedTicket,
             expiredInSecond = actualExpiredSeconds
         )
-
-        return encryptedTicket
+        logger.info("Generated and cached THUMBNAIL ticket for workspace: $actualWorkspaceName")
+        return ThumbnailEncryptedTicketResp(
+            workspaceName = actualWorkspaceName,
+            aiDigitalTwinFlag = true,
+            cryptKey = encryptedTicket
+        )
     }
 
     /**
-     * 更新工作空间录屏密钥的启用状态
-     *
-     * @param workspaceName 工作空间名称
+     * 更新工作空间记录密钥的enable状态
      * @param type 密钥类型
      * @param enable 是否启用
      * @return 是否更新成功
@@ -458,6 +525,7 @@ class WorkspaceRecordService @Autowired constructor(
     }
 
     companion object {
+        val logger = LoggerFactory.getLogger(WorkspaceRecordService::class.java)
 
         private const val BKREPO_WORKSPACE_REPONAME_PREFIX = "REMOTEDEV_"
         private const val THUMBNAIL_ENCRYPTED_TICKET_CACHE_KEY_PREFIX = "remotedev:thumbnail:encrypted-ticket:"
