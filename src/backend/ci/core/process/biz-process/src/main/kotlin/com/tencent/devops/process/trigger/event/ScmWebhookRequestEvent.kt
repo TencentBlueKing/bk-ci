@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Event(StreamBinding.SCM_HOOK_BUILD_REQUEST_EVENT)
 @Schema(title = "scm webhook请求事件")
@@ -39,5 +40,10 @@ data class ScmWebhookRequestEvent(
     @get:Schema(title = "scm 代码库标识")
     val scmCode: String,
     @get:Schema(title = "scm hook请求体")
-    val request: WebhookRequest
+    val request: WebhookRequest,
+    @get:Schema(
+        title = "事件请求时间," +
+                "说明: T_PIPELINE_TRIGGER_EVENT是分区表,create_time是主键,在webhook灰度阶段,需要保证事件请求时间唯一"
+    )
+    val eventTime: LocalDateTime? = null
 ) : IEvent()

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -75,8 +74,7 @@ class WebhookManager @Autowired constructor(
                 )
                 handleWebhookData(
                     requestId = requestId,
-                    scmCode = scmCode,
-                    request = request,
+                    event = event,
                     webhookData = webhookData
                 )
             } catch (ignored: Exception) {
@@ -87,20 +85,19 @@ class WebhookManager @Autowired constructor(
 
     private fun handleWebhookData(
         requestId: String,
-        scmCode: String,
-        request: WebhookRequest,
+        event: ScmWebhookRequestEvent,
         webhookData: WebhookData
     ) {
         with(webhookData) {
             logger.info(
-                "handle webhook data|scmCode:$scmCode|eventType:${webhook.eventType}|" +
+                "handle webhook data|scmCode:${event.scmCode}|eventType:${webhook.eventType}|" +
                         "repos:${repositories.map { it.repoHashId} }"
             )
             repositories.forEach { repository ->
                 val eventId = saveTriggerEvent(
                     requestId = requestId,
                     repository = repository,
-                    request = request,
+                    event = event,
                     webhook = webhook
                 )
                 fireEvent(
@@ -115,7 +112,7 @@ class WebhookManager @Autowired constructor(
     private fun saveTriggerEvent(
         requestId: String,
         repository: Repository,
-        request: WebhookRequest,
+        event: ScmWebhookRequestEvent,
         webhook: Webhook
     ): Long {
         val projectId = repository.projectId!!
@@ -132,6 +129,7 @@ class WebhookManager @Autowired constructor(
                 defaultMessage = defaultMessage
             ).toJsonStr()
         }
+        val request = event.request
         val eventBody = ScmWebhookEventBody(
             headers = request.headers,
             queryParams = request.queryParams,
@@ -148,7 +146,7 @@ class WebhookManager @Autowired constructor(
                 triggerUser = webhook.userName,
                 eventDesc = eventDesc,
                 requestId = requestId,
-                createTime = LocalDateTime.now(),
+                createTime = event.eventTime ?: LocalDateTime.now(),
                 eventBody = eventBody
             )
             pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)

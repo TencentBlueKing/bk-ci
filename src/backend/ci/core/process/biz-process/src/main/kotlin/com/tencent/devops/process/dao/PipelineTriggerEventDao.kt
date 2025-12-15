@@ -71,7 +71,7 @@ class PipelineTriggerEventDao {
         triggerEvent: PipelineTriggerEvent
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.insertInto(
+            val insert = dslContext.insertInto(
                 this,
                 REQUEST_ID,
                 PROJECT_ID,
@@ -98,7 +98,16 @@ class PipelineTriggerEventDao {
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it, false) },
                 triggerEvent.createTime,
                 triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
-            ).onDuplicateKeyIgnore().execute()
+            )
+            if (triggerEvent.eventBody != null) {
+                insert.onDuplicateKeyUpdate().set(
+                    EVENT_BODY,
+                    triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
+                )
+            } else {
+                insert.onDuplicateKeyIgnore()
+            }
+            insert.execute()
         }
     }
 
