@@ -37,7 +37,7 @@
                 <template v-if="hasGroup">
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id + index"
+                        :key="item.vKey"
                         :disabled="item.disabled"
                     >
                         <div class="option-group-name">{{ item.name }}</div>
@@ -61,7 +61,7 @@
                 <template v-else>
                     <li
                         v-for="(item, index) in filteredList"
-                        :key="item.id + index"
+                        :key="item.vKey"
                         :class="{
                             'option-item': true,
                             active: item.active,
@@ -123,7 +123,10 @@
             filteredList () {
                 const { displayName, optionList } = this
                 const strVal = String(displayName).toLowerCase()
-                return this.formatList(optionList, strVal)
+                return this.formatList(optionList, strVal).map((item, index) => ({
+                    ...item,
+                    vKey: `option-${item.id ?? ''}-${index}`
+                }))
             },
             hasOption () {
                 return Array.isArray(this.filteredList) && this.filteredList.length > 0
