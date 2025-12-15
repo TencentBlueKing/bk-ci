@@ -637,7 +637,7 @@
         const instanceBuildNo = instance?.buildNo
         const templateBuildNo = template?.buildNo
         
-        if (!instanceBuildNo?.required && templateBuildNo?.required) {
+        if (instanceBuildNo && !templateBuildNo?.required) {
             instanceParams?.forEach(i => {
                 if (allVersionKeyList.includes(i.id)) {
                     const newValue = templateParamsMap.get(i.id)?.defaultValue
