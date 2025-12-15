@@ -380,9 +380,11 @@
         readOnly.value = true
         defaultTab.value = 'basicInfo'
         proxy.$store.dispatch('publicVar/updateOperateType', OPERATE_TYPE.UPDATE)
+        const publicVars = await getVariablesByGroupName(row.groupName, true)
         proxy.$store.dispatch('publicVar/updateGroupData', {
             ...groupData.value,
-            ...row
+            ...row,
+            publicVars
         })
     }
     function handleClearSearchValue () {
