@@ -1423,6 +1423,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 hotFlag = statistic?.hotFlag,
                 extData = extData,
                 ownerStoreName = ownerStoreName,
+                ownerStoreCode = ownerStoreCode,
                 pipelineCnt = pipelineCount
             )
             results.add(marketItem)

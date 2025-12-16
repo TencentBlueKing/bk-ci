@@ -139,7 +139,8 @@ class TriggerEventService @Autowired constructor(
                         installed = marketItem.installed,
                         honorInfos = marketItem.honorInfos,
                         indexInfos = marketItem.indexInfos,
-                        hotFlag = marketItem.hotFlag
+                        hotFlag = marketItem.hotFlag,
+                        ownerStoreCode = marketItem.ownerStoreCode
                     )
                 }
             )
