@@ -114,6 +114,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "ip", required = false)
         @QueryParam("ip")
         ip: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "businessLineName", required = false)
         @QueryParam("businessLineName")
         businessLineName: String?,
@@ -837,9 +840,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "工作空间名称", required = false)
         @QueryParam("workspaceName")
         workspaceName: String?,
-        @Parameter(description = "CDS ID", required = false)
-        @QueryParam("cdsId")
-        cdsId: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "过期秒数", required = false)
         @QueryParam("expiredSeconds")
         expiredSeconds: Long?

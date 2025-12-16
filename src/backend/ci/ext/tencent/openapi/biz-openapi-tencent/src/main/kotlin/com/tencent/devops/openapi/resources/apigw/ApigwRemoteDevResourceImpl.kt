@@ -105,12 +105,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         appCode: String?,
         apigwType: String?,
         projectId: String?,
-        ip: String?
+        ip: String?,
+        envId: String?
     ): Result<List<WeSecProjectWorkspace>> {
-        logger.info("Get  projects workspace ,projectId:$projectId")
+        logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
+        if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty()) {
+            // 三个参数都为空, 返回空列表
+            return Result(emptyList())
+        }
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
             ip = ip,
+            envId = envId,
             businessLineName = null,
             ownerName = null
         )
@@ -655,14 +661,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getThumbnailEncryptedTicket(
         userId: String,
         workspaceName: String?,
-        cdsId: String?,
+        envId: String?,
         expiredSeconds: Long?
     ): Result<ThumbnailEncryptedTicketResp> {
-        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$cdsId|$expiredSeconds")
+        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$envId|$expiredSeconds")
         return client.get(ServiceRemoteDevResource::class).getThumbnailEncryptedTicket(
             userId = userId,
             workspaceName = workspaceName,
-            cdsId = cdsId,
+            envId = envId,
             expiredSeconds = expiredSeconds
         )
     }

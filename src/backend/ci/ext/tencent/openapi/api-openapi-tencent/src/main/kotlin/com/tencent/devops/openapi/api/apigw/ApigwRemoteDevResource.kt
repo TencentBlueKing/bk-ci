@@ -138,7 +138,10 @@ interface ApigwRemoteDevResource {
         projectId: String?,
         @Parameter(description = "ip", required = false)
         @QueryParam("ip")
-        ip: String?
+        ip: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
@@ -932,9 +935,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "工作空间名称", required = false)
         @QueryParam("workspaceName")
         workspaceName: String?,
-        @Parameter(description = "CDS ID", required = false)
-        @QueryParam("cdsId")
-        cdsId: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "过期秒数", required = false)
         @HeaderParam("expiredSeconds")
         expiredSeconds: Long?

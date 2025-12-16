@@ -76,6 +76,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -164,7 +165,8 @@ class WorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val whiteListService: WhiteListService,
-    private val whiteListDao: WhiteListDao
+    private val whiteListDao: WhiteListDao,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -676,6 +678,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceList4WeSec(
         projectId: String? = null,
         ip: String? = null,
+        envId: String? = null,
         hasDepartmentsInfo: Boolean? = null,
         hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
@@ -693,13 +696,23 @@ class WorkspaceService @Autowired constructor(
         val viewers = mutableMapOf<String, MutableList<String>>()
         val projectGameIds = mutableMapOf<String, Int>()
 
+        // 如果提供了envId，通过envId查询workspaceName
+        val actualWorkspaceName = if (!envId.isNullOrBlank()) {
+            dispatchWorkspaceDao.getWorkspaceNameByEnvId(
+                envId = envId,
+                dslContext = dslContext
+            ) ?: workspaceName
+        } else {
+            workspaceName
+        }
+
         val result = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             projectId = projectId,
             sip = ip,
             businessLineName = businessLineName,
             owner = ownerName,
-            workspaceName = workspaceName,
+            workspaceName = actualWorkspaceName,
             notStatus = notStatus
         )
 

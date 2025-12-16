@@ -167,6 +167,7 @@ class ServiceRemoteDevResourceImpl(
     override fun getProjectWorkspace(
         projectId: String?,
         ip: String?,
+        envId: String?,
         businessLineName: String?,
         ownerName: String?
     ): Result<List<WeSecProjectWorkspace>> {
@@ -174,6 +175,7 @@ class ServiceRemoteDevResourceImpl(
             workspaceService.getWorkspaceList4WeSec(
                 projectId = projectId,
                 ip = ip,
+                envId = envId,
                 businessLineName = businessLineName,
                 ownerName = ownerName,
                 hasDepartmentsInfo = null,
@@ -816,13 +818,13 @@ class ServiceRemoteDevResourceImpl(
     override fun getThumbnailEncryptedTicket(
         userId: String,
         workspaceName: String?,
-        cdsId: String?,
+        envId: String?,
         expiredSeconds: Long?
     ): Result<ThumbnailEncryptedTicketResp> {
         return Result(
             workspaceRecordService.getThumbnailEncryptedTicket(
                 workspaceName = workspaceName,
-                cdsId = cdsId,
+                envId = envId,
                 expiredSeconds = expiredSeconds
             )
         )
