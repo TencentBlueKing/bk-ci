@@ -50,8 +50,8 @@ interface UserTriggerResource {
 
     @Operation(summary = "触发器列表")
     @GET
-    @Path("/base")
-    fun baseTrigger(
+    @Path("/list")
+    fun list(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

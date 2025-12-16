@@ -49,6 +49,7 @@ class PipelineEventSubscriptionDao {
                 .set(EVENT_CODE, subscription.eventCode)
                 .set(EVENT_SOURCE, subscription.eventSource)
                 .set(EVENT_TYPE, subscription.eventType)
+                .set(TRIGGER_TARGET, subscription.triggerTarget.name)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, now)
                 .execute()

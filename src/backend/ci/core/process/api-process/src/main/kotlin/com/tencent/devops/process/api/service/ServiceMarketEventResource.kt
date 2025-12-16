@@ -39,8 +39,8 @@ interface ServiceMarketEventResource {
         @Parameter(description = "x-devops-cds-ip")
         @HeaderParam(AUTH_HEADER_CDS_IP)
         cdsIp: String,
-        @Parameter(description = AUTH_HEADER_EVENT_TYPE)
-        @HeaderParam("x-devops-cds-event-type")
+        @Parameter(description = "x-devops-cds-event-type")
+        @HeaderParam(AUTH_HEADER_EVENT_TYPE)
         eventType: String,
         @Parameter(description = "事件编码")
         @PathParam("eventCode")

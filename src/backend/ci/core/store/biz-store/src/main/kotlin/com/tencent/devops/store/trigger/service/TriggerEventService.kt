@@ -74,7 +74,7 @@ class TriggerEventService @Autowired constructor(
         ).plus(finalComponentGroup)
     }
 
-    fun baseTrigger(
+    fun list(
         userId: String,
         keyword: String?,
         ownerStoreCode: String?,

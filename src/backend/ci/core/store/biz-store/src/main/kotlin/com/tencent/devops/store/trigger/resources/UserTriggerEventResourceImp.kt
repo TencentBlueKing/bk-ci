@@ -23,7 +23,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
         return Result(triggerEventService.types(userId))
     }
 
-    override fun baseTrigger(
+    override fun list(
         userId: String,
         keyword: String?,
         ownerStoreCode: String?,
@@ -31,7 +31,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?> {
         return Result(
-            triggerEventService.baseTrigger(
+            triggerEventService.list(
                 userId = userId,
                 keyword = keyword,
                 ownerStoreCode = ownerStoreCode,
