@@ -46,7 +46,8 @@ enum class StartType {
     WEB_HOOK,
     SERVICE,
     PIPELINE,
-    REMOTE;
+    REMOTE,
+    TRIGGER_EVENT;
 
     companion object {
         fun toReadableString(type: String, channelCode: ChannelCode?, language: String): String {

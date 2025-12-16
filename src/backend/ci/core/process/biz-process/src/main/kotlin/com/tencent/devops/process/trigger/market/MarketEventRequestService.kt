@@ -58,7 +58,7 @@ class MarketEventRequestService constructor(
                 val triggerEvent = PipelineTriggerEvent(
                     projectId = projectId,
                     eventId = eventId,
-                    triggerType = StartType.WEB_HOOK.name,
+                    triggerType = StartType.TRIGGER_EVENT.name,
                     eventSource = envHashId,
                     eventType = eventType,
                     triggerUser = userId,

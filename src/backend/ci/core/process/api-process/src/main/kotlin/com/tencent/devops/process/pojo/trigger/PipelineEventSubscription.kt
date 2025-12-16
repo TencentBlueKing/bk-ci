@@ -1,6 +1,7 @@
 package com.tencent.devops.process.pojo.trigger
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线事件订阅表")
@@ -18,5 +19,7 @@ data class PipelineEventSubscription(
     @get:Schema(title = "事件类型")
     val eventType: String,
     @get:Schema(title = "流水线创建渠道")
-    val channelCode: ChannelCode
+    val channelCode: ChannelCode,
+    @get:Schema(title = "触发目标")
+    val triggerTarget: TriggerTargetEnum
 )

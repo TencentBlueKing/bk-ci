@@ -81,6 +81,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -310,6 +311,7 @@ class PipelineBuildService(
             StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value
             StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
             StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID)
+            StartType.TRIGGER_EVENT -> startValues?.get(PIPELINE_START_TRIGGER_EVENT_USER_ID)
         } ?: userId
         // 维持原样，保证可修改
         pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)

@@ -90,7 +90,8 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
                     eventCode = element.atomCode,
                     eventSource = "",
                     eventType = "",
-                    channelCode = channelCode
+                    channelCode = channelCode,
+                    triggerTarget = TriggerTargetEnum.CREATIVE
                 )
             }
 
@@ -115,7 +116,8 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
                     eventCode = element.atomCode,
                     eventSource = eventSource,
                     eventType = eventType,
-                    channelCode = channelCode
+                    channelCode = channelCode,
+                    triggerTarget = TriggerTargetEnum.PIPELINE
                 )
             }
 
