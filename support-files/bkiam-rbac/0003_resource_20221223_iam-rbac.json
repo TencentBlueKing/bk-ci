@@ -423,6 +423,24 @@
         },
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "creative_stream",
+        "name": "创作流",
+        "name_en": "Creative Stream",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
     }
   ]
 }

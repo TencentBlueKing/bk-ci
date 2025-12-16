@@ -368,6 +368,47 @@
                     "required": false
                   }
                 ]
+              },
+              {
+                "id": "creative_stream",
+                "actions": [
+                  {
+                    "id": "creative_stream_list",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_view",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_edit",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_execute",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_download",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_share",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_manage",
+                    "required": false
+                  },
+                  {
+                    "id": "creative_stream_archive",
+                    "required": false
+                  }
+                ]
               }
             ]
           }
