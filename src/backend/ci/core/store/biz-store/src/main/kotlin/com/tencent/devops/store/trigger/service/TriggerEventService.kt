@@ -39,7 +39,7 @@ class TriggerEventService @Autowired constructor(
         return atomForm
     }
 
-    fun types(userId: String): List<TriggerGroupInfo> {
+    fun listOwnerStoreCodes(userId: String): List<TriggerGroupInfo> {
         // 按照归属应用分组
         val componentGroupCount = storeComponentQueryService.getComponentGroupCount(
             userId = userId,
@@ -61,14 +61,14 @@ class TriggerEventService @Autowired constructor(
         ).associate { it.storeCode to it.storeName }
         val finalComponentGroup = componentGroupCount.map {
             TriggerGroupInfo(
-                type = it.first,
+                ownerStoreCode = it.first,
                 name = ownerAppInfos[it.first] ?: it.first,
                 count = it.second
             )
         }
         return mutableListOf(
             TriggerGroupInfo(
-                type = BK_STORE_ALL_TRIGGER,
+                ownerStoreCode = BK_STORE_ALL_TRIGGER,
                 count = componentCount
             )
         ).plus(finalComponentGroup)
@@ -89,7 +89,11 @@ class TriggerEventService @Autowired constructor(
                 pageSize = pageSize,
                 queryProjectComponentFlag = false,
                 keyword = keyword,
-                ownerStoreCode = ownerStoreCode
+                ownerStoreCode = if (ownerStoreCode == BK_STORE_ALL_TRIGGER) {
+                    null
+                } else {
+                    ownerStoreCode
+                }
             )
         ).let {
             AtomResp(
@@ -146,13 +150,13 @@ class TriggerEventService @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String,
-        sourceCode: String
+        ownerStoreCode: String
     ): PipelineAtom? {
         return storeComponentQueryService.getComponentDetailInfoByCode(
             userId = userId,
             storeType = StoreTypeEnum.TRIGGER_EVENT.name,
             storeCode = atomCode,
-            ownerStoreCode = sourceCode,
+            ownerStoreCode = ownerStoreCode,
             version = version
         )?.let { storeDetailInfo ->
             PipelineAtom(

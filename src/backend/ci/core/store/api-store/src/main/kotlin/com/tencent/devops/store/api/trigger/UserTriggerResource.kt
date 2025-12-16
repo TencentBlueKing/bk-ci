@@ -39,10 +39,10 @@ interface UserTriggerResource {
         storeId: String
     ): Result<AtomForm?>
 
-    @Operation(summary = "触发器分类信息")
+    @Operation(summary = "触发器分类信息(按照归属应用分组)")
     @GET
-    @Path("/types")
-    fun types(
+    @Path("/listOwnerStoreCodes")
+    fun listOwnerStoreCodes(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
@@ -71,7 +71,7 @@ interface UserTriggerResource {
 
     @Operation(summary = "根据插件代码和版本号获取流水线插件详细信息")
     @GET
-    @Path("/{sourceCode}/{atomCode}/{version}")
+    @Path("/{ownerStoreCode}/{atomCode}/{version}")
     @BkInterfaceI18n(
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
@@ -80,8 +80,8 @@ interface UserTriggerResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "归属组件标识", required = true)
-        @PathParam("sourceCode")
-        sourceCode: String,
+        @PathParam("ownerStoreCode")
+        ownerStoreCode: String,
         @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,

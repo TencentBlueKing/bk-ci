@@ -19,8 +19,8 @@ class UserTriggerEventResourceImp @Autowired constructor(
         return Result(triggerEventService.previewEvent(userId, storeId))
     }
 
-    override fun types(userId: String): Result<List<TriggerGroupInfo>> {
-        return Result(triggerEventService.types(userId))
+    override fun listOwnerStoreCodes(userId: String): Result<List<TriggerGroupInfo>> {
+        return Result(triggerEventService.listOwnerStoreCodes(userId))
     }
 
     override fun list(
@@ -43,7 +43,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
 
     override fun triggerDetail(
         userId: String,
-        sourceCode: String,
+        ownerStoreCode: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
@@ -52,7 +52,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
                 atomCode = atomCode,
                 version = version,
                 userId = userId,
-                sourceCode = sourceCode
+                ownerStoreCode = ownerStoreCode
             )
         )
     }
