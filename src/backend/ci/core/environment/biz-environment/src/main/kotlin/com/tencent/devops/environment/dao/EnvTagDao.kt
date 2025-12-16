@@ -93,8 +93,8 @@ class EnvTagDao {
         }
         with(TEnvTag.T_ENV_TAG) {
             dslContext.select(
+                ENV_ID,
                 TNodeTags.T_NODE_TAGS.NODE_ID
-//                ENABLE_TAG
             ).from(this)
                 .innerJoin(TNodeTags.T_NODE_TAGS)
                 .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
