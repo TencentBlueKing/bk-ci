@@ -221,6 +221,6 @@
     .title-link {
         cursor: pointer;
         margin-left: 10px;
-        color: #3A84FF;
+        color: #3c96ff;
     }
 </style>
