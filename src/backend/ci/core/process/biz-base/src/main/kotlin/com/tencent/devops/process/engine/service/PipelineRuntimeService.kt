@@ -2350,7 +2350,10 @@ class PipelineRuntimeService @Autowired constructor(
         offset: Int,
         limit: Int,
         status: List<BuildStatus>?,
-        startTimeStartTime: Long?,
+        startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): List<LightBuildHistory> {
@@ -2361,6 +2364,9 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             status = status,
             startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             offset = offset,
             limit = if (limit < 0) {
                 1000
@@ -2375,6 +2381,9 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         status: List<BuildStatus>?,
         startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
         buildNoStart: Int? = null,
         buildNoEnd: Int? = null,
     ): Int {
@@ -2384,6 +2393,9 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             status = status,
             startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
         )

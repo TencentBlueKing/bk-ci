@@ -558,6 +558,15 @@ interface ServiceBuildResource {
         @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long? = null,
+        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long? = null,
+        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long? = null,
+        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long? = null,
         @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int? = null,

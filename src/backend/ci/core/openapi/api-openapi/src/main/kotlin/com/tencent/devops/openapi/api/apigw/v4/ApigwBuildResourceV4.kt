@@ -367,6 +367,18 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>?,
+        @Parameter(description = "开始于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long?,
+        @Parameter(description = "开始于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long?,
+        @Parameter(description = "结束于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long?,
+        @Parameter(description = "结束于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long?,
         @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int?,
