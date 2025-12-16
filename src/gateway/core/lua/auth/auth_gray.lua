@@ -36,6 +36,11 @@ if tag and string.sub(tag, 1, 11) == "kubernetes-" then
     tag = string.sub(tag, 12)
 end
 local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+if tag == 'rbac-red' || tag == 'dev-rbac' || tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-red到容器环境
+    ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
+else
+    ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
+end
 if in_container then -- 容器化环境转发到对应ns的frontend服务
     ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. '.' .. tag .. '.svc.cluster.local'
 else -- 非容器化环境转发到容器环境域名
