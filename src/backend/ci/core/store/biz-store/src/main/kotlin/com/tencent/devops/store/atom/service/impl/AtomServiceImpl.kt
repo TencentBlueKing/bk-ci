@@ -65,6 +65,8 @@ import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
@@ -124,20 +126,22 @@ import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * 插件业务逻辑类
@@ -220,7 +224,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
         userId: String,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -279,7 +283,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     @Suppress("UNCHECKED_CAST")
     override fun serviceGetPipelineAtoms(
         userId: String,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -531,15 +535,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         version: String,
         atomStatus: Byte?,
-        queryOfflineFlag: Boolean
+        queryOfflineFlag: Boolean,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
+        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$serviceScope")
         val atomResult = getPipelineAtomDetail(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
             atomStatus = atomStatus,
-            queryOfflineFlag = queryOfflineFlag
+            queryOfflineFlag = queryOfflineFlag,
+            serviceScope = serviceScope
         )
         val atom = atomResult.data
         if (null != atom) {
@@ -662,9 +668,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         version: String,
         atomStatus: Byte?,
-        queryOfflineFlag: Boolean
+        queryOfflineFlag: Boolean,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
+        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$serviceScope")
+        // 如果传入了 serviceScope，使用该服务范围；否则默认使用 PIPELINE
+        val targetServiceScope = serviceScope ?: ServiceScopeEnum.PIPELINE
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -698,10 +707,43 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (pipelineAtomRecord == null) {
                 null
             } else {
-                val atomClassify = classifyService.getClassify(pipelineAtomRecord.classifyId).data
+                // 单个字段（classifyCode、classifyName、labelList、jobType）根据传入的 serviceScope 返回对应的值
+                // 如果没有传入 serviceScope，则使用 PIPELINE 服务范围的值
+                // 需要根据 targetServiceScope 获取对应的分类ID
+                val classifyId = if (targetServiceScope == ServiceScopeEnum.PIPELINE) {
+                    // PIPELINE 服务范围直接使用 classifyId
+                    pipelineAtomRecord.classifyId
+                } else {
+                    // 其他服务范围需要从 CLASSIFY_ID_MAP 中获取
+                    val classifyIdMapJson = pipelineAtomRecord.classifyIdMap
+                    if (!classifyIdMapJson.isNullOrEmpty()) {
+                        try {
+                            val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java) as? Map<*, *>
+                            classifyIdMap?.get(targetServiceScope.name) as? String
+                        } catch (e: Exception) {
+                            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+                            pipelineAtomRecord.classifyId // 解析失败时使用默认值
+                        }
+                    } else {
+                        pipelineAtomRecord.classifyId // 没有 CLASSIFY_ID_MAP 时使用默认值
+                    }
+                } ?: pipelineAtomRecord.classifyId
+                
+                val atomClassify = classifyService.getClassify(classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
-                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id)
+                // 获取 labelList（根据传入的 serviceScope 返回对应的值）
+                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id, targetServiceScope)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
+                // 获取 jobType（根据传入的 serviceScope 返回对应的值）
+                val jobType = AtomJobTypeUtil.getJobType(pipelineAtomRecord.jobType, null, targetServiceScope.name)
+                
+                // 构建 serviceScopeConfigs（返回所有服务范围的配置信息）
+                val serviceScopeConfigs = buildPipelineAtomServiceScopeConfigs(
+                    atomId = pipelineAtomRecord.id,
+                    serviceScopeStr = pipelineAtomRecord.serviceScope,
+                    classifyIdMapJson = pipelineAtomRecord.classifyIdMap,
+                    jobTypeValue = pipelineAtomRecord.jobType
+                )
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
                     name = pipelineAtomRecord.name,
@@ -715,7 +757,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     summary = pipelineAtomRecord.summary,
                     serviceScope =
                     JsonUtil.toOrNull(pipelineAtomRecord.serviceScope, List::class.java) as List<String>?,
-                    jobType = pipelineAtomRecord.jobType,
+                    jobType = jobType,
                     os = JsonUtil.toOrNull(pipelineAtomRecord.os, List::class.java) as List<String>?,
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
@@ -755,7 +797,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(pipelineAtomRecord.visibilityLevel as Int),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
-                    updateTime = pipelineAtomRecord.updateTime.timestampmilli()
+                    updateTime = pipelineAtomRecord.updateTime.timestampmilli(),
+                    serviceScopeConfigs = serviceScopeConfigs
                 )
             }
         )
@@ -1050,6 +1093,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum?,
         page: Int,
         pageSize: Int
     ): Page<InstalledAtom> {
@@ -1058,13 +1102,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val defaultAtomCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             classifyCode = classifyCode,
-            name = name
+            name = name,
+            serviceScope = serviceScope
         )
         val projectAtomCount = atomDao.countInstalledAtoms(
             dslContext = dslContext,
             projectCode = projectCode,
             classifyCode = classifyCode,
-            name = name
+            name = name,
+            serviceScope = serviceScope
         )
         val count = projectAtomCount + defaultAtomCount
         if (count == 0) {
@@ -1078,6 +1124,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 projectCode = projectCode,
                 classifyCode = classifyCode,
                 name = name,
+                serviceScope = serviceScope,
                 page = page,
                 pageSize = pageSize
             )
@@ -1442,5 +1489,57 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+    
+    /**
+     * 构建 PipelineAtom 的 ServiceScopeConfig 数组（包含所有服务范围的配置信息）
+     * 
+     * @param atomId 插件ID
+     * @param serviceScopeStr SERVICE_SCOPE 字段值（JSON 数组）
+     * @param classifyIdMapJson CLASSIFY_ID_MAP 字段值（JSON 对象）
+     * @param jobTypeValue JOB_TYPE 字段值
+     * @return ServiceScopeConfig 列表
+     */
+    private fun buildPipelineAtomServiceScopeConfigs(
+        atomId: String,
+        serviceScopeStr: String?,
+        classifyIdMapJson: String?,
+        jobTypeValue: String?
+    ): List<ServiceScopeConfig>? {
+        // 获取所有服务范围
+        val serviceScopes = AtomServiceScopeUtil.getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
+        
+        // 使用工具类构建 ServiceScopeConfig
+        return AtomServiceScopeUtil.buildServiceScopeConfigs(
+            serviceScopes = serviceScopes,
+            jobTypeValue = jobTypeValue,
+            getClassifyCode = { serviceScopeEnum ->
+                // 获取该服务范围的分类ID
+                val classifyId = if (serviceScopeEnum == ServiceScopeEnum.PIPELINE) {
+                    // PIPELINE 服务范围，需要从 atomDao 获取
+                    atomDao.getPipelineAtom(dslContext, atomId)?.classifyId
+                } else {
+                    // 其他服务范围，从 CLASSIFY_ID_MAP 中获取
+                    if (!classifyIdMapJson.isNullOrEmpty()) {
+                        try {
+                            val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java)
+                            classifyIdMap?.get(serviceScopeEnum.name) as? String
+                        } catch (e: Exception) {
+                            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+                            null
+                        }
+                    } else {
+                        null
+                    }
+                }
+                // 获取分类信息
+                classifyId?.let { classifyService.getClassify(it).data?.classifyCode }
+            },
+            getLabelIdList = { serviceScopeEnum ->
+                // 获取该服务范围的标签
+                val scopeLabels = atomLabelService.getLabelsByAtomId(atomId, serviceScopeEnum)
+                scopeLabels?.map { it.id }
+            }
+        )
     }
 }

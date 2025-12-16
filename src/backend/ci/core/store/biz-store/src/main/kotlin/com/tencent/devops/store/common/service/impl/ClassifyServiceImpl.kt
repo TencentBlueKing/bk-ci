@@ -188,7 +188,10 @@ class ClassifyServiceImpl @Autowired constructor(
             val classifyType = classifyRecord.type
             val storeType = StoreTypeEnum.getStoreType(classifyType.toInt())
             val classifyService = getStoreClassifyService(storeType)
-            flag = classifyService.getDeleteClassifyFlag(id, StoreTypeEnum.valueOf(storeType))
+            flag = classifyService.getDeleteClassifyFlag(
+                classifyId = id,
+                storeType = StoreTypeEnum.valueOf(storeType),
+                serviceScope = classifyRecord.serviceScope?.let { ServiceScopeEnum.valueOf(it) })
         }
         if (flag) {
             classifyDao.delete(dslContext, id)

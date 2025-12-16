@@ -47,7 +47,7 @@ class UserAtomLabelResourceImpl @Autowired constructor(
         return labelService.getAllLabel(StoreTypeEnum.ATOM.type.toByte(), serviceScope)
     }
 
-    override fun getAtomLabelsByAtomId(atomId: String): Result<List<Label>?> {
-        return Result(atomLabelService.getLabelsByAtomId(atomId))
+    override fun getAtomLabelsByAtomId(atomId: String, serviceScope: ServiceScopeEnum?): Result<List<Label>?> {
+        return Result(atomLabelService.getLabelsByAtomId(atomId, serviceScope))
     }
 }

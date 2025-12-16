@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
-import com.tencent.devops.common.pipeline.pojo.PipelineBaseInfoCreateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
@@ -143,20 +142,6 @@ interface UserPipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线模型实例请求", required = true)
         request: TemplateInstanceCreateRequest
-    ): Result<DeployPipelineResult>
-
-    @Operation(summary = "创建流水线基础信息")
-    @POST
-    @Path("/projects/{projectId}/base/info/create")
-    fun createPipelineBaseInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线基本信息创建请求", required = true)
-        baseInfo: PipelineBaseInfoCreateReq
     ): Result<DeployPipelineResult>
 
     @Operation(summary = "获取流水线指定版本的两种编排")

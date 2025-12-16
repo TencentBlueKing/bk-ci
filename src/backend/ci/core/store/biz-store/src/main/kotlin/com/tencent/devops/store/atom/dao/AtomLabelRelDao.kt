@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -49,10 +50,16 @@ class AtomLabelRelDao {
 
     fun getLabelsByAtomIds(
         dslContext: DSLContext,
-        atomIds: Set<String>
+        atomIds: Set<String>,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<out Record>? {
         val tLabel = TLabel.T_LABEL
         val tAtomLabelRel = TAtomLabelRel.T_ATOM_LABEL_REL
+        val conditions = mutableListOf<org.jooq.Condition>().apply {
+            add(tAtomLabelRel.ATOM_ID.`in`(atomIds))
+            // 如果提供了 serviceScope，添加 SERVICE_SCOPE 条件
+            serviceScope?.let { add(tLabel.SERVICE_SCOPE.eq(it.name)) }
+        }
         return dslContext.select(
             tLabel.ID.`as`(KEY_LABEL_ID),
             tLabel.LABEL_CODE.`as`(KEY_LABEL_CODE),
@@ -63,7 +70,7 @@ class AtomLabelRelDao {
             tLabel.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
             tAtomLabelRel.ATOM_ID.`as`(KEY_ID)
         ).from(tLabel).join(tAtomLabelRel).on(tLabel.ID.eq(tAtomLabelRel.LABEL_ID))
-            .where(tAtomLabelRel.ATOM_ID.`in`(atomIds))
+            .where(conditions)
             .fetch()
     }
 

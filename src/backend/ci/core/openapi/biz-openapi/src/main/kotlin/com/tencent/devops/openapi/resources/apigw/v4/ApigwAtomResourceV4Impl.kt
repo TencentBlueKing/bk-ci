@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import org.slf4j.LoggerFactory
@@ -108,16 +109,18 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         apigwType: String?,
         atomCode: String,
         version: String,
-        userId: String
+        userId: String,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         logger.info("OPENAPI_ATOM_V4|$appCode|$userId|getAtomDetail: $atomCode, $version")
-        return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version)
+        return client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, version, serviceScope)
     }
 
     override fun list(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        serviceScope: ServiceScopeEnum?,
         keyword: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -131,12 +134,13 @@ class ApigwAtomResourceV4Impl @Autowired constructor(private val client: Client)
         pageSize: Int?
     ): Result<MarketAtomResp> {
         logger.info(
-            "OPENAPI_ATOM_V4|$appCode|$userId|atom list: $keyword, $classifyCode," +
+            "OPENAPI_ATOM_V4|$appCode|$userId|atom list: $serviceScope, $keyword, $classifyCode," +
                 " $labelCode, $score, $rdType, $yamlFlag, $recommendFlag, $qualityFlag, " +
                 "$sortType, $page, $pageSize"
         )
         return client.get(ServiceAtomResource::class).list(
             userId = userId.trim(),
+            serviceScope = serviceScope,
             keyword = keyword?.trim(),
             classifyCode = classifyCode?.trim(),
             labelCode = labelCode?.trim(),

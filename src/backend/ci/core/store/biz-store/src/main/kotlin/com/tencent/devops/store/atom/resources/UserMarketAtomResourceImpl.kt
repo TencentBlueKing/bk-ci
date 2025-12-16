@@ -48,6 +48,7 @@ import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -57,7 +58,12 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserMarketAtomResource {
 
-    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketMainItem>> {
+    override fun mainPageList(
+        userId: String,
+        serviceScope: ServiceScopeEnum?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<MarketMainItem>> {
         return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
     }
 
@@ -72,6 +78,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         recommendFlag: Boolean?,
         qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
+        serviceScope: ServiceScopeEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketAtomResp> {
@@ -103,12 +110,16 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getMyAtoms(userId, atomName, page, pageSize)
     }
 
-    override fun getAtomById(userId: String, atomId: String): Result<AtomVersion?> {
-        return marketAtomService.getAtomById(atomId, userId)
+    override fun getAtomById(userId: String, atomId: String, serviceScope: ServiceScopeEnum?): Result<AtomVersion?> {
+        return marketAtomService.getAtomById(atomId, userId, serviceScope)
     }
 
-    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
-        return marketAtomService.getAtomByCode(userId, atomCode)
+    override fun getAtomByCode(
+        userId: String,
+        atomCode: String,
+        serviceScope: ServiceScopeEnum?
+    ): Result<AtomVersion?> {
+        return marketAtomService.getAtomByCode(userId, atomCode, serviceScope)
     }
 
     override fun getAtomVersionsByCode(

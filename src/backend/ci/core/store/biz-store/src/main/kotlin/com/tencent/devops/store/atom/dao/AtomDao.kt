@@ -86,12 +86,10 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
-import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
-import java.net.URLDecoder
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -100,10 +98,12 @@ import org.jooq.Record1
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.jooq.SelectOnConditionStep
+import org.jooq.impl.DSL
 import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -205,46 +205,56 @@ class AtomDao : AtomBaseDao() {
     /**
      * 统计分类下处于已发布状态的插件个数
      */
-    fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
+    fun countReleaseAtomNumByClassifyId(
+        dslContext: DSLContext,
+        classifyId: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(
-                ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                    .and(CLASSIFY_ID.eq(classifyId))
-            ).fetchOne(0, Int::class.java)!!
+            val classifyCondition = buildClassifyCondition(
+                ta = this,
+                classifyId = classifyId,
+                serviceScope = serviceScope
+            )
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            classifyCondition?.let { conditions.add(it) }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
     /**
      * 统计还在使用处于下架中或者已下架状态的插件的项目的个数
      */
-    fun countUndercarriageAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
+    fun countUndercarriageAtomNumByClassifyId(
+        dslContext: DSLContext,
+        classifyId: String,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val atomStatusList = listOf(
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
+        val classifyCondition = buildClassifyCondition(
+            ta = tAtom,
+            classifyId = classifyId,
+            serviceScope = serviceScope
+        )
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tAtom.ATOM_STATUS.`in`(atomStatusList))
+        classifyCondition?.let { conditions.add(it) }
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return dslContext.select(countDistinct(tStoreProjectRel.PROJECT_CODE)).from(tAtom).join(tStoreProjectRel)
             .on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
-            .where(
-                tAtom.ATOM_STATUS.`in`(atomStatusList)
-                    .and(tAtom.CLASSIFY_ID.eq(classifyId))
-                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            ).fetchOne(0, Int::class.java)!!
+            .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     fun delete(dslContext: DSLContext, id: String) {
         with(TAtom.T_ATOM) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
-                .execute()
-        }
-    }
-
-    fun deleteByClassifyId(dslContext: DSLContext, classifyId: String) {
-        with(TAtom.T_ATOM) {
-            dslContext.deleteFrom(this)
-                .where(CLASSIFY_ID.eq(classifyId))
                 .execute()
         }
     }
@@ -366,7 +376,7 @@ class AtomDao : AtomBaseDao() {
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -409,7 +419,7 @@ class AtomDao : AtomBaseDao() {
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -436,7 +446,7 @@ class AtomDao : AtomBaseDao() {
         atomName: String?,
         atomCode: String?,
         atomType: AtomTypeEnum?,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         os: String?,
         category: String?,
         classifyId: String?,
@@ -452,7 +462,10 @@ class AtomDao : AtomBaseDao() {
         }
         os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
         category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
-        classifyId?.let { conditions.add(CLASSIFY_ID.eq(classifyId)) }
+        // 使用 buildClassifyCondition 构建分类查询条件（支持多服务范围）
+        buildClassifyCondition(ta = this, classifyId = classifyId, serviceScope = serviceScope)?.let {
+            conditions.add(it)
+        }
         atomStatus?.let { conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte())) }
         return conditions
     }
@@ -556,7 +569,7 @@ class AtomDao : AtomBaseDao() {
 
     fun getPipelineAtoms(
         dslContext: DSLContext,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String?,
@@ -673,7 +686,7 @@ class AtomDao : AtomBaseDao() {
 
     /**
      * 构建基础查询步骤（支持多服务范围分类）
-     * 
+     *
      * @param dslContext DSL上下文
      * @param ta TAtom 表
      * @param tc TClassify 表
@@ -688,11 +701,11 @@ class AtomDao : AtomBaseDao() {
         tc: TClassify,
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal,
-        serviceScope: String? = null
+        serviceScope: ServiceScopeEnum? = null
     ): SelectOnConditionStep<Record> {
         // 根据服务范围构建分类ID字段表达式
         val classifyIdField = buildClassifyIdField(ta, serviceScope)
-        
+
         return dslContext.select(
             ta.ID.`as`(KEY_ID),
             ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
@@ -739,7 +752,7 @@ class AtomDao : AtomBaseDao() {
 
     fun getPipelineAtomCount(
         dslContext: DSLContext,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String?,
@@ -857,7 +870,7 @@ class AtomDao : AtomBaseDao() {
         ta: TAtom,
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         category: String?,
@@ -888,7 +901,7 @@ class AtomDao : AtomBaseDao() {
     }
 
     private fun setQueryAtomBaseCondition(
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         ta: TAtom,
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal,
@@ -937,7 +950,7 @@ class AtomDao : AtomBaseDao() {
             }
         }
         if (null != category) conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!classifyId.isNullOrBlank()) conditions.add(ta.CLASSIFY_ID.eq(classifyId))
+        // 注意：classifyId 条件已在上面通过 buildClassifyCondition 添加，这里不再重复添加
         if (null != recommendFlag) {
             if (recommendFlag) {
                 conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag).or(taf.RECOMMEND_FLAG.isNull))
@@ -958,7 +971,7 @@ class AtomDao : AtomBaseDao() {
         tspr: TStoreProjectRel,
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String?,
@@ -998,7 +1011,7 @@ class AtomDao : AtomBaseDao() {
         tspr: TStoreProjectRel,
         taf: TAtomFeature,
         tsst: TStoreStatisticsTotal,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -1139,12 +1152,14 @@ class AtomDao : AtomBaseDao() {
         dslContext: DSLContext,
         projectCode: String? = null,
         classifyCode: String? = null,
-        name: String? = null
+        name: String? = null,
+        serviceScope: ServiceScopeEnum? = null
     ): Int {
         val (ta, tspr, conditions) = getInstalledConditions(
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
+            serviceScope = serviceScope,
             dslContext = dslContext
         )
 
@@ -1153,7 +1168,8 @@ class AtomDao : AtomBaseDao() {
             step.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
         }
         val tc = TClassify.T_CLASSIFY
-        return step.join(tc).on(ta.CLASSIFY_ID.eq(tc.ID))
+        // 使用公共方法构建分类关联条件（支持 CLASSIFY_ID_MAP）
+        return step.join(tc).on(buildClassifyJoinCondition(ta, tc, serviceScope))
             .where(conditions).fetchOne(0, Int::class.java)!!
     }
 
@@ -1165,6 +1181,7 @@ class AtomDao : AtomBaseDao() {
         projectCode: String,
         classifyCode: String? = null,
         name: String? = null,
+        serviceScope: ServiceScopeEnum? = null,
         page: Int? = null,
         pageSize: Int? = null
     ): Result<out Record>? {
@@ -1173,6 +1190,7 @@ class AtomDao : AtomBaseDao() {
             projectCode = projectCode,
             classifyCode = classifyCode,
             name = name,
+            serviceScope = serviceScope,
             dslContext = dslContext
         )
         val tc = TClassify.T_CLASSIFY
@@ -1196,7 +1214,7 @@ class AtomDao : AtomBaseDao() {
         )
             .from(ta)
             .join(tc)
-            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .on(buildClassifyJoinCondition(ta, tc, serviceScope))
             .join(tspr)
             .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             .where(conditions)
@@ -1210,6 +1228,7 @@ class AtomDao : AtomBaseDao() {
         projectCode: String? = null,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum? = null,
         dslContext: DSLContext
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
@@ -1225,18 +1244,28 @@ class AtomDao : AtomBaseDao() {
                 )
             ))
         } else {
-            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(0)))
+            conditions.add(tspr.PROJECT_CODE.eq(projectCode).and(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
             conditions.add(ta.DEFAULT_FLAG.eq(false))
         }
         conditions.add(ta.LATEST_FLAG.eq(true))
-
+        buildServiceScopeCondition(ta.SERVICE_SCOPE, serviceScope)?.let {
+            conditions.add(it)
+        }
         if (!classifyCode.isNullOrEmpty()) {
-            val tClassify = TClassify.T_CLASSIFY
-            val classifyId = dslContext.select(tClassify.ID)
-                .from(tClassify)
-                .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
-                .fetchOne(0, String::class.java)
-            conditions.add(ta.CLASSIFY_ID.eq(classifyId))
+            // 使用公共方法查询分类ID
+            val classifyId = getClassifyIdByCode(
+                dslContext = dslContext,
+                classifyCode = classifyCode,
+                serviceScope = serviceScope
+            )
+            // 使用公共方法构建分类查询条件
+            buildClassifyCondition(
+                ta = ta,
+                classifyId = classifyId,
+                serviceScope = serviceScope
+            )?.let {
+                conditions.add(it)
+            }
         }
         if (!name.isNullOrBlank()) {
             conditions.add(ta.NAME.contains(name))
@@ -1257,12 +1286,14 @@ class AtomDao : AtomBaseDao() {
                 baseStep.set(NAME, atomName)
             }
             val classifyCode = atomBaseInfoUpdateRequest.classifyCode
-            if (null != classifyCode) {
-                val tClassify = TClassify.T_CLASSIFY
-                val classifyId = dslContext.select(tClassify.ID)
-                    .from(tClassify)
-                    .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
-                    .fetchOne(0, String::class.java)
+            if (!classifyCode.isNullOrBlank()) {
+                // 使用公共方法查询分类ID
+                val serviceScope = atomBaseInfoUpdateRequest.serviceScope
+                val classifyId = getClassifyIdByCode(
+                    dslContext = dslContext,
+                    classifyCode = classifyCode,
+                    serviceScope = serviceScope
+                )
                 baseStep.set(CLASSIFY_ID, classifyId)
             }
             val summary = atomBaseInfoUpdateRequest.summary
@@ -1476,7 +1507,7 @@ class AtomDao : AtomBaseDao() {
         )
             .from(ta)
             .join(tc)
-            .on(ta.CLASSIFY_ID.eq(tc.ID))
+            .on(buildClassifyJoinCondition(ta, tc))
             .where(conditions)
             .groupBy(ta.ATOM_CODE)
             .orderBy(ta.CREATE_TIME, ta.ID)
@@ -1537,14 +1568,13 @@ class AtomDao : AtomBaseDao() {
      */
     private fun buildServiceScopeCondition(
         serviceScopeField: Field<String>,
-        serviceScope: String?
+        serviceScope: ServiceScopeEnum?
     ): Condition? {
-        if (serviceScope.isNullOrBlank() || KEY_ALL.equals(serviceScope, ignoreCase = true)) {
+        if (serviceScope == null) {
             return null
         }
-        
         // 标准化服务范围值（统一转换为大写格式）
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: serviceScope
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope.name) ?: serviceScope.name
         
         // 使用 JSON_CONTAINS 进行精确匹配（支持大小写兼容）
         // 同时匹配大写格式（标准格式）和小写格式（兼容现有小写数据）
@@ -1564,75 +1594,5 @@ class AtomDao : AtomBaseDao() {
                 DSL.inline("\"${normalizedScope.lowercase()}\"")
             ).eq(true)
         )
-    }
-    
-    /**
-     * 根据服务范围构建分类ID字段表达式
-     * 
-     * 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段（性能最好，有索引）
-     * 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
-     * 
-     * @param ta TAtom 表
-     * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则默认使用 PIPELINE
-     * @return 分类ID字段表达式（Field<String>）
-     */
-    private fun buildClassifyIdField(
-        ta: TAtom,
-        serviceScope: String?
-    ): Field<String> {
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: "PIPELINE"
-        
-        return if (normalizedScope == "PIPELINE") {
-            // PIPELINE 使用 CLASSIFY_ID 字段（性能最好，有索引）
-            ta.CLASSIFY_ID
-        } else {
-            // 其他服务范围从 CLASSIFY_ID_MAP 中提取
-            // 使用 COALESCE 回退到 CLASSIFY_ID（兼容处理）
-            DSL.field(
-                "COALESCE(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})), {2})",
-                String::class.java,
-                ta.CLASSIFY_ID_MAP,
-                DSL.inline("$.$normalizedScope"),
-                ta.CLASSIFY_ID  // 如果未找到，回退到 CLASSIFY_ID
-            )
-        }
-    }
-    
-    /**
-     * 构建分类查询条件（支持多服务范围）
-     * 
-     * 根据 serviceScope 参数动态构建分类过滤条件：
-     * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
-     * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
-     * 
-     * @param ta TAtom 表
-     * @param classifyId 分类ID
-     * @param serviceScope 服务范围
-     * @return 查询条件，如果不需要过滤则返回 null
-     */
-    private fun buildClassifyCondition(
-        ta: TAtom,
-        classifyId: String?,
-        serviceScope: String?
-    ): Condition? {
-        if (classifyId.isNullOrBlank()) return null
-        val servicePipelineScopeName = ServiceScopeEnum.PIPELINE.name
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: servicePipelineScopeName
-
-        // 构建 JSON_EXTRACT 表达式
-        val jsonExtractField = DSL.field(
-            "JSON_UNQUOTE(JSON_EXTRACT({0}, '$.{1}'))",
-            String::class.java,
-            ta.CLASSIFY_ID_MAP,
-            DSL.inline(normalizedScope)
-        )
-
-        return if (normalizedScope == servicePipelineScopeName) {
-            // PIPELINE: 使用 CLASSIFY_ID 或 CLASSIFY_ID_MAP
-            ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
-        } else {
-            // 其他服务范围: 只使用 CLASSIFY_ID_MAP
-            jsonExtractField.eq(classifyId)
-        }
     }
 }

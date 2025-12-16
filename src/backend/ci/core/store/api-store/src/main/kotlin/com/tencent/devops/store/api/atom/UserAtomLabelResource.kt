@@ -62,6 +62,9 @@ interface UserAtomLabelResource {
     fun getAtomLabelsByAtomId(
         @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
-        atomId: String
+        atomId: String,
+        @Parameter(description = "服务范围", required = false)
+        @QueryParam("serviceScope")
+        serviceScope: ServiceScopeEnum? = null
     ): Result<List<Label>?>
 }

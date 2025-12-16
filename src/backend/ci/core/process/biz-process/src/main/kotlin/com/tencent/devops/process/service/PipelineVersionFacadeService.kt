@@ -457,33 +457,6 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineCreator = userId
     )
 
-    fun createPipelineBaseInfo(
-        userId: String,
-        projectId: String,
-        baseInfo: PipelineBaseInfoCreateReq
-    ): DeployPipelineResult {
-        val model = initializeModel(userId, baseInfo.pipelineName)
-        model.desc = baseInfo.pipelineDesc
-        val deployPipelineResult = pipelineInfoFacadeService.createPipeline(
-            userId = userId,
-            projectId = projectId,
-            model = model,
-            channelCode = ChannelCode.getRequestChannelCode(),
-            checkPermission = true,
-            versionStatus = VersionStatus.COMMITTING
-        )
-        baseInfo.envName?.takeIf { it.isNotBlank() }?.let { envName ->
-            pipelineRepositoryService.createBuildEnv(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = deployPipelineResult.pipelineId,
-                version = deployPipelineResult.version,
-                envName = envName
-            )
-        }
-        return deployPipelineResult
-    }
-
     fun getVersion(
         userId: String,
         projectId: String,
@@ -583,7 +556,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
             updateTime = resource.updateTime?.timestampmilli(),
-            envName = pipelineRepositoryService.getBuildEnvRecord(projectId, pipelineId, version)?.envName
+            envName = setting.envName
         )
     }
 

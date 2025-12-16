@@ -28,6 +28,7 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-插件基本信息修改请求报文体")
@@ -49,5 +50,7 @@ data class AtomBaseInfoUpdateRequest(
     @get:Schema(title = "项目可视范围", required = false)
     val visibilityLevel: VisibilityLevelEnum? = null,
     @get:Schema(title = "插件代码库不开源原因", required = false)
-    val privateReason: String? = null
+    val privateReason: String? = null,
+    @get:Schema(title = "支持的服务范围", required = false)
+    val serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
 )

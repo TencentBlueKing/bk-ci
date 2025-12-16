@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 
 /**
@@ -55,7 +56,7 @@ interface AtomService {
      */
     fun getPipelineAtoms(
         userId: String,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -75,7 +76,7 @@ interface AtomService {
      */
     fun serviceGetPipelineAtoms(
         userId: String,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -108,31 +109,30 @@ interface AtomService {
         atomCode: String,
         version: String,
         atomStatus: Byte? = null,
-        queryOfflineFlag: Boolean = false
+        queryOfflineFlag: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomDetail(
         projectCode: String? = null,
         atomCode: String,
         version: String,
         atomStatus: Byte? = null,
-        queryOfflineFlag: Boolean = false
+        queryOfflineFlag: Boolean = false,
+        serviceScope: ServiceScopeEnum? = null
     ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>
 
     /**
      * 根据插件代码和版本号集合批量获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomRunInfo>>
 
     /**
@@ -173,6 +173,7 @@ interface AtomService {
         projectCode: String,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum?,
         page: Int,
         pageSize: Int
     ): Page<InstalledAtom>
