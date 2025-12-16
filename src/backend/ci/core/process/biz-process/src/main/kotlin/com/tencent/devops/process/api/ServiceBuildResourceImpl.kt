@@ -462,6 +462,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pageSize: Int,
         status: List<BuildStatus>?,
         startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): Result<Page<LightBuildHistory>> {
@@ -475,6 +478,9 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pageSize = pageSize,
             status = status?.filterNotNull(),
             startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd
         )

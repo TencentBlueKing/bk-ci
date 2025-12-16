@@ -474,6 +474,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         status: List<BuildStatus>?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): Result<Page<LightBuildHistory>> {
@@ -484,6 +488,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = ApigwParamUtil.standardSize(pageSize) ?: 20,
             status = status,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
         )

@@ -1224,6 +1224,9 @@ class PipelineBuildDao {
         pipelineId: String,
         status: List<BuildStatus>?,
         startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
         offset: Int,
         limit: Int,
         buildNoStart: Int?,
@@ -1234,20 +1237,50 @@ class PipelineBuildDao {
                 BUILD_ID, BUILD_NUM, START_TIME, END_TIME, STATUS, REMARK, EXECUTE_TIME,
                 EXECUTE_COUNT, CHANNEL, TRIGGER, ERROR_INFO, STAGE_STATUS, BUILD_PARAMETERS, TRIGGER_USER, START_USER
             ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
-
-            if (!status.isNullOrEmpty()) {
-                where.and(STATUS.`in`(status.map { it.ordinal }))
-            }
-            if (startTimeStartTime != null && startTimeStartTime > 0) {
-                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
-            }
-            if (buildNoStart != null && buildNoStart > 0) {
-                where.and(BUILD_NUM.ge(buildNoStart))
-            }
-            if (buildNoEnd != null && buildNoEnd > 0) {
-                where.and(BUILD_NUM.le(buildNoEnd))
-            }
+            makeQueryConditions(
+                status,
+                where,
+                startTimeStartTime,
+                startTimeEndTime,
+                endTimeStartTime,
+                endTimeEndTime,
+                buildNoStart,
+                buildNoEnd
+            )
             where.limit(offset, limit).fetch(lightMapper)
+        }
+    }
+
+    private fun TPipelineBuildHistory.makeQueryConditions(
+        status: List<BuildStatus>?,
+        where: SelectConditionStep<*>,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ) {
+        if (!status.isNullOrEmpty()) {
+            where.and(STATUS.`in`(status.map { it.ordinal }))
+        }
+        if (startTimeStartTime != null && startTimeStartTime > 0) {
+            where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
+        }
+        if (startTimeEndTime != null && startTimeEndTime > 0) {
+            where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+        }
+        if (endTimeStartTime != null && endTimeStartTime > 0) {
+            where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
+        }
+        if (endTimeEndTime != null && endTimeEndTime > 0) {
+            where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
+        }
+        if (buildNoStart != null && buildNoStart > 0) {
+            where.and(BUILD_NUM.ge(buildNoStart))
+        }
+        if (buildNoEnd != null && buildNoEnd > 0) {
+            where.and(BUILD_NUM.le(buildNoEnd))
         }
     }
 
@@ -1257,25 +1290,25 @@ class PipelineBuildDao {
         pipelineId: String,
         status: List<BuildStatus>?,
         startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where =
                 dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
-
-            if (!status.isNullOrEmpty()) {
-                where.and(STATUS.`in`(status.map { it.ordinal }))
-            }
-            if (startTimeStartTime != null && startTimeStartTime > 0) {
-                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
-            }
-            if (buildNoStart != null && buildNoStart > 0) {
-                where.and(BUILD_NUM.ge(buildNoStart))
-            }
-            if (buildNoEnd != null && buildNoEnd > 0) {
-                where.and(BUILD_NUM.le(buildNoEnd))
-            }
+            makeQueryConditions(
+                status,
+                where,
+                startTimeStartTime,
+                startTimeEndTime,
+                endTimeStartTime,
+                endTimeEndTime,
+                buildNoStart,
+                buildNoEnd
+            )
             where.fetchOne(0, Int::class.java)!!
         }
     }

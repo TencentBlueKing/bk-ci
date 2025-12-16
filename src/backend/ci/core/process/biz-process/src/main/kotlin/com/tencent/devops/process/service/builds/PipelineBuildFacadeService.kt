@@ -2188,6 +2188,9 @@ class PipelineBuildFacadeService(
         pageSize: Int,
         status: List<BuildStatus>?,
         startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): Page<LightBuildHistory> {
@@ -2207,6 +2210,9 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             status = status,
             startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
         )
@@ -2220,6 +2226,9 @@ class PipelineBuildFacadeService(
             limit = limit,
             status = status,
             startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd,
         )
