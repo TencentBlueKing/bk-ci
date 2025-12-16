@@ -70,7 +70,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_THIR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
 import com.tencent.devops.environment.dao.AgentShareProjectDao
 import com.tencent.devops.environment.dao.EnvDao
-import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.AgentPipelineRefDao
@@ -99,6 +98,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartI
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.upgrade.AgentPropsScope
@@ -127,7 +127,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val thirdPartyAgentEnableProjectsDao: ThirdPartyAgentEnableProjectsDao,
     private val nodeDao: NodeDao,
-    private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
     private val agentPipelineRefDao: AgentPipelineRefDao,
     private val slaveGatewayService: SlaveGatewayService,
@@ -144,7 +143,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentMetricService: AgentMetricService,
     private val agentShareProjectDao: AgentShareProjectDao,
     private val thirdPartyAgentActionDao: ThirdPartyAgentActionDao,
-    private val thirdPartAgentService: ThirdPartAgentService
+    private val thirdPartAgentService: ThirdPartAgentService,
+    private val envService: EnvService
 ) {
 
     fun getAgentDetailById(
@@ -1087,7 +1087,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             return aList
         }
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val nodes = envNodeDao.list(dslContext = dslContext, projectId = projectId, envIds = listOf(envId))
+        val nodes = envService.fetchEnvNodes(projectId = projectId, envIds = listOf(envId))
         if (nodes.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
