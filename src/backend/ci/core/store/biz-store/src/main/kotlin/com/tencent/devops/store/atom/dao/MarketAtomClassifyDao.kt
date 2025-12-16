@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -42,11 +43,15 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomClassifyDao : AtomBaseDao() {
 
-    fun getAllAtomClassify(dslContext: DSLContext): Result<out Record>? {
+    fun getAllAtomClassify(
+        dslContext: DSLContext,
+        serviceScope: ServiceScopeEnum? = null
+    ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tClassify = TClassify.T_CLASSIFY
         val conditions = setAtomVisibleCondition(tAtom)
-        conditions.add(0, tAtom.CLASSIFY_ID.eq(tClassify.ID))
+        // 使用公共方法构建分类关联条件（支持 CLASSIFY_ID_MAP，根据 serviceScope 参数）
+        conditions.add(0, buildClassifyJoinCondition(tAtom, tClassify, serviceScope))
         val atomNum = dslContext.selectCount().from(tAtom).where(conditions).asField<Int>("atomNum")
         return dslContext.select(
             tClassify.ID.`as`(KEY_ID),

@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -52,19 +53,21 @@ class UserAtomResourceImpl @Autowired constructor(
         projectCode: String,
         atomCode: String,
         version: String,
-        queryOfflineFlag: Boolean?
+        queryOfflineFlag: Boolean?,
+        serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         return atomService.getPipelineAtom(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            queryOfflineFlag = queryOfflineFlag ?: true
+            queryOfflineFlag = queryOfflineFlag ?: true,
+            serviceScope = serviceScope
         )
     }
 
     override fun listAllPipelineAtoms(
         userId: String,
-        serviceScope: String?,
+        serviceScope: ServiceScopeEnum?,
         jobType: String?,
         os: String?,
         projectCode: String,
@@ -105,6 +108,7 @@ class UserAtomResourceImpl @Autowired constructor(
         projectCode: String,
         classifyCode: String?,
         name: String?,
+        serviceScope: ServiceScopeEnum?,
         page: Int,
         pageSize: Int
     ): Result<Page<InstalledAtom>> {
@@ -113,6 +117,7 @@ class UserAtomResourceImpl @Autowired constructor(
                 userId = userId,
                 projectCode = projectCode,
                 classifyCode = classifyCode,
+                serviceScope = serviceScope,
                 name = name,
                 page = page,
                 pageSize = pageSize

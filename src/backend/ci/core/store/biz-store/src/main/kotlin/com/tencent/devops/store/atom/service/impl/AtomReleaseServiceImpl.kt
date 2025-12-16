@@ -79,6 +79,8 @@ import com.tencent.devops.store.atom.service.AtomQualityService
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomArchiveService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
+import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.LabelDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -169,6 +171,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
+    @Autowired
+    lateinit var labelDao: LabelDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
@@ -358,6 +364,29 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )
+        }
+        // 转换为服务范围配置列表
+        val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
+        // 构建服务范围列表
+        val serviceScopes = serviceScopeConfigs.map { it.serviceScope.name }
+
+        // 为每个服务范围创建/更新分类和标签关联
+        serviceScopeConfigs.forEach { config ->
+            // 1. 验证分类是否存在且匹配服务范围
+            val classify = classifyDao.getClassifyByCode(
+                dslContext = dslContext,
+                classifyCode = config.classifyCode,
+                type = StoreTypeEnum.ATOM,
+                serviceScope = config.serviceScope
+            ) ?: throw IllegalArgumentException("Classify not found: ${config.classifyCode} for scope: ${config.serviceScope}")
+
+            // 2. 验证标签是否存在且匹配服务范围
+            config.labelIdList?.forEach { labelId ->
+                val label = labelDao.getLabel(
+                    dslContext = dslContext,
+                    id = labelId
+                ) ?: throw IllegalArgumentException("Label not found: $labelId for scope: ${config.serviceScope}")
+            }
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
@@ -1414,6 +1443,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             if (atomPackageSourceType == PackageSourceTypeEnum.REPO) {
                 AtomStatusEnum.COMMITTING
             } else AtomStatusEnum.TESTING
+        // 转换为服务范围配置列表
+        val serviceScopeConfigs = convertUpdateRequest.toServiceScopeConfigs()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap, formatted = false)
@@ -1453,10 +1484,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
             }
             // 更新标签信息
-            val labelIdList = convertUpdateRequest.labelIdList?.filter { !it.isNullOrBlank() }
-            if (!convertUpdateRequest.isBranchTestVersion && null != labelIdList) {
-                atomLabelRelDao.deleteByAtomId(context, atomId)
-                if (labelIdList.isNotEmpty()) {
+            // 删除旧的关联关系
+            atomLabelRelDao.deleteByAtomId(dslContext, atomId)
+            // 为每个服务范围创建标签关联
+            serviceScopeConfigs.forEach { config ->
+                val labelIdList = config.labelIdList?.filter { !it.isNullOrBlank() }
+                if (!convertUpdateRequest.isBranchTestVersion && !labelIdList.isNullOrEmpty()) {
                     atomLabelRelDao.batchAdd(context, userId = userId, atomId = atomId, labelIdList = labelIdList)
                 }
             }

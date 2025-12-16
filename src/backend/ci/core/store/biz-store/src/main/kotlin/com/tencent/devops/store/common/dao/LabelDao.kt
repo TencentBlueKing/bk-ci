@@ -31,9 +31,11 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TLabelRecord
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.label.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -49,34 +51,61 @@ class LabelDao {
                 ID,
                 LABEL_CODE,
                 LABEL_NAME,
+                SERVICE_SCOPE,
                 TYPE
             )
                 .values(
                     id,
                     labelRequest.labelCode,
                     labelRequest.labelName,
+                    labelRequest.serviceScope?.name,
                     type
                 ).execute()
         }
     }
 
-    fun countByName(dslContext: DSLContext, labelName: String, type: Byte): Int {
+    fun countByName(dslContext: DSLContext, labelName: String, type: Byte, serviceScope: ServiceScopeEnum? = null): Int {
         with(TLabel.T_LABEL) {
-            return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName).and(TYPE.eq(type)))
+            val conditions = mutableListOf<Condition>().apply {
+                add(LABEL_NAME.eq(labelName))
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectCount().from(this).where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun countByCode(dslContext: DSLContext, labelCode: String, type: Byte): Int {
+    fun countByCode(
+        dslContext: DSLContext,
+        labelCode: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TLabel.T_LABEL) {
-            return dslContext.selectCount().from(this).where(LABEL_CODE.eq(labelCode).and(TYPE.eq(type)))
+            val conditions = mutableListOf<Condition>().apply {
+                add(LABEL_CODE.eq(labelCode))
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectCount().from(this).where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun getIdsByCodes(dslContext: DSLContext, labelCodes: List<String>, type: Byte): List<String> {
+    fun getIdsByCodes(
+        dslContext: DSLContext,
+        labelCodes: List<String>,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): List<String> {
         with(TLabel.T_LABEL) {
-            return dslContext.select(ID).from(this).where(LABEL_CODE.`in`(labelCodes).and(TYPE.eq(type)))
+            val conditions = mutableListOf<Condition>().apply {
+                add(LABEL_CODE.`in`(labelCodes))
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.select(ID).from(this).where(conditions)
                 .fetchInto(String::class.java)
         }
     }
@@ -94,6 +123,7 @@ class LabelDao {
             dslContext.update(this)
                 .set(LABEL_CODE, labelRequest.labelCode)
                 .set(LABEL_NAME, labelRequest.labelName)
+                .set(SERVICE_SCOPE, labelRequest.serviceScope?.name)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
@@ -108,13 +138,13 @@ class LabelDao {
         }
     }
 
-    fun getAllLabel(dslContext: DSLContext, type: Byte): Result<TLabelRecord>? {
+    fun getAllLabel(dslContext: DSLContext, type: Byte, serviceScope: ServiceScopeEnum? = null): Result<TLabelRecord>? {
         with(TLabel.T_LABEL) {
-            return dslContext
-                .selectFrom(this)
-                .where(TYPE.eq(type))
-                .orderBy(CREATE_TIME.desc())
-                .fetch()
+            val conditions = mutableListOf<Condition>().apply {
+                add(TYPE.eq(type))
+                serviceScope?.let { add(SERVICE_SCOPE.eq(it.name)) }
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
@@ -131,6 +161,7 @@ class LabelDao {
                 labelCode = labelCode,
                 labelName = labelLanName,
                 labelType = type,
+                serviceScope = serviceScope,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )

@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.classify.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.AbstractClassifyService
 import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,10 +61,11 @@ class ClassifyServiceImpl @Autowired constructor(
 
     /**
      * 获取所有分类信息
-     * @param type
+     * @param type 类型
+     * @param serviceScope 服务范围
      */
-    override fun getAllClassify(type: Byte): Result<List<Classify>> {
-        val classifyList = classifyDao.getAllClassify(dslContext, type).map { classifyDao.convert(it) }
+    override fun getAllClassify(type: Byte, serviceScope: ServiceScopeEnum?): Result<List<Classify>> {
+        val classifyList = classifyDao.getAllClassify(dslContext, type, serviceScope).map { classifyDao.convert(it) }
         return Result(classifyList)
     }
 
@@ -87,8 +89,14 @@ class ClassifyServiceImpl @Autowired constructor(
     override fun saveClassify(classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
         logger.info("saveClassify params:[$classifyRequest|$type]")
         val classifyCode = classifyRequest.classifyCode
+        val serviceScope = classifyRequest.serviceScope
         // 判断分类代码是否存在
-        val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
+        val codeCount = classifyDao.countByCode(
+            dslContext = dslContext,
+            classifyCode = classifyCode,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (codeCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -100,7 +108,12 @@ class ClassifyServiceImpl @Autowired constructor(
         }
         val classifyName = classifyRequest.classifyName
         // 判断分类名称是否存在
-        val nameCount = classifyDao.countByName(dslContext, classifyName, type)
+        val nameCount = classifyDao.countByName(
+            dslContext = dslContext,
+            classifyName = classifyName,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (nameCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
@@ -121,8 +134,14 @@ class ClassifyServiceImpl @Autowired constructor(
     override fun updateClassify(id: String, classifyRequest: ClassifyRequest, type: Byte): Result<Boolean> {
         logger.info("updateClassify params:[$id|$classifyRequest|$type]")
         val classifyCode = classifyRequest.classifyCode
+        val serviceScope = classifyRequest.serviceScope
         // 判断分类是否存在
-        val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
+        val codeCount = classifyDao.countByCode(
+            dslContext = dslContext,
+            classifyCode = classifyCode,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (codeCount > 0) {
             // 判断更新分类名称是否属于自已
             val classify = classifyDao.getClassify(dslContext, id)
@@ -137,7 +156,12 @@ class ClassifyServiceImpl @Autowired constructor(
         }
         val classifyName = classifyRequest.classifyName
         // 判断类型分类是否存在
-        val count = classifyDao.countByName(dslContext, classifyName, type)
+        val count = classifyDao.countByName(
+            dslContext = dslContext,
+            classifyName = classifyName,
+            type = type,
+            serviceScope = serviceScope
+        )
         if (count > 0) {
             // 判断更新的分类名称是否属于自已
             val classify = classifyDao.getClassify(dslContext, id)
@@ -164,7 +188,10 @@ class ClassifyServiceImpl @Autowired constructor(
             val classifyType = classifyRecord.type
             val storeType = StoreTypeEnum.getStoreType(classifyType.toInt())
             val classifyService = getStoreClassifyService(storeType)
-            flag = classifyService.getDeleteClassifyFlag(id, StoreTypeEnum.valueOf(storeType))
+            flag = classifyService.getDeleteClassifyFlag(
+                classifyId = id,
+                storeType = StoreTypeEnum.valueOf(storeType),
+                serviceScope = classifyRecord.serviceScope?.let { ServiceScopeEnum.valueOf(it) })
         }
         if (flag) {
             classifyDao.delete(dslContext, id)

@@ -3180,10 +3180,10 @@ class PipelineBuildFacadeService(
         )
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
             // 查出环境信息
-            val envName = pipelineRepositoryService.getBuildEnvRecord(
+            val envName = pipelineRepositoryService.getSettingByPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                pipelineVersion = version
             )?.envName
             envName?.let {
                 val payload = mapOf(
