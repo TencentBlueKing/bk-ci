@@ -36,7 +36,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -78,7 +80,9 @@ class TXEnvService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val envShareProjectDao: EnvShareProjectDao,
     private val nodeService: NodeService,
-    private val client: Client
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : EnvService(
     dslContext = dslContext,
     envDao = envDao,
@@ -91,7 +95,9 @@ class TXEnvService @Autowired constructor(
     environmentPermissionService = environmentPermissionService,
     envShareProjectDao = envShareProjectDao,
     nodeService = nodeService,
-    client = client
+    client = client,
+    authProjectApi = authProjectApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -150,6 +156,7 @@ class TXEnvService @Autowired constructor(
         envHashId: String,
         data: EnvAddNodesData
     ) {
+        // TODO: #12354 云桌面环境需要支持标签
         val nodeHashIds = data.nodeHashIds ?: return
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
         if (env.envType == TXEnvType.DEVX.name) {
