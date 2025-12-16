@@ -37,6 +37,9 @@ import org.springframework.stereotype.Repository
 @Repository
 class EnvNodeDao {
     fun list(dslContext: DSLContext, projectId: String, envIds: List<Long>): List<TEnvNodeRecord> {
+        if (envIds.isEmpty()) {
+            return emptyList()
+        }
         with(TEnvNode.T_ENV_NODE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))

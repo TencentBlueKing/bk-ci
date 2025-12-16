@@ -76,6 +76,7 @@ import com.tencent.devops.environment.dao.EnvTagDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.NodeTagKeyDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.model.EnvNode
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.environment.pojo.EnvAddNodesData
@@ -415,7 +416,7 @@ class EnvService @Autowired constructor(
         }
 
         return validRecordList.map {
-            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map { node ->
+            val nodeIds = fetchEnvNodes(projectId, listOf(it.envId)).map { node ->
                 node.nodeId
             }.toSet()
 
@@ -472,11 +473,7 @@ class EnvService @Autowired constructor(
 
         return validRecordList.map {
             val nodeProjectId = it.sharedProjectId ?: projectId
-            val nodeIds = envNodeDao.list(
-                dslContext = dslContext, projectId = nodeProjectId, envIds = listOf(it.envId)
-            ).map { node ->
-                node.nodeId
-            }.toSet()
+            val nodeIds = fetchEnvNodes(nodeProjectId, listOf(it.envId)).map { node -> node.nodeId }.toSet()
 
             val normalNodeCount = if (nodeIds.isEmpty()) {
                 0
@@ -552,7 +549,7 @@ class EnvService @Autowired constructor(
 //        } else {
 //            envNodeDao.count(dslContext, projectId, envId)
 //        }
-        val tags = envTagDao.fetchEnvTag(dslContext,projectId, envId)
+        val tags = envTagDao.fetchEnvTag(dslContext, projectId, envId)
         return EnvWithPermission(
             envHashId = HashUtil.encodeLongId(env.envId),
             name = env.envName,
@@ -707,7 +704,7 @@ class EnvService @Autowired constructor(
         envHashIds: List<String>
     ): Map<String, List<NodeBaseInfo>> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
-        val envNodes = envNodeDao.list(dslContext, projectId, envIds)
+        val envNodes = fetchEnvNodes(projectId, envIds)
         val nodeRecords = nodeDao.listServerNodesByIds(dslContext, projectId, envNodes.map { it.nodeId })
         val nodeBaseInfos = nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         val hashIdToNodeBaseInfoMap = nodeBaseInfos.associateBy { it.nodeHashId }
@@ -737,7 +734,7 @@ class EnvService @Autowired constructor(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
             )
         }
-        val envNodes = envNodeDao.list(dslContext, projectId, listOf(envId))
+        val envNodes = fetchEnvNodes(projectId, listOf(envId))
         val nodes = nodeDao.listThirdpartyNodes(dslContext, projectId, envNodes.map { it.nodeId })
         return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
     }
@@ -752,19 +749,7 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-        val envs = envDao.list(dslContext, projectId, envIds = envIds)
-        val envTagNodeRecordList = envTagDao.batchEnvTagNode(
-            dslContext = dslContext,
-            projectId = projectId,
-            envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
-        )
-        val envNodeRecordList = envNodeDao.list(
-            dslContext = dslContext,
-            projectId = projectId,
-            envIds = envs.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
-        )
-        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }.toMutableMap()
-        nodeIdMaps.putAll(envTagNodeRecordList.values.flatten().associateWith { true })
+        val nodeIdMaps = fetchEnvNodes(projectId, envIds).associate { it.nodeId to it.enableNode }
         val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
         if (nodeList.isEmpty()) {
             return emptyList()
@@ -837,15 +822,7 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-        val envs = envDao.list(dslContext, projectId, envIds = envIds)
-        val envTagNodeRecordList = envTagDao.batchEnvTagNode(
-            dslContext = dslContext,
-            projectId = projectId,
-            envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
-        )
-        val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
-        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }.toMutableMap()
-        nodeIdMaps.putAll(envTagNodeRecordList.values.flatten().associateWith { true })
+        val nodeIdMaps = fetchEnvNodes(projectId, envIds).associate { it.nodeId to it.enableNode }
         val nodeList = if (-1 != page) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
             nodeDao.listNodesByIdListWithPageLimit(
@@ -982,6 +959,7 @@ class EnvService @Autowired constructor(
                     envAndValueAndKeyIds = mapOf(envId to tags.associate { it.tagValueId to it.tagKeyId })
                 )
             }
+            return
         }
 
         val nodeHashIds = data.nodeHashIds ?: return
@@ -1418,5 +1396,37 @@ class EnvService @Autowired constructor(
             nodeId = nodeId,
             enable = enableNode
         )
+    }
+
+    /**
+     * 统一获取环境所拥有的节点的接口，动态环境和静态环境都从这里拿
+     * @return <nodeId, enableNode>
+     */
+    fun fetchEnvNodes(
+        projectId: String,
+        envIds: List<Long>
+    ): List<EnvNode> {
+        if (envIds.isEmpty()) {
+            return emptyList()
+        }
+        val result = mutableListOf<EnvNode>()
+        val envs = envDao.list(dslContext, projectId, envIds = envIds)
+        envTagDao.batchEnvTagNode(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
+        ).forEach {
+            it.value.forEach { node ->
+                result.add(EnvNode(it.key, node, true))
+            }
+        }
+        val envNodeRecordList = envNodeDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envIds = envs.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
+        ).forEach {
+            result.add(EnvNode(it.envId, it.nodeId, it.enableNode))
+        }
+        return result
     }
 }
