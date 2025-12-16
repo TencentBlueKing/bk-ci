@@ -43,6 +43,8 @@ data class EnvWithPermission(
     val envNodeType: String,
     @get:Schema(title = "节点数量", required = false)
     val nodeCount: Int?,
+    @get:Schema(title = "节点所有的标签", required = false)
+    val tags: List<NodeTag>?,
     @get:Schema(title = "环境变量", required = true)
     val envVars: List<EnvVar>?,
     @get:Schema(title = "创建人", required = true)

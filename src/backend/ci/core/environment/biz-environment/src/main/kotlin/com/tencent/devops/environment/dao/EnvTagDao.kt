@@ -1,7 +1,11 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagAddOrDeleteTagItem
+import com.tencent.devops.environment.pojo.NodeTagValue
 import com.tencent.devops.model.environment.tables.TEnvTag
+import com.tencent.devops.model.environment.tables.TNodeTagKey
+import com.tencent.devops.model.environment.tables.TNodeTagValues
 import com.tencent.devops.model.environment.tables.TNodeTags
 import com.tencent.devops.model.environment.tables.records.TEnvTagRecord
 import org.jooq.DSLContext
@@ -89,8 +93,8 @@ class EnvTagDao {
         }
         with(TEnvTag.T_ENV_TAG) {
             dslContext.select(
+                ENV_ID,
                 TNodeTags.T_NODE_TAGS.NODE_ID
-//                ENABLE_TAG
             ).from(this)
                 .innerJoin(TNodeTags.T_NODE_TAGS)
                 .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
@@ -141,4 +145,50 @@ class EnvTagDao {
             dslContext.batchInsert(records).execute()
         }
     }
+
+    fun fetchEnvTag(dslContext: DSLContext, projectId: String, envId: Long): List<NodeTag> {
+        val resM = mutableMapOf<Long, NodeTag>()
+        with(TEnvTag.T_ENV_TAG) {
+            dslContext.select(
+                TNodeTagKey.T_NODE_TAG_KEY.ID.`as`("KEY_ID"),
+                TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME,
+                TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES,
+                TNodeTagValues.T_NODE_TAG_VALUES.ID.`as`("VALUE_ID"),
+                TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME
+            ).from(this)
+                .leftJoin(TNodeTagKey.T_NODE_TAG_KEY)
+                .on(TAG_KEY_ID.eq(TNodeTagKey.T_NODE_TAG_KEY.ID))
+                .leftJoin(TNodeTagValues.T_NODE_TAG_VALUES)
+                .on(TAG_VALUE_ID.eq(TNodeTagValues.T_NODE_TAG_VALUES.ID))
+                .where(ENV_ID.eq(envId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch()
+                .forEach { tag ->
+                    val keyId = (tag["KEY_ID"] as Long?) ?: return@forEach
+                    val valueId = (tag["VALUE_ID"] as Long?) ?: return@forEach
+                    val keyName = tag[TNodeTagKey.T_NODE_TAG_KEY.KEY_NAME]
+                    val allowMulVal = tag[TNodeTagKey.T_NODE_TAG_KEY.ALLOW_MUL_VALUES]
+                    val valueName = tag[TNodeTagValues.T_NODE_TAG_VALUES.VALUE_NAME]
+                    val tagValue = NodeTagValue(
+                        tagValueId = valueId,
+                        tagValueName = valueName,
+                        nodeCount = null,
+                        canUpdate = null
+                    )
+                    if (resM.containsKey(keyId)) {
+                        resM[keyId]?.tagValues?.add(tagValue)
+                    } else {
+                        resM[keyId] = NodeTag(
+                            tagKeyId = keyId,
+                            tagKeyName = keyName,
+                            tagAllowMulValue = allowMulVal,
+                            canUpdate = null,
+                            tagValues = mutableListOf(tagValue)
+                        )
+                    }
+                }
+        }
+        return resM.values.toList()
+    }
+
 }

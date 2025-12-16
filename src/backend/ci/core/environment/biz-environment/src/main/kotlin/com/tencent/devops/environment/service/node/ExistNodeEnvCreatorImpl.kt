@@ -29,9 +29,14 @@ package com.tencent.devops.environment.service.node
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TAG_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvTagDao
@@ -53,7 +58,9 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val envTagDao: EnvTagDao,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val authProjectApi: AuthProjectApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : EnvCreator {
 
     override fun id(): String {
@@ -65,8 +72,15 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
             throw IllegalArgumentException("wrong nodeSourceType [${envCreateInfo.source}] in [${id()}]")
         }
 
-        // TODO: issue-12354 这里要看看怎么检查 Tag 权限
         if (envCreateInfo.envNodeType == EnvNodeType.TAG && !envCreateInfo.nodeTags.isNullOrEmpty()) {
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ERROR_NODE_TAG_NO_EDIT_PERMISSSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
             var envId = 0L
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
