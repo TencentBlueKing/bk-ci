@@ -1018,7 +1018,7 @@
                     if (res.data) {
                         this.macOSHwSpecList = res.data
 
-                        const defaultHwSpec = res.data[0]
+                        const defaultHwSpec = res.data.find(i => i.uid === 'VMware')
                         const defaultImage = defaultHwSpec.images[0]
                         const defaultXcode = defaultImage.xcodes?.[0]
 
@@ -1056,15 +1056,18 @@
                         this.macOSHwSpecList = res.data.models
                         this.systemVersionList = res.data.images
                         
-                        // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值
+                        // 如果是存量数据，没有 macOSHwSpec 或者 macOSHwSpec 为空，设置macOSHwSpec默认值为VMware
                         if (!this.macOSHwSpec && res.data.models.length > 0) {
+                            const defaultMacOSHwSpec = res.data.models.find(i => i.uid === 'VMware')
+                            // 判断systemVersion是否在MacOs系统版本中，如果不在使用默认值BigSur11.4
+                            const isHaveSystemVersion = res.data.images.some(i => i.uid === this.systemVersion)
                             this.handleContainerChange(
                                 'dispatchType',
                                 Object.assign({
                                     ...this.container.dispatchType,
-                                    macOSHwSpec: res.data.models[0].uid,
-                                    systemVersion: this.systemVersion,
-                                    value: `${res.data.models[0].uid}:${this.systemVersion || ''}:${this.xcodeVersion || ''}`
+                                    macOSHwSpec: defaultMacOSHwSpec.uid,
+                                    systemVersion: isHaveSystemVersion ? this.systemVersion : 'BigSur11.4',
+                                    value: `${defaultMacOSHwSpec.uid}:${this.systemVersion || ''}:${this.xcodeVersion || ''}`
                                 })
                             )
                         }
@@ -1384,7 +1387,7 @@
             height: 32px;
             line-height: 32px;
             font-size: 12px;
-            color: #62a5fb;
+            color: #3A84FF;
             cursor: pointer;
             z-index: 6;
         }
@@ -1399,7 +1402,7 @@
             height: 32px;
             line-height: 32px;
             font-size: 12px;
-            color: #62a5fb;
+            color: #3A84FF;
             cursor: pointer;
             z-index: 6;
         }
