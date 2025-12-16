@@ -43,7 +43,6 @@ class UserTriggerEventResourceImp @Autowired constructor(
 
     override fun triggerDetail(
         userId: String,
-        ownerStoreCode: String,
         atomCode: String,
         version: String
     ): Result<PipelineAtom?> {
@@ -52,7 +51,7 @@ class UserTriggerEventResourceImp @Autowired constructor(
                 atomCode = atomCode,
                 version = version,
                 userId = userId,
-                ownerStoreCode = ownerStoreCode
+                ownerStoreCode = null
             )
         )
     }

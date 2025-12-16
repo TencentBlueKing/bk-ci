@@ -151,7 +151,7 @@ class TriggerEventService @Autowired constructor(
         userId: String,
         atomCode: String,
         version: String,
-        ownerStoreCode: String
+        ownerStoreCode: String?
     ): PipelineAtom? {
         return storeComponentQueryService.getComponentDetailInfoByCode(
             userId = userId,
