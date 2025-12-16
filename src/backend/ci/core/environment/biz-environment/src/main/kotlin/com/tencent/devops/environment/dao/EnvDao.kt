@@ -326,4 +326,17 @@ class EnvDao {
                 .execute()
         }
     }
+
+    fun updateEnvNodeType(
+        dslContext: DSLContext,
+        envId: Long,
+        envNodeType: EnvNodeType
+    ) {
+        with(TEnv.T_ENV) {
+            dslContext.update(this)
+                .set(ENV_NODE_TYPE, envNodeType.name)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
 }

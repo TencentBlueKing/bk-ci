@@ -918,6 +918,8 @@ class EnvService @Autowired constructor(
             )
         }
 
+        val envRecord = envDao.get(dslContext, projectId, envId)
+
         // 添加标签
         val tags = data.tags
         if (!tags.isNullOrEmpty()) {
@@ -952,6 +954,11 @@ class EnvService @Autowired constructor(
             val envId = HashUtil.decodeIdToLong(envHashId)
             dslContext.transaction { config ->
                 val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.NODE.name) {
+                    envNodeDao.deleteByEnvId(dslContext, envId)
+                    envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.TAG)
+                }
                 envTagDao.deleteEnvTags(ctx, projectId, setOf(envId))
                 envTagDao.batchAddEnvTags(
                     dslContext = ctx,
@@ -1014,7 +1021,11 @@ class EnvService @Autowired constructor(
                 )
             }
         }
-
+        // 类型转换需要清空之前类型的记录
+        if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+            envTagDao.deleteByEnvId(dslContext, envId)
+            envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.NODE)
+        }
         envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
     }
 

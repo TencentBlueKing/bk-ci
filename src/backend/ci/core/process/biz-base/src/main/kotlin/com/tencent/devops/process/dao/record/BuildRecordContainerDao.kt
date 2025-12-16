@@ -37,6 +37,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordConta
 import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.store.pojo.common.CREATE_TIME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record16
@@ -311,9 +312,44 @@ class BuildRecordContainerDao {
         }
     }
 
+    fun fetchContainerRecordsCount(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        containerId: String
+    ): Long {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONTAINER_ID.eq(containerId))
+                .fetchAny(0, Long::class.java) ?: 0
+        }
+    }
+
+    fun fetchContainerRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        containerId: String,
+        offset: Int,
+        limit: Int
+    ): List<BuildRecordContainer> {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CONTAINER_ID.eq(containerId))
+                .orderBy(START_TIME.desc())
+                .offset(offset)
+                .limit(limit)
+                .fetch(mapper)
+        }
+    }
+
     private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(
         record: Record16<String, String, String, Int,
-            String, String, String, Int, String, String, Boolean, Boolean, String, LocalDateTime, LocalDateTime, String>
+                String, String, String, Int, String, String, Boolean, Boolean, String, LocalDateTime, LocalDateTime, String>
     ) =
         BuildRecordContainer(
             buildId = record[BUILD_ID],
