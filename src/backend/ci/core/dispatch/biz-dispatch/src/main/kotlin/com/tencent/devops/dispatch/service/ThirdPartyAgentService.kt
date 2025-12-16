@@ -913,10 +913,14 @@ class ThirdPartyAgentService @Autowired constructor(
 
     fun fetchBuildPipeline(
         projectId: String,
-        agentId: String,
+        agentId: String?,
+        envId: Long?,
         page: Int?,
         pageSize: Int?
     ): Page<TPAPipelineBuild> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return Page(0,0,0,emptyList())
+        }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
         val sqlLimit =
@@ -926,7 +930,8 @@ class ThirdPartyAgentService @Autowired constructor(
         val count = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
             projectId = projectId,
-            agentId = agentId
+            agentId = agentId,
+            envId = envId
         )
         return Page(
             page = pageNotNull,
@@ -936,6 +941,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 agentId = agentId,
+                envId = envId,
                 limit = limit,
                 offset = offset
             )

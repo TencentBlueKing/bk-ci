@@ -480,14 +480,23 @@ class ThirdPartyAgentBuildDao {
     fun countAgentBuildPipelineJob(
         dslContext: DSLContext,
         projectId: String,
-        agentId: String
+        agentId: String?,
+        envId: Long?,
     ): Long {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return 0
+        }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.select(DSL.countDistinct(PIPELINE_ID, JOB_ID))
+            val dsl = dslContext.select(DSL.countDistinct(PIPELINE_ID, JOB_ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .and(JOB_ID.isNotNull)
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            return dsl.and(JOB_ID.isNotNull)
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -495,12 +504,16 @@ class ThirdPartyAgentBuildDao {
     fun fetchAgentBuildPipelineJob(
         dslContext: DSLContext,
         projectId: String,
-        agentId: String,
+        agentId: String?,
+        envId: Long?,
         limit: Int,
         offset: Int
     ): List<TPAPipelineBuild> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.select(
+            val dsl = dslContext.select(
                 PIPELINE_ID,
                 PIPELINE_NAME,
                 JOB_ID,
@@ -515,10 +528,14 @@ class ThirdPartyAgentBuildDao {
                     VM_SEQ_ID,
                     ID
                 ).`as`("LAST_VM_SEQ_ID")
-            ).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(AGENT_ID.eq(agentId))
-                .and(JOB_ID.isNotNull)
+            ).from(this).where(PROJECT_ID.eq(projectId))
+            if (!agentId.isNullOrBlank()) {
+                dsl.and(AGENT_ID.eq(agentId))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
+            }
+            return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID, JOB_ID)
                 .orderBy(ID.desc())
                 .limit(limit)

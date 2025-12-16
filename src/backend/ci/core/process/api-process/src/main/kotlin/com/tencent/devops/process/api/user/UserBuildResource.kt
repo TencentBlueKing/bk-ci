@@ -729,7 +729,7 @@ interface UserBuildResource {
         forceTrigger: Boolean? = false
     ): Result<BuildId>
 
-    @Operation(summary = "或者指定流水线和job的构建历史")
+    @Operation(summary = "获取指定流水线和job的构建历史")
     @GET
     @Path("/{projectId}/{pipelineId}/containers/{containerId}/history")
     fun getPipelineContainerBuilds(

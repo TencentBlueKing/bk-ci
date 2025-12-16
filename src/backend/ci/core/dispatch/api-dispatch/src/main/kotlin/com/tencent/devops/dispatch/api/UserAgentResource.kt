@@ -25,9 +25,12 @@ interface UserAgentResource {
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "agent Hash ID", required = true)
+        @Parameter(description = "agent Hash ID", required = false)
         @QueryParam("agentId")
-        agentId: String,
+        agentId: String?,
+        @Parameter(description = "env Hash ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int?,
