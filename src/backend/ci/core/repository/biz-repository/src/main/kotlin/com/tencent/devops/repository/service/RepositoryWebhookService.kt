@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_WEBHOOK_SERVER_REPO_FULL_NAME_IS_EMPTY
 import com.tencent.devops.repository.dao.RepositoryWebhookRequestDao
 import com.tencent.devops.repository.pojo.RepoCondition
@@ -19,10 +18,8 @@ import com.tencent.devops.repository.service.hub.ScmWebhookApiService
 import com.tencent.devops.scm.api.pojo.HookRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @SuppressWarnings("ALL")
@@ -37,7 +34,6 @@ class RepositoryWebhookService @Autowired constructor(
         scmCode: String,
         request: WebhookParseRequest
     ): WebhookData? {
-        val requestId = MDC.get(TraceTag.BIZID)
         val hookRequest = with(request) {
             HookRequest(headers, body, queryParams)
         }
@@ -62,23 +58,6 @@ class RepositoryWebhookService @Autowired constructor(
             offset = 0,
             limit = 500
         ) ?: emptyList()
-
-        if (repositories.isNotEmpty()) {
-            saveWebhookRequest(
-                repositoryWebhookRequest = RepositoryWebhookRequest(
-                    requestId = requestId,
-                    externalId = webhook.repository().id.toString(),
-                    eventType = webhook.eventType,
-                    triggerUser = webhook.userName,
-                    eventMessage = "",
-                    repositoryType = repositories.first().getScmType().name,
-                    requestHeader = request.headers,
-                    requestParam = request.queryParams,
-                    requestBody = request.body,
-                    createTime = LocalDateTime.now()
-                )
-            )
-        }
 
         // 循环查找有权限的代码库,调用接口扩展webhook数据
         var enWebhook = webhook

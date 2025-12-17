@@ -37,6 +37,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
@@ -72,6 +73,12 @@ class WebhookManager @Autowired constructor(
                 logger.info(
                     "webhook data parsed successfully|${JsonUtil.toJson(webhookData.webhook, false)}"
                 )
+                // 保存原始报文, 事件回放时第三方触发器有用到
+                saveScmWebhookRequest(
+                    requestId = requestId,
+                    webhookData = webhookData,
+                    event = event
+                )
                 handleWebhookData(
                     requestId = requestId,
                     event = event,
@@ -106,6 +113,38 @@ class WebhookManager @Autowired constructor(
                     webhook = webhook
                 )
             }
+        }
+    }
+
+    private fun saveScmWebhookRequest(
+        requestId: String,
+        webhookData: WebhookData,
+        event: ScmWebhookRequestEvent
+    ) {
+        val webhook = webhookData.webhook
+        val repositories = webhookData.repositories
+        if (repositories.isEmpty()) {
+            logger.warn("The repository associated with the webhook is empty")
+            return
+        }
+        try {
+            client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+                repositoryWebhookRequest = RepositoryWebhookRequest(
+                    requestId = requestId,
+                    externalId = webhook.repository().id.toString(),
+                    eventType = webhook.eventType,
+                    triggerUser = webhook.userName,
+                    eventMessage = "",
+                    repositoryType = repositories.first().getScmType().name,
+                    requestHeader = event.request.headers,
+                    requestParam = event.request.queryParams,
+                    requestBody = event.request.body,
+                    createTime = LocalDateTime.now()
+                )
+            ).data!!
+        } catch (ignored: Exception) {
+            // 日志保存异常,不影响正常触发
+            logger.warn("Failed to save webhook request", ignored)
         }
     }
 
