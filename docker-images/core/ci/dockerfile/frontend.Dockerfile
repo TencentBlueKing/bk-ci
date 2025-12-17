@@ -9,8 +9,8 @@ ENV INSTALL_PATH="/data/workspace/"
 COPY ./dockerfile/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 
 # 复制脚本和模板
-COPY ./ci-docker/scripts /data/workspace/scripts
-COPY ./ci-docker/support-files/templates /data/workspace/templates
+COPY ./ci-docker/scripts ${INSTALL_PATH}/scripts
+COPY ./ci-docker/support-files/templates ${INSTALL_PATH}/templates
 
 # 复制前端代码
-COPY ./ci-docker/frontend /data/workspace/frontend
+COPY ./ci-docker/frontend ${INSTALL_PATH}/frontend

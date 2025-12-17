@@ -18,6 +18,10 @@
 -- 获取tag
 local tag = tagUtil:get_tag(config.ns)
 
+if tag and string.sub(tag, 1, 11) == "kubernetes-" then
+    tag = string.sub(tag, 12)
+end
+
 -- 根据tag路由front目录
 ngx.var.static_dir = tagUtil:get_frontend_path(tag, "ci")
 ngx.var.static_dir_codecc = tagUtil:get_frontend_path(tag, "codecc")
@@ -32,9 +36,6 @@ else
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
 
-if tag and string.sub(tag, 1, 11) == "kubernetes-" then
-    tag = string.sub(tag, 12)
-end
 local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
 if tag == 'rbac-red' or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-red到容器环境
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
