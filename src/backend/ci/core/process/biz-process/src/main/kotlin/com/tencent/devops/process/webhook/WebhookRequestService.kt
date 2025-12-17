@@ -131,10 +131,20 @@ class WebhookRequestService(
             }
         }
         if (grayRepo) {
-            handleGrayRequest(scmType.name, repoName, request)
+            handleGrayRequest(
+                scmCode = scmType.name,
+                repoName = repoName,
+                request = request,
+                eventTime = eventTime
+            )
         } else {
             if (pacGrayRepo) {
-                handleGrayRequest(scmType.name, repoName, request)
+                handleGrayRequest(
+                    scmCode = scmType.name,
+                    repoName = repoName,
+                    request = request,
+                    eventTime = eventTime
+                )
             }
             webhookTriggerService.trigger(
                 scmType = scmType,
@@ -233,7 +243,8 @@ class WebhookRequestService(
     private fun handleGrayRequest(
         scmCode: String,
         repoName: String,
-        request: WebhookRequest
+        request: WebhookRequest,
+        eventTime: LocalDateTime
     ) {
         logger.info("The scm hook is gray, repoName: $repoName, scmType: $scmCode")
         val headers = request.headers
@@ -248,7 +259,8 @@ class WebhookRequestService(
                     headers = headers,
                     queryParams = queryParams,
                     body = request.body
-                )
+                ),
+                eventTime = eventTime
             )
         )
     }
