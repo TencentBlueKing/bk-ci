@@ -691,7 +691,23 @@
     "unfollowTemplateTips": "升级实例时，不自动跟随模版新版本变更{0}，按需手动修改。",
     "setTimeCron": "设置定时规则",
     "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚",
-    "resetBuildNoConfirmMessage": "共 {0} 条流水线的 [构建号] 字段在发布正式后将自动重置为基线值，请关注！若无需重置，请取消 [发布正式版本后立即重置为基线值] 的勾选状态。"
+    "resetBuildNoConfirmMessage": "共 {0} 条流水线的 [构建号] 字段在发布正式后将自动重置为基线值，请关注！若无需重置，请取消 [发布正式版本后立即重置为基线值] 的勾选状态。",
+    "propertyUpdate": {
+      "constName": "常量名",
+      "constAlias": "常量别名",
+      "constDesc": "常量描述",
+      "constType": "常量类型",
+      "varType": "变量类型",
+      "varName": "变量名",
+      "varAlias": "变量别名",
+      "varDesc": "变量描述",
+      "defaultValue": "默认值",
+      "required": "是否入参",
+      "valueNotEmpty": "是否必填",
+      "readOnly": "运行时只读",
+      "category": "分组标签"
+    },
+    "propertyUpdated": "更新"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

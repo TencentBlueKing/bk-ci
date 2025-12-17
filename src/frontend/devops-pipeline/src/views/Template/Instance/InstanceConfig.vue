@@ -135,8 +135,8 @@
                                                 is-instance
                                                 :is-init-instance="isInstanceCreateType"
                                                 :is-follow-template="curInstance.buildNo?.isFollowTemplate"
-                                                :reset-build-no="curInstance.resetBuildNo"
-                                                :build-no-changed="curInstance.buildNoChanged"
+                                                :reset-build-no="curInstance?.resetBuildNo"
+                                                :build-no-changed="curInstance?.buildNoChanged"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
@@ -233,12 +233,12 @@
                                                 is-instance
                                                 :is-init-instance="isInstanceCreateType"
                                                 disabled
-                                                :build-no-changed="curInstance.buildNoChanged"
+                                                :build-no-changed="curInstance?.buildNoChanged"
                                                 :version-param-values="versionParamValues"
                                                 :handle-version-change="handleParamChange"
                                                 :handle-build-no-change="handleBuildNoChange"
                                                 :version-param-list="versionParams"
-                                                :reset-build-no="curInstance.resetBuildNo"
+                                                :reset-build-no="curInstance?.resetBuildNo"
                                                 :handle-check-change="handleCheckChange"
                                             />
                                         </template>
@@ -358,84 +358,104 @@
         return Object.keys(curTemplateDetail.value)?.length && !!templateRef.value
     })
         
-    watch(() => curTemplateDetail.value, (val) => {
-        // 对所有实例进行数据合并并保存到 store
-        if (initialInstanceList.value?.length && (curTemplateVersion.value || templateRef.value)) {
-            try {
-                isLoading.value = true
-                const mergedInstances = initialInstanceList.value.map((instance, index) => {
-                    // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
-                    const processedInstance = {
-                        ...instance,
-                        param: instance.param?.map(p => ({
+    const shouldMerge = computed(() => proxy.$store?.state?.templates?.shouldMergeInstances)
+    
+    // 监听合并触发标记,当流水线数据请求完成后执行数据合并
+    watch(() => shouldMerge.value, (val) => {
+        if (val && curTemplateDetail.value) {
+            console.log(2)
+            mergeInstancesWithTemplate()
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', false)
+        }
+    })
+
+    watch(() => curTemplateVersion.value, () => {
+        mergeInstancesWithTemplate()
+    })
+    
+    // 数据合并函数
+    function mergeInstancesWithTemplate () {
+        if (!initialInstanceList.value?.length) {
+            return
+        }
+        
+        if (!curTemplateVersion.value) {
+            return
+        }
+        try {
+            isLoading.value = true
+            const mergedInstances = initialInstanceList.value.map((instance, index) => {
+                // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
+                const processedInstance = {
+                    ...instance,
+                    param: instance.param?.map(p => ({
                            ...p,
                            readOnlyCheck: false
                        }))
-                    }
-                    // 如果没有模板详情，直接返回处理后的实例
-                    if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
-                        return processedInstance
-                    }
-                   
-                    // 进行数据比对和合并
-                    let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
-                   
-                    if (curTemplateDetail.value?.param) {
-                        instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
-                    }
-                    if (curTemplateDetail.value?.buildNo) {
-                        const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
-                        instanceBuildNo = buildNo
-                        instanceBuildNoParams = buildNoParam
-                    }
-                    if (curTemplateDetail.value?.triggerConfigs?.length) {
-                        instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
-                    }
-                   
-                    // 返回合并后的实例
-                    if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
-                        // 获取初始实例的参数
-                        const initialInstance = initialInstanceList.value?.[index]
-                        
-                        // 判断 resetBuildNo：
-                        // 1. buildNo.currentBuildNo 发生变化
-                        // 2. 或者版本号变量（allVersionKeyList）发生变化
-                        const buildNoChanged = processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
-                        const versionParamsChanged = checkVersionParamsChanged(
-                            instanceParams ?? processedInstance.param,
-                            initialInstance?.param
-                        )
-                        
-                        return {
-                            ...processedInstance,
-                            param: [
-                                ...(instanceParams ?? processedInstance.param ?? []),
-                                ...(instanceBuildNoParams ?? [])
-                            ],
-                            buildNo: {
-                                ...instanceBuildNo,
-                                currentBuildNo: buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo
-                            } ?? processedInstance.buildNo,
-                            triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
-                            resetBuildNo: buildNoChanged || versionParamsChanged,
-                            buildNoChanged
-                        }
-                    }
+                }
+                // 如果没有模板详情，直接返回处理后的实例
+                if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
                     return processedInstance
-                })
-                // 保存到 store
-                console.log(mergedInstances, 'mergedInstances')
-                proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
-                    list: mergedInstances,
-                    init: false
-                })
-            } catch (e) {
-                throw e
-            } finally {
-                isLoading.value = false
-            }
+                }
+                   
+                // 进行数据比对和合并
+                let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
+                   
+                if (curTemplateDetail.value?.param) {
+                    instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
+                }
+                if (curTemplateDetail.value?.buildNo) {
+                    const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
+                    instanceBuildNo = buildNo
+                    instanceBuildNoParams = buildNoParam
+                }
+                if (curTemplateDetail.value?.triggerConfigs?.length) {
+                    instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
+                }
+                   
+                // 返回合并后的实例
+                if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
+                    // 获取初始实例的参数
+                    const initialInstance = initialInstanceList.value?.[index]
+                        
+                    // 判断 resetBuildNo：
+                    // 1. buildNo.currentBuildNo 发生变化
+                    // 2. 或者版本号变量（allVersionKeyList）发生变化
+                    const buildNoChanged = processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
+                    const versionParamsChanged = checkVersionParamsChanged(
+                        instanceParams ?? processedInstance.param,
+                            initialInstance?.param
+                    )
+                        
+                    return {
+                        ...processedInstance,
+                        param: [
+                            ...(instanceParams ?? processedInstance.param ?? []),
+                            ...(instanceBuildNoParams ?? [])
+                        ],
+                        buildNo: {
+                            ...instanceBuildNo,
+                            currentBuildNo: buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo
+                        } ?? processedInstance.buildNo,
+                        triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
+                        resetBuildNo: buildNoChanged || versionParamsChanged,
+                        buildNoChanged
+                    }
+                }
+                return processedInstance
+            })
+
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: mergedInstances,
+                init: false
+            })
+        } catch (e) {
+            throw e
+        } finally {
+            isLoading.value = false
         }
-    })
+    }
+    
     const curInstance = computed(() => instanceList.value.find((i, index) => index === activeIndex.value - 1))
 
     const compareParamsNum = computed(() => {
@@ -446,21 +466,24 @@
         }
         // 流水线入参 新增/删除/变更统计
         curInstance?.value?.param?.forEach(item => {
-            if (item.isChange) {
+            if (item?.propertyUpdates?.length) {
                 counts.changed++
             }
-            if (item.isNew) {
+            if (allVersionKeyList.includes(item.id) && item?.isChange) {
+                counts.changed++
+            }
+            if (item?.isNew) {
                 counts.added++
             }
-            if (item.isDelete) {
+            if (item?.isDelete) {
                 counts.deleted++
             }
         })
         
-        if (curInstance.value.buildNoChanged) {
+        if (curInstance.value?.buildNoChanged) {
             counts.changed++
         }
-        if (curInstance.value.resetBuildNo) {
+        if (curInstance.value?.resetBuildNo) {
             counts.changed++
         }
         // 触发器新增/删除统计
@@ -584,6 +607,42 @@
             return acc
         }, {})
         
+        // 需更新为模板对应参数值的字段名
+        const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly']
+        instanceParams?.forEach(i => {
+            const templateParam = templateParamsMap.get(i.id)
+            const initialInstanceParam = initialInstanceParams[i.id]
+            if (!templateParam) {
+                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
+                i.isDelete = true
+            } else {
+                // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
+                // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
+                // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
+                if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
+                    needUpdatedField.forEach(field => {
+                        i[field] = templateParam[field]
+                    })
+                    i.isRequiredParam = templateParam.required && templateParam.asInstanceInput
+                    i.defaultValue = i.isRequiredParam ? i.defaultValue : templateParam.defaultValue
+                    i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                    i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                } else {
+                    // 入参参数处理
+                    if (i.isFollowTemplate) {
+                        i.defaultValue = templateParam.defaultValue
+                    }
+                    needUpdatedField.forEach(field => {
+                        i[field] = templateParam[field]
+                    })
+                    i.isRequiredParam = templateParam.required && templateParam.asInstanceInput
+                    i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                    i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                }
+            }
+            i.propertyUpdates = collectPropertyUpdates(i, initialInstanceParam)
+        })
+        
         // 对比 templateParams，将新字段添加到 instanceParams，并标记为 isNew
         for (const item of templateParams) {
             const instanceParamItem = instanceParams.find(i => i.id === item.id)
@@ -607,44 +666,6 @@
                 instanceParamItem.required = item.required
             }
         }
-        instanceParams?.forEach(i => {
-            // 常量 其他变量直接赋值为模板对应参数的值（版本号除外）
-            if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
-                const newValue = templateParamsMap.get(i.id)?.defaultValue
-                i.defaultValue = newValue ?? i.defaultValue
-                i.isChange = templateParamsMap.get(i.id) && newValue !== i.defaultValue
-            }
-        })
-        for (const item of instanceParams) {
-            const templateParamItem = templateParamsMap.get(item.id)
-            const initialInstanceParamItem = initialInstanceParams[item.id]
-           
-            if (!templateParamItem) {
-                // 在 instanceParams 中存在，但在 templateParams 中不存在，标记为isDelete
-                item.isDelete = true
-            } else {
-                // 对比 defaultValue, 如果不相同则标记为isChange
-                // 如果入参为跟随模板，则默认值替换为模板对应变量的默认值
-                if (!allVersionKeyList.includes(item.id) && item.isFollowTemplate && item.defaultValue !== templateParamItem.defaultValue) {
-                    item.defaultValue = templateParamItem.defaultValue
-                    item.isChange = true
-                } else {
-                    const templateDefaultValue = allVersionKeyList.includes(item.id) ? Number(templateParamItem.defaultValue) : templateParamItem.defaultValue
-                    const itemDefaultValue = allVersionKeyList.includes(item.id) ? Number(item.defaultValue) : item.defaultValue
-                    item.hasChange = isObject(itemDefaultValue)
-                        ? !isShallowEqual(itemDefaultValue, templateDefaultValue)
-                        : itemDefaultValue !== templateDefaultValue
-                    
-                    if (!item.isNew) {
-                        const initialInstanceDefaultValue = allVersionKeyList.includes(item.id) ? Number(initialInstanceParamItem?.defaultValue) : initialInstanceParamItem?.defaultValue
-                        item.isChange =  isObject(itemDefaultValue)
-                            ? !isShallowEqual(itemDefaultValue, initialInstanceDefaultValue)
-                            : itemDefaultValue !== initialInstanceDefaultValue
-                    }
-                }
-            }
-        }
-        
         return instanceParams
     }
 
@@ -779,15 +800,86 @@
         return false
     }
     
+    /**
+     * 收集参数属性更新信息
+     * @param {Object} templateParam - 模板参数（新值）
+     * @param {Object} initialParam - 初始实例参数（旧值）
+     * @returns {Array} - 属性更新列表
+     */
+    function collectPropertyUpdates (currentParam, initialParam) {
+        // id-变量名 name-变量别名 desc-变量描述 type-变量类型  defaultValue-默认值
+        // isRequiredParam-是否入参 valueNotEmpty-是否必填 readOnly-是否只读 category-分组标签
+        if (!initialParam || !currentParam) return []
+        
+        const updates = []
+        const propertyMap = {
+            id: currentParam.constant ? proxy.$t('template.propertyUpdate.constName') : proxy.$t('template.propertyUpdate.varName'),
+            name: currentParam.constant ?  proxy.$t('template.propertyUpdate.constAlias') : proxy.$t('template.propertyUpdate.varAlias'),
+            desc: currentParam.constant ?  proxy.$t('template.propertyUpdate.constDesc') : proxy.$t('template.propertyUpdate.varDesc'),
+            type: currentParam.constant ?  proxy.$t('template.propertyUpdate.constType') : proxy.$t('template.propertyUpdate.varType'),
+            defaultValue: proxy.$t('template.propertyUpdate.defaultValue'),
+            isRequiredParam: proxy.$t('template.propertyUpdate.required'),
+            valueNotEmpty: proxy.$t('template.propertyUpdate.valueNotEmpty'),
+            readOnly: proxy.$t('template.propertyUpdate.readOnly'),
+            category: proxy.$t('template.propertyUpdate.category')
+        }
+        
+        // 检查各个属性是否有变更
+        Object.keys(propertyMap).forEach(key => {
+            let oldValue = initialParam[key]
+            let newValue = currentParam[key]
+            
+            // 处理布尔值显示
+            const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly']
+            if (booleanField.includes(key)) {
+                oldValue = oldValue ? proxy.$t('true') : proxy.$t('false')
+                newValue = newValue ? proxy.$t('true') : proxy.$t('false')
+            }
+            
+            // 处理空值显示
+            if (oldValue === undefined || oldValue === null || oldValue === '') {
+                oldValue = '--'
+            }
+            if (newValue === undefined || newValue === null || newValue === '') {
+                newValue = '--'
+            }
+            
+            // 如果值发生变化，添加到更新列表
+            if (String(oldValue) !== String(newValue)) {
+                updates.push({
+                    label: propertyMap[key],
+                    oldValue: String(oldValue),
+                    newValue: String(newValue)
+                })
+            }
+        })
+        
+        return updates
+    }
+    
     function handleSetParmaRequired (id) {
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
+        
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
-                param: curInstance.value?.param.map(p => ({
-                    ...p,
-                    isRequiredParam: p.id === id ? !p.isRequiredParam : p.isRequiredParam
-                }))
+                param: curInstance.value?.param.map(p => {
+                    if (p.id === id) {
+                        const updatedParam = {
+                            ...p,
+                            isRequiredParam: !p.isRequiredParam
+                        }
+                        const initialParam = initialInstanceParams?.find(ip => ip.id === id)
+                        const propertyUpdates = collectPropertyUpdates(updatedParam, initialParam)
+                        
+                        return {
+                            ...updatedParam,
+                            propertyUpdates
+                        }
+                    }
+                    return p
+                })
             }
         })
     }
@@ -815,12 +907,17 @@
                                 ? !isShallowEqual(templateValue, initialDefaultValue)
                                 : templateValue !== initialDefaultValue
                         }
-                        
+                        const propertyUpdates = collectPropertyUpdates({
+                            ...p,
+                            defaultValue
+                        }, initialParam)
+
                         return {
                             ...p,
                             defaultValue,
                             isChange,
-                            hasChange: false
+                            hasChange: false,
+                            propertyUpdates
                         }
                     }
                     return p
@@ -831,6 +928,27 @@
     function handleParamChange (id, value) {
         const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
         const templateParamsMap = new Map(curTemplateDetail.value?.param?.map(t => [t.id, t]) || [])
+        
+        // 检查是否是版本号参数
+        const isVersionParam = allVersionKeyList.includes(id)
+        let versionParamChanged = false
+        let newCurrentBuildNo = curInstance.value?.buildNo?.currentBuildNo
+        
+        if (isVersionParam) {
+            // 获取原始版本号参数值
+            const initialParam = initialInstanceParams?.find(ip => ip.id === id)
+            const initialValue = Number(initialParam?.defaultValue)
+            const newValue = Number(value)
+            
+            // 检查是否与原始值不同
+            versionParamChanged = initialValue !== newValue
+            
+            if (versionParamChanged) {
+                newCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
+            } else {
+                newCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.currentBuildNo
+            }
+        }
         
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
@@ -871,15 +989,27 @@
                                 ? !isShallowEqual(currentValue, templateDefaultValue)
                                 : currentValue !== templateDefaultValue
                         }
-                        
+                        const propertyUpdates = collectPropertyUpdates({
+                            ...p,
+                            defaultValue: value
+                        }, initialParam)
                         return {
                             ...p,
                             defaultValue: value,
                             isChange,
-                            hasChange
+                            hasChange,
+                            propertyUpdates
                         }
                     }
                     return p
+                }),
+                // 如果是版本号参数,更新 buildNo 和 resetBuildNo
+                ...(isVersionParam && {
+                    buildNo: {
+                        ...curInstance.value?.buildNo,
+                        currentBuildNo: newCurrentBuildNo
+                    },
+                    resetBuildNo: versionParamChanged
                 })
             }
         })
@@ -909,6 +1039,16 @@
     }
 
     function handleBuildNoChange (name, value) {
+        const currentValue = curInstance.value?.buildNo?.[name]
+        if (String(currentValue) === String(value)) {
+            return
+        }
+        
+        // 获取原始实例的 buildNo
+        const initialBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
+        const initialCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.currentBuildNo
+        // 检查是否与原始值不同
+        const buildNoChanged = String(value) !== String(initialBuildNo)
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
@@ -916,9 +1056,10 @@
                 buildNo: {
                     ...curInstance.value?.buildNo,
                     [name]: value,
-                    currentBuildNo: value
+                    currentBuildNo: buildNoChanged ? value : initialCurrentBuildNo
                 },
-                resetBuildNo: true
+                resetBuildNo: buildNoChanged,
+                buildNoChanged: buildNoChanged
             }
         })
     }
@@ -983,7 +1124,6 @@
                 index = paramIds.indexOf(target)
                 const isCurrentlyFollowingTemplate = curInstance.value?.buildNo?.isFollowTemplate
                 const willFollowTemplate = !isCurrentlyFollowingTemplate
-                
                 index > -1 ? paramIds.splice(index, 1) : paramIds.push(target)
                 
                 // 获取原始实例数据
@@ -1165,11 +1305,16 @@
                                     : (allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
                                         : initialParam?.defaultValue !== temDefaultValue)
-                                
+
+                                const propertyUpdates = collectPropertyUpdates({
+                                    ...p,
+                                    defaultValue: newDefaultValue
+                                }, initialParam)
                                 return {
                                     ...p,
                                     defaultValue: newDefaultValue,
                                     isFollowTemplate: newIsFollowTemplate,
+                                    propertyUpdates,
                                     hasChange,
                                     isChange
                                 }

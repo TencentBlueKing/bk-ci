@@ -289,8 +289,10 @@
                     proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
+            console.log(1)
         } catch (e) {
             console.error(e)
         }
