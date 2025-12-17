@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.PipelineTemplateConstant
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_PUBLISHED
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceWithoutVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCopyCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
@@ -128,27 +127,17 @@ class PipelineTemplateCopyCreateReqConverter @Autowired constructor(
                 )
             }
 
-            val transferResult = try {
-                pipelineTemplateGenerator.transfer(
-                    userId = userId,
-                    projectId = projectId,
-                    storageType = PipelineStorageType.MODEL,
-                    templateType = srcTemplateInfo.type,
-                    templateModel = srcTemplateResource.model,
-                    templateSetting = setting,
-                    params = srcTemplateResource.params,
-                    yaml = null
-                )
-            } catch (ex: Exception) {
-                logger.warn("TRANSFER_TEMPLATE_YAML_FAILED|$projectId|$templateId", ex)
-                PTemplateModelTransferResult(
-                    templateType = srcTemplateInfo.type,
-                    templateModel = srcTemplateResource.model,
-                    templateSetting = setting,
-                    params = srcTemplateResource.params ?: emptyList(),
-                    yamlWithVersion = null
-                )
-            }
+            val transferResult = pipelineTemplateGenerator.transfer(
+                userId = userId,
+                projectId = projectId,
+                storageType = PipelineStorageType.MODEL,
+                templateType = srcTemplateInfo.type,
+                templateModel = srcTemplateResource.model,
+                templateSetting = setting,
+                params = srcTemplateResource.params,
+                yaml = null,
+                fallbackOnError = true
+            )
 
             val pipelineTemplateInfo = PipelineTemplateInfoV2(
                 id = newTemplateId,

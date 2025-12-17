@@ -17,9 +17,10 @@ export default function useTemplateConstraint () {
         notices: 'NOTICES',
         parallelSetting: 'CONCURRENCY',
         failIfVariableInvalid: 'FAIL_IF_VARIABLE_INVALID',
-        buildNo: 'BK_CI_BUILD_NO'
+        buildNo: 'BK_CI_BUILD_NO',
+        buildCancelPolicy: 'BUILD_CANCEL_POLICY',
     }
-    
+
     const labelMap = {
         [CLASSIFY_ENUM.TRIGGER]: 'triggerSetting',
         [CLASSIFY_ENUM.PARAM]: 'paramDefaultValue',
@@ -74,7 +75,7 @@ export default function useTemplateConstraint () {
         if (classify === CLASSIFY_ENUM.TRIGGER) {
             const currentAtom = findTrigger(currentTriggerContainer, field)
             const constraintAtom = findTrigger(constraintTriggerContainer, field)
-            
+
             vm.proxy.$store.dispatch('atom/updateAtom', {
                 element: currentAtom,
                 newParam: {
@@ -185,5 +186,3 @@ export default function useTemplateConstraint () {
         reverting
     }
 }
-
-

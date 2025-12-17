@@ -33,11 +33,36 @@ object PipelineTransferAspectLoader {
         return instance
     }
 
+    fun yaml2ModelAspects(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        checkLockResourceJob(aspects)
+        checkJobId(aspects)
+    }
+
+    private fun checkJobId(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        val jobsCheck = mutableSetOf<String/*job_id*/>()
+        aspects.add(
+            object : IPipelineTransferAspectJob {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    val job = jp.modelJob()
+                    if (job?.jobId != null && !jobsCheck.add(job.jobId!!)) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
+                            params = arrayOf(job.name, job.jobId!!)
+                        )
+                    }
+                }
+            })
+    }
+
     /*
     * feat：第三方构建机 Job 间复用构建环境支持 Code 配置 #10254
     * 支持检查值的有效性
     * */
-    fun checkLockResourceJob(
+    private fun checkLockResourceJob(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
         val jobsCheck = mutableListOf<String/*job_id*/>()
