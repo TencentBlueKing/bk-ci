@@ -54,7 +54,6 @@ import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.LightBuildParameter
-import com.tencent.devops.process.pojo.LightStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
