@@ -225,10 +225,10 @@ abstract class AtomBaseDao {
 
         // 构建 JSON_EXTRACT 表达式
         val jsonExtractField = DSL.field(
-            "JSON_UNQUOTE(JSON_EXTRACT({0}, '$.{1}'))",
+            "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
             String::class.java,
             ta.CLASSIFY_ID_MAP,
-            DSL.inline(normalizedScope)
+            DSL.inline("$.$normalizedScope")
         )
 
         return if (normalizedScope == servicePipelineScopeName) {
