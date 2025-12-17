@@ -28,6 +28,8 @@
 package com.tencent.devops.store.pojo.atom.enums
 
 enum class JobTypeEnum {
-    AGENT,
-    AGENT_LESS
+    AGENT,  // 编译环境
+    AGENT_LESS,  // 无编译环境
+    CREATIVE_STREAM,  // 创作流环境
+    CLOUD_TASK  // 云任务环境
 }
