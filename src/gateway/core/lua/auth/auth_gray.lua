@@ -1,4 +1,3 @@
-   
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 -- Copyright (C) 2019 Tencent.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
@@ -19,6 +18,10 @@
 -- 获取tag
 local tag = tagUtil:get_tag(config.ns)
 
+if tag and string.sub(tag, 1, 11) == "kubernetes-" then
+    tag = string.sub(tag, 12)
+end
+
 -- 根据tag路由front目录
 ngx.var.static_dir = tagUtil:get_frontend_path(tag, "ci")
 ngx.var.static_dir_codecc = tagUtil:get_frontend_path(tag, "codecc")
@@ -31,6 +34,18 @@ if tag == "gray" then
     ngx.header["X-DEVOPS-GRAY"] = "true"
 else
     ngx.header["X-DEVOPS-GRAY"] = "false"
+end
+
+local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+if tag == 'rbac-red' or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-red到容器环境
+    ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
+else
+    ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
+end
+if in_container then -- 容器化环境转发到对应ns的frontend服务
+    ngx.header["X-FRONTEND-SERVICE"] = config.frontend.host .. '.' .. tag .. '.svc.cluster.local'
+else -- 非容器化环境转发到容器环境域名
+    ngx.header["X-FRONTEND-SERVICE"] = config.kubernetes.domain
 end
 
 ngx.exit(200)
