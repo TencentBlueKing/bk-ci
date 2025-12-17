@@ -133,6 +133,9 @@ config = {
     auth_token = "__BK_CI_AUTH_TOKEN__",
     tof_token = "__BK_CI_TOF_TOKEN__",
     double_check = true,
+    frontend = {
+        host = "frontend-bk-ci-frontend"
+    },
     tag_service_table = __BK_CI_TAG_SERVICE_TABLE__,
     tag_project_table = __BK_CI_TAG_PROJECT_TABLE__
 }
