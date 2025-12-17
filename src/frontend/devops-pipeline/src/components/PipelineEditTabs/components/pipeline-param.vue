@@ -39,7 +39,7 @@
 
         <div
             class="container-bottom"
-            :style="{ marginTop: `${offsetData}px` }"
+            :style="{ marginTop: `${offsetData}px`, height: `calc(100% - ${(isAlertTips && editable) ? '89' : '54'}px)` }"
             v-if="!showSlider"
         >
             <param-group
@@ -54,7 +54,7 @@
         </div>
 
         <div
-            v-else-if="editable"
+            v-else
             class="current-edit-param-item"
         >
             <div class="edit-var-header">
@@ -72,6 +72,7 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
+                    :disabled="!editable"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -124,6 +125,10 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            canEditParam: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -174,21 +179,21 @@
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        listNum: this.requiredParamList.length,
+                        itemNum: this.requiredParamList.length,
                         listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        listNum: this.constantParamList.length,
+                        itemNum: this.constantParamList.length,
                         listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        listNum: this.otherParamList.length,
+                        itemNum: this.otherParamList.length,
                         listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
                         sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
@@ -227,7 +232,7 @@
             },
             // toTop为true，表示移到最前, 为false为delete操作
             handleUpdate (paramId, toTop = false) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
                 const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
@@ -242,7 +247,7 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
@@ -327,7 +332,6 @@
         .container-bottom {
             width: 100%;
             position: absolute;
-            height: calc(100% - 89px);
             overflow-y: auto;
         }
         

@@ -1,30 +1,36 @@
 <template>
     <section class="version-container">
-        <div class="operate-version">
-            <section class="checkbox-container">
+        <constraint-wraper
+            class="operate-version"
+            :classify="CLASSIFY_ENUM.PARAM"
+            field="buildNo"
+            @toggleConstraint="toggleBuildNoConstraint"
+        >
+            <template #constraint-title="{ props: { isOverride } }">
                 <atom-checkbox
-                    :disabled="disabled"
+                    :disabled="disabled && !isOverride"
                     :text="$t('newui.enableVersions')"
                     :value="showVersions"
                     :handle-change="(name, value) => toggleVersions(name, value)"
                 />
                 <atom-checkbox
-                    style="margin-top: 15px;"
                     v-if="showVersions"
-                    :disabled="disabled"
+                    :disabled="disabled && !isOverride"
                     name="required"
                     :text="$t('newui.isBuildParam')"
                     :value="execuVisible"
                     :handle-change="handleBuildNoChange"
                 />
-            </section>
-            <bk-button
-                v-if="showVersions && !disabled"
-                @click="editVersions"
-            >
-                {{ $t('newui.editVersions') }}
-            </bk-button>
-        </div>
+            </template>
+            <template #constraint-area="{ props: { isOverride } }">
+                <bk-button
+                    v-if="showVersions && !(disabled && !isOverride)"
+                    @click="editVersions"
+                >
+                    {{ $t('newui.editVersions') }}
+                </bk-button>
+            </template>
+        </constraint-wraper>
         <!-- 展示已有的versionlist -->
         <section
             v-show="showVersions"
@@ -62,12 +68,12 @@
                     <div class="value-row">
                         <span class="default-value">
                             <span v-if="param.isBuildNo">
-                                {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
+                                {{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
-                                    v-if="pipelineModel"
+                                    v-if="pipelineModel && !isTemplate"
                                 >
-                                    {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
+                                    {{ `${$t('buildNoBaseline.currentValue')}${$t('colon')}${buildNo.currentBuildNo}` }}
                                     <span
                                         class="dafault-value-reset"
                                         @click="goResetBuildNo"
@@ -134,7 +140,7 @@
                                     :data-vv-scope="'pipelineVersion'"
                                     input-type="number"
                                     class="version-input"
-                                    :disabled="disabled"
+                                    :disabled="disabled && !overrideConstraint"
                                     :name="v"
                                     :value="editVersionValues[v]"
                                     :handle-change="handleEditVersionChange"
@@ -165,7 +171,7 @@
                                 style="width: 228px;"
                                 v-validate.initial="'required|numeric'"
                                 :data-vv-scope="'pipelineVersion'"
-                                :disabled="disabled"
+                                :disabled="disabled && !overrideConstraint"
                                 :value="editBuildNo.buildNo"
                                 :handle-change="handleEditBuildNoChange"
                             />
@@ -196,7 +202,7 @@
                     >
                         <enum-input
                             :list="buildNoRules"
-                            :disabled="disabled"
+                            :disabled="disabled && !overrideConstraint"
                             name="buildNoType"
                             v-validate.initial="'required|string'"
                             :data-vv-scope="'pipelineVersion'"
@@ -212,14 +218,14 @@
             >
                 <bk-button
                     theme="primary"
-                    :disabled="disabled"
+                    :disabled="disabled && !overrideConstraint"
                     @click="handleSaveVersion"
                 >
                     {{ $t('confirm') }}
                 </bk-button>
                 <bk-button
                     style="margin-left: 8px;"
-                    :disabled="disabled"
+                    :disabled="disabled && !overrideConstraint"
                     @click="cancelEditVersion"
                 >
                     {{ $t('cancel') }}
@@ -239,7 +245,7 @@
                 <h3>{{ $t('buildNoBaseline.isSureReset') }}</h3>
             </template>
             <div>
-                <p>{{ `${$t('buildNoBaseline.baselineValue')}${buildNo.buildNo}` }}</p>
+                <p>{{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${buildNo.buildNo}` }}</p>
                 <p class="reset-tips">
                     <i18n
                         :path="`buildNoBaseline.${buildNo.buildNoType}`"
@@ -270,14 +276,16 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import Logo from '@/components/Logo'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
+    import { bkVarWrapper, copyToClipboard, getParamsValuesMap } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -285,7 +293,8 @@
             VuexInput,
             EnumInput,
             AtomCheckbox,
-            Logo
+            Logo,
+            ConstraintWraper
         },
         props: {
             disabled: {
@@ -315,6 +324,7 @@
         },
         data () {
             return {
+                CLASSIFY_ENUM,
                 showVersions: false,
                 isRequired: false,
                 showEditVersion: false,
@@ -327,13 +337,15 @@
                     content: '#baseline-tooltip-content'
                 },
                 resetBuildNoDialog: false,
-                resetLoading: false
+                resetLoading: false,
+                overrideConstraint: false
             }
         },
         computed: {
             ...mapGetters('atom', [
                 'buildNoRules',
-                'defaultBuildNo'
+                'defaultBuildNo',
+                'isTemplate'
             ]),
             globalParams: {
                 get () {
@@ -398,6 +410,16 @@
         methods: {
             bkVarWrapper,
             ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
+            toggleBuildNoConstraint (isOverride) {
+                console.log(isOverride, 'toggleBuildNoConstraint')
+                this.overrideConstraint = isOverride
+                this.$nextTick(() => {
+                    if (!isOverride) {
+                        this.renderBuildNo = this.buildNo
+                        this.showVersions = this.versions.length !== 0
+                    }
+                })
+            },
             handleCopy (con) {
                 copyToClipboard(con)
                 this.$bkMessage({
@@ -522,15 +544,16 @@
         margin-top: 8px;
         display: flex;
         justify-content: space-between;
-        .checkbox-container {
-            display: flex;
-            flex-direction: column;
+        grid-gap: 10px;
+        & > :first-child {
+            flex: 1;
         }
     }
+    
     .version-list {
         width: 100%;
         border-bottom: none;
-        margin-top: 24px;
+        margin-top: 10px;
         .version-item {
             width: 100%;
             position: relative;

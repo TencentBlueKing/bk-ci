@@ -63,9 +63,11 @@ class AgentPipelineService @Autowired constructor(
                 }
                 savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos)
             }
+
             "delete_pipeline" -> {
                 cleanPipelineRef(projectId, request.pipelineId)
             }
+
             else -> {
                 logger.warn("action(${request.action}) not supported")
             }
@@ -99,36 +101,21 @@ class AgentPipelineService @Autowired constructor(
     }
 
     private fun savePipelineRef(projectId: String, pipelineId: String, agentPipelineRefs: List<AgentPipelineRef>) {
-        val modifiedAgentIds = mutableSetOf<Long>()
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val existPipelineRefs = agentPipelineRefDao.list(transactionContext, projectId, pipelineId)
-            val existRefMap = existPipelineRefs.associateBy { "${it.agentId!!}_${it.vmSeqId}_${it.jobId}" }
-            val refMap = agentPipelineRefs.associateBy { "${it.agentId!!}_${it.vmSeqId}_${it.jobId}" }
-            val toDeleteRefMap = existRefMap.filterKeys { !refMap.containsKey(it) }
-            val toAddRefMap = refMap.filterKeys { !existRefMap.containsKey(it) }
-
-            val toDeleteRef = toDeleteRefMap.values
-            val toAddRef = toAddRefMap.values
-
-            agentPipelineRefDao.batchDelete(transactionContext, toDeleteRef.map { it.id })
-            agentPipelineRefDao.batchAdd(transactionContext, toAddRef)
-            modifiedAgentIds.addAll(toDeleteRef.map { it.agentId })
-            modifiedAgentIds.addAll(toAddRef.map { it.agentId!! })
+            agentPipelineRefDao.deletePipelineRef(transactionContext, projectId = projectId, pipelineId = pipelineId)
+            agentPipelineRefDao.batchAdd(transactionContext, agentPipelineRefs)
         }
-
-        logger.info("savePipelineRef, modifiedAgentIds: $modifiedAgentIds")
+        val modifiedAgentIds = agentPipelineRefs.map { it.agentId!! }
+        logger.info("savePipelineRef|$projectId|$pipelineId|saveAgentIds: $modifiedAgentIds")
         modifiedAgentIds.forEach {
             updateRefCount(it)
         }
     }
 
     fun cleanPipelineRef(projectId: String, pipelineId: String) {
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            val existPipelineRefs = agentPipelineRefDao.list(transactionContext, projectId, pipelineId)
-            agentPipelineRefDao.batchDelete(transactionContext, existPipelineRefs.map { it.id })
-        }
+        agentPipelineRefDao.deletePipelineRef(dslContext, projectId = projectId, pipelineId = pipelineId)
+        logger.info("cleanPipelineRef|$projectId|$pipelineId|deleted refs")
     }
 
     private fun updateRefCount(agentId: Long) {

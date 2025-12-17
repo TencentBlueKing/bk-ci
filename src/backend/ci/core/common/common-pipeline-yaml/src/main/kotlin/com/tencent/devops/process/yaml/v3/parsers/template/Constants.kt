@@ -32,6 +32,8 @@ object Constants {
 
     // 引用模板的关键字
     const val TEMPLATE_KEY = "template"
+    const val TEMPLATE_KEY_NAME = "template-id"
+    const val TEMPLATE_KEY_ID = "template-name"
     const val REF = "ref"
 
     //  模板变量关键字

@@ -14,16 +14,33 @@
                 'is-debug-exec-detail': isDebugExec
             }]"
         >
-            <bk-button
+            <span
                 v-if="isRunning"
-                :disabled="loading"
-                :icon="loading ? 'loading' : ''"
-                outline
-                theme="warning"
-                @click="handleCancel"
+                v-bk-tooltips="{
+                    disabled: !isStrictCancelPolicy,
+                    content: $t('cancelBuildPermTip')
+                }"
             >
-                {{ $t("cancel") }}
-            </bk-button>
+                <bk-button
+                    :disabled="loading || isStrictCancelPolicy"
+                    :icon="loading ? 'loading' : ''"
+                    outline
+                    theme="warning"
+                    @click="handleCancel"
+                    v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId,
+                            resourceType: RESOURCE_TYPE.PIPELINE,
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                >
+                    {{ $t("cancel") }}
+                </bk-button>
+            </span>
             <template v-else-if="!isDebugExec">
                 <bk-dropdown-menu
                     trigger="click"
@@ -53,7 +70,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -81,7 +98,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EXECUTE
                                 }
@@ -110,7 +127,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
@@ -134,7 +151,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
@@ -148,7 +165,7 @@
                 v-if="isDebugExec"
                 :can-release="canRelease"
                 :project-id="projectId"
-                :pipeline-id="pipelineId"
+                :id="pipelineId"
             />
         </aside>
     </div>
@@ -160,8 +177,10 @@
 </template>
 
 <script>
+    import { BUILD_CANCEL_POLICY } from '@/store/constants'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
@@ -186,6 +205,9 @@
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
             },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -200,6 +222,9 @@
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
+            },
+            isStrictCancelPolicy () {
+                return this.pipelineInfo?.buildCancelPolicy === BUILD_CANCEL_POLICY.RESTRICTED && this.execDetail?.cancelBuildPerm === false
             },
             canRelease () {
                 return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning

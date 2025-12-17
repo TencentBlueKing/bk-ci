@@ -48,6 +48,7 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.factory.BkDiskLruFileCacheFactory
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -119,10 +120,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -163,7 +164,7 @@ open class MarketAtomTask : ITask() {
         val namespace: String? = map["namespace"] as String?
         logger.info(
             "${buildTask.buildId}|RUN_ATOM|taskName=$taskName|ver=$atomVersion|code=$atomCode" +
-                    "|workspace=$workspacePath"
+                "|workspace=$workspacePath"
         )
 
         // 获取插件基本信息
@@ -289,7 +290,7 @@ open class MarketAtomTask : ITask() {
                 buildId = buildTask.buildId
             )
             // 检查插件包的完整性
-            checkSha1(atomExecuteFile, atomData.shaContent!!)
+            checkSha(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
             val atomLanguage = atomData.language!!
             val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
@@ -368,6 +369,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     OSType.LINUX, OSType.MAC_OS -> {
                         val script = runCmds.joinToString(
                             separator = "\n"
@@ -385,6 +387,7 @@ open class MarketAtomTask : ITask() {
                             taskId = buildTask.taskId
                         )
                     }
+
                     else -> {
                     }
                 }
@@ -478,7 +481,7 @@ open class MarketAtomTask : ITask() {
                     queryCacheFlag = cacheFlag
                 )
 
-                val shouldCache = atomData.authFlag != true && checkSha1(
+                val shouldCache = atomData.authFlag != true && checkSha(
                     atomExecuteFile, atomData.shaContent!!
                 ) && cacheFlag && !fileCacheDir.contains(buildId)
 
@@ -627,6 +630,7 @@ open class MarketAtomTask : ITask() {
                     executeCount = buildTask.executeCount ?: 1
                 )
             }
+
             BuildType.WORKER -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
@@ -730,6 +734,15 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 对windows市场插件bat启动脚本执行失败进行监控
+        if (BatScriptUtil.retryTimes() > 0) {
+            val extData: MutableMap<String, Any> = getMonitorData()[AtomMonitorData::extData.name]?.let {
+                JsonUtil.toMutableMap(it)
+            } ?: mutableMapOf()
+            extData["market-atom-start-bat-auto-retry-times"] = BatScriptUtil.retryTimes()
+            addMonitorData(mapOf(AtomMonitorData::extData.name to extData))
+            BatScriptUtil.retryClean()
+        }
         // 校验插件对接平台错误码信息失败
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
@@ -805,6 +818,7 @@ open class MarketAtomTask : ITask() {
                         buildVariables = buildVariables,
                         atomWorkspace = bkWorkspace
                     )
+
                     ARTIFACT -> env[key] = archiveArtifact(
                         buildTask = buildTask,
                         varKey = varKey,
@@ -825,7 +839,7 @@ open class MarketAtomTask : ITask() {
                     env[contextKey] = value
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
                     if (
-                        // TODO 暂时只对stream进行拦截原key
+                    // TODO 暂时只对stream进行拦截原key
                         buildVariables.variables[BK_CI_RUN] == "true" &&
                         buildVariables.pipelineAsCodeSettings?.enable == true
                     ) env.remove(key)
@@ -1056,11 +1070,37 @@ open class MarketAtomTask : ITask() {
         return JsonUtil.to(json, AtomResult::class.java)
     }
 
-    private fun checkSha1(file: File, sha1: String): Boolean {
-        val fileSha1 = file.inputStream().use { ShaUtils.sha1InputStream(it) }
-        if (fileSha1 != sha1) {
+    /**
+     * 校验文件SHA哈希值，确保文件完整性
+     * 该方法用于验证下载的插件文件是否与预期的SHA值匹配，防止文件被篡改或损坏
+     *
+     * @param file 需要校验的文件对象
+     * @param sha 预期的SHA哈希值字符串
+     * @return Boolean 校验结果，true表示校验通过
+     * @throws TaskExecuteException 当文件SHA值与预期不符时抛出异常
+     *
+     * 算法选择逻辑：
+     * - SHA256：当SHA字符串长度为64字符时使用（SHA256哈希值为64位十六进制字符串）
+     * - SHA1：当SHA字符串长度不为64时使用（SHA1哈希值为40位十六进制字符串）
+     *
+     * 使用场景：
+     * - 插件文件下载后的完整性校验
+     * - 确保从市场下载的插件文件未被篡改
+     * - 防止恶意文件注入和传输过程中的数据损坏
+     */
+    private fun checkSha(file: File, sha: String): Boolean {
+        // 根据SHA字符串长度选择算法：64位为SHA256，其他为SHA1
+        val fileSha = if (sha.length == 64) {
+            // 使用SHA256算法计算文件哈希值
+            file.inputStream().use { ShaUtils.sha256InputStream(it) }
+        } else {
+            // 使用SHA1算法计算文件哈希值
+            file.inputStream().use { ShaUtils.sha1InputStream(it) }
+        }
+        if (fileSha != sha) {
+            // SHA值不匹配，抛出异常并记录错误的SHA值
             throw TaskExecuteException(
-                errorMsg = "Plugin File Sha1 is wrong! wrong sha1: $fileSha1",
+                errorMsg = "Plugin File Sha is wrong! wrong sha: $fileSha",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )

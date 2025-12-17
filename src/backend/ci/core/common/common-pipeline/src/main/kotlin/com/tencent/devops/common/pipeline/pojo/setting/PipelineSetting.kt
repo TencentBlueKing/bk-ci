@@ -87,6 +87,8 @@ data class PipelineSetting(
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
     @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
     var failIfVariableInvalid: Boolean? = false,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy = BuildCancelPolicy.EXECUTE_PERMISSION,
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
@@ -94,7 +96,15 @@ data class PipelineSetting(
     @get:Schema(title = "重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings?
+    var pipelineAsCodeSettings: PipelineAsCodeSettings?,
+    @get:Schema(title = "创建人", required = false)
+    var creator: String? = null,
+    @get:Schema(title = "更新人", required = false)
+    var updater: String? = null,
+    @get:Schema(title = "创建时间", required = false)
+    val createdTime: Long? = null,
+    @get:Schema(title = "更新时间", required = false)
+    val updateTime: Long? = null
 ) {
 
     companion object {
@@ -103,17 +113,20 @@ data class PipelineSetting(
             projectId: String,
             pipelineId: String,
             pipelineName: String,
+            desc: String? = null,
             maxPipelineResNum: Int? = null,
             failSubscription: Subscription? = null,
             inheritedDialectSetting: Boolean? = null,
-            pipelineDialectSetting: String? = null
+            pipelineDialectSetting: String? = null,
+            creator: String? = null,
+            updater: String? = null
         ): PipelineSetting {
             return PipelineSetting(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
                 version = 1,
-                desc = pipelineName,
+                desc = desc ?: pipelineName,
                 maxPipelineResNum = maxPipelineResNum ?: PIPELINE_RES_NUM_MIN,
                 waitQueueTimeMinute = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
                 maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
@@ -125,7 +138,10 @@ data class PipelineSetting(
                 pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
                     inheritedDialect = inheritedDialectSetting,
                     pipelineDialect = pipelineDialectSetting
-                )
+                ),
+                buildCancelPolicy = BuildCancelPolicy.RESTRICTED, // 新建流水线默认使用受限策略
+                creator = creator,
+                updater = creator
             )
         }
     }

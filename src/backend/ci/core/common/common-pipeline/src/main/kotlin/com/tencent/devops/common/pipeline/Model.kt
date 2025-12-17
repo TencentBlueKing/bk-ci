@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -35,8 +37,13 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.common.pipeline.template.ITemplateModel
+import com.tencent.devops.common.web.utils.I18nUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
@@ -67,15 +74,13 @@ data class Model(
     var staticViews: List<String> = emptyList(),
     @get:Schema(title = "各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = null,
-    @get:Schema(title = "模板地址", required = true)
-    override var template: String? = null,
-    @get:Schema(title = "模板版本", required = true)
-    override var ref: String? = null,
-    @get:Schema(title = "模板入参", required = true)
-    override var variables: Map<String, String>? = null,
     @get:Schema(title = "模板资源", required = true)
-    val resources: Resources? = null
-) : IModelTemplate {
+    val resources: Resources? = null,
+    @get:Schema(title = "实例化模版信息", required = true)
+    var template: TemplateInstanceDescriptor? = null,
+    @get:Schema(title = "流水线覆盖模版的字段", required = false)
+    var overrideTemplateField: TemplateInstanceField? = null
+) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 
@@ -228,5 +233,42 @@ data class Model(
         return pipelineCallBack
     }
 
+    @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    companion object {
+        const val classType = "model"
+        fun defaultModel(
+            pipelineName: String = "",
+            userId: String? = null
+        ): Model {
+            return Model(
+                name = pipelineName,
+                desc = "",
+                stages = listOf(
+                    Stage(
+                        id = "stage-1",
+                        containers = listOf(
+                            TriggerContainer(
+                                id = "0",
+                                name = "trigger",
+                                elements = listOf(
+                                    ManualTriggerElement(
+                                        id = "T-1-1-1",
+                                        name = I18nUtil.getCodeLanMessage(
+                                            messageCode = CommonMessageCode.BK_MANUAL_TRIGGER,
+                                            language = userId?.let { I18nUtil.getLanguage(userId) }
+                                        )
+                                    ).apply {
+                                        additionalOptions = ElementAdditionalOptions(enable = true)
+                                    },
+                                )
+                            )
+                        )
+                    )
+                ),
+                pipelineCreator = userId
+            )
+        }
+    }
 }

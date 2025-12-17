@@ -40,6 +40,7 @@ import java.math.BigDecimal
 import java.sql.Timestamp
 import org.jooq.DSLContext
 import org.jooq.Select
+import org.jooq.TableField
 
 /**
  * 兼容
@@ -157,6 +158,10 @@ object JooqUtils {
             "count(${data.name})",
             Int::class.java
         )
+    }
+
+    fun <T> values(field: TableField<*, T>): Field<T> {
+        return DSL.field("VALUES({0})", field.dataType, field)
     }
 }
 
