@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
@@ -35,63 +36,45 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "轻量历史构建模型")
 data class LightBuildHistory(
-    @get:Schema(title = "构建ID")
+    @get:Schema(title = "构建ID", required = true)
     val id: String,
-    @get:Schema(title = "启动用户")
+    @get:Schema(title = "启动用户", required = true)
     val userId: String,
-    @get:Schema(title = "构建号")
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
-    @get:Schema(title = "流水线的执行开始时间(毫秒时间戳)")
+    @get:Schema(title = "流水线的执行开始时间", required = true)
     val startTime: Long,
-    @get:Schema(title = "流水线的执行结束时间(毫秒时间戳)")
+    @get:Schema(title = "流水线的执行结束时间", required = true)
     val endTime: Long?,
-    @get:Schema(title = "状态")
+    @get:Schema(title = "状态", required = true)
     val status: String,
-    @get:Schema(title = "备注")
+    @get:Schema(title = "备注", required = false)
     val remark: String?,
-    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)")
+    @get:Schema(title = "运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long?,
-    @get:Schema(title = "是否重试")
-    val retry: Boolean,
-    @get:Schema(title = "触发方式")
-    val trigger: String?,
-    @get:Schema(title = "流水线任务执行错误")
-    val errorInfoList: List<ErrorInfo>?,
-    @get:Schema(title = "阶段 & 任务错误信息")
-    val stageStatus: List<LightStageStatus>?,
-    @get:Schema(title = "构建参数")
+    @get:Schema(title = "是否重试", required = false)
+    val retry: Boolean = false,
+    @get:Schema(title = "触发条件", required = true)
+    val trigger: String,
+    @get:Schema(title = "流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?,
+    @get:Schema(title = "启动参数", required = false)
     val buildParameters: List<LightBuildParameter>?
-)
-
-/**
- * 轻量阶段状态
- * 注意：这里只保留与前端展示/排障相关的必要字段
- */
-@Schema(title = "轻量阶段状态")
-data class LightStageStatus(
-    @get:Schema(title = "阶段ID")
-    val stageId: String?,
-    @get:Schema(title = "阶段名称")
-    val name: String?,
-    @get:Schema(title = "阶段状态")
-    val status: String?,
-    @get:Schema(title = "提示信息")
-    val showMsg: String?
 )
 
 /**
  * 轻量构建参数
  */
-@Schema(title = "轻量构建参数")
+@Schema(title = "轻量构建模型-构建参数")
 data class LightBuildParameter(
-    @get:Schema(title = "参数key")
-    val key: String,
-    @get:Schema(title = "参数值")
-    val value: String?,
-    @get:Schema(title = "值类型")
-    val valueType: String?,
-    @get:Schema(title = "描述")
-    val desc: String?,
-    @get:Schema(title = "默认值")
-    val defaultValue: String?
+    @get:Schema(title = "元素值ID-标识符", required = true)
+    var key: String,
+    @get:Schema(title = "元素值名称-显示用", required = true)
+    var value: Any,
+    @get:Schema(title = "元素值类型", required = false)
+    val valueType: BuildFormPropertyType? = null,
+    @get:Schema(title = "描述", required = false)
+    var desc: String? = null,
+    @get:Schema(title = "默认值", required = false)
+    var defaultValue: Any? = null,
 )
