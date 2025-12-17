@@ -1004,7 +1004,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                     storeId = it.id,
                     storeType = finalStoreType,
                     storeCode = it.storeCode
-                )
+                ),
+                ownerStoreCode = it.ownerStoreCode
             )
         }
     }

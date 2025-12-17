@@ -100,7 +100,9 @@ data class StoreDetailInfo(
     @get:Schema(title = "指标信息列表", required = false)
     val indexInfos: List<StoreIndexInfo>? = null,
     @get:Schema(title = "扩展字段集合", required = false)
-    val extData: Map<String, Any>? = null
+    val extData: Map<String, Any>? = null,
+    @get:Schema(title = "归属应用标识", required = false)
+    val ownerStoreCode: String? = null
 ) {
     // 补充代码
     constructor(
@@ -109,7 +111,8 @@ data class StoreDetailInfo(
         storeCode: String,
         name: String,
         description: String?,
-        extData: Map<String, Any>?
+        extData: Map<String, Any>?,
+        ownerStoreCode: String?
     ): this(
         storeId = storeId,
         storeCode = storeCode,
@@ -139,6 +142,7 @@ data class StoreDetailInfo(
         editFlag = null,
         honorInfos = null,
         indexInfos = null,
-        extData = extData
+        extData = extData,
+        ownerStoreCode = ownerStoreCode
     )
 }

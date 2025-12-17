@@ -81,6 +81,7 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
             version = version
         ).data ?: throw InvalidParamException("component[$atomCode@$version] not found")
         val triggerTarget = componentDetail.extData?.get(KEY_TRIGGER_TARGET)?.toString()
+        val eventType = componentDetail.storeCode.substringAfter("${componentDetail.ownerStoreCode}-")
         val eventSubscription = when (triggerTarget) {
             TriggerTargetEnum.CREATIVE.name -> {
                 PipelineEventSubscription(
@@ -89,7 +90,7 @@ class TriggerContainerVersionPostProcessor @Autowired constructor(
                     taskId = element.id!!,
                     eventCode = element.atomCode,
                     eventSource = "",
-                    eventType = "",
+                    eventType = eventType,
                     channelCode = channelCode,
                     triggerTarget = TriggerTargetEnum.CREATIVE
                 )

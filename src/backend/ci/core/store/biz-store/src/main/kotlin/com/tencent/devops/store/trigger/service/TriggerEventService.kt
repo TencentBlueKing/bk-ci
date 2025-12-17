@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
@@ -165,7 +166,7 @@ class TriggerEventService @Autowired constructor(
                 name = storeDetailInfo.name,
                 atomCode = storeDetailInfo.storeCode,
                 version = storeDetailInfo.version,
-                classType = "marketBuild",
+                classType = MarketEventAtomElement.classType,
                 atomStatus = storeDetailInfo.status,
                 creator = userId,
                 createTime = 0,
