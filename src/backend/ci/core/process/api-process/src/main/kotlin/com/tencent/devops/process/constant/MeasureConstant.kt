@@ -13,7 +13,10 @@ object MeasureConstant {
     // webhook触发耗时
     const val PIPELINE_SCM_WEBHOOK_EXECUTE_TIME = "pipeline.scm.webhook.execute.time"
     // 状态
-    const val TAG_STATUS = "status"
+    const val TAG_SCM_WEBHOOK_TRIGGER_STATUS = "status"
     // 是否是yaml
-    const val TAG_YAML = "yaml"
+    const val TAG_SCM_WEBHOOK_TRIGGER_YAML = "yaml"
+
+    // 是否是老的webhook
+    const val TAG_SCM_WEBHOOK_TRIGGER_OLD = "old"
 }

@@ -38,6 +38,7 @@ import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线webhook事件监听者
@@ -50,7 +51,13 @@ class PipelineWebHookEventListener @Autowired constructor(
     private val sampleEventDispatcher: SampleEventDispatcher
 ) : WebHookEventListener {
 
-    override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
+    override fun onEvent(
+        eventId: Long,
+        eventTime: LocalDateTime,
+        repository: Repository,
+        webhook: Webhook,
+        replayPipelineId: String?
+    ) {
         // 不是灰度仓库,不执行新逻辑
         if (!webhookGrayService.isGrayRepo(scmCode = repository.scmCode, repository.projectName)) {
             logger.info(
@@ -79,7 +86,6 @@ class PipelineWebHookEventListener @Autowired constructor(
             )
         }
 
-        val requestTime = System.currentTimeMillis()
         if (triggerPipelines.size >= 50) {
             logger.warn(
                 "Repository webhook triggered too many pipelines|${repository.projectId}|${repository.repoHashId}|" +
@@ -105,7 +111,7 @@ class PipelineWebHookEventListener @Autowired constructor(
                     version = version,
                     eventId = eventId,
                     repository = repository,
-                    requestTime = requestTime
+                    eventTime = eventTime
                 )
             )
         }
