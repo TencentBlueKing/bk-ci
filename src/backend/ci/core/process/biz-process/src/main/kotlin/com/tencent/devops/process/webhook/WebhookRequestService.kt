@@ -189,6 +189,7 @@ class WebhookRequestService(
                 )?.let {
                     webhookManager.fireEvent(
                         eventId = triggerEvent.eventId!!,
+                        eventTime = LocalDateTime.now(),
                         repository = repository,
                         webhook = (it.eventBody!! as ScmWebhookEventBody).webhook,
                         replayPipelineId = pipelineId

@@ -21,5 +21,5 @@ data class ScmWebhookTriggerEvent(
     @get:Schema(title = "代码库", required = true)
     val repository: Repository,
     @get:Schema(title = "webhook请求时间", required = true)
-    val eventTime: LocalDateTime
+    val eventTime: LocalDateTime? = null
 ) : IEvent()

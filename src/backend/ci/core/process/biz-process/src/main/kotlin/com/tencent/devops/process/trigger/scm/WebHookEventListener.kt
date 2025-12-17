@@ -34,7 +34,7 @@ import java.time.LocalDateTime
 interface WebHookEventListener {
     fun onEvent(
         eventId: Long,
-        eventTime: LocalDateTime,
+        eventTime: LocalDateTime?,
         repository: Repository,
         webhook: Webhook,
         replayPipelineId: String? = null

@@ -125,7 +125,7 @@ data class PipelineYamlFileEvent(
     constructor(
         repository: Repository,
         yamlDiff: PipelineYamlDiff,
-        eventTime: LocalDateTime
+        eventTime: LocalDateTime?
     ): this(
         userId = yamlDiff.triggerUser,
         authUser = repository.userName,

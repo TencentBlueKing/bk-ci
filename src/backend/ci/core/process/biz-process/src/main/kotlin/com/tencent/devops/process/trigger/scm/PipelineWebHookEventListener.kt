@@ -53,7 +53,7 @@ class PipelineWebHookEventListener @Autowired constructor(
 
     override fun onEvent(
         eventId: Long,
-        eventTime: LocalDateTime,
+        eventTime: LocalDateTime?,
         repository: Repository,
         webhook: Webhook,
         replayPipelineId: String?

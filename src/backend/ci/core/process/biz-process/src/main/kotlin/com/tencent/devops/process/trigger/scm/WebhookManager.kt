@@ -109,6 +109,7 @@ class WebhookManager @Autowired constructor(
                 )
                 fireEvent(
                     eventId = eventId,
+                    eventTime = event.eventTime,
                     repository = repository,
                     webhook = webhook
                 )
@@ -218,11 +219,18 @@ class WebhookManager @Autowired constructor(
      * @param webhook 解析后的webhook
      * @param replayPipelineId 指定流水线回放
      */
-    fun fireEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String? = null) {
+    fun fireEvent(
+        eventId: Long,
+        eventTime: LocalDateTime?,
+        repository: Repository,
+        webhook: Webhook,
+        replayPipelineId: String? = null
+    ) {
         webhookListeners.forEach { listener ->
             try {
                 listener.onEvent(
                     eventId = eventId,
+                    eventTime = eventTime,
                     repository = repository,
                     webhook = webhook,
                     replayPipelineId = replayPipelineId
