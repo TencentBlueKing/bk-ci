@@ -363,7 +363,6 @@
     // 监听合并触发标记,当流水线数据请求完成后执行数据合并
     watch(() => shouldMerge.value, (val) => {
         if (val && curTemplateDetail.value) {
-            console.log(2)
             mergeInstancesWithTemplate()
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', false)
         }
@@ -375,13 +374,10 @@
     
     // 数据合并函数
     function mergeInstancesWithTemplate () {
-        if (!initialInstanceList.value?.length) {
+        if (!initialInstanceList.value?.length || !curTemplateVersion.value) {
             return
         }
         
-        if (!curTemplateVersion.value) {
-            return
-        }
         try {
             isLoading.value = true
             const mergedInstances = initialInstanceList.value.map((instance, index) => {
@@ -397,8 +393,7 @@
                 if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
                     return processedInstance
                 }
-                   
-                // 进行数据比对和合并
+
                 let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
                    
                 if (curTemplateDetail.value?.param) {
@@ -417,34 +412,34 @@
                 if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
                     // 获取初始实例的参数
                     const initialInstance = initialInstanceList.value?.[index]
-                        
-                    // 判断 resetBuildNo：
-                    // 1. buildNo.currentBuildNo 发生变化
-                    // 2. 或者版本号变量（allVersionKeyList）发生变化
-                    const buildNoChanged = processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
-                    const versionParamsChanged = checkVersionParamsChanged(
-                        instanceParams ?? processedInstance.param,
-                            initialInstance?.param
-                    )
-                        
+                    const buildNoChanged = processedInstance.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
+                    
+                    // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
+                    const mergedCurrentParams = [
+                        ...(instanceParams ?? processedInstance.param ?? []),
+                        ...(instanceBuildNoParams ?? [])
+                    ]
+                    
+                    const needResetBuildNo = initialInstance?.buildNo?.buildNo && shouldResetBuildNo({
+                        currentParams: instanceBuildNoParams,
+                        initialParams: initialInstance?.param,
+                        currentBuildNo: instanceBuildNo?.buildNo,
+                        initialBuildNo: initialInstance?.buildNo?.buildNo
+                    })
                     return {
                         ...processedInstance,
-                        param: [
-                            ...(instanceParams ?? processedInstance.param ?? []),
-                            ...(instanceBuildNoParams ?? [])
-                        ],
-                        buildNo: {
+                        param: mergedCurrentParams,
+                        buildNo: curTemplateDetail.value?.buildNo ? {
                             ...instanceBuildNo,
-                            currentBuildNo: buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo
-                        } ?? processedInstance.buildNo,
+                            currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo.currentBuildNo,
+                        } : undefined,
                         triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
-                        resetBuildNo: buildNoChanged || versionParamsChanged,
+                        resetBuildNo: needResetBuildNo,
                         buildNoChanged
                     }
                 }
                 return processedInstance
             })
-
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
                 list: mergedInstances,
                 init: false
@@ -620,22 +615,23 @@
                 // hasChange(控制一键填入默认值按钮是否显示, 如果变量值与模板默认值不同则显示)
                 // isChange(控制默认值输入框是否高亮，默认值变更则高亮)
                 if (i.constant || (!i.required && !allVersionKeyList.includes(i.id))) {
+                    i.isRequiredParam = templateParam.required && i.required
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
-                    i.isRequiredParam = templateParam.required && templateParam.asInstanceInput
-                    i.defaultValue = i.isRequiredParam ? i.defaultValue : templateParam.defaultValue
+                    // 如果该变量是模板的入参，则默认值为原默认值，否则为模板对应参数的值
+                    i.defaultValue = templateParam.required ? i.defaultValue : templateParam.defaultValue
                     i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
                     i.hasChange = i.defaultValue !== templateParam?.defaultValue
                 } else {
                     // 入参参数处理
+                    i.isRequiredParam = templateParam.required && i.required
                     if (i.isFollowTemplate) {
                         i.defaultValue = templateParam.defaultValue
                     }
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
-                    i.isRequiredParam = templateParam.required && templateParam.asInstanceInput
                     i.hasChange = i.defaultValue !== templateParam?.defaultValue
                     i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
                 }
@@ -656,14 +652,6 @@
                     required: item.required
                 }
                 instanceParams.push(newItem) // 将新字段添加到 instanceParams
-            } else {
-                // 对于已存在的参数，保留 store 中的 isRequiredParam 值
-                // 只在 isRequiredParam 未定义时，才使用 required 的值进行初始化
-                if (instanceParamItem.isRequiredParam === undefined) {
-                    instanceParamItem.isRequiredParam = instanceParamItem.required
-                }
-                // 更新 required 为模板的 required（模板定义的是否为入参）
-                instanceParamItem.required = item.required
             }
         }
         return instanceParams
@@ -696,13 +684,23 @@
         return result
     }
     function compareBuild (instance, templateDate) {
-        // 模板推荐版本号为非入参时，实例始终使用模板配置
         const instanceBuildNo = instance.buildNo
         const templateBuildNo = templateDate.buildNo
         const instanceBuildNoParams = (instance?.param ?? []).map(p => ({ ...p })).filter(i => allVersionKeyList.includes(i.id))
         const templateBuildNoParams = (templateDate?.param ?? []).filter(i => allVersionKeyList.includes(i.id))
+
+        // 如果实例没有推荐版本号，模板版本有推荐版本号，则返回模板的
+        if (!instanceBuildNo && templateBuildNo) {
+            return {
+                buildNo: {
+                    ...templateBuildNo,
+                    currentBuildNo: templateBuildNo.buildNo
+                },
+                buildNoParam: templateBuildNoParams
+            }
+        }
+        // 模板推荐版本号为非入参时，实例始终使用模板配置
         const instanceBuildNoParamsMap = new Map(instanceBuildNoParams.map(p => [p.id, p]))
-        
         if (!templateBuildNo.required) {
             // 对比模板版本号参数和实例版本号参数，如果 defaultVal 不同则加上 isChange
             const comparedBuildNoParams = templateBuildNoParams.map(templateParam => {
@@ -768,36 +766,43 @@
     }
     
     /**
-     * 检查版本号变量是否发生变化
-     * @param {Array} currentParams - 当前实例的参数列表
-     * @param {Array} initialParams - 初始实例的参数列表
-     * @returns {boolean} - 如果版本号变量有变化返回 true，否则返回 false
+     * 检查是否需要重置构建号
+     * 检查3个版本号参数和 buildNo 基线值是否有任何一个发生变化
+     * @param {Object} options - 配置参数
+     * @param {Array} options.currentParams - 当前实例的参数列表
+     * @param {Array} options.initialParams - 初始实例的参数列表
+     * @param {String|Number} options.currentBuildNo - 当前 buildNo 基线值
+     * @param {String|Number} options.initialBuildNo - 初始 buildNo 基线值
+     * @param {String} options.modifyingParamId - 正在修改的参数 ID (可选)
+     * @param {String|Number} options.newParamValue - 正在修改的参数新值 (可选)
+     * @returns {boolean} - 如果需要重置构建号返回 true，否则返回 false
      */
-    function checkVersionParamsChanged (currentParams, initialParams) {
-        if (!currentParams || !initialParams) {
-            return false
-        }
-        
-        const currentParamsMap = new Map(currentParams.map(p => [p.id, p]))
-        const initialParamsMap = new Map(initialParams.map(p => [p.id, p]))
-        
-        // 遍历三个版本号变量
-        for (const versionKey of allVersionKeyList) {
-            const currentParam = currentParamsMap.get(versionKey)
-            const initialParam = initialParamsMap.get(versionKey)
+    function shouldResetBuildNo ({
+        currentParams,
+        initialParams,
+        currentBuildNo,
+        initialBuildNo,
+        modifyingParamId = null,
+        newParamValue = null
+    }) {
+        // 检查所有版本号参数是否有任何一个发生变化
+        const versionParamsChanged = allVersionKeyList.some(versionId => {
+            const currentParam = currentParams?.find(p => p.id === versionId)
+            const initialParam = initialParams?.find(ip => ip.id === versionId)
+            // 如果当前修改的就是这个参数,使用新值进行对比
+            const currentValue = versionId === modifyingParamId
+                ? Number(newParamValue)
+                : Number(currentParam?.defaultValue)
+            const initialValue = Number(initialParam?.defaultValue)
             
-            if (currentParam && initialParam) {
-                const currentValue = Number(currentParam.defaultValue)
-                const initialValue = Number(initialParam.defaultValue)
-                
-                // 只要有一个版本号变量不一样，就返回 true
-                if (currentValue !== initialValue) {
-                    return true
-                }
-            }
-        }
+            return initialParam && currentValue !== initialValue
+        })
         
-        return false
+        // 检查 buildNo.buildNo 基线值是否发生改变
+        const buildNoChanged = String(currentBuildNo) !== String(initialBuildNo)
+        
+        // 只要版本号参数或 buildNo 基线值有任何一个发生变化,就需要重置
+        return versionParamsChanged || buildNoChanged
     }
     
     /**
@@ -935,16 +940,19 @@
         let newCurrentBuildNo = curInstance.value?.buildNo?.currentBuildNo
         
         if (isVersionParam) {
-            // 获取原始版本号参数值
-            const initialParam = initialInstanceParams?.find(ip => ip.id === id)
-            const initialValue = Number(initialParam?.defaultValue)
-            const newValue = Number(value)
+            const initialBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
+            const currentBuildNo = curInstance.value?.buildNo?.buildNo
             
-            // 检查是否与原始值不同
-            versionParamChanged = initialValue !== newValue
-            
+            versionParamChanged = shouldResetBuildNo({
+                currentParams: curInstance.value?.param,
+                initialParams: initialInstanceParams,
+                currentBuildNo,
+                initialBuildNo,
+                modifyingParamId: id,
+                newParamValue: value
+            })
             if (versionParamChanged) {
-                newCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
+                newCurrentBuildNo = curInstance.value?.buildNo?.buildNo
             } else {
                 newCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.currentBuildNo
             }
@@ -1044,11 +1052,17 @@
             return
         }
         
-        // 获取原始实例的 buildNo
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
         const initialBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.buildNo
         const initialCurrentBuildNo = initialInstanceList.value?.[activeIndex.value - 1]?.buildNo?.currentBuildNo
-        // 检查是否与原始值不同
         const buildNoChanged = String(value) !== String(initialBuildNo)
+        const needResetBuildNo = shouldResetBuildNo({
+            currentParams: curInstance.value?.param,
+            initialParams: initialInstanceParams,
+            currentBuildNo: value,
+            initialBuildNo
+        })
+        
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: activeIndex.value - 1,
             value: {
@@ -1056,9 +1070,9 @@
                 buildNo: {
                     ...curInstance.value?.buildNo,
                     [name]: value,
-                    currentBuildNo: buildNoChanged ? value : initialCurrentBuildNo
+                    currentBuildNo: needResetBuildNo ? value : initialCurrentBuildNo
                 },
-                resetBuildNo: buildNoChanged,
+                resetBuildNo: needResetBuildNo,
                 buildNoChanged: buildNoChanged
             }
         })
@@ -1136,34 +1150,21 @@
                     const templateBuildNo = curTemplateDetail.value?.buildNo
                     const templateParams = curTemplateDetail.value?.param
                     
-                    // 获取模板的版本号参数值
-                    const templateVersionParams = {}
-                    allVersionKeyList.forEach(versionKey => {
+                    // 获取模板的版本号参数值,构建模板参数列表
+                    const templateVersionParams = allVersionKeyList.map(versionKey => {
                         const templateParam = templateParams?.find(t => t.id === versionKey)
-                        if (templateParam) {
-                            templateVersionParams[versionKey] = templateParam.defaultValue
+                        return {
+                            id: versionKey,
+                            defaultValue: templateParam?.defaultValue,
                         }
+                    }).filter(p => p.defaultValue !== undefined)
+                    
+                    const needResetBuildNo = shouldResetBuildNo({
+                        currentParams: templateVersionParams,
+                        initialParams,
+                        currentBuildNo: templateBuildNo?.buildNo,
+                        initialBuildNo: initialBuildNo?.buildNo
                     })
-                    
-                    // 检查 buildNo 或 allVersionKeyList 中任意一个参数是否与原实例的值不一样
-                    let needResetBuildNo = false
-                    
-                    // 检查 buildNo 是否变化
-                    if (templateBuildNo?.buildNo !== initialBuildNo?.buildNo) {
-                        needResetBuildNo = true
-                    }
-                    
-                    // 检查版本号参数是否有变化
-                    if (!needResetBuildNo) {
-                        for (const versionKey of allVersionKeyList) {
-                            const initialParam = initialParams?.find(p => p.id === versionKey)
-                            const templateValue = templateVersionParams[versionKey]
-                            if (initialParam && String(templateValue) !== String(initialParam.defaultValue)) {
-                                needResetBuildNo = true
-                                break
-                            }
-                        }
-                    }
                     
                     proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
                         index: activeIndex.value - 1,

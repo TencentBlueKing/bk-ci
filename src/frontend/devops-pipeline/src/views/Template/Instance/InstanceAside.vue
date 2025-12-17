@@ -292,7 +292,6 @@
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
             proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
-            console.log(1)
         } catch (e) {
             console.error(e)
         }
@@ -311,6 +310,7 @@
         if (instanceParams?.param?.length) {
             instanceParams.param = instanceParams.param.map(p => ({
                 ...p,
+                readOnlyCheck: false,
                 isRequiredParam: p.required && p.asInstanceInput
             }))
         }
