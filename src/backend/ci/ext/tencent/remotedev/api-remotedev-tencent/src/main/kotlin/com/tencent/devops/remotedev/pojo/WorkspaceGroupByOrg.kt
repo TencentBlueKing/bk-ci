@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,22 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template.v2
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
-import com.tencent.devops.process.pojo.PipelineIdAndName
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线模版实例化发布预览请求")
-data class PreFetchTemplateInstanceReleaseReq(
-    @get:Schema(title = "流水线ID和名称", required = true)
-    val pipelineIdAndNames: List<PipelineIdAndName>,
-    @get:Schema(title = "启用PAC", required = true)
-    val enablePac: Boolean = false,
-    @get:Schema(title = "提交动作", required = true)
-    val targetAction: CodeTargetAction? = null,
-    @get:Schema(title = "代码库hashId", required = true)
-    val repoHashId: String? = null,
-    @get:Schema(title = "指定提交的分支", required = true)
-    val targetBranch: String? = null
+/**
+ * 按组织架构分组的工作空间列表
+ */
+@Schema(title = "按组织架构分组的工作空间列表")
+data class WorkspaceGroupByOrg(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String,
+    @get:Schema(title = "组织架构列表")
+    val organizations: List<OrganizationGroup>
+)
+
+/**
+ * 组织架构分组
+ */
+@Schema(title = "组织架构分组")
+data class OrganizationGroup(
+    @get:Schema(title = "组织架构名称")
+    val orgName: String,
+    @get:Schema(title = "工作空间列表")
+    val workspaces: List<Workspace>
 )

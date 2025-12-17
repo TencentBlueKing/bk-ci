@@ -703,7 +703,8 @@ class WorkspaceDao {
                 },
                 bakWorkspaceName = record.getOrNull(TWorkspace.T_WORKSPACE.BAK_NAME) as String?,
                 ip = record.getOrNull(TWorkspace.T_WORKSPACE.IP) as String?,
-                nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?
+                nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?,
+                resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?
             )
         }
 

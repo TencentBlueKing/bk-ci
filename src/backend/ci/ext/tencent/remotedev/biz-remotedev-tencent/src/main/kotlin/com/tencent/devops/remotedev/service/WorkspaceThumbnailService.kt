@@ -234,7 +234,7 @@ class WorkspaceThumbnailService @Autowired constructor(
 
             workspaceNames.forEach { workspaceName ->
                 try {
-                    // 2s内同画质只允许上传一次
+                    // 1s内同画质只允许上传一次
                     val limitKey = ThumbnailCacheKey(workspaceName).toUploadLimitRedisKey(screenId, size)
                     val limit = redisOperation.get(limitKey)
                     if (limit != null) {

@@ -310,7 +310,7 @@
             justify-content: center;
             grid-gap: 8px;
             font-size: 14px;
-            line-height: 1;
+            line-height: 22px;
             .devops-icon.icon-shift {
                 color: #979BA5;
                 display: inline-flex;

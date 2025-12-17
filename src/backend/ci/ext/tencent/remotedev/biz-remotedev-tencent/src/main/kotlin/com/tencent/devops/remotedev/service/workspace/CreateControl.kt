@@ -558,7 +558,7 @@ class CreateControl @Autowired constructor(
 
                 // 创建实例成功后异步执行流水线
                 workspaceCommon.executeCreateWorkspacePipeline(
-                    ip = ip,
+                    ips = setOf(ip),
                     user = event.userId
                 )
 
@@ -780,6 +780,14 @@ class CreateControl @Autowired constructor(
                 gameId = gameId.second
             )
         )
+
+        // 如果是克隆场景，异步克隆 bksec 安全策略
+        if (copy != null) {
+            workspaceCommon.cloneBkSecPolicy(
+                oldWorkspaceName = copy.workspaceName,
+                newWorkspaceName = ws.workspaceName
+            )
+        }
         return true
     }
 
@@ -911,6 +919,12 @@ class CreateControl @Autowired constructor(
                     pipelineId = info.pipelineId,
                     values = newParam
                 )
+            )
+
+            // 创建实例成功后异步执行流水线
+            workspaceCommon.executeCreateWorkspacePipeline(
+                ips = resIps,
+                user = userId
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)

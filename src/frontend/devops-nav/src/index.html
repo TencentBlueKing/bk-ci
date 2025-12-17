@@ -266,7 +266,7 @@
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js"></script>
-  
+
   <script>
     loadJsAssets(true)
   </script>
@@ -279,12 +279,7 @@
           : LOGIN_SERVICE_URL
 
       const loginUrl = loginUrlPlaceholder.startsWith('//') ? `${location.protocol}${loginUrlPlaceholder}` : loginUrlPlaceholder
-      var cUrl =
-        location.origin +
-        location.pathname +
-        + location.pathname.endsWith('/') ? '' : '/'
-        + '_logout/'
-        encodeURIComponent(location.search)
+      var cUrl = `${location.origin}${location.pathname}${encodeURIComponent(location.search)}`
       if (/=%s/.test(loginUrl)) {
         return loginUrl.replace(/%s/, cUrl)
       } else {

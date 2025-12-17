@@ -28,42 +28,94 @@
                     </bk-radio-group>
                 </section>
             </form-field>
-            <!-- <form-field
-                v-if="isTimerTriggerV2"
-                :label="$t('template.timeCron')"
-            >
-                <section class="component-row">
-                    <bk-input
-                        @focus="handleShowTimeCronCom"
-                    >
-                    </bk-input>
-                </section>
-            </form-field>
-            <sub-parameter
-                v-if="isTimerTriggerV2"
-                :title="$t('details.startupParams')"
-                :value="trigger.variables"
-            /> -->
+            <template v-if="isTimerTriggerV2">
+                <form-field
+                    :label="$t('template.timeCron')"
+                    name="cron"
+                >
+                    <section class="component-row">
+                        <bk-input
+                            v-model="trigger.cron"
+                            :disabled="trigger.isFollowTemplate"
+                            @focus="handleShowTimeCronCom"
+                        />
+                    </section>
+                </form-field>
+                <sub-parameter
+                    name="variables"
+                    :title="$t('details.startupParams')"
+                    :value="trigger.variables"
+                    :disabled="trigger.isFollowTemplate"
+                    :param="timerTriggerParamConfig"
+                    :handle-change="handleChangeStartParam"
+                />
+            </template>
         </bk-form>
+        <bk-dialog
+            v-model="showTimeCronCom"
+            :title="$t('template.setTimeCron')"
+            header-position="left"
+            width="700px"
+            render-directive="if"
+            :mask-close="false"
+            @confirm="handleConfirmChangeCron"
+        >
+            <timer-cron-tab
+                :value="trigger.cron"
+                name="cron"
+                :keep-error="false"
+                show-error
+                :handle-change="handleChangeCron"
+            />
+        </bk-dialog>
     </section>
 </template>
 
 <script setup>
+    import { ref, computed } from 'vue'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    // import SubParameter from '@/components/AtomFormComponent/SubParameter'
+    import SubParameter from '@/components/AtomFormComponent/SubParameter'
+    import TimerCronTab from '@/components/atomFormField/TimerCrontab/'
+
     import { defineProps } from 'vue'
     const props = defineProps({
         index: Boolean,
         trigger: Object,
         handleChangeTrigger: Function
     })
-    // const isTimerTriggerV2 = computed(() => {
-    //     const { version, atomCode } = props.trigger
-    //     return atomCode === 'timerTrigger' && version.startsWith('2.')
-    // })
+    const showTimeCronCom = ref(false)
+    const isTimerTriggerV2 = computed(() => {
+        const { version, atomCode } = props.trigger
+        return atomCode === 'timerTrigger' && version.startsWith('2.')
+    })
+    const newCron = ref('')
+    const timerTriggerParamConfig = computed(() => {
+        return {
+            paramType: 'url',
+            url: '/process/api/user/buildParam/{projectId}/{pipelineId}/buildParamFormProp',
+            urlQuery: {
+                includeConst: false,
+                includeNotRequired: false,
+                isTemplate: ""
+            },
+            parameters: []
+        }
+    })
+    
+    function handleChangeStartParam (name, val) {
+        props.handleChangeTrigger(name, props.index, JSON.parse(val))
+    }
 
-    // function handleShowTimeCronCom () {
-    // }
+    function handleShowTimeCronCom () {
+        showTimeCronCom.value = true
+    }
+    function handleChangeCron (name, val) {
+        newCron.value = val
+    }
+    function handleConfirmChangeCron () {
+        props.handleChangeTrigger('cron', props.index, newCron.value)
+        showTimeCronCom.value = false
+    }
 </script>
 
 <style lang="scss" scoped>

@@ -17,6 +17,8 @@ import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @Suppress("ALL")
 @Service
@@ -129,6 +131,47 @@ class ApiGwService @Autowired constructor(
         }
     }
 
+    /**
+     * 克隆机器的 bksec 安全策略
+     * @param oldWorkspaceName 旧工作空间名称
+     * @param newWorkspaceName 新工作空间名称
+     * @return 任务ID，如果失败返回 null
+     */
+    fun cloneMachinePolicy(
+        oldWorkspaceName: String,
+        newWorkspaceName: String
+    ): String? {
+        val url = "${bkConfig.remoteDevUrl}/apigw/v1/remote_dev/clone_machine_apigw/"
+        val body = mapOf(
+            "old_workspace_name" to oldWorkspaceName,
+            "new_workspace_name" to newWorkspaceName
+        )
+        val requestBody = objectMapper.writeValueAsString(body)
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .headers(genCommonHeader())
+            .build()
+
+        return OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body!!.string()
+            logger.info("cloneMachinePolicy|{}|{}|{}", request.url, response.code, data)
+
+            if (!response.isSuccessful) {
+                logger.error("cloneMachinePolicy request failed|code={}|data={}", response.code, data)
+                return@use null
+            }
+
+            val resp = objectMapper.readValue<RemoteDevApiGwResp<CloneMachinePolicyRespData>>(data)
+            if (!resp.result) {
+                logger.error("cloneMachinePolicy api failed|code={}|msg={}", resp.code, resp.message)
+                return@use null
+            }
+
+            resp.data?.id
+        }
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(ApiGwService::class.java)
     }
@@ -155,4 +198,9 @@ data class AccessDevicePermissionsRespData(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MoaVerifyRespData(
     val result: Boolean?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CloneMachinePolicyRespData(
+    val id: String?
 )

@@ -130,6 +130,25 @@ const customeRules = {
         validate: function (value, args) {
             return Object.values(value).every(val => !!val)
         }
+    },
+    // cron 表达式数组校验规则 - 检查是否为空数组
+    crontabArrayRule: {
+        validate: function (value, args) {
+            // 检查是否为数组且不为空
+            if (Array.isArray(value)) {
+                return value.length > 0
+            }
+            // 支持字符串格式（用于组件内部错误标记）
+            if (typeof value === 'string') {
+                try {
+                    const parsed = JSON.parse(value)
+                    return Array.isArray(parsed) && parsed.length > 0
+                } catch (e) {
+                    return false
+                }
+            }
+            return false
+        }
     }
 }
 
