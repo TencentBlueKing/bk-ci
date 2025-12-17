@@ -2228,10 +2228,6 @@ class PipelineBuildDao {
                     } catch (ignored: Exception) {
                         null
                     },
-                    stageStatus = kotlin.runCatching {
-                        JsonUtil.getObjectMapper()
-                            .readValue(t[tTPipelineBuildHistory.STAGE_STATUS]) as List<LightStageStatus>
-                    }.getOrNull(),
                     buildParameters = t[tTPipelineBuildHistory.BUILD_PARAMETERS]?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
                     },
