@@ -3,7 +3,6 @@ package com.tencent.devops.metrics.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.metrics.config.MetricsUserConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -27,27 +26,51 @@ class MetricsQueryService @Autowired constructor(
 
     @Value("\${metrics.monitor.bizId:}")
     val monitorBizId: String = ""
-    
+
+    @Value("\${metrics.monitor.table:}")
+    val monitorTable: String = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsQueryService::class.java)
     }
-    
+
     /**
      * 查询指标数据
+     * @param projectId 项目ID
      * @param requestParams 请求参数（不包含bk_biz_id）
      * @return 监控平台返回的数据
      */
-    fun queryMetrics(requestParams: Map<String, Any>): Map<String, Any> {
+    fun queryMetrics(projectId: String, requestParams: Map<String, Any>): Map<String, Any> {
         if (monitorUrl.isEmpty()) {
             return emptyMap()
         }
-        // 构建完整的请求参数，添加bk_biz_id
+
+        // 获取promql并进行校验和替换
+        val promql = requestParams["promql"] as? String
+            ?: throw IllegalArgumentException("promql参数不能为空")
+
+        // 安全校验：检测promql必须包含{{table}}占位符
+        if (!promql.contains("{{table}}")) {
+            throw IllegalArgumentException("promql必须包含{{table}}占位符")
+        }
+
+        // 安全校验：检测是否包含危险字符和模式
+        validateNoMaliciousPatterns(promql)
+
+        // 替换占位符
+        val replacedPromql = replacePromqlPlaceholders(promql, projectId)
+
+        // 安全校验：替换后再次检查是否包含非法内容
+        validateReplacedPromql(replacedPromql, projectId)
+
+        // 构建完整的请求参数，添加bk_biz_id和替换后的promql
         val fullParams = requestParams.toMutableMap()
         fullParams["bk_biz_id"] = monitorBizId
-        
+        fullParams["promql"] = replacedPromql
+
         // 构建请求体
         val requestBody = JsonUtil.toJson(fullParams, false)
-        
+
         // 构建认证头
         val authHeader = JsonUtil.toJson(
             mapOf(
@@ -56,9 +79,9 @@ class MetricsQueryService @Autowired constructor(
             ),
             false
         )
-        
+
         logger.info("Query metrics with params: $requestBody")
-        
+
         // 发送HTTP请求
         val request = Request.Builder()
             .url(monitorUrl)
@@ -66,17 +89,17 @@ class MetricsQueryService @Autowired constructor(
             .header("Content-Type", "application/json")
             .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
-        
+
         OkhttpUtils.doHttp(request).use { response ->
             val responseBody = response.body?.string() ?: ""
-            
+
             if (!response.isSuccessful) {
                 logger.error("Query metrics failed: code=${response.code}, body=$responseBody")
                 throw RuntimeException("查询指标数据失败: ${response.code}")
             }
-            
+
             logger.info("Query metrics success: $responseBody")
-            
+
             // 解析响应
             return try {
                 objectMapper.readValue(responseBody, Map::class.java) as Map<String, Any>
@@ -84,6 +107,106 @@ class MetricsQueryService @Autowired constructor(
                 logger.error("Parse response failed", e)
                 throw RuntimeException("解析响应数据失败: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * 替换promql中的占位符
+     * @param promql 原始promql
+     * @param projectId 项目ID
+     * @return 替换后的promql
+     */
+    private fun replacePromqlPlaceholders(promql: String, projectId: String): String {
+        var result = promql
+
+        // 替换{{table}}占位符
+        result = result.replace("{{table}}", monitorTable)
+
+        // 替换{{projectId}}占位符
+        result = result.replace("{{projectId}}", projectId)
+
+        logger.info("Replace promql placeholders: original=$promql, replaced=$result")
+
+        return result
+    }
+
+    /**
+     * 校验是否包含危险字符和模式（防止注入攻击）
+     * @param promql 原始promql
+     */
+    private fun validateNoMaliciousPatterns(promql: String) {
+        // 危险模式列表
+        val dangerousPatterns = listOf(
+            // 防止逻辑运算符绕过
+            Regex("""\s+or\s+""", RegexOption.IGNORE_CASE),
+            Regex("""\s+and\s+""", RegexOption.IGNORE_CASE),
+//            Regex("""\s+unless\s+""", RegexOption.IGNORE_CASE),
+            // 防止注释注入
+            Regex("""#.*"""),
+            // 防止多语句
+            Regex(""";"""),
+            // 防止命令注入
+            Regex("""\$\{.*\}"""),
+            Regex("""`.*`"""),
+            // 防止访问其他表（不通过占位符）
+            Regex("""[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+\{""")
+        )
+
+        for (pattern in dangerousPatterns) {
+            if (pattern.containsMatchIn(promql)) {
+                logger.warn("检测到危险模式，可能存在注入攻击: pattern=$pattern, promql=$promql")
+                throw IllegalArgumentException("promql包含非法字符或模式")
+            }
+        }
+
+        // 检查是否只包含允许的占位符
+        val allowedPlaceholders = setOf("{{table}}", "{{projectId}}")
+        val placeholderPattern = Regex("""\{\{[^}]+\}\}""")
+        val foundPlaceholders = placeholderPattern.findAll(promql).map { it.value }.toSet()
+        val invalidPlaceholders = foundPlaceholders - allowedPlaceholders
+
+        if (invalidPlaceholders.isNotEmpty()) {
+            logger.warn("检测到非法占位符: $invalidPlaceholders, promql=$promql")
+            throw IllegalArgumentException("promql包含非法占位符: ${invalidPlaceholders.joinToString()}")
+        }
+    }
+
+    /**
+     * 校验替换后的promql是否合法（防止替换后注入）
+     * @param replacedPromql 替换后的promql
+     * @param projectId 项目ID
+     */
+    private fun validateReplacedPromql(replacedPromql: String, projectId: String) {
+        // 确保替换后的promql包含配置的表名
+        if (!replacedPromql.contains(monitorTable)) {
+            logger.error("替换后的promql不包含配置的表名: table=${monitorTable}, promql=$replacedPromql")
+            throw IllegalArgumentException("promql替换失败")
+        }
+
+        // 确保替换后的promql包含当前项目ID（防止跨项目查询）
+        if (!replacedPromql.contains(projectId)) {
+            logger.warn("替换后的promql不包含项目ID，可能存在跨项目查询风险: projectId=$projectId, promql=$replacedPromql")
+            throw IllegalArgumentException("promql必须包含{{projectId}}占位符")
+        }
+
+        // 检查是否存在多个不同的项目ID（防止跨项目查询）
+        val projectIdPattern = Regex("""dimensions__bk_46__projectId\s*=\s*["']([^"']+)["']""")
+        val foundProjectIds = projectIdPattern.findAll(replacedPromql)
+            .map { it.groupValues[1] }
+            .toSet()
+
+        if (foundProjectIds.size > 1 || (foundProjectIds.isNotEmpty() && !foundProjectIds.contains(projectId))) {
+            logger.warn(
+                "检测到跨项目查询攻击: expectedProjectId=$projectId, foundProjectIds=$foundProjectIds, " +
+                    "promql=$replacedPromql"
+            )
+            throw IllegalArgumentException("不允许跨项目查询")
+        }
+
+        // 检查是否仍然包含占位符（防止替换不完整）
+        if (replacedPromql.contains("{{") || replacedPromql.contains("}}")) {
+            logger.error("替换后的promql仍包含占位符: $replacedPromql")
+            throw IllegalArgumentException("promql包含未识别的占位符")
         }
     }
 }

@@ -27,8 +27,15 @@ class UserMetricsResourceImpl @Autowired constructor(
         logger.info("Query metrics for project: $projectId, user: $userId, request: $request")
         
         return try {
-            val result = metricsQueryService.queryMetrics(request)
+            val result = metricsQueryService.queryMetrics(projectId, request)
             Result(result)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid request parameters for project: $projectId", e)
+            Result(
+                status = 1,
+                message = e.message ?: "请求参数不合法",
+                data = null
+            )
         } catch (e: Exception) {
             logger.error("Query metrics failed for project: $projectId", e)
             Result(
