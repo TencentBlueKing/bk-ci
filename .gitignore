@@ -58,5 +58,6 @@ pre-*-bkcodeai
 
 .codebuddy/
 .cursor/
-specs/
 .specify/
+.cursorrules
+CODEBUDDY.md
