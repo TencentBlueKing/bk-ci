@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
 
@@ -105,7 +106,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
                     projectId = projectId,
                     model = model,
                     referId = pipelineId,
-                    referType = "PIPELINE",
+                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE.name,
                     referVersion = model.latestVersion
                 )
             }
@@ -115,7 +116,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
                     projectId = projectId,
                     model = model,
                     referId = templateId,
-                    referType = "TEMPLATE",
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE.name,
                     referVersion = model.latestVersion
                 )
             }
