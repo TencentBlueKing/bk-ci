@@ -159,7 +159,7 @@ class ContainerBuildRecordService(
         containerBuildDetailService.containerPreparing(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerPreparing#$containerId",
+            operation = "containerPreparing#$containerId",
             lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             updateContainerRecord(
@@ -193,7 +193,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerStarted#$containerId",
+            operation = "containerStarted#$containerId",
             lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             updateContainerRecord(
@@ -234,7 +234,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "$operation#$containerId",
+            operation = "$operation#$containerId",
             lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             dslContext.transaction { configuration ->
@@ -342,7 +342,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId",
+            operation = "updateMatrixGroupContainer#$matrixGroupId",
             lock = ContainerBuildRecordLock(redisOperation, buildId, matrixGroupId, executeCount)
         ) {
             logger.info(
@@ -370,7 +370,7 @@ class ContainerBuildRecordService(
         containerBuildDetailService.containerSkip(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerSkip#$containerId",
+            operation = "containerSkip#$containerId",
             lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
@@ -407,7 +407,7 @@ class ContainerBuildRecordService(
         if (executeCount == null) return
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)",
+            operation = "saveBuildVmInfo($projectId,$pipelineId)",
             lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             dslContext.transaction { configuration ->

@@ -90,56 +90,25 @@ open class BaseBuildRecordService(
         buildId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        cancelUser: String? = null,
         operation: String = "",
         lock: AbstractBuildRecordLock,
         refreshOperation: () -> Unit
     ) {
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
-        var message = "nothing"
-        var startUser: String? = null
+        var message = ""
         try {
-
-            watcher.start("getRecord")
-            val (oldStatus, recordStartUser, recordCancelUser) = buildRecordModelDao.getBuildStatusAndUsers(
-                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, executeCount = executeCount
-            ) ?: run {
-                message = "Model record is empty"
-                return
-            }
-
             watcher.start("lock")
             lock.use {
                 watcher.start("refreshOperation")
                 refreshOperation()
             }
-
-            watcher.start("updateModelRecord")
-            startUser = recordStartUser
-            val (change, finalStatus) = takeBuildStatus(oldStatus, buildStatus)
-            if (!change && cancelUser.isNullOrBlank()) {
-                message = "Build status did not change"
-                return
-            }
-            buildRecordModelDao.updateStatus(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                executeCount = executeCount,
-                buildStatus = finalStatus,
-                cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
-                    ?: if (buildStatus.isCancel() && recordCancelUser.isNullOrBlank()) "System" else null
-            )
-            message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
             watcher.start("dispatchEvent")
-            pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            pipelineRecordChangeEvent(projectId, pipelineId, buildId, executeCount)
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
@@ -298,18 +267,13 @@ open class BaseBuildRecordService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        startUser: String?,
         executeCount: Int
     ) {
-        val userId = startUser
-            ?: pipelineBuildDao.getUserBuildInfo(dslContext, projectId, buildId)?.startUser
-            ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
                 source = "recordChange",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = userId,
                 buildId = buildId,
                 executeCount = executeCount,
                 refreshTypes = RefreshType.RECORD.binary

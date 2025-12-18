@@ -144,7 +144,7 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = "taskStart#$taskId",
+            operation = "taskStart#$taskId",
             lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             val delimiters = ","
@@ -392,7 +392,7 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = "taskEnd#$taskId",
+            operation = "taskEnd#$taskId",
             lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             dslContext.transaction { configuration ->
@@ -624,7 +624,7 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = operation,
+            operation = operation,
             lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             dslContext.transaction { configuration ->

@@ -42,7 +42,8 @@ data class PipelineBuildWebSocketPushEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
-    override val userId: String,
+    @Deprecated("推送状态消息无需关系事件来源")
+    override val userId: String = "",
     val buildId: String,
     val refreshTypes: Long, // HISTORY or DETAIL or STATUS 位运算
     val executeCount: Int? = null,

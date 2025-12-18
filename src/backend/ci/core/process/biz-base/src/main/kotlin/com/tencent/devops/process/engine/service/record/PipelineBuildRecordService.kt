@@ -632,7 +632,6 @@ class PipelineBuildRecordService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                startUser = recordModel.startUser,
                 executeCount = executeCount
             )
         }
@@ -719,7 +718,6 @@ class PipelineBuildRecordService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                startUser = recordModel.startUser,
                 executeCount = executeCount
             )
             allStageStatus = fetchHistoryStageStatus(

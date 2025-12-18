@@ -116,7 +116,7 @@ class StageBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateStageStatus#$stageId",
+            operation = "updateStageStatus#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
@@ -178,7 +178,7 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_skip|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "stageSkip#$stageId",
+            operation = "stageSkip#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             recordContainerDao.updateRecordStatus(
@@ -223,7 +223,7 @@ class StageBuildRecordService(
 
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
-            cancelUser = null, operation = "stagePause#$stageId",
+            operation = "stagePause#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
@@ -272,7 +272,7 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.CANCELED,
-            cancelUser = null, operation = "stageCancel#$stageId",
+            operation = "stageCancel#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
@@ -334,7 +334,7 @@ class StageBuildRecordService(
 
         update(
             projectId, pipelineId, buildId, executeCount, newBuildStatus,
-            cancelUser = null, operation = "stageCheckQuality#$stageId",
+            operation = "stageCheckQuality#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
@@ -385,7 +385,7 @@ class StageBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
-            cancelUser = null, operation = "stageReview#$stageId",
+            operation = "stageReview#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
@@ -418,7 +418,7 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "stageStart#$stageId",
+            operation = "stageStart#$stageId",
             lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
