@@ -461,7 +461,7 @@
         }
         // 流水线入参 新增/删除/变更统计
         curInstance?.value?.param?.forEach(item => {
-            if (item?.propertyUpdates?.length) {
+            if (!allVersionKeyList.includes(item.id) && item?.propertyUpdates?.length) {
                 counts.changed++
             }
             if (allVersionKeyList.includes(item.id) && item?.isChange) {
@@ -1165,7 +1165,6 @@
                         currentBuildNo: templateBuildNo?.buildNo,
                         initialBuildNo: initialBuildNo?.buildNo
                     })
-                    
                     proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
                         index: activeIndex.value - 1,
                         value: {
@@ -1178,19 +1177,20 @@
                                 ...curInstance.value?.buildNo,
                                 buildNo: templateBuildNo?.buildNo,
                                 buildNoType: templateBuildNo?.buildNoType,
-                                currentBuildNo: needResetBuildNo ? templateBuildNo?.buildNo : curInstance.value?.buildNo?.currentBuildNo,
+                                currentBuildNo: needResetBuildNo ? templateBuildNo?.buildNo : initialBuildNo?.currentBuildNo,
                                 isFollowTemplate: true
                             },
                             param: curInstance.value?.param.map(p => {
                                 const templateParamDefault = curTemplateDetail.value.param?.find(t => t.id === p.id)?.defaultValue
+                                const initialParamDefault = initialParams?.find(t => t.id === p.id)?.defaultValue
                                 if (allVersionKeyList.includes(p.id)) {
                                     return {
                                         ...p,
                                         defaultValue: allVersionKeyList.includes(p.id)
                                             ? templateParamDefault
                                             : p.defaultValue,
-                                        isChange: p.defaultValue !== templateParamDefault,
-                                        hasChange: p.defaultValue !== templateParamDefault
+                                        isChange: initialParamDefault !== templateParamDefault,
+                                        hasChange: initialParamDefault !== templateParamDefault
                                     }
                                 }
                                 return p
