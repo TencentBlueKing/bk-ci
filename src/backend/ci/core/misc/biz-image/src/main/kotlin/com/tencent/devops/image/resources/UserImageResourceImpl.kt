@@ -41,7 +41,6 @@ import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_FILE_VALID_IMAG
 import com.tencent.devops.image.constants.ImageMessageCode.USER_NOT_UPLOAD_IMAGE_PERMISSION
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
-import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import com.tencent.devops.image.pojo.UploadImageTask
 import com.tencent.devops.image.service.ImageArtifactoryService
@@ -153,6 +152,47 @@ class UserImageResourceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.error("list project image failed", e)
             throw RuntimeException("list project image failed")
+        }
+    }
+
+    override fun listProjectBuildImages(
+        userId: String,
+        projectId: String,
+        searchKey: String?,
+        start: Int?,
+        limit: Int?
+    ): Result<ImagePageData> {
+        val vSearchKey = searchKey ?: ""
+        val vStart = if (start == null || start == 0) 0 else start
+        val vLimit = if (limit == null || limit == 0) 10000 else limit
+
+        try {
+            return Result(artifactoryService.listProjectBuildImages(projectId, vSearchKey, vStart, vLimit))
+        } catch (e: Exception) {
+            logger.error("list project build image failed", e)
+            throw RuntimeException("list project build image failed")
+        }
+    }
+
+    override fun listDockerBuildImages(userId: String, projectId: String): Result<List<DockerTag>> {
+        checkUserAndProject(userId, projectId)
+
+        try {
+            return Result(artifactoryService.listDockerBuildImages(projectId))
+        } catch (e: Exception) {
+            logger.error("list docker build image failed", e)
+            throw RuntimeException("list docker build image failed")
+        }
+    }
+
+    override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
+        checkUserAndProject(userId, projectId)
+
+        try {
+            return Result(artifactoryService.listDevCloudImages(projectId, public))
+        } catch (e: Exception) {
+            logger.error("list dev cloud image failed", e)
+            throw RuntimeException("list dev cloud image failed")
         }
     }
 

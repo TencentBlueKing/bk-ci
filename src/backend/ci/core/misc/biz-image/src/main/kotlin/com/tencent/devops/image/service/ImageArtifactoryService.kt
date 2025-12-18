@@ -165,6 +165,20 @@ class ImageArtifactoryService @Autowired constructor(
         )
     }
 
+    fun listDevCloudImages(projectId: String, public: Boolean): List<DockerTag> {
+        val aql = if (public) {
+            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+                    "{\"path\":{\"\$match\":\"devcloud/public/*\"}}]}).include(\"property.key\",\"property.value\")"
+        } else {
+            "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}},{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+                    "{\"path\":{\"\$match\":\"devcloud/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
+        }
+
+        logger.info("aql: $aql")
+
+        return aqlSearchImage(aql)
+    }
+
     fun getImageInfo(
         userId: String,
         projectId: String,
@@ -491,6 +505,150 @@ class ImageArtifactoryService @Autowired constructor(
                 projectId = projectId,
                 repoName = repoName,
                 imageName = it.name
+            )
+        }
+    }
+    private fun aqlSearchImage(aql: String): List<DockerTag> {
+        val url = "${dockerConfig.registryUrl}/api/search/aql"
+
+        logger.info("POST url: $url")
+        logger.info("requestAql: $aql")
+
+//        val okHttpClient = okhttp3.OkHttpClient.Builder()
+//            .connectTimeout(5L, TimeUnit.SECONDS)
+//            .readTimeout(60L, TimeUnit.SECONDS)
+//            .writeTimeout(60L, TimeUnit.SECONDS)
+//            .build()
+        val request = Request.Builder().url(url)
+            .post(RequestBody.create(null, aql))
+            .header("Authorization", credential)
+            .build()
+//        val call = okHttpClient.newCall(request)
+        OkhttpUtils.doHttp(request).use { response ->
+            try {
+//            val response = call.execute()
+                if (!response.isSuccessful) {
+                    logger.error("sql search failed, statusCode: ${response.code}")
+                    throw RuntimeException("aql search failed")
+                }
+
+                val responseBody = response.body?.string()
+                logger.info("responseBody: $responseBody")
+                return parseImages(responseBody!!)
+            } catch (e: Exception) {
+                logger.error("aql search failed", e)
+                throw RuntimeException("aql search failed")
+            }
+        }
+    }
+
+    private fun parseImages(dataStr: String): List<DockerTag> {
+        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr)
+        val results = responseData["results"] as List<Map<String, Any>>
+        val images = mutableListOf<DockerTag>()
+        for (it in results) {
+            val dockerTag = DockerTag()
+            dockerTag.created = DateTime(it["created"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.createdBy = it["created_by"] as String
+            dockerTag.modified = DateTime(it["modified"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.modifiedBy = it["modified_by"] as String
+
+            val properties = it["properties"] as List<Map<String, Any>>
+            for (item in properties) {
+                val key = item["key"] ?: ""
+                val value = item["value"] ?: ""
+                if (key == "docker.manifest") {
+                    dockerTag.tag = value as String
+                    continue
+                }
+                if (key == "docker.repoName") {
+                    dockerTag.repo = value as String
+                    continue
+                }
+                if (key == "devops.creator") {
+                    dockerTag.createdBy = value as String
+                }
+                if (key == "devops.desc") {
+                    dockerTag.desc = value as String
+                }
+            }
+
+            // 过滤掉路径跟repo匹配不上的镜像
+            val path = it["path"] as String
+            if (path.contains('/')) {
+                if (path.substring(0, path.lastIndexOf("/")) != dockerTag.repo) {
+                    continue
+                }
+            }
+
+            dockerTag.image = "${dockerConfig.imagePrefix}/${dockerTag.repo}:${dockerTag.tag}"
+            images.add(dockerTag)
+        }
+        return images
+    }
+
+    fun listProjectBuildImages(projectCode: String, searchKey: String, start: Int, limit: Int): ImagePageData {
+        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+                "{\"name\":{\"\$eq\":\"manifest.json\"}},{\"path\":{\"\$match\":\"paas/bkdevops/$projectCode/*\"}}," +
+                "{\"@docker.repoName\":{\"\$match\":\"*$searchKey*\"}}]}).include(\"property.key\",\"property.value\")"
+        logger.info("aql: $aql")
+
+        return listProjectImagesByAql(aql, start, limit)
+    }
+
+    fun listDockerBuildImages(projectId: String): List<DockerTag> {
+        val aql = "items.find({\"\$and\":[{\"repo\":{\"\$eq\":\"docker-local\"}}," +
+                "{\"name\":{\"\$eq\":\"manifest.json\"}}," +
+                "{\"path\":{\"\$match\":\"paas/bkdevops/$projectId/*\"}}]}).include(\"property.key\",\"property.value\")"
+        logger.info("aql: $aql")
+
+        return aqlSearchImage(aql)
+    }
+
+    private fun listProjectImagesByAql(aql: String, start: Int, limit: Int): ImagePageData {
+        val images = aqlSearchImage(aql)
+        val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
+        val repos = repoNames.map {
+            DockerRepo().apply {
+                repoUrl = dockerConfig.imagePrefix
+                repo = it
+                type = "private"
+                createdBy = "system"
+                name = parseName(it!!)
+            }
+        }
+
+        val total = repos.size
+        val pageRange = getPageIndex(total, start, limit)
+        val resultRepos = repos.subList(pageRange.first, pageRange.second)
+
+        return ImagePageData(resultRepos, start, limit, total)
+    }
+
+    fun listAllProjectImages(projectCode: String, searchKey: String?): ImageListResp {
+        // 查询项目镜像列表
+        val aql = generateListProjectImagesAql(projectCode, searchKey ?: "")
+        val projectImages = aqlSearchImage(aql)
+        val imageList = mutableListOf<ImageItem>()
+        handleImageList(projectImages, imageList)
+        // 获取项目Docker构建镜像列表
+        val dockerProjectImages = listDockerBuildImages(projectCode)
+        handleImageList(dockerProjectImages, imageList)
+        // 获取项目devCloud镜像列表
+        val devCloudProjectImages = listDevCloudImages(projectCode, false)
+        handleImageList(devCloudProjectImages, imageList)
+        return ImageListResp(imageList)
+    }
+
+    private fun handleImageList(images: List<DockerTag>, imageList: MutableList<ImageItem>) {
+        val repoNames = images.map { it.repo }.toSet().toList().sortedBy { it }
+        repoNames.forEach {
+            imageList.add(
+                ImageItem(
+                    repoUrl = dockerConfig.imagePrefix!!,
+                    repo = it!!,
+                    name = parseName(it)
+                )
             )
         }
     }
