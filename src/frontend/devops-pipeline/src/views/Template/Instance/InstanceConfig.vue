@@ -99,7 +99,6 @@
                                 v-if="hasPipelineParams"
                                 ref="paramsForm"
                                 :param-values="paramsValues"
-                                ::all-pipeline-param-values="allParamValues"
                                 :handle-param-change="handleParamChange"
                                 :params="paramsList"
                                 :is-exec-preview="false"
@@ -534,13 +533,6 @@
             return [...paramsList.value, ...versionParams.value].length
         }
         return paramsList.value.length
-    })
-    const allParamValues = computed(() => {
-        return {
-            ...paramsValues.value,
-            ...constantValues.value,
-            ...otherValues.value
-        }
     })
     watch(() => activeIndex.value, () => {
         isLoading.value = true
