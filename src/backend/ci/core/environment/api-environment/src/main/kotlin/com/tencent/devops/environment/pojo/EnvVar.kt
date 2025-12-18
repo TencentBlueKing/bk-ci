@@ -43,5 +43,5 @@ data class EnvVar(
     @get:Schema(title = "最后修改人", required = false)
     var lastUpdateUser: String?,
     @get:Schema(title = "最后修改时间", required = false)
-    var lastUpdateTime: LocalDateTime?
+    var lastUpdateTime: Long?
 )
