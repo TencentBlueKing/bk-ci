@@ -962,6 +962,14 @@
             index: activeIndex.value - 1,
             value: {
                 ...curInstance.value,
+                // 如果是版本号参数,更新 buildNo 和 resetBuildNo
+                ...(isVersionParam && {
+                    buildNo: {
+                        ...curInstance.value?.buildNo,
+                        currentBuildNo: newCurrentBuildNo
+                    },
+                    resetBuildNo: versionParamChanged
+                }),
                 param: curInstance.value?.param.map(p => {
                     if (p.id === id) {
                         // 更新当前参数的值
@@ -986,15 +994,11 @@
                         // 计算 hasChange：对比修改后的值与模板值
                         let hasChange = false
                         if (templateParam) {
-                            const templateDefaultValue = allVersionKeyList.includes(id)
-                                ? Number(templateParam.defaultValue)
-                                : templateParam.defaultValue
-                            const currentValue = allVersionKeyList.includes(id)
-                                ? Number(value)
-                                : value
+                            const templateDefaultValue = templateParam.defaultValue
+                            const currentValue = value
                             
                             hasChange = isObject(currentValue)
-                                ? !isShallowEqual(currentValue, templateDefaultValue)
+                                ? !isShallowEqual(value, templateDefaultValue)
                                 : currentValue !== templateDefaultValue
                         }
                         const propertyUpdates = collectPropertyUpdates({
@@ -1010,14 +1014,6 @@
                         }
                     }
                     return p
-                }),
-                // 如果是版本号参数,更新 buildNo 和 resetBuildNo
-                ...(isVersionParam && {
-                    buildNo: {
-                        ...curInstance.value?.buildNo,
-                        currentBuildNo: newCurrentBuildNo
-                    },
-                    resetBuildNo: versionParamChanged
                 })
             }
         })
@@ -1236,10 +1232,12 @@
                 break
 
             case 'trigger':
-                const temTriggerValue = curTemplateDetail.value.triggerConfigs?.find(trigger => trigger.stepId === id).disabled
+                const templateTrigger = curTemplateDetail.value.triggerConfigs?.find(trigger => trigger.stepId === id)
+                const initialInstanceTrigger = initialInstanceList.value?.[activeIndex.value - 1]?.triggerConfigs?.find(trigger => trigger.stepId === id)
                 const triggerStepIds = [...(curInstance.value.overrideTemplateField?.triggerStepIds ?? [])]
                 index = triggerStepIds.indexOf(target)
                 index > -1 ? triggerStepIds.splice(index, 1) : triggerStepIds.push(target)
+                
                 proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
                     index: activeIndex.value - 1,
                     value: {
@@ -1250,11 +1248,37 @@
                         },
 
                         triggerConfigs: curInstance.value?.triggerConfigs.map(trigger => {
-                            return {
-                                ...trigger,
-                                disabled: trigger.stepId === id ? temTriggerValue : trigger.disabled,
-                                isFollowTemplate: trigger.stepId === id ? !trigger.isFollowTemplate: trigger.isFollowTemplate
+                            if (trigger.stepId === id) {
+                                const newIsFollowTemplate = !trigger.isFollowTemplate
+                                
+                                // 如果切换为跟随模板，需要重置定时规则和启动参数为模板的值
+                                if (newIsFollowTemplate && templateTrigger) {
+                                    return {
+                                        ...trigger,
+                                        disabled: templateTrigger.disabled,
+                                        cron: templateTrigger.cron,
+                                        variables: templateTrigger.variables,
+                                        isFollowTemplate: newIsFollowTemplate
+                                    }
+                                }
+                                
+                                // 如果切换为不跟随模板，需要重置定时规则和启动参数为初始实例的值
+                                if (!newIsFollowTemplate && initialInstanceTrigger) {
+                                    return {
+                                        ...trigger,
+                                        disabled: initialInstanceTrigger.disabled,
+                                        cron: initialInstanceTrigger.cron,
+                                        variables: initialInstanceTrigger.variables,
+                                        isFollowTemplate: newIsFollowTemplate
+                                    }
+                                }
+                                
+                                return {
+                                    ...trigger,
+                                    isFollowTemplate: newIsFollowTemplate
+                                }
                             }
+                            return trigger
                         })
                     }
                 })
