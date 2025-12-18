@@ -68,7 +68,7 @@ class PublicVarService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarService::class.java)
-        
+
         // 正则表达式常量
         private val VAR_NAME_REGEX = Regex("^[0-9a-zA-Z_]+$")
     }
@@ -226,11 +226,8 @@ class PublicVarService @Autowired constructor(
             it.version == null
         }
         if (groupsToUpdate.isEmpty()) return
-        // 批量获取所有非固定版本组的最新版本信息
-        val groupNames = groupsToUpdate.map { it.groupName }
-        val latestGroupVersionMap = getLatestVersionsForGroups(projectId, groupNames)
-        // 批量获取所有变量组最新版本的变量
-        val latestVars = getAllLatestVarsForGroups(projectId, latestGroupVersionMap)
+
+        // 查询引用信息，获取sourceProjectId
         val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
@@ -238,6 +235,17 @@ class PublicVarService @Autowired constructor(
             referId = referId,
             referVersion = referVersion
         )
+
+        // 从引用信息中获取源头项目ID，如果没有则使用当前项目ID
+        val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
+        logger.info("handleModelParams sourceProjectId: $sourceProjectId, projectId: $projectId")
+
+        // 批量获取所有非固定版本组的最新版本信息（使用源头项目ID）
+        val groupNames = groupsToUpdate.map { it.groupName }
+        val latestGroupVersionMap = getLatestVersionsForGroups(sourceProjectId, groupNames)
+        // 批量获取所有变量组最新版本的变量（使用源头项目ID）
+        val latestVars = getAllLatestVarsForGroups(sourceProjectId, latestGroupVersionMap)
+
         val params = model.getTriggerContainer().params
 
         // 为每个变量组处理并设置 variables
@@ -462,5 +470,4 @@ class PublicVarService @Autowired constructor(
             }
         }
     }
-
 }

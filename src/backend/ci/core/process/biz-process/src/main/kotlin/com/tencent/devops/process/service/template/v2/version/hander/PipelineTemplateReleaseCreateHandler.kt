@@ -112,7 +112,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referName = pipelineTemplateInfo.name,
                     referVersion = resourceOnlyVersion.version.toInt(),
-                    referVersionName = resourceOnlyVersion.versionName ?: ""
+                    referVersionName = resourceOnlyVersion.versionName ?: "",
+                    referHasSource = true
                 )
             )
         }

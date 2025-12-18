@@ -47,6 +47,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
@@ -75,6 +76,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
+    private val templateDao: TemplateDao,
     private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao,
     private val sampleEventDispatcher: SampleEventDispatcher
@@ -82,11 +84,11 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
-        
+
         // 批量操作相关常量
         private const val DEFAULT_BATCH_SIZE = 100
         private const val MAX_RETRY_TIMES = 3
-        
+
         // 默认版本号（表示动态版本）
         private const val DYNAMIC_VERSION = -1
     }
@@ -284,9 +286,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      * @return 分页结果
      */
     fun listVarReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
-        
+
         val (totalCount, varGroupReferInfo) = queryVarGroupReferInfo(queryReq)
-        
+
         logger.info("listVarReferInfo queryReq:{$queryReq }totalCount: $totalCount ${varGroupReferInfo.size}")
         if (totalCount == 0) {
             return Page(
@@ -570,6 +572,104 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
+     * 获取源头项目ID
+     * 当referHasSource为true时，根据referType检查referId是否存在源模板，并获取源模板所属的项目ID
+     * @param projectId 当前项目ID
+     * @param referId 引用资源ID（模板ID或流水线ID）
+     * @param referType 引用类型（TEMPLATE或PIPELINE）
+     * @param referHasSource 是否存在源模板
+     * @return 源头项目ID，如果不存在源头则返回当前projectId
+     */
+    private fun getSourceProjectId(
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referHasSource: Boolean
+    ): String {
+        // 如果referHasSource为false，直接返回当前projectId
+        if (!referHasSource) {
+            return projectId
+        }
+
+        return try {
+            when (referType) {
+                PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
+                    // 模板类型：直接查询T_TEMPLATE.SRC_TEMPLATE_ID
+                    getSourceProjectIdForTemplate(projectId, referId)
+                }
+                PublicVerGroupReferenceTypeEnum.PIPELINE -> {
+                    // 流水线类型：先查询T_TEMPLATE_PIPELINE判断是否为模板实例
+                    getSourceProjectIdForPipeline(projectId, referId)
+                }
+            }
+        } catch (e: Throwable) {
+            logger.warn("Failed to get source project id for referId: $referId, referType: $referType", e)
+            projectId
+        }
+    }
+
+    /**
+     * 获取模板类型的源头项目ID
+     * 查询T_TEMPLATE.SRC_TEMPLATE_ID，如果存在则根据源模板ID查询其所属项目
+     */
+    private fun getSourceProjectIdForTemplate(projectId: String, templateId: String): String {
+        // 查询模板的源模板ID
+        val srcTemplateId = templateDao.getSrcTemplateId(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
+
+        if (srcTemplateId.isNullOrBlank()) {
+            return projectId
+        }
+
+        // 根据源模板ID查询其所属项目ID
+        val sourceProjectId = templateDao.getProjectIdByTemplateId(
+            dslContext = dslContext,
+            templateId = srcTemplateId
+        )
+
+        return sourceProjectId ?: projectId
+    }
+
+    /**
+     * 获取流水线类型的源头项目ID
+     * 先查询T_TEMPLATE_PIPELINE判断流水线是否为模板实例，
+     * 如果是则获取TEMPLATE_ID，再查询T_TEMPLATE.SRC_TEMPLATE_ID获取源模板所属项目
+     */
+    private fun getSourceProjectIdForPipeline(projectId: String, pipelineId: String): String {
+        val templateId = templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.templateId
+
+        if (templateId.isNullOrBlank()) {
+            return projectId
+        }
+
+        // 查询模板的源模板ID
+        val srcTemplateId = templateDao.getSrcTemplateId(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
+
+        if (srcTemplateId.isNullOrBlank()) {
+            return projectId
+        }
+
+        // 根据源模板ID查询其所属项目ID
+        val sourceProjectId = templateDao.getProjectIdByTemplateId(
+            dslContext = dslContext,
+            templateId = srcTemplateId
+        )
+
+        return sourceProjectId ?: projectId
+    }
+
+    /**
      * 处理变量组引用业务逻辑
      */
     fun handleVarGroupReferBus(
@@ -580,9 +680,18 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         if (params.isEmpty()) {
             return
         }
+
         // 检查参数ID是否存在重复
         validateParamIds(params)
 
+        // 源头检查：当referHasSource为true时，获取源头项目ID
+        val sourceProjectId = getSourceProjectId(
+            projectId = publicVarGroupReferDTO.projectId,
+            referId = publicVarGroupReferDTO.referId,
+            referType = publicVarGroupReferDTO.referType,
+            referHasSource = publicVarGroupReferDTO.referHasSource
+        )
+        
         // 查询历史引用记录
         val historicalReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
@@ -594,9 +703,13 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
         model.handlePublicVarInfo()
         val publicVarGroups = model.publicVarGroups
-        publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
+        publicVarGroups?.let { validatePublicVarGroupsExist(sourceProjectId, it) }
         // 提取并处理动态变量组
-        val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(publicVarGroupReferDTO, params)
+        val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(
+            publicVarGroupReferDTO = publicVarGroupReferDTO,
+            params = params,
+            sourceProjectId = sourceProjectId
+        )
 
         // 更新引用计数和批量保存
         updateReferenceCountsAfterSave(
@@ -696,17 +809,16 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
-     * 验证参数ID是否重复
+     * 验证公共变量参数ID是否重复（只检查varGroupName不为空的参数）
      */
     private fun validateParamIds(params: List<BuildFormProperty>) {
-        val seenIds = HashSet<String>(params.size)
-        val duplicateIds = mutableSetOf<String>()
-
-        for (param in params) {
-            if (!seenIds.add(param.id)) {
-                duplicateIds.add(param.id)
-            }
-        }
+        // 只检查公共变量参数，统计ID出现次数并过滤出重复的
+        val duplicateIds = params
+            .filter { !it.varGroupName.isNullOrBlank() }
+            .groupingBy { it.id }
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
 
         if (duplicateIds.isNotEmpty()) {
             throw ErrorCodeException(
@@ -715,7 +827,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             )
         }
     }
-
+    
     /**
      * 验证变量组是否存在
      */
@@ -724,7 +836,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         publicVarGroups: List<PublicVarGroupRef>
     ) {
         val groupNames = publicVarGroups.map { it.groupName }.distinct()
-        
+
         // 批量查询变量组是否存在
         val existingGroups = publicVarGroupDao.listGroupsNameByProjectId(
             dslContext = dslContext,
@@ -747,7 +859,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun processDynamicVarGroups(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
-        params: MutableList<BuildFormProperty>
+        params: MutableList<BuildFormProperty>,
+        sourceProjectId: String
     ): List<ResourcePublicVarGroupReferPO> {
 
         // 提取非固定版本的变量组变量并记录位置信息
@@ -793,7 +906,11 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 
             // 批量生成ID并保存
             resourcePublicVarGroupReferPOS.addAll(
-                createReferRecords(publicVarGroupReferDTO, dynamicPublicVarWithPositions)
+                createReferRecords(
+                    publicVarGroupReferDTO = publicVarGroupReferDTO,
+                    dynamicPublicVarWithPositions = dynamicPublicVarWithPositions,
+                    sourceProjectId = sourceProjectId
+                )
             )
         }
 
@@ -805,7 +922,8 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun createReferRecords(
         publicVarGroupReferDTO: PublicVarGroupReferDTO,
-        dynamicPublicVarWithPositions: Map<PublicGroupKey, List<PublicVarPositionPO>>
+        dynamicPublicVarWithPositions: Map<PublicGroupKey, List<PublicVarPositionPO>>,
+        sourceProjectId: String
     ): List<ResourcePublicVarGroupReferPO> {
 
         val currentTime = LocalDateTime.now()
@@ -830,6 +948,11 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 version = key.version ?: -1,
                 referId = publicVarGroupReferDTO.referId,
                 referName = publicVarGroupReferDTO.referName,
+                sourceProjectId = if (sourceProjectId != publicVarGroupReferDTO.projectId) {
+                    sourceProjectId
+                } else {
+                    null
+                },
                 referType = publicVarGroupReferDTO.referType,
                 referVersion = publicVarGroupReferDTO.referVersion,
                 referVersionName = publicVarGroupReferDTO.referVersionName,
@@ -971,10 +1094,18 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         val versionName = publicVarGroup.versionName
         val version = publicVarGroup.version
 
-        // 查询变量组信息
+        // 检查引用是否存在源模板项目，获取源头项目ID
+        val sourceProjectId = getSourceProjectId(
+            projectId = publicVarGroupReferDTO.projectId,
+            referId = publicVarGroupReferDTO.referId,
+            referType = publicVarGroupReferDTO.referType,
+            referHasSource = publicVarGroupReferDTO.referHasSource
+        )
+
+        // 使用源头项目ID查询变量组信息
         val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
             dslContext = dslContext,
-            projectId = publicVarGroupReferDTO.projectId,
+            projectId = sourceProjectId,
             groupName = groupName,
             version = version,
             versionName = versionName
@@ -983,10 +1114,10 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             params = arrayOf(groupName)
         )
 
-        // 查询变量组中的变量
+        // 使用源头项目ID查询变量组中的变量
         val groupVars = publicVarDao.listVarByGroupName(
             dslContext = dslContext,
-            projectId = publicVarGroupReferDTO.projectId,
+            projectId = sourceProjectId,
             groupName = groupName,
             version = varGroupRecord.version
         )
@@ -1020,13 +1151,25 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     ): List<PublicVarDO> {
         logger.info("listResourceVarReferInfo for referId: $referId, referType: $referType, " +
                 "referVersion: $referVersion, groupName: $groupName, version: $version")
-        
+
         try {
-            
+            // 先查询引用信息，获取sourceProjectId
+            val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+                dslContext = dslContext,
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referVersion = referVersion,
+                groupName = groupName
+            )
+
+            // 获取sourceProjectId，如果不为空则使用它来查询变量组信息
+            val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
+            logger.info("listResourceVarReferInfo projectId:$projectId|sourceProjectId: $sourceProjectId")
             // 查询变量组信息，确认变量组存在
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectId = sourceProjectId,
                 groupName = groupName,
                 version = version
             ) ?: throw ErrorCodeException(
@@ -1037,7 +1180,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             // 先查询变量组中的所有变量详细信息
             val groupVars = publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectId = sourceProjectId,
                 groupName = groupName,
                 version = varGroupRecord.version
             )

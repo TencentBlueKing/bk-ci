@@ -389,6 +389,21 @@ class TemplateDao {
         }
     }
 
+    /**
+     * 根据模板ID查询项目ID
+     * @param dslContext DSL上下文
+     * @param templateId 模板ID
+     * @return 项目ID，如果模板不存在则返回null
+     */
+    fun getProjectIdByTemplateId(dslContext: DSLContext, templateId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(PROJECT_ID).from(this)
+                .where(ID.eq(templateId))
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun getTemplateVersionInfos(
         dslContext: DSLContext,
         projectId: String,

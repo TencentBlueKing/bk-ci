@@ -52,6 +52,19 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
         val paramsMap = HashMap<String, BuildParameters>(paramProperties.size, 1F)
 
         paramProperties.forEach { param ->
+            // 如果是公共变量，检查paramProperties中是否存在同名变量（非公共变量），存在则跳过处理
+            if (!param.varGroupName.isNullOrBlank()) {
+                val hasSameNameNonPublicVar = paramProperties.any {
+                    it.id == param.id && it.varGroupName.isNullOrBlank()
+                }
+                if (hasSameNameNonPublicVar) {
+                    logger.info(
+                        "parseTriggerParam|$userId|$projectId|$pipelineId|skip public var [${param.id}] " +
+                            "due to same name non-public var exists"
+                    )
+                    return@forEach
+                }
+            }
             // 对于CUSTOM_FILE类型的变量，需要特殊处理和保存
             var randomStringInPath: String? = null
 

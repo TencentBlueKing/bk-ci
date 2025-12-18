@@ -256,10 +256,13 @@ class PublicVarGroupReferInfoDao {
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int? = null
+        referVersion: Int? = null,
+        groupName: String? = null
     ): List<ResourcePublicVarGroupReferPO> {
         with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = buildReferConditions(this, projectId, referId, referType, referVersion)
+            val conditions = buildReferConditions(this, projectId, referId, referType, referVersion).apply {
+                groupName?.let { add(GROUP_NAME.eq(it)) }
+            }
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.asc())
@@ -319,6 +322,7 @@ class PublicVarGroupReferInfoDao {
         version = publicVarGroupReferInfoRecord.version,
         referId = publicVarGroupReferInfoRecord.referId,
         referName = publicVarGroupReferInfoRecord.referName,
+        sourceProjectId = publicVarGroupReferInfoRecord.groupProjectId,
         referType = PublicVerGroupReferenceTypeEnum.valueOf(publicVarGroupReferInfoRecord.referType),
         createTime = publicVarGroupReferInfoRecord.createTime,
         updateTime = publicVarGroupReferInfoRecord.updateTime,
@@ -494,6 +498,7 @@ class PublicVarGroupReferInfoDao {
                     REFER_ID,
                     REFER_TYPE,
                     REFER_NAME,
+                    GROUP_PROJECT_ID,
                     REFER_VERSION,
                     REFER_VERSION_NAME,
                     POSITION_INFO,
@@ -509,6 +514,7 @@ class PublicVarGroupReferInfoDao {
                     po.referId,
                     po.referType.name,
                     po.referName,
+                    po.sourceProjectId,
                     po.referVersion,
                     po.referVersionName,
                     po.positionInfo?.let { JsonUtil.toJson(it, false) },
