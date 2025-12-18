@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.CustomMessageException
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.util.concurrent.TimeUnit
 
 @Service
 class SignatureManageService(
@@ -52,6 +54,18 @@ class SignatureManageService(
 
     @Value("\${signature.clientId:}")
     private lateinit var bkCiClientId: String
+
+    // 电子签名验证控制开关本地缓存
+    private val eSignatureVerificationControlCache = CacheBuilder.newBuilder()
+        .maximumSize(1)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*key*/, Boolean>()
+
+    // 需要签名验证的项目本地缓存
+    private val projectsRequiringSignatureVerificationCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*projectId*/, Boolean>()
 
     fun listSignatureProjects(): List<String> {
         return if (eSignControl()) {
@@ -95,7 +109,20 @@ class SignatureManageService(
     }
 
     private fun isSignatureVerificationRequired(projectId: String): Boolean {
-        return eSignControl() && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        if (!eSignControl()) {
+            return false
+        }
+        return isProjectRequiringSignatureVerification(projectId)
+    }
+
+    private fun isProjectRequiringSignatureVerification(projectId: String): Boolean {
+        val cachedValue = projectsRequiringSignatureVerificationCache.getIfPresent(projectId)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isMember = redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        projectsRequiringSignatureVerificationCache.put(projectId, isMember)
+        return isMember
     }
 
     private fun verifyUserProjectPermission(userId: String, projectId: String) {
@@ -459,12 +486,18 @@ class SignatureManageService(
     }
 
     private fun eSignControl(): Boolean {
-        return try {
-            return redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
+        val cachedValue = eSignatureVerificationControlCache.getIfPresent(E_SIGNATURE_VERIFICATION_CONTROL)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isEnabled = try {
+            redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
         } catch (ex: Exception) {
             logger.error("e Sign Control failed!")
-            return false
+            false
         }
+        eSignatureVerificationControlCache.put(E_SIGNATURE_VERIFICATION_CONTROL, isEnabled)
+        return isEnabled
     }
 
     data class SignatureStatusQueryReq(
