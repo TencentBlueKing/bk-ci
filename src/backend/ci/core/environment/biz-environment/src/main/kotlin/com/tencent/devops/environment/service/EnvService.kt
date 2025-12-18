@@ -216,7 +216,7 @@ class EnvService @Autowired constructor(
             )
         envUpdateInfo.envVars?.forEach {
             it.lastUpdateUser = userId
-            it.lastUpdateTime = LocalDateTime.now()
+            it.lastUpdateTime = LocalDateTime.now().timestamp()
         }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -315,7 +315,7 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
         ).associateBy({ it.value1() }, { it.value2() })
-        return envListResult.map {
+        val resEnvList = envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
@@ -339,6 +339,11 @@ class EnvService @Autowired constructor(
                 projectName = null
             )
         }
+        if (envType != EnvType.CREATE) {
+            return resEnvList
+        }
+        // TODO: 增加内置创作环境
+        return resEnvList
     }
 
     override fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission> {
@@ -548,11 +553,6 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(envId.toString())
             .setInstanceName(env.envName)
-//        val nodeCount = if (env.envNodeType == EnvNodeType.TAG.name) {
-//            envTagDao.batchEnvTagNodeCount(dslContext, setOf(envId), projectId)[envId]
-//        } else {
-//            envNodeDao.count(dslContext, projectId, envId)
-//        }
         val tags = envTagDao.fetchEnvTag(dslContext, projectId, envId)
         return EnvWithPermission(
             envHashId = HashUtil.encodeLongId(env.envId),
