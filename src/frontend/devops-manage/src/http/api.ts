@@ -445,4 +445,10 @@ export default {
   batchUpdateMetadata(projectId : string, params: any) {
     return http.post(`${ARTIFACTORY_PERFIX}/quality/metadata/${projectId}/batch`, params);
   },
+  /**
+   * 获取KPI代码列表
+   */
+  getKpiCodeList (kpiName: string) {
+    return http.get(`${PROJECT_PERFIX}/user/kpiProducts/list?kpiName=${kpiName}`);
+  },
 };

@@ -92,28 +92,6 @@
       </div>
     </bk-form-item>
     <bk-form-item
-      :label="t('项目所属运营产品')"
-      property="productId"
-      :required="true"
-      :description="t('公司OBS结算业务的运营产品，1个项目仅支持关联1个运营产品，多个项目可关联到同一运营产品')"
-    >
-      <bk-select
-        class="project-select"
-        v-model="projectData.productId"
-        :placeholder="t('请选择所属运营产品')"
-        :scroll-height="160"
-        name="center"
-        filterable
-        enable-virtual-render
-        :list="operationalList"
-        :input-search="false"
-        :loading="deptLoading.product"
-        searchable
-        @change="handleChangeForm"
-      >
-      </bk-select>
-    </bk-form-item>
-    <bk-form-item
       :label="t('项目性质')"
       property="authSecrecy"
       :required="true"
@@ -134,6 +112,52 @@
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>
+    <bk-form-item
+      :label="t('项目成本归属')"
+      property="productId"
+      :required="true"
+    >
+      <div class="cost-attribution-box">
+        <div class="cost-description">{{ t('用于货币化结算场景，可在 tea.woa.com 查看业务信息。') }}</div>
+        <div class="cost-item">
+          <span class="cost-label">{{ t('运营产品') }}</span>
+          <bk-select
+            class="cost-select"
+            v-model="projectData.productId"
+            :placeholder="t('请选择所属运营产品')"
+            :scroll-height="160"
+            name="center"
+            filterable
+            enable-virtual-render
+            :list="operationalList"
+            :input-search="false"
+            :loading="deptLoading.product"
+            searchable
+            @change="handleChangeProduct"
+          />
+        </div>
+        <div class="cost-item">
+          <span class="cost-label">{{ t('KPI 代码') }}</span>
+          <bk-select
+            class="cost-select"
+            v-model="projectData.kpiCode"
+            :placeholder="t('所属的 KPI 业务代码')"
+            :scroll-height="160"
+            name="kpiCode"
+            filterable
+            enable-virtual-render
+            :list="KPIList"
+            :loading="deptLoading.kpiCode"
+            searchPlaceholder="请输入/修改关键字重新搜索数据"
+            noDataText="请输入/修改关键字重新搜索数据"
+            searchable
+            :remoteMethod="handleKpiCodeSearch"
+            @change="handleChangeKpiCode"
+            @clear="handleKpiCodeClear"
+          />
+        </div>
+      </div>
+    </bk-form-item>
   </div>
 </template>
 
@@ -143,6 +167,21 @@ import { ref, computed, watch, shallowRef, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Message, Popover } from 'bkui-vue';
 import { Dept } from "@/components/project-form.vue";
+
+interface OperationalProduct {
+  ProductId: string;
+  ProductName: string;
+  icosProductCode?: string;
+  icosProductName?: string;
+  value: string;
+  label: string;
+  id: string;
+}
+
+interface KPIItem {
+  value: string;
+  label: string;
+}
 
 const { t } = useI18n();
 const props = defineProps({
@@ -183,7 +222,8 @@ const validateProjectNameTips = ref('');
 const validateEnglishNameTips = ref('');
 
 const orgValue = ref<string[]>([]);
-const operationalList = ref([]);
+const operationalList = ref<OperationalProduct[]>([]);
+const KPIList = ref<KPIItem[]>([]);
 const orgTree = shallowRef<Dept[]>([]);
 const deptMap = shallowRef(new Map());
 const inited = ref(false);
@@ -192,6 +232,7 @@ const deptLoading = ref({
   dept: false,
   center: false,
   product: false,
+  kpiCode: false,
 });
 
 const logoFiles = computed(() => {
@@ -329,6 +370,11 @@ async function fetchOperationalList (bgName) {
     id: i.ProductId,
   }));
   deptLoading.value.product = false;
+  
+  // 如果已经选了运营产品，且kpiCode不存在，那么给KPI代码填充默认值
+  if (projectData.value.productId && !projectData.value.kpiCode) {
+    handleChangeProduct(projectData.value.productId);
+  }
 };
 
 function setProjectDeptProp (dept: Dept) {
@@ -381,6 +427,39 @@ function handleChangeCenter (id: any) {
   projectData.value.centerName = name ?? '';
 };
 
+function handleChangeProduct (productId: any) {
+  const selectedProduct = operationalList.value.find(i => i.ProductId === productId);
+  if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
+    projectData.value.kpiCode = selectedProduct.icosProductCode || '';
+    projectData.value.kpiName = selectedProduct.icosProductName || '';
+    fetchApilist(projectData.value.kpiName)
+  }
+  handleChangeForm();
+};
+
+function handleKpiCodeClear() {
+  projectData.value.kpiCode = '';
+  projectData.value.kpiName = '';
+  handleChangeForm();
+  KPIList.value = []
+}
+
+function handleKpiCodeSearch(value) {
+  if (value === '') {
+    KPIList.value = []
+  } else {
+    fetchApilist(value)
+  }
+}
+
+function handleChangeKpiCode (kpiCode: any) {
+  const selectedKpi = KPIList.value.find(i => i.value === kpiCode);
+  if (selectedKpi?.label) {
+    projectData.value.kpiName = selectedKpi.label;
+  }
+  handleChangeForm();
+};
+
 function handleChangeForm() {
   emits('handleChangeForm')
 }
@@ -415,6 +494,22 @@ async function handleUploadLogo (res: any) {
     });
   }
 };
+
+async function fetchApilist(kpiName) {
+  try {
+    deptLoading.value.kpiCode = true;
+    const res = await http.getKpiCodeList(kpiName)
+    KPIList.value = res.map(i => ({
+      value: i.product_code,
+      label: i.product_name,
+    }));
+  } catch (error) {
+    console.log(error);
+  } finally {
+    deptLoading.value.kpiCode = false;
+  }
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -434,7 +529,39 @@ async function handleUploadLogo (res: any) {
   font-size: 12px;
   color: #979BA5;
 }
-  .authSecrecy-item {
-    border-bottom: 1px dashed #979ba5;
+.authSecrecy-item {
+  border-bottom: 1px dashed #979ba5;
+}
+.cost-attribution-box {
+  width: 100%;
+  padding: 12px 24px;
+  background-color: #f6f7fa;
+  border-radius: 2px;
+  .cost-description {
+    font-size: 14px;
+    color: #a8abae;
+    margin-bottom: 10px;
   }
+  .cost-item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    &:not(:last-child) {
+      margin-bottom: 12px;
+    }
+    .cost-label {
+      display: inline-block;
+      padding: 0 12px;
+      height: 32px;
+      margin-top: 1px;
+      border: 1px solid #c4c6cc;
+      border-radius: 2px;
+      border-right: 0;
+    }
+    .cost-select {
+      width: 100px;
+      flex: 1;
+    }
+  }
+}
 </style>

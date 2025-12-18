@@ -47,6 +47,13 @@ const rules = {
       trigger: 'change',
     },
   ],
+  productId: [
+    {
+      validator: () => !!(projectData.value.productId && projectData.value.kpiCode),
+      message: t('请选择运营产品和KPI代码'),
+      trigger: 'blur',
+    },
+  ],
 };
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
