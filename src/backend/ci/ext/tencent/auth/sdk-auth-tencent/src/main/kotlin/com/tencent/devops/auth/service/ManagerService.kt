@@ -42,6 +42,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceSignatureManageResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.util.concurrent.TimeUnit
 
 class ManagerService @Autowired constructor(
@@ -53,6 +54,9 @@ class ManagerService @Autowired constructor(
 
     @Autowired
     private lateinit var config: CommonConfig
+
+    @Value("\${auth.eSignature.verificationControl:true}")
+    private var eSignatureVerificationControl: Boolean = true
 
     private val userPermissionMap = CacheBuilder.newBuilder()
         .maximumSize(50000)
@@ -68,6 +72,18 @@ class ManagerService @Autowired constructor(
         .maximumSize(50000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String/*platform:userId*/, Boolean>()
+
+    // 需要签名验证的项目本地缓存
+    private val projectsRequiringSignatureVerificationCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*projectId*/, Boolean>()
+
+    // 需要签名预检查的项目本地缓存
+    private val projectsRequiringSignaturePreCheckCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*projectId*/, Boolean>()
 
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
@@ -206,17 +222,34 @@ class ManagerService @Autowired constructor(
     }
 
     private fun needESignVerification(projectId: String): Boolean {
-        val eSignControl = try {
-            redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
-        } catch (ex: Exception) {
-            logger.error("e Sign Control failed!")
-            false
+        if (!eSignatureVerificationControl) {
+            return false
         }
-        return eSignControl && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        return isProjectRequiringSignatureVerification(projectId)
     }
 
     private fun needESignPreCheck(projectId: String): Boolean {
-        return redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, projectId)
+        return isProjectRequiringSignaturePreCheck(projectId)
+    }
+
+    private fun isProjectRequiringSignatureVerification(projectId: String): Boolean {
+        val cachedValue = projectsRequiringSignatureVerificationCache.getIfPresent(projectId)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isMember = redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        projectsRequiringSignatureVerificationCache.put(projectId, isMember)
+        return isMember
+    }
+
+    private fun isProjectRequiringSignaturePreCheck(projectId: String): Boolean {
+        val cachedValue = projectsRequiringSignaturePreCheckCache.getIfPresent(projectId)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isMember = redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, projectId)
+        projectsRequiringSignaturePreCheckCache.put(projectId, isMember)
+        return isMember
     }
 
     private fun isUserSigned(
@@ -267,7 +300,6 @@ class ManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ManagerService::class.java)
         private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
-        private const val E_SIGNATURE_VERIFICATION_CONTROL = "e:signature:verification:control"
         private const val PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK = "projects:signature:pre:check"
         private const val PROJECT_SIGNATURE_PLATFORM_KEY = "projects:signature:%s:platform"
         private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:%s:cache"
