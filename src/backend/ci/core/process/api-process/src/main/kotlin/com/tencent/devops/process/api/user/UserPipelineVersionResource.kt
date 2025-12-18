@@ -35,8 +35,10 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
+import com.tencent.devops.common.pipeline.pojo.CreatePipelineAndSaveDraftRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
@@ -196,6 +198,23 @@ interface UserPipelineVersionResource {
         @Parameter(description = "流水线模型与设置", required = true)
         @Valid
         modelAndYaml: PipelineVersionWithModelRequest
+    ): Result<DeployPipelineResult>
+
+    @Operation(summary = "通过模板创建流水线并保存草稿")
+    @POST
+    @Path("/projects/{projectId}/createPipelineAndSaveDraft")
+    fun createPipelineAndSaveDraft(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(required = true)
+        projectId: String,
+        @Parameter(description = "创建并保存草稿的请求参数", required = true)
+        @Valid
+        request: CreatePipelineAndSaveDraftRequest
     ): Result<DeployPipelineResult>
 
     @Operation(summary = "获取流水线编排创建人列表（分页）")

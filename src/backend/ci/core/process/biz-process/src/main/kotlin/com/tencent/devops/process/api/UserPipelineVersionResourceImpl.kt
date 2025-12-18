@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
+import com.tencent.devops.common.pipeline.pojo.CreatePipelineAndSaveDraftRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
@@ -265,6 +266,39 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(result)
+    }
+
+    override fun createPipelineAndSaveDraft(
+        userId: String,
+        projectId: String,
+        request: CreatePipelineAndSaveDraftRequest
+    ): Result<DeployPipelineResult> {
+        val templateCreateReq = TemplateInstanceCreateRequest(
+            templateId = request.templateId,
+            templateVersion = request.templateVersion,
+            pipelineName = request.pipelineName,
+            useSubscriptionSettings = request.useSubscriptionSettings,
+            useLabelSettings = request.useLabelSettings,
+            useConcurrencyGroup = request.useConcurrencyGroup,
+            instanceType = request.instanceType,
+            emptyTemplate = request.emptyTemplate,
+            staticViews = request.staticViews,
+            inheritedDialect = request.inheritedDialect,
+            pipelineDialect = request.pipelineDialect,
+            labels = request.labels
+        )
+        val createPipelineResult =
+            createPipelineFromTemplate(userId = userId, projectId = projectId, request = templateCreateReq)
+        val deployPipelineResult = createPipelineResult.data ?: return createPipelineResult
+        val saveDraftReq = PipelineVersionWithModelRequest(
+            pipelineId = deployPipelineResult.pipelineId,
+            baseVersion = deployPipelineResult.version,
+            modelAndSetting = request.modelAndSetting,
+            yaml = request.yaml,
+            storageType = request.storageType,
+            description = request.description
+        )
+        return savePipelineDraft(userId = userId, projectId = projectId, modelAndYaml = saveDraftReq)
     }
 
     override fun versionCreatorList(
