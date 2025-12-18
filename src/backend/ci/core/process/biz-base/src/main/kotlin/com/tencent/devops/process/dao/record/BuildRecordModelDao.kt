@@ -107,17 +107,21 @@ class BuildRecordModelDao {
     fun updateStatus(
         dslContext: DSLContext,
         projectId: String,
+        pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
-        executeCount: Int
+        executeCount: Int,
+        cancelUser: String? = null
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
-            dslContext.update(this).set(STATUS, buildStatus.name)
-                .where(
-                    PROJECT_ID.eq(projectId)
-                        .and(BUILD_ID.eq(buildId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                ).execute()
+            val update = dslContext.update(this).set(STATUS, buildStatus.name)
+            cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
+            update.where(
+                PROJECT_ID.eq(projectId)
+                    .and(BUILD_ID.eq(buildId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(EXECUTE_COUNT.eq(executeCount))
+            ).execute()
         }
     }
 
@@ -136,6 +140,30 @@ class BuildRecordModelDao {
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchAny(mapper)
+        }
+    }
+
+    fun getBuildStatusAndUsers(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): Triple<BuildStatus, String/*startUser*/, String?/*cancelUser*/>? {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            return dslContext.select(STATUS, START_USER, CANCEL_USER).from(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchAny() ?.let {
+                    Triple(
+                        BuildStatus.valueOf(it.component1()),
+                        it.component2(),
+                        it.component3()
+                    )
+                }
         }
     }
 

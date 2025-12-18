@@ -30,14 +30,100 @@ package com.tencent.devops.process.engine.control.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class PipelineBuildRecordLock(redisOperation: RedisOperation, buildId: String, executeCount: Int) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "process.build.record.lock.$buildId.$executeCount",
-        expiredTimeInSeconds = 10L
-    ) {
+/**
+ * 构建记录锁抽象基类
+ * 统一管理公共字段和行为，减少重复代码
+ */
+abstract class AbstractBuildRecordLock(
+    redisOperation: RedisOperation,
+    buildId: String,
+    executeCount: Int,
+    lockKeySuffix: String = ""
+) : RedisLock(
+    redisOperation = redisOperation,
+    lockKey = buildLockKey(buildId, executeCount, lockKeySuffix),
+    expiredTimeInSeconds = 10L
+) {
+    
     override fun decorateKey(key: String): String {
         // buildId，key无需加上集群信息前缀来区分
         return key
     }
+    
+    companion object {
+        private const val LOCK_KEY_PREFIX = "process.build.record.lock"
+        
+        /**
+         * 构建锁的key
+         * @param buildId 构建ID
+         * @param executeCount 执行次数
+         * @param suffix 额外的后缀（如stageId、containerId、taskId）
+         */
+        private fun buildLockKey(buildId: String, executeCount: Int, suffix: String): String {
+            return if (suffix.isBlank()) {
+                "$LOCK_KEY_PREFIX.$buildId.$executeCount"
+            } else {
+                "$LOCK_KEY_PREFIX.$buildId.$suffix.$executeCount"
+            }
+        }
+    }
 }
+
+/**
+ * Pipeline级别的构建记录锁 - 暂时无用BuildIdLock功能冲突
+ */
+class PipelineBuildRecordLock(
+    redisOperation: RedisOperation,
+    buildId: String,
+    executeCount: Int
+) : AbstractBuildRecordLock(
+    redisOperation = redisOperation,
+    buildId = buildId,
+    executeCount = executeCount,
+    lockKeySuffix = ""
+)
+
+/**
+ * Stage级别的构建记录锁
+ */
+class StageBuildRecordLock(
+    redisOperation: RedisOperation,
+    buildId: String,
+    stageId: String,
+    executeCount: Int
+) : AbstractBuildRecordLock(
+    redisOperation = redisOperation,
+    buildId = buildId,
+    executeCount = executeCount,
+    lockKeySuffix = stageId
+)
+
+/**
+ * Container级别的构建记录锁
+ */
+class ContainerBuildRecordLock(
+    redisOperation: RedisOperation,
+    buildId: String,
+    containerId: String,
+    executeCount: Int
+) : AbstractBuildRecordLock(
+    redisOperation = redisOperation,
+    buildId = buildId,
+    executeCount = executeCount,
+    lockKeySuffix = containerId
+)
+
+/**
+ * Task级别的构建记录锁
+ */
+class TaskBuildRecordLock(
+    redisOperation: RedisOperation,
+    buildId: String,
+    taskId: String,
+    executeCount: Int
+) : AbstractBuildRecordLock(
+    redisOperation = redisOperation,
+    buildId = buildId,
+    executeCount = executeCount,
+    lockKeySuffix = taskId
+)

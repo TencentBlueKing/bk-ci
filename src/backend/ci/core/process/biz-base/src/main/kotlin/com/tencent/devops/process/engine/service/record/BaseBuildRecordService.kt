@@ -52,7 +52,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
-import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
+import com.tencent.devops.process.engine.control.lock.AbstractBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -77,7 +77,7 @@ open class BaseBuildRecordService(
     private val buildRecordModelDao: BuildRecordModelDao,
     val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val redisOperation: RedisOperation,
+    val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResourceDao: PipelineResourceDao,
@@ -92,57 +92,51 @@ open class BaseBuildRecordService(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = "",
+        lock: AbstractBuildRecordLock,
         refreshOperation: () -> Unit
     ) {
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
-        val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
         var startUser: String? = null
         try {
-            watcher.start("lock")
-            lock.lock()
 
             watcher.start("getRecord")
-            val record = buildRecordModelDao.getRecord(
+            val (oldStatus, recordStartUser, recordCancelUser) = buildRecordModelDao.getBuildStatusAndUsers(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount
             ) ?: run {
                 message = "Model record is empty"
                 return
             }
-            startUser = record.startUser
 
-            watcher.start("refreshOperation")
-            refreshOperation()
-            watcher.stop()
+            watcher.start("lock")
+            lock.use {
+                watcher.start("refreshOperation")
+                refreshOperation()
+            }
 
-            watcher.start("updatePipelineRecord")
-            val (change, finalStatus) = takeBuildStatus(record, buildStatus)
+            watcher.start("updateModelRecord")
+            startUser = recordStartUser
+            val (change, finalStatus) = takeBuildStatus(oldStatus, buildStatus)
             if (!change && cancelUser.isNullOrBlank()) {
                 message = "Build status did not change"
                 return
             }
-            buildRecordModelDao.updateRecord(
+            buildRecordModelDao.updateStatus(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 executeCount = executeCount,
                 buildStatus = finalStatus,
-                modelVar = record.modelVar, // 暂时没有变量，保留修改可能
-                startTime = null,
-                endTime = null,
-                errorInfoList = null,
                 cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
-                    ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
-                timestamps = null
+                    ?: if (buildStatus.isCancel() && recordCancelUser.isNullOrBlank()) "System" else null
             )
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
-            lock.unlock()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
             watcher.start("dispatchEvent")
             pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
@@ -290,10 +284,9 @@ open class BaseBuildRecordService(
     }
 
     private fun takeBuildStatus(
-        record: BuildRecordModel,
+        oldStatus: BuildStatus,
         buildStatus: BuildStatus
     ): Pair<Boolean, BuildStatus> {
-        val oldStatus = BuildStatus.parse(record.status)
         return if (!oldStatus.isFinish()) {
             (oldStatus != buildStatus) to buildStatus
         } else {

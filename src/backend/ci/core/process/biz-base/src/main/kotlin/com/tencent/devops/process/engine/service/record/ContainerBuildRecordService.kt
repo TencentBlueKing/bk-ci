@@ -44,6 +44,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
+import com.tencent.devops.process.engine.control.lock.ContainerBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -158,7 +159,8 @@ class ContainerBuildRecordService(
         containerBuildDetailService.containerPreparing(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerPreparing#$containerId"
+            cancelUser = null, operation = "containerPreparing#$containerId",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -191,7 +193,8 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerStarted#$containerId"
+            cancelUser = null, operation = "containerStarted#$containerId",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -231,7 +234,8 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "$operation#$containerId"
+            cancelUser = null, operation = "$operation#$containerId",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -338,7 +342,8 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId"
+            cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, matrixGroupId, executeCount)
         ) {
             logger.info(
                 "[$buildId]|matrix_group_record|j(${modelContainer?.containerId})|" +
@@ -365,7 +370,8 @@ class ContainerBuildRecordService(
         containerBuildDetailService.containerSkip(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "containerSkip#$containerId"
+            cancelUser = null, operation = "containerSkip#$containerId",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
             recordTaskDao.updateRecordStatus(
@@ -401,7 +407,8 @@ class ContainerBuildRecordService(
         if (executeCount == null) return
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)"
+            cancelUser = null, operation = "saveBuildVmInfo($projectId,$pipelineId)",
+            lock = ContainerBuildRecordLock(redisOperation, buildId, containerId, executeCount)
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
