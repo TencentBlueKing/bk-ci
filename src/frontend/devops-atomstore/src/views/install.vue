@@ -17,7 +17,7 @@
                 v-if="!isINstallSuccess"
             >
                 <div class="atom-name">{{ name }}</div>
-                <div class="title"> {{ $t('store.请选择项目：') }} </div>
+                <div class="title"> {{ $t('store.请选择项目：') }}66 </div>
                 <bk-select
                     v-model="project"
                     searchable
@@ -36,10 +36,10 @@
                         :key="item.projectCode"
                         :id="item.projectCode"
                         :name="item.projectName"
-                        :disabled="!item.pipelineTemplateInstallPerm"
+                        :disabled="type === 'template' && !item.pipelineTemplateInstallPerm"
                         v-bk-tooltips="{
                             content: $t('store.无该项目的模板安装权限'),
-                            disabled: item.pipelineTemplateInstallPerm
+                            disabled: type !== 'template' || item.pipelineTemplateInstallPerm
                         }"
                     >
                     </bk-option>
