@@ -289,8 +289,9 @@
                     proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
             console.error(e)
         }
@@ -309,6 +310,7 @@
         if (instanceParams?.param?.length) {
             instanceParams.param = instanceParams.param.map(p => ({
                 ...p,
+                readOnlyCheck: false,
                 isRequiredParam: p.required && p.asInstanceInput
             }))
         }

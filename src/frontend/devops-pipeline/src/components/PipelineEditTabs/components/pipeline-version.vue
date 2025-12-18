@@ -8,7 +8,7 @@
         >
             <template #constraint-title="{ props: { isOverride } }">
                 <atom-checkbox
-                    :disabled="disabled && !isOverride"
+                    :disabled="disabled"
                     :text="$t('newui.enableVersions')"
                     :value="showVersions"
                     :handle-change="(name, value) => toggleVersions(name, value)"

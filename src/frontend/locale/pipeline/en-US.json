@@ -692,7 +692,23 @@
     "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading.",
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
-    "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version]."
+    "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "propertyUpdate": {
+      "constName": "Constant Name",
+      "constAlias": "Constant Alias",
+      "constDesc": "Constant Desc",
+      "constType": "Constant Type",
+      "varType": "Variable Type",
+      "varName": "Variable Name",
+      "varAlias": "Variable Alias",
+      "varDesc": "Variable Desc",
+      "defaultValue": "Default Value",
+      "required": "Set as input variable",
+      "valueNotEmpty": "Required",
+      "readOnly": "ReadOnly when executing",
+      "category": "Group labels"
+    },
+    "propertyUpdated": "Updated"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",
