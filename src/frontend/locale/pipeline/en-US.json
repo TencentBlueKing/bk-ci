@@ -691,7 +691,23 @@
     "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading.",
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
-    "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version]."
+    "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "propertyUpdate": {
+      "constName": "Constant Name",
+      "constAlias": "Constant Alias",
+      "constDesc": "Constant Desc",
+      "constType": "Constant Type",
+      "varType": "Variable Type",
+      "varName": "Variable Name",
+      "varAlias": "Variable Alias",
+      "varDesc": "Variable Desc",
+      "defaultValue": "Default Value",
+      "required": "Set as input variable",
+      "valueNotEmpty": "Required",
+      "readOnly": "ReadOnly when executing",
+      "category": "Group labels"
+    },
+    "propertyUpdated": "Updated"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
