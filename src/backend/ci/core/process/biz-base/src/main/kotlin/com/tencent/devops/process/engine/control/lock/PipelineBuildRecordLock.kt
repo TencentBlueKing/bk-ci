@@ -44,15 +44,15 @@ abstract class AbstractBuildRecordLock(
     lockKey = buildLockKey(buildId, executeCount, lockKeySuffix),
     expiredTimeInSeconds = 10L
 ) {
-    
+
     override fun decorateKey(key: String): String {
         // buildId，key无需加上集群信息前缀来区分
         return key
     }
-    
+
     companion object {
         private const val LOCK_KEY_PREFIX = "process.build.record.lock"
-        
+
         /**
          * 构建锁的key
          * @param buildId 构建ID
