@@ -1,7 +1,5 @@
 ﻿package com.tencent.devops.process.pojo.task
 
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -23,6 +21,8 @@ data class PipelineContainerBuild(
     var startTime: LocalDateTime? = null,
     @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @get:Schema(title = "业务时间戳集合", required = true)
-    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+    @get:Schema(title = "构建号", required = true)
+    val buildNo: Int,
+    @get:Schema(title = "触发人", required = true)
+    val creator: String
 )
