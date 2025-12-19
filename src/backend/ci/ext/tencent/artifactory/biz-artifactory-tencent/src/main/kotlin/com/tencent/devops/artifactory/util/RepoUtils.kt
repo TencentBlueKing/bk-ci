@@ -114,7 +114,7 @@ object RepoUtils {
                 size = size,
                 createdTime = LocalDateTime.parse(createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                checksums = FileChecksums(sha256, "", md5 ?: ""),
+                checksums = FileChecksums(sha256, "", md5 ?: "", crc64ecma),
                 meta = metadata.entries.associate { Pair(it.key, it.value.toString()) },
                 nodeMetadata = nodeMetadata,
                 url = "/bkrepo/api/user/generic/$projectId/$repoName$fullPath?download=true",
@@ -135,7 +135,8 @@ object RepoUtils {
             checksums = FileChecksums(
                 sha256 = nodeInfo.sha256 ?: "",
                 sha1 = "",
-                md5 = nodeInfo.md5 ?: ""
+                md5 = nodeInfo.md5 ?: "",
+                crc64ecma = nodeInfo.crc64ecma
             ),
             meta = nodeInfo.metadata ?: mapOf()
         )
@@ -151,7 +152,7 @@ object RepoUtils {
                 size = basic.size,
                 createdTime = LocalDateTime.parse(basic.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(basic.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                checksums = FileChecksums(basic.sha256, "", basic.md5),
+                checksums = FileChecksums(basic.sha256, "", basic.md5, ""),
                 meta = metadata.associate { it["key"].toString() to it["value"].toString() }
             )
         }
