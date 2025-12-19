@@ -650,7 +650,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(ENV_ID.eq(envId))
             }
             if (!pipelineName.isNullOrBlank()) {
-                dsl.and(PIPELINE_NAME.eq(pipelineName))
+                dsl.and(PIPELINE_NAME.like("%$pipelineName%"))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(PIPELINE_ID)
@@ -684,7 +684,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(ENV_ID.eq(envId))
             }
             if (!jobName.isNullOrBlank()) {
-                dsl.and(TASK_NAME.eq(jobName))
+                dsl.and(TASK_NAME.like("%$jobName%"))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(JOB_ID)
@@ -717,7 +717,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(ENV_ID.eq(envId))
             }
             if (!creator.isNullOrBlank()) {
-                dsl.and(START_USER.eq(creator))
+                dsl.and(START_USER.like("%$creator%"))
             }
             return dsl.and(JOB_ID.isNotNull)
                 .groupBy(START_USER)
