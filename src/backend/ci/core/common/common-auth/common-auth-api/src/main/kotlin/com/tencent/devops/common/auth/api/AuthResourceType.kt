@@ -89,9 +89,10 @@ enum class AuthResourceType(val value: String) {
          */
         fun getAuthResourceTypeByChannel(defaultType: AuthResourceType): AuthResourceType {
             val channel = ChannelContext.getChannel()
-            return when (channel) {
-                CREATIVE_STREAM.name -> CREATIVE_STREAM
-                else -> defaultType
+            return if (channel == CREATIVE_STREAM.name && defaultType == PIPELINE_DEFAULT) {
+                CREATIVE_STREAM
+            } else {
+                defaultType
             }
         }
     }
