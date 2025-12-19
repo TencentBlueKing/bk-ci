@@ -326,4 +326,35 @@ class EnvDao {
                 .execute()
         }
     }
+
+    fun updateEnvNodeType(
+        dslContext: DSLContext,
+        envId: Long,
+        envNodeType: EnvNodeType
+    ) {
+        with(TEnv.T_ENV) {
+            dslContext.update(this)
+                .set(ENV_NODE_TYPE, envNodeType.name)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
+
+    fun fetchEnvTypeCount(
+        dslContext: DSLContext,
+        projectId: String,
+        createEnv: Boolean
+    ): Map<String, Int> {
+        with(TEnv.T_ENV) {
+            val dsl = dslContext.select(ENV_TYPE, DSL.count(ENV_ID)).from(this).where(PROJECT_ID.eq(projectId))
+            if (createEnv) {
+                dsl.and(ENV_TYPE.eq(EnvType.CREATE.name))
+            }else{
+                dsl.and(ENV_TYPE.ne(EnvType.CREATE.name))
+            }
+            return dsl.groupBy(ENV_TYPE).fetch().associate {
+                it.value1() to it.value2()
+            }
+        }
+    }
 }

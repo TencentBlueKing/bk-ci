@@ -150,26 +150,4 @@ interface ServicePipelineTaskResource {
         @PathParam("taskId")
         taskId: String
     ): Result<ContainerStartInfo?>
-
-    // TODO: 应该放到 user 里
-    @Operation(summary = "或者指定流水线和job的构建历史")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/containers/{containerId}/builds")
-    fun getPipelineContainerBuilds(
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @Parameter(description = "任务ID", required = true)
-        @PathParam("containerId")
-        containerId: String,
-        @Parameter(description = "页数", required = true)
-        @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<PipelineBuildTask?>>
 }

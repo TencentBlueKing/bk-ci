@@ -471,4 +471,19 @@ interface UserEnvironmentResource {
         @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
         enableNode: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "获取项目下环境数量")
+    @GET
+    @Path("/{projectId}/envCount")
+    fun getEnvCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "是否是创作环境", required = false)
+        @QueryParam("createEnv")
+        createEnv: Boolean?
+    ): Result<Map<String, Int>>
 }

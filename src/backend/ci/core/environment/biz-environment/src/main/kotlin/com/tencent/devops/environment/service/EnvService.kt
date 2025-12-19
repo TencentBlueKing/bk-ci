@@ -215,7 +215,7 @@ class EnvService @Autowired constructor(
             )
         envUpdateInfo.envVars?.forEach {
             it.lastUpdateUser = userId
-            it.lastUpdateTime = LocalDateTime.now()
+            it.lastUpdateTime = LocalDateTime.now().timestamp()
         }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -314,7 +314,7 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envIds = envRecordList.filter { it.envNodeType == EnvNodeType.NODE.name }.map { it.envId }.toList()
         ).associateBy({ it.value1() }, { it.value2() })
-        return envListResult.map {
+        val resEnvList = envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
@@ -338,6 +338,11 @@ class EnvService @Autowired constructor(
                 projectName = null
             )
         }
+        if (envType != EnvType.CREATE) {
+            return resEnvList
+        }
+        // TODO: 增加内置创作环境
+        return resEnvList
     }
 
     override fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission> {
@@ -547,11 +552,6 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(envId.toString())
             .setInstanceName(env.envName)
-//        val nodeCount = if (env.envNodeType == EnvNodeType.TAG.name) {
-//            envTagDao.batchEnvTagNodeCount(dslContext, setOf(envId), projectId)[envId]
-//        } else {
-//            envNodeDao.count(dslContext, projectId, envId)
-//        }
         val tags = envTagDao.fetchEnvTag(dslContext, projectId, envId)
         return EnvWithPermission(
             envHashId = HashUtil.encodeLongId(env.envId),
@@ -921,6 +921,8 @@ class EnvService @Autowired constructor(
             )
         }
 
+        val envRecord = envDao.get(dslContext, projectId, envId)
+
         // 添加标签
         val tags = data.tags
         if (!tags.isNullOrEmpty()) {
@@ -955,6 +957,11 @@ class EnvService @Autowired constructor(
             val envId = HashUtil.decodeIdToLong(envHashId)
             dslContext.transaction { config ->
                 val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.NODE.name) {
+                    envNodeDao.deleteByEnvId(dslContext, envId)
+                    envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.TAG)
+                }
                 envTagDao.deleteEnvTags(ctx, projectId, setOf(envId))
                 envTagDao.batchAddEnvTags(
                     dslContext = ctx,
@@ -1017,7 +1024,11 @@ class EnvService @Autowired constructor(
                 )
             }
         }
-
+        // 类型转换需要清空之前类型的记录
+        if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+            envTagDao.deleteByEnvId(dslContext, envId)
+            envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.NODE)
+        }
         envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
     }
 
@@ -1457,12 +1468,13 @@ class EnvService @Autowired constructor(
                 )
             )
         } else {
-            Result(data = false,
-                   status = 400,
-                   message = I18nUtil.getCodeLanMessage(
-                       messageCode = ERROR_NODE_NOT_EXISTS,
-                       params = arrayOf(node.displayName)
-                   )
+            Result(
+                data = false,
+                status = 400,
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(node.displayName)
+                )
             )
         }
     }
@@ -1497,5 +1509,9 @@ class EnvService @Autowired constructor(
             result.add(EnvNode(it.envId, it.nodeId, it.enableNode))
         }
         return result
+    }
+
+    fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
+        return envDao.fetchEnvTypeCount(dslContext, projectId, createEnv ?: false)
     }
 }
