@@ -17,7 +17,7 @@
                 v-if="!isINstallSuccess"
             >
                 <div class="atom-name">{{ name }}</div>
-                <div class="title"> {{ $t('store.请选择项目：') }}66 </div>
+                <div class="title"> {{ $t('store.请选择项目：') }} </div>
                 <bk-select
                     v-model="project"
                     searchable
