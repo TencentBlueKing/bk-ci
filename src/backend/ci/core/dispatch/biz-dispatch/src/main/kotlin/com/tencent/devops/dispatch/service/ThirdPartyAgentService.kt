@@ -140,7 +140,8 @@ class ThirdPartyAgentService @Autowired constructor(
                     containerHashId = containerHashId,
                     envId = envId,
                     ignoreEnvAgentIds = ignoreEnvAgentIds,
-                    jobId = jobId
+                    jobId = jobId,
+                    startUser = userId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")

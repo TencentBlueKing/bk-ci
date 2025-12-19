@@ -109,7 +109,8 @@ class ThirdPartyAgentBuildDao {
         containerHashId: String?,
         envId: Long?,
         ignoreEnvAgentIds: Set<String>?,
-        jobId: String?
+        jobId: String?,
+        startUser: String?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -153,6 +154,7 @@ class ThirdPartyAgentBuildDao {
                     .set(ENV_ID, envId)
                     .set(IGNORE_ENV_AGENT_IDS, ignoreEnvAgentIdsJson)
                     .set(JOB_ID, jobId)
+                    .set(START_USER, startUser)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -176,7 +178,8 @@ class ThirdPartyAgentBuildDao {
                 CONTAINER_HASH_ID,
                 ENV_ID,
                 IGNORE_ENV_AGENT_IDS,
-                JOB_ID
+                JOB_ID,
+                START_USER
             ).values(
                 projectId,
                 agentId,
@@ -201,7 +204,8 @@ class ThirdPartyAgentBuildDao {
                 containerHashId,
                 envId,
                 ignoreEnvAgentIdsJson,
-                jobId
+                jobId,
+                startUser
             ).execute()
         }
     }
