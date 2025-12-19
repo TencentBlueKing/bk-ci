@@ -14,7 +14,7 @@ const routes = [
                 name: 'experienceList',
                 component: experienceList,
                 meta: {
-                    title: 'mobileRelease',
+                    title: 'expManage',
                     logo: 'experience',
                     header: 'experience',
                     to: 'experienceList'

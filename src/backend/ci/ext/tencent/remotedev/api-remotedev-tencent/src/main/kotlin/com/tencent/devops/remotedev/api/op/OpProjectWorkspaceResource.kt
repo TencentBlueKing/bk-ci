@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -168,5 +169,19 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "备注名称", required = true)
         @QueryParam("displayName")
         displayName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "修改工作空间属性")
+    @POST
+    @Path("/modify/property")
+    fun modifyWorkspaceProperty(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "工作空间属性")
+        workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
 }

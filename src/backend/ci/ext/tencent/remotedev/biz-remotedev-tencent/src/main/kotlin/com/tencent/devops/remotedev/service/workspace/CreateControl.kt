@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -550,9 +551,16 @@ class CreateControl @Autowired constructor(
                     workspaceCommon.makeDiskMount(
                         ip = ip,
                         user = event.userId,
-                        owner = ws.createUserId
+                        owner = ws.createUserId,
+                        type = EnvironmentAction.CREATE.name
                     )
                 }
+
+                // 创建实例成功后异步执行流水线
+                workspaceCommon.executeCreateWorkspacePipeline(
+                    ips = setOf(ip),
+                    user = event.userId
+                )
 
                 if (ws.ownerType.projectPublicUse()) {
                     val winInfo = checkNotNull(
@@ -772,6 +780,14 @@ class CreateControl @Autowired constructor(
                 gameId = gameId.second
             )
         )
+
+        // 如果是克隆场景，异步克隆 bksec 安全策略
+        if (copy != null) {
+            workspaceCommon.cloneBkSecPolicy(
+                oldWorkspaceName = copy.workspaceName,
+                newWorkspaceName = ws.workspaceName
+            )
+        }
         return true
     }
 
@@ -903,6 +919,12 @@ class CreateControl @Autowired constructor(
                     pipelineId = info.pipelineId,
                     values = newParam
                 )
+            )
+
+            // 创建实例成功后异步执行流水线
+            workspaceCommon.executeCreateWorkspacePipeline(
+                ips = resIps,
+                user = userId
             )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)

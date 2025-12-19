@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
@@ -36,9 +37,13 @@ import com.tencent.devops.store.pojo.template.InstallTemplateResp
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.pojo.template.MyTemplateItem
+import com.tencent.devops.store.pojo.template.MyTemplateItemResponse
+import com.tencent.devops.store.pojo.template.PublishStrategyUpdateReq
 import com.tencent.devops.store.pojo.template.TemplateDetail
+import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.enums.MarketTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -47,6 +52,7 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -106,6 +112,9 @@ interface UserTemplateResource {
         @Parameter(description = "项目ID", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
+        @Parameter(description = "排除项目ID", required = false)
+        @QueryParam("excludeProjectCode")
+        excludeProjectCode: String?,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
@@ -172,6 +181,31 @@ interface UserTemplateResource {
         installTemplateReq: InstallTemplateReq
     ): Result<InstallTemplateResp>
 
+    @Operation(summary = "安装模板到项目--v2版本")
+    @POST
+    @Path("/template/install/v2")
+    fun installTemplateV2(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "安装模板到项目请求报文体", required = true)
+        installTemplateReq: InstallTemplateReq
+    ): Result<InstallTemplateResp>
+
+    @Operation(summary = "更新发布策略")
+    @PUT
+    @Path("/{templateCode}/store/publishStrategy")
+    fun updatePublishStrategy(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "模版ID", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @Parameter(description = "发布策略", required = true)
+        strategy: PublishStrategyUpdateReq
+    ): Result<Boolean>
+
     @Operation(summary = "根据模板标识获取已安装的项目列表")
     @GET
     @Path("/template/installedProjects/{templateCode}")
@@ -201,4 +235,52 @@ interface UserTemplateResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<MyTemplateItem>?>
+
+    @Operation(summary = "根据用户获取原子工作台模板列表-v2")
+    @GET
+    @Path("/desk/template/v2/list")
+    fun getMyTemplatesNew(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "模版名称", required = false)
+        @QueryParam("templateName")
+        templateName: String?,
+        @Parameter(description = "项目名称", required = false)
+        @QueryParam("projectName")
+        projectName: String?,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: TemplateStatusEnum?,
+        @Parameter(description = "最后更新人", required = false)
+        @QueryParam("modifier")
+        modifier: String?,
+        @Parameter(description = "描述", required = false)
+        @QueryParam("description")
+        description: String?,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<MyTemplateItemResponse>>
+
+    @Operation(summary = "获取模板上架历史")
+    @GET
+    @Path("/{templateCode}/template/published/history")
+    fun listPublishedHistory(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "模版ID", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Page<TemplatePublishedVersionInfo>>
 }

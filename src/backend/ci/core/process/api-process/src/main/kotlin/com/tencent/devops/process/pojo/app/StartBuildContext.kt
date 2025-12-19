@@ -360,7 +360,7 @@ data class StartBuildContext(
                 yamlVersion = yamlVersion,
                 retryOnRunningBuild = retryOnRunningBuild,
                 retryTaskInStageId = params[PIPELINE_RETRY_TASK_IN_STAGE_ID],
-                retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
+                retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID]
             )
         }
 

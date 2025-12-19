@@ -346,7 +346,8 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.CREATOR,
             tAtom.CREATE_TIME,
             tAtom.MODIFIER,
-            tAtom.UPDATE_TIME
+            tAtom.UPDATE_TIME,
+            tAtom.CODE_SRC
         )
             .from(tAtom)
             .join(tStoreMember)

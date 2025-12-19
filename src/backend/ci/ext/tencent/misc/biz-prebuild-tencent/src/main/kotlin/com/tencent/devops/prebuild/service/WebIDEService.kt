@@ -70,6 +70,8 @@ import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
+import java.text.SimpleDateFormat
+import java.util.concurrent.Executors
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
@@ -78,8 +80,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.SimpleDateFormat
-import java.util.concurrent.Executors
 
 @Service
 class WebIDEService @Autowired constructor(

@@ -46,6 +46,9 @@ data class PreTriggerOnV3(
     override val push: Any? = null,
     override val tag: Any? = null,
     override val mr: Any? = null,
+    @JsonProperty("mr-merged")
+    @get:Schema(title = "mr-merged")
+    override val mrMerged: Any? = null,
     override val schedules: Any? = null,
     override val delete: DeleteRule? = null,
     override val issue: IssueRule? = null,

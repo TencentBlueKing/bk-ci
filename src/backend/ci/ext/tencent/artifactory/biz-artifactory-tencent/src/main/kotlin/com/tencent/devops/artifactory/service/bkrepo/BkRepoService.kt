@@ -841,7 +841,8 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean? = false
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
@@ -853,8 +854,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-
-        return "${bkRepoClient.getRkRepoIdcHost()}/web/repository$shareUri&download=true"
+        val webPath = if (useWeb == true) "web/" else ""
+        return "${bkRepoClient.getRkRepoIdcHost()}/${webPath}repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

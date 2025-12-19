@@ -51,12 +51,12 @@ import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.PUT
-import jakarta.ws.rs.PathParam
 
 @Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
@@ -267,4 +267,31 @@ interface UserRemoteDevResource {
         @PathParam("projectId")
         projectId: String
     ): Result<UserSignatureStatusResponse>
+
+    @POST
+    @Path("/thumbnails/batch")
+    @Operation(summary = "批量获取云桌面工作空间的截图缩略图地址")
+    fun batchGetThumbnails(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称列表", required = true)
+        workspaceNames: List<String>,
+        @Parameter(description = "缩略图宽度", required = false)
+        @QueryParam("width")
+        @DefaultValue("1280")
+        width: Int,
+        @Parameter(description = "缩略图高度", required = false)
+        @QueryParam("high")
+        @DefaultValue("720")
+        high: Int,
+        @Parameter(description = "JPEG图片质量", required = false)
+        @QueryParam("jpegQuality")
+        @DefaultValue("60")
+        jpegQuality: Int,
+        @Parameter(description = "屏幕id", required = false)
+        @QueryParam("screenId")
+        @DefaultValue("0")
+        screenId: Int
+    ): Result<Map<String, String>>
 }

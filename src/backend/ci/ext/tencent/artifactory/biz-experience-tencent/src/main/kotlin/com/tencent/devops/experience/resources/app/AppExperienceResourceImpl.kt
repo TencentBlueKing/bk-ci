@@ -87,16 +87,7 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     @AllowOuter
     override fun listV3(userId: String, platform: Int, organization: String?): Result<ExperienceList> {
-        logger.debug("listV3 , userId:$userId , platform:$platform , organization:$organization")
-        val privateExperiences = experienceAppService.list(userId, 0, 100, true, platform, organization).records
-        val publicExperiences = if (null == organization) {
-            experienceAppService.publicExperiences(userId, platform, 0, 100)
-        } else {
-            emptyList()
-        }
-        val redPointCount = privateExperiences.count { it.redPointEnabled } +
-                publicExperiences.count { it.redPointEnabled }
-        return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
+        return Result(experienceAppService.listV3(userId, platform, organization))
     }
 
     @AllowOuter

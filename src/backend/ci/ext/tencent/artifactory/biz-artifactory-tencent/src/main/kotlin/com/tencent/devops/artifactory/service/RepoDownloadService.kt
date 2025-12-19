@@ -55,7 +55,8 @@ interface RepoDownloadService {
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
-        ttl: Int
+        ttl: Int,
+        useWeb: Boolean?
     ): Url
 
     /**

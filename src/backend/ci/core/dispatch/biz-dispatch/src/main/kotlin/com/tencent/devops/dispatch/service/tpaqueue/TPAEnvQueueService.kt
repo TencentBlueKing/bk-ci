@@ -45,9 +45,7 @@ class TPAEnvQueueService @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentService,
     private val tpaSingleQueueService: TPASingleQueueService
 ) {
-    fun initEnvContext(
-        dataContext: QueueDataContext
-    ): EnvQueueContext {
+    fun initEnvContext(dataContext: QueueDataContext): EnvQueueContext {
         val data = dataContext.data
 
         val (envId, envAgents) = fetchEnvIdAndAgents(dataContext, data.genEnvWithProject()!!)
@@ -61,6 +59,32 @@ class TPAEnvQueueService @Autowired constructor(
             return EnvQueueContext(envId, agents)
         }
 
+        commonUtil.logWarnI18n(data, BK_NO_AGENT_AVAILABLE)
+        throw TPACommonUtil.queueRetry(
+            errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
+            errMsg = "${data.buildId}|${data.vmSeqId} " + I18nUtil.getCodeLanMessage(
+                messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                language = I18nUtil.getDefaultLocaleLanguage(),
+                params = arrayOf("${data.queueTimeoutMinutes}")
+            )
+        )
+    }
+
+    fun refreshEnvContextAgents(context: EnvQueueContext, dataContext: QueueDataContext) {
+        val data = dataContext.data
+
+        val (envId, envAgents) = fetchEnvIdAndAgents(dataContext, data.genEnvWithProject()!!)
+        logDisableAgents(data, envAgents)
+
+        val agents = envAgents.filter {
+            it.agent.status == AgentStatus.IMPORT_OK && (data.os == it.agent.os || data.os == VMBaseOS.ALL.name) &&
+                    it.enableNode
+        }.map { it.agent }
+        if (agents.isNotEmpty()) {
+            context.envId = envId
+            context.agents = agents
+            return
+        }
         commonUtil.logWarnI18n(data, BK_NO_AGENT_AVAILABLE)
         throw TPACommonUtil.queueRetry(
             errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,

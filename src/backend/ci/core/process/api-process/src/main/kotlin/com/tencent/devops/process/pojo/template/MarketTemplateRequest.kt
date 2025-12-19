@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板市场-模板请求报文体")
@@ -45,4 +46,14 @@ data class MarketTemplateRequest(
     val publicFlag: Boolean,
     @get:Schema(title = "发布者", required = false)
     val publisher: String
-)
+) {
+    constructor(request: MarketTemplateV2Request) : this(
+        projectCodeList = arrayListOf(request.projectId),
+        templateCode = request.templateCode,
+        templateName = request.templateName,
+        logoUrl = request.logoUrl,
+        categoryCodeList = request.categoryCodeList,
+        publicFlag = request.publicFlag,
+        publisher = request.publisher
+    )
+}

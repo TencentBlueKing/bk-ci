@@ -1782,8 +1782,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
     }
 
-
-
     companion object {
         private val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
     }

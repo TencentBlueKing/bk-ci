@@ -81,3 +81,4 @@ export const serviceStatusMap = {
     UNDERCARRIAGING: 'store.下架中',
     UNDERCARRIAGED: 'store.已下架'
 }
+export const STORE_TEMPLATE_TABLE_COLUMN_CACHE = 'STORE_TEMPLATE_TABLE_COLUMN_CACHE'

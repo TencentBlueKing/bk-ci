@@ -7,6 +7,7 @@ object RedisKeys {
     const val CLIENT_VERSION_LIMIT = "remotedev:clientVersionLimit" // 客户端版本限制
     const val CLIENT_VERSION_WARNING = "remotedev:clientVersionWarning" // 客户端版本warning，会发邮件
     const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo" // L盘挂载流水线
+    const val PIPELINE_CREATE_WORKSPACE_INFO = "remotedev:createWorkspace.pipelineinfo" // 创建实例流水线
     const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo" // 专家协助流水线
     const val PIPELINE_QUERY_CGS_PWD = "remotedev:queryCgsPwd.pipelineinfo" // 查询cgs密码流水线
     const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips" // 云桌面公网ip，可能会动态变化所以放redis里

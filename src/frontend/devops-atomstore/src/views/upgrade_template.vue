@@ -177,6 +177,7 @@
 
 <script>
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -221,8 +222,8 @@
             }
         },
         computed: {
-            templateId () {
-                return this.$route.params.templateId
+            templateCode () {
+                return this.$route.params.templateCode
             },
             isOver () {
                 return this.progressStatus.length && this.progressStatus[2].status === 'success'
@@ -240,20 +241,23 @@
             }
         },
         created () {
-            this.requestTplRelease()
-            this.requestTemplateDetail()
+            this.getTplRelease()
+            this.getTemplateDetail()
         },
         beforeDestroy () {
             clearTimeout(this.timer)
         },
         methods: {
-            async requestTemplateDetail (atomId) {
+            ...mapActions('store', [
+                'requestTemplateDetail',
+                'requestTplRelease',
+                'cancelReleaseTemplate'
+            ]),
+            async getTemplateDetail () {
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('store/requestTempIdDetail', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.requestTemplateDetail(this.templateCode)
 
                     Object.assign(this.templateDetail, res)
                     this.templateDetail.categoryList = res.categoryList.map(item => {
@@ -262,11 +266,9 @@
                     this.templateDetail.labels = res.labelList.map(item => {
                         return item.labelName
                     })
-                    this.$nextTick(() => {
-                        setTimeout(() => {
-                            this.isOverflow = this.$refs.editor && this.$refs.editor.scrollHeight > 180
-                        }, 1000)
-                    })
+                    setTimeout(() => {
+                        this.isOverflow = this.$refs.editor && this.$refs.editor.scrollHeight > 180
+                    }, 1000)
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -282,11 +284,9 @@
                     this.showContent = true
                 }
             },
-            async requestTplRelease (atomId) {
+            async getTplRelease () {
                 try {
-                    const res = await this.$store.dispatch('store/requestTplRelease', {
-                        templateId: this.templateId
-                    })
+                    const res = await this.requestTplRelease(this.templateCode)
 
                     this.progressStatus = res.processInfos
                     if (!this.isOver) {
@@ -307,9 +307,7 @@
 
                 this.loading.isLoading = true
                 try {
-                    await this.$store.dispatch('store/cancelReleaseTemplate', {
-                        templateId: this.templateId
-                    })
+                    await this.cancelReleaseTemplate(this.templateCode)
 
                     message = this.$t('store.取消成功')
                     theme = 'success'
@@ -344,7 +342,7 @@
 
                 if (!this.isOver) {
                     this.timer = setTimeout(async () => {
-                        await this.requestTplRelease()
+                        await this.getTplRelease()
                     }, 5000)
                 }
             },

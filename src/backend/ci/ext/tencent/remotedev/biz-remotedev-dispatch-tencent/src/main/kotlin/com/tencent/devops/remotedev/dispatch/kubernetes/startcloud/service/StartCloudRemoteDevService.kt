@@ -162,13 +162,14 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun restartWorkspace(userId: String, workspaceName: String): String {
+    override fun restartWorkspace(userId: String, workspaceName: String, force: Boolean?): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
             action = EnvironmentAction.RESTART,
             workspaceName = workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(workspaceName)
+                uid = getEnvironmentUid(workspaceName),
+                force = force ?: false
             )
         )
 

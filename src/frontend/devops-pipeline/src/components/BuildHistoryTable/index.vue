@@ -33,7 +33,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.EDIT
                                 }
@@ -55,7 +55,7 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId,
-                                        resourceType: 'pipeline',
+                                        resourceType: RESOURCE_TYPE.PIPELINE,
                                         resourceCode: pipelineId,
                                         action: RESOURCE_ACTION.EXECUTE
                                     }
@@ -370,13 +370,17 @@
                     >
                         <div>
                             <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
-                            <logo
-                                v-if="isNotLatest(props)"
-                                v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
-                                size="12"
-                                class="version-tips"
-                                name="warning-circle"
-                            />
+                            <span
+                                v-if="props.row.versionChange"
+                                @click.stop="showVersionDiffDialog(props.row.index)"
+                            >
+                                <logo
+                                    v-bk-tooltips="$t('details.pipelineVersionDiffTips')"
+                                    size="12"
+                                    class="version-tips"
+                                    name="warning-circle"
+                                />
+                            </span>
                         </div>
                     </template>
                     <template
@@ -602,6 +606,11 @@
                 </bk-button>
             </footer>
         </bk-dialog>
+        <VersionDiffDialog
+            :visible.sync="isShowVersionDiffDialog"
+            :build-num="`#${activeBuild?.buildNum}`"
+            :build-id="activeBuild?.id"
+        />
     </div>
 </template>
 
@@ -614,6 +623,7 @@
     import EmptyException from '@/components/common/exception'
     import qrcode from '@/components/devops/qrcode'
     import ArtifactQuality from '@/components/ExecDetail/artifactQuality'
+    import VersionDiffDialog from './VersionDiffDialog'
     import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
     import {
         BUILD_HISTORY_TABLE_COLUMNS_MAP,
@@ -626,8 +636,10 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
+
     const LS_COLUMN_KEY = 'shownColumnsKeys'
     export default {
         name: 'build-history-table',
@@ -639,6 +651,8 @@
             FilterBar,
             TableColumnSetting,
             ArtifactQuality,
+            EmptyException,
+            VersionDiffDialog,
             ArtifactDownloadButton,
             EmptyException
         },
@@ -653,6 +667,7 @@
             const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isShowMoreMaterial: false,
                 isShowMoreArtifactories: false,
                 showErorrInfoDialog: false,
@@ -667,8 +682,9 @@
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
                 tableHeight: null,
-                hasDownloadPermission: false,
-                dialogTopOffset: null
+                dialogTopOffset: null,
+                isShowVersionDiffDialog: false,
+                hasDownloadPermission: false
             }
         },
         computed: {
@@ -759,6 +775,7 @@
                     FAILED: 'close-circle-shape',
                     RUNNING: 'circle-2-1',
                     PAUSE: 'play-circle-shape',
+                    CANCELED: 'abort',
                     SKIP: 'redo-arrow'
                 }
             },
@@ -889,6 +906,11 @@
                     })
                 },
                 deep: true
+            },
+            isShowVersionDiffDialog (val) {
+                if (!val) {
+                    this.visibleIndex = -1
+                }
             }
         },
         mounted () {
@@ -1005,14 +1027,6 @@
             hideMoreMaterial () {
                 this.visibleIndex = -1
                 this.isShowMoreMaterial = false
-            },
-            isNotLatest ({ $index }) {
-                const length = this.buildHistoryList.length
-                // table最后一条记录必不变化
-                if ($index === length - 1) return false
-                const current = this.buildHistoryList[$index]
-                const before = this.buildHistoryList[$index + 1]
-                return current.pipelineVersion !== before.pipelineVersion
             },
             getStageTooltip (stage) {
                 switch (true) {
@@ -1276,6 +1290,10 @@
                 this.$nextTick(() => {
                     this.requestHistory()
                 })
+            },
+            showVersionDiffDialog (index) {
+                this.visibleIndex = index
+                this.isShowVersionDiffDialog = true
             }
         }
     }

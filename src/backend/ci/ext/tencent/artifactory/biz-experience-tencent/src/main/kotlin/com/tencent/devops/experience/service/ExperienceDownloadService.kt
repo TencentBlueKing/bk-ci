@@ -315,8 +315,16 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         addDownloadRecord(experienceRecord, userId)
-        var url = client.get(ServiceArtifactoryResource::class)
-            .downloadUrl(projectId, artifactoryType, experienceRecord.creator, path, 24 * 3600, false).data!!.url
+        var url = client.get(ServiceArtifactoryDownLoadResource::class)
+            .downloadUrl(
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                userId = experienceRecord.creator,
+                path = path,
+                ttl = 24 * 3600,
+                directed = false,
+                useWeb = true
+            ).data!!.url
         if (!url.contains("userId=")) {
             url += "&userId=$userId"
         }

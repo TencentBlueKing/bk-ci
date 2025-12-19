@@ -62,10 +62,6 @@
             fieldName () {
                 return this.buildType === 'PUBLIC_DEVCLOUD' ? 'performanceUid' : 'performanceConfigId'
             },
-            // 是否是流水线编辑页
-            isEditPage () {
-                return this.$route.meta.edit
-            },
         },
         watch: {
             buildType (v) {
@@ -117,6 +113,7 @@
             async getViewPageDeviceList () {
                 const uid = this.value && this.value !== '' ? this.value : 'Standard-S'
                 const res = await this.getHistoryDevcloudSettings({
+                    username: this.$userInfo.username,
                     projectId: this.projectId,
                     uid
                 })
@@ -147,7 +144,7 @@
                 try {
                     this.isLoading = true
                     if (this.buildType === 'PUBLIC_DEVCLOUD') {
-                        if (this.isEditPage) {
+                        if (!this.disabled) {
                             await this.getEditPageDeviceList()
                         } else {
                             await this.getViewPageDeviceList()

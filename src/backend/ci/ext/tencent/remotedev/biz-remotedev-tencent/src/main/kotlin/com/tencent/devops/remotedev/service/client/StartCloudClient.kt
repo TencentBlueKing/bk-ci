@@ -7,7 +7,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
-import java.io.IOException
+import com.tencent.devops.remotedev.pojo.startcloud.FetchDesktopThumbnailReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateReq
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudAppCreateRespData
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusReqBody
@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.startcloud.StartCloudComputerStatusResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudNoDataResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartCloudResp
 import com.tencent.devops.remotedev.pojo.startcloud.StartMessageRegisterReq
+import java.io.IOException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -96,6 +97,42 @@ class StartCloudClient @Autowired constructor(
     ) {
         messageRegister(config.apiUrl, req)
         messageRegister(config.apiUrlSZ, req)
+    }
+
+    /**
+     * 批量通知CDS云桌面后台执行截图上传
+     *
+     * @param requests 截图上传请求列表
+     */
+    fun notifyScreenshotUpload(
+        requests: List<FetchDesktopThumbnailReq>
+    ) {
+        if (requests.isEmpty()) {
+            logger.warn("notifyScreenshotUpload: requests is empty")
+            return
+        }
+
+        val url = "${config.apiUrlSZ}/openapi/desktop_thumbnail/fetch"
+        val body = JsonUtil.toJson(
+            requests,
+            false
+        )
+        logger.debug("notifyScreenshotUpload request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(genStartApiHeaders(body).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = doRequest(request).resolveResponse<StartCloudNoDataResp>()
+        if (resp.code != 0) {
+            logger.warn("request /screenshot/upload error ${resp.code}|${resp.message}")
+            throw RemoteServiceException(
+                errorMessage = "request api[${request.url.toUrl()}] error ${resp.message}",
+                errorCode = resp.code
+            )
+        }
+        logger.info("notify screenshot upload success: cdsIds=${requests.map { it.cdsId }}")
     }
 
     private fun messageRegister(

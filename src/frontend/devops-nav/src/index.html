@@ -25,7 +25,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <link rel="icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
   <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/favicon.ico" type="image/x-icon" />
-
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
+  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js" />
   <script>
     var API_URL_PREFIX = '/ms' // api接口前缀
     var PUBLIC_URL_PREFIX = '<%= PUBLIC_PATH_PREFIX %>' // 静态资源前缀
@@ -46,6 +48,7 @@
     var BK_CI_AUTH_PROVIDER = '__BK_CI_AUTH_PROVIDER__'
     var BK_SHARED_RES_URL = '<%= BK_SHARED_RES_URL %>'
     var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
+    var BK_CI_NO_COOKIE_PROJECT_PREFIX = '__BK_CI_NO_COOKIE_PROJECT_PREFIX__'
   </script>
   <script>
 
@@ -141,7 +144,7 @@
 
     function setProjectIdCookie(projectId) {
       try {
-        if (projectId.startsWith('git_')) {
+        if (BK_CI_NO_COOKIE_PROJECT_PREFIX.split(';').some(str => projectId.startsWith(str))) {
           console.log('current project is from stream')
           return
         }
@@ -194,10 +197,6 @@
     }())
   </script>
 
-
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js" />
-  <link rel="preload" as="script" href="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js" />
   <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
 
   <!-- devops:preload -->
@@ -266,7 +265,8 @@
 
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue_2.7.16.min.js"></script>
   <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
-  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.js"></script>
+  <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router_3.6.5.min.js"></script>
+
   <script>
     loadJsAssets(true)
   </script>
@@ -279,10 +279,7 @@
           : LOGIN_SERVICE_URL
 
       const loginUrl = loginUrlPlaceholder.startsWith('//') ? `${location.protocol}${loginUrlPlaceholder}` : loginUrlPlaceholder
-      var cUrl =
-        location.origin +
-        location.pathname +
-        encodeURIComponent(location.search)
+      var cUrl = `${location.origin}${location.pathname}${encodeURIComponent(location.search)}`
       if (/=%s/.test(loginUrl)) {
         return loginUrl.replace(/%s/, cUrl)
       } else {

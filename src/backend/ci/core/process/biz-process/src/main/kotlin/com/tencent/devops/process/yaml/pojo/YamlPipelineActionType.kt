@@ -36,11 +36,15 @@ enum class YamlPipelineActionType {
     // 更新
     UPDATE,
 
+    DEPENDENCY_UPGRADE,
+
     // 删除版本
     DELETE_VERSION,
 
     // 删除流水线
     DELETE,
+
+    CLOSE,
 
     // 没有变更
     NO_CHANGE

@@ -4,7 +4,7 @@
         width="800"
         ext-cls="version-package-wrapper"
         header-position="left"
-        :title="$t('experience.select_file')"
+        :title="$t('experience.select_file', [fileNamesTitle])"
         :has-header="versionSelectConf.hasHeader"
         :close-icon="versionSelectConf.closeIcon"
         :quick-close="versionSelectConf.quickClose"
@@ -113,8 +113,13 @@
 </template>
 
 <script>
+    import { platformMap } from '@/utils/util'
     export default {
         props: {
+            platform: {
+                type: String,
+                default: platformMap.ANDROID
+            },
             versionSelectConf: Object,
             loading: Object,
             confirmFn: Function,
@@ -158,10 +163,48 @@
                     CUSTOM_DIR: this.$t('experience.custom_repo'),
                     PIPELINE: this.$t('experience.pipeline_repo')
                 }
+            },
+            fileNameByPlatform () {
+                const extList = ['*.apk', '*.ipa', '*.hap', '*.zip']
+                // '*.msix', '*.exe'
+                try {
+                    switch (this.platform) {
+                        case platformMap.ANDROID:
+                            return extList.slice(0, 1)
+                        case platformMap.IOS:
+                            return extList.slice(1, 2)
+                        case platformMap.HAP:
+                            return extList.slice(2, 3)
+                        case platformMap.WIN:
+                            return extList.slice(3, 4)
+                        default:
+                            return extList
+                    }
+                } catch (error) {
+                    return extList
+                }
+            },
+            fileNamesTitle () {
+                return this.fileNameByPlatform.reduce((pre, cur) => {
+                    if (pre) {
+                        return pre + '/' + cur.replace('*.', '')
+                    }
+                    return cur.replace('*.', '')
+                }, '')
             }
         },
         watch: {
             'versionSelectConf.isShow' (val) {
+                if (!val) {
+                    this.selectInfo = {
+                        pipelineId: '',
+                        constructId: ''
+                    }
+                    this.fileList = []
+                    this.$store.dispatch('experience/updateCurSelectedFile', {
+                        selectFile: {}
+                    })
+                }
             },
             'selectInfo.pipelineId' (val) {
                 this.selectInfo.constructId = ''
@@ -244,11 +287,12 @@
                     this.requestList(id)
                 }
             },
+            
             async requestList (buildId) {
                 this.listLoading.isLoading = true
 
                 const params = {
-                    fileNames: ['*.ipa', '*.apk', '*.hap'],
+                    fileNames: this.fileNameByPlatform,
                     props: {
                         pipelineId: this.selectInfo.pipelineId,
                         buildId: buildId === 'all' ? undefined : buildId
