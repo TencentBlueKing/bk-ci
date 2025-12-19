@@ -47,7 +47,7 @@ description: 管理蓝盾流水线的构建操作，包括查询构建历史、�
 
 用户配置的常用流水线，参阅 [config.json](config.json)
 
-**URL 解析规则**：从 `https://devops.woa.com/console/pipeline/{projectId}/{pipelineId}` 提取：
+**URL 解析规则**：从 `https://xxxx/console/pipeline/{projectId}/{pipelineId}` 提取：
 - `projectId`：`/pipeline/` 后的第一段
 - `pipelineId`：以 `p-` 开头的最后一段
 
