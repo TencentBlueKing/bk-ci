@@ -20,31 +20,18 @@ nvm install 20
 nvm use 20
 ```
 
-### 2. 安装 CodeBuddy
+### 2. 安装 CodeBuddy 和 OpenSpec
 
 ```bash
-npm install -g @anthropic-ai/codebuddy-cli
-codebuddy --version
-# 命令行执行codebuddy进入命令行界面，首次需要登录，登录后使用 `/model` 命令可以切换具体的模型。
-codebuddy
-# 确认没问题后，执行exit，退出codebuddy
-exit
-```
-
-
-
-### 3. 安装 OpenSpec
-
-```bash
+npm install -g @tencent-ai/codebuddy-code
 npm install -g @fission-ai/openspec@latest
-openspec --version
 ```
 
-### 4. 初始化项目
+### 3. 初始化项目
 
 ```bash
 cd your-project
-openspec init
+openspec init            # 初始化 OpenSpec 目录结构
 ```
 
 生成目录结构：
@@ -57,22 +44,21 @@ openspec/
 └── AGENTS.md       # AI 助手指令
 ```
 
+进入 CodeBuddy 完成登录、模型配置，并让 AI 学习工程背景：
+
+```bash
+codebuddy                # 进入命令行界面，首次需登录
+/model                   # 切换模型（推荐 Claude-4.5-Opus）
+> Please read openspec/project.md and help me fill it out with details about my project, tech stack, and conventions，后续工作请用中文
+```
+
+AI 会扫描项目结构、识别代码模式，将分析结果写入 `openspec/project.md`。
+
 ## AI SDD 开发流程
 
 ```
 起草提案 → 审查对齐 → 实施任务 → 归档更新
 ```
-
-### 前置准备：让 AI 学习工程背景
-
-首次使用时，让 AI 理解项目背景：
-
-```
-codebuddy
-> Please read openspec/project.md and help me fill it out with details about my project, tech stack, and conventions
-```
-
-AI 会扫描项目结构、识别代码模式，将分析结果写入 `openspec/project.md`。
 
 ### Stage 1: 起草变更提案
 
@@ -134,6 +120,83 @@ AI 会扫描项目结构、识别代码模式，将分析结果写入 `openspec/
 | `specs/` | 已构建、已部署（单一事实来源） |
 | `changes/` | 提案中、进行中 |
 | `archive/` | 已完成、可追溯 |
+
+## 使用案例：流水线取消通知功能
+
+以 BK-CI 项目中的「流水线取消通知」功能为例，展示完整的 AI SDD 开发流程。
+
+### Stage 1: 起草提案
+
+```bash
+/openspec:proposal 流水线通知增加构建取消发送时机，当构建被取消时（手动取消、超时取消、级联取消）能通知相关人员
+```
+
+AI 生成的 `proposal.md`：
+
+```markdown
+# Change: 流水线通知增加「构建取消」发送时机
+
+## Why
+当前流水线通知仅支持「构建成功」和「构建失败」两种发送时机，
+无法在构建被取消时通知相关人员。
+
+## What Changes
+1. 新增取消通知订阅配置 - 在 PipelineSetting 中增加 cancelSubscriptionList 字段
+2. 新增 YAML 通知条件 - 支持 `if: CANCELED` 条件
+3. 新增取消相关变量 - 提供 ci.cancel_user 和 ci.cancel_reason 变量
+
+## Impact
+- Affected specs: pipeline-notification
+- Affected code: PipelineSetting.kt, BluekingNotifySendCmd.kt 等
+- Breaking changes: 无
+```
+
+AI 生成的 `tasks.md`：
+
+```markdown
+## 1. 数据模型层
+- [ ] 1.1 在 PipelineSetting 中增加 cancelSubscriptionList 字段
+- [ ] 1.2 更新 fixSubscriptions() 方法处理取消订阅
+
+## 2. 数据库层
+- [ ] 2.1 编写 DDL 脚本增加 CANCEL_SUBSCRIPTION 字段
+- [ ] 2.2 更新 PipelineSettingDao 读写取消订阅字段
+
+## 3. 通知发送层
+- [ ] 3.1 更新 BluekingNotifySendCmd 增加取消状态分支
+- [ ] 3.2 增加 ci.cancel_user 和 ci.cancel_reason 变量
+
+## 4. 国际化
+- [ ] 4.1 增加中英文通知文案
+```
+
+### Stage 2: 审查对齐
+
+审查后发现需要补充「级联取消」场景的取消原因说明：
+
+```bash
+/openspec:proposal 补充级联取消场景：当父流水线被取消时，子流水线的 cancel_reason 应显示"由 xxx 取消父流水线的操作级联取消"
+```
+
+AI 更新文档，补充场景说明。
+
+### Stage 3: 实施任务
+
+```bash
+/openspec:apply add-pipeline-cancel-notification
+```
+
+AI 按任务清单依次实现：数据模型 → 数据库脚本 → 业务逻辑 → 国际化文案。
+
+### Stage 4: 归档
+
+代码开发完成、测试通过后：
+
+```bash
+/openspec:archive add-pipeline-cancel-notification
+```
+
+规范增量合并到 `specs/pipeline-notification/`，变更历史保留在 `changes/archive/`。
 
 ---
 
