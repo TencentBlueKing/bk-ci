@@ -170,7 +170,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
                 referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
                 referName = pipelineSettingWithoutVersion.pipelineName,
                 referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
+                referVersionName = resourceOnlyVersion.versionName,
+                referHasSource = true
             )
         )
 
