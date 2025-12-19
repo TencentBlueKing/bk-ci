@@ -65,16 +65,12 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        // 如果authResourceType为null，则从ChannelContext自动获取
-        val finalAuthResourceType = authResourceType 
-            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
-        
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = "*",
             permission = permission,
-            authResourceType = finalAuthResourceType
+            authResourceType = authResourceType
         )
     }
 
@@ -94,14 +90,11 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        // 如果authResourceType为null，则从ChannelContext自动获取
-        val finalAuthResourceType = authResourceType 
-            ?: AuthResourceType.getAuthResourceTypeByChannel(resourceType)
 
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = finalAuthResourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             permission = permission
@@ -115,13 +108,10 @@ abstract class AbstractPipelinePermissionService constructor(
         permission: AuthPermission,
         message: String?
     ) {
-        // 从ChannelContext自动获取authResourceType
-        val finalAuthResourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType)
-        
         if (!authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = finalAuthResourceType,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
                 projectCode = projectId,
                 resourceCode = pipelineId,
                 permission = permission
@@ -152,7 +142,7 @@ abstract class AbstractPipelinePermissionService constructor(
         authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             permission = permission,
             supplier = supplierForFakePermission(projectId)
@@ -185,7 +175,7 @@ abstract class AbstractPipelinePermissionService constructor(
         authResourceApi.createResource(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
@@ -201,7 +191,7 @@ abstract class AbstractPipelinePermissionService constructor(
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
         authResourceApi.modifyResource(
             serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
+            resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
             projectCode = projectId,
             resourceCode = pipelineId,
             resourceName = pipelineName
@@ -217,7 +207,7 @@ abstract class AbstractPipelinePermissionService constructor(
         try {
             authResourceApi.deleteResource(
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
+                resourceType = AuthResourceType.getAuthResourceTypeByChannel(resourceType),
                 projectCode = projectId,
                 resourceCode = pipelineId
             )
