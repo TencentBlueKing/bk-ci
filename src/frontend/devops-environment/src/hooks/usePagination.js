@@ -11,7 +11,7 @@ import { reactive, toRefs } from 'vue'
  */
 export default function usePagination (options = {}) {
     const {
-        limit = 20,
+        limit = 10,
         current = 1,
         limitList = [10, 20, 50, 100]
     } = options

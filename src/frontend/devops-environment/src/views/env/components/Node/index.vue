@@ -197,12 +197,12 @@
             const searchList = computed(() => ([
                 {
                     name: proxy.$t('environment.nodeInfo.hostName'),
-                    id: 'envName',
+                    id: 'displayName',
                     default: true
                 },
                 {
                     name: 'IP',
-                    id: 'IP'
+                    id: 'nodeIp'
                 },
                 {
                     name: proxy.$t('environment.status'),
@@ -215,16 +215,16 @@
                         {
                             id: 'ABNORMAL',
                             name: proxy.$t('environment.nodeStatusMap.ABNORMAL')
-                        },
-                        {
-                            id: 'NOT_INSTALLED',
-                            name: proxy.$t('environment.nodeStatusMap.NOT_INSTALLED')
                         }
+                        // {
+                        //     id: 'NOT_INSTALLED',
+                        //     name: proxy.$t('environment.nodeStatusMap.NOT_INSTALLED')
+                        // }
                     ]
                 },
                 {
                     name: proxy.$t('environment.operateUser'),
-                    id: 'lastModifiedUser'
+                    id: 'createdUser'
                 }
             ]))
             const filterTips = computed(() => {
@@ -308,7 +308,6 @@
             const removeNodeFn = async (params) => {
                 try {
                     const res = await requestRemoveNode(params)
-                    console.log(res)
                     proxy.$bkMessage({
                         message: proxy.$t('environment.removeSuccess'),
                         theme: 'success'

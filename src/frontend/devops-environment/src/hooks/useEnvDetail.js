@@ -2,11 +2,11 @@ import { computed, ref, watch } from 'vue'
 import { convertTime } from '@/utils/util'
 import useInstance from './useInstance'
 
+const currentEnv = ref({})
+
 export default function useEnvDetail () {
     const { proxy } = useInstance()
     const envNodeList = ref([]) // 节点列表
-    const envParamsList = ref([]) // 环境变量列表
-    const currentEnv = ref({})
     const envHashId = computed(() => proxy.$route.params?.envId)
     const projectId = computed(() => proxy.$route.params?.projectId)
     const envList = computed(() => proxy.$store.getters['environment/getEnvList'] || [])
@@ -45,6 +45,7 @@ export default function useEnvDetail () {
         }
     }
     // 获取环境详情
+
     const fetchEnvDetail = async () => {
         if (!envHashId.value) return
         try {
@@ -53,11 +54,27 @@ export default function useEnvDetail () {
                 envHashId: envHashId.value
             })
             currentEnv.value = res ?? {}
-            envParamsList.value = res?.envVars ?? []
             return res
         } catch (e) {
             throw e
         }
+    }
+    // 获取环境的环境变量
+    const envParamsList = ref([]) // 环境变量列表
+    const fetchEnvParamsList = async (params) => {
+        if (!envHashId.value) return
+        try {
+            const res = await proxy.$store.dispatch('environment/requestEnvParamsList', {
+                projectId: projectId.value,
+                envHashId: envHashId.value,
+                params
+            })
+            envParamsList.value = res ?? []
+            return res
+        } catch (e) {
+            throw e
+        }
+
     }
     // 修改环境
     const updateEnvDetail = async (params) => {
@@ -92,6 +109,86 @@ export default function useEnvDetail () {
         }
     }
 
+    const fetchJobTaskList = async (params) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/requestAgentJobTaskList', {
+                projectId: projectId.value,
+                params
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    const fetchPipelineBuildHistory = async ({
+        pipelineId,
+        containerId,
+        params
+    }) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/requestPipelineBuildHistory', {
+                projectId: projectId.value,
+                pipelineId,
+                containerId,
+                params
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+
+    }
+
+    // 根据Job名称搜索
+    const searchJobByName = async (keyword) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/searchJobByName', {
+                params: {
+                    projectId: projectId.value,
+                    envId: envHashId.value,
+                    jobName: keyword
+                }
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    // 根据流水线名称搜索
+    const searchPipelineByName = async (keyword) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/searchPipelineByName', {
+                params: {
+                    projectId: projectId.value,
+                    envId: envHashId.value,
+                    pipelineName: keyword
+                }
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+    // 根据触发人搜索
+    const searchByCreator = async (keyword) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/searchByCreator', {
+                params: {
+                    projectId: projectId.value,
+                    envId: envHashId.value,
+                    creator: keyword
+                }
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
+
     return {
         // data
         currentEnv,
@@ -105,7 +202,13 @@ export default function useEnvDetail () {
         fetchEnvNodeList,
         requestRemoveNode,
         fetchEnvDetail,
+        fetchEnvParamsList,
         updateEnvDetail,
-        fetchEnvRelatedProject
+        fetchEnvRelatedProject,
+        fetchJobTaskList,
+        fetchPipelineBuildHistory,
+        searchJobByName,
+        searchPipelineByName,
+        searchByCreator
     }
 }

@@ -76,6 +76,7 @@
         setup () {
             const { proxy } = useInstance()
             const {
+                currentEnv,
                 envHashId,
                 fetchEnvDetail,
                 updateEnvDetail
@@ -86,7 +87,6 @@
             const editingField = ref(null)
             const editingValue = ref('')
             const editInput = ref(null)
-            const envDetail = ref(null)
             watch(() => envHashId.value, () => {
                 getEnvDetail()
             })
@@ -138,8 +138,7 @@
             const getEnvDetail = async () => {
                 try {
                     isLoading.value = true
-                    const res = await fetchEnvDetail()
-                    envDetail.value = res
+                    await fetchEnvDetail()
                 } catch (err) {
                     proxy.$bkMessage({
                         theme: 'error',
@@ -152,7 +151,7 @@
             
             // 获取字段值
             const getFieldValue = (key) => {
-                const value = envDetail.value?.[key]
+                const value = currentEnv.value?.[key]
                 const field = infoFields.value.find(f => f.key === key)
                 if (field?.isTime && value) {
                     return convertTime(value * 1000)
@@ -191,7 +190,7 @@
                     
                     // 更新数据
                     const params = {
-                        ...envDetail.value,
+                        ...currentEnv.value,
                         [fieldKey]: newValue
                     }
                     
@@ -222,13 +221,9 @@
                 editingField.value = null
                 editingValue.value = ''
             }
-            
-            onMounted(() => {
-                getEnvDetail()
-            })
 
             return {
-                envDetail,
+                currentEnv,
                 isLoading,
                 isSaving,
                 infoFields,

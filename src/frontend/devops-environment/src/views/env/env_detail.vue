@@ -1,34 +1,40 @@
 <template>
-    <div class="env-entry-main">
+    <div
+        class="env-entry-main"
+    >
         <header class="env-info-header">
             <span
                 v-bk-overflow-tips
                 class="env-name"
             >
-                {{ currentEnv?.name }}
+                {{ currentEnv?.name || '--' }}
             </span>
-            <bk-tag>动态</bk-tag>
+            <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
             <span class="env-type-tag">
-                构建环境
+                {{ envTypeDisplayName }}
             </span>
         </header>
-        <div class="env-content-main">
-            <bk-tab
-                v-if="currentEnv"
-                :active.sync="tabActive"
-                type="unborder-card"
-                ext-cls="env-details-tab"
-            >
-                <bk-tab-panel
-                    v-for="(panel, index) in panels"
-                    v-bind="panel"
-                    :key="index"
+        <div
+            class="env-content-main"
+            v-bkloading="{ isLoading: !envDetailLoaded }"
+        >
+            <template v-if="envDetailLoaded">
+                <bk-tab
+                    :active.sync="tabActive"
+                    type="unborder-card"
+                    ext-cls="env-details-tab"
+                >
+                    <bk-tab-panel
+                        v-for="(panel, index) in panels"
+                        v-bind="panel"
+                        :key="index"
+                    />
+                </bk-tab>
+                <component
+                    :is="renderComponent"
+                    :key="currentEnv.envType"
                 />
-            </bk-tab>
-            <component
-                :is="renderComponent"
-                :key="currentEnv.envType"
-            />
+            </template>
         </div>
     </div>
 </template>
@@ -64,6 +70,10 @@
                 fetchEnvDetail
             } = useEnvDetail()
             
+            
+            // 环境详情是否加载完成
+            const envDetailLoaded = ref(false)
+            
             // 从路由参数中获取初始 tab，如果没有则默认为 'node'
             const initialTab = proxy.$route.params.tabName || 'node'
             const tabActive = ref(initialTab)
@@ -77,6 +87,22 @@
                     deployTask: DeployTask
                 }
                 return comMap[tabActive.value]
+            })
+
+            const envNodeTypeDisplayName = computed(() => {
+                const envNodeTypeMap = {
+                    'TAG': proxy.$t('environment.dynamic'),
+                    'NODE': proxy.$t('environment.static')
+                }
+                return envNodeTypeMap[currentEnv.value?.envNodeType]
+            })
+            const envTypeDisplayName = computed(() => {
+                const envTypeMap = {
+                    'DEV': proxy.$t('environment.envInfo.devEnvType'),
+                    'PROD': proxy.$t('environment.envInfo.testEnvType'),
+                    'BUILD': proxy.$t('environment.envInfo.buildEnvType')
+                }
+                return envTypeMap[currentEnv.value?.envType]
             })
             const panels = computed(() => [
                 {
@@ -100,11 +126,12 @@
                 {
                     name: 'buildTask',
                     label: proxy.$t('environment.nodeInfo.buildTask')
-                },
-                {
-                    name: 'deployTask',
-                    label: proxy.$t('environment.deployTask')
                 }
+                // 部署Agent 暂时没有任务
+                // {
+                //     name: 'deployTask',
+                //     label: proxy.$t('environment.deployTask')
+                // }
             ])
             
             // 获取可用的 tab 名称列表
@@ -157,8 +184,12 @@
             })
 
             // 监听 envId 变化，当 envId 存在但没有 tabName 时，添加默认的 tabName
-            watch(() => proxy.$route.params.envId, (newEnvId) => {
-                fetchEnvDetail()
+            watch(() => proxy.$route.params.envId, async (newEnvId) => {
+                if (newEnvId) {
+                    envDetailLoaded.value = false
+                    await fetchEnvDetail()
+                    envDetailLoaded.value = true
+                }
                 if (newEnvId && !proxy.$route.params.tabName) {
                     proxy.$router.replace({
                         name: 'envDetail',
@@ -171,14 +202,19 @@
                     })
                 }
             })
-            onMounted(() => {
-                fetchEnvDetail()
+            onMounted(async () => {
+                envDetailLoaded.value = false
+                await fetchEnvDetail()
+                envDetailLoaded.value = true
             })
             return {
                 renderComponent,
                 currentEnv,
                 tabActive,
-                panels
+                panels,
+                envDetailLoaded,
+                envTypeDisplayName,
+                envNodeTypeDisplayName
             }
         }
     }

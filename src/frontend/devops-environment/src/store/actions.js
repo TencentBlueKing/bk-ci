@@ -20,6 +20,8 @@
 import Vue from 'vue'
 
 const prefix = 'environment/api'
+const dispatchPrefix = 'dispatch/api'
+const processPrefix = 'process/api'
 const vue = new Vue()
 
 const actions = {
@@ -374,6 +376,74 @@ const actions = {
             return response
         })
 
+    },
+    // 获取环境的环境变量列表
+    requestEnvParamsList ({ commit }, { projectId, envHashId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/envs?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    // 获取agent任务详情
+    requestAgentJobTaskList ({ commit }, { projectId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs?projectId=${projectId}&${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    // 获取指定流水线和job的构建历史
+    requestPipelineBuildHistory ({ commit }, { projectId, pipelineId, containerId, params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${processPrefix}/user/builds/${projectId}/${pipelineId}/containers/${containerId}/history?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据Job名称搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.jobName - Job名称
+     */
+    searchJobByName ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByJobName?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据流水线名称搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.pipelineName - 流水线名称
+     */
+    searchPipelineByName ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByPipelineName?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 根据触发人搜索
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentId - Agent ID (可选)
+     * @param {string} params.envId - 环境ID
+     * @param {string} params.creator - 触发人
+     */
+    searchByCreator ({ commit }, { params }) {
+        const queryString = new URLSearchParams(params).toString()
+        return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByCreator?${queryString}`).then(response => {
+            return response
+        })
     }
 }
 

@@ -3,7 +3,15 @@
         <!-- 顶部统计和搜索 -->
         <div class="task-header">
             <div class="task-stats">
-                <span class="stats-text">{{ statsText }}</span>
+                <span
+                    class="stats-text"
+                    v-if="pipelineCount"
+                >
+                    <i18n path="environment.totalJobTasks">
+                        <span class="count-number">{{ jobCount }}</span>
+                        <span class="count-number">{{ pipelineCount }}</span>
+                    </i18n>
+                </span>
             </div>
             <div class="task-search">
                 <bk-date-picker
@@ -12,7 +20,8 @@
                     type="datetimerange"
                     :placeholder="$t('environment.selectExecutionTime')"
                     :clearable="true"
-                    @change="handleDateChange"
+                    @clear="handleDateClear"
+                    @pick-success="handleDateChange"
                 />
                 <SearchSelect
                     v-model="searchSelectValue"
@@ -49,7 +58,7 @@
                             :class="task.isExpanded ? 'icon-angle-down' : 'icon-angle-right'"
                         />
                         <div class="task-title">
-                            <span class="task-name">{{ task.name }}</span>
+                            <span class="task-name">{{ task.jobName }}</span>
                             <span class="task-pipeline-name">
                                 <i class="bk-icon icon-pipeline" />
                                 <span
@@ -89,65 +98,41 @@
                             <bk-table-column
                                 :label="$t('environment.buildNumber')"
                                 prop="buildNum"
-                                width="150"
+                                width="100"
                             >
                                 <template #default="{ row }">
-                                    <span class="build-number">#{{ row.buildNum }}</span>
+                                    <span>#{{ row.buildNum }}</span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column
                                 :label="$t('environment.buildStatus')"
                                 prop="status"
-                                width="200"
                             >
                                 <template #default="{ row }">
-                                    <span
-                                        class="status-badge"
-                                        :class="`status-${row.status}`"
-                                    >
-                                        <i
-                                            class="bk-icon"
-                                            :class="getStatusIcon(row.status)"
+                                    <span class="status-text-container">
+                                        <pipeline-status-icon
+                                            :status="row.status"
                                         />
-                                        {{ getStatusText(row.status) }}
+                                        {{ row.statusText }}
                                     </span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column
                                 :label="$t('environment.duration')"
                                 prop="duration"
-                                width="250"
-                            >
-                                <template #default="{ row }">
-                                    {{ formatDuration(row.duration) }}
-                                </template>
-                            </bk-table-column>
+                            />
                             <bk-table-column
                                 :label="$t('environment.startTime')"
                                 prop="startTime"
-                                width="250"
-                            >
-                                <template #default="{ row }">
-                                    {{ formatTime(row.startTime) }}
-                                </template>
-                            </bk-table-column>
+                            />
                             <bk-table-column
                                 :label="$t('environment.endTime')"
                                 prop="endTime"
-                                width="250"
-                            >
-                                <template #default="{ row }">
-                                    {{ formatTime(row.endTime) }}
-                                </template>
-                            </bk-table-column>
+                            />
                             <bk-table-column
                                 :label="$t('environment.trigger')"
-                                prop="triggerUser"
-                            >
-                                <template #default="{ row }">
-                                    {{ row.triggerUser || '--' }}
-                                </template>
-                            </bk-table-column>
+                                prop="creator"
+                            />
                         </bk-table>
                     </div>
                 </div>
@@ -156,6 +141,7 @@
             <!-- 空状态 -->
             <bk-exception
                 v-else-if="!isLoading"
+                class="task-empty"
                 type="empty"
                 scene="part"
             >
@@ -190,143 +176,183 @@
     import usePagination from '@/hooks/usePagination'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import PipelineStatusIcon from './PipelineStatusIcon'
 
     export default {
         name: 'TaskList',
         components: {
-            SearchSelect
-        },
-        props: {
-            // 任务类型：'build' 或 'deploy'
-            taskType: {
-                type: String,
-                required: true,
-                validator: (value) => ['build', 'deploy'].includes(value)
-            },
-            // 获取任务列表的方法
-            fetchTaskList: {
-                type: Function,
-                required: true
-            },
-            // 获取任务详情的方法
-            fetchTaskDetail: {
-                type: Function,
-                required: true
-            }
+            SearchSelect,
+            PipelineStatusIcon
         },
         setup (props) {
             const { proxy } = useInstance()
             const {
-                envHashId
+                envHashId,
+                fetchJobTaskList,
+                fetchPipelineBuildHistory,
+                searchJobByName,
+                searchPipelineByName,
+                searchByCreator
             } = useEnvDetail()
             const {
                 pagination,
                 resetPagination,
                 updateCount
             } = usePagination()
-            
+            const pipelineCount = ref(0)
+            const jobCount = ref(0)
             const isLoading = ref(false)
             const isLoadingMore = ref(false)
             const taskList = ref([])
             const dateRange = ref([])
-            const searchKeyword = ref('')
             const searchSelectValue = ref([])
             const taskRefs = new Map()
             const taskListRef = ref(null)
             
-            // SearchSelect 配置数据
             const searchSelectData = computed(() => {
-                const jobOrStep = props.taskType === 'build' ? 'Job' : 'Step'
                 return [
                     {
-                        name: jobOrStep,
-                        id: 'task',
-                        default: true
+                        name: 'Job',
+                        id: 'jobId',
+                        default: true,
+                        remoteMethod: async (keyword) => {
+                            try {
+                                const res = await searchJobByName(keyword)
+                                return res.map(item => ({
+                                    id: item.jobId,
+                                    name: item.jobName
+                                }))
+                            } catch (e) {
+                                return []
+                            }
+                        }
                     },
                     {
                         name: proxy.$t('environment.pipeline'),
-                        id: 'pipeline'
+                        id: 'pipelineId',
+                        remoteMethod: async (keyword) => {
+                            try {
+                                const res = await searchPipelineByName(keyword)
+                                return res.map(item => ({
+                                    id: item.pipelineId,
+                                    name: item.pipelineName
+                                }))
+                            } catch (e) {
+                                return []
+                            }
+                        }
                     },
                     {
                         name: proxy.$t('environment.operateUser'),
-                        id: 'operator'
+                        id: 'creator',
+                        remoteMethod: async (keyword) => {
+                            try {
+                                const res = await searchByCreator(keyword)
+                                return res.map(item => ({
+                                    id: item,
+                                    name: item
+                                }))
+                            } catch (e) {
+                                return []
+                            }
+                        }
                     }
                 ]
             })
-            
             // 是否还有更多数据
             const hasMore = computed(() => {
                 return taskList.value.length < pagination.value.count
+            })
+
+            const filterQuery = computed(() => {
+                return searchSelectValue.value.reduce((query, item) => {
+                    query[item.id] = item.values.map(value => value.id).join(',')
+                    return query
+                }, {})
+            })
+
+            // 时间范围参数（秒级时间戳）
+            const timeRangeParams = computed(() => {
+                const [startDate, endDate] = dateRange.value || []
+                return {
+                    ...(startDate ? { startTime: Math.floor(new Date(startDate).getTime() / 1000) } : {}),
+                    ...(endDate ? { endTime: Math.floor(new Date(endDate).getTime() / 1000) } : {})
+                }
             })
             
             // 设置 task 元素引用
             const setTaskRef = (el, task) => {
                 if (el) {
-                    taskRefs.set(task.id, el)
+                    taskRefs.set(task.pipelineId, el)
                 }
             }
             
-            // 计算属性
-            const statsText = computed(() => {
-                const total = taskList.value.length
-                const countText = props.taskType === 'build'
-                    ? 'Job'
-                    : 'step'
-                const usageText = props.taskType === 'build'
-                    ? '系统共该环境用途环境'
-                    : '系统此环境使用场所环境'
-                return `共 ${total} 个 ${countText}，${total} ${usageText}`
-            })
-            
             const searchPlaceholder = computed(() => {
                 return searchSelectData.value.map(item => item.name).join(' / ')
-            })
-            
-            const executeLabel = computed(() => {
-                return props.taskType === 'build'
-                    ? '执行次数'
-                    : '执行次数'
             })
             
             // 获取任务信息项
             const getTaskInfoItems = (task) => {
                 return [
                     {
-                        label: executeLabel.value,
-                        value: task.executeCount || 0
+                        label:  proxy.$t('environment.executionCount'),
+                        value: task.buildCount || 0
                     },
                     {
                         label: proxy.$t('environment.avgDuration'),
-                        value: task.avgDurationText || '--'
-                    },
-                    {
-                        label: proxy.$t('environment.envInfo.creationTime'),
-                        value: task.createTimeText || '--'
+                        value: task.avgTimeInterval || '--'
                     },
                     {
                         label: proxy.$t('environment.nodeInfo.lastRunAs'),
-                        value: task.lastExecuteTimeText || '--'
+                        value: task.lastBuildTime || '--'
                     }
                 ]
             }
             
-            // 格式化时长
-            const formatDuration = (seconds) => {
-                if (!seconds && seconds !== 0) return '--'
-                
-                const minutes = Math.floor(seconds / 60)
+            // 将秒数转换为中文时间格式
+            const formatSeconds = (seconds) => {
+                if (seconds === null || seconds === undefined || seconds < 0) return '--'
+                const days = Math.floor(seconds / 86400)
+                const hours = Math.floor((seconds % 86400) / 3600)
+                const minutes = Math.floor((seconds % 3600) / 60)
                 const secs = seconds % 60
                 
-                if (minutes > 0) {
-                    return `${minutes} 分 ${secs} 秒`
+                const parts = []
+                if (days > 0) {
+                    parts.push(`${days}${proxy.$t('environment.day')}`)
                 }
-                return `${secs} 秒`
+                if (hours > 0) {
+                    parts.push(`${hours}${proxy.$t('environment.hour')}`)
+                }
+                if (minutes > 0) {
+                    parts.push(`${minutes}${proxy.$t('environment.minute')}`)
+                }
+                if (secs > 0 || parts.length === 0) {
+                    parts.push(`${secs}${proxy.$t('environment.second')}`)
+                }
+                
+                return parts.join('')
+            }
+            
+            // 计算执行耗时
+            const calculateDuration = (startTime, endTime) => {
+                if (!startTime || !endTime) return '--'
+                
+                const startTimestamp = new Date(startTime).getTime()
+                const endTimestamp = new Date(endTime).getTime()
+                const seconds = Math.floor((endTimestamp - startTimestamp) / 1000)
+                
+                return formatSeconds(seconds)
             }
             
             // 格式化时间
-            const formatTime = (timestamp) => {
-                if (!timestamp) return '--'
-                return convertTime(timestamp * 1000)
+            const formatTime = (time) => {
+                if (!time) return '--'
+                if (typeof time === 'string') {
+                    return convertTime(new Date(time).getTime())
+                }
+                // 如果是秒级时间戳
+                return convertTime(time * 1000)
             }
             
             // 获取状态图标
@@ -337,16 +363,6 @@
                     failed: 'icon-failed-shape'
                 }
                 return iconMap[status] || 'icon-circle'
-            }
-            
-            // 获取状态文本
-            const getStatusText = (status) => {
-                const textMap = {
-                    success: proxy.$t('environment.success'),
-                    running: proxy.$t('environment.running'),
-                    failed: proxy.$t('environment.failure')
-                }
-                return textMap[status] || status
             }
             
             // 展开/收起任务
@@ -365,28 +381,6 @@
                 if (task.isExpanded && !task.records) {
                     await loadTaskDetail(task)
                 }
-                
-                // 滚动到合适位置，确保 header 完全可见
-                if (task.isExpanded) {
-                    await nextTick()
-                    const taskElement = taskRefs.get(task.id)
-                    if (taskElement) {
-                        // 获取滚动容器和任务元素的位置
-                        const container = taskElement.closest('.task-list')
-                        if (container) {
-                            const containerRect = container.getBoundingClientRect()
-                            const taskRect = taskElement.getBoundingClientRect()
-                            
-                            // 计算需要滚动的距离，让任务项显示在容器顶部并留出一些边距
-                            const scrollTop = container.scrollTop + (taskRect.top - containerRect.top) - 20
-                            
-                            container.scrollTo({
-                                top: scrollTop,
-                                behavior: 'smooth'
-                            })
-                        }
-                    }
-                }
             }
             
             // 加载任务详情
@@ -397,11 +391,27 @@
                         page: task.pagination.current,
                         pageSize: task.pagination.limit
                     }
-                    const res = await props.fetchTaskDetail(task.id, params)
-                    task.records = res.records || []
+                    const res = await fetchPipelineBuildHistory({
+                        pipelineId: task.pipelineId,
+                        containerId: task.lastContainerId,
+                        params
+                    })
+                    task.records = res.records.map(i => {
+                        return {
+                            ...i,
+                            statusText: proxy.$t(`environment.statusMap.${i.status}`) || '',
+                            startTime: formatTime(i.startTime),
+                            endTime: formatTime(i.endTime),
+                            duration: calculateDuration(i.startTime, i.endTime)
+                        }
+                    }) || []
                     task.pagination.count = res.count || 0
                 } catch (err) {
-                    console.error('加载任务详情失败:', err)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: err.message || err
+                    })
+                    throw err
                 } finally {
                     task.isLoadingDetail = false
                 }
@@ -413,47 +423,36 @@
                     if (isLoadMore) {
                         isLoadingMore.value = true
                     } else {
-                        isLoading.value = true
                         pagination.value.current = 1
                     }
-                    
-                    // 构建搜索参数
-                    const searchParams = {}
-                    searchSelectValue.value.forEach(item => {
-                        if (item.id === 'task') {
-                            searchParams.taskName = item.values?.[0]?.name || item.values?.[0]?.id
-                        } else if (item.id === 'pipeline') {
-                            searchParams.pipelineName = item.values?.[0]?.name || item.values?.[0]?.id
-                        } else if (item.id === 'operator') {
-                            searchParams.operator = item.values?.[0]?.name || item.values?.[0]?.id
-                        }
-                    })
-                    
                     const params = {
-                        ...searchParams,
-                        startTime: dateRange.value?.[0],
-                        endTime: dateRange.value?.[1],
+                        ...filterQuery.value,
+                        ...timeRangeParams.value,
+                        envId: envHashId.value,
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
                     }
                     
-                    const res = await props.fetchTaskList(params)
-                    const newTasks = (res.records || res || []).map(item => ({
-                        ...item,
-                        // 预处理格式化数据
-                        avgDurationText: formatDuration(item.avgDuration),
-                        createTimeText: formatTime(item.createTime),
-                        lastExecuteTimeText: formatTime(item.lastExecuteTime),
-                        // 状态数据
-                        isExpanded: false,
-                        isLoadingDetail: false,
-                        records: null,
-                        pagination: {
-                            current: 1,
-                            count: 0,
-                            limit: 10
+                    const res = await fetchJobTaskList(params)
+                    pipelineCount.value = res.pipelineCount
+                    jobCount.value = res.jobCount
+                    const newTasks = (res.result.records || []).map(task => {
+                        return {
+                            ...task,
+                            lastBuildTime: formatTime(task.lastBuildTime),
+                            avgTimeInterval: formatSeconds(task.avgTimeInterval),
+                      
+                            // 流水线列表状态数据
+                            isExpanded: false,
+                            isLoadingDetail: false,
+                            records: null,
+                            pagination: {
+                                current: 1,
+                                count: 0,
+                                limit: 10
+                            }
                         }
-                    }))
+                    })
                     
                     if (isLoadMore) {
                         // 加载更多，追加数据
@@ -472,9 +471,12 @@
                     }
                     
                     // 更新总数
-                    updateCount(res.count || newTasks.length)
+                    updateCount(res.result.count || newTasks.length)
                 } catch (err) {
-                    console.error('加载任务列表失败:', err)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: err.message || err
+                    })
                 } finally {
                     isLoading.value = false
                     isLoadingMore.value = false
@@ -509,13 +511,13 @@
                 loadTaskList()
             }
             
-            // 搜索（保留兼容性）
-            const handleSearch = () => {
-                loadTaskList()
-            }
-            
             // 日期变化
             const handleDateChange = () => {
+                loadTaskList()
+            }
+
+            const handleDateClear = () => {
+                dateRange.value = []
                 loadTaskList()
             }
             
@@ -551,27 +553,28 @@
             })
             
             return {
+                // data
                 isLoading,
                 isLoadingMore,
-                taskList,
                 dateRange,
                 searchSelectValue,
                 searchSelectData,
                 taskListRef,
                 pagination,
-                statsText,
                 searchPlaceholder,
-                executeLabel,
                 hasMore,
+                taskList,
+                jobCount,
+                pipelineCount,
+
+                // function
                 setTaskRef,
                 getTaskInfoItems,
-                formatDuration,
                 formatTime,
                 getStatusIcon,
-                getStatusText,
                 toggleExpand,
                 handleSearchChange,
-                handleSearch,
+                handleDateClear,
                 handleDateChange,
                 handlePageChange,
                 handlePageSizeChange,
@@ -593,6 +596,7 @@
     }
     .search-input {
         width: 480px;
+        z-index: 1000;
         background: white;
         ::placeholder {
             color: #c4c6cc;
@@ -610,6 +614,10 @@
             .stats-text {
                 font-size: 12px;
                 color: #63656E;
+            }
+            .count-number {
+                font-weight: 700;
+                color: #3c88ff;
             }
         }
         
@@ -730,47 +738,10 @@
             .task-detail {
                 padding: 16px 16px 0;
                 background: #fff;
-                
-                .build-number {
-                    color: #3A84FF;
-                    cursor: pointer;
-                    
-                    &:hover {
-                        text-decoration: underline;
-                    }
-                }
-                
-                .status-badge {
-                    display: inline-flex;
+                .status-text-container {
+                    display: flex;
                     align-items: center;
-                    gap: 4px;
-                    
-                    &.status-success {
-                        .icon-success-shape {
-                            width: 8px;
-                            height: 8px;
-                            border-radius: 50%;
-                            background: #E5F6EA;
-                            border: 1px solid #3FC06D;
-                        }
-                    }
-                    
-                    &.status-running {
-                        .bk-icon {
-                            color: #3A84FF;
-                            animation: rotating 1s linear infinite;
-                        }
-                    }
-                    
-                    &.status-failed {
-                        .icon-failed-shape {
-                            width: 8px;
-                            height: 8px;
-                            border-radius: 50%;
-                            background: #FFE6E6;
-                            border: 1px solid #EA3636;
-                        }
-                    }
+                    gap: 2px;
                 }
             }
         }
@@ -793,6 +764,9 @@
                 animation: rotating 1s linear infinite;
             }
         }
+    }
+    .task-empty {
+        margin-top: 4%;
     }
 }
 

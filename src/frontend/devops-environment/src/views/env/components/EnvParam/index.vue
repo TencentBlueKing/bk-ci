@@ -191,13 +191,13 @@
                 handlePageLimitChange
             } = usePagination()
             const {
+                currentEnv,
                 envHashId,
                 envParamsList,
-                fetchEnvDetail,
+                fetchEnvParamsList,
                 updateEnvDetail
             } = useEnvDetail()
             const isLoading = ref(false)
-            const curEnvDetail = ref({})
             const searchValue = ref([])
             const envVarForm = ref(null)
             const tableMaxHeight = ref(565)
@@ -277,8 +277,8 @@
             const fetchData = async () => {
                 try {
                     isLoading.value = true
-                    const res = await fetchEnvDetail()
-                    curEnvDetail.value = res
+                    const res = await fetchEnvParamsList()
+                    currentEnv.value = res
                     if (res?.envVars) {
                         updateCount(res?.envVars.length)
                     }
@@ -295,8 +295,8 @@
                         // 计算真实的索引（考虑分页）
                         const realIndex = (pagination.value.current - 1) * pagination.value.limit + index
                         const params = {
-                            ...curEnvDetail.value,
-                            envVars: curEnvDetail.value.envVars.filter((item, i) => i !== realIndex)
+                            ...currentEnv.value,
+                            envVars: currentEnv.value.envVars.filter((item, i) => i !== realIndex)
                         }
                         await updateEnvDetail(params)
                         proxy.$bkMessage({
@@ -346,7 +346,7 @@
             const handleEdit = (row) => {
                 resetForm()
                 // 找到当前行在完整列表中的索引
-                const realIndex = curEnvDetail.value.envVars.findIndex(item =>
+                const realIndex = currentEnv.value.envVars.findIndex(item =>
                     item.name === row.name && item.value === row.value && item.secure === row.secure
                 )
                 formData.value = {
@@ -369,7 +369,7 @@
                     await envVarForm.value.validate()
                     sliderConfig.value.isSubmitting = true
                     
-                    const newEnvVars = [...(curEnvDetail.value.envVars || [])]
+                    const newEnvVars = [...(currentEnv.value.envVars || [])]
                     
                     if (sliderConfig.value.isEdit) {
                         // 编辑模式：更新指定索引的数据
@@ -388,7 +388,7 @@
                     }
                     
                     const params = {
-                        ...curEnvDetail.value,
+                        ...currentEnv.value,
                         envVars: newEnvVars
                     }
                     
@@ -403,7 +403,11 @@
                     sliderConfig.value.isShow = false
                     await fetchData()
                 } catch (e) {
-                    console.error(e)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                    throw e
                 } finally {
                     sliderConfig.value.isSubmitting = false
                 }
