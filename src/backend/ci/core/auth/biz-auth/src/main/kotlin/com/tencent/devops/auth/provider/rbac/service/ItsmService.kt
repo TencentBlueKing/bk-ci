@@ -19,6 +19,7 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
+@Suppress("MaxLineLength")
 class ItsmService constructor(
     val bkHttpRequestService: BkHttpRequestService
 ) {
