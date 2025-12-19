@@ -112,7 +112,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -1469,12 +1468,13 @@ class EnvService @Autowired constructor(
                 )
             )
         } else {
-            Result(data = false,
-                   status = 400,
-                   message = I18nUtil.getCodeLanMessage(
-                       messageCode = ERROR_NODE_NOT_EXISTS,
-                       params = arrayOf(node.displayName)
-                   )
+            Result(
+                data = false,
+                status = 400,
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_NODE_NOT_EXISTS,
+                    params = arrayOf(node.displayName)
+                )
             )
         }
     }
@@ -1509,5 +1509,9 @@ class EnvService @Autowired constructor(
             result.add(EnvNode(it.envId, it.nodeId, it.enableNode))
         }
         return result
+    }
+
+    fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
+        return envDao.fetchEnvTypeCount(dslContext, projectId, createEnv ?: false)
     }
 }

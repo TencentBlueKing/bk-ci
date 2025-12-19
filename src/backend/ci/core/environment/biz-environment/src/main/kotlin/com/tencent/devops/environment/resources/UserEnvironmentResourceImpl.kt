@@ -390,6 +390,14 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getEnvCount(
+        userId: String,
+        projectId: String,
+        createEnv: Boolean?
+    ): Result<Map<String, Int>> {
+        return Result(envService.getEnvCount(projectId, createEnv))
+    }
+
     private fun checkParam(
         userId: String,
         projectId: String,

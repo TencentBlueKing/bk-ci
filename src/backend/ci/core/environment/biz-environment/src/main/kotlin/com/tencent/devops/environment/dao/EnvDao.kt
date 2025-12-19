@@ -339,4 +339,22 @@ class EnvDao {
                 .execute()
         }
     }
+
+    fun fetchEnvTypeCount(
+        dslContext: DSLContext,
+        projectId: String,
+        createEnv: Boolean
+    ): Map<String, Int> {
+        with(TEnv.T_ENV) {
+            val dsl = dslContext.select(ENV_TYPE, DSL.count(ENV_ID)).from(this).where(PROJECT_ID.eq(projectId))
+            if (createEnv) {
+                dsl.and(ENV_TYPE.eq(EnvType.CREATE.name))
+            }else{
+                dsl.and(ENV_TYPE.ne(EnvType.CREATE.name))
+            }
+            return dsl.groupBy(ENV_TYPE).fetch().associate {
+                it.value1() to it.value2()
+            }
+        }
+    }
 }

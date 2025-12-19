@@ -400,7 +400,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         envs.forEach {
             it.lastUpdateUser = userId
-            it.lastUpdateTime = LocalDateTime.now()
+            it.lastUpdateTime = LocalDateTime.now().timestamp()
         }
         thirdPartyAgentDao.saveAgentEnvs(
             dslContext = dslContext,
