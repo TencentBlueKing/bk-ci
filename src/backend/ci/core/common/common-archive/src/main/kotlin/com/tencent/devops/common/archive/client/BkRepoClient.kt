@@ -1309,7 +1309,7 @@ class BkRepoClient constructor(
     }
 
     private fun ignoreFakeChecksum(checksum: String?): String {
-        if (checksum == null || checksum.toLong() == 0L) {
+        if (checksum == null || checksum.toLongOrNull() == 0L) {
             return ""
         }
         return checksum
