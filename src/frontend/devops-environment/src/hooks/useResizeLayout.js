@@ -30,7 +30,7 @@ export function useResizeLayout (options = {}) {
     // 获取当前页面的唯一key: resType_pageName
     const currentPageKey = computed(() => {
         const resType = proxy.$route.params.resType || 'pipeline'
-        const pageName = proxy.$route.name || 'envList'
+        const pageName = proxy.$route.meta?.collapsePageName || 'envList'
         return `${resType}_${pageName}`
     })
     
@@ -40,7 +40,6 @@ export function useResizeLayout (options = {}) {
             const config = localStorage.getItem(RESIZE_LAYOUT_CONFIG_STORAGE_KEY)
             return config ? JSON.parse(config) : {}
         } catch (e) {
-            console.warn('解析ResizeLayout配置失败', e)
             return {}
         }
     }
@@ -52,7 +51,7 @@ export function useResizeLayout (options = {}) {
             config[key] = data
             localStorage.setItem(RESIZE_LAYOUT_CONFIG_STORAGE_KEY, JSON.stringify(config))
         } catch (e) {
-            console.warn('保存ResizeLayout配置失败', e)
+            throw e
         }
     }
     
@@ -81,6 +80,9 @@ export function useResizeLayout (options = {}) {
             ...pageConfig,
             collapsed: val
         })
+        
+        // 触发全局事件，通知 CollapseLayout 重新计算布局
+        window.dispatchEvent(new CustomEvent('resize-layout-change'))
     }
     
     // 处理拖拽后的宽度变化
@@ -91,6 +93,8 @@ export function useResizeLayout (options = {}) {
             ...pageConfig,
             width: val
         })
+        
+        window.dispatchEvent(new CustomEvent('resize-layout-change'))
     }
     
     // 初始化当前页面的状态

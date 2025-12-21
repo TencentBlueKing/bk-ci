@@ -173,6 +173,8 @@
     import { convertTime } from '@/utils/util'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useNodeDetail from '@/hooks/useNodeDetail'
+    import useTaskDetail from '@/hooks/useTaskDetail'
     import usePagination from '@/hooks/usePagination'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -186,14 +188,16 @@
         },
         setup (props) {
             const { proxy } = useInstance()
+            const routeName = proxy.$route.name
+            const { envHashId } = useEnvDetail()
+            const { nodeHashId } = useNodeDetail()
             const {
-                envHashId,
                 fetchJobTaskList,
                 fetchPipelineBuildHistory,
                 searchJobByName,
                 searchPipelineByName,
                 searchByCreator
-            } = useEnvDetail()
+            } = useTaskDetail()
             const {
                 pagination,
                 resetPagination,
@@ -428,7 +432,10 @@
                     const params = {
                         ...filterQuery.value,
                         ...timeRangeParams.value,
-                        envId: envHashId.value,
+                        ...(routeName === 'envDetail'
+                            ? { envId: envHashId.value }
+                            : { agentId: nodeHashId.value }
+                        ),
                         page: pagination.value.current,
                         pageSize: pagination.value.limit
                     }
@@ -537,8 +544,12 @@
             // 初始化加载
             loadTaskList()
             
-            // 监听 envHashId 变化
-            watch(() => envHashId.value, (newVal, oldVal) => {
+            // 监听 envHashId 或 nodeHashId 变化
+            const watchHashId = computed(() =>
+                routeName === 'envDetail' ? envHashId.value : nodeHashId.value
+            )
+            
+            watch(watchHashId, (newVal, oldVal) => {
                 if (newVal && newVal !== oldVal) {
                     // 重置分页
                     resetPagination()

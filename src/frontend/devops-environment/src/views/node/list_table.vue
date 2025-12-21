@@ -1076,7 +1076,7 @@
 
       .node-item-content {
           position: absolute;
-          top: 6px;
+          top: 20px;
           display: flex;
           width: 90%;
           margin-right: 12px;
@@ -1100,7 +1100,7 @@
               margin-left: 10px;
               position: absolute;
               right: 11px;
-              top: 8px;
+              top: 7px;
               .edit-base {
                   cursor: pointer;
               }

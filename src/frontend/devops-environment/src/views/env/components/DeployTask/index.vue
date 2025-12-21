@@ -1,13 +1,11 @@
 <template>
     <TaskList
         task-type="deploy"
-        :fetch-task-list="fetchDeployTaskList"
-        :fetch-task-detail="fetchDeployTaskDetail"
     />
 </template>
 
 <script>
-    import TaskList from '../TaskList/index.vue'
+    import TaskList from '@/components/TaskList/'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
     

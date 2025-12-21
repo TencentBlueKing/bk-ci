@@ -1,5 +1,6 @@
 <template>
     <div class="node-list-wrapper">
+        <router-view />
         <section
             class="sub-view-port"
             v-bkloading="{
@@ -136,7 +137,6 @@
                         @toggle-fold="toggleFlod"
                     />
                     <template slot="flod">
-                        {{ flod }}
                     </template>
                 </CollapseLayout>
             </template>

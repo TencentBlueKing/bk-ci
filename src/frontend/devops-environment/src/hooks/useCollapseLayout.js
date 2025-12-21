@@ -57,6 +57,14 @@ export default function useCollapseLayout (storageKey, defaultFlod = false) {
     // 从全局状态获取
     const { flod } = globalStates.get(storageKey)
     
+    // 监听折叠状态变化，重新计算布局宽度
+    watch(flod, () => {
+        // 使用 nextTick 确保 DOM 更新后再计算
+        setTimeout(() => {
+            initLayout()
+        }, 0)
+    })
+    
     // 左侧样式
     const leftStyles = computed(() => {
         if (flod.value) {
@@ -107,13 +115,23 @@ export default function useCollapseLayout (storageKey, defaultFlod = false) {
         layoutOffsetTop.value = offsetTop
     }
     
+    // 监听 ResizeLayout 变化事件
+    const handleResizeLayoutChange = () => {
+        setTimeout(() => {
+            initLayout()
+        }, 0)
+    }
+    
     onMounted(() => {
         initLayout()
         window.addEventListener('resize', initLayout)
+        // 监听 ResizeLayout 的折叠/展开事件
+        window.addEventListener('resize-layout-change', handleResizeLayoutChange)
     })
     
     onBeforeUnmount(() => {
         window.removeEventListener('resize', initLayout)
+        window.removeEventListener('resize-layout-change', handleResizeLayoutChange)
     })
     
     return {

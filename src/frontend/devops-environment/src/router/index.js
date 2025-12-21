@@ -56,22 +56,26 @@ const routes = [
                     {
                         path: ':envType/:envId?/:tabName?',
                         name: 'envDetail',
-                        component: envDetail
+                        component: envDetail,
+                        meta: {
+                            // collapsePageName 用于页面左侧aside展开时，缓存页面状态
+                            collapsePageName: 'envList',
+                        }
                     }
                 ]
             },
-            {
-                path: 'createEnv',
-                name: 'createEnv',
-                component: createEnv,
-                meta: {
-                    title: 'createEnvrionment',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList',
-                    activeName: 'envList'
-                }
-            },
+            // {
+            //     path: 'createEnv',
+            //     name: 'createEnv',
+            //     component: createEnv,
+            //     meta: {
+            //         title: 'createEnvrionment',
+            //         logo: 'environment',
+            //         header: 'environmentManage',
+            //         to: 'envList',
+            //         activeName: 'envList'
+            //     }
+            // },
             // {
             //     path: 'envDetail/:envId',
             //     name: 'envDetail',
@@ -91,10 +95,34 @@ const routes = [
                         path: ':nodeType',
                         name: 'nodeList',
                         component: nodeList,
+                        children: [
+                            {
+                                path: ':nodeHashId',
+                                name: 'nodeDetail',
+                                component: nodeDetail,
+                                meta: {
+                                    title: 'nodeDetail',
+                                    logo: 'environment',
+                                    header: 'environmentManage',
+                                    to: 'envList',
+                                    webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
+                                }
+                            },
+                            {
+                                path: 'setNodeTag',
+                                name: 'setNodeTag',
+                                component: setNodeTag,
+                                meta: {
+                                    collapsePageName: 'nodeList',
+                                }
+                            },
+
+                        ],
                         meta: {
                             title: 'nodeList',
                             logo: 'environment',
                             header: 'environmentManage',
+                            collapsePageName: 'nodeList',
                             to: 'envList',
                             webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
                         },
@@ -112,22 +140,22 @@ const routes = [
                             }
                         }
                     },
-                    {
-                        path: 'nodeDetail/:nodeHashId',
-                        name: 'nodeDetail',
-                        component: nodeDetail,
-                        meta: {
-                            title: 'nodeDetail',
-                            logo: 'environment',
-                            header: 'environmentManage',
-                            to: 'envList'
-                        }
-                    },
-                    {
-                        path: 'setNodeTag',
-                        name: 'setNodeTag',
-                        component: setNodeTag
-                    },
+                    // {
+                    //     path: 'nodeDetail/:nodeHashId',
+                    //     name: 'nodeDetail',
+                    //     component: nodeDetail,
+                    //     meta: {
+                    //         title: 'nodeDetail',
+                    //         logo: 'environment',
+                    //         header: 'environmentManage',
+                    //         to: 'envList'
+                    //     }
+                    // },
+                    // {
+                    //     path: ':nodeType/setNodeTag',
+                    //     name: 'setNodeTag',
+                    //     component: setNodeTag
+                    // },
                 ]
             }
         ]
