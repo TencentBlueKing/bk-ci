@@ -41,7 +41,7 @@ data class TemplateInstanceField(
     /**
      * 是否覆盖推荐版本,推荐版本号也放在参数中传递
      */
-    fun overrideRecommendedVersion(): Boolean {
+    fun overrideBuildNo(): Boolean {
         return overrideParam(BK_CI_BUILD_NO)
     }
 

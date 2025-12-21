@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTemplateVariable(
-    val value: Any,
+    val value: Any?,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = true
 )

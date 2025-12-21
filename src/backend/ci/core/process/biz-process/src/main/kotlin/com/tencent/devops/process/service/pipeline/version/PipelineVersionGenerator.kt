@@ -653,7 +653,7 @@ class PipelineVersionGenerator constructor(
                         defaultStageTagId = defaultStageTagId,
                         buildNo = releaseInfo.buildNo,
                         params = releaseInfo.param ?: emptyList(),
-                        triggerConfigs = releaseInfo.triggerConfigs,
+                        overrideTemplateTriggerConfigs = releaseInfo.triggerConfigs,
                         overrideTemplateField = releaseInfo.overrideTemplateField
                     )
                     generateInstanceVersion(

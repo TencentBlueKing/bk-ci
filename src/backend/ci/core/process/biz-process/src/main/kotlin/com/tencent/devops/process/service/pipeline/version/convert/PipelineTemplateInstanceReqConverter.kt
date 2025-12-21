@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -192,11 +191,12 @@ class PipelineTemplateInstanceReqConverter(
                 )
             }
 
-            // 前端会把所有的参数都传过来，这里只需要保留流水线自定义的参数,ui方式实例化,参数默认都是自定义
-            // 以下变量为流水线自身的，不跟随模板，会对模板的变量默认值，进行覆盖。
-            val templateVariables = params?.filter {
-                overrideTemplateField?.overrideParam(it.id) ?: true
-            }?.map { TemplateVariable(it) }
+            val templateTrigger = templateModel.getTriggerContainer()
+            val templateVariables = TemplateInstanceUtil.getTemplateVariables(
+                pipelineParams = params ?: emptyList(),
+                templateParams = templateTrigger.params,
+                overrideTemplateField = overrideTemplateField
+            )
 
             // 前端会把所有的触发器都传过来,这里只需要保留流水线自定义的触发器,ui方式实例化,触发器默认继承模版
             // 以下触发器配置为流水线自定义的触发器，不跟随模板，会对流水线模板的触发器配置进行覆盖
@@ -206,8 +206,9 @@ class PipelineTemplateInstanceReqConverter(
 
             // 是否覆盖推荐版本号
             val recommendedVersion = TemplateInstanceUtil.getRecommendedVersion(
-                buildNo = buildNo,
-                params = params ?: emptyList(),
+                pipelineBuildNo = buildNo,
+                pipelineParams = params ?: emptyList(),
+                templateBuildNo = templateTrigger.buildNo,
                 overrideTemplateField = overrideTemplateField
             )
 
@@ -249,9 +250,9 @@ class PipelineTemplateInstanceReqConverter(
                 templateResource = templateResource,
                 pipelineName = pipelineName,
                 defaultStageTagId = defaultStageTagId,
-                templateVariables = templateVariables,
+                buildNo = buildNo,
+                params = params,
                 overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
-                recommendedVersion = recommendedVersion,
                 overrideTemplateField = overrideTemplateField,
                 template = pipelineModelRef.template
             )
