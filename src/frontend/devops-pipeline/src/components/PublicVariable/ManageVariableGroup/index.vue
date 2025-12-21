@@ -193,7 +193,7 @@
         )
         
         // 合并过滤后的全局参数和待保存的参数列表，用于检测重复
-        return [...filteredGlobalParams, ...groupsMap.value.variableList]
+        return [...filteredGlobalParams, ...groupsMap.value.variableList].filter(i => i.varGroupName)
     })
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量

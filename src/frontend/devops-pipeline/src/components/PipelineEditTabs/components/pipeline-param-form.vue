@@ -321,7 +321,8 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
-                return this.globalParams
+                // 新增变量可与公共变量组下变量重名
+                return this.globalParams.filter(i => !i.varGroupName)
                     .filter((item) => item[field] !== this.initParamItem[field])
                     .map((p) =>
                         typeof p[field] === 'string'
