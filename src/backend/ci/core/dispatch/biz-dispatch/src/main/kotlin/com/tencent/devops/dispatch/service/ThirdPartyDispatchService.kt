@@ -334,14 +334,16 @@ class ThirdPartyDispatchService @Autowired constructor(
                     .getAgentsByEnvId(
                         projectId = dispatchMessage.event.projectId,
                         envId = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             } else {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvNameWithId(
                         projectId = dispatchMessage.event.projectId,
                         envName = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName,
+                        userId = dispatchMessage.event.userId
                     )
             }
         } catch (e: Exception) {

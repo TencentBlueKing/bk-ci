@@ -125,7 +125,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment Hash ID", required = true)
         @PathParam("envId")
-        envId: String
+        envId: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "根据环境名称获取Agent列表")
@@ -137,7 +139,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
-        envName: String
+        envName: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<List<EnvNodeAgent>>
 
     @Operation(summary = "Agent是否能升级")
@@ -450,7 +454,9 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
-        envName: String
+        envName: String,
+        @QueryParam("userId")
+        userId: String? = null
     ): Result<Pair<Long?, List<EnvNodeAgent>>>
 
     @Operation(summary = "批量查询Agent环境变量")

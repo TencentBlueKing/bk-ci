@@ -10,8 +10,4 @@ class CreateEnvService {
     fun fetchUserWorkspaceId(projectId: String, userId: String): List<String> {
         return emptyList()
     }
-
-    fun fetchAllWorkspaceId(projectId: String): List<String> {
-        return emptyList()
-    }
 }

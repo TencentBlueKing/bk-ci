@@ -915,7 +915,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgentByEnvName(projectId: String, envName: String): Pair<Long?, List<EnvNodeAgent>> {
+    fun getAgentByEnvName(projectId: String, envName: String, userId: String?): Pair<Long?, List<EnvNodeAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<EnvNodeAgent>()
@@ -933,7 +933,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     projectId = projectId,
                     sharedProjectId = envNameItems[0],
                     sharedEnvName = envNameItems[1],
-                    sharedEnvId = null
+                    sharedEnvId = null,
+                    userId = userId
                 )
             }
         }
@@ -947,7 +948,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         }
         thirdPartyAgentList.addAll(
-            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId), userId)
         )
 
         return Pair(envRecord.envId, thirdPartyAgentList)
@@ -957,7 +958,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         projectId: String,
         sharedProjectId: String,
         sharedEnvName: String?,
-        sharedEnvId: Long?
+        sharedEnvId: Long?,
+        userId: String?
     ): Pair<Long?, List<EnvNodeAgent>> {
         logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
@@ -1056,7 +1058,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                 }
 
-                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(it.envId)))
+                sharedThirdPartyAgents.addAll(
+                    getAgentByEnvId(
+                        it.mainProjectId,
+                        HashUtil.encodeLongId(it.envId),
+                        userId
+                    )
+                )
                 // 找到了环境可用就可以退出了
                 return@outSide
             }
@@ -1072,7 +1080,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         return Pair(sharedEnvRecord.getOrNull(0)?.envId, sharedThirdPartyAgents)
     }
 
-    fun getAgentByEnvId(projectId: String, envHashId: String): List<EnvNodeAgent> {
+    fun getAgentByEnvId(projectId: String, envHashId: String, userId: String?): List<EnvNodeAgent> {
         logger.info("[$projectId|$envHashId] Get the agents by envId")
         run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
@@ -1083,12 +1091,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 projectId = projectId,
                 sharedProjectId = sharedProjEnv[0],
                 sharedEnvName = null,
-                sharedEnvId = HashUtil.decodeIdToLong(sharedProjEnv[1])
+                sharedEnvId = HashUtil.decodeIdToLong(sharedProjEnv[1]),
+                userId = userId
             )
             return aList
         }
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val nodes = envService.fetchEnvNodes(projectId = projectId, envIds = listOf(envId))
+        val nodes = envService.fetchEnvNodes(projectId = projectId, envIds = listOf(envId), userId)
         if (nodes.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
