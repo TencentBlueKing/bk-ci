@@ -82,7 +82,8 @@ class WorkspaceJoinDao {
     fun fetchAnyWindowsWorkspace(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        checkField: List<Field<*>>? = null
     ): WorkspaceRecordWithWindows? {
         // 目前只有windows，如果后期增加横向扩展即可
         val dsl = genFetchProjectWorkspaceCond(
@@ -94,7 +95,7 @@ class WorkspaceJoinDao {
                 workspaceName = listOf(workspaceName),
                 workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU)
             ),
-            checkField = windowsFullFields
+            checkField = checkField ?: windowsFullFields
         )
         return dsl.skipCheck()
             .fetchAny(workspaceWithWindowsMapper)

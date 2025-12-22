@@ -749,4 +749,19 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("tgitBindRemotedevProject |$userId|$data")
         return client.get(ServiceRemoteDevResource::class).tgitBindRemotedevProject(userId, data)
     }
+
+    override fun cdsWebhookEvent(
+        userId: String,
+        appCode: String?,
+        apigwType: String?,
+        type: String,
+        envId: String
+    ): Result<Boolean> {
+        logger.info("cgsReportNotify ,type:$type,envId:$envId")
+        return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
+            userId = userId,
+            type = type,
+            envId = envId
+        )
+    }
 }
