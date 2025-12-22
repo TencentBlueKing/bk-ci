@@ -49,7 +49,6 @@ import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
-import jakarta.ws.rs.core.Response
 
 @Tag(name = "OP_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/op/thirdPartyAgent")
@@ -165,5 +164,5 @@ interface OpThirdPartyAgentResource {
         projectId: String,
         workspaceName: String,
         zoneName: String
-    ): String
+    ): Result<String>
 }
