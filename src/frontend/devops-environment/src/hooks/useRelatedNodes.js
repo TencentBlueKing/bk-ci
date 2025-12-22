@@ -1,16 +1,24 @@
 import { ref, computed } from 'vue'
-
+import useEnvDetail from './useEnvDetail'
+const RELATED_TYPE = {
+    STATIC: 'static',
+    DYNAMIC: 'dynamic'
+}
 const globalState = {
     isShow: ref(false),
     isLoading: ref(false),
-    relatedType: ref('static'),
+    relatedType: ref(RELATED_TYPE.STATIC),
     searchKeyword: ref(''),
     selectedNodesList: ref([])
 }
-
 export default function useRelatedNodes () {
-    const handleShowRelatedNodes = () => {
-        console.log('显示关联节点对话框')
+    const {
+        currentEnv
+    } = useEnvDetail()
+    const currentNodeList = ref([])
+    const handleShowRelatedNodes = (list) => {
+        currentNodeList.value = list
+        console.log(currentNodeList.value, 1)
         globalState.isShow.value = true
     }
     
@@ -38,6 +46,7 @@ export default function useRelatedNodes () {
         handleShowRelatedNodes,
         handleSearch,
         handleSave,
-        handelCancel
+        handelCancel,
+        RELATED_TYPE
     }
 }

@@ -18,14 +18,21 @@
             row-class-name="node-item-row"
             :data="nodeList"
             :pagination="pagination"
+            :default-sort="defaultSort"
             :key="isFlod"
             height="100%"
+            @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
             @sort-change="handleSortChange"
             @selection-change="handleSelectionChange"
         >
             <template v-if="isFlod">
+                <bk-table-column
+                    type="selection"
+                    fixed="left"
+                    width="40"
+                ></bk-table-column>
                 <bk-table-column
                     :label="$t('environment.nodeInfo.displayName')"
                     prop="displayName"
@@ -543,6 +550,10 @@
             isFlod: {
                 type: Boolean,
                 default: false
+            },
+            defaultSort: {
+                type: Object,
+                default: () => ({})
             }
         },
         data () {
@@ -780,9 +791,15 @@
                     }
                 })
             },
-            toNodeDetail (node) {
+            handleRowClick (node) {
                 if (this.canShowDetail(node)) {
-                    this.handleExpandList()
+                    this.$emit('show-detail', node.nodeHashId)
+                }
+            },
+            toNodeDetail (node) {
+                if (this.isFlod) return
+                if (this.canShowDetail(node)) {
+                    this.$emit('show-detail', node.nodeHashId)
                     // const currentNodeType = this.$route.params.nodeType || ALLNODE
                     // localStorage.setItem(ENV_ACTIVE_NODE_TYPE, currentNodeType)
                     // this.$router.push({

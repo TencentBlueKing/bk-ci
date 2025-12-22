@@ -4,7 +4,7 @@
             <div class="header-left">
                 <bk-button
                     theme="primary"
-                    @click="handleShowRelatedNodes"
+                    @click="handleShowAddNodesDialog"
                 >
                     {{ $t('environment.relatedNodes') }}
                 </bk-button>
@@ -284,6 +284,9 @@
                 calculateTableHeight()
             }
 
+            const handleShowAddNodesDialog = () => {
+                handleShowRelatedNodes(envNodeList.value)
+            }
             const handleSelectionChange = ((list) => {
                 selectedNodesList.value = list
             })
@@ -386,7 +389,7 @@
                 resetPagination,
                 handlePageChange,
                 handlePageLimitChange,
-                handleShowRelatedNodes,
+                handleShowAddNodesDialog,
                 handleSelectionChange,
                 handleBatchRemove,
                 handleRemoveNode

@@ -3,6 +3,7 @@
         :value="isShow"
         width="1080"
         ext-cls="related-nodes-dialog"
+        :position="dialogConfigs"
         scrollable
         :quick-close="false"
         :close-icon="false"
@@ -11,59 +12,117 @@
         <div class="dialog-content">
             <div class="left-section">
                 <div class="title-section">
-                    环境1 - 关联节点
+                    {{ currentEnv.name }} - {{ $t('environment.relatedNodes') }}
                 </div>
                 <!-- 关联策略 -->
                 <div class="form-section">
-                    <div class="form-label">关联策略</div>
+                    <div class="form-label">{{ $t('environment.relatedStrategies') }}</div>
                     <bk-radio-group v-model="relatedType">
                         <bk-radio
                             class="mr10"
                             value="static"
                         >
-                            静态关联
+                            {{ $t('environment.staticRelated') }}
                         </bk-radio>
-                        <bk-radio value="dynamic">动态关联</bk-radio>
+                        <bk-radio value="dynamic">{{ $t('environment.dynamicRelated') }}</bk-radio>
                     </bk-radio-group>
                 </div>
 
-                <div class="form-section">
-                    <bk-input
-                        v-model="searchKeyword"
-                        placeholder="搜索标签/节点"
-                        right-icon="bk-icon icon-search"
-                        @enter="handleSearch"
-                        clearable
-                    />
-                </div>
+                <bk-input
+                    v-model="searchKeyword"
+                    placeholder="搜索节点"
+                    right-icon="bk-icon icon-search"
+                    @enter="handleSearch"
+                    clearable
+                />
 
-                <div class="tree-section">
-                    <bk-big-tree
-                        ref="nodeTree"
-                        :data="treeData"
-                        :show-checkbox="true"
-                        :expand-all="true"
-                        :check-strictly="false"
-                        :multiple="true"
-                        node-key="id"
-                        :show-icon="false"
-                        :options="treeOptions"
-                        @check-change="handleNodeCheck"
+                <div class="node-list-section">
+                    <!-- 顶部操作栏 -->
+                    <div class="list-header">
+                        <bk-button
+                            text
+                            class="btn-text"
+                            size="small"
+                            @click="handleToggleSelectAll"
+                        >
+                            全选 ({{ nodeList.length }})
+                        </bk-button>
+                        <bk-button
+                            text
+                            class="btn-text"
+                            size="small"
+                            @click="handleClearSelection"
+                        >
+                            清空
+                        </bk-button>
+                    </div>
+
+                    <!-- 节点列表 -->
+                    <div
+                        ref="nodeListContainer"
+                        class="node-list-container"
+                        @scroll="handleScroll"
                     >
-                        <template slot-scope="{ node, data }">
-                            <div class="tree-node">
-                                <span class="node-name">
-                                    {{ data.name }}
+                        <div
+                            v-for="node in displayNodeList"
+                            :key="node.id"
+                            class="node-item"
+                            @click="handleNodeClick(node)"
+                        >
+                            <bk-checkbox
+                                :value="isNodeSelected(node.id)"
+                            />
+                            <div class="node-content">
+                                <div class="node-main-info">
+                                    <span class="node-name">{{ node.name }}</span>
                                     <span
-                                        v-if="data.count"
-                                        class="node-count"
+                                        class="node-status"
+                                        :class="`status-${node.status?.toLowerCase()}`"
                                     >
-                                        ({{ data.count }})
+                                        <i class="bk-icon icon-circle"></i>
+                                        {{ node.statusText || '正常' }}
                                     </span>
-                                </span>
+                                </div>
+                                <div class="node-sub-info">
+                                    <span class="node-ip">{{ node.ip }}</span>
+                                    <span
+                                        v-if="node.agentId"
+                                        class="node-agent"
+                                    >{{ node.agentId }}</span>
+                                </div>
                             </div>
-                        </template>
-                    </bk-big-tree>
+                        </div>
+
+                        <!-- 加载更多 -->
+                        <div
+                            v-if="hasMore"
+                            class="loading-more"
+                        >
+                            <bk-loading
+                                :loading="isLoadingMore"
+                                size="small"
+                            >
+                                {{ isLoadingMore ? '加载中...' : '滚动加载更多' }}
+                            </bk-loading>
+                        </div>
+
+                        <!-- 无更多数据 -->
+                        <div
+                            v-if="!hasMore && displayNodeList.length > 0"
+                            class="no-more"
+                        >
+                            没有更多数据了
+                        </div>
+
+                        <!-- 空状态 -->
+                        <div
+                            v-if="displayNodeList.length === 0 && !isLoading"
+                            class="empty-state"
+                        >
+                            <i class="bk-icon icon-empty"></i>
+                            <p>暂无节点数据</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -121,9 +180,9 @@
 </template>
 
 <script>
-    import { ref, computed } from 'vue'
-    import useRelatedNodes from '../hooks/useRelatedNodes'
-
+    import { ref, computed, onMounted, nextTick } from 'vue'
+    import useRelatedNodes from '@/hooks/useRelatedNodes'
+    import useEnvDetail from '@/hooks/useEnvDetail'
     export default {
         name: 'RelatedNodes',
         setup () {
@@ -135,90 +194,160 @@
                 selectedNodesList,
                 handleSearch,
                 handleSave,
-                handelCancel
+                handelCancel,
+                RELATED_TYPE
             } = useRelatedNodes()
+            const {
+                currentEnv
+            } = useEnvDetail()
 
-            // 模拟树形数据
-            const treeData = ref([
-                {
-                    id: 'deploy-nodes',
-                    name: '部署节点',
-                    count: 7,
-                    type: 'folder',
-                    children: [
-                        {
-                            id: 'node-1',
-                            name: '蓝盾前端发布',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-2',
-                            name: '蓝盾后台发布',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-3',
-                            name: '部署节点 7',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-4',
-                            name: '部署节点 6',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-5',
-                            name: '部署节点 5',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-6',
-                            name: '部署节点 1',
-                            type: 'node',
-                            group: '流水线组 8'
-                        },
-                        {
-                            id: 'node-7',
-                            name: '各字比较长比较长比较长比较长比较长比较长的部署节点...',
-                            type: 'node',
-                            group: '流水线组 8'
-                        }
-                    ]
-                }
+            // 节点列表容器引用
+            const nodeListContainer = ref(null)
+            
+            // 分页相关
+            const currentPage = ref(1)
+            const pageSize = ref(20)
+            const isLoadingMore = ref(false)
+            const hasMore = ref(true)
+
+            const dialogConfigs = {
+                top: '120'
+            }
+
+            // 模拟完整节点数据（实际应该从接口获取）
+            const nodeList = ref([
+                { id: 'node-1', name: 'devops1', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-2', name: 'devops2', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-3', name: 'bkdevops-dev-console-1', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-4', name: 'bkdevops-dev-console-2', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-5', name: 'bkdevops-dev-console-3', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-6', name: 'bkdevops-dev-console-4', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-7', name: 'TENCENT64site', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-8', name: 'bkdevops-dev-console-5', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
+                { id: 'node-9', name: 'bkdevops-dev-console-6', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' }
             ])
+
+            // 当前显示的节点列表（分页后）
+            const displayNodeList = ref([])
+
+            // 选中的节点 ID 集合
+            const selectedNodeIds = computed(() => new Set(selectedNodesList.value.map(node => node.id)))
+
+            // 是否全选
+            const isAllSelected = computed(() => {
+                return displayNodeList.value.length > 0 && displayNodeList.value.every(node => selectedNodeIds.value.has(node.id))
+            })
+
+            // 是否半选状态
+            const isIndeterminate = computed(() => {
+                const selectedCount = displayNodeList.value.filter(node => selectedNodeIds.value.has(node.id)).length
+                return selectedCount > 0 && selectedCount < displayNodeList.value.length
+            })
 
             // 统计数据
             const totalCount = computed(() => selectedNodesList.value.length)
             const newCount = ref(0)
             const removeCount = ref(0)
 
-            // 处理节点选择
-            const handleNodeCheck = (data, checked, indeterminate) => {
-                if (data.type === 'node') {
-                    if (checked) {
-                        // 添加节点
-                        if (!selectedNodesList.value.find(item => item.id === data.id)) {
-                            selectedNodesList.value.push({
-                                id: data.id,
-                                name: data.name,
-                                type: data.type,
-                                group: data.group
-                            })
-                        }
-                    } else {
-                        // 移除节点
-                        const index = selectedNodesList.value.findIndex(item => item.id === data.id)
-                        if (index > -1) {
-                            selectedNodesList.value.splice(index, 1)
-                        }
+            // 判断节点是否被选中
+            const isNodeSelected = (nodeId) => {
+                return selectedNodeIds.value.has(nodeId)
+            }
+
+            // 处理节点点击
+            const handleNodeClick = (node) => {
+                const isSelected = isNodeSelected(node.id)
+                if (isSelected) {
+                    // 移除节点
+                    const index = selectedNodesList.value.findIndex(item => item.id === node.id)
+                    if (index > -1) {
+                        selectedNodesList.value.splice(index, 1)
                     }
+                } else {
+                    // 添加节点
+                    selectedNodesList.value.push({
+                        id: node.id,
+                        name: node.name,
+                        ip: node.ip,
+                        agentId: node.agentId,
+                        status: node.status
+                    })
                 }
             }
+
+            // 切换全选/取消全选
+            const handleToggleSelectAll = () => {
+                if (isAllSelected.value) {
+                    // 如果已经全选，则取消全选当前显示的节点
+                    const displayNodeIds = new Set(displayNodeList.value.map(n => n.id))
+                    selectedNodesList.value = selectedNodesList.value.filter(
+                        item => !displayNodeIds.has(item.id)
+                    )
+                } else {
+                    // 全选当前显示的节点
+                    displayNodeList.value.forEach(node => {
+                        if (!selectedNodesList.value.find(item => item.id === node.id)) {
+                            selectedNodesList.value.push({
+                                id: node.id,
+                                name: node.name,
+                                ip: node.ip,
+                                agentId: node.agentId,
+                                status: node.status
+                            })
+                        }
+                    })
+                }
+            }
+
+            // 清空选择
+            const handleClearSelection = () => {
+                selectedNodesList.value = []
+            }
+
+            // 加载更多数据
+            const loadMore = async () => {
+                if (isLoadingMore.value || !hasMore.value) return
+
+                isLoadingMore.value = true
+                
+                // 模拟加载延迟
+                await new Promise(resolve => setTimeout(resolve, 500))
+
+                const startIndex = (currentPage.value - 1) * pageSize.value
+                const endIndex = startIndex + pageSize.value
+                const newNodes = nodeList.value.slice(startIndex, endIndex)
+
+                if (newNodes.length > 0) {
+                    displayNodeList.value.push(...newNodes)
+                    currentPage.value++
+                } else {
+                    hasMore.value = false
+                }
+
+                isLoadingMore.value = false
+            }
+
+            // 滚动事件处理
+            const handleScroll = (e) => {
+                const { scrollTop, scrollHeight, clientHeight } = e.target
+                
+                // 距离底部 50px 时触发加载
+                if (scrollHeight - scrollTop - clientHeight < 50) {
+                    loadMore()
+                }
+            }
+
+            // 初始加载
+            const initNodeList = async () => {
+                displayNodeList.value = []
+                currentPage.value = 1
+                hasMore.value = true
+                await loadMore()
+            }
+
+            onMounted(() => {
+                initNodeList()
+            })
 
             return {
                 isShow,
@@ -226,11 +355,23 @@
                 relatedType,
                 searchKeyword,
                 selectedNodesList,
-                treeData,
+                nodeList,
+                displayNodeList,
+                nodeListContainer,
                 totalCount,
                 newCount,
                 removeCount,
-                handleNodeCheck,
+                currentEnv,
+                dialogConfigs,
+                isAllSelected,
+                isIndeterminate,
+                isLoadingMore,
+                hasMore,
+                isNodeSelected,
+                handleNodeClick,
+                handleToggleSelectAll,
+                handleClearSelection,
+                handleScroll,
                 handleSearch,
                 handleSave,
                 handelCancel
@@ -252,7 +393,7 @@
 
     .dialog-content {
         display: flex;
-        height: 500px;
+        height: 650px;
        
         .left-section {
             flex: 1;
@@ -285,52 +426,130 @@
                 }
             }
             
-            .tree-section {
+            .node-list-section {
                 flex: 1;
                 overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                background: #fff;
                 
-                .bk-big-tree {
-                    height: 100%;
-                    overflow: auto;
+                .list-header {
+                    display: flex;
+                    align-items: center;
+                    padding: 4px 8px 0;
+                    background: #fff;
+                    .btn-text {
+                        padding: 0 !important;
+                        &:first-child {
+                            margin-right: 12px;
+
+                        }
+                    }
+                }
+                
+                .node-list-container {
+                    flex: 1;
+                    padding: 0 8px;
+                    overflow-y: auto;
                     
-                    // 修复复选框和文本对齐问题
-                    :deep(.bk-tree-node) {
-                        .bk-tree-node-content {
-                            display: flex;
-                            align-items: center;
+                    .node-item {
+                        display: flex;
+                        align-items: flex-start;
+                        cursor: pointer;
+                        padding: 8px 0;
+                        transition: background-color 0.2s;
+                        .node-content {
+                            flex: 1;
+                            padding-left: 8px;
                             
-                            .bk-tree-node-checkbox {
-                                margin-right: 8px;
-                            }
-                            
-                            .bk-tree-node-label {
-                                flex: 1;
+                            .node-main-info {
                                 display: flex;
                                 align-items: center;
+                                justify-content: space-between;
+                                margin-bottom: 6px;
+                                
+                                .node-name {
+                                    font-size: 14px;
+                                    color: #313238;
+                                    font-weight: normal;
+                                    flex: 1;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                }
+                                
+                                .node-status {
+                                    display: flex;
+                                    align-items: center;
+                                    font-size: 12px;
+                                    margin-left: 16px;
+                                    flex-shrink: 0;
+                                    
+                                    .bk-icon {
+                                        font-size: 6px;
+                                        margin-right: 6px;
+                                    }
+                                    
+                                    &.status-normal {
+                                        color: #2DCB56;
+                                    }
+                                    
+                                    &.status-abnormal {
+                                        color: #EA3636;
+                                    }
+                                }
+                            }
+                            
+                            .node-sub-info {
+                                display: flex;
+                                align-items: center;
+                                font-size: 12px;
+                                color: #C4C6CC;
+                                line-height: 1.5;
+                                
+                                .node-ip {
+                                    margin-right: 12px;
+                                }
+                                
+                                .node-agent {
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                    
+                                    &::before {
+                                        content: '|';
+                                        margin-right: 12px;
+                                        color: #DCDEE5;
+                                    }
+                                }
                             }
                         }
                     }
                     
-                    .tree-node {
+                    .loading-more,
+                    .no-more {
+                        padding: 16px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #979BA5;
+                    }
+                    
+                    .empty-state {
                         display: flex;
+                        flex-direction: column;
                         align-items: center;
-                        width: 100%;
+                        justify-content: center;
+                        padding: 60px 0;
+                        color: #979BA5;
                         
-                        .node-name {
-                            display: flex;
-                            align-items: center;
-                            flex: 1;
-                            font-size: 14px;
-                            color: #313238;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                        .bk-icon {
+                            font-size: 48px;
+                            margin-bottom: 16px;
                         }
                         
-                        .node-count {
-                            color: #979BA5;
-                            font-size: 12px;
-                            margin-left: 4px;
+                        p {
+                            margin: 0;
+                            font-size: 14px;
                         }
                     }
                 }
@@ -436,35 +655,6 @@
         text-align: right;
         .bk-button {
             margin-left: 8px;
-        }
-    }
-}
-
-// 全局修复 bk-big-tree 的复选框对齐问题
-.related-nodes-dialog {
-    .bk-big-tree {
-        .bk-tree-node-content {
-            display: flex !important;
-            align-items: center !important;
-            
-            .bk-tree-node-checkbox {
-                margin-right: 8px !important;
-                flex-shrink: 0 !important;
-            }
-            
-            .bk-tree-node-label {
-                flex: 1 !important;
-                display: flex !important;
-                align-items: center !important;
-            }
-        }
-        
-        // 确保树节点内容正确对齐
-        .bk-tree-node {
-            .bk-tree-node-content {
-                height: auto !important;
-                line-height: normal !important;
-            }
         }
     }
 }

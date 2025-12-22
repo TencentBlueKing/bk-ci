@@ -427,6 +427,7 @@
                     if (isLoadMore) {
                         isLoadingMore.value = true
                     } else {
+                        isLoading.value = true
                         pagination.value.current = 1
                     }
                     const params = {
@@ -470,7 +471,7 @@
                         
                         // 首次加载时，自动展开第一个任务
                         if (newTasks.length > 0) {
-                            await nextTick()
+                            isLoading.value = false
                             const firstTask = taskList.value[0]
                             firstTask.isExpanded = true
                             await loadTaskDetail(firstTask)

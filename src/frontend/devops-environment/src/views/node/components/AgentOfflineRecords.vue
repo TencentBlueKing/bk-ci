@@ -1,21 +1,21 @@
 <template>
-    <div class="node-tasklist-container">
-        <h3 class="section-title">{{ $t('environment.taskList') }}</h3>
-        <!-- 任务列表内容 -->
-        <div class="tasklist-content">
-            <p>任务列表内容待实现</p>
+    <div class="agent-offline-records-container">
+        <h3 class="section-title">{{ $t('environment.offlineRecords') }}</h3>
+        <!-- Agent离线记录内容 -->
+        <div class="offline-records-content">
+            <p>Agent离线记录内容待实现</p>
         </div>
     </div>
 </template>
 
 <script>
     export default {
-        name: 'NodeTaskList'
+        name: 'AgentOfflineRecords'
     }
 </script>
 
 <style lang="scss" scoped>
-.node-tasklist-container {
+.agent-offline-records-container {
     padding: 20px;
     height: 100%;
     overflow-y: auto;
@@ -27,7 +27,7 @@
         margin-bottom: 16px;
     }
     
-    .tasklist-content {
+    .offline-records-content {
         background: #F5F7FA;
         padding: 20px;
         border-radius: 2px;

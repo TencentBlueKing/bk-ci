@@ -38,7 +38,7 @@ const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/nod
 const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list')
 
 // 节点详情
-const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
+// const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node/node_detail')
 
 // 批量设置节点标签
 const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
@@ -96,18 +96,18 @@ const routes = [
                         name: 'nodeList',
                         component: nodeList,
                         children: [
-                            {
-                                path: ':nodeHashId',
-                                name: 'nodeDetail',
-                                component: nodeDetail,
-                                meta: {
-                                    title: 'nodeDetail',
-                                    logo: 'environment',
-                                    header: 'environmentManage',
-                                    to: 'envList',
-                                    webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
-                                }
-                            },
+                            // {
+                            //     path: ':nodeHashId',
+                            //     name: 'nodeDetail',
+                            //     component: nodeDetail,
+                            //     meta: {
+                            //         title: 'nodeDetail',
+                            //         logo: 'environment',
+                            //         header: 'environmentManage',
+                            //         to: 'envList',
+                            //         webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
+                            //     }
+                            // },
                             {
                                 path: 'setNodeTag',
                                 name: 'setNodeTag',

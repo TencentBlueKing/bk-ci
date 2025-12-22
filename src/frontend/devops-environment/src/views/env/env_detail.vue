@@ -1,6 +1,7 @@
 <template>
     <div
         class="env-entry-main"
+        v-bkloading="{ isLoading: !envDetailLoaded }"
     >
         <header class="env-info-header">
             <span
@@ -16,7 +17,6 @@
         </header>
         <div
             class="env-content-main"
-            v-bkloading="{ isLoading: !envDetailLoaded }"
         >
             <template v-if="envDetailLoaded">
                 <bk-tab
@@ -149,7 +149,7 @@
                             tabName: newTab
                         }
                     }).catch(err => {
-                        console.error('路由导航错误:', err)
+                        throw err
                     })
                 }
             }, {
@@ -176,7 +176,7 @@
                             tabName: 'node'
                         }
                     }).catch(err => {
-                        console.error('路由导航错误:', err)
+                        throw err
                     })
                 }
             }, {
@@ -198,7 +198,7 @@
                             tabName: tabActive.value
                         }
                     }).catch(err => {
-                        console.error('路由导航错误:', err)
+                        throw err
                     })
                 }
             })

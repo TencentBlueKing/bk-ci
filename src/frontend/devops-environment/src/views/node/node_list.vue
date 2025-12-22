@@ -106,7 +106,8 @@
                             v-model="dateTimeRange"
                             :placeholder="$t('environment.selectRecentExecutionTimeRange')"
                             :type="'datetimerange'"
-                            @change="handleDateRangeChange"
+                            @clear="handleClearDateRange"
+                            @pick-success="handleDateRangeChange"
                         >
                         </bk-date-picker>
                     </div>
@@ -126,6 +127,7 @@
                         :date-time-range="dateTimeRange"
                         :node-tag-list="nodeTagList"
                         :is-flod="flod"
+                        :default-sort="defaultSort"
                         @page-change="handlePageChange"
                         @page-limit-change="handlePageLimitChange"
                         @sort-change="handleSortChange"
@@ -135,8 +137,10 @@
                         @clear-filter="clearFilter"
                         @selected-change="handleSelectedChange"
                         @toggle-fold="toggleFlod"
+                        @show-detail="handleShowNodeDetail"
                     />
                     <template slot="flod">
+                        <node-detail />
                     </template>
                 </CollapseLayout>
             </template>
@@ -310,21 +314,57 @@
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
+    import useUrlQuery from '@/hooks/useUrlQuery'
+    import NodeDetail from './node_detail.vue'
     export default {
         components: {
             ListTable,
             thirdConstruct,
             SearchSelect,
-            CollapseLayout
+            CollapseLayout,
+            NodeDetail
         },
         setup () {
-            const { flod, toggleFlod } = useCollapseLayout('node_list', false)
+            const { flod, toggleFlod: originalToggleFlod, setFlod } = useCollapseLayout('node_list', false)
+            const {
+                queryParams,
+                updateSearchValue,
+                updateTagSearchValue,
+                updateDateTimeRange,
+                updatePagination,
+                updateSort,
+                updateNodeHashId,
+                getRequestParams,
+                getTagRequestParams
+            } = useUrlQuery()
+            
+            // 包装 toggleFlod，在折叠时清除 nodeHashId
+            const toggleFlod = () => {
+                originalToggleFlod()
+                // 如果是展开状态（flod.value === true），则清除 nodeHashId
+                if (!flod.value) {
+                    updateNodeHashId(null)
+                }
+            }
+            
             return {
                 flod,
-                toggleFlod
+                toggleFlod,
+                setFlod,
+                queryParams,
+                updateSearchValue,
+                updateTagSearchValue,
+                updateDateTimeRange,
+                updatePagination,
+                updateSort,
+                updateNodeHashId,
+                getRequestParams,
+                getTagRequestParams
             }
         },
         data () {
+            const urlParams = this.queryParams
+            
             return {
                 NODE_RESOURCE_TYPE,
                 NODE_RESOURCE_ACTION,
@@ -408,19 +448,22 @@
                         }
                     ]
                 },
-                searchValue: [],
+                searchValue: urlParams.searchValue || [],
                 paginationData: {
-                    current: 1,
+                    current: urlParams.page || 1,
                     count: 0,
-                    limit: Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
+                    limit: urlParams.pageSize || Number(localStorage.getItem(ENV_NODE_TABLE_LIMIT_CACHE)) || 10,
                     limitList: [10, 50, 100, 200],
                     showTotalCount: true
                 },
                 requestParams: {},
-                dateTimeRange: [],
+                // 将时间戳转换为 Date 对象给日期组件使用
+                dateTimeRange: urlParams.startTime && urlParams.endTime
+                    ? [new Date(Number(urlParams.startTime)), new Date(Number(urlParams.endTime))]
+                    : [],
                 currentNodeType: '',
                 currentTags: [],
-                tagSearchValue: [],
+                tagSearchValue: urlParams.tagSearchValue || [],
                 isBatchDropdownShow: false,
                 selectedNodes: [],
                 reInstallId: '',
@@ -601,6 +644,23 @@
             hasPermissionCMDBCount () {
                 const { total = 0, thirdParty = 0, noPermission = 0 } = this.selectNodeCounts
                 return total - thirdParty - noPermission
+            },
+            // 从 URL 参数生成表格默认排序
+            defaultSort () {
+                const { sortType, collation } = this.queryParams
+                if (!sortType || !collation) {
+                    return {}
+                }
+                
+                const orderMap = {
+                    ASC: 'ascending',
+                    DESC: 'descending'
+                }
+                
+                return {
+                    prop: sortType,
+                    order: orderMap[collation] || 'ascending'
+                }
             }
         },
         watch: {
@@ -617,6 +677,25 @@
                 if (newVal) {
                     this.handleNodeTypeChange()
                 }
+            },
+            // 监听 queryParams 分页参数变化，同步到 paginationData
+            'queryParams.page' (newVal) {
+                if (newVal && newVal !== this.paginationData.current) {
+                    this.paginationData.current = newVal
+                }
+            },
+            'queryParams.pageSize' (newVal) {
+                if (newVal && newVal !== this.paginationData.limit) {
+                    this.paginationData.limit = newVal
+                }
+            },
+            // 监听 URL 中的 nodeHashId 参数，控制 CollapseLayout 的展开/折叠状态
+            'queryParams.nodeHashId': {
+                handler (newVal) {
+                    // 如果 URL 有 nodeHashId，展开详情页；否则折叠
+                    this.setFlod(!!newVal)
+                },
+                immediate: true
             },
             // 构建机型变化
             'constructImportForm.model' (val) {
@@ -659,9 +738,12 @@
                         }
                     })
                     this.paginationData.current = 1
+                    this.updatePagination(1, this.paginationData.limit)
                 } else {
                     this.requestParams = {}
                 }
+                // 同步到 URL
+                this.updateSearchValue(val)
                 this.requestList(this.requestParams)
             }
         },
@@ -856,6 +938,8 @@
                 } else {
                     this.syncCurrentTags()
                 }
+                // 同步到 URL
+                this.updateTagSearchValue(val)
                 this.requestList(this.requestParams)
             },
             async handleNodeTypeChange () {
@@ -867,6 +951,7 @@
             handleClearTagSearch () {
                 this.tagSearchValue = []
                 this.currentTags = []
+                this.updateTagSearchValue(null)
                 if (!this.currentNodeType && this.$route.params.nodeType !== ALLNODE) {
                     this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
                 } else {
@@ -884,8 +969,12 @@
 
                 try {
                     await this.syncCurrentTags()
+                    // 确保分页参数始终同步到 URL（包括首次加载）
+                    this.updatePagination(this.paginationData.current, this.paginationData.limit)
                     setTimeout(() => {
-                        this.requestList()
+                        // 首次加载时使用 URL 参数
+                        const urlRequestParams = this.getRequestParams()
+                        this.requestList(urlRequestParams)
                     }, 500)
                 } catch (err) {
                     this.$bkMessage({
@@ -904,6 +993,10 @@
             async requestList (params = this.requestParams) {
                 try {
                     this.tableLoading = true
+                    
+                    // 获取标签参数（优先使用 URL 参数）
+                    const tagParams = this.getTagRequestParams()
+                    
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId,
                         params: {
@@ -912,7 +1005,7 @@
                             page: this.paginationData.current,
                             pageSize: this.paginationData.limit
                         },
-                        ...(this.currentTags.length ? { tags: this.currentTags } : {})
+                        ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
                     })
 
                     this.paginationData.count = res.count
@@ -1158,6 +1251,8 @@
             },
             handlePageChange (page) {
                 this.paginationData.current = page
+                // 同步到 URL
+                this.updatePagination(page, this.paginationData.limit)
                 this.requestList(this.requestParams)
             },
             
@@ -1165,6 +1260,8 @@
                 localStorage.setItem(ENV_NODE_TABLE_LIMIT_CACHE, limit)
                 this.paginationData.current = 1
                 this.paginationData.limit = limit
+                // 同步到 URL
+                this.updatePagination(1, limit)
                 this.requestList(this.requestParams)
             },
 
@@ -1176,6 +1273,8 @@
                 this.paginationData.current = 1
                 this.requestParams.sortType = prop
                 this.requestParams.collation = orderMap[order]
+                // 同步到 URL
+                this.updateSort(prop, orderMap[order])
                 this.requestList()
             },
         
@@ -1185,6 +1284,11 @@
                 this.tagSearchValue = []
                 this.currentTags = []
                 this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+            },
+
+            handleShowNodeDetail (nodeHashId) {
+                this.toggleFlod()
+                this.updateNodeHashId(nodeHashId)
             },
 
             handleToPipelineDetail (param) {
@@ -1199,9 +1303,19 @@
                     return ''
                 }
             },
-            handleDateRangeChange (value) {
-                const startTime = this.formatTime(value[0])
-                const endTime = this.formatTime(value[1])
+
+            handleClearDateRange () {
+                this.dateTimeRange = []
+                this.requestParams.latestBuildTimeStart = ''
+                this.requestParams.latestBuildTimeEnd = ''
+                this.paginationData.current = 1
+                this.updatePagination(1, this.paginationData.limit)
+                this.updateDateTimeRange('', '')
+                this.requestList()
+            },
+            handleDateRangeChange () {
+                const startTime = this.formatTime(this.dateTimeRange[0])
+                const endTime = this.formatTime(this.dateTimeRange[1])
                 if (startTime && endTime) {
                     this.requestParams.latestBuildTimeStart = startTime
                     this.requestParams.latestBuildTimeEnd = endTime
@@ -1210,6 +1324,8 @@
                     delete this.requestParams.latestBuildTimeEnd
                 }
                 this.paginationData.current = 1
+                // 同步到 URL
+                this.updateDateTimeRange(startTime, endTime)
                 this.requestList()
             },
 

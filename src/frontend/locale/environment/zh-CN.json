@@ -447,5 +447,8 @@
     "hour": "小时",
     "minute": "分钟",
     "second": "秒",
-    "totalJobTasks": "共 {0} 个 Job，{1} 条流水线使用当前环境"
+    "totalJobTasks": "共 {0} 个 Job，{1} 条流水线使用当前环境",
+    "relatedStrategies": "关联策略",
+    "staticRelated": "静态关联",
+    "dynamicRelated": "动态关联"
 }
