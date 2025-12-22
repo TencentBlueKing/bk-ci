@@ -63,7 +63,8 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
+    private val publicVarReferInfoService: PublicVarReferInfoService
 ) {
 
     companion object {
@@ -134,6 +135,17 @@ class PublicVarService @Autowired constructor(
                 oldVarPOs = oldVarPOs
             )
         )
+
+        // 重新计算动态引用的referCount
+        // 统计所有版本的变量引用进行赋值，同名只算1
+        val varNames = publicVarPOs.map { it.varName }
+        publicVarReferInfoService.updateVarReferCount(
+            projectId = projectId,
+            groupName = groupName,
+            varNames = varNames,
+            version = null  // 传null以统计最新版本和-1版本的引用数
+        )
+
         return true
     }
 
