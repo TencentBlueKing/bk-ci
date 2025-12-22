@@ -41,7 +41,6 @@ import com.tencent.devops.environment.service.thirdpartyagent.AgentShareService
 import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
-import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -108,7 +107,7 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         projectId: String,
         workspaceName: String,
         zoneName: String
-    ): String {
-        return batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName)
+    ): Result<String> {
+        return Result(batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName))
     }
 }
