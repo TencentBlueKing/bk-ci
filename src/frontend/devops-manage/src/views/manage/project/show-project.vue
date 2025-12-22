@@ -75,6 +75,18 @@ const tabPanels = computed(() => [
 ])
 
 const projectList: any[] = [];
+
+const getInitKpiData = () => {
+  // 如果kpiCode和kpiName为空，那么默认为选中的产品
+  if (!projectData.value.kpiName && !projectData.value.kpiCode) {
+    const selectedProduct = operationalList.value.find(i => i.ProductId === projectData.value.productId);
+    console.log(6666666, operationalList.value, selectedProduct)
+    if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
+      projectData.value.kpiCode = selectedProduct.icosProductCode || '';
+      projectData.value.kpiName = selectedProduct.icosProductName || '';
+    }
+  }
+}
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -176,6 +188,10 @@ const fieldMap = [
     current: 'productName',
     after: 'afterProductName'
   },
+  {
+    current: 'kpiName',
+    after: 'afterKpiName'
+  },
 
 ];
 const propertiesFieldMap = [
@@ -267,8 +283,9 @@ const handleCancelUpdate = () => {
         theme: 'success',
         message: t('取消更新成功'),
       });
-      fetchProjectData();
+      await fetchProjectData();
       projectDiffData.value = {};
+      getInitKpiData()
     }
   };
 
@@ -423,14 +440,7 @@ onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
   await fetchOperationalList(projectData.value.bgName);
-  // 如果kpiCode和kpiName为空，那么默认为选中的产品
-  if (!projectData.value.kpiName && !projectData.value.kpiCode) {
-    const selectedProduct = operationalList.value.find(i => i.ProductId === projectData.value.productId);
-    if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
-      projectData.value.kpiCode = selectedProduct.icosProductCode || '';
-      projectData.value.kpiName = selectedProduct.icosProductName || '';
-    }
-  }
+  getInitKpiData()
 });
 </script>
 
@@ -530,7 +540,8 @@ onMounted(async () => {
                         </bk-form-item>
                         <bk-form-item :label="t('KPI代码')" property="bg">
                           <span>{{ projectData.kpiName || projectData.kpiCode }}</span>
-                          <div class="diff-content" v-if="projectData.afterKpiCode">
+                          {{ projectData.afterKpiCode }}
+                          <div class="diff-content" v-if="projectData.afterKpiName">
                             <p class="update-title">
                               {{ t('本次更新：') }}
                             </p>
