@@ -321,16 +321,16 @@ class PublicVarService @Autowired constructor(
         val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 1. 更新已存在的变量（排除与流水线变量同名的）
+        // 更新已存在的变量（排除与流水线变量同名的）
         updateExistingVars(diffResult.varsToUpdate, positionInfoMap, newVarMap, params, pipelineVarNames)
 
-        // 2. 移除不再存在的变量
+        // 移除不再存在的变量
         removeObsoleteVars(diffResult.varsToRemove, positionInfoMap, params)
 
-        // 3. 添加新增的变量到末尾（排除与流水线变量同名的）
+        // 添加新增的变量到末尾（排除与流水线变量同名的）
         addNewVars(diffResult.varsToAdd, newVarMap, params, pipelineVarNames)
 
-        // 4. 构建已移除的变量列表
+        // 构建已移除的变量列表
         return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupReferInfo)
     }
 

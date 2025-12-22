@@ -96,7 +96,7 @@ class PublicVarReferInfoService @Autowired constructor(
 
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
 
-        // 1. 查询已存在的引用记录
+        // 查询已存在的引用记录
         val existingGroupKeys = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
             dslContext = dslContext,
             projectId = projectId,
@@ -105,10 +105,10 @@ class PublicVarReferInfoService @Autowired constructor(
             referVersion = resourceVersion
         )
 
-        // 2. 获取Model中的变量组列表
+        // 获取Model中的变量组列表
         val modelVarGroups = model.publicVarGroups ?: emptyList()
 
-        // 3. 如果Model中没有变量组，清理所有已存在的引用记录
+        // 如果Model中没有变量组，清理所有已存在的引用记录
         if (modelVarGroups.isEmpty()) {
             cleanupRemovedVarGroupReferences(
                 context = dslContext,
@@ -121,17 +121,17 @@ class PublicVarReferInfoService @Autowired constructor(
             return
         }
 
-        // 4. 获取流水线变量名集合(用于排除与公共变量重名的情况)
+        // 获取流水线变量名集合(用于排除与公共变量重名的情况)
         val pipelineVarNames = model.getTriggerContainer().params
             .filter { it.varGroupName.isNullOrBlank() }
             .map { it.id }
             .toSet()
         
-        // 5. 构建公共变量映射和被引用变量集合
+        // 构建公共变量映射和被引用变量集合
         val referencedVarNames = varRefDetails.map { it.varName }.toSet()
         val publicVarMap = buildPublicVarMap(model)
 
-        // 6. 清理不在Model中的变量组引用
+        // 清理不在Model中的变量组引用
         cleanupObsoleteGroupReferences(
             projectId = projectId,
             resourceId = resourceId,
@@ -141,10 +141,10 @@ class PublicVarReferInfoService @Autowired constructor(
             existingGroupKeys = existingGroupKeys
         )
 
-        // 7. 批量查询最新版本号
+        // 批量查询最新版本号
         val latestVersionMap = queryLatestVersions(projectId, modelVarGroups)
 
-        // 8. 批量查询已存在的变量名
+        // 批量查询已存在的变量名
         val allExistingVarNames = queryExistingVarNames(
             projectId = projectId,
             resourceId = resourceId,
@@ -152,7 +152,7 @@ class PublicVarReferInfoService @Autowired constructor(
             resourceVersion = resourceVersion
         )
 
-        // 9. 构建处理上下文
+        // 构建处理上下文
         val context = VarGroupProcessContext(
             userId = userId,
             projectId = projectId,
@@ -167,21 +167,21 @@ class PublicVarReferInfoService @Autowired constructor(
             pipelineVarNames = pipelineVarNames
         )
 
-        // 10. 计算并执行删除操作
+        // 计算并执行删除操作
         calculateAndExecuteDelete(context)
 
-        // 11. 计算需要新增的变量引用记录
+        // 计算需要新增的变量引用记录
         val referRecordsToAdd = calculateVarsToAdd(context)
 
-        // 12. 执行批量插入
+        // 执行批量插入
         if (referRecordsToAdd.isNotEmpty()) {
             publicVarReferInfoDao.batchSave(dslContext, referRecordsToAdd)
         }
 
-        // 13. 计算需要更新引用计数的变量
+        // 计算需要更新引用计数的变量
         val varsNeedUpdateCount = calculateVarsNeedUpdateCount(context)
 
-        // 14. 批量更新引用计数
+        // 批量更新引用计数
         batchUpdateReferCounts(projectId, varsNeedUpdateCount)
     }
 
@@ -283,7 +283,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 计算并执行删除操作
-     * @param context 变量组处理上下文
      */
     private fun calculateAndExecuteDelete(
         context: VarGroupProcessContext
@@ -366,16 +365,34 @@ class PublicVarReferInfoService @Autowired constructor(
 
             // 收集需要新增的变量
             if (diffResult.varsToAdd.isNotEmpty()) {
-                val newRecords = createVarReferRecords(
-                    userId = context.userId,
-                    projectId = context.projectId,
-                    resourceId = context.resourceId,
-                    referType = context.referType,
-                    resourceVersion = context.resourceVersion,
-                    groupName = groupName,
-                    versionForDb = versionForDb,
-                    varsToAdd = diffResult.varsToAdd
-                )
+                // 批量生成ID
+                val segmentIds = client.get(ServiceAllocIdResource::class)
+                    .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", diffResult.varsToAdd.size).data
+                if (segmentIds.isNullOrEmpty()) {
+                    throw ErrorCodeException(
+                        errorCode = ERROR_INVALID_PARAM_,
+                        params = arrayOf("Failed to generate segment IDs for var refer info")
+                    )
+                }
+
+                val currentTime = LocalDateTime.now()
+                val newRecords = diffResult.varsToAdd.mapIndexed { index, varName ->
+                    ResourcePublicVarReferPO(
+                        id = segmentIds[index] ?: 0,
+                        projectId = context.projectId,
+                        groupName = groupName,
+                        varName = varName,
+                        version = versionForDb,
+                        referId = context.resourceId,
+                        referType = context.referType,
+                        referVersion = context.resourceVersion,
+                        referVersionName = "v${context.resourceVersion}",
+                        creator = context.userId,
+                        modifier = context.userId,
+                        createTime = currentTime,
+                        updateTime = currentTime
+                    )
+                }
                 referRecordsToAdd.addAll(newRecords)
             }
         }
@@ -462,48 +479,7 @@ class PublicVarReferInfoService @Autowired constructor(
             .toSet()
     }
 
-    /**
-     * 创建变量引用记录
-     */
-    private fun createVarReferRecords(
-        userId: String,
-        projectId: String,
-        resourceId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        resourceVersion: Int,
-        groupName: String,
-        versionForDb: Int,
-        varsToAdd: Set<String>
-    ): List<ResourcePublicVarReferPO> {
-        // 批量生成ID
-        val segmentIds = client.get(ServiceAllocIdResource::class)
-            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", varsToAdd.size).data
-        if (segmentIds.isNullOrEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("Failed to generate segment IDs for var refer info")
-            )
-        }
 
-        val currentTime = LocalDateTime.now()
-        return varsToAdd.mapIndexed { index, varName ->
-            ResourcePublicVarReferPO(
-                id = segmentIds[index] ?: 0,
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                version = versionForDb,
-                referId = resourceId,
-                referType = referType,
-                referVersion = resourceVersion,
-                referVersionName = resourceVersion.toString(),
-                creator = userId,
-                modifier = userId,
-                createTime = currentTime,
-                updateTime = currentTime
-            )
-        }
-    }
 
 
 

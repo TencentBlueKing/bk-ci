@@ -279,7 +279,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     ): List<PublicVarReleaseDO> {
         val releaseRecords = mutableListOf<PublicVarReleaseDO>()
 
-        // 1. 处理删除的变量
+        // 处理删除的变量
         val deletedVars = oldVars.filter { oldVar ->
             newVars.none { it.varName == oldVar.varName }
         }
@@ -313,7 +313,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             )
         }
 
-        // 2. 处理新增的变量
+        // 处理新增的变量
         val addedVars = newVars.filter { newVar ->
             newVar.varName !in oldVars.map { it.varName }
         }
@@ -347,7 +347,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             )
         }
 
-        // 3. 处理修改的变量
+        // 处理修改的变量
         val modifiedVars = newVars.filter { newVar ->
             oldVars.any { oldVar ->
                 oldVar.varName == newVar.varName &&
