@@ -605,6 +605,23 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun getRealtimeKpiInfo(englishName: String): Pair<String?, String?>? {
+        return try {
+            val devopsData = projectOperationalProductService.getBkCostsProjectInfo(
+                devopsId = englishName
+            )
+            val projectInfo = devopsData.list.firstOrNull()
+            if (projectInfo != null && !projectInfo.icosProductCode.isNullOrBlank()) {
+                Pair(projectInfo.icosProductCode, projectInfo.icosProductName)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            logger.warn("getRealtimeKpiInfo|$englishName|failed|error=${e.message}")
+            null
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
         private const val VALIDATION_ENABLED = "validate:product:bg:enable"
