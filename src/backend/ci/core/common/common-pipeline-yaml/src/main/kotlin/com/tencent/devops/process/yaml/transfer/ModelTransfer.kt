@@ -398,6 +398,7 @@ class ModelTransfer @Autowired constructor(
                     )?.ifEmpty { null },
                     recommendedVersion = recommendedVersion?.let {
                         ExtendsRecommendedVersion(
+                            allowModifyAtStartup = it.allowModifyAtStartup,
                             major = it.major,
                             minor = it.minor,
                             fix = it.fix,
