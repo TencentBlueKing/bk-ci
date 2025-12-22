@@ -71,7 +71,6 @@ import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreRepositoryHook
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
-import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import com.tencent.devops.process.yaml.v3.models.YamlTransferData
 import com.tencent.devops.process.yaml.v3.models.YmlName
