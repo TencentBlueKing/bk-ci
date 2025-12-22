@@ -27,6 +27,8 @@
 
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
+import com.tencent.devops.environment.pojo.enums.EnvType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "环境信息(权限)")
@@ -63,4 +65,31 @@ data class EnvWithPermission(
     val canUse: Boolean?,
     @get:Schema(title = "项目名称", required = false)
     val projectName: String?
-)
+) {
+    constructor(
+        envHashId: String,
+        name: String,
+        envType: EnvType,
+        envNodeType: EnvNodeType,
+        nodeCount: Int?,
+        userId: String,
+        now: Long
+    ) : this(
+        envHashId = envHashId,
+        name = name,
+        desc = "",
+        envType = envType.name,
+        envNodeType = envNodeType.name,
+        nodeCount = nodeCount,
+        tags = null,
+        envVars = null,
+        createdUser = userId,
+        createdTime = now,
+        updatedUser = userId,
+        updatedTime = now,
+        canEdit = true,
+        canDelete = false,
+        canUse = true,
+        projectName = null
+    )
+}
