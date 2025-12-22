@@ -116,13 +116,13 @@ interface UserEnvironmentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境名称", required = true)
+        @Parameter(description = "环境名称", required = false)
         @QueryParam("envName")
         envName: String?,
-        @Parameter(description = "环境类型", required = true)
+        @Parameter(description = "环境类型", required = false)
         @QueryParam("envType")
         envType: EnvType?,
-        @Parameter(description = "节点", required = true)
+        @Parameter(description = "节点", required = false)
         @QueryParam("nodeHashId")
         nodeHashId: String?
     ): Result<List<EnvWithPermission>>

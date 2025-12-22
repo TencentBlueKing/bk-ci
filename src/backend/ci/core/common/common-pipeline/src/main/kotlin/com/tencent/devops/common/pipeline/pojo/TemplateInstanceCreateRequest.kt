@@ -54,5 +54,9 @@ data class TemplateInstanceCreateRequest(
     @get:Schema(title = "流水线语言风格", required = false)
     var pipelineDialect: String? = null,
     @get:Schema(title = "流水线标签", required = false)
-    val labels: List<String> = emptyList()
+    val labels: List<String> = emptyList(),
+    @get:Schema(title = "流水线描述", required = false)
+    val pipelineDesc: String? = null,
+    @get:Schema(title = "环境名称", required = false)
+    val envName: String? = null
 )
