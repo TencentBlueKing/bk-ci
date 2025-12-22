@@ -32,7 +32,7 @@ class CdsWebhookEventListener @Autowired constructor(
             projectId = ws.projectId,
             workspaceName = workspaceName,
             cdsIp = ws.hostIp ?: "",
-            eventType = event.type.name,
+            eventType = event.type.name.lowercase(),
             eventCode = "CDS-${event.type.name}",
             body = "{}"
         )
