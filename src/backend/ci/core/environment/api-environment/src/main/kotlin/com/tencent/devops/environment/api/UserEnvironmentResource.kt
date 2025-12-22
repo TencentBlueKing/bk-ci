@@ -389,6 +389,7 @@ interface UserEnvironmentResource {
         @QueryParam("name")
         name: String? = null,
         @Parameter(description = "操作人", required = false)
+        @QueryParam("creator")
         creator: String? = null,
         @Parameter(description = "页码", required = false)
         @QueryParam("page")

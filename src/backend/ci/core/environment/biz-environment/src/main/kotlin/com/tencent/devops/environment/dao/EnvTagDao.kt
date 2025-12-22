@@ -191,4 +191,15 @@ class EnvTagDao {
         return resM.values.toList()
     }
 
+    fun fetchTagEnvByNodeId(dslContext: DSLContext, projectId: String, nodeId: Long): List<Long> {
+        with(TEnvTag.T_ENV_TAG) {
+            return dslContext.select(ENV_ID).from(this)
+                .leftJoin(TNodeTags.T_NODE_TAGS)
+                .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
+                .where(TNodeTags.T_NODE_TAGS.NODE_ID.eq(nodeId))
+                .and(TNodeTags.T_NODE_TAGS.PROJECT_ID.eq(projectId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetch().map { it.value1() }
+        }
+    }
 }

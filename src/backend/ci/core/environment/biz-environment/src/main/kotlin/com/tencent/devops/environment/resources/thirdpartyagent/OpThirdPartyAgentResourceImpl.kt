@@ -38,8 +38,10 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResp
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentShareService
+import com.tencent.devops.environment.service.thirdpartyagent.BatchInstallAgentService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
+import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,7 +49,8 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val agentShareProjectService: AgentShareService
+    private val agentShareProjectService: AgentShareService,
+    private val batchInstallAgentService: BatchInstallAgentService
 ) : OpThirdPartyAgentResource {
 
     override fun listEnableProjects(): Result<List<String>> {
@@ -99,5 +102,13 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun deleteAgentShared(shares: AgentShared): Result<Boolean> {
         return Result(agentShareProjectService.deleteSharedAgent(shares))
+    }
+
+    override fun addCreateNode(
+        projectId: String,
+        workspaceName: String,
+        zoneName: String
+    ): Response {
+        return batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName)
     }
 }

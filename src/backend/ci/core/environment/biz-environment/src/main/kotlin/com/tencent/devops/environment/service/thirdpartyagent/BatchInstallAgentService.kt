@@ -137,7 +137,8 @@ class BatchInstallAgentService @Autowired constructor(
                 userId = userId,
                 os = os,
                 zoneName = zoneName,
-                agentType = agentType
+                agentType = agentType,
+                createWorkspaceName = null
             )
             HashUtil.encodeLongId(agentId)
         } else {
@@ -181,7 +182,8 @@ class BatchInstallAgentService @Autowired constructor(
         userId: String,
         os: OS,
         zoneName: String?,
-        agentType: AgentType?
+        agentType: AgentType?,
+        createWorkspaceName: String?
     ): Long {
         val gateway = slaveGatewayService.getGateway(zoneName)
         val fileGateway = slaveGatewayService.getFileGateway(zoneName)
@@ -194,7 +196,31 @@ class BatchInstallAgentService @Autowired constructor(
             secretKey = SecurityUtil.encrypt(secretKey),
             gateway = gateway,
             fileGateway = fileGateway,
-            agentType = agentType
+            agentType = agentType,
+            createWorkspaceName = createWorkspaceName
+        )
+    }
+
+    fun genCreateAgentInstallScript(
+        projectId: String,
+        workspaceName: String,
+        zoneName: String?
+    ): Response {
+        val agentId = genNewAgent(
+            projectId = projectId,
+            userId = "admin",
+            os = OS.WINDOWS,
+            zoneName = zoneName,
+            agentType = AgentType.CREATE,
+            createWorkspaceName = workspaceName
+        )
+        val hashId = HashUtil.encodeLongId(agentId)
+        return downloadAgentInstallService.downloadInstallScript(
+            hashId,
+            true,
+            null,
+            null,
+            TPAInstallType.TASK
         )
     }
 

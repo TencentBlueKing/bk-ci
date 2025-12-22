@@ -87,9 +87,11 @@ CREATE TABLE IF NOT EXISTS `T_ENVIRONMENT_THIRDPARTY_AGENT` (
   `AGENT_PROPS` text COMMENT 'agent config 配置项Json',
   `DOCKER_PARALLEL_TASK_COUNT` int(11) DEFAULT NULL COMMENT 'Docker构建机并行任务计数',
   `AGENT_TYPE` varchar(36) DEFAULT 'BUILD' COMMENT '第三方构建机类型',
+  `CREATE_WORKSPACE_NAME` varchar(128) CHARACTER NULL COMMENT '云桌面工作空间名称',
   PRIMARY KEY (`ID`),
   KEY `idx_agent_node` (`NODE_ID`),
-  KEY `idx_agent_project` (`PROJECT_ID`)
+  KEY `idx_agent_project` (`PROJECT_ID`),
+  UNIQUE KEY `CREATE_WORKSPACE_NAME` (`CREATE_WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方构建机agent信息表';
 
 -- ----------------------------

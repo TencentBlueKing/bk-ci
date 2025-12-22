@@ -58,7 +58,9 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentDispatchData
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.BuildJobType
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuild
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskInfo
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyAskResp
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildDockerInfo
@@ -138,7 +140,9 @@ class ThirdPartyAgentService @Autowired constructor(
                     containerHashId = containerHashId,
                     envId = envId,
                     ignoreEnvAgentIds = ignoreEnvAgentIds,
-                    jobId = jobId
+                    jobId = jobId,
+                    startUser = userId,
+                    stageId = stageId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
@@ -212,7 +216,7 @@ class ThirdPartyAgentService @Autowired constructor(
             if (agentResult.data!!.secretKey != secretKey) {
                 logger.warn(
                     "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
+                            "of project($projectId) and agent($agentId)"
                 )
                 throw NotFoundException("Fail to get the agent")
             }
@@ -245,7 +249,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 } catch (e: RemoteServiceException) {
                     logger.warn(
                         "notify agent task[$build.projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                            " claim failed, cause: ${e.message} agent project($projectId)"
+                                " claim failed, cause: ${e.message} agent project($projectId)"
                     )
                 }
                 pipelineEventDispatcher.dispatch(
@@ -260,15 +264,15 @@ class ThirdPartyAgentService @Autowired constructor(
                         type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_START,
                         labels = mapOf(
                             PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
-                                "SELF_HOST",
+                                    "SELF_HOST",
                             PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
-                                build.agentId,
+                                    build.agentId,
                             PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
-                                (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                    (build.envId?.let { HashUtil.encodeLongId(it) } ?: ""),
                             PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
-                                (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                    (build.nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
                             PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
-                                build.agentIp
+                                    build.agentIp
                         )
                     )
                 )
@@ -287,9 +291,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                            dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()
-                            ) &&
+                                dockerInfo.credential?.user.isNullOrBlank() &&
+                                        dockerInfo.credential?.password.isNullOrBlank()
+                                ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -519,7 +523,7 @@ class ThirdPartyAgentService @Autowired constructor(
     private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean, timeInterval: Long?) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
-                "of seq(${record.vmSeqId}) and status(${record.status})"
+                    "of seq(${record.vmSeqId}) and status(${record.status})"
         )
         val agentResult = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentByIdGlobal(record.projectId, record.agentId)
@@ -558,15 +562,15 @@ class ThirdPartyAgentService @Autowired constructor(
                     type = PipelineBuildStatusBroadCastEventType.BUILD_AGENT_END,
                     labels = mapOf(
                         PipelineBuildStatusBroadCastEvent.Labels::nodeType.name to
-                            "SELF_HOST",
+                                "SELF_HOST",
                         PipelineBuildStatusBroadCastEvent.Labels::agentId.name to
-                            agentId,
+                                agentId,
                         PipelineBuildStatusBroadCastEvent.Labels::envHashId.name to
-                            (envId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                (envId?.let { HashUtil.encodeLongId(it) } ?: ""),
                         PipelineBuildStatusBroadCastEvent.Labels::nodeHashId.name to
-                            (nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
+                                (nodeId?.let { HashUtil.encodeLongId(it) } ?: ""),
                         PipelineBuildStatusBroadCastEvent.Labels::hostIp.name to
-                            agentIp
+                                agentIp
                     )
                 )
             )
@@ -596,9 +600,9 @@ class ThirdPartyAgentService @Autowired constructor(
             executeCount = buildInfo.executeCount
         )
         if (buildRecord != null && (
-                buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status
-                )
+                    buildRecord.status != PipelineTaskStatus.DONE.status ||
+                            buildRecord.status != PipelineTaskStatus.FAILURE.status
+                    )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -655,9 +659,9 @@ class ThirdPartyAgentService @Autowired constructor(
         }
         // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
         val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
-            "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
         val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-            "nodeDetail/${agentResult.data!!.nodeId}"
+                "nodeDetail/${agentResult.data!!.nodeId}"
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
@@ -902,7 +906,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         "oldIp" to agent.ip,
                         "newIp" to newIp,
                         "url" to "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
-                            "nodeDetail/$nodeHashId"
+                                "nodeDetail/$nodeHashId"
                     )
                 )
             )
@@ -916,35 +920,109 @@ class ThirdPartyAgentService @Autowired constructor(
         agentId: String?,
         envId: Long?,
         page: Int?,
-        pageSize: Int?
-    ): Page<TPAPipelineBuild> {
+        pageSize: Int?,
+        startTime: Long?,
+        endTime: Long?,
+        pipelineId: String?,
+        jobId: String?,
+        creator: String?
+    ): TPAPipelineBuildCountResp {
         if (agentId.isNullOrBlank() && envId == null) {
-            return Page(0,0,0,emptyList())
+            return TPAPipelineBuildCountResp(0L, 0L, Page(0, 0, 0, emptyList()))
         }
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
-        val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
+        val sqlLimit = if (pageSizeNotNull != -1) {
+            PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        } else {
+            null
+        }
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 100
-        val count = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
+        val (pipelineCount, jobCount) = thirdPartyAgentBuildDao.countAgentBuildPipelineJob(
             dslContext = dslContext,
             projectId = projectId,
             agentId = agentId,
-            envId = envId
+            envId = envId,
+            startTime = startTime,
+            endTime = endTime,
+            pipelineId = pipelineId,
+            jobId = jobId,
+            creator = creator
         )
-        return Page(
-            page = pageNotNull,
-            pageSize = pageSizeNotNull,
-            count = count,
-            records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
-                dslContext = dslContext,
-                projectId = projectId,
-                agentId = agentId,
-                envId = envId,
-                limit = limit,
-                offset = offset
+        return TPAPipelineBuildCountResp(
+            pipelineCount, jobCount, Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = jobCount,
+                records = thirdPartyAgentBuildDao.fetchAgentBuildPipelineJob(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    agentId = agentId,
+                    envId = envId,
+                    limit = limit,
+                    offset = offset,
+                    startTime = startTime,
+                    endTime = endTime,
+                    pipelineId = pipelineId,
+                    jobId = jobId,
+                    creator = creator
+                )
             )
+        )
+    }
+
+    fun fetchPipelineIdAndName(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        pipelineName: String?
+    ): List<PipelineIdAndName> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchPipelineIdAndName(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            pipelineName = pipelineName
+        ).map { PipelineIdAndName(it.first, it.second) }
+    }
+
+    fun fetchJobIdAndName(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        jobName: String?
+    ): List<JobIdAndName> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchJobIdAndName(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            jobName = jobName
+        ).map { JobIdAndName(it.first, it.second) }
+    }
+
+    fun fetchCreator(
+        projectId: String,
+        agentId: String?,
+        envId: Long?,
+        creator: String?
+    ): List<String> {
+        if (agentId.isNullOrBlank() && envId == null) {
+            return emptyList()
+        }
+        return thirdPartyAgentBuildDao.fetchCreator(
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            envId = envId,
+            creator = creator
         )
     }
 

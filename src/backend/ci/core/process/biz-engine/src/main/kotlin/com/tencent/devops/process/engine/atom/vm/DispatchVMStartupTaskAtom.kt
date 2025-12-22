@@ -296,7 +296,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 singleNodeConcurrency = param.jobControlOption?.singleNodeConcurrency,
                 allNodeConcurrency = param.jobControlOption?.allNodeConcurrency,
                 jobTimeoutMinutes = param.jobControlOption?.timeoutVar?.toIntOrNull() ?: param.jobControlOption?.timeout
-                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES
+                ?: VariableDefault.DEFAULT_JOB_MAX_RUNNING_MINUTES,
+                stageId = task.stageId
             )
         )
     }

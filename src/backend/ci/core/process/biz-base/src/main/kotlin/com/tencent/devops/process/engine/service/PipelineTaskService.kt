@@ -825,19 +825,7 @@ class PipelineTaskService @Autowired constructor(
             containerId = containerId,
             offset = offset,
             limit = limit
-        ).map {
-            PipelineContainerBuild(
-                buildId = it.buildId,
-                projectId = it.projectId,
-                pipelineId = it.pipelineId,
-                containerId = it.containerId,
-                executeCount = it.executeCount,
-                status = it.status,
-                startTime = it.startTime,
-                endTime = it.endTime,
-                timestamps = it.timestamps
-            )
-        }
+        )
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 

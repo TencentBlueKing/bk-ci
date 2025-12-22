@@ -65,7 +65,8 @@ data class PipelineAgentStartupEvent(
     // job超时时间
     val jobTimeoutMinutes: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
+    override var delayMills: Int = 0,
+    val stageId: String? = null
 ) : IPipelineEvent(
     actionType = actionType,
     source = source,

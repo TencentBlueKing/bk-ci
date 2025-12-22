@@ -82,14 +82,17 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.EnvNode
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
+import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.EnvWithNode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
+import com.tencent.devops.environment.pojo.MyCreateEnv
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
@@ -108,6 +111,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
@@ -129,7 +133,8 @@ class EnvService @Autowired constructor(
     private val nodeService: NodeService,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val createEnvService: CreateEnvService
 ) : IEnvService {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -205,6 +210,10 @@ class EnvService @Autowired constructor(
         if (existEnv.envType != EnvType.BUILD.name && envUpdateInfo.envType == EnvType.BUILD) {
             throw ErrorCodeException(errorCode = ERROR_ENV_DEPLOY_2_BUILD_DENY)
         }
+        if (envUpdateInfo.envType == EnvType.CREATE) {
+            // 看了下前段没开发修改，暂时先直接return
+            return
+        }
 
         ActionAuditContext.current()
             .addInstanceInfo(
@@ -262,6 +271,10 @@ class EnvService @Autowired constructor(
             envIds = envIds
         )
         if (envRecordList.isEmpty()) {
+            if (envType == EnvType.CREATE) {
+                // TODO: 我的创作节点
+                return emptyList()
+            }
             return listOf()
         }
 
@@ -1511,7 +1524,62 @@ class EnvService @Autowired constructor(
         return result
     }
 
+    fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): List<EnvData> {
+        val agent = thirdPartyAgentDao.getAgentByWorkspaceName(
+            dslContext = dslContext,
+            projectId = projectId,
+            workspaceNames = listOf(workspaceName)
+        ).firstOrNull()
+        if (agent == null) {
+            logger.warn("fetchAllNodeEnvList no find $projectId|$workspaceName agent")
+            return emptyList()
+        }
+        val envNodeList = envNodeDao.listNodeIds(dslContext, projectId, listOf(agent.nodeId)).map { it.envId }
+        val tagEnvList = envTagDao.fetchTagEnvByNodeId(dslContext, projectId, agent.nodeId)
+        val result = mutableListOf<EnvData>()
+        // 校验管理员权限看能否用所有构建节点
+        result.add(EnvData(MyCreateEnv.ENV_ID, MyCreateEnv.name()))
+        if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            result.add(EnvData(AllCreateNodeEnv.ENV_ID, AllCreateNodeEnv.name()))
+        }
+        if (envNodeList.isEmpty() && tagEnvList.isEmpty()) {
+            logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
+            return result
+        }
+        val permissionEnvList = environmentPermissionService.listEnvByPermissions(
+            userId,
+            projectId,
+            setOf(AuthPermission.USE)
+        )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
+        if (permissionEnvList.isNullOrEmpty()) {
+            logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
+            return result
+        }
+        val envIds = mutableListOf<Long>().let {
+            it.addAll(envNodeList)
+            it.addAll(tagEnvList)
+            it.filter { e -> permissionEnvList.contains(e) }
+        }
+        logger.debug("fetchAllNodeEnvList $projectId|$workspaceName can use $envIds")
+        return envDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envName = null,
+            envType = EnvType.CREATE,
+            envIds = envIds
+        ).map {
+            EnvData(
+                id = it.envId,
+                name = it.envName
+            )
+        }
+    }
+
     fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
         return envDao.fetchEnvTypeCount(dslContext, projectId, createEnv ?: false)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EnvService::class.java)
     }
 }

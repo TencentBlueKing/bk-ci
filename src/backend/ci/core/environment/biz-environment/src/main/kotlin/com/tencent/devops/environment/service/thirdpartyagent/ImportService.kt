@@ -122,7 +122,8 @@ class ImportService @Autowired constructor(
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
                 fileGateway = fileGateway,
-                agentType = agentType
+                agentType = agentType,
+                createWorkspaceName = null
             )
 
             return HashUtil.encodeLongId(id)

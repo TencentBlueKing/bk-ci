@@ -59,7 +59,8 @@ class ThirdPartyAgentDao {
         fileGateway: String?,
         ip: String? = null,
         status: AgentStatus = AgentStatus.UN_IMPORT,
-        agentType: AgentType?
+        agentType: AgentType?,
+        createWorkspaceName: String?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -73,7 +74,8 @@ class ThirdPartyAgentDao {
                 GATEWAY,
                 FILE_GATEWAY,
                 IP,
-                AGENT_TYPE
+                AGENT_TYPE,
+                CREATE_WORKSPACE_NAME
             ).values(
                 projectId,
                 os.name,
@@ -84,7 +86,8 @@ class ThirdPartyAgentDao {
                 gateway ?: "",
                 fileGateway ?: "",
                 ip ?: "",
-                agentType?.name ?: AgentType.BUILD.name
+                agentType?.name ?: AgentType.BUILD.name,
+                createWorkspaceName
             )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -546,6 +549,17 @@ class ThirdPartyAgentDao {
             }
             (dsl as UpdateSetMoreStep<*>).where(PROJECT_ID.eq(projectId))
                 .and(ID.`in`(ids)).execute()
+        }
+    }
+
+    fun getAgentByWorkspaceName(
+        dslContext: DSLContext,
+        projectId: String,
+        workspaceNames: List<String>
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.selectFrom(this).where(CREATE_WORKSPACE_NAME.`in`(workspaceNames))
+                .and(PROJECT_ID.eq(projectId)).fetch()
         }
     }
 }
