@@ -104,10 +104,16 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun addCreateNode(
+        userId: String,
         projectId: String,
         workspaceName: String,
         zoneName: String
     ): String {
-        return batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName)
+        return batchInstallAgentService.genCreateAgentInstallScript(
+            userId = userId,
+            projectId = projectId,
+            workspaceName = workspaceName,
+            zoneName = zoneName
+        )
     }
 }

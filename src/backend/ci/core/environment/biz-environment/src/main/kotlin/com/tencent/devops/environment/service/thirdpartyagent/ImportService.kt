@@ -206,7 +206,7 @@ class ImportService @Autowired constructor(
             )
 
             val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
-                "CREATE_${agentRecord.ip}"
+                "CREATE_${agentRecord.createWorkspaceName}"
             } else {
                 "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
             }

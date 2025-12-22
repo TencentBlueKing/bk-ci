@@ -202,13 +202,14 @@ class BatchInstallAgentService @Autowired constructor(
     }
 
     fun genCreateAgentInstallScript(
+        userId: String,
         projectId: String,
         workspaceName: String,
         zoneName: String?
     ): String {
         val agentId = genNewAgent(
             projectId = projectId,
-            userId = "admin",
+            userId = userId,
             os = OS.WINDOWS,
             zoneName = zoneName,
             agentType = AgentType.CREATE,
