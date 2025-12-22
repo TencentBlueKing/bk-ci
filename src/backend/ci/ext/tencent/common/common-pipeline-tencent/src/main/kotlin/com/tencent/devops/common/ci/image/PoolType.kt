@@ -154,7 +154,8 @@ enum class PoolType {
     Macos {
         override fun transfer(pool: Pool): DispatchType {
             return MacOSDispatchType(
-                macOSEvn = pool.macOS!!.systemVersion + ":" + pool.macOS.xcodeVersion,
+                macOSEvn = pool.macOS!!.macOSHwSpec + pool.macOS.systemVersion + ":" + pool.macOS.xcodeVersion,
+                macOSHwSpec = pool.macOS.macOSHwSpec,
                 systemVersion = pool.macOS.systemVersion,
                 xcodeVersion = pool.macOS.xcodeVersion
             )
@@ -197,6 +198,11 @@ enum class PoolType {
             if (dispatcher is MacOSDispatchType) {
                 return RunsOn(
                     selfHosted = null,
+                    hwSpec = if (dispatcher.macOSHwSpec.isNullOrBlank()) {
+                        "VMware"
+                    } else {
+                        dispatcher.macOSHwSpec
+                    },
                     poolName = "macos-${dispatcher.systemVersion}",
                     xcode = dispatcher.xcodeVersion,
                     poolType = null
