@@ -107,7 +107,7 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
         projectId: String,
         workspaceName: String,
         zoneName: String
-    ): Result<String> {
-        return Result(batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName))
+    ): String {
+        return batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName)
     }
 }
