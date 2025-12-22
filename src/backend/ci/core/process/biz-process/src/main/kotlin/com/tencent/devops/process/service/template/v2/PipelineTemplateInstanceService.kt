@@ -659,16 +659,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineId = null,
             params = triggerContainer.params
         )
-        val overrideTemplateField = TemplateInstanceField.initFromTrigger(
-            triggerContainer = triggerContainer
-        )
         return TemplateInstanceParams(
             pipelineId = "",
             pipelineName = "",
             buildNo = triggerContainer.buildNo,
             param = instanceParams,
-            triggerElements = triggerContainer.elements,
-            overrideTemplateField = overrideTemplateField
+            triggerElements = triggerContainer.elements
         )
     }
 

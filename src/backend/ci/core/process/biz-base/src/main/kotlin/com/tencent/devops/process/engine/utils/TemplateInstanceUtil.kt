@@ -569,7 +569,7 @@ object TemplateInstanceUtil {
         val templateVariables = mutableListOf<TemplateVariable>()
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         templateParams.filterNot {
-            it.constant == true || !it.required || !VERSION_PARAMS.contains(it.id)
+            it.constant == true || !it.required || VERSION_PARAMS.contains(it.id)
         }.forEach { templateParam ->
             val pipelineParam = pipelineParamMap[templateParam.id] ?: return@forEach
             // 是否覆盖模版的值
