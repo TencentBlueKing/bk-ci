@@ -28,10 +28,10 @@
 package com.tencent.devops.common.redis
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import org.slf4j.LoggerFactory
-import org.springframework.data.redis.core.script.DefaultRedisScript
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import org.springframework.data.redis.core.script.DefaultRedisScript
 
 open class RedisLock(
     private val redisOperation: RedisOperation,
@@ -40,11 +40,6 @@ open class RedisLock(
     private val sleepTime: Long = 100L,
     private var lockValue: String = UUID.randomUUID().toString()
 ) : AutoCloseable {
-
-    /**
-     * 锁是否已经被占用
-     */
-    fun isLocked() = redisOperation.hasKey(lockKey)
 
     /**
      * 获取锁,直到成功才会返回
@@ -110,14 +105,20 @@ open class RedisLock(
     }
 
     private fun tryLockRemote(): Boolean {
-        return redisOperation.setNxEx(decorateKey(lockKey), lockValue, expiredTimeInSeconds)
+        return redisOperation.setNxEx(
+            key = decorateKey(lockKey),
+            value = lockValue,
+            expiredInSecond = expiredTimeInSeconds,
+            isRedisLock = true
+        )
     }
 
     private fun unLockRemote(): Boolean {
         return redisOperation.execute(
-            DefaultRedisScript(unLockLua, Long::class.java),
-            listOf(decorateKey(lockKey)),
-            lockValue
+            script = DefaultRedisScript(unLockLua, Long::class.java),
+            keys = listOf(decorateKey(lockKey)),
+            args = arrayOf(lockValue),
+            isRedisLock = true
         ) > 0
     }
 
@@ -126,12 +127,6 @@ open class RedisLock(
     }
 
     private fun getLocalLock(): Any = localLock.get(lockKey)!!
-
-    fun getLockValue() = lockValue
-
-    fun setLockValue(lockValue: String) {
-        this.lockValue = lockValue
-    }
 
     override fun close() {
         unlock()
