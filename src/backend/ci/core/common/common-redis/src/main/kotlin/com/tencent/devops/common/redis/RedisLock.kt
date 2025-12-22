@@ -109,7 +109,7 @@ open class RedisLock(
                 key = decorateKey(lockKey),
                 value = lockValue,
                 expiredInSecond = expiredTimeInSeconds,
-                isRedisLock = true
+                isRedisLock = false
             )
         ) { // 先加老库锁
             if (redisOperation.setNxEx(
