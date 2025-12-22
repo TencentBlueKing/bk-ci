@@ -370,10 +370,13 @@ async function fetchOperationalList (bgName) {
     id: i.ProductId,
   }));
   deptLoading.value.product = false;
-  
+
   // 如果已经选了运营产品，且kpiCode不存在，那么给KPI代码填充默认值
   if (projectData.value.productId && !projectData.value.kpiCode) {
     handleChangeProduct(projectData.value.productId);
+  } else if (projectData.value.kpiCode) {
+    // 如果kpi存在，那么调用kpi列表接口，正确回显kpi代码
+    fetchApilist(projectData.value.kpiName)
   }
 };
 
