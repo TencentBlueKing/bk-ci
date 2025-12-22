@@ -201,6 +201,22 @@ class BatchInstallAgentService @Autowired constructor(
         )
     }
 
+    fun genCreateAgentInstallScript(
+        projectId: String,
+        workspaceName: String,
+        zoneName: String?
+    ): String {
+        val agentId = genNewAgent(
+            projectId = projectId,
+            userId = "admin",
+            os = OS.WINDOWS,
+            zoneName = zoneName,
+            agentType = AgentType.CREATE,
+            createWorkspaceName = workspaceName
+        )
+        return HashUtil.encodeLongId(agentId)
+    }
+
     companion object {
         private const val ASE_SECRET = "6fQyK-&Ht49zlBwhB8TW*xAJ/JZz0ZreVcDVCSj+5bY="
         private val logger = LoggerFactory.getLogger(BatchInstallAgentService::class.java)

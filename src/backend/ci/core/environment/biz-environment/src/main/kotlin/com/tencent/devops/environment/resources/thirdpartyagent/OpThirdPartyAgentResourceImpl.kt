@@ -49,7 +49,8 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
-    private val agentShareProjectService: AgentShareService
+    private val agentShareProjectService: AgentShareService,
+    private val batchInstallAgentService: BatchInstallAgentService
 ) : OpThirdPartyAgentResource {
 
     override fun listEnableProjects(): Result<List<String>> {
@@ -101,5 +102,13 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun deleteAgentShared(shares: AgentShared): Result<Boolean> {
         return Result(agentShareProjectService.deleteSharedAgent(shares))
+    }
+
+    override fun addCreateNode(
+        projectId: String,
+        workspaceName: String,
+        zoneName: String
+    ): String {
+        return batchInstallAgentService.genCreateAgentInstallScript(projectId, workspaceName, zoneName)
     }
 }
