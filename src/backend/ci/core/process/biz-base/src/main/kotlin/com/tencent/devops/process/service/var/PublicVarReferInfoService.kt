@@ -79,13 +79,19 @@ class PublicVarReferInfoService @Autowired constructor(
      */
     fun handlePublicVarGroupReferences(
         userId: String,
-        projectId: String,
         model: Model,
-        resourceId: String,
-        resourceType: String,
-        resourceVersion: Int,
         varRefDetails: List<VarRefDetail>
     ) {
+        if (varRefDetails.isEmpty()) {
+            return
+        }
+        
+        val firstDetail = varRefDetails.first()
+        val projectId = firstDetail.projectId
+        val resourceId = firstDetail.resourceId
+        val resourceType = firstDetail.resourceType
+        val resourceVersion = firstDetail.referVersion
+        
         logger.info("Start handling public var group references for resource: $resourceId|$resourceVersion")
 
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
@@ -115,11 +121,17 @@ class PublicVarReferInfoService @Autowired constructor(
             return
         }
 
-        // 4. 构建公共变量映射和被引用变量集合
+        // 4. 获取流水线变量名集合(用于排除与公共变量重名的情况)
+        val pipelineVarNames = model.getTriggerContainer().params
+            .filter { it.varGroupName.isNullOrBlank() }
+            .map { it.id }
+            .toSet()
+        
+        // 5. 构建公共变量映射和被引用变量集合
         val referencedVarNames = varRefDetails.map { it.varName }.toSet()
         val publicVarMap = buildPublicVarMap(model)
 
-        // 5. 清理不在Model中的变量组引用
+        // 6. 清理不在Model中的变量组引用
         cleanupObsoleteGroupReferences(
             projectId = projectId,
             resourceId = resourceId,
@@ -129,10 +141,10 @@ class PublicVarReferInfoService @Autowired constructor(
             existingGroupKeys = existingGroupKeys
         )
 
-        // 6. 批量查询最新版本号
+        // 7. 批量查询最新版本号
         val latestVersionMap = queryLatestVersions(projectId, modelVarGroups)
 
-        // 7. 批量查询已存在的变量名
+        // 8. 批量查询已存在的变量名
         val allExistingVarNames = queryExistingVarNames(
             projectId = projectId,
             resourceId = resourceId,
@@ -140,7 +152,7 @@ class PublicVarReferInfoService @Autowired constructor(
             resourceVersion = resourceVersion
         )
 
-        // 8. 构建处理上下文
+        // 9. 构建处理上下文
         val context = VarGroupProcessContext(
             userId = userId,
             projectId = projectId,
@@ -151,10 +163,11 @@ class PublicVarReferInfoService @Autowired constructor(
             publicVarMap = publicVarMap,
             referencedVarNames = referencedVarNames,
             latestVersionMap = latestVersionMap,
-            allExistingVarNames = allExistingVarNames
+            allExistingVarNames = allExistingVarNames,
+            pipelineVarNames = pipelineVarNames
         )
 
-        // 9. 计算并执行删除操作
+        // 10. 计算并执行删除操作
         calculateAndExecuteDelete(context)
 
         // 11. 计算需要新增的变量引用记录
@@ -284,9 +297,10 @@ class PublicVarReferInfoService @Autowired constructor(
             val referencedVarNameSet = getReferencedVarsForGroup(
                 groupName = groupName,
                 publicVarMap = context.publicVarMap,
-                referencedVarNames = context.referencedVarNames
+                referencedVarNames = context.referencedVarNames,
+                pipelineVarNames = context.pipelineVarNames
             )
-
+            
             if (referencedVarNameSet.isEmpty()) {
                 return@forEach
             }
@@ -334,9 +348,10 @@ class PublicVarReferInfoService @Autowired constructor(
             val referencedVarNameSet = getReferencedVarsForGroup(
                 groupName = groupName,
                 publicVarMap = context.publicVarMap,
-                referencedVarNames = context.referencedVarNames
+                referencedVarNames = context.referencedVarNames,
+                pipelineVarNames = context.pipelineVarNames
             )
-
+            
             if (referencedVarNameSet.isEmpty()) {
                 return@forEach
             }
@@ -387,9 +402,10 @@ class PublicVarReferInfoService @Autowired constructor(
             val referencedVarNameSet = getReferencedVarsForGroup(
                 groupName = groupName,
                 publicVarMap = context.publicVarMap,
-                referencedVarNames = context.referencedVarNames
+                referencedVarNames = context.referencedVarNames,
+                pipelineVarNames = context.pipelineVarNames
             )
-
+            
             if (referencedVarNameSet.isEmpty()) {
                 return@forEach
             }
@@ -435,10 +451,15 @@ class PublicVarReferInfoService @Autowired constructor(
     private fun getReferencedVarsForGroup(
         groupName: String,
         publicVarMap: Map<String, Set<String>>,
-        referencedVarNames: Set<String>
+        referencedVarNames: Set<String>,
+        pipelineVarNames: Set<String> = emptySet()
     ): Set<String> {
         val groupVarNames = publicVarMap[groupName] ?: emptySet()
-        return groupVarNames.filter { referencedVarNames.contains(it) }.toSet()
+        // 过滤出被引用的变量，并排除与流水线变量重名的公共变量
+        return groupVarNames
+            .filter { referencedVarNames.contains(it) }
+            .filterNot { pipelineVarNames.contains(it) }
+            .toSet()
     }
 
     /**
@@ -682,7 +703,6 @@ class PublicVarReferInfoService @Autowired constructor(
         }
 
         // 批量更新引用计数（会重新统计实际引用数）
-        // 注意：这里统一传null，让updateVarReferCount统计最新版本和-1版本的引用数
         groupsNeedUpdateCount.forEach { (groupKey, varNames) ->
             updateVarReferCount(
                 projectId = projectId,

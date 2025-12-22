@@ -99,11 +99,7 @@ class ModelHandleServiceImpl @Autowired constructor(
             // 处理公共变量组变量引用
             publicVarReferInfoService.handlePublicVarGroupReferences(
                 userId = userId,
-                projectId = projectId,
                 model = model,
-                resourceId = resourceId,
-                resourceType = resourceType,
-                resourceVersion = resourceVersion,
                 varRefDetails = varRefDetails
             )
             logger.info("Variable references update completed for resource: $resourceId")

@@ -37,5 +37,11 @@ data class VarGroupProcessContext(
         description = "已存在的变量名映射，key为PublicGroupKey，value为变量名集合",
         required = true
     )
-    val allExistingVarNames: Map<PublicGroupKey, Set<String>>
+    val allExistingVarNames: Map<PublicGroupKey, Set<String>>,
+    @get:Schema(
+        title = "流水线变量名集合",
+        description = "流水线自身定义的变量名集合（非公共变量组），用于排除与公共变量重名的情况",
+        required = true
+    )
+    val pipelineVarNames: Set<String> = emptySet()
 )

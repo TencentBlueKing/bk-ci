@@ -259,6 +259,8 @@ class PublicVarService @Autowired constructor(
         val latestVars = getAllLatestVarsForGroups(sourceProjectId, latestGroupVersionMap)
 
         val params = model.getTriggerContainer().params
+        // 获取流水线中所有非变量组的变量名集合
+        val pipelineVarNames = params.filter { it.varGroupName.isNullOrBlank() }.map { it.id }.toSet()
 
         // 为每个变量组处理并设置 variables
         publicVarGroups.forEach { varGroup ->
@@ -272,16 +274,14 @@ class PublicVarService @Autowired constructor(
                 val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
                 val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
                 // 对比版本差异
-                val diffResult = compareVarGroupVersions(
-                    savedGroupVarNames,
-                    latestGroupVarNames
-                )
+                val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
                 // 处理变量差异并获取已移除的变量
                 val removedVars = processVarGroupDiff(
                     diffResult = diffResult,
                     groupReferInfo = groupReferInfo,
                     latestGroupVars = latestGroupVars,
-                    params = params
+                    params = params,
+                    pipelineVarNames = pipelineVarNames
                 )
                 // 将已移除的变量设置到 variables 中
                 varGroup.variables = removedVars
@@ -314,20 +314,21 @@ class PublicVarService @Autowired constructor(
         diffResult: VarGroupDiffResult,
         groupReferInfo: ResourcePublicVarGroupReferPO,
         latestGroupVars: List<BuildFormProperty>,
-        params: MutableList<BuildFormProperty>
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
     ): List<BuildFormProperty> {
         val positionInfo = groupReferInfo.positionInfo ?: return emptyList()
         val newVarMap = latestGroupVars.associateBy { it.id }
         val positionInfoMap = positionInfo.associateBy { it.varName }
 
-        // 1. 更新已存在的变量
-        updateExistingVars(diffResult.varsToUpdate, positionInfoMap, newVarMap, params)
+        // 1. 更新已存在的变量（排除与流水线变量同名的）
+        updateExistingVars(diffResult.varsToUpdate, positionInfoMap, newVarMap, params, pipelineVarNames)
 
         // 2. 移除不再存在的变量
         removeObsoleteVars(diffResult.varsToRemove, positionInfoMap, params)
 
-        // 3. 添加新增的变量到末尾
-        addNewVars(diffResult.varsToAdd, newVarMap, params)
+        // 3. 添加新增的变量到末尾（排除与流水线变量同名的）
+        addNewVars(diffResult.varsToAdd, newVarMap, params, pipelineVarNames)
 
         // 4. 构建已移除的变量列表
         return buildRemovedVarsList(diffResult.varsToRemove, positionInfoMap, groupReferInfo)
@@ -340,9 +341,15 @@ class PublicVarService @Autowired constructor(
         varsToUpdate: Set<String>,
         positionInfoMap: Map<String, PublicVarPositionPO>,
         newVarMap: Map<String, BuildFormProperty>,
-        params: MutableList<BuildFormProperty>
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
     ) {
         varsToUpdate.forEach { varName ->
+            // 如果变量名与流水线变量同名，则跳过
+            if (varName in pipelineVarNames) {
+                return@forEach
+            }
+            
             val pos = positionInfoMap[varName] ?: return@forEach
             val newVar = newVarMap[varName] ?: return@forEach
 
@@ -379,12 +386,14 @@ class PublicVarService @Autowired constructor(
     private fun addNewVars(
         varsToAdd: Set<String>,
         newVarMap: Map<String, BuildFormProperty>,
-        params: MutableList<BuildFormProperty>
+        params: MutableList<BuildFormProperty>,
+        pipelineVarNames: Set<String>
     ) {
         val currentParamVarIds = params.map { it.id }.toSet()
         varsToAdd
             .mapNotNull { newVarMap[it] }
             .filter { it.id !in currentParamVarIds }
+            .filter { it.id !in pipelineVarNames } // 排除与流水线变量同名的
             .forEach { newVar ->
                 params.add(newVar)
             }
