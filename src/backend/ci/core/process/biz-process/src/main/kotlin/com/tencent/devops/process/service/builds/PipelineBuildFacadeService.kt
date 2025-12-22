@@ -430,6 +430,8 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            } else if (startType == StartType.SERVICE && readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // 正式版本,必须使用最新版本执行
             if (version != null &&
