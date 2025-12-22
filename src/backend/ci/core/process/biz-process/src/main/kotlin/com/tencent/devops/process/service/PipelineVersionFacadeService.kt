@@ -403,7 +403,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             channelCode = ChannelCode.getRequestChannelCode()
         ).copy(
             pipelineAsCodeSettings = pipelineAsCodeSettings,
-            labels = request.labels
+            labels = request.labels,
+            envName = request.envName
         )
 
         return pipelineInfoFacadeService.createPipeline(
@@ -414,7 +415,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 templateId = request.templateId,
                 instanceFromTemplate = false,
                 staticViews = request.staticViews,
-                labels = request.labels
+                labels = request.labels,
+                desc = request.pipelineDesc
             ),
             channelCode = ChannelCode.getRequestChannelCode(),
             setting = setting,
