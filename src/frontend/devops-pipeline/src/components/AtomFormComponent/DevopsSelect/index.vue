@@ -276,7 +276,7 @@
             },
 
             isEnvVar (str) {
-                return typeof str === 'string' && str.isBkVar()
+                return typeof str === 'string' && this.getValidaVar(str)
             },
 
             handleBlur () {
