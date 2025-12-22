@@ -111,7 +111,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 ip = initIp ?: "",
                 status = AgentStatus.IMPORT_EXCEPTION,
                 fileGateway = fileGateway,
-                agentType = AgentType.BUILD
+                agentType = AgentType.BUILD,
+                createWorkspaceName = null
             )
             val agentRecord = thirdPartyAgentDao.getAgent(context, agentId)!!
             val agentHashId = HashUtil.encodeLongId(agentId)

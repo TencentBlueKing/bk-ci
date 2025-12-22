@@ -82,7 +82,8 @@ class TXEnvService @Autowired constructor(
     private val nodeService: NodeService,
     private val client: Client,
     private val authProjectApi: AuthProjectApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val createEnvService: CreateEnvService
 ) : EnvService(
     dslContext = dslContext,
     envDao = envDao,
@@ -97,7 +98,8 @@ class TXEnvService @Autowired constructor(
     nodeService = nodeService,
     client = client,
     authProjectApi = authProjectApi,
-    pipelineAuthServiceCode = pipelineAuthServiceCode
+    pipelineAuthServiceCode = pipelineAuthServiceCode,
+    createEnvService = createEnvService
 ) {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
