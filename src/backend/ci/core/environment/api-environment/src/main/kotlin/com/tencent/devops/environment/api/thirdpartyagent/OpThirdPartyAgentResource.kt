@@ -157,14 +157,4 @@ interface OpThirdPartyAgentResource {
     fun deleteAgentShared(
         shares: AgentShared
     ): Result<Boolean>
-
-    @Operation(summary = "添加创作流节点")
-    @POST
-    @Path("/addCreateNode")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun addCreateNode(
-        projectId: String,
-        workspaceName: String,
-        zoneName: String
-    ): Response
 }
