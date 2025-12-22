@@ -193,7 +193,17 @@
         )
         
         // 合并过滤后的全局参数和待保存的参数列表，用于检测重复
-        return [...filteredGlobalParams, ...groupsMap.value.variableList].filter(i => i.varGroupName)
+        const mergedParams = [...filteredGlobalParams, ...groupsMap.value.variableList].filter(i => i.varGroupName)
+        // 按参数唯一标识（如id）去重
+        const uniqueParams = []
+        const seenIds = new Set()
+        for (const param of mergedParams) {
+            if (param.id && !seenIds.has(param.id)) {
+                seenIds.add(param.id)
+                uniqueParams.push(param)
+            }
+        }
+        return uniqueParams
     })
     const renderSelectedVariableList = computed(() => {
         // 新增变量组-选中变量组对应的变量

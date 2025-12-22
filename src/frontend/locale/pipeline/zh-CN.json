@@ -2111,7 +2111,7 @@
     "releaseVarGroup": "发布变量组",
     "confirmDeleteGroup": "确认删除该变量组？",
     "deleteSubTitle": "变量组：{0}",
-    "create": "创建",
+    "create": "新增",
     "delete": "删除",
     "update": "修改",
     "varDesc": "变量描述",
@@ -2119,17 +2119,21 @@
     "releasePreview": {
       "VARIABLE": {
         "UPDATE": "以下流水线/模板都将{0}此变量属性",
-        "DELETE": "以下流水线/模板将{0}此变量"
+        "DELETE": "以下流水线/模板将{0}此变量",
+        "CREATE": "以下流水线/模板中若{0}，将以流水线/模板{1}"
       },
       "CONSTANT": {
         "UPDATE": "以下流水线/模板都将{0}此常量属性",
-        "DELETE": "以下流水线/模板将{0}此常量"
+        "DELETE": "以下流水线/模板将{0}此常量",
+        "CREATE": "以下流水线/模板中若{0}，将以流水线/模板{1}"
       },
       "syncUpdate": "同步更新",
       "canNotUse": "不能再使用",
       "newContent": "新增内容",
       "variableContent": "变量内容",
-      "constantContent": "常量内容"
+      "constantContent": "常量内容",
+      "definedRepeatParams": "已定义了同名变量",
+      "CustomizeAsDesired": "自己的定义为准"
     },
     "manageGroup": "管理变量组",
     "addVarGroup": "添加变量组",

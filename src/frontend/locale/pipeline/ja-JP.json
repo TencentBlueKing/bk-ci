@@ -2114,7 +2114,7 @@
     "releaseVarGroup": "変数グループを公開",
     "confirmDeleteGroup": "この変数グループを削除しますか？",
     "deleteSubTitle": "変数グループ：{0}",
-    "create": "作成",
+    "create": "新しい",
     "delete": "削除",
     "update": "更新",
     "varDesc": "変数の説明",
@@ -2122,17 +2122,21 @@
     "releasePreview": {
       "VARIABLE": {
         "UPDATE": "次のパイプライン/テンプレートは、この変数属性を{0}します。",
-        "DELETE": "次のパイプライン/テンプレートでは、この変数は{0}。"
+        "DELETE": "次のパイプライン/テンプレートでは、この変数は{0}。",
+        "CREATE": "パイプライン/テンプレート{0}, はパイプライン/テンプレート{1}"
       },
       "CONSTANT": {
         "UPDATE": "次のパイプライン/テンプレートは、この定数属性を{0}します。",
-        "DELETE": "次のパイプライン/テンプレートでは、この定数は{0}。"
+        "DELETE": "次のパイプライン/テンプレートでは、この定数は{0}。",
+        "CREATE": "パイプライン/テンプレート{0}, はパイプライン/テンプレート{1}"
       },
       "syncUpdate": "同期的に更新",
       "canNotUse": "使用できなくなります",
       "newContent": "新しいコンテンツ",
       "variableContent": "変数コンテンツ",
-      "constantContent": "定数コンテンツ"
+      "constantContent": "定数コンテンツ",
+      "definedRepeatParams": "に同じ名前の変数が定義されている場合、パイプライン/テンプレート",
+      "CustomizeAsDesired": "で定義された定義を使用します"
     },
     "manageGroup": "変数グループの管理",
     "addVarGroup": "変数グループを追加",

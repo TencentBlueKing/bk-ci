@@ -51,20 +51,20 @@
                         >
                             <span class="key">
                                 <i
-                                    v-if="changeFieldsNeedTips.includes(key) && (key === 'defaultValue' ? value?.newValue : value?.oldValue !== value?.newValue)"
+                                    v-if="changeFieldsNeedTips.includes(key) && (value?.oldValue !== value?.newValue)"
                                     class="bk-icon icon-exclamation-circle-shape tooltips-icon"
                                     v-bk-tooltips="changeFieldValueTips(key)"
                                 />
                                 {{ fieldTitleMap[key] }}
                             </span>
                             <span class="value">
-                                <span class="current-value">{{ key === 'defaultValue' ? value?.oldValue : proxy.$t(`${value.oldValue}`) }}</span>
+                                <span class="current-value">{{ typeof value === 'boolean' ? proxy.$t(`${value.oldValue}`) : value?.oldValue || '--' }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ key === 'defaultValue' ? value?.newValue : proxy.$t(`${value.newValue}`) }}</span>
+                                <span class="after-value">{{ typeof value === 'boolean' ? proxy.$t(`${value.newValue}`) : value?.newValue || '--' }}</span>
                             </span>
                         </div>
                     </div>
@@ -86,14 +86,13 @@
                                 {{ fieldTitleMap[key] }}
                             </span>
                             <span class="value">
-                                <span class="after-value">{{ value }}</span>
+                                <span class="after-value">{{ typeof value === 'boolean' ? proxy.$t(`${value}`) : value || '--' }}</span>
                             </span>
                         </div>
                     </div>
                 </template>
                 <div
                     class="references-list"
-                    v-if="curVarData?.content?.operate !== OPERATE_TYPE.CREATE"
                 >
                     <div class="title">
                         <div>
@@ -104,11 +103,22 @@
                                 class="references-tips"
                                 slot="title"
                             >
-                                <span class="highlight">
-                                    {{ curVarData.content?.operate === OPERATE_TYPE.UPDATE
-                                        ? proxy.$t('publicVar.releasePreview.syncUpdate')
-                                    : proxy.$t('publicVar.releasePreview.canNotUse') }}
-                                </span>
+                                <template v-if="curVarData.content?.operate === OPERATE_TYPE.CREATE">
+                                    <span class="red-highlight">
+                                        {{ proxy.$t('publicVar.releasePreview.definedRepeatParams') }}
+                                    </span>
+
+                                    <span class="red-highlight">
+                                        {{ proxy.$t('publicVar.releasePreview.CustomizeAsDesired') }}
+                                    </span>
+                                </template>
+                                <template v-else>
+                                    <span class="highlight">
+                                        {{ curVarData.content?.operate === OPERATE_TYPE.UPDATE
+                                            ? proxy.$t('publicVar.releasePreview.syncUpdate')
+                                        : proxy.$t('publicVar.releasePreview.canNotUse') }}
+                                    </span>
+                                </template>
                             </i18n>
                         </div>
                     </div>
@@ -155,6 +165,7 @@
     const dialogPositionConfig = ref({
         top: window.innerHeight < 800 ? '20' :  window.innerHeight > 1000 ? '8%' : '80'
     })
+    const referencesTips = computed(() => {})
     const curVarData = computed(() => props.previewData[activeIdx.value] ?? {})
     const fieldTitleMap = computed(() => {
         const isVariable = curVarData.value.type === VARIABLE
@@ -183,9 +194,9 @@
         return proxy.$t('publicVar.changeFieldValueTips')
     }
     watch(() => curVarData.value, () => {
-        if (curVarData.value?.content?.operate === OPERATE_TYPE.CREATE) {
-            return
-        }
+        // if (curVarData.value?.content?.operate === OPERATE_TYPE.CREATE) {
+        //     return
+        // }
         isLoading.value = true
         Promise.all([
             fetchReferenceList('PIPELINE'),
@@ -385,6 +396,9 @@
                 font-weight: 400;
                 .highlight {
                     color:#eaa53b;
+                }
+                .red-highlight {
+                    color: #ea3e3e;
                 }
             }
             .change-content {

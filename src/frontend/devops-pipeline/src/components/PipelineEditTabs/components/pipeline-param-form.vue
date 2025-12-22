@@ -322,7 +322,7 @@
             },
             getUniqueArgs (field) {
                 // 新增变量可与公共变量组下变量重名
-                return this.globalParams.filter(i => !i.varGroupName)
+                return this.globalParams
                     .filter((item) => item[field] !== this.initParamItem[field])
                     .map((p) =>
                         typeof p[field] === 'string'

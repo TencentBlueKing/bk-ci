@@ -2120,17 +2120,21 @@
     "releasePreview": {
       "VARIABLE": {
         "UPDATE": "The following pipelines/templates will {0} this variable property.",
-        "DELETE": "TThe following pipeline/template will {0} this variable."
+        "DELETE": "TThe following pipeline/template will {0} this variable.",
+        "CREATE": "If {0} in the following pipeline/template, the pipeline/template {1} will prevail."
       },
       "CONSTANT": {
         "UPDATE": "The following pipelines/templates will {0} this constant property.",
-        "DELETE": "The following pipeline/template will {0} this constant."
+        "DELETE": "The following pipeline/template will {0} this constant.",
+        "CREATE": "If {0} in the following pipeline/template, the pipeline/template {1} will prevail."
       },
       "syncUpdate": "synchronously update",
       "canNotUse": "no longer be able to use",
       "newContent": "New Content",
       "variableContent": "Variable Content",
-      "constantContent": "Constant Content"
+      "constantContent": "Constant Content",
+      "definedRepeatParams": "a variable with the same name has been defined",
+      "CustomizeAsDesired": "own definition"
     },
     "manageGroup": "Manage Variable Groups",
     "addVarGroup": "Add Variable Group",
