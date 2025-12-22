@@ -53,7 +53,6 @@ class BuildVariableServiceTest {
         masterRedisTemplate = mockk(),
         slaveRedisTemplate = mockk(),
         lockRedisTemplate = mockk(),
-        springRedisTemplate = mockk(),
         splitMode = mockk()
     )
     private val pipelineAsCodeService: PipelineAsCodeService = mockk(relaxed = true)
