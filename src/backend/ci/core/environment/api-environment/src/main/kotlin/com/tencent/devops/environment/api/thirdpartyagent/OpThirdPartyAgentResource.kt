@@ -161,8 +161,11 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/addCreateNode")
     fun addCreateNode(
+        @QueryParam("projectId")
         projectId: String,
+        @QueryParam("workspaceName")
         workspaceName: String,
+        @QueryParam("zoneName")
         zoneName: String
-    ): Result<String>
+    ): String
 }
