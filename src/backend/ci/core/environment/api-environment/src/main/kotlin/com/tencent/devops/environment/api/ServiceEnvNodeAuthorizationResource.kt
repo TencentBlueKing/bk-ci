@@ -27,17 +27,23 @@
 
 package com.tencent.devops.environment.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
+import com.tencent.devops.environment.pojo.EnvData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "SERVICE_AUTHORIZATION", description = "环境节点授权管理")
@@ -58,4 +64,18 @@ interface ServiceEnvNodeAuthorizationResource {
         @Parameter(description = "请求体", required = true)
         resourceAuthorizationHandoverDTOs: List<ResourceAuthorizationHandoverDTO>
     ): Result<Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>>
+
+    @Operation(summary = "根据工作空间ID,获取所有拥有这个节点的环境(创作流)")
+    @GET
+    @Path("/{projectId}/fetchAllNodeEnvList")
+    fun fetchAllNodeEnvList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<List<EnvData>>
 }

@@ -22,7 +22,9 @@ data class TPAPipelineBuild(
     @get:Schema(title = "平均耗时")
     val avgTimeInterval: Long?,
     @get:Schema(title = "最后一次构建的containerId")
-    val lastContainerId: Long?
+    val lastContainerId: Long?,
+    @get:Schema(title = "stageId")
+    val stageId: String?
 )
 
 data class TPAPipelineBuildCountResp(

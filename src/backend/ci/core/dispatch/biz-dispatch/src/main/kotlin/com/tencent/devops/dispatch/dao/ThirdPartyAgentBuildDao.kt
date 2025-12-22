@@ -110,7 +110,8 @@ class ThirdPartyAgentBuildDao {
         envId: Long?,
         ignoreEnvAgentIds: Set<String>?,
         jobId: String?,
-        startUser: String?
+        startUser: String?,
+        stageId: String?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -155,6 +156,7 @@ class ThirdPartyAgentBuildDao {
                     .set(IGNORE_ENV_AGENT_IDS, ignoreEnvAgentIdsJson)
                     .set(JOB_ID, jobId)
                     .set(START_USER, startUser)
+                    .set(STAGE_ID, stageId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -179,7 +181,8 @@ class ThirdPartyAgentBuildDao {
                 ENV_ID,
                 IGNORE_ENV_AGENT_IDS,
                 JOB_ID,
-                START_USER
+                START_USER,
+                STAGE_ID
             ).values(
                 projectId,
                 agentId,
@@ -205,7 +208,8 @@ class ThirdPartyAgentBuildDao {
                 envId,
                 ignoreEnvAgentIdsJson,
                 jobId,
-                startUser
+                startUser,
+                stageId
             ).execute()
         }
     }
@@ -572,7 +576,8 @@ class ThirdPartyAgentBuildDao {
                     Long::class.java,
                     VM_SEQ_ID,
                     ID
-                ).`as`("LAST_VM_SEQ_ID")
+                ).`as`("LAST_VM_SEQ_ID"),
+                STAGE_ID
             ).from(this).where(PROJECT_ID.eq(projectId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
@@ -625,7 +630,8 @@ class ThirdPartyAgentBuildDao {
                         buildCount = it.value5() as Int,
                         lastBuildTime = it.value6(),
                         avgTimeInterval = it.value7()?.toLong(),
-                        lastContainerId = it.value8()
+                        lastContainerId = it.value8(),
+                        stageId = it.value9()
                     )
                 }
         }
@@ -720,6 +726,7 @@ class ThirdPartyAgentBuildDao {
                 dsl.and(START_USER.like("%$creator%"))
             }
             return dsl.and(JOB_ID.isNotNull)
+                .and(START_USER.isNotNull)
                 .groupBy(START_USER)
                 .orderBy(ID.desc())
                 .fetch()

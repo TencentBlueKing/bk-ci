@@ -37,7 +37,7 @@ data class EnvWithPermission(
     val name: String,
     @get:Schema(title = "环境描述", required = true)
     val desc: String,
-    @get:Schema(title = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
+    @get:Schema(title = "环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}|创作环境{CREATE}）", required = true)
     val envType: String,
     @get:Schema(title = "环境节点类型（节点环境{NODE}|标签环境{TAG}）", required = false)
     val envNodeType: String,

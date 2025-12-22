@@ -687,7 +687,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.encrypt(secretKey),
                 gateway = gateway,
                 fileGateway = fileGateway,
-                agentType = agentType
+                agentType = agentType,
+                createWorkspaceName = null
             )
             thirdPartyAgentDao.getAgent(dslContext, id)!!
         } else {
