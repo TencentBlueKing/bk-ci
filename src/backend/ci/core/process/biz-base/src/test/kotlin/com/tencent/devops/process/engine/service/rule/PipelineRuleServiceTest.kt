@@ -43,7 +43,7 @@ class PipelineRuleServiceTest {
         masterRedisTemplate = mockk(),
         slaveRedisTemplate = mockk(),
         lockRedisTemplate = mockk(),
-        splitMode= mockk()
+        splitMode = mockk()
     )
 
     private val pipelineRuleService = PipelineRuleService(

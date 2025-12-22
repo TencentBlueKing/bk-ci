@@ -128,7 +128,6 @@ open class RedisLock(
         } else {
             return false
         }
-
     }
 
     private fun unLockRemote(): Boolean {
