@@ -432,6 +432,7 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
             } else if (startType == StartType.SERVICE &&
                 readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+                // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // 正式版本,必须使用最新版本执行
