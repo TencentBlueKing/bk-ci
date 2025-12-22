@@ -663,10 +663,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 // 记录项目更新记录
                 // 获取最近一条已审批通过的历史记录，用于获取"修改前"的 KPI 值
-                val latestApprovedHistory = projectUpdateHistoryDao.getLatestApprovedHistory(
-                    dslContext = dslContext,
-                    englishName = englishName
-                )
                 val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
                     englishName = englishName,
@@ -800,10 +796,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ),
                 afterSubjectScopes = afterSubjectScopes
             )
-            // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
+            val realtimeKpiInfo = getRealtimeKpiInfo(projectInfo.englishName)
+            val realtimeKpiCode = realtimeKpiInfo?.first
             val finalNeedApproval = authNeedApproval &&
                 (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
-                    projectInfo.productId != projectUpdateInfo.productId)
+                    projectInfo.productId != projectUpdateInfo.productId ||
+                    realtimeKpiCode != projectUpdateInfo.kpiCode)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
