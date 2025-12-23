@@ -92,6 +92,7 @@
                     </div>
                 </template>
                 <div
+                    v-if="referenceList.length"
                     class="references-list"
                 >
                     <div class="title">
@@ -421,7 +422,7 @@
                     border-radius: 2px;
                     padding: 4px 8px;
                     margin-right: 8px;
-                    min-width: 70px;
+                    min-width: 80px;
                     max-width: 100px;
                     overflow: hidden;
                     text-overflow: ellipsis;
