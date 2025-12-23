@@ -29,6 +29,7 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.rabbit.AnonymousQueueHealthIndicator
 import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
@@ -144,10 +145,11 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列
             setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", "$groupName-")
+            // anonymousGroupPrefix存在时已经默认为false，这里再次确认为false保证不持久化
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "false")
-            // 匿名队列在重连时可能不存在，设置为false允许自动重新创建而不是抛出异常
-            setProperty("$rabbitPropPrefix.consumer.missingQueuesFatal", "false")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
+            // 注册匿名队列到健康检查单例，用于监控匿名队列消费者的致命错误
+            AnonymousQueueHealthIndicator.registerAnonymousQueue("$groupName-$bindingName")
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }
