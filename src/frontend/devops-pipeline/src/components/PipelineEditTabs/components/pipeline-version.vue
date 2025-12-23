@@ -24,7 +24,7 @@
                             :handle-change="handleBuildNoChange"
                         />
                         <atom-checkbox
-                            v-if="!!templateId && showVersions && isRequired"
+                            v-if="!!templateId && showVersions"
                             name="asInstanceInput"
                             class="ml10"
                             :disabled="disabled && !isOverride"
@@ -391,13 +391,13 @@
                 return getVersionConfig()
             },
             buildNo () {
-                return this.container?.buildNo || {}
+                return this.container?.buildNo ?? {}
             },
             isRequired () {
-                return !!this.buildNo?.required
+                return !!this.container?.buildNo?.required
             },
             asInstanceInput () {
-                return !!this.buildNo?.asInstanceInput
+                return !!this.container?.buildNo?.asInstanceInput
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
@@ -453,10 +453,16 @@
                 Object.assign(this.editBuildNo, { [name]: value })
             },
             handleBuildNoChange (name, value) {
-                Object.assign(this.renderBuildNo, { [name]: value })
-                this.updateContainerParams('buildNo', {
-                    ...this.renderBuildNo
-                })
+                // 创建新对象以触发响应式更新
+                const newBuildNo = {
+                    ...this.buildNo,
+                    [name]: value
+                }
+                if (name === 'required') {
+                    // 如果设置为入参，则更新默认为实例入参
+                    newBuildNo.asInstanceInput = value
+                }
+                this.updateContainerParams('buildNo', newBuildNo)
             },
             getLabelByBuildType (type) {
                 const item = this.buildNoRules.find(item => item.value === type)
