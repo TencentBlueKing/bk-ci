@@ -420,7 +420,7 @@
                         ...(instanceBuildNoParams ?? [])
                     ]
                     
-                    const needResetBuildNo = initialInstance?.buildNo?.buildNo && shouldResetBuildNo({
+                    const needResetBuildNo = initialInstance?.buildNo && shouldResetBuildNo({
                         currentParams: instanceBuildNoParams,
                         initialParams: initialInstance?.param,
                         currentBuildNo: instanceBuildNo?.buildNo,
