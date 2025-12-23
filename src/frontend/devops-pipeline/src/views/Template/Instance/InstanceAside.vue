@@ -316,6 +316,12 @@
         }
         const newInstance = {
             ...instanceParams,
+            ...(instanceParams?.buildNo ? {
+                buildNo: {
+                    ...instanceParams.buildNo,
+                    isRequiredParam: instanceParams.buildNo.required && instanceParams.buildNo.asInstanceInput
+                }
+            } : {}),
             pipelineName: name ?? pipelineName.value ?? ''
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [...instanceList.value, newInstance] })
