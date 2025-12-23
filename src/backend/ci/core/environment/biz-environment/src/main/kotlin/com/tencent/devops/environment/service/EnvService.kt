@@ -273,37 +273,36 @@ class EnvService @Autowired constructor(
             envType = envType,
             envIds = envIds
         )
-        if (envRecordList.isEmpty()) {
-            if (envType == EnvType.CREATE) {
-                val result = mutableListOf<EnvWithPermission>()
-                val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
-                val myWorkspaces = createEnvService.fetchUserWorkspaceId(projectId, userId)
-                val myNodesCount = createNodes.filter { myWorkspaces.contains(it.createWorkspaceName) }.size
+        val result = mutableListOf<EnvWithPermission>()
+        if (envType == EnvType.CREATE) {
+            val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
+            val myWorkspaces = createEnvService.fetchUserWorkspaceId(projectId, userId)
+            val myNodesCount = createNodes.filter { myWorkspaces.contains(it.createWorkspaceName) }.size
+            result.add(
+                EnvWithPermission(
+                    envHashId = HashUtil.encodeLongId(MyCreateEnv.ENV_ID),
+                    name = MyCreateEnv.name(),
+                    envType = EnvType.CREATE,
+                    envNodeType = EnvNodeType.NODE,
+                    nodeCount = myNodesCount,
+                    userId = userId, now = LocalDateTime.now().timestamp()
+                )
+            )
+            if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 result.add(
                     EnvWithPermission(
-                        envHashId = HashUtil.encodeLongId(MyCreateEnv.ENV_ID),
-                        name = MyCreateEnv.name(),
+                        envHashId = HashUtil.encodeLongId(AllCreateNodeEnv.ENV_ID),
+                        name = AllCreateNodeEnv.name(),
                         envType = EnvType.CREATE,
                         envNodeType = EnvNodeType.NODE,
-                        nodeCount = myNodesCount,
+                        nodeCount = createNodes.size,
                         userId = userId, now = LocalDateTime.now().timestamp()
                     )
                 )
-                if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
-                    result.add(
-                        EnvWithPermission(
-                            envHashId = HashUtil.encodeLongId(AllCreateNodeEnv.ENV_ID),
-                            name = AllCreateNodeEnv.name(),
-                            envType = EnvType.CREATE,
-                            envNodeType = EnvNodeType.NODE,
-                            nodeCount = createNodes.size,
-                            userId = userId, now = LocalDateTime.now().timestamp()
-                        )
-                    )
-                }
-                return result
             }
-            return listOf()
+        }
+        if (envRecordList.isEmpty()) {
+            return result
         }
 
         val permissionMap = environmentPermissionService.listEnvByPermissions(
@@ -338,7 +337,7 @@ class EnvService @Autowired constructor(
         // 用于兼容rbac和其他版本权限，rbac只会展示出用户有列表权限的环境。而其
         // 他权限版本，则只要用户具有某个环境的列表权限，就会把该项目下所有的环境都返回
         val envListResult = if (canListEnv.isEmpty()) {
-            return listOf()
+            return result
         } else {
             environmentPermissionService.getEnvListResult(
                 canListEnv = canListEnv,
@@ -379,11 +378,8 @@ class EnvService @Autowired constructor(
                 projectName = null
             )
         }
-        if (envType != EnvType.CREATE) {
-            return resEnvList
-        }
-        // TODO: 增加内置创作环境
-        return resEnvList
+        result.addAll(resEnvList)
+        return result
     }
 
     override fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission> {
