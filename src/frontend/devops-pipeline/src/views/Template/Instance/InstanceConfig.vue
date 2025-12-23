@@ -412,7 +412,7 @@
                 if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
                     // 获取初始实例的参数
                     const initialInstance = initialInstanceList.value?.[index]
-                    const buildNoChanged = processedInstance.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
+                    const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
                     
                     // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
                     const mergedCurrentParams = [
@@ -564,10 +564,13 @@
         
         if (!hasNewParams && !hasNewTriggers && !buildNoChanged) return
         
-        // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id（不跟随模板的参数）
+        // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id（不跟随模板的参数，并且模板对应的变量 required 为true）
         const newOverrideParamIds = newInstance.param
-            ?.filter(p => !p.isFollowTemplate)
-            .map(p => p.id) || []
+            ?.filter(p => {
+            const templateParam = curTemplateDetail.value?.param?.find(t => t.id === p.id)
+            return !p.isFollowTemplate && templateParam?.required
+        }).map(p => p.id) || []
+        
         isUpdatingStore.value = true
         proxy.$nextTick(() => {
             proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
@@ -603,6 +606,7 @@
         }, {})
         
         // 需更新为模板对应参数值的字段名
+        // 其中required字段为特殊处理，如果模板变量为入参，可以修改默认值，isRequiredParam才是实例的真实入参值， 其余字段均需变更为模板对应的值
         const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly']
         instanceParams?.forEach(i => {
             const templateParam = templateParamsMap.get(i.id)
@@ -620,9 +624,18 @@
                         i[field] = templateParam[field]
                     })
                     // 如果该变量是模板的入参，则默认值为原默认值，否则为模板对应参数的值
-                    i.defaultValue = templateParam.required ? i.defaultValue : templateParam.defaultValue
-                    i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
-                    i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                    if (i.isFollowTemplate) {
+                        i.defaultValue = templateParam.defaultValue
+                    } else {
+                        i.defaultValue = templateParam.required ? i.defaultValue : templateParam.defaultValue
+                    }
+                    if (isObject(i.defaultValue)) {
+                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
+                    } else {
+                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                    }
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
@@ -632,8 +645,13 @@
                     needUpdatedField.forEach(field => {
                         i[field] = templateParam[field]
                     })
-                    i.hasChange = i.defaultValue !== templateParam?.defaultValue
-                    i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                    if (isObject(i.defaultValue)) {
+                        i.isChange = !isShallowEqual(i.defaultValue, initialInstanceParam?.defaultValue)
+                        i.hasChange = !isShallowEqual(i.defaultValue, templateParam?.defaultValue)
+                    } else {
+                        i.hasChange = i.defaultValue !== templateParam?.defaultValue
+                        i.isChange = i.defaultValue !== initialInstanceParam?.defaultValue
+                    }
                 }
             }
             i.propertyUpdates = collectPropertyUpdates(i, initialInstanceParam)
@@ -694,7 +712,8 @@
             return {
                 buildNo: {
                     ...templateBuildNo,
-                    currentBuildNo: templateBuildNo.buildNo
+                    currentBuildNo: templateBuildNo.buildNo,
+                    isRequiredParam: templateBuildNo?.required && templateBuildNo?.asInstanceInput
                 },
                 buildNoParam: templateBuildNoParams
             }
@@ -746,16 +765,18 @@
                         ...instanceBuildNo,
                         buildNo: templateBuildNo.buildNo,
                         buildNoType: templateBuildNo.buildNoType,
-                        required: templateBuildNo.required
+                        required: templateBuildNo.required,
+                        isRequiredParam: templateBuildNo.required
                     },
                     buildNoParam: comparedBuildNoParams
                 }
             }
-            // 如果实例为不跟随模板，保持原实例的配置,但更新 required 为模板的 required
+            // 如果实例为不跟随模板，保持原实例的配置, 保持原实例的配置
             return {
                 buildNo: {
                     ...instanceBuildNo,
-                    required: templateBuildNo.required
+                    required: templateBuildNo.required,
+                    isRequiredParam: instanceBuildNo.required
                 },
                 buildNoParam: instanceBuildNoParams
             }
