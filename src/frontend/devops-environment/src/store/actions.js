@@ -70,7 +70,7 @@ const actions = {
      * 导入节点到环境
      */
     importEnvNode ({ commit }, { projectId, envHashId, params }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/addNodes`, params).then(response => {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/addNodesNew`, params).then(response => {
             return response
         })
     },

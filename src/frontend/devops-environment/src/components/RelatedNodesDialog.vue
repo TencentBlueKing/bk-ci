@@ -27,129 +27,173 @@
                         <bk-radio value="dynamic">{{ $t('environment.dynamicRelated') }}</bk-radio>
                     </bk-radio-group>
                 </div>
-
-                <bk-input
-                    v-model="searchKeyword"
-                    placeholder="搜索节点"
-                    right-icon="bk-icon icon-search"
-                    @enter="handleSearch"
-                    clearable
-                />
-
-                <div class="node-list-section">
-                    <!-- 顶部操作栏 -->
-                    <div class="list-header">
-                        <bk-button
-                            text
-                            class="btn-text"
-                            size="small"
-                            @click="handleToggleSelectAll"
-                        >
-                            全选 ({{ nodeList.length }})
-                        </bk-button>
-                        <bk-button
-                            text
-                            class="btn-text"
-                            size="small"
-                            @click="handleClearSelection"
-                        >
-                            清空
-                        </bk-button>
-                    </div>
-
-                    <!-- 节点列表 -->
+                <template v-if="relatedType === RELATED_TYPE.STATIC">
+                    <bk-input
+                        v-model="searchKeyword"
+                        :placeholder="$t('environment.searchNodePlaceholder')"
+                        right-icon="bk-icon icon-search"
+                        @enter="handleSearch"
+                        @clear="handleSearch"
+                        clearable
+                    />
+    
                     <div
-                        ref="nodeListContainer"
-                        class="node-list-container"
-                        @scroll="handleScroll"
+                        class="node-list-section"
+                        v-bkloading="{ isLoading }"
                     >
+                        <!-- 顶部操作栏 -->
                         <div
-                            v-for="node in displayNodeList"
-                            :key="node.id"
-                            class="node-item"
-                            @click="handleNodeClick(node)"
+                            v-if="nodeList.length"
+                            class="list-header"
                         >
-                            <bk-checkbox
-                                :value="isNodeSelected(node.id)"
-                            />
-                            <div class="node-content">
-                                <div class="node-main-info">
-                                    <span class="node-name">{{ node.name }}</span>
-                                    <span
-                                        class="node-status"
-                                        :class="`status-${node.status?.toLowerCase()}`"
-                                    >
-                                        <i class="bk-icon icon-circle"></i>
-                                        {{ node.statusText || '正常' }}
-                                    </span>
-                                </div>
-                                <div class="node-sub-info">
-                                    <span class="node-ip">{{ node.ip }}</span>
-                                    <span
-                                        v-if="node.agentId"
-                                        class="node-agent"
-                                    >{{ node.agentId }}</span>
+                            <bk-button
+                                text
+                                class="btn-text"
+                                size="small"
+                                @click="handleToggleSelectAll"
+                            >
+                                {{ $t('environment.selectAll') }} ({{ nodeList.length }})
+                            </bk-button>
+                            <bk-button
+                                text
+                                class="btn-text"
+                                size="small"
+                                @click="handleClearSelection"
+                            >
+                                {{ $t('environment.clear') }}
+                            </bk-button>
+                        </div>
+    
+                        <!-- 节点列表 -->
+                        <div
+                            class="node-list-container"
+                            @scroll="handleScroll"
+                        >
+                            <div
+                                v-for="node in nodeList"
+                                :key="node.nodeHashId"
+                                class="node-item"
+                                @click="handleNodeClick(node)"
+                            >
+                                <bk-checkbox
+                                    @change="handleNodeClick(node)"
+                                    :value="isNodeSelected(node.nodeHashId)"
+                                />
+                                <div class="node-content">
+                                    <div class="node-main-info">
+                                        <span class="node-name">{{ node.displayName }}</span>
+                                        <!-- <span
+                                            class="node-status"
+                                            :class="`status-${node.status?.toLowerCase()}`"
+                                        >
+                                            <i class="bk-icon icon-circle"></i>
+                                            {{ node.statusText || '正常' }}
+                                        </span> -->
+                                    </div>
+                                    <div class="node-sub-info">
+                                        <span class="node-ip">{{ node.ip }}</span>
+                                        <span
+                                            v-if="node.agentId"
+                                            class="node-agent"
+                                        >
+                                            {{ node.agentId }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- 加载更多 -->
-                        <div
-                            v-if="hasMore"
-                            class="loading-more"
-                        >
-                            <bk-loading
-                                :loading="isLoadingMore"
-                                size="small"
+    
+                            <!-- 加载更多 -->
+                            <div
+                                v-if="hasMore"
+                                class="loading-more"
                             >
-                                {{ isLoadingMore ? '加载中...' : '滚动加载更多' }}
-                            </bk-loading>
-                        </div>
-
-                        <!-- 无更多数据 -->
-                        <div
-                            v-if="!hasMore && displayNodeList.length > 0"
-                            class="no-more"
-                        >
-                            没有更多数据了
-                        </div>
-
-                        <!-- 空状态 -->
-                        <div
-                            v-if="displayNodeList.length === 0 && !isLoading"
-                            class="empty-state"
-                        >
-                            <i class="bk-icon icon-empty"></i>
-                            <p>暂无节点数据</p>
+                                <bk-loading
+                                    :loading="isLoadingMore"
+                                    size="small"
+                                >
+                                    {{ $t('environment.loadingTitle') }}
+                                </bk-loading>
+                            </div>
+    
+                            <!-- 无更多数据 -->
+                            <div
+                                v-if="!hasMore && nodeList.length > 0"
+                                class="no-more"
+                            >
+                                {{ $t('environment.noMore') }}
+                            </div>
+    
+                            <!-- 空状态 -->
+                            <div
+                                v-if="nodeList.length === 0 && !isLoading"
+                                class="empty-state"
+                            >
+                                <i class="bk-icon icon-empty"></i>
+                                <p>{{ $t('environment.noData') }}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </template>
+                <template v-else>
+                    todo
+                </template>
             </div>
 
             <!-- 右侧预览区域 -->
             <div class="right-section">
                 <div class="preview-header">
-                    <span class="title">结果预览</span>
+                    <span class="title">{{ $t('environment.previewResult') }}</span>
                 </div>
-                
                 <div class="preview-stats">
-                    <span>共 <span class="count total-count">{{ totalCount }}</span> 个，</span>
-                    <span>新增 <span class="count new-count">{{ newCount }}</span> 个，</span>
-                    <span>移除 <span class="count remove-count">{{ removeCount }}</span> 个</span>
+                    <i18n path="environment.totalItem">
+                        <span class="count total-count">{{ totalCount }}</span>
+                    </i18n>
+                    <i18n path="environment.newItem">
+                        <span class="count new-count">{{ newCount }}</span>
+                    </i18n>
+                    <i18n path="environment.removeItem">
+                        <span class="count remove-count">{{ removeCount }}</span>
+                    </i18n>
                 </div>
 
                 <div class="preview-content">
                     <div
-                        v-if="selectedNodesList.length > 0"
+                        v-if="selectedNodesList.length"
                         class="selected-nodes"
                     >
                         <div
                             v-for="node in selectedNodesList"
-                            :key="node.id"
+                            :key="node.nodeHashId"
                             class="selected-node-item"
                         >
-                            <span class="node-name">{{ node.name }}</span>
-                            <span class="node-group">{{ node.group }}</span>
+                            <div class="node-info">
+                                <div class="node-name">
+                                    {{ node.displayName }}
+                                    <bk-tag
+                                        v-if="node.isNew && !node.isDelete"
+                                        theme="success"
+                                        size="small"
+                                    >
+                                        {{ $t('environment.new') }}
+                                    </bk-tag>
+                                    <bk-tag
+                                        v-if="node.isDelete"
+                                        theme="danger"
+                                        size="small"
+                                    >
+                                        {{ $t('environment.remove') }}
+                                    </bk-tag>
+                                </div>
+                                <div class="node-details">
+                                    <span class="node-ip">{{ node.ip }}</span>
+                                    <span
+                                        v-if="node.agentId"
+                                        class="node-agent"
+                                    >
+                                        {{ node.agentId }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -157,8 +201,13 @@
                         v-else
                         class="empty-state"
                     >
-                        <i class="bk-icon icon-empty"></i>
-                        <p>暂无选择的节点</p>
+                        <Logo
+                            name="empty"
+                            size="60"
+                        />
+                        <p class="mt20">
+                            {{ relatedType === RELATED_TYPE.STATIC ? $t('environment.noSelectNode') : $t('environment.noSetLabel') }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -170,107 +219,144 @@
         >
             <bk-button
                 theme="primary"
+                :loading="isSaveLoading"
                 @click="handleSave"
             >
-                保存
+                {{ $t('environment.save') }}
             </bk-button>
-            <bk-button @click="handelCancel">取消</bk-button>
+            <bk-button
+                :loading="isSaveLoading"
+                @click="handleCloseDialog"
+            >
+                {{ $t('environment.cancel') }}
+            </bk-button>
         </div>
     </bk-dialog>
 </template>
 
 <script>
-    import { ref, computed, onMounted, nextTick } from 'vue'
+    import { ref, computed, onMounted, watch } from 'vue'
+    import Logo from '@/components/Logo'
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import usePagination from '@/hooks/usePagination'
     export default {
         name: 'RelatedNodes',
-        setup () {
+        components: {
+            Logo
+        },
+        props: {
+            currentNodeList: {
+                type: Array,
+                default: () => []
+            }
+        },
+        emits: ['save-success'],
+        setup (props, { emit }) {
             const {
                 isShow,
+                nodeList,
                 isLoading,
                 relatedType,
-                searchKeyword,
-                selectedNodesList,
-                handleSearch,
-                handleSave,
-                handelCancel,
-                RELATED_TYPE
+                RELATED_TYPE,
+                relateNodes,
+                requestNodeList,
+                handleCloseDialog
             } = useRelatedNodes()
+
             const {
                 currentEnv
             } = useEnvDetail()
 
-            // 节点列表容器引用
-            const nodeListContainer = ref(null)
-            
-            // 分页相关
-            const currentPage = ref(1)
-            const pageSize = ref(20)
-            const isLoadingMore = ref(false)
-            const hasMore = ref(true)
+            const {
+                pagination,
+                pageChange,
+            } = usePagination({
+                limit: 50,
+                current: 1
+            })
 
+            const searchKeyword = ref('')
             const dialogConfigs = {
                 top: '120'
             }
+            const isSaveLoading = ref(false)
+            const selectedNodesList = ref([])
+            // 保存两种模式下各自选择的节点
+            const staticModeSelectedNodes = ref([])
+            const dynamicModeSelectedNodes = ref([])
 
-            // 模拟完整节点数据（实际应该从接口获取）
-            const nodeList = ref([
-                { id: 'node-1', name: 'devops1', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-2', name: 'devops2', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-3', name: 'bkdevops-dev-console-1', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-4', name: 'bkdevops-dev-console-2', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-5', name: 'bkdevops-dev-console-3', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-6', name: 'bkdevops-dev-console-4', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-7', name: 'TENCENT64site', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-8', name: 'bkdevops-dev-console-5', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' },
-                { id: 'node-9', name: 'bkdevops-dev-console-6', ip: '9.135.88.82', agentId: 'ins-0svirhrz47yp76qu', status: 'NORMAL', statusText: '正常' }
-            ])
-
-            // 当前显示的节点列表（分页后）
-            const displayNodeList = ref([])
-
-            // 选中的节点 ID 集合
-            const selectedNodeIds = computed(() => new Set(selectedNodesList.value.map(node => node.id)))
+            const isLoadingMore = ref(false)
+            const hasMore = computed(() => {
+                return nodeList.value.length < pagination.value.count
+            })
+           
+            // 选中的节点 ID 集合（不包括已删除的）
+            const selectedNodeIds = computed(() => new Set(
+                selectedNodesList.value
+                    .filter(node => !node.isDelete)
+                    .map(node => node.nodeHashId)
+            ))
 
             // 是否全选
             const isAllSelected = computed(() => {
-                return displayNodeList.value.length > 0 && displayNodeList.value.every(node => selectedNodeIds.value.has(node.id))
+                return nodeList.value.length && nodeList.value.every(node => selectedNodeIds.value.has(node.nodeHashId))
             })
 
-            // 是否半选状态
-            const isIndeterminate = computed(() => {
-                const selectedCount = displayNodeList.value.filter(node => selectedNodeIds.value.has(node.id)).length
-                return selectedCount > 0 && selectedCount < displayNodeList.value.length
+            // 统计数据 - 不包括已删除的节点
+            const totalCount = computed(() => selectedNodesList.value.filter(node => !node.isDelete).length)
+            
+            // 计算新增和移除的节点数量
+            const currentNodeIds = computed(() => new Set(props.currentNodeList.map(node => node.nodeHashId)))
+            
+            const newCount = computed(() => {
+                // 新增的节点 = 当前选中的节点中（未删除且不在原有节点列表中的）
+                return selectedNodesList.value.filter(node => !node.isDelete && !currentNodeIds.value.has(node.nodeHashId)).length
             })
-
-            // 统计数据
-            const totalCount = computed(() => selectedNodesList.value.length)
-            const newCount = ref(0)
-            const removeCount = ref(0)
+            
+            const removeCount = computed(() => {
+                // 移除的节点 = 标记为删除的节点数量
+                return selectedNodesList.value.filter(node => node.isDelete).length
+            })
 
             // 判断节点是否被选中
-            const isNodeSelected = (nodeId) => {
-                return selectedNodeIds.value.has(nodeId)
+            const isNodeSelected = (nodeHashId) => {
+                console.log(selectedNodeIds.value, 1)
+                return selectedNodeIds.value.has(nodeHashId)
             }
-
-            // 处理节点点击
+            const handleSearch = (keyword) => {
+                searchKeyword.value = keyword
+                pageChange(1)
+                fetchNodeList()
+            }
             const handleNodeClick = (node) => {
-                const isSelected = isNodeSelected(node.id)
-                if (isSelected) {
-                    // 移除节点
-                    const index = selectedNodesList.value.findIndex(item => item.id === node.id)
-                    if (index > -1) {
-                        selectedNodesList.value.splice(index, 1)
+                const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
+                
+                if (index > -1) {
+                    const existingNode = selectedNodesList.value[index]
+                    // 节点已存在
+                    if (existingNode.isDelete) {
+                        // 如果是被删除状态，恢复节点
+                        selectedNodesList.value.splice(index, 1, { ...existingNode, isDelete: false })
+                    } else {
+                        // 如果是选中状态，标记为删除
+                        // 检查是否是原有节点
+                        const isOriginalNode = currentNodeIds.value.has(node.nodeHashId)
+                        if (isOriginalNode) {
+                            // 原有节点标记为删除 - 使用对象替换确保响应式
+                            selectedNodesList.value.splice(index, 1, { ...existingNode, isDelete: true })
+                        } else {
+                            // 新增的节点直接移除
+                            selectedNodesList.value.splice(index, 1)
+                        }
                     }
                 } else {
-                    // 添加节点
+                    // 添加新节点，判断是否是新增节点
+                    const isOriginalNode = currentNodeIds.value.has(node.nodeHashId)
                     selectedNodesList.value.push({
-                        id: node.id,
-                        name: node.name,
-                        ip: node.ip,
-                        agentId: node.agentId,
-                        status: node.status
+                        ...node,
+                        isDelete: false,
+                        isNew: !isOriginalNode  // 不在原有列表中的标记为新增
                     })
                 }
             }
@@ -278,103 +364,195 @@
             // 切换全选/取消全选
             const handleToggleSelectAll = () => {
                 if (isAllSelected.value) {
-                    // 如果已经全选，则取消全选当前显示的节点
-                    const displayNodeIds = new Set(displayNodeList.value.map(n => n.id))
-                    selectedNodesList.value = selectedNodesList.value.filter(
-                        item => !displayNodeIds.has(item.id)
-                    )
+                    // 如果已经全选，则取消全选当前页的节点
+                    nodeList.value.forEach(node => {
+                        const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
+                        if (index > -1) {
+                            const existingNode = selectedNodesList.value[index]
+                            if (!existingNode.isDelete) {
+                                // 检查是否是原有节点
+                                const isOriginalNode = currentNodeIds.value.has(node.nodeHashId)
+                                if (isOriginalNode) {
+                                    // 原有节点标记为删除 - 使用对象替换确保响应式
+                                    selectedNodesList.value.splice(index, 1, { ...existingNode, isDelete: true })
+                                } else {
+                                    // 新增的节点直接移除
+                                    selectedNodesList.value.splice(index, 1)
+                                }
+                            }
+                        }
+                    })
                 } else {
-                    // 全选当前显示的节点
-                    displayNodeList.value.forEach(node => {
-                        if (!selectedNodesList.value.find(item => item.id === node.id)) {
+                    // 全选当前页的节点
+                    nodeList.value.forEach(node => {
+                        const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
+                        if (index > -1) {
+                            const existingNode = selectedNodesList.value[index]
+                            // 如果节点已存在且被删除，恢复它 - 使用对象替换确保响应式
+                            if (existingNode.isDelete) {
+                                selectedNodesList.value.splice(index, 1, { ...existingNode, isDelete: false })
+                            }
+                        } else {
+                            // 添加新节点，判断是否是新增节点
+                            const isOriginalNode = currentNodeIds.value.has(node.nodeHashId)
                             selectedNodesList.value.push({
-                                id: node.id,
-                                name: node.name,
-                                ip: node.ip,
-                                agentId: node.agentId,
-                                status: node.status
+                                ...node,
+                                isDelete: false,
+                                isNew: !isOriginalNode
                             })
                         }
                     })
                 }
             }
 
+
+            // 获取节点列表
+            const fetchNodeList = async () => {
+                try {
+                    const res = await requestNodeList({
+                        page: pagination.value.current,
+                        pageSize: pagination.value.limit,
+                        keywords: searchKeyword.value
+                    })
+                    pagination.value.count = res.count
+                    pageChange(pagination.value.current + 1)
+                } catch (error) {
+                    console.error(error)
+                }
+            }
+
             // 清空选择
             const handleClearSelection = () => {
-                selectedNodesList.value = []
+                // 原有的节点标记为删除，新增的节点直接移除
+                selectedNodesList.value = selectedNodesList.value
+                    .filter(node => currentNodeIds.value.has(node.nodeHashId))
+                    .map(node => ({ ...node, isDelete: true }))
             }
 
             // 加载更多数据
             const loadMore = async () => {
                 if (isLoadingMore.value || !hasMore.value) return
-
-                isLoadingMore.value = true
                 
-                // 模拟加载延迟
-                await new Promise(resolve => setTimeout(resolve, 500))
-
-                const startIndex = (currentPage.value - 1) * pageSize.value
-                const endIndex = startIndex + pageSize.value
-                const newNodes = nodeList.value.slice(startIndex, endIndex)
-
-                if (newNodes.length > 0) {
-                    displayNodeList.value.push(...newNodes)
-                    currentPage.value++
-                } else {
-                    hasMore.value = false
+                try {
+                    isLoadingMore.value = true
+                    await fetchNodeList()
+                } finally {
+                    isLoadingMore.value = false
                 }
-
-                isLoadingMore.value = false
             }
 
             // 滚动事件处理
             const handleScroll = (e) => {
                 const { scrollTop, scrollHeight, clientHeight } = e.target
-                
-                // 距离底部 50px 时触发加载
                 if (scrollHeight - scrollTop - clientHeight < 50) {
                     loadMore()
                 }
             }
 
-            // 初始加载
-            const initNodeList = async () => {
-                displayNodeList.value = []
-                currentPage.value = 1
-                hasMore.value = true
-                await loadMore()
+            const handleSave = async () => {
+                try {
+                    isSaveLoading.value = true
+                    const params = {
+                        ...(relatedType.value === RELATED_TYPE.STATIC
+                            ? {
+                                nodeHashIds: selectedNodesList.value
+                                    .filter(node => !node.isDelete)
+                                    .map(node => node.nodeHashId)
+                            }
+                            : {
+                                tags: selectedNodesList.value
+                            }
+                        )
+                    }
+
+                    await relateNodes(params)
+                    
+                    emit('save-success')
+                    handleCloseDialog()
+                } catch (e) {
+                    console.error(e)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: e.message || e
+                    })
+                } finally {
+                    isSaveLoading.value = false
+                }
             }
 
-            onMounted(() => {
-                initNodeList()
+            const initData = async () => {
+                if (relatedType.value === RELATED_TYPE.STATIC) {
+                    // 静态模式：加载节点列表
+                    pageChange(1)
+                    searchKeyword.value = ''
+                    await fetchNodeList()
+                    // 恢复静态模式下的选择
+                    selectedNodesList.value = [...staticModeSelectedNodes.value]
+                } else {
+                    // 动态模式：恢复动态模式下的选择
+                    selectedNodesList.value = [...dynamicModeSelectedNodes.value]
+                }
+            }
+
+            // 监听弹窗显示状态,显示时初始化数据
+            watch(() => isShow.value, async (newVal) => {
+                if (newVal) {
+                    // 弹窗打开时，从 currentNodeList 初始化两种模式的数据
+                    if (props.currentNodeList?.length) {
+                        staticModeSelectedNodes.value = props.currentNodeList.map(node => ({ ...node }))
+                        dynamicModeSelectedNodes.value = props.currentNodeList.map(node => ({ ...node }))
+                    }
+                    initData()
+                } else {
+                    // 弹窗关闭时清空临时数据
+                    selectedNodesList.value = []
+                    staticModeSelectedNodes.value = []
+                    dynamicModeSelectedNodes.value = []
+                }
+            })
+
+            watch(() => relatedType.value, async (val) => {
+                // 切换模式前，保存当前模式的选择
+                if (val === RELATED_TYPE.STATIC) {
+                    // 切换到静态模式前，保存动态模式的选择
+                    dynamicModeSelectedNodes.value = [...selectedNodesList.value]
+                } else {
+                    // 切换到动态模式前，保存静态模式的选择
+                    staticModeSelectedNodes.value = [...selectedNodesList.value]
+                }
+                // 加载新模式的数据
+                // initData()
             })
 
             return {
+                // data
                 isShow,
                 isLoading,
                 relatedType,
                 searchKeyword,
+                currentEnv,
                 selectedNodesList,
                 nodeList,
-                displayNodeList,
-                nodeListContainer,
+                pagination,
                 totalCount,
                 newCount,
                 removeCount,
-                currentEnv,
                 dialogConfigs,
                 isAllSelected,
-                isIndeterminate,
                 isLoadingMore,
                 hasMore,
                 isNodeSelected,
+                RELATED_TYPE,
+                isSaveLoading,
+
+                // function
                 handleNodeClick,
                 handleToggleSelectAll,
                 handleClearSelection,
                 handleScroll,
                 handleSearch,
-                handleSave,
-                handelCancel
+                handleCloseDialog,
+                handleSave
             }
         }
     }
@@ -469,6 +647,7 @@
                                 margin-bottom: 6px;
                                 
                                 .node-name {
+                                    line-height: 22px;
                                     font-size: 14px;
                                     color: #313238;
                                     font-weight: normal;
@@ -508,7 +687,7 @@
                                 line-height: 1.5;
                                 
                                 .node-ip {
-                                    margin-right: 12px;
+                                    margin-right: 8px;
                                 }
                                 
                                 .node-agent {
@@ -518,7 +697,7 @@
                                     
                                     &::before {
                                         content: '|';
-                                        margin-right: 12px;
+                                        margin-right: 8px;
                                         color: #DCDEE5;
                                     }
                                 }
@@ -582,7 +761,7 @@
                     font-weight: 600;
                     
                     &.total-count {
-                        color: #313238;
+                        color: #3a84ff;
                     }
                     
                     &.new-count {
@@ -604,27 +783,43 @@
                     overflow: auto;
                     
                     .selected-node-item {
-                        display: flex;
-                        align-items: center;
-                        padding: 8px 12px;
+                        padding: 0 16px;
                         margin-bottom: 8px;
                         background: white;
-                        border-radius: 4px;
-                        border: 1px solid #DCDEE5;
-                        
-                        .node-name {
-                            flex: 1;
-                            font-size: 14px;
-                            color: #313238;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
-                        
-                        .node-group {
-                            font-size: 12px;
-                            color: #979BA5;
-                            margin-left: 8px;
+                        border-radius: 2px;
+                        transition: opacity 0.2s;
+                        .node-info {
+                            .node-name {
+                                height: 32px;
+                                font-size: 14px;
+                                color: #313238;
+                                margin-bottom: 2px;
+                                word-break: break-all;
+                                line-height: 1.5;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            }
+                            
+                            .node-details {
+                                padding-bottom: 4px;
+                                align-items: center;
+                                font-size: 12px;
+                                color: #979BA5;
+                                line-height: 1.5;
+                                
+                                .node-agent {
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                    margin-left: 8px;
+                                    &::before {
+                                        content: '|';
+                                        margin-right: 8px;
+                                        color: #DCDEE5;
+                                    }
+                                }
+                            }
                         }
                     }
                 }

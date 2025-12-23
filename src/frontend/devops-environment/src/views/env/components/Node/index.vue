@@ -41,9 +41,10 @@
                 type="selection"
                 fixed="left"
                 width="40"
-            ></bk-table-column>
+            />
             <bk-table-column
                 :label="$t('environment.nodeInfo.hostName')"
+                fixed="left"
                 prop="displayName"
                 width="280"
             >
@@ -148,7 +149,10 @@
                 </template>
             </bk-table-column>
         </bk-table>
-        <related-nodes-dialog />
+        <related-nodes-dialog
+            :current-node-list="envNodeList"
+            @save-success="handleRelateSuccess"
+        />
     </div>
 </template>
 
@@ -175,7 +179,7 @@
                 resetPagination,
                 pageChange,
                 pageLimitChange,
-                updatePagination
+                updateCount
             } = usePagination()
             const  {
                 handleShowRelatedNodes
@@ -285,8 +289,19 @@
             }
 
             const handleShowAddNodesDialog = () => {
-                handleShowRelatedNodes(envNodeList.value)
+                handleShowRelatedNodes()
             }
+            
+            // 关联节点保存成功后的回调
+            const handleRelateSuccess = () => {
+                resetPage()
+                fetchData()
+                proxy.$bkMessage({
+                    theme: 'success',
+                    message: proxy.$t('environment.successfullySaved')
+                })
+            }
+            
             const handleSelectionChange = ((list) => {
                 selectedNodesList.value = list
             })
@@ -296,11 +311,7 @@
                 try {
                     isLoading.value = true
                     const res = await fetchEnvNodeList(searchQuery.value)
-                    updatePagination({
-                        count: res.count,
-                        page: res.page,
-                        pageSize: res.pageSize
-                    })
+                    updateCount(res.count)
                 } catch (err) {
                     console.error('获取节点列表失败:', err)
                 } finally {
@@ -390,6 +401,7 @@
                 handlePageChange,
                 handlePageLimitChange,
                 handleShowAddNodesDialog,
+                handleRelateSuccess,
                 handleSelectionChange,
                 handleBatchRemove,
                 handleRemoveNode
