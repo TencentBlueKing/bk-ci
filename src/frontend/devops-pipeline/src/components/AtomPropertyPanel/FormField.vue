@@ -413,7 +413,7 @@
                 justify-content: space-around;
                 margin-right: 8px;
                 max-width: 100px;
-                min-width: 70px;
+                min-width: 80px;
                 overflow: hidden;
                 padding: 4px 8px;
                 text-align: center;

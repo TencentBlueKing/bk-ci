@@ -7,20 +7,34 @@
             @toggleConstraint="toggleBuildNoConstraint"
         >
             <template #constraint-title="{ props: { isOverride } }">
-                <atom-checkbox
-                    :disabled="disabled"
-                    :text="$t('newui.enableVersions')"
-                    :value="showVersions"
-                    :handle-change="(name, value) => toggleVersions(name, value)"
-                />
-                <atom-checkbox
-                    v-if="showVersions"
-                    :disabled="disabled && !isOverride"
-                    name="required"
-                    :text="$t('newui.isBuildParam')"
-                    :value="execuVisible"
-                    :handle-change="handleBuildNoChange"
-                />
+                <div class="version-config-options">
+                    <atom-checkbox
+                        :disabled="disabled"
+                        :text="$t('newui.enableVersions')"
+                        :value="showVersions"
+                        :handle-change="(name, value) => toggleVersions(name, value)"
+                    />
+                    <div>
+                        <atom-checkbox
+                            v-if="showVersions"
+                            :disabled="disabled && !isOverride"
+                            name="required"
+                            :text="$t('newui.isBuildParam')"
+                            :value="isRequired"
+                            :handle-change="handleBuildNoChange"
+                        />
+                        <atom-checkbox
+                            v-if="!!templateId && showVersions && isRequired"
+                            name="asInstanceInput"
+                            class="ml10"
+                            :disabled="disabled && !isOverride"
+                            :desc="$t('editPage.instanceRequiredTips')"
+                            :text="$t('editPage.instanceRequired')"
+                            :value="asInstanceInput"
+                            :handle-change="handleBuildNoChange"
+                        />
+                    </div>
+                </div>
             </template>
             <template #constraint-area="{ props: { isOverride } }">
                 <bk-button
@@ -326,7 +340,6 @@
             return {
                 CLASSIFY_ENUM,
                 showVersions: false,
-                isRequired: false,
                 showEditVersion: false,
                 renderBuildNo: {},
                 editBuildNo: {},
@@ -380,14 +393,20 @@
             buildNo () {
                 return this.container?.buildNo || {}
             },
-            execuVisible () {
-                return this.buildNo && this.buildNo.required ? this.buildNo.required : false
+            isRequired () {
+                return !!this.buildNo?.required
+            },
+            asInstanceInput () {
+                return !!this.buildNo?.asInstanceInput
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
             },
             resetBuildNo () {
                 return this.buildNo.buildNo + 1
+            },
+            templateId () {
+                return this.$route.params.templateId
             }
         },
         watch: {
@@ -411,7 +430,6 @@
             bkVarWrapper,
             ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
             toggleBuildNoConstraint (isOverride) {
-                console.log(isOverride, 'toggleBuildNoConstraint')
                 this.overrideConstraint = isOverride
                 this.$nextTick(() => {
                     if (!isOverride) {
@@ -548,6 +566,11 @@
         & > :first-child {
             flex: 1;
         }
+    }
+    .version-config-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
     
     .version-list {
