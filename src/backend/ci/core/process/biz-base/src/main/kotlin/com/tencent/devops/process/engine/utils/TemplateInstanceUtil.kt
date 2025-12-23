@@ -515,31 +515,12 @@ object TemplateInstanceUtil {
         // 如果模版关闭推荐版本号, 则实例也应该关闭
         if (templateBuildNo == null || pipelineBuildNo == null) return null
         val overrideBuildNo = overrideTemplateField?.overrideBuildNo() == true
-        // 模版的入参与实例的入参不一致,需要yaml中声明
-        val requireChange = pipelineBuildNo.required != templateBuildNo.required
 
-        val buildNo = if (overrideBuildNo) {
-            pipelineBuildNo.buildNo
-        } else {
-            null
-        }
-        // 只要实例与模版的入参不一致,yaml都需要声明allowModifyAtStartUp
-        val allowModifyAtStartUp = if (requireChange) {
-            pipelineBuildNo.required
-        } else {
-            null
-        }
-        if (buildNo == null && allowModifyAtStartUp == null) {
-            return null
-        }
-        val recommendedVersion = TemplateInstanceRecommendedVersion()
-        if (buildNo != null) {
-            recommendedVersion.buildNo = buildNo
-        }
-        if (allowModifyAtStartUp != null) {
-            recommendedVersion.allowModifyAtStartup = allowModifyAtStartUp
-        }
+        val recommendedVersion = TemplateInstanceRecommendedVersion(
+            allowModifyAtStartup = pipelineBuildNo.required
+        )
         if (overrideBuildNo) {
+            recommendedVersion.buildNo = pipelineBuildNo.buildNo
             pipelineParams.forEach { param ->
                 when (param.id) {
                     MAJORVERSION -> recommendedVersion.major = param.defaultValue.toString().toIntOrNull() ?: 0
@@ -573,8 +554,6 @@ object TemplateInstanceUtil {
             val pipelineParam = pipelineParamMap[templateParam.id] ?: return@forEach
             // 是否覆盖模版的值
             val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
-            // 模版的入参与实例的入参不一致,需要在yaml化中声明
-            val requireChange = templateParam.required != pipelineParam.required
             // 不跟随模版,则使用流水线的值,需要在yaml中声明
             val defaultValue = if (overrideParam) {
                 when (templateParam.type) {
@@ -584,20 +563,10 @@ object TemplateInstanceUtil {
             } else {
                 null
             }
-            // 只要实例与模版的入参不一致,yaml都需要声明allowModifyAtStartUp
-            val allowModifyAtStartUp = if (requireChange) {
-                pipelineParam.required
-            } else {
-                null
-            }
-            // 如果值和入参都为空,说明入参和值都跟随模版,yaml不需要声明
-            if (defaultValue == null && allowModifyAtStartUp == null) {
-                return@forEach
-            }
             val templateVariable = TemplateVariable(
                 key = templateParam.id,
                 value = defaultValue,
-                allowModifyAtStartup = allowModifyAtStartUp
+                allowModifyAtStartup = pipelineParam.required
             )
             templateVariables.add(templateVariable)
         }
