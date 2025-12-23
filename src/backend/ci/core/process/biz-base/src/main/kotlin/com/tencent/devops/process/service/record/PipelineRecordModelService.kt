@@ -247,12 +247,11 @@ class PipelineRecordModelService @Autowired constructor(
 
     /**
      * 处理容器任务逻辑
-     * 
      * @param stageRecordTasks 当前阶段的构建记录任务列表，包含所有任务的详细信息
      * @param buildRecordContainer 构建记录容器对象，表示当前处理的容器
      * @param containerVarMap 容器变量映射，用于存储容器的环境变量和配置信息
      * @param originContainerBaseMap 原始容器基础映射，包含容器的初始配置
-     * @param mutableContainerBaseMap 可变的容器基础映射，用于存储处理后的容器信息
+     * @param mutableContainerBaseMap 可变容器基础映射，用于存储处理后的容器信息
      * @param matrixTaskFlag 矩阵任务标志，标识是否为矩阵任务（默认为false）
      */
     private fun handleContainerRecordTask(
