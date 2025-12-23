@@ -30,6 +30,9 @@ class MetricsQueryService @Autowired constructor(
     @Value("\${metrics.monitor.table:}")
     val monitorTable: String = ""
 
+    @Value("\${metrics.monitor.tableAgent:}")
+    val monitorTableAgent: String = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsQueryService::class.java)
     }
@@ -49,9 +52,9 @@ class MetricsQueryService @Autowired constructor(
         val promql = requestParams["promql"] as? String
             ?: throw IllegalArgumentException("promql参数不能为空")
 
-        // 安全校验：检测promql必须包含{{table}}占位符
-        if (!promql.contains("{{table}}")) {
-            throw IllegalArgumentException("promql必须包含{{table}}占位符")
+        // 安全校验：检测promql必须包含{{table}}或{{table_agent}}占位符
+        if (!promql.contains("{{table}}") && !promql.contains("{{table_agent}}")) {
+            throw IllegalArgumentException("promql必须包含{{table}}或{{table_agent}}占位符")
         }
 
         // 安全校验：检测是否包含危险字符和模式
@@ -122,6 +125,9 @@ class MetricsQueryService @Autowired constructor(
         // 替换{{table}}占位符
         result = result.replace("{{table}}", monitorTable)
 
+        // 替换{{table_agent}}占位符
+        result = result.replace("{{table_agent}}", monitorTableAgent)
+
         // 替换{{projectId}}占位符
         result = result.replace("{{projectId}}", projectId)
 
@@ -134,7 +140,7 @@ class MetricsQueryService @Autowired constructor(
      * 校验是否包含危险字符和模式（防止注入攻击）
      * @param promql 原始promql
      */
-    private fun validateNoMaliciousPatterns(promql: String) {
+    fun validateNoMaliciousPatterns(promql: String) {
         // 危险模式列表
         val dangerousPatterns = listOf(
             // 防止逻辑运算符绕过
@@ -147,9 +153,7 @@ class MetricsQueryService @Autowired constructor(
             Regex(""";"""),
             // 防止命令注入
             Regex("""\$\{.*\}"""),
-            Regex("""`.*`"""),
-            // 防止访问其他表（不通过占位符）
-            Regex("""[a-zA-Z_][a-zA-Z0-9_]*:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+:[a-zA-Z0-9_]+\{""")
+            Regex("""`.*`""")
         )
 
         for (pattern in dangerousPatterns) {
@@ -159,8 +163,16 @@ class MetricsQueryService @Autowired constructor(
             }
         }
 
+        // 防止访问其他表（不通过占位符）：使用正则检测第一个冒号前必须紧跟table占位符
+        // 匹配模式：查找第一个冒号，检查其前面是否紧跟{{table}}或{{table_agent}}
+        val tableAccessPattern = Regex("""^[^:]*\{\{(table|table_agent)\}\}:""")
+        if (promql.contains(':') && !tableAccessPattern.containsMatchIn(promql)) {
+            logger.warn("检测到非法表名访问，第一个冒号前未紧跟table占位符: promql=$promql")
+            throw IllegalArgumentException("promql必须通过{{table}}:或{{table_agent}}:格式访问表")
+        }
+
         // 检查是否只包含允许的占位符
-        val allowedPlaceholders = setOf("{{table}}", "{{projectId}}")
+        val allowedPlaceholders = setOf("{{table}}", "{{table_agent}}", "{{projectId}}")
         val placeholderPattern = Regex("""\{\{[^}]+\}\}""")
         val foundPlaceholders = placeholderPattern.findAll(promql).map { it.value }.toSet()
         val invalidPlaceholders = foundPlaceholders - allowedPlaceholders
@@ -176,10 +188,13 @@ class MetricsQueryService @Autowired constructor(
      * @param replacedPromql 替换后的promql
      * @param projectId 项目ID
      */
-    private fun validateReplacedPromql(replacedPromql: String, projectId: String) {
-        // 确保替换后的promql包含配置的表名
-        if (!replacedPromql.contains(monitorTable)) {
-            logger.error("替换后的promql不包含配置的表名: table=${monitorTable}, promql=$replacedPromql")
+    fun validateReplacedPromql(replacedPromql: String, projectId: String) {
+        // 确保替换后的promql包含配置的表名（至少包含一个）
+        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent)) {
+            logger.error(
+                "替换后的promql不包含配置的表名: table=${monitorTable}, tableAgent=${monitorTableAgent}, " +
+                    "promql=$replacedPromql"
+            )
             throw IllegalArgumentException("promql替换失败")
         }
 
