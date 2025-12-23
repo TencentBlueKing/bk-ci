@@ -273,6 +273,8 @@ class PublicVarService @Autowired constructor(
             positionInfo?.let {
                 val latestGroupVarNames = latestGroupVars.map { it.id }.toSet()
                 val savedGroupVarNames = positionInfo.map { it.varName }.toSet()
+                logger.info("handleModelParams " +
+                        "latestGroupVarNames: $latestGroupVarNames|savedGroupVarNames: $savedGroupVarNames")
                 // 对比版本差异
                 val diffResult = compareVarGroupVersions(savedGroupVarNames, latestGroupVarNames)
                 // 处理变量差异并获取已移除的变量
@@ -286,6 +288,7 @@ class PublicVarService @Autowired constructor(
                 // 将已移除的变量设置到 variables 中
                 varGroup.variables = removedVars
             }
+
         }
         model.publicVarGroups = publicVarGroups
     }
