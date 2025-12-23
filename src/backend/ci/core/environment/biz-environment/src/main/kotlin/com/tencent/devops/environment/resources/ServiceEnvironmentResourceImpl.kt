@@ -40,6 +40,7 @@ import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.EnvAddNodesData
 import com.tencent.devops.environment.pojo.EnvCreateInfo
+import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -258,5 +259,9 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (projectId.isEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
         }
+    }
+
+    override fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): Result<List<EnvData>> {
+        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName))
     }
 }
