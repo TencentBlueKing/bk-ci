@@ -24,7 +24,7 @@
                             :handle-change="handleBuildNoChange"
                         />
                         <atom-checkbox
-                            v-if="!!templateId && showVersions"
+                            v-if="!!templateId && showVersions && isRequired"
                             name="asInstanceInput"
                             class="ml10"
                             :disabled="disabled && !isOverride"
