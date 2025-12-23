@@ -26,14 +26,20 @@ function _M:get_ticket(bk_ticket)
     --- 命中缓存
     if user_cache_value then
         local cached_result = json.decode(user_cache_value)
-        if cached_result and cached_result.code == 0 then
+        if cached_result == nil then
+            -- JSON解析失败，删除损坏的缓存，继续走正常请求流程
+            ngx.log(ngx.WARN, "failed to decode cached value, removing cache")
+            user_cache:delete(bk_ticket)
+        elseif cached_result.code == 0 then
             return cached_result.data
+        else
+            -- 缓存的是鉴权失败结果
+            ngx.log(ngx.WARN, "cached invalid get_ticket, bk_ticket: ", bk_ticket)
+            ngx.exit(401)
+            return
         end
-        -- 缓存的是鉴权失败结果
-        ngx.log(ngx.WARN, "cached invalid get_ticket, bk_ticket: ", bk_ticket)
-        ngx.exit(401)
-        return
     end
+
 
     --- 初始化HTTP连接
     local httpc = http.new()
