@@ -195,9 +195,6 @@
         return proxy.$t('publicVar.changeFieldValueTips')
     }
     watch(() => curVarData.value, () => {
-        // if (curVarData.value?.content?.operate === OPERATE_TYPE.CREATE) {
-        //     return
-        // }
         isLoading.value = true
         Promise.all([
             fetchReferenceList('PIPELINE'),
@@ -284,7 +281,9 @@
                 params: {
                     page:1,
                     pageSize: 100,
-                    varName: curVarData.value.varName,
+                    ...(curVarData.value?.content?.operate !== OPERATE_TYPE.CREATE ? {
+                        varName: curVarData.value.varName,
+                    } : {}),
                     referType: type
                 }
             })
