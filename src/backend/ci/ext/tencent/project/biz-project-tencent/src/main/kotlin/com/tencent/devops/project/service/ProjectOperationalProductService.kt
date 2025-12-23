@@ -12,10 +12,10 @@ import com.tencent.devops.project.dao.ProjectOperationalProductDao
 import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.ICosProductVO
 import com.tencent.devops.project.pojo.ObsBaseDictDTO
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.annotation.PostConstruct
@@ -340,7 +340,8 @@ class ProjectOperationalProductService(
         }
 
         try {
-            val devopsData = DevopsDataVO(
+            val devopsData = getBkCostsProjectInfo(englishName).list.firstOrNull()
+            val devopsDataVo = DevopsDataVO(
                 devopsId = englishName,
                 devopsName = projectUpdateInfo.projectName,
                 obsProductId = projectUpdateInfo.productId,
@@ -350,7 +351,11 @@ class ProjectOperationalProductService(
                 businessManager = null,
                 isDeleted = false
             )
-            batchUpdateDevopsData(listOf(devopsData))
+            if (devopsData != null) {
+                batchUpdateDevopsData(listOf(devopsDataVo))
+            } else {
+                batchAddDevopsData(listOf(devopsDataVo))
+            }
             logger.info("syncKpiProductOnUpdate|$englishName|success|kpiCode=$kpiCode")
         } catch (e: Exception) {
             // 同步失败不阻塞项目更新流程，仅记录警告日志
