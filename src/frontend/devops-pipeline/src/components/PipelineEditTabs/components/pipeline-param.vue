@@ -279,7 +279,7 @@
                 if (!this.canEditParam || removeFlag) return
                 this.showSlider = true
                 this.editIndex = varGroupName
-                    ? this.globalParams.findIndex(item => item.varGroupName === varGroupName)
+                    ? this.globalParams.findIndex(item => item.varGroupName === varGroupName && item.id === id)
                     : this.globalParams.findIndex(item => item.id === id)
                 this.sliderEditItem = deepCopy(this.globalParams.find((item, index) => index === this.editIndex) || {})
                 this.paramType = this.sliderEditItem?.constant === true ? 'constant' : 'var'
