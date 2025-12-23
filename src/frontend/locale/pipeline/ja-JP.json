@@ -338,10 +338,6 @@
     "disableSetting": "無効設定",
     "stopWhenNewCome": "実行中のビルドをキャンセル",
     "lockGroupDesc": "この設定に基づいてグループ化されます。有効範囲は現在のプロジェクトの下のパイプラインです。慎重に設定してください。起動段階で値が確定できる変数（例：${{ci.pipeline_id}}、${{ci.branch}}、${{variables.a}}（前提として、a の値が起動時点で既に明確である場合）など）を使用することができます。",
-    "buildCancelPolicyOptions": {
-      "EXECUTE_PERMISSION": "実行権限を持つユーザーは任意のビルドをキャンセルできます",
-      "RESTRICTED": "トリガー者またはパイプライン管理権限を持つユーザーのみキャンセル可能"
-    },
     "notify": "通知",
     "auth": "権限",
     "authManage": "権限管理",
@@ -2159,12 +2155,12 @@
   "noVariablesAvailable": "利用可能な変数がありません",
   "validVariableFormat": "有効な変数形式を入力してください",
   "showStageProgress": "ステージの進捗を表示",
-  "showBuildInfo": "ビルド情報を表示",
   "switchToVarMode": "クリックして変数入力モードに切り替え",
   "closeVarMode": "クリックして変数入力モードを閉じる",
   "placeholderConstraintVar": "変数を入力してください、例: ${{var}}",
   "placeholderVar": "変数を入力してください、例: ${{var}} または ${var}",
   "selectTips": "選択してください",
   "rollbackToVersion": "バージョン {0} へのロールバック",
-  "constraintPipelineEditTips": "このパイプラインは制約モードになっており、入力パラメータのデフォルト値、通知、その他の設定を変更できます。オーケストレーションのアップグレードについては、テンプレートインスタンス化インターフェースをご覧ください。"
+  "constraintPipelineEditTips": "このパイプラインは制約モードになっており、入力パラメータのデフォルト値、通知、その他の設定を変更できます。オーケストレーションのアップグレードについては、テンプレートインスタンス化インターフェースをご覧ください。",
+  "showBuildInfo": "ビルド情報を表示"
 }
