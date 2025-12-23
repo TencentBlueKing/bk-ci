@@ -702,6 +702,7 @@ class PipelineTemplateGenerator @Autowired constructor(
             }
         }
         triggerContainer.buildNo?.let {
+            if (it.asInstanceInput != null) return@let
             // 旧构建号若勾选了[执行时显示],[默认为实例入参]= true
             if (it.required == true) {
                 it.asInstanceInput = true
