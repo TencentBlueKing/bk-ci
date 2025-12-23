@@ -29,40 +29,101 @@ package com.tencent.devops.common.stream.rabbit
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Condition
+import org.springframework.context.annotation.ConditionContext
+import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.type.AnnotatedTypeMetadata
 
 /**
  * RabbitMQ 匿名队列健康检查配置类
  *
  * 配置条件：
  * 1. 类路径中存在 SimpleMessageListenerContainer 类
- * 2. 配置属性 spring.rabbitmq.listener.simple.missing-queues-fatal 未设置或为 true（默认值）
+ * 2. management.endpoint.health.group.readinessState.include 或 livenessState.include 中显式包含 "anonQueue"
  *
- * 注意：此配置会自动注册健康检查端点 /actuator/health/anonymousQueueHealth
+ * 使用方式：
+ * 在服务配置中添加：
+ * management:
+ *   endpoint:
+ *     health:
+ *       group:
+ *         readinessState:
+ *           include: "readinessState,binders,db,kubernetes,redis,process,anonQueue"
+ *
+ * 注意：此配置会自动注册健康检查端点 /actuator/health/anonQueue
  */
 @Configuration
 @ConditionalOnClass(name = ["org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer"])
-@ConditionalOnProperty(
-    prefix = "bkci.rabbitmq.anonymous-queue-health",
-    name = ["enabled"],
-    havingValue = "true",
-    matchIfMissing = true
-)
+@Conditional(AnonymousQueueHealthConfiguration.AnonQueueIncludedCondition::class)
 class AnonymousQueueHealthConfiguration {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AnonymousQueueHealthConfiguration::class.java)
+        
+        /**
+         * 健康检查指标名称，用于配置和端点访问
+         */
+        const val HEALTH_INDICATOR_NAME = "anonQueue"
     }
 
     /**
      * 注册匿名队列健康检查指标
      * 这个 Bean 会被 Spring Boot Actuator 自动发现并注册到健康检查端点
+     * Bean 名称 "anonQueue" 会作为健康检查端点名称: /actuator/health/anonQueue
      */
-    @Bean("anonymousQueueHealthIndicator")
-    fun anonymousQueueHealthIndicator(): AnonymousQueueHealthIndicator {
+    @Bean(HEALTH_INDICATOR_NAME)
+    fun anonQueueHealthIndicator(): AnonymousQueueHealthIndicator {
         logger.info("[AnonymousQueueHealthConfiguration] Registering AnonymousQueueHealthIndicator bean")
         return AnonymousQueueHealthIndicator.getInstance()
+    }
+
+    /**
+     * 自定义条件：检查 management.endpoint.health.group 配置中是否包含 anonQueue
+     * 
+     * 支持以下配置路径：
+     * - management.endpoint.health.group.readinessState.include
+     * - management.endpoint.health.group.livenessState.include
+     */
+    class AnonQueueIncludedCondition : Condition {
+        
+        companion object {
+            private val logger = LoggerFactory.getLogger(AnonQueueIncludedCondition::class.java)
+            
+            /**
+             * 需要检查的配置属性路径列表
+             */
+            private val HEALTH_GROUP_INCLUDE_PROPERTIES = listOf(
+                "management.endpoint.health.group.readinessState.include",
+                "management.endpoint.health.group.livenessState.include"
+            )
+        }
+
+        override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean {
+            val environment = context.environment
+            
+            for (propertyKey in HEALTH_GROUP_INCLUDE_PROPERTIES) {
+                val includeValue = environment.getProperty(propertyKey)
+                if (!includeValue.isNullOrBlank()) {
+                    // 解析 include 配置值，支持逗号分隔的多个值
+                    val indicators = includeValue.split(",").map { it.trim() }
+                    if (indicators.contains(HEALTH_INDICATOR_NAME)) {
+                        logger.info(
+                            "[AnonQueueIncludedCondition] Found '$HEALTH_INDICATOR_NAME' in $propertyKey, " +
+                                "AnonymousQueueHealthIndicator will be loaded"
+                        )
+                        return true
+                    }
+                }
+            }
+            
+            logger.info(
+                "[AnonQueueIncludedCondition] '$HEALTH_INDICATOR_NAME' not found in health group include configs, " +
+                    "AnonymousQueueHealthIndicator will NOT be loaded. " +
+                    "To enable, add '$HEALTH_INDICATOR_NAME' to management.endpoint.health.group.readinessState.include"
+            )
+            return false
+        }
     }
 }
