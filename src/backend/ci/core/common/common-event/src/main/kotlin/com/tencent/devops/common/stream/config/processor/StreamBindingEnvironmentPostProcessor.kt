@@ -143,8 +143,10 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列
-            setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", groupName)
-            setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
+            setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", "$groupName-")
+            setProperty("$rabbitPropPrefix.consumer.durableSubscription", "false")
+            // 匿名队列在重连时可能不存在，设置为false允许自动重新创建而不是抛出异常
+            setProperty("$rabbitPropPrefix.consumer.missingQueuesFatal", "false")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
