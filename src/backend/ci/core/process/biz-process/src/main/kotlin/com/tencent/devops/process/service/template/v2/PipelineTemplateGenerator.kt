@@ -701,6 +701,16 @@ class PipelineTemplateGenerator @Autowired constructor(
                 param.asInstanceInput = false
             }
         }
+        triggerContainer.buildNo?.let {
+            // 旧构建号若勾选了[执行时显示],[默认为实例入参]= true
+            if (it.required == true) {
+                it.asInstanceInput = true
+            } else {
+                // 旧构建号若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
+                it.required = true
+                it.asInstanceInput = false
+            }
+        }
     }
 
     /**

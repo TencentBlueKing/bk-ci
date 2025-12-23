@@ -280,7 +280,6 @@ object TemplateInstanceUtil {
         val pipelineParam = pipelineParamMap[templateParam.id] ?: return templateParam
 
         // 如果没有对应的流水线参数，直接返回模板参数
-
         val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
         val overrideBuildNo = overrideTemplateField?.overrideBuildNo() == true
 

@@ -206,6 +206,7 @@ class VariableTransfer {
             RecommendedVersion(
                 enabled = true,
                 allowModifyAtStartup = it.required,
+                asInstanceInput = it.asInstanceInput,
                 buildNo = RecommendedVersion.BuildNo(
                     it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
