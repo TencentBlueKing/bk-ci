@@ -117,8 +117,7 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
          * 注册匿名队列，标记服务使用了匿名队列
          * 应在 StreamBindingEnvironmentPostProcessor 中调用
          * 
-         * @param queueName 队列标识，格式为 {groupName}-{bindingName}
-         *                  例如：process-timerChangeBinding
+         * @param event MQ事件定义
          *                  
          * 匿名队列实际名称格式：{destination}.{groupName}-{randomSuffix}
          * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
@@ -183,26 +182,13 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
     )
 
     /**
-     * 判断队列是否为匿名队列
-     * 
-     * 匿名队列的命名规则：{destination}.{groupName}-{randomSuffix}
-     * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
-     * 
-     * 持久化队列的命名规则：{destination}.{groupName}-{bindingName}
-     * 例如：e.engine.stream.timer.change.stream.process-timerChangeBinding
-     * 
-     * 区分方式：
-     * 1. 匿名队列的后缀是 Base64 编码的随机字符串（22个字符）
-     * 2. 持久化队列的后缀是有意义的 bindingName
-     * 
-     * @param queueNames 队列名称（可能包含多个，用逗号分隔）
-     * @return 如果任一队列是匿名队列则返回 true
+     * 过滤匿名队列
      */
-    private fun isAnonymousQueue(queueNames: List<String>): Boolean {
+    private fun filterAnonymousQueue(queueNames: List<String>): List<String> {
         if (!hasAnonymousQueue.get()) {
-            return false
+            return emptyList()
         }
-
+        val anonymousQueueNames = mutableListOf<String>()
         // 检查队列名称是否包含已注册的匿名队列前缀
         for (prefix in registeredAnonymousQueuePrefixes) {
             // 进一步检查是否为匿名队列（通过检查后缀是否为随机字符串）
@@ -212,48 +198,11 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
                         "[AnonymousQueueHealthIndicator] Queue '$queueNames' is an anonymous queue " +
                             "(registered prefixes: $registeredAnonymousQueuePrefixes)"
                     )
-                    return true
+                    anonymousQueueNames.add(queueName)
                 }
             }
         }
-
-        return false
-    }
-
-    /**
-     * 判断后缀是否为随机生成的字符串（匿名队列特征）
-     * 
-     * 匿名队列的后缀特征：
-     * 1. 由 Spring AMQP 生成的 Base64 编码 UUID，通常是 22 个字符
-     * 2. 格式类似：aAhym6ZnSsClHmoVYlMTMQ
-     * 
-     * 持久化队列的后缀特征：
-     * 1. 由开发者定义的有意义名称
-     * 2. 通常包含 Binding、Consumer、Handler 等关键词
-     * 3. 使用驼峰命名或下划线命名
-     */
-    private fun isRandomSuffix(suffix: String): Boolean {
-        // 如果后缀长度在 20-24 之间，且主要由字母数字组成，认为是随机后缀
-        if (suffix.length in 20..24) {
-            val alphanumericCount = suffix.count { it.isLetterOrDigit() || it == '_' || it == '-' }
-            if (alphanumericCount.toDouble() / suffix.length > 0.9) {
-                return true
-            }
-        }
-        
-        // 如果包含这些关键词，认为是持久化队列的有意义名称
-        val durableQueueKeywords = listOf(
-            "Binding", "Consumer", "Handler", "Listener", "Service", 
-            "binding", "consumer", "handler", "listener", "service"
-        )
-        for (keyword in durableQueueKeywords) {
-            if (suffix.contains(keyword)) {
-                return false
-            }
-        }
-        
-        // 其他情况，默认认为不是匿名队列
-        return false
+        return anonymousQueueNames
     }
 
     /**
@@ -274,7 +223,8 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
         }
 
         // 检查是否为匿名队列，如果不是则忽略
-        if (!isAnonymousQueue(queueNames)) {
+        val anonymousQueueNames = filterAnonymousQueue(queueNames)
+        if (anonymousQueueNames.isEmpty()) {
             logger.info(
                 "[AnonymousQueueHealthIndicator] Ignoring event for non-anonymous queue: $queueNames\n" +
                     "Exception: ${throwable?.javaClass?.name}: ${throwable?.message}"
@@ -288,7 +238,7 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
                 append("isRunning=${container.isRunning}, ")
                 append("isActive=${container.isActive}, ")
                 append("activeConsumerCount=${container.activeConsumerCount}, ")
-                append("queueNames=${container.queueNames?.contentToString()}")
+                append("queueNames=$anonymousQueueNames")
             }
         } else {
             "unknown"
@@ -297,10 +247,15 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
         // 检查是否为致命异常类型（即使 isFatal=false）
         val isFatalException = isFatalException(throwable)
 
-        // 更新连续失败计数
-        val failureCount = consecutiveFailures
-            .computeIfAbsent(queueNames) { AtomicInteger(0) }
-            .incrementAndGet()
+        // 取最大的一个失败次数
+        var failureCount = 0
+        for (queueName in anonymousQueueNames) {
+            val tmp = consecutiveFailures
+                .computeIfAbsent(queueName) { AtomicInteger(0) }
+                .incrementAndGet()
+            if (tmp > failureCount) { failureCount = tmp }
+        }
+
 
         // 判断是否应该标记为不健康
         val shouldMarkUnhealthy = isFatal || isFatalException || failureCount >= CONSECUTIVE_FAILURE_THRESHOLD
@@ -331,19 +286,19 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
                 isFatalException -> "Fatal exception type detected: ${throwable?.javaClass?.name}"
                 else -> "Consecutive failures reached threshold: $failureCount >= $CONSECUTIVE_FAILURE_THRESHOLD"
             }
-
-            val errorInfo = FatalErrorInfo(
-                queueName = queueNames,
-                errorMessage = throwable?.message ?: "Unknown error",
-                exceptionClass = throwable?.javaClass?.name ?: "Unknown",
-                timestamp = LocalDateTime.now().format(DATE_FORMATTER),
-                containerState = containerState,
-                isFatal = isFatal || isFatalException,
-                consecutiveFailures = failureCount,
-                reason = markReason
-            )
-            fatalErrors[queueNames] = errorInfo
-
+            anonymousQueueNames.forEach {  queueName ->
+                val errorInfo = FatalErrorInfo(
+                    queueName = queueName,
+                    errorMessage = throwable?.message ?: "Unknown error",
+                    exceptionClass = throwable?.javaClass?.name ?: "Unknown",
+                    timestamp = LocalDateTime.now().format(DATE_FORMATTER),
+                    containerState = containerState,
+                    isFatal = isFatal || isFatalException,
+                    consecutiveFailures = failureCount,
+                    reason = markReason
+                )
+                fatalErrors[queueName] = errorInfo
+            }
             // 将健康状态设置为不健康
             healthy.set(false)
 
