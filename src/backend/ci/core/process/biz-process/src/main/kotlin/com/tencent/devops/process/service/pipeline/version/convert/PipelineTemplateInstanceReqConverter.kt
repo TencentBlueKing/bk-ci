@@ -350,6 +350,7 @@ class PipelineTemplateInstanceReqConverter(
                 TemplateInstanceUtil.instanceSetting(
                     setting = it,
                     templateSetting = templateSetting,
+                    overrideTemplateField = overrideTemplateField
                 )
             }?.copy(
                 pipelineName = pipelineName
