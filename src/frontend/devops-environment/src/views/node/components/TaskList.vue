@@ -1,16 +1,14 @@
 <template>
-    <div class="node-tasklist-container">
-        <h3 class="section-title">{{ $t('environment.taskList') }}</h3>
-        <!-- 任务列表内容 -->
-        <div class="tasklist-content">
-            <p>任务列表内容待实现</p>
-        </div>
-    </div>
+    <TaskList />
 </template>
 
 <script>
+    import TaskList from '@/components/TaskList/'
     export default {
-        name: 'NodeTaskList'
+        name: 'NodeTaskList',
+        components: {
+            TaskList
+        }
     }
 </script>
 

@@ -28,7 +28,7 @@
                         <bk-radio value="dynamic">{{ $t('environment.dynamicRelated') }}</bk-radio>
                     </bk-radio-group>
                 </div>
-                <template v-if="relatedType === RELATED_TYPE.STATIC">
+                <template v-if="relatedType === RELATED_TYPE.NODE">
                     <bk-input
                         v-model="searchKeyword"
                         :placeholder="$t('environment.searchNodePlaceholder')"
@@ -288,7 +288,7 @@
                             size="60"
                         />
                         <p class="mt20">
-                            {{ relatedType === RELATED_TYPE.STATIC ? $t('environment.noSelectNode') : $t('environment.noSetLabel') }}
+                            {{ relatedType === RELATED_TYPE.NODE ? $t('environment.noSelectNode') : $t('environment.noSetLabel') }}
                         </p>
                     </div>
                 </div>
@@ -406,7 +406,7 @@
             // 判断是否应该显示选中的节点列表
             const shouldShowSelectedNodes = computed(() => {
                 // 静态模式：有选中节点就显示
-                if (relatedType.value === RELATED_TYPE.STATIC) {
+                if (relatedType.value === RELATED_TYPE.NODE) {
                     return !!selectedNodesList.value.length
                 }
                 // 动态模式：需要点击预览后才显示
@@ -416,7 +416,7 @@
             // 统计数据 - 不包括已删除的节点
             const totalCount = computed(() => {
                 // 动态模式未预览时返回 0
-                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                if (relatedType.value === RELATED_TYPE.TAG && !isDynamicPreviewed.value) {
                     return 0
                 }
                 return selectedNodesList.value.filter(node => !node.isDelete).length
@@ -427,7 +427,7 @@
             
             const newCount = computed(() => {
                 // 动态模式未预览时返回 0
-                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                if (relatedType.value === RELATED_TYPE.TAG && !isDynamicPreviewed.value) {
                     return 0
                 }
                 // 新增的节点 = 当前选中的节点中（未删除且不在原有节点列表中的）
@@ -436,7 +436,7 @@
             
             const removeCount = computed(() => {
                 // 动态模式未预览时返回 0
-                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                if (relatedType.value === RELATED_TYPE.TAG && !isDynamicPreviewed.value) {
                     return 0
                 }
                 // 移除的节点 = 标记为删除的节点数量
@@ -576,7 +576,7 @@
                 try {
                     isSaveLoading.value = true
                     const params = {
-                        ...(relatedType.value === RELATED_TYPE.STATIC
+                        ...(relatedType.value === RELATED_TYPE.NODE
                             ? {
                                 nodeHashIds: selectedNodesList.value
                                     .filter(node => !node.isDelete)
@@ -688,7 +688,7 @@
             }
 
             const initData = async () => {
-                if (relatedType.value === RELATED_TYPE.STATIC) {
+                if (relatedType.value === RELATED_TYPE.NODE) {
                     // 静态模式：加载节点列表
                     pageChange(1)
                     searchKeyword.value = ''
@@ -722,7 +722,7 @@
                     searchKeyword.value = ''
                     pageChange(1)
                     nodeList.value = []
-                    relatedType.value = RELATED_TYPE.STATIC
+                    relatedType.value = RELATED_TYPE.NODE
                 }
             })
 
@@ -730,7 +730,7 @@
                 pageChange(1)
                 labelRules.value = [{ tagKeyId: '', tagValues: [] }]
                 // 切换模式前，保存当前模式的选择
-                if (val === RELATED_TYPE.STATIC) {
+                if (val === RELATED_TYPE.NODE) {
                     // 切换到静态模式前，保存动态模式的选择
                     dynamicModeSelectedNodes.value = [...selectedNodesList.value]
                 } else {

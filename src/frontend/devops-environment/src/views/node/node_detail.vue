@@ -10,12 +10,15 @@
             >
                 {{ currentNode?.displayName || '--' }}
             </span>
-            <bk-tag>{{ nodeTypeDisplayName }}</bk-tag>
             <span
-                class="node-status-tag"
-                :class="nodeStatusClass"
+                class="node-os"
             >
-                {{ nodeStatusDisplayName }}
+                {{ currentNode?.osName || '--' }}
+            </span>
+            <span
+                class="node-ip"
+            >
+                {{ currentNode?.ip || '--' }}
             </span>
         </header>
         <div
@@ -70,8 +73,8 @@
             // 节点详情是否加载完成
             const nodeDetailLoaded = ref(false)
             
-            // 从路由参数中获取初始 tab，如果没有则默认为 'overview'
-            const initialTab = proxy.$route.params.tabName || 'overview'
+            // 从路由查询参数中获取初始 tab，如果没有则默认为 'overview'
+            const initialTab = proxy.$route.query.tabName || 'overview'
             const tabActive = ref(initialTab)
             
             const renderComponent = computed(() => {
@@ -123,7 +126,7 @@
                 },
                 {
                     name: 'taskList',
-                    label: proxy.$t('environment.taskList')
+                    label: proxy.$t('environment.taskDetail')
                 },
                 {
                     name: 'offlineRecords',
@@ -134,15 +137,14 @@
             // 获取可用的 tab 名称列表
             const availableTabs = computed(() => panels.value.map(p => p.name))
 
-            // 监听 tabActive 变化，更新路由参数
+            // 监听 tabActive 变化，更新路由查询参数
             watch(() => tabActive.value, (newTab) => {
                 const currentRoute = proxy.$route
-                // 只有在有 nodeHashId 且 tabName 不同时才进行导航
-                if (currentRoute.params.nodeHashId && currentRoute.params.tabName !== newTab) {
+                // 使用 query 而不是 params
+                if (currentRoute.query.nodeHashId && currentRoute.query.tabName !== newTab) {
                     proxy.$router.replace({
-                        name: 'nodeDetail',
-                        params: {
-                            ...currentRoute.params,
+                        query: {
+                            ...currentRoute.query,
                             tabName: newTab
                         }
                     }).catch(err => {
@@ -153,8 +155,8 @@
                 immediate: true
             })
 
-            // 监听路由参数变化，更新 tabActive
-            watch(() => proxy.$route.params.tabName, (newTabName) => {
+            // 监听路由查询参数变化，更新 tabActive
+            watch(() => proxy.$route.query.tabName, (newTabName) => {
                 if (newTabName && newTabName !== tabActive.value) {
                     tabActive.value = newTabName
                 }
@@ -167,9 +169,8 @@
                 if (nodeHashId && currentTabName && !tabs.includes(currentTabName)) {
                     tabActive.value = 'overview'
                     proxy.$router.replace({
-                        name: 'nodeDetail',
-                        params: {
-                            ...proxy.$route.params,
+                        query: {
+                            ...proxy.$route.query,
                             tabName: 'overview'
                         }
                     }).catch(err => {
@@ -187,11 +188,10 @@
                     await fetchNodeDetail()
                     nodeDetailLoaded.value = true
                 }
-                if (newNodeHashId && !proxy.$route.params.tabName) {
+                if (newNodeHashId && !proxy.$route.query.tabName) {
                     proxy.$router.replace({
-                        name: 'nodeDetail',
-                        params: {
-                            ...proxy.$route.params,
+                        query: {
+                            ...proxy.$route.query,
                             tabName: tabActive.value
                         }
                     }).catch(err => {
@@ -224,15 +224,14 @@
 .node-entry-main {
     display: flex;
     flex-direction: column;
-    padding: 24px;
     height: 100%;
     background: #f5f7fa;
 }
 .node-info-header {
     display: flex;
     align-items: center;
-    height: 54px;
-    line-height: 54px;
+    height: 48px;
+    line-height: 48px;
     background: #FAFBFD;
     padding: 0 24px;
     .node-name {
@@ -245,28 +244,15 @@
         color: #63656E;
         margin-right: 16px;
     }
-    .node-status-tag {
-        min-width: 68px;
-        height: 22px;
-        line-height: 22px;
+    .node-os,
+    .node-ip {
         font-size: 12px;
-        text-align: center;
-        color: #63656E;
-        margin-left: 8px;
-        padding: 0 8px;
-        border: 1px solid #979ba54d;
-        border-radius: 2px;
-        
-        &.status-normal {
-            color: #30D878;
-            border-color: #30D878;
-            background-color: #E5F6EB;
-        }
-        
-        &.status-abnormal {
-            color: #EA3636;
-            border-color: #EA3636;
-            background-color: #FEEBEA;
+        color: #979BA5;
+    }
+    .node-ip {
+        &::before {
+            content: '|';
+            margin: 0 6px;
         }
     }
 }

@@ -181,12 +181,14 @@
                 pageLimitChange,
                 updateCount
             } = usePagination()
+       
             const  {
                 handleShowRelatedNodes
             } = useRelatedNodes()
             const {
                 envHashId,
                 envNodeList,
+                fetchEnvDetail,
                 fetchEnvNodeList,
                 requestRemoveNode
             } = useEnvDetail()
@@ -296,6 +298,7 @@
             const handleRelateSuccess = () => {
                 resetPage()
                 fetchData()
+                fetchEnvDetail()
                 proxy.$bkMessage({
                     theme: 'success',
                     message: proxy.$t('environment.successfullySaved')

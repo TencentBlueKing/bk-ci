@@ -3,8 +3,8 @@ import useEnvDetail from './useEnvDetail'
 import useInstance from './useInstance'
 
 const RELATED_TYPE = {
-    STATIC: 'static',
-    DYNAMIC: 'dynamic'
+    NODE: 'static',
+    TAG: 'dynamic'
 }
 const isShow = ref(false)
 const tagList = ref([])
@@ -17,7 +17,7 @@ export default function useRelatedNodes () {
         currentEnv
     } = useEnvDetail()
     const isLoading = ref(false)
-    const relatedType = ref(RELATED_TYPE.STATIC)
+    const relatedType = ref(RELATED_TYPE[currentEnv.value.envNodeType] || RELATED_TYPE.NODE)
     const projectId = computed(() => proxy.$route.params.projectId)
     const envHashId = computed(() => proxy.$route.params.envId)
     const handleShowRelatedNodes = () => {

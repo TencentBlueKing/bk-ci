@@ -1,7 +1,5 @@
 <template>
-    <TaskList
-        task-type="build"
-    />
+    <TaskList />
 </template>
 
 <script>
@@ -25,7 +23,3 @@
         }
     }
 </script>
-
-<style lang="scss" scoped>
-
-</style>

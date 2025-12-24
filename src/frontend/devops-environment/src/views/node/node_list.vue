@@ -1287,8 +1287,8 @@
             },
 
             handleShowNodeDetail (nodeHashId) {
-                this.toggleFlod()
                 this.updateNodeHashId(nodeHashId)
+                this.toggleFlod()
             },
 
             handleToPipelineDetail (param) {

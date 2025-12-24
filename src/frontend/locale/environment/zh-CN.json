@@ -462,5 +462,9 @@
     "labelKey": "标签(key)",
     "labelValue": "值(value)",
     "pleaseSelectLabelKey": "请选择标签键",
-    "pleaseSelectLabelValue": "请选择标签值"
+    "pleaseSelectLabelValue": "请选择标签值",
+    "overview": "概览",
+    "settings": "设置",
+    "taskDetail": "任务详情",
+    "offlineRecords": "Agent离线记录"
 }

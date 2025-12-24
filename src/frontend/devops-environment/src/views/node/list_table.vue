@@ -15,11 +15,10 @@
             v-bkloading="{ isLoading: tableLoading }"
             :size="tableSize"
             class="node-table-wrapper"
-            row-class-name="node-item-row"
+            :row-class-name="tableRowClassName"
             :data="nodeList"
             :pagination="pagination"
             :default-sort="defaultSort"
-            :key="isFlod"
             height="100%"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
@@ -260,13 +259,13 @@
                                 v-if="props.row.nodeStatus === 'RUNNING'"
                                 @click="installAgent(props.row)"
                             >
-                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                                {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) }}
                             </span>
                             <span
                                 class="node-status"
                                 v-else
                             >
-                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}
+                                {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) || props.row.nodeStatus }}
                             </span>
                             <div
                                 class="install-agent"
@@ -513,6 +512,7 @@
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { t } from '../../../../bk-permission/src/utils/locale'
 
     export default {
         components: {
@@ -680,6 +680,9 @@
                     }
                 })
                 return res
+            },
+            queryNodeHashId () {
+                return this.$route.query.nodeHashId
             }
         },
         watch: {
@@ -792,8 +795,18 @@
                 })
             },
             handleRowClick (node) {
+                if (!this.isFlod) return
                 if (this.canShowDetail(node)) {
-                    this.$emit('show-detail', node.nodeHashId)
+                    this.$router.replace({
+                        params: {
+                            ...this.$route.params,
+                        },
+                        query: {
+                            ...this.$route.query,
+                            nodeHashId: node.nodeHashId
+                        }
+
+                    })
                 }
             },
             toNodeDetail (node) {
@@ -989,6 +1002,13 @@
             },
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY'
+            },
+            tableRowClassName ({ row }) {
+                if (row.nodeHashId === this.queryNodeHashId) {
+                    return 'node-item-row is-active'
+                }
+
+                return 'node-item-row'
             }
         }
     }
@@ -1083,6 +1103,12 @@
           .node-count-item {
             color: $fontLigtherColor;
           }
+        }
+        &.is-active {
+            background: #F0F5FF !important;
+            .node-name {
+                color: $primaryColor !important;
+            }
         }
       }
 
