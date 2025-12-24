@@ -17,8 +17,6 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
 
-local cjson = require("cjson")
-
 function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
@@ -218,12 +216,12 @@ function _M:get_prebuild_ticket(bk_ticket)
                 return
             end
 
-            red:set(red_key, cjson.encode(result.data))
+            red:set(red_key, json.encode(result.data))
             red:expire(red_key, 179 * 24 * 60 * 60) -- 缓存29天
 
             prebuild_ticket = result.data
         else
-            prebuild_ticket = cjson.decode(redRes)
+            prebuild_ticket = json.decode(redRes)
         end
 
         --- 将redis连接放回pool中
