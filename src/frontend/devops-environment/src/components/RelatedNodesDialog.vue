@@ -8,6 +8,7 @@
         :quick-close="false"
         :close-icon="false"
         :draggable="false"
+        render-directive="if"
     >
         <div class="dialog-content">
             <div class="left-section">
@@ -92,12 +93,12 @@
                                     </div>
                                     <div class="node-sub-info">
                                         <span class="node-ip">{{ node.ip }}</span>
-                                        <span
+                                        <!-- <span
                                             v-if="node.agentId"
                                             class="node-agent"
                                         >
                                             {{ node.agentId }}
-                                        </span>
+                                        </span> -->
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +118,7 @@
     
                             <!-- 无更多数据 -->
                             <div
-                                v-if="!hasMore && nodeList.length > 0"
+                                v-if="!hasMore && nodeList.length"
                                 class="no-more"
                             >
                                 {{ $t('environment.noMore') }}
@@ -135,7 +136,84 @@
                     </div>
                 </template>
                 <template v-else>
-                    todo
+                    <!-- 动态关联 -->
+                    <div class="dynamic-related-section">
+                        <!-- 标签选择表格 -->
+                        <div class="table-section">
+                            <bk-table
+                                :data="labelRules"
+                                class="label-table"
+                            >
+                                <bk-table-column
+                                    :label="$t('environment.labelKey')"
+                                    prop="tagKeyId"
+                                    min-width="200"
+                                >
+                                    <template #default="{ row, $index }">
+                                        <bk-select
+                                            v-model="row.tagKeyId"
+                                            :placeholder="$t('environment.pleaseSelectLabelKey')"
+                                            :clearable="false"
+                                            @change="handleLabelKeyChange(row, $index)"
+                                        >
+                                            <bk-option
+                                                v-for="option in availableLabelKeys"
+                                                :key="option.id"
+                                                :id="option.id"
+                                                :name="option.name"
+                                            />
+                                        </bk-select>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column
+                                    :label="$t('environment.labelValue')"
+                                    prop="tagValues"
+                                    min-width="200"
+                                >
+                                    <template #default="{ row }">
+                                        <bk-select
+                                            v-model="row.tagValues"
+                                            :placeholder="$t('environment.pleaseSelectLabelValue')"
+                                            :clearable="false"
+                                            :disabled="!row.tagKeyId"
+                                            multiple
+                                        >
+                                            <bk-option
+                                                v-for="val in getLabelValues(row.tagKeyId)"
+                                                :key="val.id"
+                                                :id="val.id"
+                                                :name="val.name"
+                                            />
+                                        </bk-select>
+                                    </template>
+                                </bk-table-column>
+                                <bk-table-column
+                                    width="80"
+                                >
+                                    <template #default="{ $index }">
+                                        <i
+                                            class="operator-icon bk-icon icon-plus-circle mr10"
+                                            @click="handleAddRule($index)"
+                                        />
+                                        <i
+                                            class="operator-icon bk-icon icon-minus-circle"
+                                            @click="handleDeleteRule($index)"
+                                        />
+                                    </template>
+                                </bk-table-column>
+                            </bk-table>
+
+                            <bk-button
+                                class="preview-button"
+                                theme="primary"
+                                outline
+                                :disabled="!hasValidLabelRules"
+                                @click="handlePreviewResult"
+                            >
+                                {{ $t('environment.previewResult') }}
+                            </bk-button>
+                        </div>
+                    </div>
                 </template>
             </div>
 
@@ -156,15 +234,19 @@
                     </i18n>
                 </div>
 
-                <div class="preview-content">
+                <div
+                    class="preview-content"
+                    v-bkloading="{ isLoading: isPreviewLoading }"
+                >
                     <div
-                        v-if="selectedNodesList.length"
+                        v-if="shouldShowSelectedNodes"
                         class="selected-nodes"
                     >
                         <div
                             v-for="node in selectedNodesList"
                             :key="node.nodeHashId"
                             class="selected-node-item"
+                            :class="{ 'is-deleted': node.isDelete }"
                         >
                             <div class="node-info">
                                 <div class="node-name">
@@ -186,12 +268,12 @@
                                 </div>
                                 <div class="node-details">
                                     <span class="node-ip">{{ node.ip }}</span>
-                                    <span
+                                    <!-- <span
                                         v-if="node.agentId"
                                         class="node-agent"
                                     >
                                         {{ node.agentId }}
-                                    </span>
+                                    </span> -->
                                 </div>
                             </div>
                         </div>
@@ -240,6 +322,7 @@
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import usePagination from '@/hooks/usePagination'
+    import useInstance from '@/hooks/useInstance'
     export default {
         name: 'RelatedNodes',
         components: {
@@ -253,6 +336,7 @@
         },
         emits: ['save-success'],
         setup (props, { emit }) {
+            const { proxy } = useInstance()
             const {
                 isShow,
                 nodeList,
@@ -261,7 +345,10 @@
                 RELATED_TYPE,
                 relateNodes,
                 requestNodeList,
-                handleCloseDialog
+                handleCloseDialog,
+                availableLabelKeys,
+                fetchTagList,
+                getLabelValues
             } = useRelatedNodes()
 
             const {
@@ -285,6 +372,14 @@
             // 保存两种模式下各自选择的节点
             const staticModeSelectedNodes = ref([])
             const dynamicModeSelectedNodes = ref([])
+            
+            // 动态关联相关数据
+            const labelRules = ref([
+                { tagKeyId: '', tagValues: [] }
+            ])
+            
+            // 动态模式是否已经预览过
+            const isDynamicPreviewed = ref(false)
 
             const isLoadingMore = ref(false)
             const hasMore = computed(() => {
@@ -302,26 +397,54 @@
             const isAllSelected = computed(() => {
                 return nodeList.value.length && nodeList.value.every(node => selectedNodeIds.value.has(node.nodeHashId))
             })
+            
+            // 判断所有标签规则是否都有效（所有规则的 key 和 value 都不为空）
+            const hasValidLabelRules = computed(() => {
+                return labelRules.value.length && labelRules.value.every(rule => rule.tagKeyId && rule.tagValues?.length)
+            })
+            
+            // 判断是否应该显示选中的节点列表
+            const shouldShowSelectedNodes = computed(() => {
+                // 静态模式：有选中节点就显示
+                if (relatedType.value === RELATED_TYPE.STATIC) {
+                    return !!selectedNodesList.value.length
+                }
+                // 动态模式：需要点击预览后才显示
+                return isDynamicPreviewed.value && selectedNodesList.value.length > 0
+            })
 
             // 统计数据 - 不包括已删除的节点
-            const totalCount = computed(() => selectedNodesList.value.filter(node => !node.isDelete).length)
+            const totalCount = computed(() => {
+                // 动态模式未预览时返回 0
+                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                    return 0
+                }
+                return selectedNodesList.value.filter(node => !node.isDelete).length
+            })
             
             // 计算新增和移除的节点数量
             const currentNodeIds = computed(() => new Set(props.currentNodeList.map(node => node.nodeHashId)))
             
             const newCount = computed(() => {
+                // 动态模式未预览时返回 0
+                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                    return 0
+                }
                 // 新增的节点 = 当前选中的节点中（未删除且不在原有节点列表中的）
                 return selectedNodesList.value.filter(node => !node.isDelete && !currentNodeIds.value.has(node.nodeHashId)).length
             })
             
             const removeCount = computed(() => {
+                // 动态模式未预览时返回 0
+                if (relatedType.value === RELATED_TYPE.DYNAMIC && !isDynamicPreviewed.value) {
+                    return 0
+                }
                 // 移除的节点 = 标记为删除的节点数量
                 return selectedNodesList.value.filter(node => node.isDelete).length
             })
 
             // 判断节点是否被选中
             const isNodeSelected = (nodeHashId) => {
-                console.log(selectedNodeIds.value, 1)
                 return selectedNodeIds.value.has(nodeHashId)
             }
             const handleSearch = (keyword) => {
@@ -460,7 +583,15 @@
                                     .map(node => node.nodeHashId)
                             }
                             : {
-                                tags: selectedNodesList.value
+                                // 每个标签键+值组合成一条记录
+                                tags: labelRules.value
+                                    .filter(rule => rule.tagKeyId && rule.tagValues?.length)
+                                    .flatMap(rule =>
+                                        rule.tagValues.map(tagValueId => ({
+                                            tagKeyId: rule.tagKeyId,
+                                            tagValueId
+                                        }))
+                                    )
                             }
                         )
                     }
@@ -479,6 +610,82 @@
                     isSaveLoading.value = false
                 }
             }
+            
+            // 添加规则
+            const handleAddRule = () => {
+                labelRules.value.push({ tagKeyId: '', tagValues: [] })
+            }
+            
+            // 删除规则
+            const handleDeleteRule = (index) => {
+                if (labelRules.value.length > 1) {
+                    labelRules.value.splice(index, 1)
+                } else {
+                    labelRules.value[index].tagKeyId = ''
+                    labelRules.value[index].tagValues = []
+                }
+            }
+            
+            const isPreviewLoading = ref(false)
+            // 预览动态关联结果
+            const handlePreviewResult = async () => {
+                try {
+                    isPreviewLoading.value = true
+                    const res = await requestNodeList({
+                        page: pagination.value.current,
+                        pageSize: 1000
+                    }, labelRules.value)
+                    
+                    // 获取预览结果的节点列表
+                    const previewNodes = res.records || []
+                    
+                    // 构建预览节点 ID 集合
+                    const previewNodeIds = new Set(previewNodes.map(node => node.nodeHashId))
+                    
+                    // 1. 标记已关联但不在预览结果中的节点为删除（isDelete: true）
+                    const deletedNodes = props.currentNodeList
+                        .filter(node => !previewNodeIds.has(node.nodeHashId))
+                        .map(node => ({
+                            ...node,
+                            isDelete: true,
+                            isNew: false
+                        }))
+                    
+                    // 2. 标记预览结果中新增的节点（isNew: true）
+                    const newNodes = previewNodes
+                        .filter(node => !currentNodeIds.value.has(node.nodeHashId))
+                        .map(node => ({
+                            ...node,
+                            isDelete: false,
+                            isNew: true
+                        }))
+                    
+                    // 3. 既在预览结果中又在已关联列表中的节点（保持不变）
+                    const unchangedNodes = previewNodes
+                        .filter(node => currentNodeIds.value.has(node.nodeHashId))
+                        .map(node => ({
+                            ...node,
+                            isDelete: false,
+                            isNew: false
+                        }))
+                    
+                    selectedNodesList.value = [...unchangedNodes, ...newNodes, ...deletedNodes]
+                    // 标记已经预览过
+                    isDynamicPreviewed.value = true
+                } catch (error) {
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: error.message || error
+                    })
+                } finally {
+                    isPreviewLoading.value = false
+                }
+            }
+            
+            // 标签键改变时清空值
+            const handleLabelKeyChange = (row, index) => {
+                row.tagValues = []
+            }
 
             const initData = async () => {
                 if (relatedType.value === RELATED_TYPE.STATIC) {
@@ -489,29 +696,39 @@
                     // 恢复静态模式下的选择
                     selectedNodesList.value = [...staticModeSelectedNodes.value]
                 } else {
-                    // 动态模式：恢复动态模式下的选择
-                    selectedNodesList.value = [...dynamicModeSelectedNodes.value]
+                    // 动态模式：清空节点列表，重置预览状态
+                    selectedNodesList.value = []
+                    isDynamicPreviewed.value = false
                 }
             }
 
             // 监听弹窗显示状态,显示时初始化数据
-            watch(() => isShow.value, async (newVal) => {
+            watch(() => isShow.value, (newVal) => {
                 if (newVal) {
-                    // 弹窗打开时，从 currentNodeList 初始化两种模式的数据
+                    fetchTagList()
+                    // 从 currentNodeList 初始化静态模式的数据
                     if (props.currentNodeList?.length) {
                         staticModeSelectedNodes.value = props.currentNodeList.map(node => ({ ...node }))
-                        dynamicModeSelectedNodes.value = props.currentNodeList.map(node => ({ ...node }))
                     }
+                    // 初始化当前模式的数据
                     initData()
                 } else {
-                    // 弹窗关闭时清空临时数据
+                    // 弹窗关闭时还原所有数据
                     selectedNodesList.value = []
                     staticModeSelectedNodes.value = []
                     dynamicModeSelectedNodes.value = []
+                    isDynamicPreviewed.value = false
+                    labelRules.value = [{ tagKeyId: '', tagValues: [] }]
+                    searchKeyword.value = ''
+                    pageChange(1)
+                    nodeList.value = []
+                    relatedType.value = RELATED_TYPE.STATIC
                 }
             })
 
-            watch(() => relatedType.value, async (val) => {
+            watch(() => relatedType.value, async (val, oldVal) => {
+                pageChange(1)
+                labelRules.value = [{ tagKeyId: '', tagValues: [] }]
                 // 切换模式前，保存当前模式的选择
                 if (val === RELATED_TYPE.STATIC) {
                     // 切换到静态模式前，保存动态模式的选择
@@ -520,8 +737,7 @@
                     // 切换到动态模式前，保存静态模式的选择
                     staticModeSelectedNodes.value = [...selectedNodesList.value]
                 }
-                // 加载新模式的数据
-                // initData()
+                initData()
             })
 
             return {
@@ -544,6 +760,11 @@
                 isNodeSelected,
                 RELATED_TYPE,
                 isSaveLoading,
+                labelRules,
+                availableLabelKeys,
+                hasValidLabelRules,
+                shouldShowSelectedNodes,
+                isPreviewLoading,
 
                 // function
                 handleNodeClick,
@@ -552,7 +773,12 @@
                 handleScroll,
                 handleSearch,
                 handleCloseDialog,
-                handleSave
+                handleSave,
+                getLabelValues,
+                handleAddRule,
+                handleDeleteRule,
+                handleLabelKeyChange,
+                handlePreviewResult
             }
         }
     }
@@ -733,6 +959,39 @@
                     }
                 }
             }
+            
+            // 动态关联样式
+            .dynamic-related-section {
+                flex: 1;
+                overflow-y: auto;
+                
+                .table-section {
+                    .section-title {
+                        font-size: 12px;
+                        color: #63656E;
+                        margin-bottom: 8px;
+                        font-weight: 500;
+                    }
+                    
+                    .label-table {
+                        margin-bottom: 12px;
+                        
+                        .bk-table-body {
+                            tr:hover {
+                                background-color: #F5F7FA;
+                            }
+                        }
+                    }
+                    .preview-button {
+                        width: 100%;
+                    }
+                    
+                    .operator-icon {
+                        font-size: 14px;
+                        cursor: pointer;
+                    }
+                }
+            }
         }
         
         .right-section {
@@ -788,6 +1047,20 @@
                         background: white;
                         border-radius: 2px;
                         transition: opacity 0.2s;
+                        
+                        &.is-deleted {
+                            .node-info {
+                                .node-name {
+                                    text-decoration: line-through;
+                                    color: #C4C6CC;
+                                }
+                                
+                                .node-details {
+                                    color: #C4C6CC;
+                                }
+                            }
+                        }
+                        
                         .node-info {
                             .node-name {
                                 height: 32px;

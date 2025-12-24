@@ -8,6 +8,7 @@ export default function useEnvAside () {
     const isLoading = ref(false)
     const envList = ref([])
     const envName = ref('')
+    const envCountData = ref({})
     
     // 初始化方法：检查并设置默认的 envType，获取列表
     const initData = async () => {
@@ -29,11 +30,18 @@ export default function useEnvAside () {
             })
         }
         await fetchEnvList()
+        await fetchEnvCountAsType()
     }
 
     const envType = computed(() => proxy.$route.params?.envType)
     const envId = computed(() => proxy.$route.params.envId)
     const projectId = computed(() => proxy.$route.params.projectId)
+    
+    // 计算环境总数
+    const totalEnvCount = computed(() => {
+        if (!envCountData.value) return 0
+        return Object.values(envCountData.value).reduce((sum, count) => sum + (count || 0), 0)
+    })
     const fetchEnvList = async () => {
         isLoading.value = true
         try {
@@ -75,15 +83,36 @@ export default function useEnvAside () {
             isLoading.value = false
         }
     }
+
+    const fetchEnvCountAsType = async (createEnv = false) => {
+        try {
+            const res = await proxy.$store.dispatch('environment/requestEnvCount', {
+                projectId: projectId.value,
+                createEnv
+            })
+            envCountData.value = res
+            return res
+        } catch (error) {
+            proxy.$showTips({
+                message: error.message || error,
+                theme: 'error'
+            })
+            return null
+        }
+    }
+    
     return {
         // data
         isLoading,
         envName,
         envType,
         envList,
+        envCountData,
+        totalEnvCount,
 
         // function
         initData,
-        fetchEnvList
+        fetchEnvList,
+        fetchEnvCountAsType
     }
 }

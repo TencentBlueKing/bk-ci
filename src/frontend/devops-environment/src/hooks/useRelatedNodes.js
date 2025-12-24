@@ -7,6 +7,10 @@ const RELATED_TYPE = {
     DYNAMIC: 'dynamic'
 }
 const isShow = ref(false)
+const tagList = ref([])
+const availableLabelKeys = ref([])
+const tagValuesMap = ref({})
+
 export default function useRelatedNodes () {
     const { proxy } = useInstance()
     const {
@@ -20,13 +24,48 @@ export default function useRelatedNodes () {
         isShow.value = true
     }
     const nodeList = ref([])
-    const requestNodeList = async (params) => {
+    
+    // 根据标签键ID获取对应的标签值选项
+    const getLabelValues = (tagKeyId) => {
+        return tagValuesMap.value[tagKeyId] || []
+    }
+    
+    // 获取标签列表
+    const fetchTagList = async () => {
+        try {
+            const res = await proxy.$store.dispatch('environment/requestNodeTagList', projectId.value)
+            // 保存原始数据
+            tagList.value = res ?? []
+            
+            // 转换为标签键选项列表
+            availableLabelKeys.value = tagList.value.map(tag => ({
+                id: tag.tagKeyId,
+                name: tag.tagKeyName
+            }))
+            
+            // 构建标签值映射表
+            const valuesMap = {}
+            tagList.value.forEach(tag => {
+                if (tag.tagValues && tag.tagValues.length > 0) {
+                    valuesMap[tag.tagKeyId] = tag.tagValues.map(val => ({
+                        id: val.tagValueId,
+                        name: val.tagValueName
+                    }))
+                }
+            })
+            tagValuesMap.value = valuesMap
+        } catch (error) {
+            console.error('Failed to fetch tag list:', error)
+        }
+    }
+    const requestNodeList = async (params, tags = []) => {
         try {
             isLoading.value = true
             const res = await proxy.$store.dispatch('environment/requestNodeList', {
                 projectId: projectId.value,
                 envHashId: envHashId.value,
-                params
+                params,
+                tags
             })
             
             if (params.page === 1) {
@@ -55,8 +94,9 @@ export default function useRelatedNodes () {
                 envHashId: envHashId.value,
                 params
             })
+            return res
         } catch (error) {
-            
+            throw error
         }
     }
     return {
@@ -66,11 +106,15 @@ export default function useRelatedNodes () {
         isLoading,
         relatedType,
         RELATED_TYPE,
+        tagList,
+        availableLabelKeys,
         
         // function
         relateNodes,
         requestNodeList,
         handleCloseDialog,
         handleShowRelatedNodes,
+        fetchTagList,
+        getLabelValues
     }
 }

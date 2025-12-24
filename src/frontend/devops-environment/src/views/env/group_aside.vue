@@ -100,6 +100,8 @@
                 envName,
                 envType,
                 envList,
+                envCountData,
+                totalEnvCount,
                 initData,
                 fetchEnvList
             } = useEnvAside()
@@ -108,20 +110,23 @@
                 {
                     id: ENV_TYPE_MAP.ALL,
                     name: proxy.$t('environment.allEnv'),
-                    count: envList.value.length
+                    count: totalEnvCount.value
                 },
                 {
                     id: ENV_TYPE_MAP.BUILD,
-                    name: proxy.$t('environment.envInfo.buildEnvType')
-                },
-                {
-                    id: ENV_TYPE_MAP.PROD,
-                    name: proxy.$t('environment.envInfo.testEnvType')
-                },
-                {
-                    id: ENV_TYPE_MAP.DEV,
-                    name: proxy.$t('environment.envInfo.devEnvType')
+                    name: proxy.$t('environment.envInfo.buildEnvType'),
+                    count: envCountData.value?.[ENV_TYPE_MAP.BUILD] ?? 0
                 }
+                // {
+                //     id: ENV_TYPE_MAP.PROD,
+                //     name: proxy.$t('environment.envInfo.testEnvType')
+                //     count: envCountData.value?.[ENV_TYPE_MAP.PROD] ?? 0
+                // },
+                // {
+                //     id: ENV_TYPE_MAP.DEV,
+                //     name: proxy.$t('environment.envInfo.devEnvType')
+                //     count: envCountData.value?.[ENV_TYPE_MAP.DEV] ?? 0
+                // }
             ]))
             const handleCreateEnvSuccess = () => {
                 // todo..
@@ -146,8 +151,8 @@
                     }
                 })
             }
+
             onMounted(() => {
-                console.log(123)
                 initData()
             })
         

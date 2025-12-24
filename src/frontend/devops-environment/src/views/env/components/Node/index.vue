@@ -311,7 +311,9 @@
                 try {
                     isLoading.value = true
                     const res = await fetchEnvNodeList(searchQuery.value)
-                    updateCount(res.count)
+                    if (res) {
+                        updateCount(res.count)
+                    }
                 } catch (err) {
                     console.error('获取节点列表失败:', err)
                 } finally {

@@ -35,6 +35,14 @@ const actions = {
         })
     },
     /**
+     * 获取环境数量
+     */
+    requestEnvCount ({ commit }, { projectId, createEnv = false }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/envCount?createEnv=${createEnv}`).then(response => {
+            return response
+        })
+    },
+    /**
      * 区域集群
      */
     requestClusterList ({ commit }) {

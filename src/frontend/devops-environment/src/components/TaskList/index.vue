@@ -58,7 +58,10 @@
                             :class="task.isExpanded ? 'icon-angle-down' : 'icon-angle-right'"
                         />
                         <div class="task-title">
-                            <span class="task-name">{{ task.jobName }}</span>
+                            <span class="task-name">
+                                <bk-tag v-if="task.stageId">{{ task.stageId }}</bk-tag>
+                                {{ task.jobName }}
+                            </span>
                             <span class="task-pipeline-name">
                                 <i class="bk-icon icon-pipeline" />
                                 <span
@@ -98,7 +101,7 @@
                             <bk-table-column
                                 :label="$t('environment.buildNumber')"
                                 prop="buildNum"
-                                width="100"
+                                width="80"
                             >
                                 <template #default="{ row }">
                                     <span>#{{ row.buildNum }}</span>
@@ -359,6 +362,18 @@
                 return convertTime(time * 1000)
             }
             
+            // 流水线编排不展示第一个Stage，转换 stageId 显示：后端从 stage-2 开始，前端显示从 stage-1 开始
+            const convertStageId = (stageId) => {
+                if (!stageId || typeof stageId !== 'string') return stageId
+                
+                const match = stageId.match(/^stage-(\d+)$/)
+                if (match) {
+                    const stageNum = parseInt(match[1], 10)
+                    return `stage-${stageNum - 1}`
+                }
+                return stageId
+            }
+            
             // 获取状态图标
             const getStatusIcon = (status) => {
                 const iconMap = {
@@ -447,6 +462,7 @@
                     const newTasks = (res.result.records || []).map(task => {
                         return {
                             ...task,
+                            stageId: convertStageId(task.stageId),
                             lastBuildTime: formatTime(task.lastBuildTime),
                             avgTimeInterval: formatSeconds(task.avgTimeInterval),
                       
