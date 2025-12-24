@@ -577,7 +577,12 @@ class ThirdPartyAgentBuildDao {
                     VM_SEQ_ID,
                     ID
                 ).`as`("LAST_VM_SEQ_ID"),
-                STAGE_ID
+                DSL.field(
+                    "SUBSTRING_INDEX(GROUP_CONCAT({0} ORDER BY {1} DESC SEPARATOR ','), ',', 1)",
+                    String::class.java,
+                    STAGE_ID,
+                    ID
+                ).`as`("STAGE_ID"),
             ).from(this).where(PROJECT_ID.eq(projectId))
             if (!agentId.isNullOrBlank()) {
                 dsl.and(AGENT_ID.eq(agentId))
