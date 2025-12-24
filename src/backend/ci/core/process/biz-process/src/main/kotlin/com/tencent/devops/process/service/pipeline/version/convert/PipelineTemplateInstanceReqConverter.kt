@@ -346,7 +346,12 @@ class PipelineTemplateInstanceReqConverter(
             pipelineRepositoryService.getSetting(
                 projectId = projectId,
                 pipelineId = pipelineId
-            )?.copy(
+            )?.let {
+                TemplateInstanceUtil.instanceSetting(
+                    setting = it,
+                    templateSetting = templateSetting,
+                )
+            }?.copy(
                 pipelineName = pipelineName
             ) ?: pipelineRepositoryService.createDefaultSetting(
                 projectId = projectId,

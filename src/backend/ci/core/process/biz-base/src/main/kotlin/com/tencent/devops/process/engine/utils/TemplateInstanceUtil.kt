@@ -297,7 +297,19 @@ object TemplateInstanceUtil {
         templateVariableMap: Map<String, TemplateVariable>,
         templateParam: BuildFormProperty
     ): BuildFormProperty {
-        val templateVariable = templateVariableMap[templateParam.id] ?: return templateParam
+        // 如果是常量参数或者其他变量,则直接反正模版参数
+        if (templateParam.constant == true || !templateParam.required) {
+            return templateParam
+        }
+        val templateVariable = templateVariableMap[templateParam.id] ?: run {
+            // 如果yaml中变量没有声明,表示值和入参都跟随模版,不能直接使用模版的require,应该使用asInstanceInput
+            val asInstanceInput = templateParam.asInstanceInput
+            return if (asInstanceInput == null) {
+                templateParam
+            } else {
+                templateParam.copy(required = asInstanceInput)
+            }
+        }
 
         val defaultValue = determineDefaultValue(
             templateParam = templateParam,
@@ -343,7 +355,7 @@ object TemplateInstanceUtil {
         )
         return when {
             // 如果实例没有声明默认值,则使用模版的值
-            templateParam.value == null -> templateParam.defaultValue
+            templateVariable.value == null -> templateParam.defaultValue
             // 从yaml转换过来的值,在yaml中不知道变量类型,所以默认都是字符串,需要进行转换
             templateParam.type == BuildFormPropertyType.BOOLEAN && templateVariable.value is String -> {
                 (templateVariable.value as String?).toBoolean()
