@@ -2756,24 +2756,6 @@ class PipelineBuildFacadeService(
             )
         )
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
-        val startType = StartType.toStartType(buildInfo.trigger)
-        if (startType == StartType.WEB_HOOK) {
-            val replayEventId = pipelineTriggerEventService.getTriggerDetail(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId
-            )?.let {
-                pipelineTriggerEventService.replay(
-                    userId = userId,
-                    projectId = projectId,
-                    detailId = it.detailId!!
-                )
-            } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
-            return BuildReplayResult(
-                status = BuildReplayStatus.REPLAYING,
-                eventId = replayEventId
-            )
-        }
         val buildVars = buildVariableService.getAllVariable(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -2791,6 +2773,7 @@ class PipelineBuildFacadeService(
             }
         }?.toMutableMap() ?: mutableMapOf()
         startParameters.putAll(buildVars)
+        val startType = StartType.toStartType(buildInfo.trigger)
         // 定时触发不存在调试的情况
         val (readyToBuildPipelineInfo, resource, _) = pipelineRepositoryService.getBuildTriggerInfo(
             projectId, pipelineId, null
@@ -2805,6 +2788,10 @@ class PipelineBuildFacadeService(
         val triggerContainer = model.getTriggerContainer()
         // 检查触发器是否存在
         val checkTriggerResult = forceTrigger || when (startType) {
+            StartType.WEB_HOOK -> {
+                triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
+            }
+
             StartType.MANUAL, StartType.SERVICE -> {
                 triggerContainer.elements.find { it is ManualTriggerElement }
             }
@@ -2820,11 +2807,28 @@ class PipelineBuildFacadeService(
             else -> {
                 EmptyElement()
             }
-        } != null
+        }?.takeIf { it.elementEnabled() } != null
         if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
                 params = arrayOf(resource.versionName ?: "")
+            )
+        }
+        if (startType == StartType.WEB_HOOK) {
+            val replayEventId = pipelineTriggerEventService.getTriggerDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )?.let {
+                pipelineTriggerEventService.replay(
+                    userId = userId,
+                    projectId = projectId,
+                    detailId = it.detailId!!
+                )
+            } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
+            return BuildReplayResult(
+                status = BuildReplayStatus.REPLAYING,
+                eventId = replayEventId
             )
         }
         val replayBuildId = buildManualStartup(
