@@ -375,7 +375,7 @@ class BuildRecordContainerDao {
                     status = record[container.STATUS],
                     startTime = record[container.START_TIME],
                     endTime = record[container.END_TIME],
-                    buildNo = record[model.BUILD_NUM],
+                    buildNum = record[model.BUILD_NUM],
                     creator = record[model.START_USER]
                 )
             }

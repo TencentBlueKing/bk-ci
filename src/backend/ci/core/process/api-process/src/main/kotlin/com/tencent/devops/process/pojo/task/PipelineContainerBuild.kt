@@ -22,7 +22,7 @@ data class PipelineContainerBuild(
     @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
     @get:Schema(title = "构建号", required = true)
-    val buildNo: Int,
+    val buildNum: Int,
     @get:Schema(title = "触发人", required = true)
     val creator: String
 )
