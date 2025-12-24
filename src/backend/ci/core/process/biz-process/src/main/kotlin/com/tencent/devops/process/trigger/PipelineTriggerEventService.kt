@@ -439,7 +439,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 ).toJsonStr(),
                 replayRequestId = replayRequestId,
                 requestParams = requestParams,
-                createTime = LocalDateTime.now()
+                createTime = LocalDateTime.now(),
+                eventBody = eventBody
             )
         }
         pipelineTriggerEventDao.save(

@@ -38,13 +38,13 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
 import com.tencent.devops.process.trigger.WebhookTriggerService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
-import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
@@ -62,7 +62,6 @@ class WebhookRequestService(
     private val webhookTriggerService: WebhookTriggerService,
     private val dslContext: DSLContext,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
-    private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val grayService: WebhookGrayService,
     private val simpleDispatcher: SampleEventDispatcher,
     private val webhookGrayCompareService: WebhookGrayCompareService,
@@ -107,7 +106,7 @@ class WebhookRequestService(
         // 如果整个仓库都开启灰度，则全部走新逻辑
         val grayRepo = grayService.isGrayRepo(scmType.name, repoName)
         // 如果pac开启灰度,也走新逻辑,会在新逻辑中判断旧的触发会不会运行
-        val pacGrayRepo = grayService.isPacGrayRepo(scmType.name, repoName)
+        val pacGrayRepo = grayService.isPacGrayRepo(scmType, matcher.getExternalId())
         try {
             // 有一方为灰度, 则不保存request信息, 后续由灰度逻辑统一保存
             // @see com.tencent.devops.process.trigger.scm.WebhookManager.handleRequestEvent
@@ -132,35 +131,27 @@ class WebhookRequestService(
             }
         }
         if (grayRepo) {
-            handleGrayRequest(scmType.name, repoName, request)
+            handleGrayRequest(
+                scmCode = scmType.name,
+                repoName = repoName,
+                request = request,
+                eventTime = eventTime
+            )
         } else {
+            if (pacGrayRepo) {
+                handleGrayRequest(
+                    scmCode = scmType.name,
+                    repoName = repoName,
+                    request = request,
+                    eventTime = eventTime
+                )
+            }
             webhookTriggerService.trigger(
                 scmType = scmType,
                 matcher = matcher,
                 requestId = requestId,
                 eventTime = eventTime
             )
-        }
-
-        when {
-            // 如果是灰度仓库,同时也是pac灰度仓库,无需重复触发
-            grayRepo && pacGrayRepo -> {
-                logger.info("The $scmType repo $repoName is gray repo and pac gray repo")
-                return
-            }
-
-            pacGrayRepo -> {
-                handleGrayRequest(scmType.name, repoName, request)
-            }
-
-            else -> {
-                pipelineYamlFacadeService.trigger(
-                    eventObject = event,
-                    scmType = scmType,
-                    requestId = requestId,
-                    eventTime = eventTime
-                )
-            }
         }
     }
 
@@ -186,8 +177,8 @@ class WebhookRequestService(
                     repoHashId = it
                 )
             } ?: return
-            // 新代码源灰度流量控制
-            if (supportScmWebhook(repository)) {
+            val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
+            if (grayRepo) {
                 logger.info("The current replay event will execute the new trigger logic")
                 // 读取当前回放操作依赖的trigger event
                 pipelineTriggerEventDao.getEventByRequestId(
@@ -198,10 +189,10 @@ class WebhookRequestService(
                 )?.let {
                     webhookManager.fireEvent(
                         eventId = triggerEvent.eventId!!,
+                        eventTime = LocalDateTime.now(),
                         repository = repository,
-                        webhook = it.eventBody!!,
-                        replayPipelineId = pipelineId,
-                        sourceWebhook = repoWebhookRequest.requestBody
+                        webhook = (it.eventBody!! as ScmWebhookEventBody).webhook,
+                        replayPipelineId = pipelineId
                     )
                 }
             } else {
@@ -253,7 +244,8 @@ class WebhookRequestService(
     private fun handleGrayRequest(
         scmCode: String,
         repoName: String,
-        request: WebhookRequest
+        request: WebhookRequest,
+        eventTime: LocalDateTime
     ) {
         logger.info("The scm hook is gray, repoName: $repoName, scmType: $scmCode")
         val headers = request.headers
@@ -268,7 +260,8 @@ class WebhookRequestService(
                     headers = headers,
                     queryParams = queryParams,
                     body = request.body
-                )
+                ),
+                eventTime = eventTime
             )
         )
     }
@@ -293,6 +286,6 @@ class WebhookRequestService(
         val supportRepo = listOf(ScmType.SCM_GIT, ScmType.SCM_SVN)
             .contains(repository.getScmType())
         val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
-        return supportRepo && grayRepo
+        return supportRepo || grayRepo
     }
 }
