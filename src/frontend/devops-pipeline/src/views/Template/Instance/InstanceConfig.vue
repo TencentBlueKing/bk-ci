@@ -766,7 +766,7 @@
                         buildNo: templateBuildNo.buildNo,
                         buildNoType: templateBuildNo.buildNoType,
                         required: templateBuildNo.required,
-                        isRequiredParam: templateBuildNo.required
+                        isRequiredParam: instanceBuildNo.required
                     },
                     buildNoParam: comparedBuildNoParams
                 }
