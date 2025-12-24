@@ -394,10 +394,10 @@
                 return this.container?.buildNo ?? {}
             },
             isRequired () {
-                return !!this.container?.buildNo?.required
+                return !!this.buildNo?.required
             },
             asInstanceInput () {
-                return !!this.container?.buildNo?.asInstanceInput
+                return !!this.buildNo?.asInstanceInput
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
@@ -463,6 +463,8 @@
                     newBuildNo.asInstanceInput = value
                 }
                 this.updateContainerParams('buildNo', newBuildNo)
+                // 同步更新 renderBuildNo
+                this.renderBuildNo = { ...newBuildNo }
             },
             getLabelByBuildType (type) {
                 const item = this.buildNoRules.find(item => item.value === type)
@@ -496,7 +498,8 @@
             },
             editVersions () {
                 this.editVersionValues = Object.assign({}, this.versionValues)
-                this.editBuildNo = Object.assign({}, this.renderBuildNo)
+                // 使用 buildNo 而不是 renderBuildNo，确保获取最新的数据
+                this.editBuildNo = Object.assign({}, this.buildNo)
                 this.showEditVersion = true
             },
             handleSaveVersion () {
@@ -515,9 +518,10 @@
                             ...newVersions
                         ])
                         this.updateContainerParams('buildNo', {
+                            ...this.buildNo,
                             ...this.editBuildNo
                         })
-                        this.renderBuildNo = Object.assign({}, this.editBuildNo)
+                        this.renderBuildNo = Object.assign({}, this.buildNo, this.editBuildNo)
                         this.showEditVersion = false
                     }
                 })
