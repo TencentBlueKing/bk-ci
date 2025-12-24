@@ -74,9 +74,9 @@ class AnonymousQueueHealthConfiguration {
      * Bean 名称 "anonQueue" 会作为健康检查端点名称: /actuator/health/anonQueue
      */
     @Bean(HEALTH_INDICATOR_NAME)
-    fun anonQueueHealthIndicator(): AnonymousQueueHealthIndicator {
+    fun anonQueueHealthIndicator(): AnonymousRabbitHealthIndicator {
         logger.info("[AnonymousQueueHealthConfiguration] Registering AnonymousQueueHealthIndicator bean")
-        return AnonymousQueueHealthIndicator.getInstance()
+        return AnonymousRabbitHealthIndicator.getInstance()
     }
 
     /**

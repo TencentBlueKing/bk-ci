@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.stream.rabbit
 
+import com.tencent.devops.common.event.annotation.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.listener.ListenerContainerConsumerFailedEvent
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
@@ -52,10 +53,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * 当 Pod 网络异常导致 RabbitMQ 连接断开后，匿名队列会被自动删除。
  * 重连时消费者尝试声明已删除的队列会失败，此时需要通过健康检查让 K8s 重启 Pod。
  */
-class AnonymousQueueHealthIndicator : HealthIndicator {
+class AnonymousRabbitHealthIndicator : HealthIndicator {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AnonymousQueueHealthIndicator::class.java)
+        private val logger = LoggerFactory.getLogger(AnonymousRabbitHealthIndicator::class.java)
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
         /**
@@ -86,7 +87,7 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
          * 全局单例实例
          */
         @Volatile
-        private var INSTANCE: AnonymousQueueHealthIndicator? = null
+        private var INSTANCE: AnonymousRabbitHealthIndicator? = null
 
         /**
          * 是否已注册匿名队列（只有注册了匿名队列才启用健康检查）
@@ -106,9 +107,9 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
          * 获取单例实例
          */
         @JvmStatic
-        fun getInstance(): AnonymousQueueHealthIndicator {
+        fun getInstance(): AnonymousRabbitHealthIndicator {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: AnonymousQueueHealthIndicator().also { INSTANCE = it }
+                INSTANCE ?: AnonymousRabbitHealthIndicator().also { INSTANCE = it }
             }
         }
 
@@ -125,15 +126,13 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
          * 我们从 queueName 中提取 groupName 作为前缀来匹配
          */
         @JvmStatic
-        fun registerAnonymousQueue(queueName: String) {
+        fun registerAnonymousQueue(event: Event) {
             hasAnonymousQueue.set(true)
-            // 提取 groupName 前缀（第一个 - 之前的部分加上 -）
-            // 例如 "process-timerChangeBinding" -> "process-"
-            val groupPrefix = queueName.substringBefore("-") + "-"
-            registeredAnonymousQueuePrefixes.add(groupPrefix)
+            val prefix = event.destination
+            registeredAnonymousQueuePrefixes.add(prefix)
             logger.info(
-                "[AnonymousQueueHealthIndicator] Registered anonymous queue: $queueName, " +
-                    "extracted prefix: $groupPrefix"
+                "[AnonymousQueueHealthIndicator] Registered anonymous queue: $prefix, " +
+                    "extracted prefix: $prefix"
             )
         }
 
@@ -199,43 +198,25 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
      * @param queueNames 队列名称（可能包含多个，用逗号分隔）
      * @return 如果任一队列是匿名队列则返回 true
      */
-    private fun isAnonymousQueue(queueNames: String): Boolean {
+    private fun isAnonymousQueue(queueNames: List<String>): Boolean {
         if (!hasAnonymousQueue.get()) {
             return false
         }
 
         // 检查队列名称是否包含已注册的匿名队列前缀
         for (prefix in registeredAnonymousQueuePrefixes) {
-            // 匿名队列格式：{destination}.{groupName}-{randomSuffix}
-            // 检查队列名称中是否包含 .{prefix} 模式
-            if (queueNames.contains(".$prefix") || queueNames.contains(",$prefix")) {
-                // 进一步检查是否为匿名队列（通过检查后缀是否为随机字符串）
-                // 匿名队列的随机后缀通常是 22 个字符的 Base64 编码
-                val parts = queueNames.split(",").map { it.trim() }
-                for (part in parts) {
-                    if (part.contains(".$prefix")) {
-                        // 提取 {prefix} 后面的部分
-                        val afterPrefix = part.substringAfter(".$prefix")
-                        // 匿名队列的随机后缀特征：
-                        // 1. 长度约为 22 个字符
-                        // 2. 只包含字母、数字、下划线、横杠
-                        // 3. 不包含大写字母组成的有意义单词（如 Binding, Consumer 等）
-                        if (afterPrefix.isNotEmpty() && isRandomSuffix(afterPrefix)) {
-                            logger.debug(
-                                "[AnonymousQueueHealthIndicator] Queue '$part' identified as anonymous queue " +
-                                    "(prefix: $prefix, suffix: $afterPrefix)"
-                            )
-                            return true
-                        }
-                    }
+            // 进一步检查是否为匿名队列（通过检查后缀是否为随机字符串）
+            for (queueName in queueNames) {
+                if (queueName.contains(prefix)) {
+                    logger.info(
+                        "[AnonymousQueueHealthIndicator] Queue '$queueNames' is an anonymous queue " +
+                            "(registered prefixes: $registeredAnonymousQueuePrefixes)"
+                    )
+                    return true
                 }
             }
         }
 
-        logger.debug(
-            "[AnonymousQueueHealthIndicator] Queue '$queueNames' is NOT an anonymous queue " +
-                "(registered prefixes: $registeredAnonymousQueuePrefixes)"
-        )
         return false
     }
 
@@ -287,9 +268,9 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
 
         // 获取队列名信息
         val queueNames = if (container is SimpleMessageListenerContainer) {
-            container.queueNames?.joinToString(",") ?: "unknown"
+            container.queueNames?.toList() ?: emptyList()
         } else {
-            "unknown"
+            emptyList()
         }
 
         // 检查是否为匿名队列，如果不是则忽略

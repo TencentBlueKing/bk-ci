@@ -29,7 +29,7 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.stream.rabbit.AnonymousQueueHealthIndicator
+import com.tencent.devops.common.stream.rabbit.AnonymousRabbitHealthIndicator
 import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
@@ -149,7 +149,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             setProperty("$rabbitPropPrefix.consumer.durableSubscription", "false")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
             // 注册匿名队列到健康检查单例，用于监控匿名队列消费者的致命错误
-            AnonymousQueueHealthIndicator.registerAnonymousQueue("$groupName-$bindingName")
+            AnonymousRabbitHealthIndicator.registerAnonymousQueue(event)
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
         }
