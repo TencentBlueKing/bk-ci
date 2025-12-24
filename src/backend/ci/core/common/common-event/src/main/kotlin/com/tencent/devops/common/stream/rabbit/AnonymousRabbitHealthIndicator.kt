@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * 1. 监听 SimpleMessageListenerContainer 的致命错误事件
  * 2. 当检测到队列消费者发生致命错误（如队列不存在）时，将容器标记为不健康
  * 3. 只在服务使用了匿名队列时才生效
+ * 4. 只关心匿名队列的异常事件，忽略持久化队列的事件
  *
  * 使用场景：
  * 当 Pod 网络异常导致 RabbitMQ 连接断开后，匿名队列会被自动删除。
@@ -93,6 +94,15 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
         private val hasAnonymousQueue = AtomicBoolean(false)
 
         /**
+         * 已注册的匿名队列前缀集合
+         * 匿名队列的命名规则：{destination}.{groupName}-{randomSuffix}
+         * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
+         * 
+         * 这里存储的是 groupName 前缀（如 "process-"），用于匹配匿名队列
+         */
+        private val registeredAnonymousQueuePrefixes = ConcurrentHashMap.newKeySet<String>()
+
+        /**
          * 获取单例实例
          */
         @JvmStatic
@@ -105,11 +115,26 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
         /**
          * 注册匿名队列，标记服务使用了匿名队列
          * 应在 StreamBindingEnvironmentPostProcessor 中调用
+         * 
+         * @param queueName 队列标识，格式为 {groupName}-{bindingName}
+         *                  例如：process-timerChangeBinding
+         *                  
+         * 匿名队列实际名称格式：{destination}.{groupName}-{randomSuffix}
+         * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
+         * 
+         * 我们从 queueName 中提取 groupName 作为前缀来匹配
          */
         @JvmStatic
         fun registerAnonymousQueue(queueName: String) {
             hasAnonymousQueue.set(true)
-            logger.info("[AnonymousQueueHealthIndicator] Registered anonymous queue: $queueName")
+            // 提取 groupName 前缀（第一个 - 之前的部分加上 -）
+            // 例如 "process-timerChangeBinding" -> "process-"
+            val groupPrefix = queueName.substringBefore("-") + "-"
+            registeredAnonymousQueuePrefixes.add(groupPrefix)
+            logger.info(
+                "[AnonymousQueueHealthIndicator] Registered anonymous queue: $queueName, " +
+                    "extracted prefix: $groupPrefix"
+            )
         }
 
         /**
@@ -117,6 +142,12 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
          */
         @JvmStatic
         fun hasAnonymousQueue(): Boolean = hasAnonymousQueue.get()
+
+        /**
+         * 获取已注册的匿名队列前缀
+         */
+        @JvmStatic
+        fun getRegisteredPrefixes(): Set<String> = registeredAnonymousQueuePrefixes.toSet()
     }
 
     /**
@@ -153,6 +184,98 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
     )
 
     /**
+     * 判断队列是否为匿名队列
+     * 
+     * 匿名队列的命名规则：{destination}.{groupName}-{randomSuffix}
+     * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
+     * 
+     * 持久化队列的命名规则：{destination}.{groupName}-{bindingName}
+     * 例如：e.engine.stream.timer.change.stream.process-timerChangeBinding
+     * 
+     * 区分方式：
+     * 1. 匿名队列的后缀是 Base64 编码的随机字符串（22个字符）
+     * 2. 持久化队列的后缀是有意义的 bindingName
+     * 
+     * @param queueNames 队列名称（可能包含多个，用逗号分隔）
+     * @return 如果任一队列是匿名队列则返回 true
+     */
+    private fun isAnonymousQueue(queueNames: String): Boolean {
+        if (!hasAnonymousQueue.get()) {
+            return false
+        }
+
+        // 检查队列名称是否包含已注册的匿名队列前缀
+        for (prefix in registeredAnonymousQueuePrefixes) {
+            // 匿名队列格式：{destination}.{groupName}-{randomSuffix}
+            // 检查队列名称中是否包含 .{prefix} 模式
+            if (queueNames.contains(".$prefix") || queueNames.contains(",$prefix")) {
+                // 进一步检查是否为匿名队列（通过检查后缀是否为随机字符串）
+                // 匿名队列的随机后缀通常是 22 个字符的 Base64 编码
+                val parts = queueNames.split(",").map { it.trim() }
+                for (part in parts) {
+                    if (part.contains(".$prefix")) {
+                        // 提取 {prefix} 后面的部分
+                        val afterPrefix = part.substringAfter(".$prefix")
+                        // 匿名队列的随机后缀特征：
+                        // 1. 长度约为 22 个字符
+                        // 2. 只包含字母、数字、下划线、横杠
+                        // 3. 不包含大写字母组成的有意义单词（如 Binding, Consumer 等）
+                        if (afterPrefix.isNotEmpty() && isRandomSuffix(afterPrefix)) {
+                            logger.debug(
+                                "[AnonymousQueueHealthIndicator] Queue '$part' identified as anonymous queue " +
+                                    "(prefix: $prefix, suffix: $afterPrefix)"
+                            )
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+
+        logger.debug(
+            "[AnonymousQueueHealthIndicator] Queue '$queueNames' is NOT an anonymous queue " +
+                "(registered prefixes: $registeredAnonymousQueuePrefixes)"
+        )
+        return false
+    }
+
+    /**
+     * 判断后缀是否为随机生成的字符串（匿名队列特征）
+     * 
+     * 匿名队列的后缀特征：
+     * 1. 由 Spring AMQP 生成的 Base64 编码 UUID，通常是 22 个字符
+     * 2. 格式类似：aAhym6ZnSsClHmoVYlMTMQ
+     * 
+     * 持久化队列的后缀特征：
+     * 1. 由开发者定义的有意义名称
+     * 2. 通常包含 Binding、Consumer、Handler 等关键词
+     * 3. 使用驼峰命名或下划线命名
+     */
+    private fun isRandomSuffix(suffix: String): Boolean {
+        // 如果后缀长度在 20-24 之间，且主要由字母数字组成，认为是随机后缀
+        if (suffix.length in 20..24) {
+            val alphanumericCount = suffix.count { it.isLetterOrDigit() || it == '_' || it == '-' }
+            if (alphanumericCount.toDouble() / suffix.length > 0.9) {
+                return true
+            }
+        }
+        
+        // 如果包含这些关键词，认为是持久化队列的有意义名称
+        val durableQueueKeywords = listOf(
+            "Binding", "Consumer", "Handler", "Listener", "Service", 
+            "binding", "consumer", "handler", "listener", "service"
+        )
+        for (keyword in durableQueueKeywords) {
+            if (suffix.contains(keyword)) {
+                return false
+            }
+        }
+        
+        // 其他情况，默认认为不是匿名队列
+        return false
+    }
+
+    /**
      * 监听 RabbitMQ 消费者容器失败事件
      */
     @EventListener
@@ -167,6 +290,15 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
             container.queueNames?.joinToString(",") ?: "unknown"
         } else {
             "unknown"
+        }
+
+        // 检查是否为匿名队列，如果不是则忽略
+        if (!isAnonymousQueue(queueNames)) {
+            logger.info(
+                "[AnonymousQueueHealthIndicator] Ignoring event for non-anonymous queue: $queueNames\n" +
+                    "Exception: ${throwable?.javaClass?.name}: ${throwable?.message}"
+            )
+            return
         }
 
         // 获取容器状态信息
@@ -197,6 +329,7 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
             "[AnonymousQueueHealthIndicator] Consumer container failed event received!\n" +
                 "========== Error Details ==========\n" +
                 "Queue Names: $queueNames\n" +
+                "Is Anonymous Queue: true\n" +
                 "Is Fatal (from event): $isFatal\n" +
                 "Is Fatal Exception: $isFatalException\n" +
                 "Consecutive Failures: $failureCount (threshold: $CONSECUTIVE_FAILURE_THRESHOLD)\n" +
@@ -293,6 +426,7 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
             Health.up()
                 .withDetail("message", "All anonymous queue consumers are healthy")
                 .withDetail("anonymousQueueEnabled", true)
+                .withDetail("registeredPrefixes", registeredAnonymousQueuePrefixes.toList())
                 .withDetail("fatalErrorCount", fatalErrors.size)
                 .withDetail("consecutiveFailureThreshold", CONSECUTIVE_FAILURE_THRESHOLD)
                 .withDetail("currentFailureCounts", consecutiveFailures.mapValues { it.value.get() })
@@ -301,6 +435,7 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
             val builder = Health.down()
                 .withDetail("message", "Fatal error detected in anonymous queue consumer(s)")
                 .withDetail("anonymousQueueEnabled", true)
+                .withDetail("registeredPrefixes", registeredAnonymousQueuePrefixes.toList())
                 .withDetail("fatalErrorCount", fatalErrors.size)
                 .withDetail("consecutiveFailureThreshold", CONSECUTIVE_FAILURE_THRESHOLD)
                 .withDetail("recommendation", "Pod needs to be restarted to recover anonymous queue consumers")
