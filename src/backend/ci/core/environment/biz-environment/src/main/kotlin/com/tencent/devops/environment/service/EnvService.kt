@@ -280,7 +280,7 @@ class EnvService @Autowired constructor(
             val myNodesCount = createNodes.filter { myWorkspaces.contains(it.createWorkspaceName) }.size
             result.add(
                 EnvWithPermission(
-                    envHashId = HashUtil.encodeLongId(MyCreateEnv.ENV_ID),
+                    envHashId = MyCreateEnv.hashId(),
                     name = MyCreateEnv.name(),
                     envType = EnvType.CREATE,
                     envNodeType = EnvNodeType.NODE,
@@ -291,7 +291,7 @@ class EnvService @Autowired constructor(
             if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 result.add(
                     EnvWithPermission(
-                        envHashId = HashUtil.encodeLongId(AllCreateNodeEnv.ENV_ID),
+                        envHashId = AllCreateNodeEnv.hashId(),
                         name = AllCreateNodeEnv.name(),
                         envType = EnvType.CREATE,
                         envNodeType = EnvNodeType.NODE,
@@ -971,7 +971,8 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        data: EnvAddNodesData
+        data: EnvAddNodesData,
+        overWrite: Boolean
     ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
@@ -1013,15 +1014,14 @@ class EnvService @Autowired constructor(
             ActionAuditContext.current()
                 .addInstanceInfo(envHashId, JsonUtil.toJson(tags), null, null)
 
-            val envId = HashUtil.decodeIdToLong(envHashId)
             dslContext.transaction { config ->
                 val ctx = DSL.using(config)
                 // 类型转换需要清空之前类型的记录
                 if (envRecord.envNodeType == EnvNodeType.NODE.name) {
-                    envNodeDao.deleteByEnvId(dslContext, envId)
-                    envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.TAG)
+                    envNodeDao.deleteByEnvId(ctx, envId)
+                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.TAG)
                 }
-                envTagDao.deleteEnvTags(ctx, projectId, setOf(envId))
+                envTagDao.deleteByEnvId(ctx, envId)
                 envTagDao.batchAddEnvTags(
                     dslContext = ctx,
                     projectId = projectId,
@@ -1060,6 +1060,21 @@ class EnvService @Autowired constructor(
             )
         }
 
+        // 覆盖
+        if (overWrite) {
+            dslContext.transaction { config ->
+                val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+                    envTagDao.deleteByEnvId(ctx, envId)
+                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                }
+                envNodeDao.deleteByEnvId(ctx, envId)
+                envNodeDao.batchStoreEnvNode(ctx, existNodeIds.toList(), envId, projectId)
+            }
+            return
+        }
+
         // 过滤已在环境中的节点
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
         val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds.toSet())
@@ -1083,12 +1098,15 @@ class EnvService @Autowired constructor(
                 )
             }
         }
-        // 类型转换需要清空之前类型的记录
-        if (envRecord.envNodeType == EnvNodeType.TAG.name) {
-            envTagDao.deleteByEnvId(dslContext, envId)
-            envDao.updateEnvNodeType(dslContext, envId, EnvNodeType.NODE)
+        dslContext.transaction { config ->
+            val ctx = DSL.using(config)
+            // 类型转换需要清空之前类型的记录
+            if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+                envTagDao.deleteByEnvId(ctx, envId)
+                envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+            }
+            envNodeDao.batchStoreEnvNode(ctx, toAddNodeIds.toList(), envId, projectId)
         }
-        envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
     }
 
     @ActionAuditRecord(

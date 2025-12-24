@@ -255,7 +255,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, EnvAddNodesData(nodeHashIds, null))
+        envService.addEnvNodes(userId, projectId, envHashId, EnvAddNodesData(nodeHashIds, null), false)
         return Result(true)
     }
 
@@ -271,7 +271,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         if (data.nodeHashIds.isNullOrEmpty() && data.tags.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
-        envService.addEnvNodes(userId, projectId, envHashId, data)
+        envService.addEnvNodes(userId, projectId, envHashId, data, true)
         return Result(true)
     }
 

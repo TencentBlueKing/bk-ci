@@ -120,12 +120,6 @@ class EnvTagDao {
         }
     }
 
-    fun deleteEnvTags(dslContext: DSLContext, projectId: String, envIds: Set<Long>) {
-        with(TEnvTag.T_ENV_TAG) {
-            dslContext.deleteFrom(this).where(ENV_ID.`in`(envIds)).and(PROJECT_ID.eq(projectId)).execute()
-        }
-    }
-
     fun batchAddEnvTags(
         dslContext: DSLContext,
         projectId: String,
