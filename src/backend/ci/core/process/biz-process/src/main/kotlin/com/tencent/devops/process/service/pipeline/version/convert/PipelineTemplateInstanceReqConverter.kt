@@ -252,7 +252,7 @@ class PipelineTemplateInstanceReqConverter(
                 defaultStageTagId = defaultStageTagId,
                 buildNo = buildNo,
                 params = params,
-                overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
+                triggerConfigs = overrideTemplateTriggerConfigs,
                 overrideTemplateField = overrideTemplateField,
                 template = pipelineModelRef.template
             )

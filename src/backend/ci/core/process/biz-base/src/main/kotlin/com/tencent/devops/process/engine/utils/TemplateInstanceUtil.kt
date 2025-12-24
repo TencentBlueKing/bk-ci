@@ -42,7 +42,7 @@ object TemplateInstanceUtil {
         staticViews: List<String> = emptyList(),
         buildNo: BuildNo?,
         params: List<BuildFormProperty>?,
-        overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
+        triggerConfigs: List<TemplateInstanceTriggerConfig>? = null,
         overrideTemplateField: TemplateInstanceField? = null,
         template: TemplateInstanceDescriptor? = null
     ): Model {
@@ -55,7 +55,7 @@ object TemplateInstanceUtil {
         val templateTrigger = templateModel.getTriggerContainer()
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateTrigger.elements,
-            overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs
+            triggerConfigs = triggerConfigs
         )
         val pipelineParams = mergeParams(
             templateParams = templateTrigger.params,
@@ -142,7 +142,7 @@ object TemplateInstanceUtil {
         val template = model.template
         val triggerElements = mergeTriggerElements(
             templateTriggerElements = templateTrigger.elements,
-            overrideTemplateTriggerConfigs = template?.triggerConfigs
+            triggerConfigs = template?.triggerConfigs
         )
         val pipelineParams = mergeParams(
             templateParams = templateTrigger.params,
@@ -150,6 +150,7 @@ object TemplateInstanceUtil {
         )
         val buildNo = mergeRecommendedVersion(
             pipelineParams = pipelineParams,
+            templateParams = templateTrigger.params,
             templateBuildNo = templateModel.getTriggerContainer().buildNo,
             recommendedVersion = template?.recommendedVersion
         )
@@ -165,11 +166,11 @@ object TemplateInstanceUtil {
      */
     private fun mergeTriggerElements(
         templateTriggerElements: List<Element>,
-        overrideTemplateTriggerConfigs: List<TemplateInstanceTriggerConfig>?
+        triggerConfigs: List<TemplateInstanceTriggerConfig>?
     ): List<Element> {
-        if (overrideTemplateTriggerConfigs == null) return templateTriggerElements
+        if (triggerConfigs == null) return templateTriggerElements
 
-        val triggerConfigMap = overrideTemplateTriggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
+        val triggerConfigMap = triggerConfigs.filter { it.stepId != null }.associateBy { it.stepId }
         return templateTriggerElements.map { templateTriggerElement ->
             if (templateTriggerElement.stepId.isNullOrEmpty()) {
                 templateTriggerElement
@@ -493,21 +494,27 @@ object TemplateInstanceUtil {
         return pipelineBuildNo.copy(buildNo = buildNo)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun mergeRecommendedVersion(
         pipelineParams: List<BuildFormProperty>,
+        templateParams: List<BuildFormProperty>,
         templateBuildNo: BuildNo?,
         recommendedVersion: TemplateInstanceRecommendedVersion?
     ): BuildNo? {
         // 如果模版关闭推荐版本号, 则实例也应该关闭
         if (templateBuildNo == null) return null
         if (recommendedVersion == null) return templateBuildNo
-        if (recommendedVersion.allowModifyAtStartup == true) {
-            pipelineParams.forEach { param ->
-                when (param.id) {
-                    MAJORVERSION -> param.defaultValue = recommendedVersion.major ?: 0
-                    MINORVERSION -> param.defaultValue = recommendedVersion.minor ?: 0
-                    FIXVERSION -> param.defaultValue = recommendedVersion.fix ?: 0
-                }
+        val templateParamMap = templateParams.associateBy { it.id }
+        pipelineParams.forEach { param ->
+            when (param.id) {
+                MAJORVERSION -> param.defaultValue =
+                    recommendedVersion.major ?: templateParamMap[MAJORVERSION]?.defaultValue ?: 0
+
+                MINORVERSION -> param.defaultValue =
+                    recommendedVersion.minor ?: templateParamMap[MINORVERSION]?.defaultValue ?: 0
+
+                FIXVERSION -> param.defaultValue =
+                    recommendedVersion.fix ?: templateParamMap[FIXVERSION]?.defaultValue ?: 0
             }
         }
 
