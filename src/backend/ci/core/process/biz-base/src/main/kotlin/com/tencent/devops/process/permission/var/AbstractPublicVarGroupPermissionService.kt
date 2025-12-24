@@ -19,7 +19,6 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
         permission: AuthPermission,
         groupName: String
     ): Boolean {
-
         return authProjectApi.checkProjectManager(
             userId = userId,
             serviceCode = publicVarGroupAuthServiceCode,
@@ -87,6 +86,30 @@ abstract class AbstractPublicVarGroupPermissionService constructor(
                 canDelete = false,
                 canUse = true
             )
+        }
+    }
+
+    override fun filterPublicVarGroups(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        groupNames: List<String>
+    ): Map<AuthPermission, List<String>> {
+        val isManager = authProjectApi.checkProjectManager(
+            userId = userId,
+            serviceCode = publicVarGroupAuthServiceCode,
+            projectCode = projectId
+        )
+
+        return if (isManager) {
+            authPermissions.associateWith { groupNames }
+        } else {
+            authPermissions.associateWith { permission ->
+                when (permission) {
+                    AuthPermission.VIEW, AuthPermission.USE -> groupNames
+                    else -> emptyList()
+                }
+            }
         }
     }
 

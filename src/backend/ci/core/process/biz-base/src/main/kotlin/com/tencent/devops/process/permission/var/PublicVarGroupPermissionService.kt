@@ -73,6 +73,21 @@ interface PublicVarGroupPermissionService {
     ): Map<AuthPermission, List<String>>
 
     /**
+     * 批量过滤公共变量组权限
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param authPermissions 权限集合
+     * @param groupNames 变量组名称列表
+     * @return 权限与对应的变量组名称列表的映射
+     */
+    fun filterPublicVarGroups(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        groupNames: List<String>
+    ): Map<AuthPermission, List<String>>
+
+    /**
      * 注册公共变量组到权限中心
      * @param userId 用户ID
      * @param projectId 项目ID

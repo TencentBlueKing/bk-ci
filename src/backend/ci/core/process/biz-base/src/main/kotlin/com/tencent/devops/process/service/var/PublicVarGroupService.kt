@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
@@ -57,6 +58,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
+import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
@@ -312,6 +314,24 @@ class PublicVarGroupService @Autowired constructor(
             groupNames = groupNames.takeIf { it.isNotEmpty() }
         )
 
+        // 批量查询权限
+        val groupNameList = groupPOs.map { it.groupName }
+        val permissionsMap = if (groupNameList.isNotEmpty()) {
+            publicVarGroupPermissionService.filterPublicVarGroups(
+                userId = userId,
+                projectId = projectId,
+                authPermissions = setOf(
+                    AuthPermission.EDIT,
+                    AuthPermission.VIEW,
+                    AuthPermission.DELETE,
+                    AuthPermission.USE
+                ),
+                groupNames = groupNameList
+            )
+        } else {
+            emptyMap()
+        }
+
         // 直接使用表中的REFER_COUNT字段
         val records = groupPOs.map { po ->
             PublicVarGroupDO(
@@ -321,10 +341,11 @@ class PublicVarGroupService @Autowired constructor(
                 desc = po.desc,
                 modifier = po.modifier,
                 updateTime = po.updateTime,
-                permission = publicVarGroupPermissionService.getPublicVarGroupPermissions(
-                    userId = userId,
-                    projectId = projectId,
-                    groupName = po.groupName
+                permission = PublicVarGroupPermissions(
+                    canEdit = permissionsMap[AuthPermission.EDIT]?.contains(po.groupName) ?: false,
+                    canView = permissionsMap[AuthPermission.VIEW]?.contains(po.groupName) ?: false,
+                    canDelete = permissionsMap[AuthPermission.DELETE]?.contains(po.groupName) ?: false,
+                    canUse = permissionsMap[AuthPermission.USE]?.contains(po.groupName) ?: false
                 )
             )
         }

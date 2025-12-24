@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.PublicVarGroupAuthServiceCode
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
@@ -115,6 +116,52 @@ class RbacPublicVarGroupPermissionService constructor(
                 projectCode = projectId,
                 permission = it,
                 supplier = null
+            )
+        }
+    }
+
+    override fun filterPublicVarGroups(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        groupNames: List<String>
+    ): Map<AuthPermission, List<String>> {
+        logger.info("[rbac] filter public var groups|$userId|$projectId|$authPermissions")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val resources = publicVarGroups2AuthResources(
+                projectId = projectId,
+                groupNames = groupNames
+            )
+            return authPermissionApi.filterResourcesByPermissions(
+                user = userId,
+                serviceCode = publicVarGroupAuthServiceCode,
+                resourceType = RESOURCE_TYPE,
+                projectCode = projectId,
+                permissions = authPermissions,
+                resources = resources
+            )
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to filter public var groups|" +
+                    "$userId|$projectId|$authPermissions"
+            )
+        }
+    }
+
+    private fun publicVarGroups2AuthResources(
+        projectId: String,
+        groupNames: List<String>
+    ): List<AuthResourceInstance> {
+        val projectInstance = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        return groupNames.map { groupName ->
+            AuthResourceInstance(
+                resourceType = RESOURCE_TYPE.value,
+                resourceCode = groupName,
+                parents = listOf(projectInstance)
             )
         }
     }
