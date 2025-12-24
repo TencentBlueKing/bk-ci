@@ -37,6 +37,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * RabbitMQ 匿名队列消费者健康检查单例
@@ -55,6 +56,30 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
     companion object {
         private val logger = LoggerFactory.getLogger(AnonymousQueueHealthIndicator::class.java)
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+        /**
+         * 非致命错误的连续失败阈值，超过此阈值标记为不健康
+         */
+        private const val CONSECUTIVE_FAILURE_THRESHOLD = 3
+
+        /**
+         * 需要检测的致命异常类型（这些异常即使 isFatal=false 也应该标记为不健康）
+         */
+        private val FATAL_EXCEPTION_TYPES = setOf(
+            "org.springframework.amqp.rabbit.listener.QueuesNotAvailableException",
+            "org.springframework.amqp.rabbit.listener.BlockingQueueConsumer\$DeclarationException"
+        )
+
+        /**
+         * 需要检测的致命异常消息关键词
+         */
+        private val FATAL_MESSAGE_KEYWORDS = listOf(
+            "queue doesn't exist",
+            "no queue",
+            "NOT_FOUND",
+            "Cannot prepare queue",
+            "Failed to declare queue"
+        )
 
         /**
          * 全局单例实例
@@ -100,6 +125,13 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
     private val healthy = AtomicBoolean(true)
 
     /**
+     * 记录每个队列的连续失败次数
+     * Key: 队列名
+     * Value: 连续失败次数
+     */
+    private val consecutiveFailures = ConcurrentHashMap<String, AtomicInteger>()
+
+    /**
      * 记录的致命错误信息，用于详细的健康检查报告
      * Key: 容器标识（队列名）
      * Value: 错误详情
@@ -115,7 +147,9 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
         val exceptionClass: String,
         val timestamp: String,
         val containerState: String,
-        val isFatal: Boolean
+        val isFatal: Boolean,
+        val consecutiveFailures: Int,
+        val reason: String
     )
 
     /**
@@ -141,36 +175,58 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
                 append("isRunning=${container.isRunning}, ")
                 append("isActive=${container.isActive}, ")
                 append("activeConsumerCount=${container.activeConsumerCount}, ")
-                append("queueNames=${container.queueNames}")
+                append("queueNames=${container.queueNames?.contentToString()}")
             }
         } else {
             "unknown"
         }
+
+        // 检查是否为致命异常类型（即使 isFatal=false）
+        val isFatalException = isFatalException(throwable)
+
+        // 更新连续失败计数
+        val failureCount = consecutiveFailures
+            .computeIfAbsent(queueNames) { AtomicInteger(0) }
+            .incrementAndGet()
+
+        // 判断是否应该标记为不健康
+        val shouldMarkUnhealthy = isFatal || isFatalException || failureCount >= CONSECUTIVE_FAILURE_THRESHOLD
 
         // 记录详细日志
         logger.error(
             "[AnonymousQueueHealthIndicator] Consumer container failed event received!\n" +
                 "========== Error Details ==========\n" +
                 "Queue Names: $queueNames\n" +
-                "Is Fatal: $isFatal\n" +
+                "Is Fatal (from event): $isFatal\n" +
+                "Is Fatal Exception: $isFatalException\n" +
+                "Consecutive Failures: $failureCount (threshold: $CONSECUTIVE_FAILURE_THRESHOLD)\n" +
+                "Should Mark Unhealthy: $shouldMarkUnhealthy\n" +
                 "Reason: $reason\n" +
                 "Container State: $containerState\n" +
                 "Exception Type: ${throwable?.javaClass?.name}\n" +
                 "Exception Message: ${throwable?.message}\n" +
-                "Root Cause: ${getRootCause(throwable)?.message}\n" +
+                "Root Cause: ${getRootCause(throwable)?.let { "${it.javaClass.name}: ${it.message}" }}\n" +
                 "===================================",
             throwable
         )
 
-        // 只处理致命错误队列的情况
-        if (isFatal) {
+        // 如果满足不健康条件，记录错误并标记
+        if (shouldMarkUnhealthy) {
+            val markReason = when {
+                isFatal -> "Event marked as fatal"
+                isFatalException -> "Fatal exception type detected: ${throwable?.javaClass?.name}"
+                else -> "Consecutive failures reached threshold: $failureCount >= $CONSECUTIVE_FAILURE_THRESHOLD"
+            }
+
             val errorInfo = FatalErrorInfo(
                 queueName = queueNames,
                 errorMessage = throwable?.message ?: "Unknown error",
                 exceptionClass = throwable?.javaClass?.name ?: "Unknown",
                 timestamp = LocalDateTime.now().format(DATE_FORMATTER),
                 containerState = containerState,
-                isFatal = true
+                isFatal = isFatal || isFatalException,
+                consecutiveFailures = failureCount,
+                reason = markReason
             )
             fatalErrors[queueNames] = errorInfo
 
@@ -178,13 +234,48 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
             healthy.set(false)
 
             logger.error(
-                "[AnonymousQueueHealthIndicator] FATAL ERROR DETECTED!\n" +
-                    "Container marked as UNHEALTHY due to fatal error on anonymous queue.\n" +
+                "[AnonymousQueueHealthIndicator] MARKING CONTAINER AS UNHEALTHY!\n" +
+                    "Reason: $markReason\n" +
                     "Queue: $queueNames\n" +
                     "The pod should be killed and restarted by Kubernetes.\n" +
                     "Total fatal errors recorded: ${fatalErrors.size}"
             )
         }
+    }
+
+    /**
+     * 检查异常是否为致命类型
+     * 即使 Spring AMQP 没有标记为 fatal，这些异常也应该触发不健康状态
+     */
+    private fun isFatalException(throwable: Throwable?): Boolean {
+        if (throwable == null) return false
+
+        // 检查异常类型
+        var current: Throwable? = throwable
+        while (current != null) {
+            val className = current.javaClass.name
+            if (FATAL_EXCEPTION_TYPES.any { className.contains(it) }) {
+                logger.warn("[AnonymousQueueHealthIndicator] Detected fatal exception type: $className")
+                return true
+            }
+
+            // 检查异常消息中的关键词
+            val message = current.message ?: ""
+            for (keyword in FATAL_MESSAGE_KEYWORDS) {
+                if (message.contains(keyword, ignoreCase = true)) {
+                    logger.warn(
+                        "[AnonymousQueueHealthIndicator] Detected fatal keyword '$keyword' " +
+                            "in exception message: $message"
+                    )
+                    return true
+                }
+            }
+
+            current = current.cause
+            if (current == throwable) break // 防止循环引用
+        }
+
+        return false
     }
 
     /**
@@ -203,12 +294,15 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
                 .withDetail("message", "All anonymous queue consumers are healthy")
                 .withDetail("anonymousQueueEnabled", true)
                 .withDetail("fatalErrorCount", fatalErrors.size)
+                .withDetail("consecutiveFailureThreshold", CONSECUTIVE_FAILURE_THRESHOLD)
+                .withDetail("currentFailureCounts", consecutiveFailures.mapValues { it.value.get() })
                 .build()
         } else {
             val builder = Health.down()
                 .withDetail("message", "Fatal error detected in anonymous queue consumer(s)")
                 .withDetail("anonymousQueueEnabled", true)
                 .withDetail("fatalErrorCount", fatalErrors.size)
+                .withDetail("consecutiveFailureThreshold", CONSECUTIVE_FAILURE_THRESHOLD)
                 .withDetail("recommendation", "Pod needs to be restarted to recover anonymous queue consumers")
 
             // 添加每个错误的详细信息
@@ -221,7 +315,9 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
                         "exceptionClass" to errorInfo.exceptionClass,
                         "timestamp" to errorInfo.timestamp,
                         "containerState" to errorInfo.containerState,
-                        "isFatal" to errorInfo.isFatal
+                        "isFatal" to errorInfo.isFatal,
+                        "consecutiveFailures" to errorInfo.consecutiveFailures,
+                        "reason" to errorInfo.reason
                     )
                 )
             }
@@ -252,11 +348,25 @@ class AnonymousQueueHealthIndicator : HealthIndicator {
     fun getFatalErrors(): Map<String, FatalErrorInfo> = fatalErrors.toMap()
 
     /**
+     * 获取当前连续失败计数
+     */
+    fun getConsecutiveFailures(): Map<String, Int> = consecutiveFailures.mapValues { it.value.get() }
+
+    /**
+     * 重置指定队列的连续失败计数（当消费者恢复成功时调用）
+     */
+    fun resetConsecutiveFailures(queueName: String) {
+        consecutiveFailures[queueName]?.set(0)
+        logger.info("[AnonymousQueueHealthIndicator] Reset consecutive failures for queue: $queueName")
+    }
+
+    /**
      * 重置健康状态（仅用于测试）
      */
     fun reset() {
         healthy.set(true)
         fatalErrors.clear()
+        consecutiveFailures.clear()
         logger.info("[AnonymousQueueHealthIndicator] Health status reset to healthy")
     }
 }
