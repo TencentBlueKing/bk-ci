@@ -25,20 +25,10 @@ const envHome = () => import(/* webpackChunkName: 'envHome' */ '../views/index.v
 const envEntry = () => import(/* webpackChunkName: 'envList' */ '../views/env/index.vue')
 const envDetail = () => import(/* webpackChunkName: 'envList' */ '../views/env/env_detail.vue')
 
-// 新增环境
-const createEnv = () => import(/* webpackChunkName: 'createEnv' */ '../views/create_env')
-
-// 环境详情
-// const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
-
 // 节点入口
 const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
-
 // 节点列表
 const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list')
-
-// 节点详情
-// const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node/node_detail')
 
 // 批量设置节点标签
 const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
@@ -64,29 +54,7 @@ const routes = [
                     }
                 ]
             },
-            // {
-            //     path: 'createEnv',
-            //     name: 'createEnv',
-            //     component: createEnv,
-            //     meta: {
-            //         title: 'createEnvrionment',
-            //         logo: 'environment',
-            //         header: 'environmentManage',
-            //         to: 'envList',
-            //         activeName: 'envList'
-            //     }
-            // },
-            // {
-            //     path: 'envDetail/:envId',
-            //     name: 'envDetail',
-            //     component: envDetail,
-            //     meta: {
-            //         title: 'environmentDetail',
-            //         logo: 'environment',
-            //         header: 'environmentManage',
-            //         to: 'envList'
-            //     }
-            // },
+           
             {
                 path: 'node',
                 component: nodeEntry,
@@ -96,18 +64,6 @@ const routes = [
                         name: 'nodeList',
                         component: nodeList,
                         children: [
-                            // {
-                            //     path: ':nodeHashId',
-                            //     name: 'nodeDetail',
-                            //     component: nodeDetail,
-                            //     meta: {
-                            //         title: 'nodeDetail',
-                            //         logo: 'environment',
-                            //         header: 'environmentManage',
-                            //         to: 'envList',
-                            //         webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
-                            //     }
-                            // },
                             {
                                 path: 'setNodeTag',
                                 name: 'setNodeTag',
@@ -139,23 +95,7 @@ const routes = [
                                 next(true)
                             }
                         }
-                    },
-                    // {
-                    //     path: 'nodeDetail/:nodeHashId',
-                    //     name: 'nodeDetail',
-                    //     component: nodeDetail,
-                    //     meta: {
-                    //         title: 'nodeDetail',
-                    //         logo: 'environment',
-                    //         header: 'environmentManage',
-                    //         to: 'envList'
-                    //     }
-                    // },
-                    // {
-                    //     path: ':nodeType/setNodeTag',
-                    //     name: 'setNodeTag',
-                    //     component: setNodeTag
-                    // },
+                    }
                 ]
             }
         ]
