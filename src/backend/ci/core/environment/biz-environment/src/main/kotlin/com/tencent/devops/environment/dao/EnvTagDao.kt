@@ -14,12 +14,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class EnvTagDao {
-    fun fetchEnvTags(dslContext: DSLContext, envId: Long): List<TEnvTagRecord> {
-        with(TEnvTag.T_ENV_TAG) {
-            return dslContext.selectFrom(this).where(ENV_ID.eq(envId)).fetch()
-        }
-    }
-
     fun batchStoreEnvTag(
         dslContext: DSLContext,
         tags: List<NodeTagAddOrDeleteTagItem>,
@@ -65,8 +59,8 @@ class EnvTagDao {
             ).from(this)
                 .leftJoin(TNodeTags.T_NODE_TAGS)
                 .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
-                .where(ENV_ID.`in`(envIds))
-                .and(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.`in`(envIds))
                 .groupBy(TAG_VALUE_ID)
                 .fetch()
                 .forEach {
@@ -98,8 +92,8 @@ class EnvTagDao {
             ).from(this)
                 .innerJoin(TNodeTags.T_NODE_TAGS)
                 .on(TAG_VALUE_ID.eq(TNodeTags.T_NODE_TAGS.TAG_VALUE_ID))
-                .where(ENV_ID.`in`(envIds))
-                .and(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.`in`(envIds))
                 .fetch()
                 .forEach {
                     val envId = it[ENV_ID]
@@ -154,8 +148,8 @@ class EnvTagDao {
                 .on(TAG_KEY_ID.eq(TNodeTagKey.T_NODE_TAG_KEY.ID))
                 .leftJoin(TNodeTagValues.T_NODE_TAG_VALUES)
                 .on(TAG_VALUE_ID.eq(TNodeTagValues.T_NODE_TAG_VALUES.ID))
-                .where(ENV_ID.eq(envId))
-                .and(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(ENV_ID.eq(envId))
                 .fetch()
                 .forEach { tag ->
                     val keyId = (tag["KEY_ID"] as Long?) ?: return@forEach
@@ -194,6 +188,14 @@ class EnvTagDao {
                 .and(TNodeTags.T_NODE_TAGS.PROJECT_ID.eq(projectId))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch().map { it.value1() }
+        }
+    }
+
+    fun fetchTagEnvByTagValueIds(dslContext: DSLContext, projectId: String, tagValueIds: List<Long>): List<Long> {
+        with(TEnvTag.T_ENV_TAG) {
+            return dslContext.select(ENV_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TAG_VALUE_ID.`in`(tagValueIds)).fetch().map { it.value1() }
         }
     }
 }

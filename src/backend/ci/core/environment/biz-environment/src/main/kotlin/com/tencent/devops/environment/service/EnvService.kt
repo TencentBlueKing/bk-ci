@@ -95,6 +95,7 @@ import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.MyCreateEnv
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeTagAndEnvItem
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.enums.AgentType
@@ -1710,6 +1711,28 @@ class EnvService @Autowired constructor(
                 id = it.envId,
                 name = it.envName
             )
+        }
+    }
+
+    // 查询节点所属的环境
+    fun fetchNodeEnvs(projectId: String, nodeId: Long, tagValueIds: List<Long>?): List<NodeTagAndEnvItem> {
+        // 静态环境
+        val envIdMaps = envNodeDao.listNodeIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeIds = listOf(nodeId)
+        ).associate { it.envId to EnvNodeType.NODE }.toMutableMap()
+        // 动态环境
+        if (!tagValueIds.isNullOrEmpty()) {
+            envIdMaps.putAll(
+                envTagDao.fetchTagEnvByTagValueIds(dslContext, projectId, tagValueIds).associateWith { EnvNodeType.TAG }
+            )
+        }
+        if (envIdMaps.isEmpty()) {
+            return emptyList()
+        }
+        return envDao.list(dslContext, projectId, envIds = envIdMaps.keys).map {
+            NodeTagAndEnvItem(it.envName, envIdMaps[it.envId] ?: EnvNodeType.NODE)
         }
     }
 
