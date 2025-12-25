@@ -25,6 +25,10 @@ class RemoteDevBkRepoConfig {
     @ConfigurationProperties(prefix = "bkrepo.devcloud")
     fun devcloudBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devcloudmedia")
+    fun devcloudMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
+
     @Qualifier("devxBkRepoRegionConfig")
     @Autowired
     private lateinit var devxConfig: BkRepoRegionConfig
@@ -41,6 +45,10 @@ class RemoteDevBkRepoConfig {
     @Autowired
     private lateinit var devcloudConfig: BkRepoRegionConfig
 
+    @Qualifier("devcloudMediaBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devcloudMediaConfig: BkRepoRegionConfig
+
     fun getRegionConfig(region: BkRepoRegion, media: Boolean = false): BkRepoRegionConfig {
         return when (region) {
             BkRepoRegion.DEVX -> {
@@ -50,7 +58,12 @@ class RemoteDevBkRepoConfig {
                 devxConfig
             }
             BkRepoRegion.CSIG -> csigConfig
-            BkRepoRegion.DEVCLOUD -> devcloudConfig
+            BkRepoRegion.DEVCLOUD -> {
+                if (media) {
+                    devcloudMediaConfig
+                }
+                devcloudConfig
+            }
         }
     }
 }
