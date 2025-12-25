@@ -706,12 +706,17 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineId = null,
             params = triggerContainer.params
         )
+        // 返回给前端,那些字段是可以覆盖模版的值
+        val overrideTemplateField = TemplateInstanceField.initFromTrigger(
+            triggerContainer = triggerContainer
+        )
         return TemplateInstanceParams(
             pipelineId = "",
             pipelineName = "",
             buildNo = triggerContainer.buildNo,
             param = instanceParams,
-            triggerElements = triggerContainer.elements
+            triggerElements = triggerContainer.elements,
+            overrideTemplateField = overrideTemplateField
         )
     }
 
