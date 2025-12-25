@@ -643,24 +643,16 @@ class EnvService @Autowired constructor(
         ActionAuditContext.current()
             .setInstanceId(envId.toString())
             .setInstanceName(env.envName)
-        var envs: List<EnvVar> = if (env.envVars.isNullOrBlank()) {
+        val envs: List<EnvVar> = if (env.envVars.isNullOrBlank()) {
             listOf()
         } else {
             JsonUtil.to(env.envVars, object : TypeReference<List<EnvVar>>() {})
         }
-        if (!envName.isNullOrBlank()) {
-            envs = envs.filter { it.name == envName }
-        }
-        if (!envValue.isNullOrBlank()) {
-            envs = envs.filter { it.value == envValue }
-        }
-        if (secure != null) {
-            envs = envs.filter { it.secure == secure }
-        }
-        if (!lastUpdateUser.isNullOrBlank()) {
-            envs = envs.filter { it.lastUpdateUser == lastUpdateUser }
-        }
-        return envs
+        return envs.filter { envName.isNullOrBlank() || it.name == envName }
+            .filter { envValue.isNullOrBlank() || it.value == envValue }
+            .filter { secure == null || it.secure == secure }
+            .filter { lastUpdateUser.isNullOrBlank() || it.lastUpdateUser == lastUpdateUser }
+            .sortedByDescending { it.lastUpdateTime }
     }
 
     override fun listRawEnvByHashIds(
@@ -973,8 +965,7 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        data: EnvAddNodesData,
-        overWrite: Boolean
+        nodeHashIds: List<String>
     ) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
@@ -983,72 +974,6 @@ class EnvService @Autowired constructor(
             )
         }
 
-        val envRecord = envDao.get(dslContext, projectId, envId)
-
-        // 添加标签
-        val tags = data.tags
-        if (!tags.isNullOrEmpty()) {
-            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
-                throw PermissionForbiddenException(
-                    message = I18nUtil.getCodeLanMessage(
-                        ERROR_NODE_TAG_NO_EDIT_PERMISSSION,
-                        language = I18nUtil.getLanguage(userId)
-                    )
-                )
-            }
-            val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                keyIds = tags.map { it.tagKeyId }.toSet()
-            ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
-            val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
-            tags.forEach { tag ->
-                tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
-            }
-            tags.forEach { tag ->
-                if (tagKeys[tag.tagKeyId]?.first == false && (tagsMap[tag.tagKeyId]?.size ?: 0) > 1) {
-                    throw ErrorCodeException(
-                        errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
-                        params = arrayOf(tagKeys[tag.tagKeyId]?.second ?: "")
-                    )
-                }
-            }
-            ActionAuditContext.current()
-                .addInstanceInfo(envHashId, JsonUtil.toJson(tags), null, null)
-
-            dslContext.transaction { config ->
-                val ctx = DSL.using(config)
-                // 类型转换需要清空之前类型的记录
-                if (envRecord.envNodeType == EnvNodeType.NODE.name) {
-                    envNodeDao.deleteByEnvId(ctx, envId)
-                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.TAG)
-                }
-                envTagDao.deleteByEnvId(ctx, envId)
-                envTagDao.batchAddEnvTags(
-                    dslContext = ctx,
-                    projectId = projectId,
-                    envAndValueAndKeyIds = mapOf(envId to tags.associate { it.tagValueId to it.tagKeyId })
-                )
-            }
-            return
-        }
-
-        val nodeHashIds = data.nodeHashIds ?: run{
-            if (!overWrite) {
-                return
-            }
-            // 覆盖场景允许清空节点
-            dslContext.transaction { config ->
-                val ctx = DSL.using(config)
-                // 类型转换需要清空之前类型的记录
-                if (envRecord.envNodeType == EnvNodeType.TAG.name) {
-                    envTagDao.deleteByEnvId(ctx, envId)
-                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
-                }
-                envNodeDao.deleteByEnvId(ctx, envId)
-            }
-            return
-        }
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
         // 检查 node 权限
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
@@ -1077,24 +1002,9 @@ class EnvService @Autowired constructor(
             )
         }
 
-        // 覆盖
-        if (overWrite) {
-            dslContext.transaction { config ->
-                val ctx = DSL.using(config)
-                // 类型转换需要清空之前类型的记录
-                if (envRecord.envNodeType == EnvNodeType.TAG.name) {
-                    envTagDao.deleteByEnvId(ctx, envId)
-                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
-                }
-                envNodeDao.deleteByEnvId(ctx, envId)
-                envNodeDao.batchStoreEnvNode(ctx, existNodeIds.toList(), envId, projectId)
-            }
-            return
-        }
-
         // 过滤已在环境中的节点
         val existEnvNodeIds = envNodeDao.list(dslContext, projectId, listOf(envId)).map { it.nodeId }
-        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds.toSet())
+        val toAddNodeIds = nodeLongIds.subtract(existEnvNodeIds)
 
         // 验证节点类型
         val existNodesMap = existNodes.associateBy { it.nodeId }
@@ -1115,6 +1025,136 @@ class EnvService @Autowired constructor(
                 )
             }
         }
+
+        envNodeDao.batchStoreEnvNode(dslContext, toAddNodeIds.toList(), envId, projectId)
+    }
+
+    @ActionAuditRecord(
+        actionId = ActionId.ENVIRONMENT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENVIRONMENT
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENVIRONMENT_EDIT_ADD_NODES_CONTENT
+    )
+    fun addEnvNodesNew(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        data: EnvAddNodesData
+    ) {
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+
+        val envRecord = envDao.get(dslContext, projectId, envId)
+
+        // 添加标签
+        val tags = data.tags
+        if (tags != null) {
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+                throw PermissionForbiddenException(
+                    message = I18nUtil.getCodeLanMessage(
+                        ERROR_NODE_TAG_NO_EDIT_PERMISSSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
+            }
+            ActionAuditContext.current()
+                .addInstanceInfo(envHashId, JsonUtil.toJson(tags), null, null)
+            // 清空
+            if (tags.isEmpty()) {
+                dslContext.transaction { config ->
+                    val ctx = DSL.using(config)
+                    // 类型转换需要清空之前类型的记录
+                    if (envRecord.envNodeType == EnvNodeType.NODE.name) {
+                        envNodeDao.deleteByEnvId(ctx, envId)
+                        envDao.updateEnvNodeType(ctx, envId, EnvNodeType.TAG)
+                    }
+                    envTagDao.deleteByEnvId(ctx, envId)
+                }
+                return
+            }
+
+            val tagKeys = nodeTagKeyDao.fetchNodeKeyByIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                keyIds = tags.map { it.tagKeyId }.toSet()
+            ).associate { it.id to Pair((it.allowMulValues ?: false), it.keyName) }
+            val tagsMap = mutableMapOf<Long, MutableSet<Long>>()
+            tags.forEach { tag ->
+                tagsMap.putIfAbsent(tag.tagKeyId, mutableSetOf(tag.tagValueId))?.add(tag.tagValueId)
+            }
+            tags.forEach { tag ->
+                if (tagKeys[tag.tagKeyId]?.first == false && (tagsMap[tag.tagKeyId]?.size ?: 0) > 1) {
+                    throw ErrorCodeException(
+                        errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_NO_ALLOW_VALUES,
+                        params = arrayOf(tagKeys[tag.tagKeyId]?.second ?: "")
+                    )
+                }
+            }
+            dslContext.transaction { config ->
+                val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.NODE.name) {
+                    envNodeDao.deleteByEnvId(ctx, envId)
+                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.TAG)
+                }
+                envTagDao.deleteByEnvId(ctx, envId)
+                envTagDao.batchAddEnvTags(
+                    dslContext = ctx,
+                    projectId = projectId,
+                    envAndValueAndKeyIds = mapOf(envId to tags.associate { it.tagValueId to it.tagKeyId })
+                )
+            }
+            return
+        }
+
+        val nodeHashIds = data.nodeHashIds ?: return
+        val env = envDao.get(dslContext, projectId, envId)
+        ActionAuditContext.current()
+            .setInstanceId(envId.toString())
+            .setInstanceName(env.envName)
+            .addExtendData("addNodeIds", nodeHashIds.toString())
+        // 清空
+        if (nodeHashIds.isEmpty()) {
+            dslContext.transaction { config ->
+                val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+                    envTagDao.deleteByEnvId(ctx, envId)
+                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                }
+                envNodeDao.deleteByEnvId(ctx, envId)
+            }
+            return
+        }
+
+        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        // 检查 node 权限
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
+        val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
+        if (unauthorizedNodeIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
+                params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
+        }
+        // 检查 node 是否存在
+        val existNodes = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
+        val existNodeIds = existNodes.map { it.nodeId }.toSet()
+        val notExistNodeIds = nodeLongIds.filterNot { existNodeIds.contains(it) }
+        if (notExistNodeIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(notExistNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
+            )
+        }
+
         dslContext.transaction { config ->
             val ctx = DSL.using(config)
             // 类型转换需要清空之前类型的记录
@@ -1122,7 +1162,8 @@ class EnvService @Autowired constructor(
                 envTagDao.deleteByEnvId(ctx, envId)
                 envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
             }
-            envNodeDao.batchStoreEnvNode(ctx, toAddNodeIds.toList(), envId, projectId)
+            envNodeDao.deleteByEnvId(ctx, envId)
+            envNodeDao.batchStoreEnvNode(ctx, existNodeIds.toList(), envId, projectId)
         }
     }
 

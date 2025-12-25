@@ -437,24 +437,16 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                 params = arrayOf(nodeHashId)
             )
-        var envs: List<EnvVar> = if (agentRecord.agentEnvs.isNullOrBlank()) {
+        val envs: List<EnvVar> = if (agentRecord.agentEnvs.isNullOrBlank()) {
             listOf()
         } else {
-            objectMapper.readValue(agentRecord.agentEnvs)
+            JsonUtil.to(agentRecord.agentEnvs, object : TypeReference<List<EnvVar>>() {})
         }
-        if (!envName.isNullOrBlank()) {
-            envs = envs.filter { it.name == envName }
-        }
-        if (!envValue.isNullOrBlank()) {
-            envs = envs.filter { it.value == envValue }
-        }
-        if (secure != null) {
-            envs = envs.filter { it.secure == secure }
-        }
-        if (lastUpdateUser != null) {
-            envs = envs.filter { it.lastUpdateUser == lastUpdateUser }
-        }
-        return envs
+        return envs.filter { envName.isNullOrBlank() || it.name == envName }
+            .filter { envValue.isNullOrBlank() || it.value == envValue }
+            .filter { secure == null || it.secure == secure }
+            .filter { lastUpdateUser.isNullOrBlank() || it.lastUpdateUser == lastUpdateUser }
+            .sortedByDescending { it.lastUpdateTime }
     }
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {

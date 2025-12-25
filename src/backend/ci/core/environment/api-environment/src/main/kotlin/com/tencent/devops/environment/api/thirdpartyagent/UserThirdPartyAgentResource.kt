@@ -299,6 +299,7 @@ interface UserThirdPartyAgentResource {
         @QueryParam("source")
         source: Boolean?,
         @Parameter(description = "最后修改人", required = false)
+        @QueryParam("lastUpdateUser")
         lastUpdateUser: String?
     ): Result<List<EnvVar>>
 

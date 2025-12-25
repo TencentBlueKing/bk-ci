@@ -122,7 +122,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
         }
 
-        envService.addEnvNodes(userId, projectId, envHashId, EnvAddNodesData(nodeHashIds, null), false)
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
         return Result(true)
     }
 
