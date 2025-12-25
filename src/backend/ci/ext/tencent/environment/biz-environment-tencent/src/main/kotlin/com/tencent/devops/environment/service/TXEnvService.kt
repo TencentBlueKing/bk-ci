@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
@@ -70,6 +71,7 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class TXEnvService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
@@ -86,6 +88,7 @@ class TXEnvService @Autowired constructor(
     private val createEnvService: CreateEnvService
 ) : EnvService(
     dslContext = dslContext,
+    objectMapper = objectMapper,
     envDao = envDao,
     nodeDao = nodeDao,
     envNodeDao = envNodeDao,
