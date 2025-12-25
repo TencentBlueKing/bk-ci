@@ -17,7 +17,7 @@ export default function useRelatedNodes () {
         currentEnv
     } = useEnvDetail()
     const isLoading = ref(false)
-    const relatedType = ref(RELATED_TYPE[currentEnv.value.envNodeType] || RELATED_TYPE.NODE)
+    const relatedType = ref(RELATED_TYPE[currentEnv.value?.envNodeType] || RELATED_TYPE.NODE)
     const projectId = computed(() => proxy.$route.params.projectId)
     const envHashId = computed(() => proxy.$route.params.envId)
     const handleShowRelatedNodes = () => {

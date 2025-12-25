@@ -172,11 +172,11 @@
     import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
-    import useEnvDetail from '@/hooks/useEnvDetail'
+    import useNodeDetail from '@/hooks/useNodeDetail'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
     export default {
-        name: 'EnvParam',
+        name: 'NodeEnvParam',
         components: {
             SearchSelect
         },
@@ -191,12 +191,12 @@
                 pageLimitChange: handlePageLimitChange
             } = usePagination()
             const {
-                currentEnv,
-                envHashId,
-                envParamsList,
-                fetchEnvParamsList,
-                updateEnvDetail
-            } = useEnvDetail()
+                nodeHashId,
+                nodeEnvsList,
+                fetchNodeEnvs,
+                saveNodeEnvs,
+                deleteNodeEnv
+            } = useNodeDetail()
             const isLoading = ref(false)
             const searchValue = ref([])
             const envVarForm = ref(null)
@@ -254,16 +254,20 @@
                             { id: false, name: proxy.$t('environment.envInfo.clearText') },
                             { id: true, name: proxy.$t('environment.envInfo.cipherText') }
                         ]
-                    },
-                    {
-                        name: proxy.$t('environment.lastModifiedUser'),
-                        id: 'lastModifiedUser'
                     }
+                    // {
+                    //     name: proxy.$t('environment.lastModifiedUser'),
+                    //     id: 'lastModifiedUser'
+                    // }
                 ]
             })
-            watch(() => envHashId.value, (val) => {
-                fetchData()
+            
+            watch(() => nodeHashId.value, (val) => {
+                if (val) {
+                    fetchData()
+                }
             })
+            
             const filterTips = computed(() => {
                 return searchList.value.map(item => item.name).join(' / ')
             })
@@ -277,27 +281,37 @@
                     return acc
                 }, {})
             })
+            
             // 监听搜索值变化
             watch(() => searchValue.value, () => {
                 resetPage()
                 fetchData()
-            })
+            }, { deep: true })
             
-            // 前端分页：根据 pagination 和 envParamsList 计算当前页显示的数据
+            // 后端分页：直接使用接口返回的数据
             const renderData = computed(() => {
                 const start = (pagination.value.current - 1) * pagination.value.limit
                 const end = start + pagination.value.limit
-                return envParamsList.value.slice(start, end)
+                return nodeEnvsList.value.slice(start, end)
             })
+            
+            // 监听 nodeEnvsList 变化，更新分页总数
+            watch(() => nodeEnvsList.value, (val) => {
+                updateCount(val.length)
+            }, { immediate: true })
+            
+            // 获取节点环境变量列表
             const fetchData = async () => {
+                if (!nodeHashId.value) return
                 try {
                     isLoading.value = true
-                    const res = await fetchEnvParamsList(searchQuery.value)
-                    if (res) {
-                        updateCount(res?.length)
-                    }
+                    await fetchNodeEnvs(searchQuery.value)
                 } catch (e) {
                     console.error(e)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: e.message || '获取环境变量失败'
+                    })
                 } finally {
                     isLoading.value = false
                 }
@@ -306,15 +320,7 @@
             const handleDelete = (row) => {
                 const confirmFn = async () => {
                     try {
-                        // 根据 row 的内容找到真实的索引
-                        const realIndex = envParamsList.value.findIndex(item =>
-                            item.name === row.name && item.value === row.value && item.secure === row.secure
-                        )
-                        const params = {
-                            ...currentEnv.value,
-                            envVars: envParamsList.value.filter((item, i) => i !== realIndex)
-                        }
-                        await updateEnvDetail(params)
+                        await deleteNodeEnv(row)
                         proxy.$bkMessage({
                             theme: 'success',
                             message: proxy.$t('environment.successfullyDeleted')
@@ -324,7 +330,7 @@
                         console.error(e)
                         proxy.$bkMessage({
                             theme: 'error',
-                            message: e.message
+                            message: e.message || '删除失败'
                         })
                     }
                 }
@@ -362,7 +368,7 @@
             const handleEdit = (row) => {
                 resetForm()
                 // 找到当前行在完整列表中的索引
-                const realIndex = envParamsList.value.findIndex(item =>
+                const realIndex = nodeEnvsList.value.findIndex(item =>
                     item.name === row.name && item.value === row.value && item.secure === row.secure
                 )
                 formData.value = {
@@ -385,7 +391,7 @@
                     await envVarForm.value.validate()
                     sliderConfig.value.isSubmitting = true
                     
-                    const newEnvVars = [...(envParamsList.value || [])]
+                    const newEnvVars = [...(nodeEnvsList.value || [])]
                     
                     if (sliderConfig.value.isEdit) {
                         // 编辑模式：更新指定索引的数据
@@ -395,7 +401,7 @@
                             secure: formData.value.secure
                         }
                     } else {
-                        // 新增模式：添加到数组末尾
+                        // 新增模式：添加到数组开头
                         newEnvVars.unshift({
                             name: formData.value.name,
                             value: formData.value.value,
@@ -403,12 +409,8 @@
                         })
                     }
                     
-                    const params = {
-                        ...currentEnv.value,
-                        envVars: newEnvVars
-                    }
+                    await saveNodeEnvs(newEnvVars)
                     
-                    await updateEnvDetail(params)
                     proxy.$bkMessage({
                         theme: 'success',
                         message: sliderConfig.value.isEdit
@@ -419,11 +421,12 @@
                     sliderConfig.value.isShow = false
                     await fetchData()
                 } catch (e) {
-                    proxy.$bkMessage({
-                        theme: 'error',
-                        message: e.message || e
-                    })
-                    throw e
+                    if (e !== 'cancel') {
+                        proxy.$bkMessage({
+                            theme: 'error',
+                            message: e.message || e || '保存失败'
+                        })
+                    }
                 } finally {
                     sliderConfig.value.isSubmitting = false
                 }
@@ -469,6 +472,7 @@
             onBeforeUnmount(() => {
                 window.removeEventListener('resize', handleResize)
             })
+            
             return {
                 // data
                 isLoading,
@@ -476,8 +480,8 @@
                 searchList,
                 filterTips,
                 pagination,
-                envParamsList,
-                envHashId,
+                nodeEnvsList,
+                nodeHashId,
                 renderData,
                 envVarForm,
                 sliderConfig,

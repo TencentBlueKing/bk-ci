@@ -249,8 +249,8 @@ const actions = {
     /**
      * 获取agent环境变量
      */
-    requestEnvs ({ commit }, { projectId, nodeHashId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/envs`).then(response => {
+    requestEnvs ({ commit }, { projectId, nodeHashId, params }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${nodeHashId}/envs`, { params }).then(response => {
             return response
         })
     },
@@ -450,6 +450,20 @@ const actions = {
     searchByCreator ({ commit }, { params }) {
         const queryString = new URLSearchParams(params).toString()
         return vue.$ajax.get(`${dispatchPrefix}/user/agents/listAgentPipelineJobs/searchByCreator?${queryString}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取Agent离线记录
+     * @param {Object} params - 查询参数
+     * @param {string} params.projectId - 项目ID
+     * @param {string} params.agentHashId - Agent Hash ID
+     * @param {number} params.page - 页码
+     * @param {number} params.pageSize - 每页条数
+     */
+    requestAgentOfflinePeriod ({ commit }, { projectId, agentHashId, page, pageSize }) {
+        return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${agentHashId}/listAgentOfflinePeriod?page=${page}&pageSize=${pageSize}`).then(response => {
             return response
         })
     }

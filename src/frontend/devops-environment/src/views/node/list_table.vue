@@ -20,6 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
+            :key="isFlod"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -27,11 +28,11 @@
             @selection-change="handleSelectionChange"
         >
             <template v-if="isFlod">
-                <bk-table-column
+                <!-- <bk-table-column
                     type="selection"
                     fixed="left"
                     width="40"
-                ></bk-table-column>
+                ></bk-table-column> -->
                 <bk-table-column
                     :label="$t('environment.nodeInfo.displayName')"
                     prop="displayName"

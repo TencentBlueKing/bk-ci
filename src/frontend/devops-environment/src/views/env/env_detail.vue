@@ -32,7 +32,7 @@
                 </bk-tab>
                 <component
                     :is="renderComponent"
-                    :key="currentEnv.envType"
+                    :key="currentEnv?.envType"
                 />
             </template>
         </div>

@@ -466,5 +466,9 @@
     "overview": "概览",
     "settings": "设置",
     "taskDetail": "任务详情",
-    "offlineRecords": "Agent离线记录"
+    "offlineRecords": "Agent离线记录",
+    "offlineTime": "离线时间段",
+    "offlineDuration": "离线时长",
+    "nodeUsage": "节点用途",
+    "buildAgent": "构建 Agent"
 }

@@ -22,7 +22,7 @@ export default function useEnvAside () {
                 params: {
                     ...proxy.$route.params,
                     envType: ENV_TYPE_MAP.ALL,
-                    envId: currentEnvId, // 保持原有的 envId（如果有的话）
+                    envId: currentEnvId, // 保持原有的 envId
                     tabName: undefined // 清除 tabName，让 env_detail 重新设置
                 }
             }).catch(err => {
