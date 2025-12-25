@@ -75,7 +75,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                 resourceId = resourceId,
                 resourceVersion = resourceVersion
             ) ?: return
-
+            model.handlePublicVarInfo()
             // 使用 ModelVarRefUtils 解析变量引用
             val varRefDetails = ModelVarRefUtils.parseModelVarReferences(
                 model = model,

@@ -107,7 +107,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
         // 获取Model中的变量组列表
         val modelVarGroups = model.publicVarGroups ?: emptyList()
-
         // 如果Model中没有变量组，清理所有已存在的引用记录
         if (modelVarGroups.isEmpty()) {
             cleanupRemovedVarGroupReferences(
