@@ -54,15 +54,18 @@ class RemoteDevBkRepoConfig {
             BkRepoRegion.DEVX -> {
                 if (media) {
                     devxMediaConfig
+                } else {
+                    devxConfig
                 }
-                devxConfig
             }
+
             BkRepoRegion.CSIG -> csigConfig
             BkRepoRegion.DEVCLOUD -> {
                 if (media) {
                     devcloudMediaConfig
+                } else {
+                    devcloudConfig
                 }
-                devcloudConfig
             }
         }
     }
