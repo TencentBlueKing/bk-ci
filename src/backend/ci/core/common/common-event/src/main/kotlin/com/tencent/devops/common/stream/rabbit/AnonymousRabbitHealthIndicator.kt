@@ -262,7 +262,7 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
 
         // 记录详细日志
         logger.error(
-            "[AnonymousQueueHealthIndicator] Consumer container failed event received!\n" +
+            "BKSystemErrorMonitor|[AnonymousQueueHealthIndicator] Consumer container failed event received!\n" +
                 "========== Error Details ==========\n" +
                 "Queue Names: $queueNames\n" +
                 "Is Anonymous Queue: true\n" +
