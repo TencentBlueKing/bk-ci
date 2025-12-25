@@ -78,5 +78,6 @@ data class BkRepoRegionConfig(
     var url: String = "",
     var headerUserAuth: String = "",
     var webUrl: String = "",
-    var dnsIp: String = ""
+    var dnsIp: String = "",
+    var proxyUrl: String = ""
 )

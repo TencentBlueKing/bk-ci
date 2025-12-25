@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.IOException
+import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service
@@ -49,8 +50,12 @@ class RemotedevBkRepoClient @Autowired constructor(
         media: Boolean
     ): String? {
         val config = bkRepoConfig.getRegionConfig(region, media)
+        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
-            .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
+            .url(url)
             .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
@@ -62,7 +67,10 @@ class RemotedevBkRepoClient @Autowired constructor(
 
     fun existProject(region: BkRepoRegion, projectId: String, media: Boolean): Boolean? {
         val config = bkRepoConfig.getRegionConfig(region, media)
-        val url = "${config.url}/repository/api/project/exist/$projectId"
+        var url = "${config.url}/repository/api/project/exist/$projectId"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(region, BKREPO_ROOT_USERID, media).toHeaders())
@@ -78,8 +86,12 @@ class RemotedevBkRepoClient @Autowired constructor(
             displayName = projectId,
             description = ""
         )
+        var url = "${config.url}/repository/api/project/create"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
-            .url("${config.url}/repository/api/project/create")
+            .url(url)
             .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
@@ -113,7 +125,10 @@ class RemotedevBkRepoClient @Autowired constructor(
         media: Boolean
     ): Page<BkRepoNodeDetail>? {
         val config = bkRepoConfig.getRegionConfig(region, media)
-        val url = "${config.url}/repository/api/node/search"
+        var url = "${config.url}/repository/api/node/search"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
             .url(url)
             .headers(getCommonHeaders(region, userId, media).toHeaders())
@@ -289,7 +304,11 @@ class RemotedevBkRepoClient @Autowired constructor(
         return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
     }
 
-    private fun getCommonHeaders(region: BkRepoRegion, userId: String, media: Boolean = false): MutableMap<String, String> {
+    private fun getCommonHeaders(
+        region: BkRepoRegion,
+        userId: String,
+        media: Boolean = false
+    ): MutableMap<String, String> {
         val config = bkRepoConfig.getRegionConfig(region, media)
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = config.headerUserAuth
