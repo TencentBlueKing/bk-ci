@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -121,6 +122,7 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 class EnvService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
@@ -238,7 +240,7 @@ class EnvService @Autowired constructor(
                 name = envUpdateInfo.name,
                 desc = envUpdateInfo.desc,
                 envType = envUpdateInfo.envType.name,
-                envVars = ObjectMapper().writeValueAsString(envUpdateInfo.envVars)
+                envVars = objectMapper.writeValueAsString(envUpdateInfo.envVars)
             )
 
             if (existEnv.envName != envUpdateInfo.name) {
@@ -644,7 +646,7 @@ class EnvService @Autowired constructor(
         var envs: List<EnvVar> = if (env.envVars.isNullOrBlank()) {
             listOf()
         } else {
-            ObjectMapper().readValue(env.envVars)
+            JsonUtil.to(env.envVars, object : TypeReference<List<EnvVar>>() {})
         }
         if (!envName.isNullOrBlank()) {
             envs = envs.filter { it.name == envName }
@@ -655,7 +657,7 @@ class EnvService @Autowired constructor(
         if (secure != null) {
             envs = envs.filter { it.secure == secure }
         }
-        if (lastUpdateUser != null) {
+        if (!lastUpdateUser.isNullOrBlank()) {
             envs = envs.filter { it.lastUpdateUser == lastUpdateUser }
         }
         return envs
@@ -1031,7 +1033,22 @@ class EnvService @Autowired constructor(
             return
         }
 
-        val nodeHashIds = data.nodeHashIds ?: return
+        val nodeHashIds = data.nodeHashIds ?: run{
+            if (!overWrite) {
+                return
+            }
+            // 覆盖场景允许清空节点
+            dslContext.transaction { config ->
+                val ctx = DSL.using(config)
+                // 类型转换需要清空之前类型的记录
+                if (envRecord.envNodeType == EnvNodeType.TAG.name) {
+                    envTagDao.deleteByEnvId(ctx, envId)
+                    envDao.updateEnvNodeType(ctx, envId, EnvNodeType.NODE)
+                }
+                envNodeDao.deleteByEnvId(ctx, envId)
+            }
+            return
+        }
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
         // 检查 node 权限
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
