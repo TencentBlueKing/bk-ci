@@ -22,7 +22,7 @@ data class TemplateInstanceField(
             triggerContainer: TriggerContainer
         ): TemplateInstanceField {
             val paramIds = triggerContainer.params.filter {
-                it.constant != true
+                it.constant != true && it.required
             }.map { it.id }.toMutableList()
             if (triggerContainer.buildNo != null) {
                 paramIds.add(BK_CI_BUILD_NO)
