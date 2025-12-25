@@ -155,7 +155,7 @@
             },
             paramValues: {
                 handler (value, oldValue) {
-                    this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && value.subBranch.isBkVar()
+                    this.pipelineRequiredParams.subBranch = typeof value.subBranch === 'string' && this.getValidaVar(value.subBranch)
                         ? this.requiredParams[value.subBranch.extractBkVar()]
                         : value.subBranch
                     if (oldValue !== undefined && ((value?.subPip !== oldValue?.subPip) || (value?.subBranch !== oldValue?.subBranch))) {

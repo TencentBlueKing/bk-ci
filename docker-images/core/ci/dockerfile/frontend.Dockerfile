@@ -1,5 +1,16 @@
-FROM bkci/os:0.0.1
+FROM bkci/openresty:0.0.2
 
 LABEL maintainer="Tencent BlueKing Devops"
 
-COPY ./ci-docker/frontend /data/workspace/frontend
+# 设置安装路径
+ENV INSTALL_PATH="/data/workspace/"
+
+# nginx配置文件
+COPY ./dockerfile/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+
+# 复制脚本和模板
+COPY ./ci-docker/scripts ${INSTALL_PATH}/scripts
+COPY ./ci-docker/support-files/templates ${INSTALL_PATH}/templates
+
+# 复制前端代码
+COPY ./ci-docker/frontend ${INSTALL_PATH}/frontend

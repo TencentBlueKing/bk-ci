@@ -115,7 +115,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .file-upload {
         margin: 0 auto;
         width: 650px;

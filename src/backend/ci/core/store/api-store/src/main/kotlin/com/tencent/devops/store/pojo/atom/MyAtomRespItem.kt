@@ -69,5 +69,7 @@ data class MyAtomRespItem(
     @get:Schema(title = "创建时间", required = true)
     val updateTime: String,
     @get:Schema(title = "处于流程中的插件版本信息", required = false)
-    val processingVersionInfos: List<AtomBaseInfo>? = null
+    val processingVersionInfos: List<AtomBaseInfo>? = null,
+    @get:Schema(title = "代码库链接", required = true)
+    val codeSrc: String?
 )
