@@ -58,13 +58,13 @@
                                 {{ fieldTitleMap[key] }}
                             </span>
                             <span class="value">
-                                <span class="current-value">{{ typeof value === 'boolean' ? proxy.$t(`${value.oldValue}`) : value?.oldValue || '--' }}</span>
+                                <span class="current-value">{{ ['required', 'readOnly', 'valueNotEmpty', 'sensitive'].includes(key) ? proxy.$t(`${value.oldValue}`) : value?.oldValue || '--' }}</span>
                                 <Logo
                                     class="arrow-right-icon"
                                     size="18"
                                     name="arrow-right"
                                 />
-                                <span class="after-value">{{ typeof value === 'boolean' ? proxy.$t(`${value.newValue}`) : value?.newValue || '--' }}</span>
+                                <span class="after-value">{{ ['required', 'readOnly', 'valueNotEmpty', 'sensitive'].includes(key) ? proxy.$t(`${value.newValue}`) : value?.newValue || '--' }}</span>
                             </span>
                         </div>
                     </div>
@@ -86,7 +86,7 @@
                                 {{ fieldTitleMap[key] }}
                             </span>
                             <span class="value">
-                                <span class="after-value">{{ typeof value === 'boolean' ? proxy.$t(`${value}`) : value || '--' }}</span>
+                                <span class="after-value">{{ ['required', 'readOnly', 'valueNotEmpty', 'sensitive'].includes(key) ? proxy.$t(`${value}`) : value || '--' }}</span>
                             </span>
                         </div>
                     </div>
@@ -166,7 +166,6 @@
     const dialogPositionConfig = ref({
         top: window.innerHeight < 800 ? '20' :  window.innerHeight > 1000 ? '8%' : '80'
     })
-    const referencesTips = computed(() => {})
     const curVarData = computed(() => props.previewData[activeIdx.value] ?? {})
     const fieldTitleMap = computed(() => {
         const isVariable = curVarData.value.type === VARIABLE

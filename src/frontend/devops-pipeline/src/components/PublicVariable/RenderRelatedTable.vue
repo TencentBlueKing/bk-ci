@@ -22,6 +22,7 @@
                     <bk-table-column
                         v-for="column in columns"
                         :key="column.prop"
+                        show-overflow-tooltip
                         v-bind="column"
                     />
                 </bk-table>

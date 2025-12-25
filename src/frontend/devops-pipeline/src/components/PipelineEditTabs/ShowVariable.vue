@@ -206,7 +206,7 @@
 }
 
 .variable-entry {
-  z-index: 1980;
+  z-index: 2020;
   position: absolute;
   right: 460px;
   top: calc(50% - 50px);
