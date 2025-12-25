@@ -720,7 +720,8 @@
       "readOnly": "実行時読み取り専用",
       "category": "グループラベル"
     },
-    "propertyUpdated": "更新"
+    "propertyUpdated": "更新",
+    "toInstance": "実例化"
   },
   "newlist": {
     "exportYamlTip": "PreCI は BlueKing DevOps が開発者向けに提供する CI 前的開発活動向けソリューションで、コード提出前に早期に問題を発見し、コード品質を向上させます。IDE プラグインとコマンドラインツールが含まれます。",

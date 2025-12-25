@@ -708,7 +708,8 @@
       "readOnly": "ReadOnly when executing",
       "category": "Group labels"
     },
-    "propertyUpdated": "Updated"
+    "propertyUpdated": "Updated",
+    "toInstance": "To instantiate"
   },
   "newlist": {
     "exportYamlTip": "PreCI is a set of solutions provided by Blue Shield DevOps for developers' pre-CI R&D activities, which can detect problems as early as possible before submitting code and improve code quality. Including IDE plug-ins and command line tools.",
