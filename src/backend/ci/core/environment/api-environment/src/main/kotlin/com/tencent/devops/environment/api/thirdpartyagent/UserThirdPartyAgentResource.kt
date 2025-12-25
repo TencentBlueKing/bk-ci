@@ -429,7 +429,7 @@ interface UserThirdPartyAgentResource {
 
     @Operation(summary = "获取第三方构建机离线时间段")
     @GET
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentOfflinePeriod")
+    @Path("/projects/{projectId}/nodes/{agentHashId}/listAgentOfflinePeriod")
     fun listAgentOfflinePeriod(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
