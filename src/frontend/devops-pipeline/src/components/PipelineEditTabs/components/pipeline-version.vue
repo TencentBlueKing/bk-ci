@@ -431,6 +431,7 @@
             ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
             toggleBuildNoConstraint (isOverride) {
                 this.overrideConstraint = isOverride
+                console.log(this.$store.state.atom.pipeline.stages[0].containers[0], 1111111)
                 this.$nextTick(() => {
                     if (!isOverride) {
                         this.renderBuildNo = this.buildNo

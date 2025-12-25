@@ -247,7 +247,7 @@
             })
             const list = renderInstanceList.value.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
-                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {
                     ...i,
                     ...res[i.pipelineId],

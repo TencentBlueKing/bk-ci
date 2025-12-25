@@ -707,7 +707,8 @@
       "readOnly": "ReadOnly when executing",
       "category": "Group labels"
     },
-    "propertyUpdated": "Updated"
+    "propertyUpdated": "Updated",
+    "toInstance": "To instantiate"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

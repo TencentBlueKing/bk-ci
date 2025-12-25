@@ -242,7 +242,7 @@
                     resetBuildNo: item?.resetBuildNo ?? false,
                     timerTrigger: item.timerTrigger,
                     filePath: item.filePath,
-                    overrideTemplateField: item?.overrideTemplateField ?? [],
+                    overrideTemplateField: item?.overrideTemplateField ?? {},
                     triggerConfigs: item?.triggerConfigs
                 }
             })

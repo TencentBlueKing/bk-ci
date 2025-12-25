@@ -709,7 +709,8 @@
       "readOnly": "実行時読み取り専用",
       "category": "グループラベル"
     },
-    "propertyUpdated": "更新"
+    "propertyUpdated": "更新",
+    "toInstance": "実例化"
   },
   "newlist": {
     "exportJsonTip": "インポート機能を使用すると、パイプラインをすばやく作成したり、クロスプロジェクト、クロス藍盾プラットフォームのパイプラインインポートを実現したりすることができます。",

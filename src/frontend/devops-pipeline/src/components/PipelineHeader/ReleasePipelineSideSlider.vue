@@ -899,6 +899,7 @@
                         return
                     }
                     if (this.isTemplateInstanceMode) {
+                        console.log(123)
                         const { projectId, templateId } = this.$route.params
                         const res = await this.fetchTemplateReleasePreFetch({
                             projectId,
@@ -1240,7 +1241,29 @@
                                                 }
                                             },
                                             this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
-                                        )
+                                        ),
+                                        this.isTemplate ? h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        this.$router.push({
+                                                            name: 'TemplateOverview',
+                                                            params: {
+                                                                ...this.$route.params,
+                                                                version: this.pipelineInfo?.releaseVersion,
+                                                                type: 'instanceList'
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            },
+                                            this.$t('template.toInstance')
+                                        ) : null
 
                                     ]
                                 )

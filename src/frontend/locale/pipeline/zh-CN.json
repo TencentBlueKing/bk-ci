@@ -707,7 +707,8 @@
       "readOnly": "运行时只读",
       "category": "分组标签"
     },
-    "propertyUpdated": "更新"
+    "propertyUpdated": "更新",
+    "toInstance": "去实例化"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

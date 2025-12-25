@@ -119,7 +119,10 @@
                                         default-layout
                                         show-follow-template-btn
                                         show-set-required-btn
-                                        v-bind="versionParams"
+                                        v-bind="{
+                                            ...versionParams,
+                                            ...buildNo
+                                        }"
                                         config-type="introVersion"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
@@ -447,6 +450,25 @@
         } catch (e) {
             throw e
         } finally {
+            // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id
+            const newOverrideParamIds = curInstance.value.param?.filter(p => p.constant && p.required).map(p => p.id) || []
+            // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
+            const originalParamIds = curInstance.value?.overrideTemplateField?.paramIds || []
+            if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
+                newOverrideParamIds.push('BK_CI_BUILD_NO')
+            }
+            proxy.$nextTick(() => {
+                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                    index: activeIndex.value - 1,
+                    value: {
+                        ...curInstance.value,
+                        overrideTemplateField: {
+                            ...curInstance?.overrideTemplateField,
+                            paramIds: [...newOverrideParamIds]
+                        }
+                    }
+                })
+            })
             isLoading.value = false
         }
     }
@@ -478,7 +500,7 @@
         if (curInstance.value?.buildNoChanged) {
             counts.changed++
         }
-        if (curInstance.value?.resetBuildNo) {
+        if (curInstance.value?.resetBuildN && curInstance.value?.buildNo) {
             counts.changed++
         }
         // 触发器新增/删除统计
@@ -543,56 +565,6 @@
         initData()
     }, {
         deep: true
-    })
-    
-    // 监听 curInstance 变化，当有新增的 param、buildNo、triggerConfigs 时，同步store
-    const isUpdatingStore = ref(false)
-    watch(() => curInstance.value, (newInstance) => {
-        if (!newInstance || isUpdatingStore.value) return
-        
-        const storeInstance = instanceList.value[activeIndex.value - 1]
-        if (!storeInstance) return
-        
-        // 检查是否有新增的参数
-        const hasNewParams = newInstance?.param?.some(p => p.isNew) || false
-        
-        // 检查是否有新增的触发器
-        const hasNewTriggers = newInstance?.triggerConfigs?.some(trigger => trigger.isNew) || false
-        
-        // 检查 buildNo 是否有变化
-        const buildNoChanged = !isShallowEqual(newInstance?.buildNo, storeInstance?.buildNo)
-        
-        if (!hasNewParams && !hasNewTriggers && !buildNoChanged) return
-        
-        // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id（不跟随模板的参数，并且模板对应的变量 required 为true）
-        const newOverrideParamIds = newInstance.param
-            ?.filter(p => {
-            const templateParam = curTemplateDetail.value?.param?.find(t => t.id === p.id)
-            return !p.isFollowTemplate && templateParam?.required
-        }).map(p => p.id) || []
-        
-        isUpdatingStore.value = true
-        proxy.$nextTick(() => {
-            proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
-                index: activeIndex.value - 1,
-                value: {
-                    ...storeInstance,
-                    param: newInstance.param,
-                    buildNo: newInstance.buildNo,
-                    triggerConfigs: newInstance.triggerConfigs,
-                    overrideTemplateField: {
-                        ...storeInstance?.overrideTemplateField,
-                        paramIds: [...newOverrideParamIds]
-                    }
-                }
-            })
-            setTimeout(() => {
-                isUpdatingStore.value = false
-            }, 0)
-        })
-    }, {
-        deep: true,
-        immediate: true
     })
 
     function compareParams (instance, template, instanceIndex) {
@@ -713,7 +685,8 @@
                 buildNo: {
                     ...templateBuildNo,
                     currentBuildNo: templateBuildNo.buildNo,
-                    isRequiredParam: templateBuildNo?.required && templateBuildNo?.asInstanceInput
+                    isRequiredParam: templateBuildNo?.required && templateBuildNo?.asInstanceInput,
+                    isNew: true
                 },
                 buildNoParam: templateBuildNoParams
             }
@@ -1466,16 +1439,18 @@
                 display: inline-block;
                 width: 12px;
                 height: 12px;
-                background: #FDF4E8;
                 margin-right: 4px;
                 &.changed {
                     border: 1px solid #F8B64F;
+                    background: #FDF4E8;
                 }
                 &.added {
                     border: 1px solid #2CAF5E;
+                    background: #ebfaf0;
                 }
                 &.deleted {
                     border: 1px solid #FF5656;
+                    background: #fff0f0;
                 }
             }
             .status-value {
