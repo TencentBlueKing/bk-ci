@@ -782,7 +782,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 如果是克隆场景，异步克隆 bksec 安全策略
-        if (copy != null) {
+        if (copy != null && !bak) {
             workspaceCommon.cloneBkSecPolicy(
                 oldWorkspaceName = copy.workspaceName,
                 newWorkspaceName = ws.workspaceName
