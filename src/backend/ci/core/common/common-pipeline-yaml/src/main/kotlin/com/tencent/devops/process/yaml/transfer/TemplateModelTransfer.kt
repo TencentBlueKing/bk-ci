@@ -182,22 +182,21 @@ class TemplateModelTransfer @Autowired constructor(
             stages.add(ymlStage)
         }
         baseYaml.stages = stages.ifEmpty { null }?.let { TransferMapper.anyTo(stages) }
-        var variables: MutableMap<String, Any>? = null
-        model.triggerContainer()?.let {
-            variables = mutableMapOf()
+        baseYaml.variables = model.triggerContainer()?.let { triggerContainer ->
             // 刷新公共变量配置信息
             modelInput.model.handlePublicVarInfo()
+            val variables = mutableMapOf<String, Any>()
             val publicVarGroupNames = modelInput.model.getPublicVarGroups()
             if (!publicVarGroupNames.isNullOrEmpty()) {
-                variables!![TEMPLATE_KEY] = publicVarGroupNames.map {
+                variables[TEMPLATE_KEY] = publicVarGroupNames.map {
                     VariableTemplate(it.groupName, it.versionName)
                 }
             }
-            if (variableTransfer.makeVariableFromModel(it) != null) {
-                variables!!.putAll(variableTransfer.makeVariableFromModel(it)!!)
+            variableTransfer.makeVariableFromModel(triggerContainer)?.let { modelVariables ->
+                variables.putAll(modelVariables)
             }
+            variables.ifEmpty { null }
         }
-        baseYaml.variables = variables
         val lastStage = model.stages()?.last()
         val finally = if (lastStage?.finally == true) {
             modelInput.aspectWrapper.setModelStage4Model(lastStage, PipelineTransferAspectWrapper.AspectType.BEFORE)

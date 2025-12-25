@@ -33,6 +33,8 @@ class ModelHandleServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ModelHandleServiceImpl::class.java)
         private const val MODEL_VAR_REF_LOCK_KEY = "MODEL_VAR_REF_LOCK_KEY"
         private const val LOCK_EXPIRED_TIME_IN_SECONDS = 5L
+        private const val MAX_RETRY_TIMES = 3
+        private const val RETRY_INTERVAL_MILLIS = 500L
     }
 
     override fun handleModelParams(
@@ -117,32 +119,51 @@ class ModelHandleServiceImpl @Autowired constructor(
         resourceType: String,
         resourceVersion: Int
     ): Model? {
-        val modelString = when (resourceType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE.name -> {
-                pipelineResourceVersionDao.getVersionModelString(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = resourceId,
-                    version = resourceVersion,
-                    includeDraft = true
-                )
-            }
-            PublicVerGroupReferenceTypeEnum.TEMPLATE.name -> {
-                pipelineTemplateResourceDao.getVersionModelString(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    templateId = resourceId,
-                    version = resourceVersion.toLong(),
-                    includeDraft = true
-                )
-            }
+        
+        var retryCount = 0
+        var model: Model?
 
-            else -> null
+        while (retryCount < MAX_RETRY_TIMES) {
+            val modelString = when (resourceType) {
+                PublicVerGroupReferenceTypeEnum.PIPELINE.name -> {
+                    pipelineResourceVersionDao.getVersionModelString(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = resourceId,
+                        version = resourceVersion,
+                        includeDraft = true
+                    )
+                }
+                PublicVerGroupReferenceTypeEnum.TEMPLATE.name -> {
+                    pipelineTemplateResourceDao.getVersionModelString(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        templateId = resourceId,
+                        version = resourceVersion.toLong(),
+                        includeDraft = true
+                    )
+                }
+
+                else -> null
+            }
+            
+            model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) } as? Model
+            
+            if (model != null) {
+                if (retryCount > 0) {
+                    logger.info("Successfully got resource model after $retryCount retries: $resourceId")
+                }
+                return model
+            }
+            
+            retryCount++
+            if (retryCount < MAX_RETRY_TIMES) {
+                logger.warn("Failed to get resource model, retrying ($retryCount/$MAX_RETRY_TIMES): $resourceId")
+                Thread.sleep(RETRY_INTERVAL_MILLIS)
+            }
         }
-        val model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) }
-        if (model is Model) {
-            return model
-        }
+        
+        logger.warn("Failed to get resource model after $MAX_RETRY_TIMES retries: $resourceId")
         return null
     }
 }

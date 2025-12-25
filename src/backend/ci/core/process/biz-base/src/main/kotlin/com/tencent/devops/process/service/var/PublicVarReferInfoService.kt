@@ -59,7 +59,7 @@ class PublicVarReferInfoService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PublicVarReferInfoService::class.java)
         
         // 版本相关常量
-        private const val DYNAMIC_VERSION = -1  // 动态版本标识
+        private const val DYNAMIC_VERSION = -1 // 动态版本标识
     }
 
     /**
