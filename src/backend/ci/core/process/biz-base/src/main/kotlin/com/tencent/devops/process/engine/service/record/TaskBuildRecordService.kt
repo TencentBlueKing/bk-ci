@@ -54,7 +54,6 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
-import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
@@ -75,7 +74,6 @@ import java.time.LocalDateTime
 )
 @Service
 class TaskBuildRecordService(
-    private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
@@ -145,7 +143,6 @@ class TaskBuildRecordService(
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
             cancelUser = null, operation = "taskStart#$taskId"
         ) {
-            val delimiters = ","
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val recordTask = recordTaskDao.getRecord(
@@ -169,20 +166,6 @@ class TaskBuildRecordService(
                         recordTask.originClassType == ManualReviewUserTaskElement.classType)
                 ) {
                     taskStatus = BuildStatus.REVIEWING
-                    val list = mutableListOf<String>()
-                    taskVar[ManualReviewUserTaskElement::reviewUsers.name]?.let {
-                        try {
-                            (it as List<*>).forEach { reviewUser ->
-                                list.addAll(
-                                    buildVariableService.replaceTemplate(projectId, buildId, reviewUser.toString())
-                                        .split(delimiters)
-                                )
-                            }
-                        } catch (ignore: Throwable) {
-                            return@let
-                        }
-                    }
-                    taskVar[ManualReviewUserTaskElement::reviewUsers.name] = list
                 } else if (
                     recordTask.classType == QualityGateInElement.classType ||
                     recordTask.classType == QualityGateOutElement.classType ||
