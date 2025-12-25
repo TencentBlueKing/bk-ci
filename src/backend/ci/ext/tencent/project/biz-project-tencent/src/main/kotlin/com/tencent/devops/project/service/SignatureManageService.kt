@@ -218,9 +218,9 @@ class SignatureManageService(
         } else {
             val targetLanguage = I18nUtil.getLanguage(userId)
             val (information, agreementTips) = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
-                Pair(platformDetails.platform, platformDetails.informationCn)
+                Pair(platformDetails.platformName, platformDetails.informationCn)
             } else {
-                Pair(platformDetails.platformName, platformDetails.informationEn)
+                Pair(platformDetails.platform, platformDetails.informationEn)
             }
             UserSignatureStatusResponse(
                 userId = userId,
