@@ -159,14 +159,8 @@ class TXEnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        data: EnvAddNodesData,
-        overWrite: Boolean
+        nodeHashIds: List<String>
     ) {
-        // TODO: #12354 云桌面环境需要支持标签
-        val nodeHashIds = data.nodeHashIds ?: run {
-            super.addEnvNodes(userId, projectId, envHashId, data, overWrite)
-            return
-        }
         val env = envDao.get(dslContext, projectId, HashUtil.decodeIdToLong(envHashId))
         if (env.envType == TXEnvType.DEVX.name) {
             // 暂时仅支持一个公共云桌面进入一个环境
@@ -178,7 +172,7 @@ class TXEnvService @Autowired constructor(
                 throw ErrorCodeException(errorCode = ERROR_NODE_HAD_BEEN_ASSIGN)
             }
         }
-        super.addEnvNodes(userId, projectId, envHashId, data, overWrite)
+        super.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
         if (env.envType == TXEnvType.DEVX.name) {
             client.get(ServiceRemoteDevResource::class).reloadEnvHook(
                 userId = userId,
