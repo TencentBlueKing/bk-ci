@@ -203,10 +203,6 @@ class NodeTagService @Autowired constructor(
     fun batchAddNodeTag(userId: String, projectId: String, data: List<UpdateNodeTag>) {
         val nodeIds = data.map { it.nodeId }.toSet()
         val nodes = nodeDao.listByIds(dslContext, projectId, nodeIds).associateBy { it.nodeId }
-        // 只有第三方机器支持节点
-        if (nodes.values.any { it.nodeType != NodeType.THIRDPARTY.name }) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_TAG_ONLY_SUP_THIRD)
-        }
         // 校验权限
         val hasRbacPermissionNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.EDIT)
