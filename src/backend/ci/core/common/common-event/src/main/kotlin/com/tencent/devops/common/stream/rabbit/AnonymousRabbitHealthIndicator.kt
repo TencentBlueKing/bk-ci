@@ -98,7 +98,7 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
          * 已注册的匿名队列前缀集合
          * 匿名队列的命名规则：{destination}.{groupName}-{randomSuffix}
          * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
-         * 
+         *
          * 这里存储的是 groupName 前缀（如 "process-"），用于匹配匿名队列
          */
         private val registeredAnonymousQueuePrefixes = ConcurrentHashMap.newKeySet<String>()
@@ -116,12 +116,12 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
         /**
          * 注册匿名队列，标记服务使用了匿名队列
          * 应在 StreamBindingEnvironmentPostProcessor 中调用
-         * 
+         *
          * @param event MQ事件定义
-         *                  
+         *
          * 匿名队列实际名称格式：{destination}.{groupName}-{randomSuffix}
          * 例如：e.engine.stream.timer.change.stream.process-aAhym6ZnSsClHmoVYlMTMQ
-         * 
+         *
          * 我们从 queueName 中提取 groupName 作为前缀来匹配
          */
         @JvmStatic
@@ -256,7 +256,6 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
             if (tmp > failureCount) { failureCount = tmp }
         }
 
-
         // 判断是否应该标记为不健康
         val shouldMarkUnhealthy = isFatal || isFatalException || failureCount >= CONSECUTIVE_FAILURE_THRESHOLD
 
@@ -286,7 +285,7 @@ class AnonymousRabbitHealthIndicator : HealthIndicator {
                 isFatalException -> "Fatal exception type detected: ${throwable?.javaClass?.name}"
                 else -> "Consecutive failures reached threshold: $failureCount >= $CONSECUTIVE_FAILURE_THRESHOLD"
             }
-            anonymousQueueNames.forEach {  queueName ->
+            anonymousQueueNames.forEach { queueName ->
                 val errorInfo = FatalErrorInfo(
                     queueName = queueName,
                     errorMessage = throwable?.message ?: "Unknown error",

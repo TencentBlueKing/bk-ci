@@ -61,7 +61,7 @@ class AnonymousQueueHealthConfiguration {
 
     companion object {
         private val logger = LoggerFactory.getLogger(AnonymousQueueHealthConfiguration::class.java)
-        
+
         /**
          * 健康检查指标名称，用于配置和端点访问
          */
@@ -81,16 +81,16 @@ class AnonymousQueueHealthConfiguration {
 
     /**
      * 自定义条件：检查 management.endpoint.health.group 配置中是否包含 anonQueue
-     * 
+     *
      * 支持以下配置路径：
      * - management.endpoint.health.group.readinessState.include
      * - management.endpoint.health.group.livenessState.include
      */
     class AnonQueueIncludedCondition : Condition {
-        
+
         companion object {
             private val logger = LoggerFactory.getLogger(AnonQueueIncludedCondition::class.java)
-            
+
             /**
              * 需要检查的配置属性路径列表
              */
@@ -102,7 +102,7 @@ class AnonymousQueueHealthConfiguration {
 
         override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean {
             val environment = context.environment
-            
+
             for (propertyKey in HEALTH_GROUP_INCLUDE_PROPERTIES) {
                 val includeValue = environment.getProperty(propertyKey)
                 if (!includeValue.isNullOrBlank()) {
@@ -117,7 +117,7 @@ class AnonymousQueueHealthConfiguration {
                     }
                 }
             }
-            
+
             logger.info(
                 "[AnonQueueIncludedCondition] '$HEALTH_INDICATOR_NAME' not found in health group include configs, " +
                     "AnonymousQueueHealthIndicator will NOT be loaded. " +
