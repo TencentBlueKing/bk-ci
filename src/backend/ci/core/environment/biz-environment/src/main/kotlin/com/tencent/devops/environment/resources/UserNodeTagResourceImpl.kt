@@ -5,16 +5,18 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeTagResource
 import com.tencent.devops.environment.pojo.NodeTag
-import com.tencent.devops.environment.pojo.NodeTagAndDynEnv
+import com.tencent.devops.environment.pojo.NodeTagAndEnv
 import com.tencent.devops.environment.pojo.NodeTagReq
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
+import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeTagService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserNodeTagResourceImpl @Autowired constructor(
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val envService: EnvService
 ) : UserNodeTagResource {
     override fun createTag(
         userId: String,
@@ -83,12 +85,17 @@ class UserNodeTagResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         nodeHashId: String
-    ): Result<NodeTagAndDynEnv> {
+    ): Result<NodeTagAndEnv> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        val tags = nodeTagService.fetchNodeTags(projectId, setOf(nodeId))[nodeId] ?: emptyList()
         return Result(
-            NodeTagAndDynEnv(
-                tags = nodeTagService.fetchNodeTags(projectId, setOf(nodeId))[nodeId] ?: emptyList(),
-                envs = listOf()
+            NodeTagAndEnv(
+                tags = tags,
+                envs = envService.fetchNodeEnvs(
+                    projectId = projectId,
+                    nodeId = nodeId,
+                    tagValueIds = tags.map { it.tagValues.map { t -> t.tagValueId } }.flatten()
+                )
             )
         )
     }

@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.pojo
 
+import com.tencent.devops.environment.pojo.enums.EnvNodeType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "节点标签")
@@ -104,11 +105,18 @@ data class NodeTagUpdateReqValue(
     val tagValueName: String
 )
 
-@Schema(title = "节点标签和动态环境")
-data class NodeTagAndDynEnv(
+@Schema(title = "节点标签和环境")
+data class NodeTagAndEnv(
     @get:Schema(title = "标签")
     val tags: List<NodeTag>,
-    // TODO: issue-12354 等待动态环境实现
-    @get:Schema(title = "动态环境")
-    val envs: List<String>
+    @get:Schema(title = "环境")
+    val envs: List<NodeTagAndEnvItem>
+)
+
+@Schema(title = "节点标签和环境-环境属性")
+data class NodeTagAndEnvItem(
+    @get:Schema(title = "名称")
+    val name: String,
+    @get:Schema(title = "环境类型")
+    val type: EnvNodeType
 )

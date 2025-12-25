@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeTag
-import com.tencent.devops.environment.pojo.NodeTagAndDynEnv
+import com.tencent.devops.environment.pojo.NodeTagAndEnv
 import com.tencent.devops.environment.pojo.NodeTagReq
 import com.tencent.devops.environment.pojo.NodeTagUpdateReq
 import com.tencent.devops.environment.pojo.UpdateNodeTag
@@ -122,5 +122,5 @@ interface UserNodeTagResource {
         @Parameter(description = "节点HashID", required = true)
         @QueryParam("nodeHashId")
         nodeHashId: String
-    ): Result<NodeTagAndDynEnv>
+    ): Result<NodeTagAndEnv>
 }
