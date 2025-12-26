@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
@@ -79,6 +80,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_S
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
@@ -126,6 +128,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -140,6 +143,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
+import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -2182,6 +2186,71 @@ class PipelineBuildFacadeService(
         } finally {
             jmxApi.execute(ProcessJmxApi.LIST_NEW_BUILDS_DETAIL, System.currentTimeMillis() - apiStartEpoch)
         }
+    }
+
+    /**
+     * 轻量级构建历史查询：
+     * - 返回轻量数据结构，减少不必要的数据传输
+     * - 查询条件轻量化
+     */
+    fun getLightHistoryBuild(
+        userId: String?,
+        projectId: String,
+        pipelineId: String,
+        page: Int,
+        pageSize: Int,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ): Page<LightBuildHistory> {
+        val sqlLimit =
+            if (pageSize != -1) PageUtil.convertPageSizeToSQLLimit(page, pageSize) else null
+        val offset = sqlLimit?.offset ?: 0
+        val limit = sqlLimit?.limit ?: 1000
+        UserPipelinePermissionCheckContext(SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)).checkUserPipelinePermission(
+            userId = userId!!,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        // 查询总数
+        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = status,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+        )
+
+        // 查询构建历史记录
+        val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit,
+            status = status,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+        )
+        return Page(
+            page = page,
+            pageSize = limit,
+            count = newTotalCount + 0L,
+            records = newHistoryBuilds,
+        )
     }
 
     fun updateRemark(userId: String, projectId: String, pipelineId: String, buildId: String, remark: String?) {

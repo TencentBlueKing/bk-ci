@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -54,6 +55,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -530,6 +532,48 @@ interface ServiceBuildResource {
         @QueryParam("triggerUser")
         triggerUser: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
+
+    @Operation(summary = "获取流水线轻量构建历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/history/simple")
+    fun getLightHistoryBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页多少条", required = true, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int,
+        @Parameter(description = "状态", required = false)
+        @QueryParam("status")
+        status: List<BuildStatus>? = null,
+        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
+        @QueryParam("startTimeStartTime")
+        startTimeStartTime: Long? = null,
+        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
+        @QueryParam("startTimeEndTime")
+        startTimeEndTime: Long? = null,
+        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
+        @QueryParam("endTimeStartTime")
+        endTimeStartTime: Long? = null,
+        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
+        @QueryParam("endTimeEndTime")
+        endTimeEndTime: Long? = null,
+        @Parameter(description = "构件号起始", required = false)
+        @QueryParam("buildNoStart")
+        buildNoStart: Int? = null,
+        @Parameter(description = "构件号结束", required = false)
+        @QueryParam("buildNoEnd")
+        buildNoEnd: Int? = null
+    ): Result<Page<LightBuildHistory>>
 
     @Operation(summary = "获取构建详情")
     @GET
