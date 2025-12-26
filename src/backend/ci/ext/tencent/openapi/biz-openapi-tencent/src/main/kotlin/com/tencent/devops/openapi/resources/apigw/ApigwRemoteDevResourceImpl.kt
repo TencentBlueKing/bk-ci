@@ -106,7 +106,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         projectId: String?,
         ip: String?,
-        envId: String?
+        envId: String?,
+        workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
         if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty()) {
@@ -118,7 +119,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = ip,
             envId = envId,
             businessLineName = null,
-            ownerName = null
+            ownerName = null,
+            workspaceName = workspaceName
         )
     }
 

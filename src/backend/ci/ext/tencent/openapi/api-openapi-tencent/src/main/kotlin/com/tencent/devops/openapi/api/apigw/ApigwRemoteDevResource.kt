@@ -141,7 +141,10 @@ interface ApigwRemoteDevResource {
         ip: String?,
         @Parameter(description = "环境ID", required = false)
         @QueryParam("envId")
-        envId: String?
+        envId: String?,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
