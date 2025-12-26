@@ -119,10 +119,7 @@
                                         default-layout
                                         show-follow-template-btn
                                         show-set-required-btn
-                                        v-bind="{
-                                            ...versionParams,
-                                            ...buildNo
-                                        }"
+                                        v-bind="buildNo"
                                         config-type="introVersion"
                                         follow-template-key="introVersion"
                                         :handle-follow-template="handleFollowTemplate"
@@ -1179,8 +1176,8 @@
                                         defaultValue: allVersionKeyList.includes(p.id)
                                             ? templateParamDefault
                                             : p.defaultValue,
-                                        isChange: initialParamDefault !== templateParamDefault,
-                                        hasChange: initialParamDefault !== templateParamDefault
+                                        isChange: String(initialParamDefault) !== String(templateParamDefault),
+                                        hasChange: String(initialParamDefault) !== String(templateParamDefault)
                                     }
                                 }
                                 return p
