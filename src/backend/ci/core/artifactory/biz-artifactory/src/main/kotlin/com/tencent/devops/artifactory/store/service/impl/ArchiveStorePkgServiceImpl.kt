@@ -50,6 +50,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
+import com.tencent.devops.store.utils.VersionUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -84,6 +85,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val storeCode = archiveStorePkgRequest.storeCode
         val storeType = archiveStorePkgRequest.storeType
         val version = archiveStorePkgRequest.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val releaseType = archiveStorePkgRequest.releaseType
         // 校验上传的包是否合法
         val verifyPackageResult = client.get(ServiceStoreArchiveResource::class)

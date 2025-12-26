@@ -41,7 +41,7 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG

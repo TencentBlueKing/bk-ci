@@ -49,7 +49,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest

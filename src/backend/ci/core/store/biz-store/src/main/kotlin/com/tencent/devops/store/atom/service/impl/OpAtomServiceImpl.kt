@@ -63,7 +63,7 @@ import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreFileAnalysisUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
