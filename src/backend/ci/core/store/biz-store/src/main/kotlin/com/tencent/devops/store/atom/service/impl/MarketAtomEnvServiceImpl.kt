@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.atom.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -245,12 +246,14 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
+            atomStatus = AtomStatusEnum.getAtomStatus(atomEnv.atomStatus)?.status?.toByte(),
             initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props),
             sensitiveParams = sensitiveParams?.joinToString(","),
-            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) }
+            canPauseBeforeRun = props?.let { marketAtomCommonService.getAtomCanPauseBeforeRun(props) },
+            serviceScope = atomEnv.serviceScope
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
@@ -391,7 +394,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             classifyName = classifyRecord?.classifyName,
             runtimeVersion = atomEnvInfoRecord?.runtimeVersion,
             finishKillFlag = atomEnvInfoRecord?.finishKillFlag,
-            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level
+            authFlag = atomBaseInfoRecord[tAtom.VISIBILITY_LEVEL] != VisibilityLevelEnum.LOGIN_PUBLIC.level,
+            serviceScope = atomBaseInfoRecord[tAtom.SERVICE_SCOPE]?.takeIf { it.isNotBlank() }?.let { serviceScopeJson ->
+                JsonUtil.toOrNull(serviceScopeJson, object : TypeReference<List<String>?>() {})
+            }
         )
         return Result(atomEnv)
     }

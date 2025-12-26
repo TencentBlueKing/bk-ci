@@ -97,7 +97,6 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -573,66 +572,39 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     override fun getAtomInfos(
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomRunInfo>> {
-        val atomRunInfos = mutableListOf<AtomRunInfo>()
-        codeVersions.forEach {
-            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, it.atomCode)
-            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, it.version)
-            if (!atomRunInfoJson.isNullOrBlank()) {
-                try {
-                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
-                    if (atomRunInfo.atomStatus != null && atomRunInfo.version == it.version) {
-                        atomRunInfos.add(atomRunInfo)
-                    } else {
-                        atomRunInfos.add(
-                            setCache(
-                                atomRunInfoKey = atomRunInfoKey,
-                                version = it.version,
-                                atomCode = it.atomCode
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    atomRunInfos.add(
-                        setCache(
-                            atomRunInfoKey = atomRunInfoKey,
-                            version = it.version,
-                            atomCode = it.atomCode
-                        )
-                    )
-                    logger.error("atomRunInfoJson convert error: $it", e)
+        val atomRunInfos = codeVersions.map { reqItem ->
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, reqItem.atomCode)
+            val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, reqItem.version)
+            
+            when {
+                atomRunInfoJson.isNullOrBlank() -> {
+                    // 缓存不存在，重新设置缓存
+                    setCache(reqItem.version, reqItem.atomCode)
                 }
-            } else {
-                atomRunInfos.add(
-                    setCache(
-                        atomRunInfoKey = atomRunInfoKey,
-                        version = it.version,
-                        atomCode = it.atomCode
-                    )
-                )
+                else -> {
+                    try {
+                        val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                        if (atomRunInfo.atomStatus != null && atomRunInfo.version == reqItem.version) {
+                            atomRunInfo
+                        } else {
+                            // 缓存数据无效，重新设置缓存
+                            setCache(reqItem.version, reqItem.atomCode)
+                        }
+                    } catch (ignored: Throwable) {
+                        // JSON解析异常，重新设置缓存
+                        logger.error("atomRunInfoJson convert error: $reqItem", ignored)
+                        setCache(reqItem.version, reqItem.atomCode)
+                    }
+                }
             }
         }
+        
         return Result(atomRunInfos)
     }
 
-    fun setCache(
-        atomRunInfoKey: String,
+    private fun setCache(
         version: String,
         atomCode: String
-    ): AtomRunInfo {
-        val atomRunInfoFromDb = getAtomRunInfo(
-            atomCode = atomCode,
-            version = version,
-            dslContext = dslContext
-        )
-        // 将db中的环境信息写入缓存
-        redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfoFromDb))
-        return atomRunInfoFromDb
-    }
-
-    fun getAtomRunInfo(
-        atomCode: String,
-        version: String,
-        dslContext: DSLContext
     ): AtomRunInfo {
         val tAtomRecord = atomDao.getPipelineAtom(
             dslContext = dslContext,
@@ -642,22 +614,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("$atomCode:$version")
         )
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = dslContext,
-            storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM.type.toByte()
-        ) ?: ""
-        return AtomRunInfo(
+        return marketAtomCommonService.handleAtomCache(
+            atomId = tAtomRecord.id,
             atomCode = atomCode,
-            atomName = tAtomRecord.name,
-            version = version,
-            initProjectCode = initProjectCode,
-            jobType = if (tAtomRecord.jobType == null) null else JobTypeEnum.valueOf(tAtomRecord.jobType),
-            buildLessRunFlag = tAtomRecord.buildLessRunFlag,
-            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(tAtomRecord.props),
-            atomStatus = tAtomRecord.atomStatus
+            version = tAtomRecord.version,
+            releaseFlag = false
         )
     }
+
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
@@ -1025,7 +989,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     atomName = atomUpdateRequest.name,
                     jobType = atomUpdateRequest.jobType,
                     buildLessRunFlag = atomUpdateRequest.buildLessRunFlag,
-                    props = atomUpdateRequest.props
+                    props = atomUpdateRequest.props,
+                    serviceScope = atomUpdateRequest.serviceScope
                 )
             }
             Result(true)

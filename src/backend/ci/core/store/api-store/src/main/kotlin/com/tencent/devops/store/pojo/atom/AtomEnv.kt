@@ -89,5 +89,7 @@ data class AtomEnv(
     @get:Schema(title = "插件运行结束后是否立即杀掉其进程", required = false)
     val finishKillFlag: Boolean? = null,
     @get:Schema(title = "插件是否需要鉴权（开源插件无需鉴权）", required = false)
-    val authFlag: Boolean? = null
+    val authFlag: Boolean? = null,
+    @get:Schema(title = "服务范围", required = false)
+    val serviceScope: List<String>? = null
 )
