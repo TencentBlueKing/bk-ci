@@ -43,7 +43,7 @@
                         :param="param"
                         ref="renderParam"
                         :is-exec-preview="isExecPreview"
-                        :disabled="disabled || param.isFollowTemplate"
+                        :disabled="disabled || (param.isFollowTemplate && !batchEditFlag)"
                         :show-operate-btn="showOperateBtn"
                         :handle-set-parma-required="handleSetParmaRequired"
                         :handle-use-default-value="handleUseDefaultValue"
