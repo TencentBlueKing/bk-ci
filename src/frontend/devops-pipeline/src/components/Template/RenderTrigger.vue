@@ -54,8 +54,10 @@
         <bk-dialog
             v-model="showTimeCronCom"
             :title="$t('template.setTimeCron')"
+            ext-cls="time-cron-dialog"
             header-position="left"
-            width="700px"
+            width="700"
+            :position="dialogPosition"
             render-directive="if"
             :mask-close="false"
             @confirm="handleConfirmChangeCron"
@@ -88,6 +90,9 @@
         const { version, atomCode } = props.trigger
         return atomCode === 'timerTrigger' && version.startsWith('2.')
     })
+    const dialogPosition = {
+        top: '120'
+    }
     const newCron = ref('')
     const timerTriggerParamConfig = computed(() => {
         return {
@@ -123,5 +128,13 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(200px, 1fr));
         grid-gap: 0 24px;
+    }
+</style>
+<style lang="scss">
+    .time-cron-dialog {
+        .bk-dialog-body {
+            min-height: 470px !important;
+            overflow-y: auto;
+        }
     }
 </style>
