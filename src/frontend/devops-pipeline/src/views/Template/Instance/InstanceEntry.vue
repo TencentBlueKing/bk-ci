@@ -59,6 +59,7 @@
                     </bk-exception>
                     <InstanceConfig
                         v-else
+                        ref="instanceConfigRef"
                         slot="main"
                         :is-instance-create-type="isInstanceCreateViewType"
                     />
@@ -102,6 +103,7 @@
     import TemplateVersionSelector from './TemplateVersionSelector'
 
     const { proxy } = UseInstance()
+    const instanceConfigRef = ref(null)
     const isLoading = ref(false)
     const showRelease = ref(false)
     const showBatchEdit = ref(false)
@@ -119,6 +121,7 @@
     const templateRef = computed(() => proxy.$store?.state?.templates?.templateRef)
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
+    const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
@@ -267,16 +270,45 @@
     function handleBatchEdit () {
         showBatchEdit.value = true
     }
+    const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
+    const activeIndex = computed(() => proxy.$route?.query?.index)
     function handleBatchChange (params) {
+        console.log(params, 123)
         const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
+        // 创建模板参数的 Map，用于获取模板中对应变量的 defaultValue
+        const templateParamsMap = new Map((curTemplateDetail.value?.param ?? []).map(t => [t.id, t]))
+        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
 
-        const updatedList = instanceList.value.map(instance => ({
-            ...instance,
-            param: instance.param.map(p => ({
-                ...p,
-                defaultValue: updateMap.has(p.id) ? updateMap.get(p.id) : p.defaultValue
-            }))
-        }))
+        const updatedList = instanceList.value.map(instance => {
+            // 深拷贝实例对象，确保触发响应式更新
+            const newInstance = JSON.parse(JSON.stringify(instance))
+            
+            newInstance.param = newInstance.param.map(p => {
+                if (p.isFollowTemplate) {
+                    return p // 如果参数跟随模板，则不进行更新
+                }
+                if (updateMap.has(p.id)) {
+                    const initialParam = initialInstanceParams?.find(ip => ip.id === p.id)
+                    const templateParam = templateParamsMap.get(p.id)
+                    const templateDefaultValue = templateParam?.defaultValue
+                    const newValue = updateMap.get(p.id)
+                    const propertyUpdates = instanceConfigRef.value?.collectPropertyUpdates({
+                        ...p,
+                        defaultValue: newValue
+                    }, initialParam)
+                    return {
+                        ...p,
+                        defaultValue: newValue,
+                        isChange: newValue !== p.defaultValue,
+                        hasChange: newValue !== templateDefaultValue,
+                        propertyUpdates
+                    }
+                }
+                return p
+            })
+            
+            return newInstance
+        })
         
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
             list: updatedList,
