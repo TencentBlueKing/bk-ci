@@ -22,22 +22,13 @@
 const envHome = () => import(/* webpackChunkName: 'envHome' */ '../views/index.vue')
 
 // 环境列表
-const envList = () => import(/* webpackChunkName: 'envList' */ '../views/env_list')
-
-// 新增环境
-const createEnv = () => import(/* webpackChunkName: 'createEnv' */ '../views/create_env')
-
-// 环境详情
-const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
+const envEntry = () => import(/* webpackChunkName: 'envList' */ '../views/env/index.vue')
+const envDetail = () => import(/* webpackChunkName: 'envList' */ '../views/env/env_detail.vue')
 
 // 节点入口
 const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
-
 // 节点列表
 const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list')
-
-// 节点详情
-const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
 
 // 节点详情
 const extPageContainer = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/extPageContainer')
@@ -50,43 +41,26 @@ const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/n
 
 const routes = [
     {
-        path: 'environment/:projectId?',
+        path: 'environment/:projectId?/:resType?',
         component: envHome,
         children: [
             {
-                path: '',
+                path: 'env',
                 name: 'envList',
-                component: envList,
-                meta: {
-                    title: 'environmentList',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
+                component: envEntry,
+                children: [
+                    {
+                        path: ':envType/:envId?/:tabName?',
+                        name: 'envDetail',
+                        component: envDetail,
+                        meta: {
+                            // collapsePageName 用于页面左侧aside展开时，缓存页面状态
+                            collapsePageName: 'envList',
+                        }
+                    }
+                ]
             },
-            {
-                path: 'createEnv',
-                name: 'createEnv',
-                component: createEnv,
-                meta: {
-                    title: 'createEnvrionment',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList',
-                    activeName: 'envList'
-                }
-            },
-            {
-                path: 'envDetail/:envId',
-                name: 'envDetail',
-                component: envDetail,
-                meta: {
-                    title: 'environmentDetail',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
-            },
+           
             {
                 path: 'node',
                 component: nodeEntry,
@@ -95,10 +69,22 @@ const routes = [
                         path: ':nodeType',
                         name: 'nodeList',
                         component: nodeList,
+                        children: [
+                            {
+                                path: 'setNodeTag',
+                                name: 'setNodeTag',
+                                component: setNodeTag,
+                                meta: {
+                                    collapsePageName: 'nodeList',
+                                }
+                            },
+
+                        ],
                         meta: {
                             title: 'nodeList',
                             logo: 'environment',
                             header: 'environmentManage',
+                            collapsePageName: 'nodeList',
                             to: 'envList',
                             webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
                         },
@@ -115,23 +101,7 @@ const routes = [
                                 next(true)
                             }
                         }
-                    },
-                    {
-                        path: 'nodeDetail/:nodeHashId',
-                        name: 'nodeDetail',
-                        component: nodeDetail,
-                        meta: {
-                            title: 'nodeDetail',
-                            logo: 'environment',
-                            header: 'environmentManage',
-                            to: 'envList'
-                        }
-                    },
-                    {
-                        path: 'setNodeTag',
-                        name: 'setNodeTag',
-                        component: setNodeTag
-                    },
+                    }
                 ]
             },
             {
