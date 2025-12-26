@@ -1,6 +1,6 @@
 ---
 name: 17-aop-aspect-programming
-description: AOP 切面编程指南
+description: AOP 切面编程指南，涵盖切面定义、切点表达式、通知类型（Before/After/Around）、注解驱动 AOP、性能监控切面。当用户实现切面逻辑、编写拦截器、添加日志切面或实现权限切面时使用。
 ---
 
 # AOP 切面编程

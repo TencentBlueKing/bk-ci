@@ -1,6 +1,6 @@
 ---
 name: 06-database-script-management
-description: 数据库脚本管理规范.
+description: 数据库脚本管理规范，涵盖 DDL/DML 脚本编写、版本命名规则、增量更新策略、数据迁移、回滚方案。当用户编写数据库脚本、新增表结构、修改字段、进行数据迁移或管理 SQL 版本时使用。
 ---
 
 # Skill 06: 数据库脚本管理

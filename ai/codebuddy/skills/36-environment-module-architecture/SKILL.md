@@ -1,6 +1,6 @@
 ---
 name: 36-environment-module-architecture
-description: Environment 构建机环境模块架构指南
+description: Environment 构建机环境模块架构指南，涵盖构建机节点管理、环境变量配置、节点状态监控、第三方构建机接入。当用户开发环境管理功能、配置构建机节点、处理环境变量或接入第三方构建机时使用。
 ---
 
 # Environment 构建机环境模块架构指南

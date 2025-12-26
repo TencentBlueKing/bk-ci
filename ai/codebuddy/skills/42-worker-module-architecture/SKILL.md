@@ -1,6 +1,6 @@
 ---
 name: 42-worker-module-architecture
-description: Worker 构建执行器模块架构指南
+description: Worker 构建执行器模块架构指南，涵盖插件执行引擎、任务分发、日志上报、制品上传、Worker 生命周期。当用户开发 Worker 功能、实现插件执行、处理任务分发或优化执行器性能时使用。
 ---
 
 # Worker 构建执行器模块架构指南

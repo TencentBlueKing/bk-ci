@@ -1,6 +1,6 @@
 ---
 name: 29-3-process-engine-control
-description: Process 模块构建引擎 Control 层详细分析
+description: Process 模块构建引擎 Control 层详细分析，涵盖构建状态机、任务调度、并发控制、构建生命周期管理。当用户开发构建引擎、修改状态流转、处理任务调度或优化构建控制逻辑时使用。
 ---
 
 # Process 模块构建引擎 Control 层详细分析

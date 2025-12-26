@@ -1,6 +1,6 @@
 ---
 name: 09-chain-of-responsibility-pattern
-description: 责任链模式实践指南
+description: 责任链模式实践指南，涵盖责任链设计、拦截器实现、流水线插件链、请求处理链。当用户实现责任链模式、设计拦截器、处理多步骤流程或实现可扩展的处理链时使用。
 ---
 
 # 责任链模式

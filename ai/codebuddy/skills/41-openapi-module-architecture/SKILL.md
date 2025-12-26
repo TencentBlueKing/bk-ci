@@ -1,6 +1,6 @@
 ---
 name: 41-openapi-module-architecture
-description: OpenAPI 开放接口模块架构指南
+description: OpenAPI 开放接口模块架构指南，涵盖 API 网关、接口鉴权、限流配置、SDK 生成、API 文档。当用户开发开放 API、配置接口鉴权、实现限流策略或生成 SDK 时使用。
 ---
 
 # OpenAPI 开放接口模块架构指南

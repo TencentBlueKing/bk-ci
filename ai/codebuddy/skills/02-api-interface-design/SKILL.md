@@ -1,6 +1,6 @@
 ---
 name: 02-api-interface-design
-description: API 接口设计规范.
+description: API 接口设计规范，涵盖 RESTful 设计原则、URL 命名、HTTP 方法选择、请求响应格式、错误码定义、版本控制。当用户设计 API 接口、定义 Resource 类、编写接口文档或进行接口评审时使用。
 ---
 
 # Skill 02: API 接口设计

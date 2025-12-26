@@ -1,6 +1,6 @@
 ---
 name: 29-1-process-api-layer
-description: Process 模块 API 层详细分析
+description: Process 模块 API 层详细分析，涵盖 Resource 接口定义、API 版本管理、权限注解、请求参数校验。当用户开发 Process API 接口、添加新端点、处理 API 版本或配置接口权限时使用。
 ---
 
 # Process 模块 API 层详细分析

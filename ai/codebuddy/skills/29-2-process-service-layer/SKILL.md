@@ -1,6 +1,6 @@
 ---
 name: 29-2-process-service-layer
-description: Process 模块 Service 业务层详细分析
+description: Process 模块 Service 业务层详细分析，涵盖流水线服务、构建服务、模板服务、业务逻辑实现。当用户开发 Process 业务逻辑、实现流水线功能、处理构建流程或扩展服务能力时使用。
 ---
 
 # Process 模块 Service 业务层详细分析

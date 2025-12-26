@@ -1,6 +1,6 @@
 ---
 name: 19-jwt-security
-description: JWT 安全认证指南
+description: JWT 安全认证指南，涵盖 JWT 生成验证、Token 刷新机制、权限校验、安全配置、OAuth2 集成。当用户实现 JWT 认证、配置安全过滤器、处理 Token 刷新或集成 OAuth2 时使用。
 ---
 
 # JWT 安全认证

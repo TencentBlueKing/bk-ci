@@ -1,3 +1,8 @@
+---
+name: 38-quality-module-architecture
+description: Quality 质量红线模块架构指南，涵盖质量规则管理、指标配置、准入准出控制点、红线拦截与放行机制。当用户需要开发质量管控功能、配置质量红线、实现质量检查拦截时使用。
+---
+
 # Quality 质量红线模块架构指南
 
 ## 概述

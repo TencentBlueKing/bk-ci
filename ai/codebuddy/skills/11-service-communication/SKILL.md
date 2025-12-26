@@ -1,6 +1,6 @@
 ---
 name: 11-service-communication
-description: 服务间调用规范
+description: 服务间调用规范，涵盖 Feign 客户端、服务发现、负载均衡、熔断降级、超时配置、链路追踪。当用户进行微服务间调用、配置 Feign 客户端、实现服务降级或处理跨服务通信时使用。
 ---
 
 # 服务间调用

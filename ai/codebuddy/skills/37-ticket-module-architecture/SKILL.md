@@ -1,6 +1,6 @@
 ---
 name: 37-ticket-module-architecture
-description: Ticket 凭证管理模块架构指南
+description: Ticket 凭证管理模块架构指南，涵盖凭证类型（密码/SSH/Token）、加密存储、凭证授权、安全访问控制。当用户开发凭证功能、添加新凭证类型、处理凭证加密或配置凭证授权时使用。
 ---
 
 # Ticket 凭证管理模块架构指南

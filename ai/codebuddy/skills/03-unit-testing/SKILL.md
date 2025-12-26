@@ -1,6 +1,6 @@
 ---
 name: 03-unit-testing
-description: 单元测试编写指南.
+description: 单元测试编写指南，涵盖 JUnit5/MockK 使用、测试命名规范、Mock 技巧、测试覆盖率要求、TDD 实践。当用户编写单元测试、Mock 依赖、提高测试覆盖率或进行测试驱动开发时使用。
 ---
 
 # Skill 03: 单元测试编写

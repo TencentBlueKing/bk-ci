@@ -1,6 +1,6 @@
 ---
 name: 39-notify-module-architecture
-description: Notify 通知服务模块架构指南
+description: Notify 通知服务模块架构指南，涵盖多渠道通知（邮件/企微/RTX）、通知模板、订阅管理、通知策略。当用户开发通知功能、添加新通知渠道、配置通知模板或实现订阅逻辑时使用。
 ---
 
 # Notify 通知服务模块架构指南

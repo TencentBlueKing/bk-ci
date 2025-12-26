@@ -1,6 +1,6 @@
 ---
 name: 16-scheduled-tasks
-description: 定时任务开发指南
+description: 定时任务开发指南，涵盖 Spring Scheduled、Cron 表达式、分布式任务调度、任务锁、任务监控。当用户创建定时任务、配置 Cron 表达式、实现分布式调度或处理任务并发时使用。
 ---
 
 # 定时任务开发

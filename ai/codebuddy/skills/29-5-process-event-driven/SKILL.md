@@ -1,6 +1,6 @@
 ---
 name: 29-5-process-event-driven
-description: Process 模块事件驱动机制详解
+description: Process 模块事件驱动机制详解，涵盖构建事件发布订阅、MQ 消息处理、事件类型定义、异步任务处理。当用户开发事件处理、添加新事件类型、处理异步消息或理解事件流转时使用。
 ---
 
 # Process 模块事件驱动机制详解

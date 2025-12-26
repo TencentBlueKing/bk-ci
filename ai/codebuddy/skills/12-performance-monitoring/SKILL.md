@@ -1,6 +1,6 @@
 ---
 name: 12-performance-monitoring
-description: 性能监控指南
+description: 性能监控指南，涵盖 Micrometer 指标采集、Prometheus 集成、性能埋点、慢查询监控、JVM 监控。当用户添加性能监控、配置指标采集、分析性能瓶颈或实现可观测性时使用。
 ---
 
 # 性能监控

@@ -1,6 +1,6 @@
 ---
 name: 18-conditional-configuration
-description: 条件配置指南
+description: 条件配置指南，涵盖 @Conditional 注解、Profile 配置、特性开关、配置优先级、动态配置加载。当用户实现条件化 Bean 加载、配置多环境、使用特性开关或处理配置优先级时使用。
 ---
 
 # 条件配置

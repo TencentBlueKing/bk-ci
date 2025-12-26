@@ -1,6 +1,6 @@
 ---
 name: 29-4-process-dao-database
-description: Process 模块 DAO 层与数据库表结构详细分析
+description: Process 模块 DAO 层与数据库表结构详细分析，涵盖 JOOQ 使用、表结构设计、索引优化、数据分片。当用户开发 Process 数据访问、设计表结构、优化查询性能或处理数据存储时使用。
 ---
 
 # Process 模块 DAO 层与数据库表结构详细分析
