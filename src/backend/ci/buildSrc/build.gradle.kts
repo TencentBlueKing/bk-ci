@@ -24,4 +24,5 @@ dependencies {
     implementation("com.google.cloud.tools:jib-gradle-plugin:3.3.1")
     implementation("com.github.jk1:gradle-license-report:1.17") // 2.x need gradle-7.0
     implementation("com.mysql:mysql-connector-j:8.0.33")
+    implementation("io.github.gradle-nexus:publish-plugin:2.0.0")
 }
