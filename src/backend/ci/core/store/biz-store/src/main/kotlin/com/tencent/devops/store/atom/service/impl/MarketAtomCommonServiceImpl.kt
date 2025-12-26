@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.atom.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.ARTIFACT
@@ -720,7 +721,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         return releaseTotalNum > currentNum
     }
 
-    override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean) {
+    override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean): AtomRunInfo {
         val atomEnv = marketAtomEnvInfoDao.getNewestAtomEnvInfo(dslContext, atomId)
             ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -757,7 +758,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
             sensitiveParams = params?.joinToString(","),
-            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props)
+            canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props),
+            serviceScope = atom.serviceScope?.takeIf { it.isNotBlank() }?.let { serviceScopeJson ->
+                JsonUtil.toOrNull(serviceScopeJson, object : TypeReference<List<String>?>() {})
+            }
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -789,6 +793,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 values = "false"
             )
         }
+        return atomRunInfo
     }
 
     override fun updateAtomRunInfoCache(
@@ -797,7 +802,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         jobType: JobTypeEnum?,
         buildLessRunFlag: Boolean?,
         latestFlag: Boolean?,
-        props: String?
+        props: String?,
+        serviceScope: List<String>?
     ) {
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
         val atomCode = atomRecord.atomCode
@@ -813,6 +819,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val params = getAtomSensitiveParams(props ?: atomRecord.props)
             atomRunInfo.sensitiveParams = params?.joinToString(",")
             atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
+            atomRunInfo.serviceScope = serviceScope
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,

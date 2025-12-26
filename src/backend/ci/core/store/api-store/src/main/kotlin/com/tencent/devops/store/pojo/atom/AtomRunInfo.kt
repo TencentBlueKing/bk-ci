@@ -51,5 +51,7 @@ data class AtomRunInfo(
     @get:Schema(title = "敏感输入字段列表", required = false)
     var sensitiveParams: String? = null,
     @get:Schema(title = "插件是否允许执行前暂停", required = false)
-    var canPauseBeforeRun: Boolean? = null
+    var canPauseBeforeRun: Boolean? = null,
+    @get:Schema(title = "服务范围", required = false)
+    var serviceScope: List<String>? = null
 )
