@@ -131,7 +131,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 readOnly = param.readOnly,
                 desc = param.desc,
                 defaultValue = param.defaultValue,
-                latestRandomStringInPath = randomStringInPath
+                latestRandomStringInPath = randomStringInPath,
+                sensitive = param.sensitive
             )
         }
 
