@@ -181,7 +181,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = ip,
             businessLineName = null,
             ownerName = null,
-            envId = null
+            envId = null,
+            workspaceName = null
         )
     }
 
@@ -239,7 +240,8 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ownerName = taiUser,
             ip = null,
             projectId = null,
-            envId = null
+            envId = null,
+            workspaceName = null
         )
     }
 
