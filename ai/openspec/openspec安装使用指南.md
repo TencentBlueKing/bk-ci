@@ -20,7 +20,7 @@ nvm install 20
 nvm use 20
 ```
 
-### 2. 安装 CodeBuddy 和 OpenSpec
+### 2. 安装 CodeBuddy-Code 和 OpenSpec
 
 ```bash
 npm install -g @tencent-ai/codebuddy-code
