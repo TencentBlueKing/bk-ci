@@ -17,6 +17,9 @@ repository:
 scm:
   oauth:
     callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/repo/%s/oauth/callback
+  webhook:
+    # 外部hookUrl
+    outerUrl: __BK_CI_PUBLIC_URL__/process/api/external/scm/{scmCode}/commit
   #svn open api url，如果不需要则放着即可
   svn:
     apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
