@@ -17,6 +17,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
@@ -35,6 +36,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
@@ -52,10 +54,12 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequ
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskResult
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedResp
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
+import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -96,6 +100,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val pipelineInfoService: PipelineInfoService,
+    private val pipelineModelParser: PipelineModelParser
 ) {
     /*同步创建模板实例*/
     fun createTemplateInstances(
@@ -592,34 +597,76 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineIds = pipelineIds.toList()
         )
         val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
+        // 增加缓存,防止相同的版本重复解析
+        val templateResourceCache = mutableMapOf<String, PipelineTemplateResource>()
 
         return try {
             pipelineId2Model.map {
                 val pipelineId = it.key
-                val instanceModel = it.value
-                val instanceTriggerContainer = instanceModel.getTriggerContainer()
-                val overrideTemplateField = instanceModel.overrideTemplateField ?: run {
-                    TemplateInstanceField.initFromTrigger(triggerContainer = instanceTriggerContainer)
+                val model = it.value
+                val template = model.template
+                // 新版模版实例化
+                if (template != null) {
+                    val templateCacheKey = if (template.templateRefType == TemplateRefType.ID) {
+                        "${template.templateId}_${template.templateVersionName}"
+                    } else {
+                        "${template.templatePath}_${template.templateRef}"
+                    }
+                    val templateResource = templateResourceCache.getOrPut(templateCacheKey) {
+                        pipelineModelParser.parseTemplateDescriptor(
+                            projectId = projectId,
+                            descriptor = template
+                        )
+                    }
+                    val instanceModel = TemplateInstanceUtil.instanceModel(
+                        model = model,
+                        templateResource = templateResource
+                    )
+                    val instanceTriggerContainer = instanceModel.getTriggerContainer()
+                    val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
+                        currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+                    )
+                    val instanceParams = paramService.filterParams(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = instanceTriggerContainer.params
+                    )
+                    pipelineId to TemplateInstanceParams(
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineId2Name[pipelineId] ?: "",
+                        buildNo = instanceBuildNoObj,
+                        param = instanceParams,
+                        repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
+                        filePath = yamlPipelineMap[pipelineId]?.filePath,
+                        triggerElements = model.getTriggerContainer().elements,
+                        overrideTemplateField = model.overrideTemplateField
+                    )
+                } else {
+                    val overrideTemplateField = model.overrideTemplateField ?: run {
+                        TemplateInstanceField.initFromTrigger(triggerContainer = model.getTriggerContainer())
+                    }
+                    val instanceTriggerContainer = model.getTriggerContainer()
+                    val instanceParams = paramService.filterParams(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = instanceTriggerContainer.params
+                    )
+                    val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
+                        currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+                    )
+                    pipelineId to TemplateInstanceParams(
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineId2Name[pipelineId] ?: "",
+                        buildNo = instanceBuildNoObj,
+                        param = instanceParams,
+                        repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
+                        filePath = yamlPipelineMap[pipelineId]?.filePath,
+                        triggerElements = model.getTriggerContainer().elements,
+                        overrideTemplateField = overrideTemplateField
+                    )
                 }
-                val instanceParams = paramService.filterParams(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    params = instanceTriggerContainer.params
-                )
-                val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
-                    currentBuildNo = pipelineCurrentBuildNos[pipelineId]
-                )
-                pipelineId to TemplateInstanceParams(
-                    pipelineId = pipelineId,
-                    pipelineName = pipelineId2Name[pipelineId] ?: "",
-                    buildNo = instanceBuildNoObj,
-                    param = instanceParams,
-                    repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
-                    filePath = yamlPipelineMap[pipelineId]?.filePath,
-                    triggerElements = instanceModel.getTriggerContainer().elements,
-                    overrideTemplateField = overrideTemplateField
-                )
             }.toMap()
         } catch (ignored: Throwable) {
             logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId]", ignored)
@@ -659,6 +706,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineId = null,
             params = triggerContainer.params
         )
+        // 返回给前端,那些字段是可以覆盖模版的值
         val overrideTemplateField = TemplateInstanceField.initFromTrigger(
             triggerContainer = triggerContainer
         )
