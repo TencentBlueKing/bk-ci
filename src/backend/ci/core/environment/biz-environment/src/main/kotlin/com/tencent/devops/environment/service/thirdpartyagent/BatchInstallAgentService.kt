@@ -14,6 +14,7 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -34,7 +35,8 @@ class BatchInstallAgentService @Autowired constructor(
     private val agentUrlService: AgentUrlService,
     private val slaveGatewayService: SlaveGatewayService,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val createEnvService: CreateEnvService
 ) {
     fun genInstallLink(
         projectId: String,
@@ -205,13 +207,12 @@ class BatchInstallAgentService @Autowired constructor(
         userId: String,
         projectId: String,
         workspaceName: String,
-        zoneName: String?
     ): String {
         val agentId = genNewAgent(
             projectId = projectId,
             userId = userId,
             os = OS.WINDOWS,
-            zoneName = zoneName,
+            zoneName = createEnvService.getWorkspaceZoneName(projectId, workspaceName),
             agentType = AgentType.CREATE,
             createWorkspaceName = workspaceName
         )

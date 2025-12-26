@@ -166,8 +166,6 @@ interface OpThirdPartyAgentResource {
         @QueryParam("projectId")
         projectId: String,
         @QueryParam("workspaceName")
-        workspaceName: String,
-        @QueryParam("zoneName")
-        zoneName: String
+        workspaceName: String
     ): String
 }
