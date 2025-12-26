@@ -535,7 +535,8 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .get()
             .build()
-        return doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data
+        val nodeDetail = doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data ?: return null
+        return nodeDetail.copy(md5 = ignoreFakeChecksum(nodeDetail.md5), sha256 = ignoreFakeChecksum(nodeDetail.sha256))
     }
 
     fun matchBkRepoFile(
@@ -1191,7 +1192,11 @@ class BkRepoClient constructor(
             .headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val queryData = doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
+        val records = queryData.records.map {
+            it.copy(md5 = ignoreFakeChecksum(it.md5), sha256 = ignoreFakeChecksum(it.sha256))
+        }
+        return queryData.copy(records = records)
     }
 
     fun listArtifactQualityMetadataLabels(
@@ -1301,6 +1306,13 @@ class BkRepoClient constructor(
         } catch (e: IOException) {
             throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
+    }
+
+    private fun ignoreFakeChecksum(checksum: String?): String {
+        if (checksum == null || checksum.toLongOrNull() == 0L) {
+            return ""
+        }
+        return checksum
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
