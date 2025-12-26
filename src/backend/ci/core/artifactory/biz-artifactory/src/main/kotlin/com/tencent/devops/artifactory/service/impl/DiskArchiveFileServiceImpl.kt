@@ -49,6 +49,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.FileDigestUtils
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -706,6 +708,38 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             }
         }
         return fileNames
+    }
+
+    override fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        version: String?,
+        packageKey: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): Page<PackageVersion> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary {
+        TODO("Not yet implemented")
+    }
+
+    override fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String?,
+        pageNumber: Int,
+        pageSize: Int
+    ): List<PackageSummary> {
+        TODO("Not yet implemented")
     }
 
     companion object {

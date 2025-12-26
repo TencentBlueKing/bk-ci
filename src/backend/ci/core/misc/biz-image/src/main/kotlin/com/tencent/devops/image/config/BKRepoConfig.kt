@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 Tencent.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,43 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.image.pojo
+package com.tencent.devops.image.config
 
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import org.springframework.stereotype.Component
 
-@Schema(title = "镜像信息模型")
-data class DockerRepo(
-    @get:Schema(title = "仓库url")
-    var repoUrl: String? = null,
-    @get:Schema(title = "所属项目")
-    var projectId: String? = null,
-    @get:Schema(title = "仓库")
-    var repo: String? = null,
-    @get:Schema(title = "类型")
-    var type: String? = null,
-    @get:Schema(title = "仓库类型")
-    var repoType: String? = "",
-    @get:Schema(title = "名称")
-    var name: String? = null,
-    @get:Schema(title = "创建者")
-    var createdBy: String? = null,
-    @get:Schema(title = "创建时间")
-    var created: LocalDateTime? = null,
-    @get:Schema(title = "修改时间")
-    var modified: LocalDateTime? = null,
-    @get:Schema(title = "修改者")
-    var modifiedBy: String? = null,
-    @get:Schema(title = "描述")
-    var desc: String? = "",
-    @get:Schema(title = "标签")
-    var tags: List<DockerTag>? = null,
-    @get:Schema(title = "标签数量")
-    var tagCount: Int? = null,
-    @get:Schema(title = "开始索引")
-    var tagStart: Int? = null,
-    @get:Schema(title = "页大小")
-    var tagLimit: Int? = null,
-    @get:Schema(title = "下载次数")
-    var downloadCount: Int? = null
-)
+@Component
+class BKRepoConfig {
+
+    //    @Value("\${bkRepo.repoUrl}")
+    var repoUrl: String? = "docker-dev.bkrepo.woa.com"
+
+    //    @Value("\${bkRepo.repoProject}")
+    var repoProject: String? = ""
+}

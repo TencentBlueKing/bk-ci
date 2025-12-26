@@ -40,6 +40,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -364,4 +366,73 @@ interface ServiceArtifactoryResource {
         @QueryParam("filePath")
         filePath: String
     ): Result<List<String>>
+
+    @Operation(summary = "分页查询包版本")
+    @javax.ws.rs.GET
+    @javax.ws.rs.Path("/package/version/list")
+    fun listVersionPage(
+        @Parameter(description = "用户ID", required = true)
+        @javax.ws.rs.HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @javax.ws.rs.QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @javax.ws.rs.QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "版本名称，前缀匹配", required = false)
+        @javax.ws.rs.QueryParam("version")
+        version: String? = null,
+        @Parameter(description = "包唯一key", required = false)
+        @javax.ws.rs.QueryParam("packageKey")
+        packageKey: String?,
+        @Parameter(description = "页码", required = false)
+        @javax.ws.rs.QueryParam("pageNumber")
+        pageNumber: Int = 1,
+        @Parameter(description = "每页数量", required = false)
+        @javax.ws.rs.QueryParam("pageSize")
+        pageSize: Int = 20,
+    ): Result<Page<PackageVersion>>
+
+    @Operation(summary = "查询包信息")
+    @javax.ws.rs.GET
+    @javax.ws.rs.Path("/package/get")
+    fun getPackageInfo(
+        @Parameter(description = "用户ID", required = true)
+        @javax.ws.rs.HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @javax.ws.rs.QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @javax.ws.rs.QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "包唯一key", required = true)
+        @javax.ws.rs.QueryParam("packageKey")
+        packageKey: String
+    ): Result<PackageSummary>
+
+    @Operation(summary = "分页查询制品包列表")
+    @javax.ws.rs.GET
+    @javax.ws.rs.Path("/packages/list")
+    fun listPackagePage(
+        @Parameter(description = "用户ID", required = true)
+        @javax.ws.rs.HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "仓库项目", required = true)
+        @javax.ws.rs.QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库名称", required = true)
+        @javax.ws.rs.QueryParam("repoName")
+        repoName: String,
+        @Parameter(description = "包名称，支持前缀匹配模糊搜索", required = false)
+        @javax.ws.rs.QueryParam("packageName")
+        packageName: String?,
+        @Parameter(description = "页码", required = true)
+        @javax.ws.rs.QueryParam("pageNumber")
+        pageNumber: Int,
+        @Parameter(description = "每页数量", required = true)
+        @javax.ws.rs.QueryParam("pageSize")
+        pageSize: Int,
+    ): Result<List<PackageSummary>>
 }
