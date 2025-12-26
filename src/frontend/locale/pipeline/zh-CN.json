@@ -610,7 +610,7 @@
     },
     "modifyConfig": "修改配置",
     "batchEditInstance": "批量编辑实例",
-    "batchEditInstanceTips": "变更将批量应用到所有实例。若入参值未设置，确认后将清空对应字段值。",
+    "batchEditInstanceTips": "变更将批量应用到所有实例（若实例入参为跟随模板则跳过）。若入参值未设置，确认后将清空对应字段值。",
     "releaseTaskHeaderTips": "有 {0} 个发布任务进行中",
     "views": "查看",
     "Upgrading": "升级中",

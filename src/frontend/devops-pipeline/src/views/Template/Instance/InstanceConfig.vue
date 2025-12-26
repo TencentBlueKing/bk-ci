@@ -448,22 +448,24 @@
             throw e
         } finally {
             // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id
-            const newOverrideParamIds = curInstance.value.param?.filter(p => p.constant && p.required).map(p => p.id) || []
-            // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
-            const originalParamIds = curInstance.value?.overrideTemplateField?.paramIds || []
-            if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
-                newOverrideParamIds.push('BK_CI_BUILD_NO')
-            }
-            proxy.$nextTick(() => {
-                proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
-                    index: activeIndex.value - 1,
-                    value: {
-                        ...curInstance.value,
-                        overrideTemplateField: {
-                            ...curInstance?.overrideTemplateField,
-                            paramIds: [...newOverrideParamIds]
+            instanceList.value?.forEach((item, index) => {
+                const newOverrideParamIds = item.param?.filter(p => !p.constant && p.required && p.isRequiredParam && !p.isFollowTemplate).map(p => p.id) || []
+                // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
+                const originalParamIds = item?.overrideTemplateField?.paramIds || []
+                if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
+                    newOverrideParamIds.push('BK_CI_BUILD_NO')
+                }
+                proxy.$nextTick(() => {
+                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                        index: index,
+                        value: {
+                            ...item,
+                            overrideTemplateField: {
+                                ...item?.overrideTemplateField,
+                                paramIds: [...newOverrideParamIds]
+                            }
                         }
-                    }
+                    })
                 })
             })
             isLoading.value = false
@@ -1372,6 +1374,10 @@
             isLoading.value = false
         })
     }
+
+    defineExpose({
+        collectPropertyUpdates
+    })
 </script>
 
 <style lang="scss">

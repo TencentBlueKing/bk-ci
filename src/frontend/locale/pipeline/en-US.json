@@ -609,7 +609,7 @@
     },
     "modifyConfig": "Modify Configuration",
     "batchEditInstance": "Batch Edit Instance",
-    "batchEditInstanceTips": "Changes will be applied to all instances in batch. Unset parameter values will be cleared upon confirmation.",
+    "batchEditInstanceTips": "Changes will be applied to all instances in batch(If the instance is included in the parameter as a follow template, it is skipped). Unset parameter values will be cleared upon confirmation.",
     "releaseTaskHeaderTips": "{0} release tasks are in progress.",
     "views": "Views",
     "from": "Src Template Ver:",
