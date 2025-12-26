@@ -110,7 +110,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
-        if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty()) {
+        if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty() && workspaceName.isNullOrEmpty()) {
             // 三个参数都为空, 返回空列表
             return Result(emptyList())
         }
