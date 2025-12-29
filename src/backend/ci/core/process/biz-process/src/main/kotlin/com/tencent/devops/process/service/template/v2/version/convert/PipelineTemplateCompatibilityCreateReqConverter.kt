@@ -75,8 +75,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
             }
             val isNewTemplate = pipelineTemplateInfoService.getOrNull(projectId, templateId) == null
 
-            // 兼容旧版模板参数入参和构建号入参
-            fixTemplateRequiredParam(model = model)
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -132,33 +130,6 @@ class PipelineTemplateCompatibilityCreateReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = transferResult.templateSetting,
                 newTemplate = isNewTemplate
             )
-        }
-    }
-
-    private fun fixTemplateRequiredParam(model: Model) {
-        val triggerContainer = model.getTriggerContainer()
-        // 存量模版除了「模版常量」，其他变量升级后均为模版入参
-        triggerContainer.params.forEach { param ->
-            if (param.constant == true || param.asInstanceInput != null) return@forEach
-            // 旧变量若勾选了[执行时显示],[默认为实例入参]= true
-            if (param.required) {
-                param.asInstanceInput = true
-            } else {
-                // 旧变量若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
-                param.required = true
-                param.asInstanceInput = false
-            }
-        }
-        triggerContainer.buildNo?.let {
-            if (it.asInstanceInput != null) return@let
-            // 旧构建号若勾选了[执行时显示],[默认为实例入参]= true
-            if (it.required == true) {
-                it.asInstanceInput = true
-            } else {
-                // 旧构建号若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
-                it.required = true
-                it.asInstanceInput = false
-            }
         }
     }
 
