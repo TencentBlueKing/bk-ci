@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.template.v2.version.convert
 
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
