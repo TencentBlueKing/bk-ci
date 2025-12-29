@@ -277,7 +277,9 @@
         const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
         // 创建模板参数的 Map，用于获取模板中对应变量的 defaultValue
         const templateParamsMap = new Map((curTemplateDetail.value?.param ?? []).map(t => [t.id, t]))
-        const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
+        const initialInstanceParams = activeIndex.value > 0 && activeIndex.value - 1 < initialInstanceList.value?.length
+            ? initialInstanceList.value[activeIndex.value - 1]?.param
+            : undefined
         const initialInstanceParamsMap = initialInstanceParams ? new Map(initialInstanceParams.map(ip => [ip.id, ip])) : new Map()
 
         const updatedList = instanceList.value.map(instance => {

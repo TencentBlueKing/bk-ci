@@ -463,8 +463,6 @@
                     newBuildNo.asInstanceInput = value
                 }
                 this.updateContainerParams('buildNo', newBuildNo)
-                // 同步更新 renderBuildNo
-                this.renderBuildNo = { ...newBuildNo }
             },
             getLabelByBuildType (type) {
                 const item = this.buildNoRules.find(item => item.value === type)
@@ -502,7 +500,6 @@
             },
             editVersions () {
                 this.editVersionValues = Object.assign({}, this.versionValues)
-                // 使用 buildNo 而不是 renderBuildNo，确保获取最新的数据
                 this.editBuildNo = Object.assign({}, this.buildNo)
                 this.showEditVersion = true
             },
