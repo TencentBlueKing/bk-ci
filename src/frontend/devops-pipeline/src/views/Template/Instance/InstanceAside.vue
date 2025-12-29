@@ -19,7 +19,7 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <div
+            <!-- <div
                 v-if="renderInstanceList.length"
                 class="batch-edit-btn"
                 @click="handleBatchEdit"
@@ -32,7 +32,7 @@
                 <span>
                     {{ $t('template.batchEditParams') }}
                 </span>
-            </div>
+            </div> -->
         </div>
         <ul class="instance-list">
             <li

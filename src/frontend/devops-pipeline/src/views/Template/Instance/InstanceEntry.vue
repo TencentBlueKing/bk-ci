@@ -273,7 +273,6 @@
     const initialInstanceList = computed(() => proxy.$store?.state?.templates?.initialInstanceList)
     const activeIndex = computed(() => proxy.$route?.query?.index)
     function handleBatchChange (params) {
-        console.log(params, 123)
         const updateMap = new Map(params.map(item => [item.id, item.defaultValue]))
         // 创建模板参数的 Map，用于获取模板中对应变量的 defaultValue
         const templateParamsMap = new Map((curTemplateDetail.value?.param ?? []).map(t => [t.id, t]))
