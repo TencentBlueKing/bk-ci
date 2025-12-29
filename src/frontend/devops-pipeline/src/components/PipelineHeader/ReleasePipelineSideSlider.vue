@@ -899,7 +899,6 @@
                         return
                     }
                     if (this.isTemplateInstanceMode) {
-                        console.log(123)
                         const { projectId, templateId } = this.$route.params
                         const res = await this.fetchTemplateReleasePreFetch({
                             projectId,
