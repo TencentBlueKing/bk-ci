@@ -80,10 +80,10 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
-            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             operationLogType = OperationLogType.fetchType(pipelineResourceWithoutVersion.status)
             operationLogParams = resourceOnlyVersion.versionName ?: ""
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -148,10 +148,10 @@ class PipelineVersionPersistenceService @Autowired constructor(
         with(context) {
             val watcher = Watcher("createReleaseVersion|$projectId|$pipelineId")
             try {
-                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
                 operationLogType = OperationLogType.RELEASE_MASTER_VERSION
                 operationLogParams = resourceOnlyVersion.versionName!!
 
+                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
                 val pipelineResourceVersion = PipelineResourceVersion(
                     pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                     pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -233,6 +233,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
             operationLogParams = resourceOnlyVersion.baseVersionName ?: ""
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -262,6 +263,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         with(context) {
             operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -289,6 +291,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -365,6 +368,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion
@@ -424,6 +428,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
         resourceOnlyVersion: PipelineResourceOnlyVersion
     ) {
         with(context) {
+            pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
             val pipelineResourceVersion = PipelineResourceVersion(
                 pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
                 pipelineResourceOnlyVersion = resourceOnlyVersion

@@ -25,46 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.v3.models
+package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
-import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
-import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
-import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
-
-/**
- * model
- */
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreExtends(
-    val template: Any?
-)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Extends(
-    val template: ExtendsTemplate?
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ExtendsTemplate(
-    @JsonProperty("path")
-    override val templatePath: String? = null,
-    @JsonProperty("ref")
-    override val templateRef: String? = null,
-    @JsonProperty("template-id")
-    override val templateId: String? = null,
-    @JsonProperty("version")
-    override val templateVersionName: String? = null,
-    @JsonProperty("variables")
-    override val variables: Map<String, PreTemplateVariable>? = null,
-    @JsonProperty("trigger-conf")
-    val triggerConfig: Map<String, ExtendsTriggerConfig>? = null,
-    @JsonProperty("recommended-version")
-    val recommendedVersion: ExtendsRecommendedVersion? = null
-) : CodeTemplate
+@Schema(title = "实例化推荐版本号 Code 定义")
+data class ExtendsRecommendedVersion(
+    @JsonProperty("allow-modify-at-startup")
+    @get:Schema(title = "是否为入参")
+    val allowModifyAtStartup: Boolean? = null,
+    @get:Schema(title = "主版本")
+    var major: Int? = null,
+    @get:Schema(title = "特性版本")
+    var minor: Int? = null,
+    @get:Schema(title = "修正版本")
+    var fix: Int? = null,
+    @get:Schema(title = "构建号")
+    @JsonProperty("build-no")
+    val buildNo: BuildNo? = null
+) {
+    data class BuildNo(
+        @get:Schema(title = "初始值")
+        @JsonProperty("initial-value")
+        val initialValue: Int = 0
+    )
+}

@@ -481,14 +481,18 @@
                         required: false,
                         type: versionConfig[v].type
                     }))
-                    this.renderBuildNo = Object.assign({}, this.defaultBuildNo)
+                    this.renderBuildNo = Object.assign({}, {
+                        ...this.defaultBuildNo,
+                        required: false,
+                        asInstanceInput: false
+                    })
 
                     this.updateContainerParams('params', [
                         ...this.globalParams,
                         ...newVersions
                     ])
                     this.updateContainerParams('buildNo', {
-                        ...this.defaultBuildNo
+                        ...this.renderBuildNo
                     })
                 } else {
                     this.updateContainerParams('params', this.globalParams)
