@@ -86,7 +86,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.common.service.TxStoreBelongDeptService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
