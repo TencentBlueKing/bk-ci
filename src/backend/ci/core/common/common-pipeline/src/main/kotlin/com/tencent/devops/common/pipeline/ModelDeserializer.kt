@@ -3,9 +3,13 @@ package com.tencent.devops.common.pipeline
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.service.ServiceModelHandleResource
+import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
 import org.slf4j.LoggerFactory
 
 /**
@@ -13,7 +17,9 @@ import org.slf4j.LoggerFactory
  * 负责将JSON数据反序列化为Model对象，并处理相关的触发器容器逻辑
  * 主要用于CI/CD流水线配置的反序列化处理
  */
-class ModelDeserializer : JsonDeserializer<Model>() {
+class ModelDeserializer(
+    private val client: Client
+) : JsonDeserializer<Model>() {
     companion object {
         private val logger = LoggerFactory.getLogger(ModelDeserializer::class.java)
     }
@@ -67,8 +73,13 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         if (model.publicVarGroups.isNullOrEmpty() || model.projectId == null) {
             return
         }
-        // 获取ModelHandleService服务实例，用于处理模型参数
-        val modelHandleService = SpringContextUtil.getBean(ModelHandleService::class.java)
+        // 根据服务名称判断是否需要获取ModelHandleService
+        val serviceName = BkServiceUtil.findServiceName()
+        val modelHandleService = if (serviceName in listOf("process", "engine")) {
+            SpringContextUtil.getBean(ModelHandleService::class.java)
+        } else {
+            null
+        }
         // 遍历所有阶段和容器，查找并处理TriggerContainer
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
@@ -85,45 +96,56 @@ class ModelDeserializer : JsonDeserializer<Model>() {
     /**
      * 处理单个触发器容器
      * @param model 包含触发器容器的Model对象
-     * @param modelHandleService 模型处理服务，用于处理模型参数
+     * @param serviceName 服务名称，用于判断处理方式
+     * @param modelHandleService 模型处理服务，用于处理模型参数（仅在serviceName为process或engine时非空）
      * 处理逻辑：
      * - 根据pipelineId或templateId确定引用类型
-     * - 调用ModelHandleService处理模型参数
+     * - 根据serviceName选择不同的处理方式
      * - 记录警告信息当没有有效的引用ID时
      */
     private fun processSingleTriggerContainer(
         model: Model,
-        modelHandleService: ModelHandleService
+        modelHandleService: ModelHandleService?
     ) {
         val projectId = model.projectId!!
         val pipelineId = model.pipelineId
         val templateId = model.templateId
-
-        when {
-            // 处理流水线引用类型的触发器容器
-            !pipelineId.isNullOrBlank() -> {
-                modelHandleService.handleModelParams(
-                    projectId = projectId,
-                    model = model,
-                    referId = pipelineId,
-                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE.name,
-                    referVersion = model.latestVersion
-                )
-            }
-            // 处理模板引用类型的触发器容器
-            !templateId.isNullOrBlank() -> {
-                modelHandleService.handleModelParams(
-                    projectId = projectId,
-                    model = model,
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE.name,
-                    referVersion = model.latestVersion
-                )
-            }
-            // 没有有效引用ID时的处理
+        
+        // 确定引用ID和引用类型
+        val (referId, referType) = when {
+            !pipelineId.isNullOrBlank() -> pipelineId to PublicVerGroupReferenceTypeEnum.PIPELINE
+            !templateId.isNullOrBlank() -> templateId to PublicVerGroupReferenceTypeEnum.TEMPLATE
             else -> {
                 logger.warn("No valid reference ID found for TriggerContainer")
+                return
             }
         }
+        
+        // 根据服务名称选择处理方式
+        val params = model.getTriggerContainer().params
+        model.getTriggerContainer().params = if (modelHandleService != null) {
+            modelHandleService.handleModelParams(
+                projectId = projectId,
+                modelPublicVarHandleContext = ModelPublicVarHandleContext(
+                    referId = referId,
+                    referType = PublicVerGroupReferenceTypeEnum.valueOf(referType.name),
+                    referVersion = model.latestVersion,
+                    params = params,
+                    publicVarGroups = model.publicVarGroups ?: emptyList()
+                )
+            ).toMutableList()
+        } else {
+            client.get(ServiceModelHandleResource::class).handlePipelineModelParams(
+                projectId = projectId,
+                modelPublicVarHandleContext = ModelPublicVarHandleContext(
+                    referId = referId,
+                    referType = PublicVerGroupReferenceTypeEnum.valueOf(referType.name),
+                    referVersion = model.latestVersion,
+                    params = params,
+                    publicVarGroups = model.publicVarGroups ?: emptyList()
+                )
+            ).data!!.toMutableList()
+        }
+        model.handlePublicVarInfo()
     }
 }

@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.utils.ModelVarRefUtils
 import com.tencent.devops.common.redis.RedisLock
@@ -11,6 +12,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
 import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
 import org.jooq.DSLContext
@@ -39,17 +41,11 @@ class ModelHandleServiceImpl @Autowired constructor(
 
     override fun handleModelParams(
         projectId: String,
-        model: Model,
-        referId: String,
-        referType: String,
-        referVersion: Int
-    ) {
-        publicVarService.handleModelParams(
+        modelPublicVarHandleContext: ModelPublicVarHandleContext
+    ): List<BuildFormProperty> {
+        return publicVarService.handleModelParams(
             projectId = projectId,
-            model = model,
-            referId = referId,
-            referType = PublicVerGroupReferenceTypeEnum.valueOf(referType),
-            referVersion = referVersion
+            modelPublicVarHandleContext = modelPublicVarHandleContext
         )
     }
 
@@ -58,6 +54,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         projectId: String,
         resourceId: String,
         resourceType: String,
+        model: Model?,
         resourceVersion: Int
     ) {
         val redisLock = RedisLock(
@@ -69,16 +66,20 @@ class ModelHandleServiceImpl @Autowired constructor(
             redisLock.lock()
             logger.info("Start detecting variable references for resource: $resourceId|$resourceVersion")
 
-            val model = getResourceModel(
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceId = resourceId,
-                resourceVersion = resourceVersion
-            ) ?: return
-            model.handlePublicVarInfo()
+            val modelInfo = if (model == null) {
+                getResourceModel(
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    resourceId = resourceId,
+                    resourceVersion = resourceVersion
+                )
+            } else {
+                model
+            } ?: return
+            modelInfo.handlePublicVarInfo()
             // 使用 ModelVarRefUtils 解析变量引用
             val varRefDetails = ModelVarRefUtils.parseModelVarReferences(
-                model = model,
+                model = modelInfo,
                 projectId = projectId
             )
 
@@ -101,7 +102,7 @@ class ModelHandleServiceImpl @Autowired constructor(
             // 处理公共变量组变量引用
             publicVarReferInfoService.handlePublicVarGroupReferences(
                 userId = userId,
-                model = model,
+                model = modelInfo,
                 varRefDetails = varRefDetails
             )
             logger.info("Variable references update completed for resource: $resourceId")

@@ -31,15 +31,14 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
@@ -143,7 +142,7 @@ class PublicVarService @Autowired constructor(
             projectId = projectId,
             groupName = groupName,
             varNames = varNames,
-            version = null  // 传null以统计最新版本和-1版本的引用数
+            version = null // 传null以统计最新版本和-1版本的引用数
         )
 
         return true
@@ -188,7 +187,7 @@ class PublicVarService @Autowired constructor(
             groupName = groupName
         ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
 
-            return publicVarDao.listVarByGroupName(
+        return publicVarDao.listVarByGroupName(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
@@ -226,39 +225,41 @@ class PublicVarService @Autowired constructor(
 
     fun handleModelParams(
         projectId: String,
-        model: Model,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int
-    ) {
-        val publicVarGroups = model.publicVarGroups?.toMutableList()
-        if (publicVarGroups.isNullOrEmpty()) return
+        modelPublicVarHandleContext: ModelPublicVarHandleContext
+    ): MutableList<BuildFormProperty> {
+        val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
+
         // 筛选出需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter {
             it.version == null
         }
-        if (groupsToUpdate.isEmpty()) return
+        if (publicVarGroups.isNullOrEmpty()) return mutableListOf()
+
+        // 获取sourceProjectId和引用信息
+        val referId = modelPublicVarHandleContext.referId
+        val referType = modelPublicVarHandleContext.referType
+        val sourceProjectId: String
+        val groupReferInfos: List<ResourcePublicVarGroupReferPO>
 
         // 查询引用信息，获取sourceProjectId
-        val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+        groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
             referType = referType,
             referId = referId,
-            referVersion = referVersion
+            referVersion = modelPublicVarHandleContext.referVersion
         )
-
         // 从引用信息中获取源头项目ID，如果没有则使用当前项目ID
-        val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
+        sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
         logger.info("handleModelParams sourceProjectId: $sourceProjectId, projectId: $projectId")
 
-        // 批量获取所有非固定版本组的最新版本信息（使用源头项目ID）
+        // 批量获取所有非固定版本组的最新版本信息
         val groupNames = groupsToUpdate.map { it.groupName }
         val latestGroupVersionMap = getLatestVersionsForGroups(sourceProjectId, groupNames)
-        // 批量获取所有变量组最新版本的变量（使用源头项目ID）
+        // 批量获取所有变量组最新版本的变量
         val latestVars = getAllLatestVarsForGroups(sourceProjectId, latestGroupVersionMap)
 
-        val params = model.getTriggerContainer().params
+        val params = modelPublicVarHandleContext.params.toMutableList()
         // 获取流水线中所有非变量组的变量名集合
         val pipelineVarNames = params.filter { it.varGroupName.isNullOrBlank() }.map { it.id }.toSet()
 
@@ -288,9 +289,8 @@ class PublicVarService @Autowired constructor(
                 // 将已移除的变量设置到 variables 中
                 varGroup.variables = removedVars
             }
-
         }
-        model.publicVarGroups = publicVarGroups
+        return params
     }
 
     /**

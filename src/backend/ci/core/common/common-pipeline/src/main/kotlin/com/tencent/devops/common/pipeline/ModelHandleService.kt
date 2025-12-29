@@ -1,5 +1,9 @@
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
+import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
+
 interface ModelHandleService {
 
     /**
@@ -13,11 +17,8 @@ interface ModelHandleService {
      */
     fun handleModelParams(
         projectId: String,
-        model: Model,
-        referId: String,
-        referType: String,
-        referVersion: Int
-    )
+        modelPublicVarHandleContext: ModelPublicVarHandleContext
+    ): List<BuildFormProperty>
 
     /**
      * 处理模型中所有变量的引用
@@ -32,6 +33,7 @@ interface ModelHandleService {
         projectId: String,
         resourceId: String,
         resourceType: String,
+        model: Model? = null,
         resourceVersion: Int
     )
 }
