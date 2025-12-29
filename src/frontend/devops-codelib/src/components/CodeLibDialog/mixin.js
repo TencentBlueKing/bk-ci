@@ -328,7 +328,6 @@ export default {
 
         handleSearchScmCodeLib (search) {
             const { projectId, codelibTypeConstants } = this
-            console.log(search, 123)
             this.checkScmOAuth({
                 projectId,
                 type: codelibTypeConstants,
