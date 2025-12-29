@@ -251,6 +251,11 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
             )
         }
+        // 保存修改前的值用于操作记录
+        val oldDisplayName = ws.displayName
+        val oldRemark = ws.remark
+        val oldLabels = ws.labels
+
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
@@ -260,6 +265,50 @@ class WorkspaceService @Autowired constructor(
                 workspaceProperty = workspaceProperty
             )
         }
+        
+        // 在事务外添加操作记录
+        if (workspaceProperty.displayName != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_DISPLAY_NAME),
+                    oldDisplayName,
+                    workspaceProperty.displayName
+                )
+            )
+        }
+        
+        if (workspaceProperty.remark != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_REMARK),
+                    oldRemark,
+                    workspaceProperty.remark
+                )
+            )
+        }
+        
+        if (workspaceProperty.labels != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_LABELS),
+                    oldLabels.toString(),
+                    workspaceProperty.labels.toString()
+                )
+            )
+        }
+        
         return true
     }
 
@@ -663,7 +712,7 @@ class WorkspaceService @Autowired constructor(
                     remark = it.remark,
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
-                    imageId = detail?.imageId ?: "",
+                    imageId = cdsInfo[detail?.hostIp]?.image ?: "",
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
                     vmName = allWindows[it.workspaceName]?.vmName,
                     nodeIp = cdsInfo[detail?.hostIp]?.node ?: ""
@@ -1369,15 +1418,8 @@ class WorkspaceService @Autowired constructor(
             .setInstanceName(workspace.workspaceName)
         permissionService.checkViewerPermission(userId, workspace.workspaceName, workspace.projectId)
         ActionAuditContext.current().addAttribute(TencentActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
-        val resourceId = if (userId != workspace.createUserId) {
-            workspaceSharedDao.fetchWorkspaceSharedInfo(
-                dslContext = dslContext,
-                workspaceName = workspace.workspaceName,
-                sharedUsers = listOf(userId)
-            ).firstOrNull()?.resourceId
-        } else {
-            workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspace.workspaceName)?.resourceId
-        }
+        
+        val resourceId = workspace.resourceId
         val owner = if (workspace.ownerType.projectUse()) {
             workspaceSharedDao.fetchWorkspaceSharedInfo(
                 dslContext = dslContext,

@@ -382,6 +382,14 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         checkParameters(userId, projectId, path)
+
+        // 非安装包的ttl为1小时
+        val ttl = if (PlatformEnum.ofTail(path) == PlatformEnum.UNKNOWN) {
+            1 * 3600
+        } else {
+            24 * 3600
+        }
+
         return Result(
             bkRepoDownloadService.outerDownloadUrlByToken(
                 creatorId = userId,
@@ -389,7 +397,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 projectId = projectId,
                 artifactoryType = artifactoryType,
                 path = path,
-                ttl = 24 * 3600
+                ttl = ttl
             )
         )
     }

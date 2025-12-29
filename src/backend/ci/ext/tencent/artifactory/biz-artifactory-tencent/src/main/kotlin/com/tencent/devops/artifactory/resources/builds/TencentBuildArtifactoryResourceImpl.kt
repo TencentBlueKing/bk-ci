@@ -115,17 +115,18 @@ class TencentBuildArtifactoryResourceImpl @Autowired constructor(
         crossPipineId: String?,
         crossBuildNo: String?
     ): Result<List<FileDetail>> {
+        val files = bkRepoService.getPropertiesByRegex(
+            projectId,
+            pipelineId,
+            buildId,
+            artifactoryType,
+            path,
+            crossProjectId,
+            crossPipineId,
+            crossBuildNo
+        )
         return Result(
-            bkRepoService.getPropertiesByRegex(
-                projectId,
-                pipelineId,
-                buildId,
-                artifactoryType,
-                path,
-                crossProjectId,
-                crossPipineId,
-                crossBuildNo
-            )
+            files.map { it.copy(meta = it.meta.mapValues { m -> m.value.toString() }) }
         )
     }
 

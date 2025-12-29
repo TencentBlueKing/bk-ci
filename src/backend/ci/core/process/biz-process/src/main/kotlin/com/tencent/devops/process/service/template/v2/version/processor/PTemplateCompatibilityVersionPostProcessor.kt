@@ -2,8 +2,10 @@ package com.tencent.devops.process.service.template.v2.version.processor
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
@@ -107,7 +109,8 @@ class PTemplateCompatibilityVersionPostProcessor(
         pipelineTemplateSetting: PipelineSetting
     ) {
         with(context) {
-            if (!versionAction.isCreateReleaseVersion() || !dualWriteEnabled) {
+            if (!versionAction.isCreateReleaseVersion() || !dualWriteEnabled ||
+                context.pipelineTemplateInfo.type != PipelineTemplateType.PIPELINE) {
                 return
             }
             logger.info(
@@ -123,6 +126,7 @@ class PTemplateCompatibilityVersionPostProcessor(
                 // 这里只需要执行 v2 → v1 的双写逻辑
                 val storeFlag = v2TemplateInfo.mode == TemplateType.CONSTRAINT ||
                     v2TemplateInfo.storeStatus != TemplateStatusEnum.NEVER_PUBLISHED
+                splitParamsForV1Compatibility(pipelineTemplateResource.model as Model)
                 v1TemplateDao.createTemplate(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -150,6 +154,23 @@ class PTemplateCompatibilityVersionPostProcessor(
                 logger.warn("v2->v1 dual write failed|project=$projectId|template=$templateId", t)
                 if (strictMode) throw t
             }
+        }
+    }
+
+    /**
+     * 将 v2 版本的合并参数拆分为 v1 版本的 templateParams 和 params
+     *
+     * v2 版本：params 包含所有参数，其中 constant = true 的来自原 templateParams
+     * v1 版本：templateParams 和 params 分开存储
+     */
+    private fun splitParamsForV1Compatibility(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        val allParams = triggerContainer.params
+        // 将参数按 constant 标记分组
+        val (templateParams, params) = allParams.partition { it.constant == true }
+        triggerContainer.params = params.toMutableList()
+        triggerContainer.templateParams = takeIf { templateParams.isNotEmpty() }?.let {
+            templateParams.map { it.copy(constant = false) }
         }
     }
 

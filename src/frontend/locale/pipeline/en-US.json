@@ -268,7 +268,6 @@
     "deleteViewTips": "Confirm to delete this parameter value combination ( {0} )?",
     "deleteNoticeTips": "Deletion cannot be undone, please proceed with caution!"
   },
-
   "restore": {
     "recycleBin": "Recycle Bin",
     "restore": "Restore",
@@ -367,7 +366,7 @@
     "noticeGroup": "Groups",
     "emptyNoticeGroup": "Groups to be notified are empty",
     "additionUser": "Additional Users",
-    "additionUserPlaceholder": "Support environment variables (${var}), multiple environment variables are separated by commas",
+    "additionUserPlaceholder": "Support environment variables (${'{'}var{'}'}), multiple environment variables are separated by commas",
     "noticeContent": "Content",
     "noticeGroupIds": "Wework Group IDs",
     "pipelineLink": "Attached pipeline link in the content",
@@ -1038,6 +1037,9 @@
     "macSystemVersion": "macOS System Version",
     "winSystemVersion": "Windows System Version",
     "xcodeVersion": "XCode Version",
+    "macOSHwSpec": "Resource Configuration",
+    "macOSHwSpecTip": "Please view configuration instructions and contact the DevCloud R&D team for application",
+    "macOSHwSpecDesc": "View Configuration Instructions",
     "notRecomendPlugin": "This plugin is not recommended",
     "notRecomendImage": "This image is not recommended",
     "image": "Image",
@@ -1720,7 +1722,6 @@
   "inSetNoRequiredParamTips": "{0} parameters ({1}) are no longer input parameters, ignored and not filled; ",
   "inSetDeletedParamTips": "{0} parameters ({1}) have been deleted, ignored and not filled.",
   "resetDefault": "Restore Default",
-
   "useLastParams": "Use Last Parameter Values",
   "next": "Next",
   "prev": "Prev",
@@ -1909,7 +1910,7 @@
   "differenceItem": "Difference Item",
   "expressionFormat": "Expression Format",
   "traditionalFormat": "Single or Double Curly Braces",
-  "traditionalFormatExample": "e.g., ${var}, ${'{{'}var{'}}'}",
+  "traditionalFormatExample": "e.g.,${'{'}var{'}'}, ${'{{'}var{'}}'}",
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${'{{'}variables.var{'}}'}",
   "expressionFunction": "Expression Functions",
@@ -1963,15 +1964,6 @@
   "addLabels": "Add Label",
   "relyChanged": "Dependent field ({0}) values have changed, please check if the configuration is correct",
   "pipelineDataBoard": "EPlus",
-  "cron": {
-    "分": "Minute",
-    "时": "Hour",
-    "日": "Day",
-    "周": "Week",
-    "月": "Month",
-    "下次：": "Next:",
-    "小时": "Hour"
-  },
   "enterRepoAlias": "Please enter the repository alias",
   "pacRepoNotSet": "The associated PAC repository will be automatically monitored, no need to set it",
   "addParam": "Add",
@@ -1988,7 +1980,7 @@
   "pipelineTemplate": "Pipeline",
   "allSource": "All",
   "customSource": "Custom",
-  "marketSource": "Store",  
+  "marketSource": "Store",
   "releaseTemplate": "Release Template",
   "checkTemplate": "Check Template",
   "archive": {
@@ -2025,6 +2017,14 @@
     "continuousFailure": "continued failure",
     "views": "Views",
     "dataUpdateT1": "(Data updated T+1)"
+  },
+  "cron": {
+    "everyMinute": "Per minute",
+    "everyHour": "Per hour",
+    "everyDay": "Per day",
+    "everyWeek": "Per week",
+    "everyMonth": "Per month",
+    "errorTips": "The timing rule cannot be empty or the format is incorrect"
   },
   "validVariableFormat": "Please enter a valid variable format",
   "attributeValue": "Attribute Value",
@@ -2074,6 +2074,11 @@
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
+  "switchToVarMode": "Click to switch to variable input mode",
+  "closeVarMode": "Click to close variable input mode",
+  "placeholderConstraintVar": "Please enter the variable, such as ${{var}}",
+  "placeholderVar": "Please enter the variable, such as ${{var}} or ${var}",
+  "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }
