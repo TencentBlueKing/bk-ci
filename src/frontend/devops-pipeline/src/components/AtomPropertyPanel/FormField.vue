@@ -131,9 +131,8 @@
     })
 
     const propertyUpdateConfig = computed(() => {
-        const hasUpdates = props.propertyUpdates && props.propertyUpdates.length > 0
         return {
-            isShow: hasUpdates,
+            isShow: !!props.propertyUpdates?.length,
             updates: props.propertyUpdates || []
         }
     })

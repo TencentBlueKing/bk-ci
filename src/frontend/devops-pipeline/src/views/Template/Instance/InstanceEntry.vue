@@ -96,6 +96,7 @@
         UPDATE_TEMPLATE_REF_TYPE,
         INSTANCE_OPERATE_TYPE
     } from '@/store/modules/templates/constants'
+    import { deepClone } from '@/utils/util'
     import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
     import BatchEditConfig from './BatchEditConfig'
     import InstanceAside from './InstanceAside'
@@ -277,24 +278,25 @@
         // 创建模板参数的 Map，用于获取模板中对应变量的 defaultValue
         const templateParamsMap = new Map((curTemplateDetail.value?.param ?? []).map(t => [t.id, t]))
         const initialInstanceParams = initialInstanceList.value?.[activeIndex.value - 1]?.param
+        const initialInstanceParamsMap = initialInstanceParams ? new Map(initialInstanceParams.map(ip => [ip.id, ip])) : new Map()
 
         const updatedList = instanceList.value.map(instance => {
             // 深拷贝实例对象，确保触发响应式更新
-            const newInstance = JSON.parse(JSON.stringify(instance))
-            
+            const newInstance = deepClone(instance)
+        
             newInstance.param = newInstance.param.map(p => {
                 if (p.isFollowTemplate) {
                     return p // 如果参数跟随模板，则不进行更新
                 }
                 if (updateMap.has(p.id)) {
-                    const initialParam = initialInstanceParams?.find(ip => ip.id === p.id)
+                    const initialParam = initialInstanceParamsMap.get(p.id)
                     const templateParam = templateParamsMap.get(p.id)
                     const templateDefaultValue = templateParam?.defaultValue
                     const newValue = updateMap.get(p.id)
                     const propertyUpdates = instanceConfigRef.value?.collectPropertyUpdates({
-                        ...p,
-                        defaultValue: newValue
-                    }, initialParam)
+                    ...p,
+                    defaultValue: newValue
+                }, initialParam)
                     return {
                         ...p,
                         defaultValue: newValue,
@@ -305,10 +307,10 @@
                 }
                 return p
             })
-            
+        
             return newInstance
         })
-        
+    
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
             list: updatedList,
             init: false
