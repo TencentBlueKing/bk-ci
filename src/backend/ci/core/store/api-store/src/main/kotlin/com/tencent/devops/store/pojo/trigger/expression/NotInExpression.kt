@@ -1,5 +1,7 @@
 package com.tencent.devops.store.pojo.trigger.expression
 
+import com.tencent.devops.common.api.util.ReflectUtil
+
 class NotInExpression : TriggerExpression {
     override fun evaluate(eventValue: Any?, inputValue: Any?): Boolean {
         return when {
@@ -10,6 +12,10 @@ class NotInExpression : TriggerExpression {
             // 用户输入是集合，才比较,都不相等,那么通过
             inputValue is Collection<*> -> inputValue.all {
                 it != null && ComparisonUtils.compare(eventValue, it) != 0
+            }
+            // 兼容处理，如果用户输入是单个元素，则转成集合
+            ReflectUtil.isNativeType(inputValue) || inputValue is String -> listOf("$inputValue").all {
+                ComparisonUtils.compare(eventValue, it) != 0
             }
 
             else -> false
