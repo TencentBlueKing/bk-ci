@@ -105,6 +105,7 @@ class WorkspaceRecordService @Autowired constructor(
         }
         val region = when (zone?.type) {
             WindowsResourceZoneConfigType.CSIG_USE -> BkRepoRegion.CSIG
+            WindowsResourceZoneConfigType.DEVCLOUD -> BkRepoRegion.DEVCLOUD
             else -> BkRepoRegion.DEVX
         }
         return region
