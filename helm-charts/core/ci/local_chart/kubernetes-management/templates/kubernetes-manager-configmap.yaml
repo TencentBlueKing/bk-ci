@@ -19,14 +19,14 @@ data:
       port: 80
     
     mysql:
-      dataSourceName: {{ include "bkci.mysqlUsername" . }}:{{- include "bkci.mysqlPassword" . }}@tcp({{- include "bkci.mysqlAddr" . }})/devops_ci_kubernetes_manager?parseTime=true&loc=Local
+      dataSourceName: {{ include "k8sm.mysqlUsername" . }}:{{- include "k8sm.mysqlPassword" . }}@tcp({{- include "k8sm.mysqlAddr" . }})/devops_ci_kubernetes_manager?parseTime=true&loc=Local
       connMaxLifetime: 3
       maxOpenConns: 10
       maxIdleConns: 10
     
     redis:
-      addr: {{ include "bkci.redisHost" . }}:{{ include "bkci.redisPort" . }}
-      password: {{ include "bkci.redisPassword" . }}
+      addr: {{ include "k8sm.redisHost" . }}:{{ include "k8sm.redisPort" . }}
+      password: {{ include "k8sm.redisPassword" . }}
       db: {{ .Values.kubernetesManager.redis.db }}
     
     kubernetes:

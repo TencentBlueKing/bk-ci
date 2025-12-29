@@ -18,7 +18,8 @@ RUN yum update -y &&\
     yum install -y mysql &&\
     yum install -y redis &&\
     yum install -y python3 &&\
-    pip3 install requests 
+    pip3 install requests &&\
+    yum install -y openssl
 
 # 安装Java工具
 RUN mkdir -p /data/tools && \
