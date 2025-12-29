@@ -102,6 +102,7 @@
                                 :params="renderParamList"
                                 :param-values="paramsValues"
                                 sort-category
+                                batch-edit-flag
                                 :handle-set-parma-required="handleSetParmaRequired"
                             >
                                 <template
@@ -150,7 +151,7 @@
 </template>
 
 <script setup>
-    import { computed, ref } from 'vue'
+    import { computed, readonly, ref } from 'vue'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import UseInstance from '@/hook/useInstance'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
