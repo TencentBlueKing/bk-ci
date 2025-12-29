@@ -1,4 +1,13 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.16](#v3016)
+  - [Changelog since v3.0.15](#changelog-since-v3015)
+
+- [v3.0.15](#v3015)
+  - [Changelog since v3.0.14](#changelog-since-v3014)
+
+- [v3.0.14](#v3014)
+  - [Changelog since v3.0.13](#changelog-since-v3013)
+
 - [v3.0.13](#v3013)
   - [Changelog since v3.0.12](#changelog-since-v3012)
 
@@ -19,6 +28,36 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.16
+## 2025-12-29
+### Changelog since v3.0.15
+#### Fixes
+
+##### Pipeline
+- [Fixed] bug: Fix tgit trigger 2.0 version content is empty [link](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### Other
+- [Fixed] bugfix: Fix initialization default image script error [link](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+
+# v3.0.15
+## 2025-08-08
+### Changelog since v3.0.14
+#### New
+
+##### Uncategorized
+- [New] feat: Maven repository publishing migrated from oss to central [link](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [New] feat: Support inter-service JWT verification [link](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [New] feat: Remove proxy cross-network region code [link](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [New] feat: Upgrade turbo version [link](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+
+# v3.0.14
+## 2025-07-11
+### Changelog since v3.0.13
+#### Fixes
+
+##### Uncategorized
+- [Fixed] bug: User-mode interfaces add project access permission verification [link](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
 # v3.0.13
 ## 2025-02-12
 ### Changelog since v3.0.12
