@@ -188,8 +188,9 @@
         margin: 12px 0 0 14px;
         > li {
             list-style: disc;
-            &:first-child {
-                margin-bottom: 16px;
+            margin-bottom: 16px;
+            &:last-child {
+                margin-bottom: 0;
             }
             > em {
                 font-style: normal;
