@@ -42,8 +42,7 @@
                 {{ $t('noticeTitle') }}
             </p>
             <ul class="disclosure-tips">
-                <li v-html="$t('disclosureTip0', [projectName])" />
-                <li v-html="$t('disclosureTip1')"></li>
+                <li v-html="$t(agreementTips)" />
             </ul>
         </footer>
     </bk-dialog>
@@ -60,6 +59,7 @@
             const signed = computed(() => store.state.nonDisclosureAgreementConfig?.signed ?? false)
             const projectName = computed(() => store.state.nonDisclosureAgreementConfig?.projectInformation ?? '')
             const schemeQrcodeUrl = computed(() => store.state.nonDisclosureAgreementConfig?.schemeQrcodeUrl ?? '')
+            const agreementTips = computed(() => store.state.nonDisclosureAgreementConfig?.agreementTips ?? [])
             const okText = computed(() => signed.value ? 'countdownFresh' : '刷新')
             const isShow = computed(() => store.state.isShowNonDisclosureAgreement)
             const sec = ref(3)
@@ -102,6 +102,7 @@
                 okText,
                 sec,
                 projectName,
+                agreementTips,
                 toggleSignDialog (show) {
                     store.dispatch('toggleSignatureDialog', show)
                     store.state.cancelDisclosureHandler?.()
