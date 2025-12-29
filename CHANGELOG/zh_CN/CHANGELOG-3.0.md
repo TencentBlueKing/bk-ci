@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.16](#v3016)
+   - [Changelog since v3.0.15](#changelog-since-v3015)
+
 - [v3.0.15](#v3015)
    - [Changelog since v3.0.14](#changelog-since-v3014)
 
@@ -25,6 +28,17 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.16
+## 2025-12-29
+### Changelog since v3.0.15
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### 其他
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+
 # v3.0.15
 ## 2025-08-08
 ### Changelog since v3.0.14
