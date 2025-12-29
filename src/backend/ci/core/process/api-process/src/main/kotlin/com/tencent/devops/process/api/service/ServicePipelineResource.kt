@@ -359,7 +359,10 @@ interface ServicePipelineResource {
         channelCode: ChannelCode? = ChannelCode.BS,
         @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
-        checkPermission: Boolean? = true
+        checkPermission: Boolean? = true,
+        @Parameter(description = "流水线名称", required = false)
+        @QueryParam("filterByPipelineName")
+        filterByPipelineName: String? = null
     ): Result<Page<Pipeline>>
 
     @Operation(summary = "获取流水线状态")

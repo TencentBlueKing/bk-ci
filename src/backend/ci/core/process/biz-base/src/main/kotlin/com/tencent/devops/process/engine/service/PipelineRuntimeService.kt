@@ -36,8 +36,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
@@ -47,6 +47,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -144,15 +145,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -356,10 +357,18 @@ class PipelineRuntimeService @Autowired constructor(
             updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
-        list.forEach {
-            result.add(genBuildHistory(it, currentTimestamp))
+        var prevBuildVersion: Int? = null
+        list.reversed().forEach {
+            result.add(
+                genBuildHistory(
+                    buildInfo = it,
+                    currentTimestamp = currentTimestamp,
+                    prevBuildVersion = prevBuildVersion
+                )
+            )
+            prevBuildVersion = it.version
         }
-        return result
+        return result.reversed()
     }
 
     fun listPipelineBuildHistory(
@@ -432,15 +441,24 @@ class PipelineRuntimeService @Autowired constructor(
             triggerUser = triggerUser
         )
         val result = mutableListOf<BuildHistory>()
-        list.forEach { buildInfo ->
+        var prevBuildVersion: Int? = null
+        list.reversed().forEach { buildInfo ->
             val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
                 projectId = projectId,
                 artifactQualityList = buildInfo.artifactQualityList
             )
-            result.add(genBuildHistory(buildInfo, currentTimestamp, artifactQuality))
+            result.add(
+                genBuildHistory(
+                    buildInfo = buildInfo,
+                    currentTimestamp = currentTimestamp,
+                    artifactQuality = artifactQuality,
+                    prevBuildVersion = prevBuildVersion
+                )
+            )
+            prevBuildVersion = buildInfo.version
         }
-        return result
+        return result.reversed()
     }
 
     fun updateBuildRemark(projectId: String, pipelineId: String, buildId: String, remark: String?) {
@@ -577,7 +595,8 @@ class PipelineRuntimeService @Autowired constructor(
     private fun genBuildHistory(
         buildInfo: BuildInfo,
         currentTimestamp: Long,
-        artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null
+        artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
+        prevBuildVersion: Int? = null
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
@@ -617,7 +636,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildNumAlias = buildNumAlias,
                 updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
-                executeCount = executeCount
+                executeCount = executeCount,
+                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion)
             )
         }
     }
@@ -993,6 +1013,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.executeCount = context.executeCount
                                 it.checkIn = stage.checkIn
                                 it.checkOut = stage.checkOut
+                                it.name = stage.name
                                 updateExistsStage.add(it)
                                 return@findHistoryStage
                             }
@@ -1016,7 +1037,8 @@ class PipelineRuntimeService @Autowired constructor(
                         controlOption = stageOption,
                         checkIn = stage.checkIn,
                         checkOut = stage.checkOut,
-                        stageIdForUser = stage.stageIdForUser
+                        stageIdForUser = stage.stageIdForUser,
+                        name = stage.name
                     )
                 )
             }
@@ -1304,6 +1326,9 @@ class PipelineRuntimeService @Autowired constructor(
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
             containerVar[Container::startVMTaskSeq.name] = detail.startVMTaskSeq ?: 1
+            detail.jobId?.let { jobId ->
+                containerVar[Container::jobId.name] = jobId
+            }
             build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
@@ -1349,7 +1374,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = build.projectId, pipelineId = build.pipelineId,
                     resourceVersion = resourceVersion, buildId = build.buildId,
                     stageId = build.stageId, stageSeq = build.seq,
-                    executeCount = build.executeCount, stageVar = mutableMapOf(),
+                    executeCount = build.executeCount, stageVar = mutableMapOf(Stage::name.name to (build.name ?: "")),
                     timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
                 )
             )
@@ -1806,12 +1831,15 @@ class PipelineRuntimeService @Autowired constructor(
                 startTime = if (latestRunningBuild.executeCount == 1) startTime else null,
                 debug = latestRunningBuild.debug
             )
-            pipelineInfoDao.updateLatestStartTime(
-                dslContext = transactionContext,
-                projectId = latestRunningBuild.projectId,
-                pipelineId = latestRunningBuild.pipelineId,
-                startTime = startTime
-            )
+            // debug下,不更新最近执行时间
+            if (!latestRunningBuild.debug) {
+                pipelineInfoDao.updateLatestStartTime(
+                    dslContext = transactionContext,
+                    projectId = latestRunningBuild.projectId,
+                    pipelineId = latestRunningBuild.pipelineId,
+                    startTime = startTime
+                )
+            }
             pipelineBuildSummaryDao.startLatestRunningBuild(
                 dslContext = transactionContext,
                 latestRunningBuild = latestRunningBuild,
@@ -2116,6 +2144,38 @@ class PipelineRuntimeService @Autowired constructor(
             buildNum = buildNum,
             debugVersion = debugVersion
         )?.buildId
+    }
+
+    fun getBuildInfoByBuildNum(
+        projectId: String,
+        pipelineId: String,
+        buildNum: Int,
+        debugVersion: Int? = null,
+        archiveFlag: Boolean? = false
+    ): BuildInfo? {
+        return pipelineBuildDao.getBuildByBuildNum(
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = buildNum,
+            debugVersion = debugVersion
+        )
+    }
+
+    fun updateBuildVersionChangeFlag(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        versionChange: Boolean,
+        archiveFlag: Boolean? = false
+    ) {
+        pipelineBuildDao.updateBuildVersionChangeFlag(
+            dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            versionChange = versionChange
+        )
     }
 
     fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus, showMsg: String) {

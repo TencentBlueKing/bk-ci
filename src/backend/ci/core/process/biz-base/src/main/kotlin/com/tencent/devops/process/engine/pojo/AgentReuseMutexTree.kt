@@ -125,7 +125,7 @@ data class AgentReuseMutexTree(
                 errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_ERROR,
                 params = arrayOf(
                     "Stage-${n.stageSeq}",
-                    "${vRoot.children.first().jobId}|${vRoot.children.first().type}",
+                    "${vRoot.children.firstOrNull()?.jobId ?: ""}|${vRoot.children.firstOrNull()?.type ?: ""}",
                     "${n.jobId}|${n.type}"
                 )
             )
@@ -413,7 +413,7 @@ abstract class AgentReuseMutexTreeNode(
         val queue = ArrayDeque<AgentReuseMutexTreeNode>()
         queue.add(this)
         while (queue.isNotEmpty()) {
-            val node = queue.removeFirst()
+            val node = queue.removeFirstOrNull() ?: continue
             run(node)
 
             for (child in node.children) {
@@ -428,7 +428,7 @@ abstract class AgentReuseMutexTreeNode(
         stack.addFirst(this)
 
         while (stack.isNotEmpty()) {
-            val node = stack.removeFirst()
+            val node = stack.removeFirstOrNull() ?: continue
 
             val r = run(node)
             if (r != null) {

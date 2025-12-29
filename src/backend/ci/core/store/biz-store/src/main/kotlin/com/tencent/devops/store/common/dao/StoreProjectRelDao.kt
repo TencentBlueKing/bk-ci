@@ -126,6 +126,22 @@ class StoreProjectRelDao {
         }
     }
 
+    fun listStoreCode2ProjectCode(
+        dslContext: DSLContext,
+        storeCodes: List<String>,
+        storeType: StoreTypeEnum,
+        storeProjectType: StoreProjectTypeEnum
+    ): Map<String, String> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this)
+                .where(
+                    STORE_CODE.`in`(storeCodes)
+                        .and(STORE_TYPE.eq(storeType.type.toByte()))
+                        .and(TYPE.eq(storeProjectType.type.toByte()))
+                ).fetch().map { Pair(it.value1(), it.value2()) }.toMap()
+        }
+    }
+
     fun countStoreProject(
         dslContext: DSLContext,
         projectCode: String,

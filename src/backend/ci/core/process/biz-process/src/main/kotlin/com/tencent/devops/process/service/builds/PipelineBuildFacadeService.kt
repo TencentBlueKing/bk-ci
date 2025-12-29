@@ -72,6 +72,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -124,6 +125,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -137,6 +139,7 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
 import com.tencent.devops.process.util.TaskUtils
@@ -153,10 +156,10 @@ import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriBuilder
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -186,7 +189,8 @@ class PipelineBuildFacadeService(
     private val pipelineRedisService: PipelineRedisService,
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val pipelineBuildRetryService: PipelineBuildRetryService
+    private val pipelineBuildRetryService: PipelineBuildRetryService,
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -426,6 +430,10 @@ class PipelineBuildFacadeService(
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
+            } else if (startType == StartType.SERVICE &&
+                readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+                // 服务间的API触发需要兼容老用户，为避免意外产生调试构建，直接拦截
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION)
             }
             // 正式版本,必须使用最新版本执行
             if (version != null &&
@@ -713,25 +721,26 @@ class PipelineBuildFacadeService(
         terminateFlag: Boolean? = false
     ) {
         if (checkPermission) {
-            val permission = AuthPermission.EXECUTE
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
-            )
-        }
+            // 检查用户是否有权限取消构建
+            if (!hasPermissionToCancelBuild(userId, projectId, pipelineId, buildId)) {
+                logger.warn("[$buildId]|User $userId has no permission to cancel build.")
+                // 根据不同的策略抛出不同的错误信息
+                val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+                val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
 
+                if (cancelPolicy == BuildCancelPolicy.RESTRICTED) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.USER_NO_CANCEL_BUILD_PERMISSION,
+                        params = arrayOf(userId, buildId)
+                    )
+                } else {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                        params = arrayOf(AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+                    )
+                }
+            }
+        }
         buildManualShutdown(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -1227,7 +1236,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         reviewUsers: List<String>,
         params: MutableList<ManualReviewParam>,
-        desc: String,
+        desc: String
     ): ReviewParam {
         val reviewUser = mutableListOf<String>()
         reviewUsers.forEach { user ->
@@ -1365,7 +1374,12 @@ class PipelineBuildFacadeService(
         buildId: String,
         channelCode: ChannelCode
     ): ModelDetail {
-        val newModel = buildRecordService.getBuildRecord(projectId, pipelineId, buildId) ?: throw ErrorCodeException(
+        val newModel = buildRecordService.getBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            encryptedFlag = true
+        ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
@@ -1537,7 +1551,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(buildId)
             )
         }
-        return buildRecordService.getBuildRecord(
+        val buildRecord = buildRecordService.getBuildRecord(
             userId = userId,
             buildInfo = buildInfo,
             executeCount = executeCount,
@@ -1548,6 +1562,16 @@ class PipelineBuildFacadeService(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
             params = arrayOf(buildId)
         )
+        if (userId != null) {
+            val cancelBuildPerm = hasPermissionToCancelBuild(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+            buildRecord.cancelBuildPerm = cancelBuildPerm
+        }
+        return buildRecord
     }
 
     @ActionAuditRecord(
@@ -1591,12 +1615,7 @@ class PipelineBuildFacadeService(
             executeCount = executeCount,
             channelCode = channelCode,
             archiveFlag = archiveFlag,
-            encryptedFlag = !pipelinePermissionService.checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EDIT
-            )
+            encryptedFlag = true
         )
     }
 
@@ -2409,8 +2428,9 @@ class PipelineBuildFacadeService(
                 val intervalTime = System.currentTimeMillis() - cancelActionTime
                 var flag = false // 是否强制终止
                 if (intervalTime <= cancelIntervalLimitTime * 1000) {
-                    val alreadyCancelUser =
-                        buildRecordService.getBuildCancelUser(pipelineId, buildId, buildInfo.executeCount)
+                    val alreadyCancelUser = buildRecordService.getBuildCancelUser(
+                        projectId = projectId, buildId = buildId, executeCount = buildInfo.executeCount
+                    )
                     logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                     val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                     throw ErrorCodeException(
@@ -2485,6 +2505,46 @@ class PipelineBuildFacadeService(
             }
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    /**
+     * 检查用户是否有权限取消构建
+     * @return true表示有权限，false表示无权限
+     */
+    fun hasPermissionToCancelBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Boolean {
+        // 获取流水线配置以检查取消策略
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+        val cancelPolicy = setting?.buildCancelPolicy ?: BuildCancelPolicy.EXECUTE_PERMISSION
+
+        return when (cancelPolicy) {
+            BuildCancelPolicy.RESTRICTED -> {
+                // 受限策略：仅触发人或管理员可取消
+                val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return false
+                val isTriggerUser = userId == buildInfo.triggerUser
+                val hasManagePermission = pipelinePermissionService.checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.MANAGE
+                )
+                isTriggerUser || hasManagePermission
+            }
+
+            else -> {
+                // 默认策略：检查执行权限
+                pipelinePermissionService.checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.EXECUTE
+                )
+            }
         }
     }
 
@@ -2896,21 +2956,29 @@ class PipelineBuildFacadeService(
         isTemplate: Boolean?,
         subModel: Model? = null
     ): List<PipelineBuildParamFormProp> {
-        val model = if (isTemplate == true) {
+        val model: Model = if (isTemplate == true) {
             // 模板触发器
-            val templateModelStr = pipelineRepositoryService.getTemplateVersionRecord(
-                templateId = pipelineId,
-                version = version?.toLong()
-            ).template
+            val templateVersion = version?.toLong()
             try {
-                JsonUtil.to(templateModelStr, Model::class.java)
-            } catch (ignored: Exception) {
-                logger.error("parse process($pipelineId) model fail", ignored)
+                pipelineRepositoryService.getTemplateVersionRecord(
+                    templateId = pipelineId,
+                    version = templateVersion
+                )?.template?.let {
+                    JsonUtil.to(it, Model::class.java)
+                } ?: (pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = pipelineId,
+                    version = templateVersion!!
+                ).model as Model)
+            } catch (e: Exception) {
+                logger.error("parse process($pipelineId) model fail", e) // 记录更具体的错误
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                    params = arrayOf(pipelineId) // 传递模板ID以便于错误定位
                 )
             }
         } else {
+            // 非模板触发器
             subModel ?: pipelineRepositoryService.getBuildTriggerInfo(
                 projectId, pipelineId, version
             ).second.model
@@ -3007,6 +3075,54 @@ class PipelineBuildFacadeService(
             }
         }
         return parameter
+    }
+
+    fun getBuildVersionDiff(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildVersionDiff? {
+        // 校验用户是否有查看权限
+        val permission = AuthPermission.VIEW
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        val currBuildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(buildId)
+        )
+        if (currBuildInfo.buildNum == 1 || currBuildInfo.versionChange == false || currBuildInfo.debug) {
+            return null
+        }
+        val prevBuildInfo = pipelineRuntimeService.getBuildInfoByBuildNum(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = currBuildInfo.buildNum - 1
+        )
+        return BuildVersionDiff(
+            currVersion = currBuildInfo.version,
+            currVersionName = currBuildInfo.versionName,
+            prevVersion = prevBuildInfo?.version,
+            prevVersionName = prevBuildInfo?.versionName,
+            buildVersionDiffs = emptyList()
+        )
     }
 
     private fun getBuildManualParams(

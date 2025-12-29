@@ -181,7 +181,6 @@ object CommonMessageCode {
     const val YAML_NOT_VALID = "2100130" // yaml不合法 {0}
     const val GIT_INVALID_PRIVATE_KEY = "2100131" // 不支持的SSH私钥格式，仅支持rsa格式私钥
     const val THIRD_PARTY_SERVICE_OPERATION_FAILED = "2100132" // 第三方服务[{0}]操作失败，失败详情：{1}
-    const val MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER = "2100133" // mr accept事件类型不支持code转换
 
     const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
     const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
@@ -189,6 +188,8 @@ object CommonMessageCode {
     const val CUSTOM_MESSAGE_EXCEPTION = "2100138" // 自定义错误信息异常
     const val ERROR_ARCHIVE_PAC_PIPELINE_YAML_EXIST = "2100139" // 已开启PAC模式的流水线[{0}]进行归档需将默认分支上的yaml文件删除
     const val ERROR_USER_NOT_EXIST_IN_PROJECT = "2100140" // 项目{0}中不存在用户{1}
+    const val ERROR_QUERY_COUNT_RANGE = "2100142" // 查询条数需要在{}到{}之间
+
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
