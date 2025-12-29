@@ -45,6 +45,12 @@ object GitUtils {
 
     private val logger = LoggerFactory.getLogger(GitUtils::class.java)
 
+    private val GIT_URL_REGEX_LIST = listOf(
+        Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*)\\.git"),
+        Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)\\.git"),
+        Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)")
+    )
+
     fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
     fun urlEncode(s: String): String = URLEncoder.encode(s, "UTF-8")
@@ -54,9 +60,7 @@ object GitUtils {
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {
         // 兼容http存在端口的情況 http://gitlab.xx:8888/xx.git
         // [.git] 后缀小数点需转义, 否则会匹配失败
-        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*)\\.git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)\\.git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(gitUrl)?.groups
+        val groups = GIT_URL_REGEX_LIST.firstNotNullOfOrNull { regex -> regex.find(gitUrl)?.groups }
             ?: throw ScmException("Git error, invalid field [http_url]:$gitUrl", ScmType.CODE_GIT.name)
 
         if (groups.size < 3) {
@@ -208,14 +212,24 @@ object GitUtils {
     /**
      * 获取仓库名称, 如果获取失败，返回原始字符串
      */
-    fun tryGetRepoName(url: String?) = if (!url.isNullOrBlank()) {
+    fun tryGetRepoName(url: String?) = if (isValidGitUrl(url)) {
         try {
-            GitUtils.getDomainAndRepoName(url).second
+            getDomainAndRepoName(url!!).second
         } catch (ignored: Exception) {
-            logger.info("failed to get domain and repo name: $url, use source string", ignored)
+            logger.warn("failed to get domain and repo name: $url, use source string", ignored)
             url
         }
     } else {
-        null
+        url
+    }
+
+    /**
+     * 判断字符串是否为有效的git仓库地址
+     * @param url 待验证的字符串
+     */
+    fun isValidGitUrl(url: String?) = if (url.isNullOrBlank()) {
+        false
+    } else {
+        GIT_URL_REGEX_LIST.any { regex -> regex.matches(url) }
     }
 }
