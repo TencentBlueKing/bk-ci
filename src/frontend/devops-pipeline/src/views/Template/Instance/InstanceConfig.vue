@@ -449,7 +449,7 @@
         } finally {
             // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id
             instanceList.value?.forEach((item, index) => {
-                const newOverrideParamIds = item.param?.filter(p => !p.constant && p.required && p.isRequiredParam && !p.isFollowTemplate).map(p => p.id) || []
+                const newOverrideParamIds = item.param?.filter(p => !p.constant && p.required && !p.isFollowTemplate).map(p => p.id) || []
                 // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
                 const originalParamIds = item?.overrideTemplateField?.paramIds || []
                 if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
