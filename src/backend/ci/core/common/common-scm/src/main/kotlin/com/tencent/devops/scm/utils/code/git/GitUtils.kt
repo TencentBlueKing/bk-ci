@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_LOGIN_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_SERCRT_WRONG
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
+import org.slf4j.LoggerFactory
 import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -41,6 +42,8 @@ import java.net.URLEncoder
 object GitUtils {
     // 工蜂pre-push虚拟分支
     private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
+
+    private val logger = LoggerFactory.getLogger(GitUtils::class.java)
 
     fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
@@ -200,5 +203,19 @@ object GitUtils {
         val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
 
         return matchesPrefix || containsKeyword
+    }
+
+    /**
+     * 获取仓库名称, 如果获取失败，返回原始字符串
+     */
+    fun tryGetRepoName(url: String?) = if (!url.isNullOrBlank()) {
+        try {
+            GitUtils.getDomainAndRepoName(url).second
+        } catch (ignored: Exception) {
+            logger.info("failed to get domain and repo name: $url, use source string", ignored)
+            url
+        }
+    } else {
+        null
     }
 }
