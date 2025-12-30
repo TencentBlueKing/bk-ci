@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -43,23 +44,50 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomClassifyDao : AtomBaseDao() {
 
+    /**
+     * 获取所有插件分类信息
+     * @param dslContext JOOQ DSL上下文
+     * @param serviceScope 服务范围筛选条件（可选）
+     * @return 分类信息结果集，包含每个分类的插件数量统计
+     */
     fun getAllAtomClassify(
         dslContext: DSLContext,
         serviceScope: ServiceScopeEnum? = null
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tClassify = TClassify.T_CLASSIFY
-        val conditions = setAtomVisibleCondition(tAtom)
-        // 使用公共方法构建分类关联条件（支持 CLASSIFY_ID_MAP，根据 serviceScope 参数）
-        conditions.add(0, buildClassifyJoinCondition(tAtom, tClassify, serviceScope))
-        val atomNum = dslContext.selectCount().from(tAtom).where(conditions).asField<Int>("atomNum")
-        return dslContext.select(
+        
+        // 构建插件可见性条件
+        val atomVisibleConditions = setAtomVisibleCondition(tAtom)
+        
+        // 构建分类ID字段（根据serviceScope动态选择CLASSIFY_ID或CLASSIFY_ID_MAP）
+        // 当serviceScope为null时，使用CLASSIFY_ID字段（默认字段）
+        val classifyIdField = buildClassifyIdField(tAtom, serviceScope)
+        
+        // 统计每个分类下的插件数量
+        val atomCountField = dslContext.selectCount()
+            .from(tAtom)
+            .where(atomVisibleConditions)
+            .and(classifyIdField.eq(tClassify.ID))
+            .asField<Int>("atomNum")
+        
+        // 构建查询条件
+        val query = dslContext.select(
             tClassify.ID.`as`(KEY_ID),
             tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
             tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
-            atomNum,
+            atomCountField,
             tClassify.CREATE_TIME.`as`(KEY_CREATE_TIME),
             tClassify.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
-        ).from(tClassify).where(tClassify.TYPE.eq(0)).orderBy(tClassify.WEIGHT.desc()).fetch()
+        ).from(tClassify)
+         .where(tClassify.TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        
+        // 如果serviceScope不为null，则添加SERVICE_SCOPE筛选条件
+        serviceScope?.let {
+            query.and(tClassify.SERVICE_SCOPE.eq(it.name))
+        }
+        
+        return query.orderBy(tClassify.WEIGHT.desc())
+            .fetch()
     }
 }
