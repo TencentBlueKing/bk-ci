@@ -872,7 +872,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
             }
         }
-        
         // 使用缓存管理器检查是否是公共插件（优化性能）
         return PublicComponentCacheManager.isPublicComponent(redisOperation, StoreTypeEnum.ATOM.name, atomCode)
     }

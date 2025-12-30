@@ -40,7 +40,6 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
-import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

@@ -35,7 +35,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
 import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
-import com.tencent.devops.common.web.utils.BkApiUtil
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -63,7 +62,7 @@ class BkApiHandlePipelineAccessServiceImpl : BkApiHandleService {
             return
         }
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        // 判断流水线是否在限制接口访问的列表中（使用缓存管理器优化）
+        // 判断流水线是否在限制接口访问的列表中
         val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
             redisOperation = redisOperation,
             pipelineIds = arrayOf(pipelineId)

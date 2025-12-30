@@ -34,7 +34,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
-import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent

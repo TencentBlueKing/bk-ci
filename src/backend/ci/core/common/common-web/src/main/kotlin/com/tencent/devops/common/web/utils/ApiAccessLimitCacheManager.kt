@@ -108,7 +108,7 @@ object ApiAccessLimitCacheManager {
             redisOperation.getSetMembers(key) ?: emptySet()
         } catch (ignored: Throwable) {
             logger.warn("Failed to load access limit set from Redis for key: $key", ignored)
-            emptySet()  // 加载失败时返回空 Set，避免影响业务
+            emptySet() // 加载失败时返回空 Set，避免影响业务
         }
     }
 
@@ -180,7 +180,7 @@ object ApiAccessLimitCacheManager {
             redisKey = PIPELINE_LIMIT_KEY,
             items = pipelineIds,
             redisOperation = redisOperation,
-            cacheKeyMapper = { it },  // pipelineId 直接作为 cache key
+            cacheKeyMapper = { it }, // pipelineId直接作为cacheKey
             itemName = "pipeline"
         )
     }

@@ -36,7 +36,6 @@ import com.tencent.devops.store.api.common.OpenStoreResource
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.utils.PublicComponentCacheManager
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 

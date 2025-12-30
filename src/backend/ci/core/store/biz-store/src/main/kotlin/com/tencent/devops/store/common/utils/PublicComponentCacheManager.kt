@@ -35,27 +35,22 @@ import java.util.concurrent.TimeUnit
 
 /**
  * 公共组件集合缓存管理器
- * 
  * 用于管理公共组件集合的本地缓存，减少Redis访问频率
  * 公共组件集合更新频率不高，适合缓存整个 Set
  */
 object PublicComponentCacheManager {
-    
     private val logger = LoggerFactory.getLogger(PublicComponentCacheManager::class.java)
-    
     // 缓存过期时间（秒）
     private const val CACHE_EXPIRE_SECONDS = 60L
-    
+
     // 公共组件集合缓存（支持多个 storeType）
     // key: storePublicFlagKey, value: Set<String> (公共组件代码列表)
-    private val publicComponentSetCache: Cache<String, Set<String>> = Caffeine.newBuilder()
-        .maximumSize(20)
-        .expireAfterWrite(CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS)  // 60秒过期，减少Redis压力
+    private val publicComponentSetCache: Cache<String, Set<String>> = Caffeine.newBuilder().maximumSize(20)
+        .expireAfterWrite(CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS) // 60秒过期，减少Redis压力
         .build()
-    
+
     /**
      * 检查组件是否是公共组件
-     * 
      * @param redisOperation Redis 操作对象
      * @param storeType 组件类型
      * @param storeCode 组件代码
@@ -67,7 +62,6 @@ object PublicComponentCacheManager {
         storeCode: String
     ): Boolean {
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(storeType)
-        
         // 先从本地缓存获取公共组件集合
         val publicComponentSet = publicComponentSetCache.get(storePublicFlagKey) {
             // 缓存未命中，从 Redis 加载
@@ -93,4 +87,3 @@ object PublicComponentCacheManager {
         logger.info("Invalidated public component cache for storeType: $storeType, key: $storePublicFlagKey")
     }
 }
-

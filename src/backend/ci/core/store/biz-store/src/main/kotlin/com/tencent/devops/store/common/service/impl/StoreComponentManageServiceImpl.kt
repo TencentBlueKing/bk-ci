@@ -88,7 +88,6 @@ import org.springframework.stereotype.Service
 @Service
 class StoreComponentManageServiceImpl : StoreComponentManageService {
 
-
     @Autowired
     lateinit var dslContext: DSLContext
 
@@ -462,7 +461,6 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         return Result(storeBaseInfo)
     }
     
-
     override fun updateComponentInstalledPkgShaContent(
         userId: String,
         storeType: StoreTypeEnum,
