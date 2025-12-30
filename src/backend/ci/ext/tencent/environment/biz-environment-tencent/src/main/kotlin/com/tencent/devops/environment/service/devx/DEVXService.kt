@@ -105,39 +105,58 @@ class DEVXService @Autowired constructor(
         }
         val res = mutableListOf<EnvWithNodeCount>()
         envRecordList.forEach { env ->
-            if (environmentPermissionService.checkEnvPermission(
-                    userId,
-                    env.projectId,
-                    env.envId,
-                    AuthPermission.USE
-                )
-            ) {
-                val nodeIds = envNodeDao.list(dslContext, env.projectId, listOf(env.envId)).map { node ->
-                    node.nodeId
-                }.toSet()
-
-                val normalNodeCount = if (nodeIds.isEmpty()) {
-                    0
-                } else {
-                    nodeDao.countNodeByStatus(dslContext, env.projectId, nodeIds, NodeStatus.NORMAL)
-                }
-
-                val abnormalNodeCount = if (nodeIds.isEmpty()) {
-                    0
-                } else {
-                    nodeIds.size - normalNodeCount
-                }
-                res.add(
-                    EnvWithNodeCount(
+            try {
+                if (environmentPermissionService.checkEnvPermission(
+                        userId = userId,
                         projectId = env.projectId,
-                        envHashId = HashUtil.encodeLongId(env.envId),
-                        name = env.envName,
-                        normalNodeCount = normalNodeCount,
-                        abnormalNodeCount = abnormalNodeCount,
-                        sharedProjectId = null,
-                        sharedUserId = null,
-                        nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
+                        envId = env.envId,
+                        permission = AuthPermission.USE
                     )
+                ) {
+                    val nodeIds = envNodeDao.list(
+                        dslContext = dslContext,
+                        projectId = env.projectId,
+                        envIds = listOf(env.envId)
+                    ).map { node ->
+                        node.nodeId
+                    }.toSet()
+
+                    val normalNodeCount = if (nodeIds.isEmpty()) {
+                        0
+                    } else {
+                        nodeDao.countNodeByStatus(
+                            dslContext = dslContext,
+                            projectId = env.projectId,
+                            nodeIds = nodeIds,
+                            status = NodeStatus.NORMAL
+                        )
+                    }
+
+                    val abnormalNodeCount = if (nodeIds.isEmpty()) {
+                        0
+                    } else {
+                        nodeIds.size - normalNodeCount
+                    }
+                    res.add(
+                        EnvWithNodeCount(
+                            projectId = env.projectId,
+                            envHashId = HashUtil.encodeLongId(env.envId),
+                            name = env.envName,
+                            normalNodeCount = normalNodeCount,
+                            abnormalNodeCount = abnormalNodeCount,
+                            sharedProjectId = null,
+                            sharedUserId = null,
+                            nodeHashIds = nodeIds.map { HashUtil.encodeLongId(it) }
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                logger.warn(
+                    "Failed to check environment permission for user. " +
+                        "userId=$userId, projectId=${env.projectId}, envId=${env.envId}, " +
+                        "envName=${env.envName}, exceptionType=${e.javaClass.simpleName}, " +
+                        "exceptionMessage=${e.message}",
+                    e
                 )
             }
         }
