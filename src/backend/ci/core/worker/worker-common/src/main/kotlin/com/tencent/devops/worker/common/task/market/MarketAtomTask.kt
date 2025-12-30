@@ -602,6 +602,10 @@ open class MarketAtomTask : ITask() {
                 val def = inputTemplate[key] as Map<String, Any>
                 val sensitiveFlag = def["isSensitive"]
                 if (sensitiveFlag != null && sensitiveFlag.toString() == "true") {
+                    // 将敏感输入值注册到脱敏服务，确保插件内部日志也能脱敏
+                    if (value.isNotBlank()) {
+                        SensitiveValueService.addSensitiveValue(value)
+                    }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
                     LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
