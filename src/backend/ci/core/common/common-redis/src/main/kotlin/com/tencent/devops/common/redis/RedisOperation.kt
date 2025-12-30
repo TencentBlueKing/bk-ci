@@ -443,9 +443,9 @@ class RedisOperation(
      * @param isRedisLock 是否为 Redis 锁操作，注意锁操作使用RedisLock，不要自己实现
      * @return 脚本执行结果
      */
-    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?, isRedisLock: Boolean = false): T {
-        if (isRedisLock && lockRedisTemplate != null) {
-            return lockRedisTemplate.execute(script, keys, *args)
+    fun <T> execute(script: RedisScript<T>, keys: List<String>, vararg args: Any?, isRedisLock: Boolean = false): T? {
+        if (isRedisLock) {
+            return lockRedisTemplate?.execute(script, keys, *args)
         } else {
             // 双写
             writeSlaveIfNeed {
@@ -506,9 +506,13 @@ class RedisOperation(
      * @return 设置成功返回 true，否则返回 false
      */
     fun setNxEx(key: String, value: String, expiredInSecond: Long, isRedisLock: Boolean = false): Boolean {
-        if (isRedisLock && lockRedisTemplate != null) {
-            return lockRedisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS)
-                ?: false
+        if (isRedisLock) {
+            if (lockRedisTemplate == null) {
+                return true // 没有开启lock redis , 默认返回true
+            } else {
+                return lockRedisTemplate.opsForValue().setIfAbsent(key, value, expiredInSecond, TimeUnit.SECONDS)
+                    ?: false
+            }
         } else {
             // 双写
             writeSlaveIfNeed {
