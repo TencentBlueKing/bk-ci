@@ -76,7 +76,8 @@ class ApigwRepositoryResourceV4Impl @Autowired constructor(private val client: C
             userId = userId,
             projectId = projectId,
             repositoryType = repositoryType?.name,
-            permission = Permission.USE
+            permission = Permission.USE,
+            scmCode = scmCode
         )
     }
 
