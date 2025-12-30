@@ -12,6 +12,11 @@ data class TemplateInstanceRecommendedVersion(
     var minor: Int? = null,
     @get:Schema(title = "修正版本")
     var fix: Int? = null,
-    @get:Schema(title = "构建版本号基线值")
-    var buildNo: Int? = null
-)
+    @get:Schema(title = "构建版本号")
+    var buildNo: BuildNo? = null
+) {
+    data class BuildNo(
+        @get:Schema(title = "初始值")
+        val buildNo: Int = 0
+    )
+}

@@ -237,7 +237,9 @@ class ModelTransfer @Autowired constructor(
                         major = it.major,
                         minor = it.minor,
                         fix = it.fix,
-                        buildNo = it.buildNo?.initialValue
+                        buildNo = it.buildNo?.let { buildNo ->
+                            TemplateInstanceRecommendedVersion.BuildNo(buildNo.initialValue)
+                        }
                     )
                 }
             )
@@ -404,7 +406,7 @@ class ModelTransfer @Autowired constructor(
                             fix = it.fix,
                             buildNo = it.buildNo?.let { buildNo ->
                                 ExtendsRecommendedVersion.BuildNo(
-                                    initialValue = buildNo
+                                    initialValue = buildNo.buildNo,
                                 )
                             }
                         )
