@@ -116,7 +116,7 @@
     "url-loader": "~1.1.2",
     "vue-loader": "^15.10.0",
     "vue-markdown-loader": "~2.4.1",
-    "webpack": "^5.58.1",
+    "webpack": "5.58.1",
     "webpack-bundle-analyzer": "~3.3.2",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.3.1",
