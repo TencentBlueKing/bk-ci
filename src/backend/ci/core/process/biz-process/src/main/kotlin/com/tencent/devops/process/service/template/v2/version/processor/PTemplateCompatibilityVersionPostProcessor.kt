@@ -120,6 +120,30 @@ class PTemplateCompatibilityVersionPostProcessor(
         }
     }
 
+    /**
+     * 将 v2 版本的合并参数拆分为 v1 版本的 templateParams 和 params
+     *
+     * v2 版本：params 包含所有参数，其中 constant = true 的来自原 templateParams
+     * v1 版本：templateParams 和 params 分开存储
+     */
+    private fun splitParamsForV1Compatibility(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        val allParams = triggerContainer.params
+        // 将参数按 constant 标记分组
+        val (templateParams, params) = allParams.partition { it.constant == true }
+        triggerContainer.params = params.map {
+            // 模版入参+实例化不入参,那么旧变量应该是不入参
+            if (it.required && it.asInstanceInput == false) {
+                it.copy(required = false)
+            } else {
+                it
+            }
+        }.toMutableList()
+        triggerContainer.templateParams = takeIf { templateParams.isNotEmpty() }?.let {
+            templateParams.map { it.copy(constant = false) }
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PTemplateCompatibilityVersionPostProcessor::class.java)
     }
