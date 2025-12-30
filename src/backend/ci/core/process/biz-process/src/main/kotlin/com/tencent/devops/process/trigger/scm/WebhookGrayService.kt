@@ -84,7 +84,8 @@ class WebhookGrayService @Autowired constructor(
             ScmType.CODE_GIT.name,
             ScmType.GITHUB.name,
             ScmType.CODE_TGIT.name,
-            ScmType.CODE_P4.name
+            ScmType.CODE_P4.name,
+            ScmType.CODE_GITLAB.name
         ).contains(scmCode)
     }
 

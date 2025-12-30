@@ -179,7 +179,10 @@ class WebhookRequestService(
             } ?: return
             val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
             if (grayRepo) {
-                logger.info("The current replay event will execute the new trigger logic")
+                logger.info(
+                    "${repository.scmCode}|${repository.projectName}|" +
+                            "The current replay event will execute the new trigger logic"
+                )
                 // 读取当前回放操作依赖的trigger event
                 pipelineTriggerEventDao.getEventByRequestId(
                     dslContext = dslContext,
