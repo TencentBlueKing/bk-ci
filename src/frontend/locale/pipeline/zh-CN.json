@@ -1542,7 +1542,7 @@
   "exitPatch": "退出管理",
   "patchSearchInputPlaceholder": "流水线名称/创建人/流水线组/标签",
   "labelGroupNameSuc": "标签组名称保存成功",
-  "labelGroupNameErr": "标签组名称保存成功",
+  "labelGroupNameErr": "标签组名称保存失败",
   "labelDeleteConfirm": "确认删除该标签",
   "labelGroupDeleteConfirm": "确认删除该标签组",
   "labelDeleteSuc": "删除标签组成功。",
