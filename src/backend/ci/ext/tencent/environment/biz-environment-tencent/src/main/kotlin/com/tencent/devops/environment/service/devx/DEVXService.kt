@@ -98,6 +98,7 @@ class DEVXService @Autowired constructor(
         return nodeId
     }
 
+    @Suppress("NestedBlockDepth")
     fun getUserDEVXEnv(userId: String, projectIds: Set<String>): List<EnvWithNodeCount> {
         val envRecordList = devxDao.listEnv(dslContext, projectIds)
         if (envRecordList.isEmpty()) {
