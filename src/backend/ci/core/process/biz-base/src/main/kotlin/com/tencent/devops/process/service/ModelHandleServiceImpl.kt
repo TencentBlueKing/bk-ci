@@ -3,6 +3,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
+import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.template.ITemplateModel
@@ -12,7 +13,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
 import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
 import org.jooq.DSLContext

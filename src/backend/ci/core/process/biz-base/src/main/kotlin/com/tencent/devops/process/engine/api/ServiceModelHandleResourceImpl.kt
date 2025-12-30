@@ -5,7 +5,7 @@ import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.service.ServiceModelHandleResource
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
+import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 
 @RestResource
 class ServiceModelHandleResourceImpl(private val modelHandleService: ModelHandleService) : ServiceModelHandleResource {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
@@ -38,7 +39,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COM
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
-import com.tencent.devops.process.pojo.`var`.ModelPublicVarHandleContext
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
@@ -226,14 +226,15 @@ class PublicVarService @Autowired constructor(
     fun handleModelParams(
         projectId: String,
         modelPublicVarHandleContext: ModelPublicVarHandleContext
-    ): MutableList<BuildFormProperty> {
+    ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
 
         // 筛选出需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter {
             it.version == null
         }
-        if (publicVarGroups.isNullOrEmpty()) return mutableListOf()
+        logger.info("handleModelParams modelPublicVarHandleContext.referId: ${groupsToUpdate.map { it.groupName }}")
+        if (publicVarGroups.isNullOrEmpty()) return modelPublicVarHandleContext.params
 
         // 获取sourceProjectId和引用信息
         val referId = modelPublicVarHandleContext.referId

@@ -1,4 +1,4 @@
-package com.tencent.devops.process.pojo.`var`
+package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
