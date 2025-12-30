@@ -520,7 +520,7 @@ object TemplateInstanceUtil {
 
         return templateBuildNo.copy(
             required = recommendedVersion.allowModifyAtStartup ?: templateBuildNo.required,
-            buildNo = recommendedVersion.buildNo ?: templateBuildNo.buildNo
+            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo
         )
     }
 
@@ -539,7 +539,7 @@ object TemplateInstanceUtil {
             allowModifyAtStartup = pipelineBuildNo.required
         )
         if (overrideBuildNo) {
-            recommendedVersion.buildNo = pipelineBuildNo.buildNo
+            recommendedVersion.buildNo = TemplateInstanceRecommendedVersion.BuildNo(pipelineBuildNo.buildNo)
             pipelineParams.forEach { param ->
                 when (param.id) {
                     MAJORVERSION -> recommendedVersion.major = param.defaultValue.toString().toIntOrNull() ?: 0
