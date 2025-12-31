@@ -69,16 +69,15 @@ object PublicComponentCacheManager {
                 redisOperation.getSetMembers(storePublicFlagKey) ?: emptySet()
             } catch (ignored: Throwable) {
                 logger.warn("Failed to load public component set from Redis for key: $storePublicFlagKey", ignored)
-                emptySet()  // 加载失败时返回空集合，避免影响业务
+                emptySet()
             }
         }
         return publicComponentSet.contains(storeCode)
     }
-    
+
     /**
      * 清除公共组件集合缓存
      * 当公共组件集合更新时调用此方法，立即清除本地缓存
-     * 
      * @param storeType 组件类型
      */
     fun invalidateCache(storeType: String) {

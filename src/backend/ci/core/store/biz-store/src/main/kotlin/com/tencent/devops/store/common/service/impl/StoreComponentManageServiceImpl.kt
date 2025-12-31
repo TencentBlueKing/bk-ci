@@ -460,7 +460,7 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
         storeBaseInfo.publicFlag = publicFlag ?: false
         return Result(storeBaseInfo)
     }
-    
+
     override fun updateComponentInstalledPkgShaContent(
         userId: String,
         storeType: StoreTypeEnum,
