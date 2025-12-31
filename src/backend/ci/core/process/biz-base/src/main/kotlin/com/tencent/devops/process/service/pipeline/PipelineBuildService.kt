@@ -31,7 +31,6 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -437,7 +436,7 @@ class PipelineBuildService(
         startValues?.get(CREATIVE_STREAM_NODE_AGENT_ID)?.let {
             // 获取节点的操作系统
             val nodeOs = client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentById(pipeline.projectId, HashUtil.encodeLongId(it.toLong())).data?.os?.uppercase()
+                .getAgentById(pipeline.projectId, it).data?.os?.uppercase()
             pipelineParamMap[CREATIVE_STREAM_NODE_AGENT_ID] = BuildParameters(
                 key = CREATIVE_STREAM_NODE_AGENT_ID,
                 value = it,
