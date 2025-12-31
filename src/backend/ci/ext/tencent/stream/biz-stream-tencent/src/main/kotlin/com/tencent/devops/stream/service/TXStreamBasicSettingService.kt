@@ -27,9 +27,11 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
@@ -40,6 +42,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.store.api.atom.TxServiceAtomReleaseResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -75,6 +78,8 @@ class TXStreamBasicSettingService @Autowired constructor(
 
     @Value("\${bkci.defaultProductId:#{0}}")
     val defaultBkProductId: Int = 0
+
+    private val executorService = java.util.concurrent.Executors.newSingleThreadExecutor()
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
@@ -401,5 +406,68 @@ class TXStreamBasicSettingService @Autowired constructor(
             newGitDomain = newGitDomain,
             idList = idList
         )
+    }
+
+    fun checkAndUpdateDepartedUsers(gitProjectIds: List<Long>): Int {
+        if (gitProjectIds.isEmpty()) {
+            return 0
+        }
+
+        val userIdMap = streamBasicSettingDao.getEnableUserIdMapByIds(
+            dslContext = dslContext,
+            gitProjectIds = gitProjectIds
+        )
+
+        val departedProjectIds = mutableListOf<Long>()
+        userIdMap.forEach { (projectId, userId) ->
+            try {
+                val result = client.get(ServiceDeptResource::class).checkUserDeparted(userId)
+                if (result.isOk() && result.data == true) {
+                    departedProjectIds.add(projectId)
+                    logger.info("checkAndUpdateDepartedUsers|user departed|projectId=$projectId|userId=$userId")
+                }
+            } catch (e: Exception) {
+                logger.warn("checkAndUpdateDepartedUsers|check user failed|projectId=$projectId|userId=$userId", e)
+            }
+        }
+
+        return if (departedProjectIds.isNotEmpty()) {
+            streamBasicSettingDao.updateEnableUserIdByIds(
+                dslContext = dslContext,
+                newUserId = "devops",
+                idList = departedProjectIds
+            )
+        } else {
+            0
+        }
+    }
+
+    fun refreshAllStreamProjectDepartedUsers(userId: String): Boolean {
+        executorService.execute {
+            Thread.sleep(500)
+            val startTime = System.currentTimeMillis()
+            var page = PageUtil.DEFAULT_PAGE
+            val pageSize = PageUtil.MAX_PAGE_SIZE
+            var continueFlag = true
+            while (continueFlag) {
+                logger.info(
+                    "refresh all stream project departed users page: $page, pageSize: $pageSize"
+                )
+                val gitProjectIds = client.get(TxServiceAtomReleaseResource::class)
+                    .getAtomRepositoryId(
+                        userId = userId,
+                        page = page,
+                        pageSize = pageSize
+                    ).data?.mapNotNull { it.toLongOrNull() }
+                if (gitProjectIds.isNullOrEmpty()) {
+                    continueFlag = false
+                    continue
+                }
+                checkAndUpdateDepartedUsers(gitProjectIds)
+                page++
+            }
+            logger.info("Refresh all stream project departed users ${System.currentTimeMillis() - startTime}ms")
+        }
+        return true
     }
 }
