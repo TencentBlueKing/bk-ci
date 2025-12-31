@@ -126,10 +126,20 @@
                 return this.pipeline?.stages[0]?.containers[0] || {}
             },
             params () {
-                return this.container?.params || []
+                return [...this.container?.params, ...this.isRemoveParamsList] || []
             },
             buildNo () {
                 return this.container?.buildNo || {}
+            },
+            publicVarGroups () {
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups || []
+            },
+            isRemoveParamsList () {
+                // 已经被删除的公共变量组变量
+                return this.publicVarGroups.reduce((allVariables, group) => {
+                    const variables = group.variables?.filter(param => !param.isRemove) || []
+                    return allVariables.concat(variables)
+                }, [])
             }
         },
         created () {
