@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v4.0.1](#v401)
+   - [Changelog since v4.0.0](#changelog-since-v400)
+
 - [v4.0.0](#v400)
    - [Changelog since v3.2.0](#changelog-since-v320)
 
@@ -28,6 +31,23 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v4.0.1
+## 2025-12-30
+### Changelog since v4.0.0
+#### 优化
+- [优化] chore: 升级api-turbo到0.0.7-RELEASE [链接](http://github.com/TencentBlueKing/bk-ci/issues/12382)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### 权限中心
+- [修复] bug: 修复release-4.0 服务无法启动不起来 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12457)
+
+##### 其他
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+
 # v4.0.0
 ## 2025-08-15
 ### Changelog since v3.2.0
