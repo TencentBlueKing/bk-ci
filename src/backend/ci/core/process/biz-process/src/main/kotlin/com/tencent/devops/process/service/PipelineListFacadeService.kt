@@ -1033,7 +1033,7 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId,
             deleteFlag = true,
             days = deletedPipelineStoreDays.toLong(),
-            filterByPipelineName = null
+            channelCode = channelCode
         )
         return PipelineCount(totalCount, myFavoriteCount, myPipelineCount, recycleCount, recentUseCount)
     }

@@ -400,29 +400,39 @@ class PipelineInfoDao {
         }
     }
 
+    /**
+     * 统计满足条件的流水线数量
+     * @param dslContext JOOQ DSL上下文
+     * @param projectId 项目ID
+     * @param deleteFlag 删除标志筛选条件（可选）
+     * @param days 时间范围筛选条件（可选，统计最近days天内的流水线）
+     * @param filterByPipelineName 流水线名称筛选条件（可选）
+     * @param channelCode 渠道代码筛选条件（可选）
+     * @return 满足条件的流水线数量
+     */
     fun countPipeline(
         dslContext: DSLContext,
         projectId: String,
         deleteFlag: Boolean? = false,
         days: Long? = null,
-        filterByPipelineName: String?
+        filterByPipelineName: String? = null,
+        channelCode: ChannelCode? = null
     ): Int {
         with(T_PIPELINE_INFO) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            if (deleteFlag != null) {
-                conditions.add(DELETE.eq(true))
+            // 构建查询条件
+            val conditions = mutableListOf<Condition>().apply {
+                add(PROJECT_ID.eq(projectId))
+                // 添加删除标志条件
+                deleteFlag?.let { add(DELETE.eq(it)) }
+                // 添加时间范围条件
+                days?.let { add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(it))) }
+                // 添加流水线名称模糊匹配条件
+                filterByPipelineName?.let { add(PIPELINE_NAME.like("%$it%")) }
+                // 添加渠道代码条件
+                channelCode?.let { add(CHANNEL.eq(it.name)) }
             }
-            if (days != null) {
-                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
-            }
-            if (filterByPipelineName != null) {
-                conditions.add(PIPELINE_NAME.like("%$filterByPipelineName%"))
-            }
-            return dslContext
-                .selectCount().from(this)
-                .where(conditions)
-                .fetchOne()?.value1() ?: 0
+            // 执行计数查询
+            return dslContext.selectCount().from(this).where(conditions).fetchOne()?.value1() ?: 0
         }
     }
 
