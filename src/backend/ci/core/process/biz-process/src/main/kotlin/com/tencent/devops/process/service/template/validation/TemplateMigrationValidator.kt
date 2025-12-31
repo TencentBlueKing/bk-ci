@@ -25,34 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.template.v2
+package com.tencent.devops.process.service.template.validation
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.template.v2.PipelineTemplateMigrateService
+import com.tencent.devops.process.pojo.template.migration.TemplateMigrationDiscrepancy
+import com.tencent.devops.process.pojo.template.migration.ValidationRuleType
 
-@RestResource
-class OpPipelineTemplateResourceImpl(
-    val pipelineTemplateMigrateService: PipelineTemplateMigrateService
-) : OpPipelineTemplateResource {
-    override fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
-        pipelineTemplateMigrateService.migrateTemplatesByCondition(projectConditionDTO)
-        return Result(true)
-    }
+/**
+ * 模板迁移验证器接口
+ */
+interface TemplateMigrationValidator {
+    /**
+     * 验证器类型
+     */
+    fun getType(): ValidationRuleType
 
-    override fun migrateProjectTemplates(projectId: String): Result<Boolean> {
-        pipelineTemplateMigrateService.migrateTemplates(projectId)
-        return Result(true)
-    }
-
-    override fun migratePublicTemplates(): Result<Boolean> {
-        pipelineTemplateMigrateService.migratePublicTemplates()
-        return Result(true)
-    }
-
-    override fun migrateTemplate(projectId: String, templateId: String): Result<Boolean> {
-        pipelineTemplateMigrateService.migrateTemplate(projectId = projectId, templateId = templateId)
-        return Result(true)
-    }
+    /**
+     * 执行验证
+     * @param projectId 项目ID
+     * @return 验证发现的差异列表
+     */
+    fun validate(projectId: String): List<TemplateMigrationDiscrepancy>
 }
