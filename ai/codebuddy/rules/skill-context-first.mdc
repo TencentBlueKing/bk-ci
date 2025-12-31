@@ -1,0 +1,106 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2025-12-11T04:00:12.840Z
+provider: 
+---
+
+# Skill 上下文优先规则
+
+## 核心原则
+
+**在进行任何代码变更之前，必须先阅读相关的 skill 文档，确保有足够的上下文理解后再进行修改。**
+
+## 执行流程
+
+1. **阅读全局架构** - 首先阅读 `00-bkci-global-architecture` 了解模块间关系
+2. **识别变更模块** - 根据用户请求确定涉及的模块/服务
+3. **阅读相关 skill** - 使用 `use_skill` 工具加载对应的架构指南
+4. **理解上下文** - 确认模块的设计模式、代码规范、依赖关系
+5. **执行变更** - 在充分理解的基础上进行代码修改
+
+## 入口文档（优先阅读）
+
+| Skill | 说明 |
+|-------|------|
+| `00-bkci-global-architecture` | **全局架构指南** - 以流水线为核心的模块协作全景图，包含完整的执行流程、模块依赖、数据流向 |
+
+> **重要**: 对于不熟悉的模块或跨模块变更，应先阅读 `00-bkci-global-architecture` 建立全局视图，再深入具体模块。
+
+## Skill 与模块对应关系
+
+| 模块/领域 | 对应 Skill |
+|-----------|------------|
+| **全局架构** | `00-bkci-global-architecture` |
+| 后端微服务开发 | `01-backend-microservice-development` |
+| API 接口设计 | `02-api-interface-design` |
+| 单元测试 | `03-unit-testing` |
+| 前端 Vue 开发 | `04-frontend-vue-development` |
+| Go Agent 开发 | `05-go-agent-development` |
+| 数据库脚本 | `06-database-script-management`, `44-database-design` |
+| Git 提交 | `07-git-commit-specification` |
+| 事件驱动 | `08-event-driven-architecture` |
+| 责任链模式 | `09-chain-of-responsibility-pattern` |
+| 分布式锁 | `10-distributed-lock` |
+| 服务间调用 | `11-service-communication` |
+| 性能监控 | `12-performance-monitoring` |
+| 重试机制 | `13-retry-mechanism` |
+| 国际化/日志 | `14-i18n-and-logging` |
+| 参数校验 | `15-parameter-validation` |
+| 定时任务 | `16-scheduled-tasks` |
+| AOP 切面 | `17-aop-aspect-programming` |
+| 条件配置 | `18-conditional-configuration` |
+| JWT 安全 | `19-jwt-security` |
+| 审计日志 | `20-audit-logging` |
+| 表达式解析 | `21-expression-parser` |
+| 数据库分片 | `23-database-sharding` |
+| OAuth2 认证 | `24-oauth2-authentication` |
+| 流水线变量 | `26-pipeline-variable-extension` |
+| 设计模式 | `27-design-patterns` |
+| 流水线模型 | `28-pipeline-model-architecture` |
+| Process 模块 | `29-process-module-architecture` 系列 |
+| Auth 模块 | `30-auth-module-architecture` |
+| Project 模块 | `31-project-module-architecture` |
+| Repository 模块 | `32-repository-module-architecture` |
+| Store 模块 | `33-store-module-architecture` |
+| Artifactory 模块 | `34-artifactory-module-architecture` |
+| Dispatch 模块 | `35-dispatch-module-architecture` |
+| Environment 模块 | `36-environment-module-architecture` |
+| Ticket 模块 | `37-ticket-module-architecture` |
+| Notify 模块 | `39-notify-module-architecture` |
+| OpenAPI 模块 | `41-openapi-module-architecture` |
+| Worker 模块 | `42-worker-module-architecture` |
+| Agent 模块 | `43-agent-module-architecture` |
+| 数据库设计 | `44-database-design` |
+
+## 示例场景
+
+### 场景1：修改流水线调度逻辑
+```
+1. 先阅读 `29-process-module-architecture` 了解 Process 模块架构
+2. 阅读 `29-3-process-engine-control` 了解引擎控制层
+3. 阅读 `08-event-driven-architecture` 了解事件驱动机制
+4. 再进行代码修改
+```
+
+### 场景2：新增数据库表
+```
+1. 先阅读 `44-database-design` 了解表设计规范
+2. 阅读 `06-database-script-management` 了解脚本管理规范
+3. 再编写 DDL 脚本
+```
+
+### 场景3：开发新插件
+```
+1. 先阅读 `33-store-module-architecture` 了解研发商店架构
+2. 阅读 `42-worker-module-architecture` 了解插件执行机制
+3. 再进行插件开发
+```
+
+## 注意事项
+
+- **跨模块变更必须先读 `00-bkci-global-architecture`** 了解模块间协作关系
+- 如果涉及多个模块，需阅读所有相关 skill
+- 如果 skill 内容与实际代码有出入，以实际代码为准并提醒更新 skill
+- 复杂变更建议先阅读 skill 后再制定变更计划
