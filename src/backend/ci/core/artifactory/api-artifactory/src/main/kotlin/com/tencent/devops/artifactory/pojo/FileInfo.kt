@@ -58,6 +58,8 @@ data class FileInfo(
     var downloadUrl: String? = null,
     @get:Schema(title = "MD5", required = false)
     var md5: String? = null,
+    @get:Schema(title = "crc64ecma", required = false)
+    var crc64ecma: String? = null,
     @get:Schema(title = "docker registry", required = false)
     var registry: String? = null
 ) : Comparable<FileInfo> {

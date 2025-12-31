@@ -36,5 +36,7 @@ data class FileChecksums(
     @get:Schema(title = "sha1", required = true)
     val sha1: String,
     @get:Schema(title = "md5", required = true)
-    val md5: String
+    val md5: String,
+    @get:Schema(title = "crc64ecma", required = false)
+    val crc64ecma: String?,
 )
