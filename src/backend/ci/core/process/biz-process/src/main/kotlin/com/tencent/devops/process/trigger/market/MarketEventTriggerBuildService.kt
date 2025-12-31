@@ -34,6 +34,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
 ) {
 
     fun cdsWebhookTrigger(event: CdsWebhookTriggerEvent) {
+        // :TODO 后续启动参数key改常量
         with(event) {
             genericWebhookTrigger(
                 GenericWebhookTriggerEvent(
@@ -43,7 +44,10 @@ class MarketEventTriggerBuildService @Autowired constructor(
                     version = null,
                     eventCode = eventCode,
                     eventSource = envHashId,
-                    requestTime = requestTime
+                    requestTime = requestTime,
+                    extStartParam = mapOf(
+                        "BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to agentHashId
+                    )
                 )
             )
         }
@@ -114,7 +118,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                                 context = context,
                                 pipelineInfo = pipelineInfo,
                                 resource = resource,
-                                startParams = atomResponse.outputVars
+                                startParams = atomResponse.outputVars.plus(extStartParam ?: mapOf())
                             )
                             return
                         }

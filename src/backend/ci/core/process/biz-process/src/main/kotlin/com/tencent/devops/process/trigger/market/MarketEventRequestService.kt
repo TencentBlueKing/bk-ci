@@ -97,6 +97,7 @@ class MarketEventRequestService constructor(
                             eventId = eventId,
                             envHashId = envHashId,
                             requestTime = requestTime,
+                            agentHashId = ""
                         )
                     )
                 }
