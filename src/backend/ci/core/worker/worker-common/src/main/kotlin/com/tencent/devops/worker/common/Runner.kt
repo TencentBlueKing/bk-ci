@@ -62,16 +62,17 @@ import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.service.QuotaService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import kotlin.system.exitProcess
-import org.slf4j.LoggerFactory
 
 object Runner {
 
@@ -206,11 +207,11 @@ object Runner {
         LoggerService.stepId = VMUtils.genStartVMTaskId(buildVariables.containerId)
         LoggerService.buildVariables = buildVariables
 
+        addSensitiveValues(buildVariables.variablesWithType)
         showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
         showMachineLog(buildVariables.vmName)
         showSystemLog()
         showRuntimeEnvs(buildVariables.variablesWithType)
-
         Heartbeat.start(buildVariables.timeoutMills, executeCount) // #2043 添加Job超时监控
 
         val workspaceAndLogPath = workspaceInterface.getWorkspaceAndLogDir(
@@ -355,6 +356,19 @@ object Runner {
         }
 
         return System.getProperty(CLEAN_WORKSPACE)?.trim()?.toBoolean() ?: false
+    }
+
+    private fun addSensitiveValues(variables: List<BuildParameters>) {
+        try {
+            variables.asSequence()
+                .filter { it.sensitive == true }
+                .map { it.value.toString() }
+                .toList()
+                .takeIf { it.isNotEmpty() }
+                ?.let { SensitiveValueService.addSensitiveValues(it) }
+        } catch (ex: Exception) {
+            logger.warn("add sensitive values failed!", ex)
+        }
     }
 
     /**

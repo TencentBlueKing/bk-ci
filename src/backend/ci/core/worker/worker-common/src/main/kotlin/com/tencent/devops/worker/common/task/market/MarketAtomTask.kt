@@ -110,6 +110,7 @@ import com.tencent.devops.worker.common.exception.TaskExecuteExceptionDecorator
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.CIKeywordsService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
@@ -601,6 +602,10 @@ open class MarketAtomTask : ITask() {
                 val def = inputTemplate[key] as Map<String, Any>
                 val sensitiveFlag = def["isSensitive"]
                 if (sensitiveFlag != null && sensitiveFlag.toString() == "true") {
+                    // 将敏感输入值注册到脱敏服务，确保插件内部日志也能脱敏
+                    if (value.isNotBlank()) {
+                        SensitiveValueService.addSensitiveValue(value)
+                    }
                     LoggerService.addWarnLine("input(sensitive): (${def["label"]})$key=******")
                 } else {
                     LoggerService.addNormalLine("input(normal): (${def["label"]})$key=$value")
@@ -831,12 +836,30 @@ open class MarketAtomTask : ITask() {
                 // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
                 // 即使没有jobId也以containerId前缀输出
                 val value = env[key] ?: ""
+
+                // 检查是否为敏感输出（来自 task.json 定义或运行时输出）
+                val sensitiveFlag = outputTemplate[varKey]?.let {
+                    it["isSensitive"] as Boolean? ?: false
+                } ?: false
+                val isSensitiveOutput = sensitiveFlag || isSensitive
+
+                // 敏感输出值注册到 SensitiveValueService，确保当前 Job 后续步骤日志脱敏
+                if (isSensitiveOutput && value.isNotBlank()) {
+                    SensitiveValueService.addSensitiveValue(value)
+                    // 收集敏感 Key，用于上报给后端持久化
+                    addSensitiveKey(key)
+                }
+
                 if (!buildTask.stepId.isNullOrBlank() &&
                     !buildVariables.jobId.isNullOrBlank() &&
                     !key.startsWith("variables.")
                 ) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
+                    // 如果是敏感输出，上下文 Key 也需要标记为敏感
+                    if (isSensitiveOutput) {
+                        addSensitiveKey(contextKey)
+                    }
                     // 原变量名输出只在未开启 pipeline as code 的逻辑中保留
                     if (
                     // TODO 暂时只对stream进行拦截原key
@@ -847,9 +870,7 @@ open class MarketAtomTask : ITask() {
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
-                    val outPutDefine = outputTemplate[varKey]
-                    val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
-                    if (sensitiveFlag || isSensitive) {
+                    if (isSensitiveOutput) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
                         LoggerService.addNormalLine("output(normal): $key=$value")
