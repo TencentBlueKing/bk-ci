@@ -41,7 +41,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.DAY -> {
                 gal.add(Calendar.DAY_OF_WEEK, -1)
                 "SELECT minute2, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 5006200_cgs_report_game_all.hdfs " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute2 " +
@@ -52,7 +52,7 @@ class BKBaseService @Autowired constructor(
             TimeScope.WEEK -> {
                 gal.add(Calendar.WEEK_OF_MONTH, -1)
                 "SELECT minute10, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 5006200_cgs_report_game_all.hdfs " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute10 " +
@@ -63,7 +63,7 @@ class BKBaseService @Autowired constructor(
             else -> {
                 gal.add(Calendar.HOUR_OF_DAY, -1)
                 "SELECT minute1, COUNT(DISTINCT user_id) AS unum " +
-                    "FROM 5006200_cgs_report_game_all.hdfs " +
+                    "FROM 100656_cgs_report_game_all.hdfs " +
                     "WHERE dtEventTime >= '${dateFormat.format(gal.time)}' " +
                     "AND project_id = '$projectId' " +
                     "GROUP BY minute1 " +
@@ -155,7 +155,7 @@ class BKBaseService @Autowired constructor(
         nodeIds: Set<String>
     ): Map<String, String> {
         val sql = "SELECT node_id, MAX(dtEventTime) as Maxtime " +
-            "FROM 5006200_cgs_report_game_all.hdfs " +
+            "FROM 100656_cgs_report_game_all.hdfs " +
             "WHERE node_id in (${
                 nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
             }) " +
