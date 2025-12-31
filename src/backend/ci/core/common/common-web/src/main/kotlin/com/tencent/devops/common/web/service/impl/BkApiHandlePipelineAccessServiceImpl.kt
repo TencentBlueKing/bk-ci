@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BkApiHandleService
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
@@ -63,7 +63,11 @@ class BkApiHandlePipelineAccessServiceImpl : BkApiHandleService {
         }
         val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
         // 判断流水线是否在限制接口访问的列表中
-        if (redisOperation.isMember(BkApiUtil.getApiAccessLimitPipelinesKey(), pipelineId)) {
+        val result = ApiAccessLimitCacheManager.checkPipelineLimitStatus(
+            redisOperation = redisOperation,
+            pipelineIds = arrayOf(pipelineId)
+        )
+        if (result[pipelineId] == true) {
             val requestURI = request.requestURI
             logger.info("Pipeline[$pipelineId] does not have access permission for interface[$requestURI]")
             throw ErrorCodeException(
