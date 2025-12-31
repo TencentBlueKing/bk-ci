@@ -46,6 +46,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.lock.TaskBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
@@ -130,7 +131,8 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = "taskStart#$taskId"
+            operation = "taskStart#$taskId",
+            lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -339,7 +341,8 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = "taskEnd#$taskId"
+            operation = "taskEnd#$taskId",
+            lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -569,7 +572,8 @@ class TaskBuildRecordService(
         update(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             executeCount = executeCount, buildStatus = BuildStatus.RUNNING,
-            cancelUser = null, operation = operation
+            operation = operation,
+            lock = TaskBuildRecordLock(redisOperation, buildId, taskId, executeCount)
         ) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)

@@ -40,6 +40,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
+import com.tencent.devops.process.engine.control.lock.StageBuildRecordLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
@@ -113,7 +114,8 @@ class StageBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateStageStatus#$stageId"
+            operation = "updateStageStatus#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             if (buildStatus.isRunning()) {
@@ -170,7 +172,8 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_skip|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "stageSkip#$stageId"
+            operation = "stageSkip#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             recordContainerDao.updateRecordStatus(
                 dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
@@ -209,7 +212,8 @@ class StageBuildRecordService(
 
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
-            cancelUser = null, operation = "stagePause#$stageId"
+            operation = "stagePause#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
@@ -249,7 +253,8 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.CANCELED,
-            cancelUser = null, operation = "stageCancel#$stageId"
+            operation = "stageCancel#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
@@ -306,7 +311,8 @@ class StageBuildRecordService(
 
         update(
             projectId, pipelineId, buildId, executeCount, newBuildStatus,
-            cancelUser = null, operation = "stageCheckQuality#$stageId"
+            operation = "stageCheckQuality#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
@@ -346,7 +352,8 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_review|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.STAGE_SUCCESS,
-            cancelUser = null, operation = "stageReview#$stageId"
+            operation = "stageReview#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
@@ -378,7 +385,8 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "stageStart#$stageId"
+            operation = "stageStart#$stageId",
+            lock = StageBuildRecordLock(redisOperation, buildId, stageId, executeCount)
         ) {
             val stageVar = mutableMapOf<String, Any>()
             stageVar[Stage::stageControlOption.name] = controlOption.stageControlOption
