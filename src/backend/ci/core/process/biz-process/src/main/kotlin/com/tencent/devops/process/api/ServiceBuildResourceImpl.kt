@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.auth.api.ActionId
@@ -58,6 +59,7 @@ import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -448,6 +450,39 @@ class ServiceBuildResourceImpl @Autowired constructor(
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
             triggerUser = triggerUser
+        )
+        return Result(result)
+    }
+
+    override fun getLightHistoryBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int,
+        pageSize: Int,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ): Result<Page<LightBuildHistory>> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        val result = pipelineBuildFacadeService.getLightHistoryBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            status = status?.filterNotNull(),
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
         return Result(result)
     }

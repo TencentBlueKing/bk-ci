@@ -118,6 +118,7 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -2303,5 +2304,63 @@ class PipelineRuntimeService @Autowired constructor(
         CodeType.SCM_GIT.name -> CodeType.GIT.name
         CodeType.SCM_SVN.name -> CodeType.SVN.name
         else -> webhookType
+    }
+
+    fun listLightPipelineBuildHistory(
+        userId: String? = null,
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
+        buildNoStart: Int?,
+        buildNoEnd: Int?
+    ): List<LightBuildHistory> {
+        // 限制最大一次拉1000，防止攻击
+        return pipelineBuildDao.listLightPipelineBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = status,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            offset = offset,
+            limit = if (limit < 0) {
+                1000
+            } else limit,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
+        )
+    }
+
+    fun getLightPipelineBuildHistoryCount(
+        projectId: String,
+        pipelineId: String,
+        status: List<BuildStatus>?,
+        startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
+        buildNoStart: Int? = null,
+        buildNoEnd: Int? = null,
+    ): Int {
+        return pipelineBuildDao.lightPipelineBuildHistoryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            status = status,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd,
+        )
     }
 }
