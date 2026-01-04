@@ -58,6 +58,7 @@
     import templateInfo from '../../components/common/detail-info/template'
     import codeSection from '../../components/common/detailTab/codeSection'
     import detailScore from '../../components/common/detailTab/detailScore'
+    import errorCodeDetail from '../../components/common/detailTab/errorCodeDetail'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
     import versionLogDetail from '../../components/common/detailTab/versionLogDetail'
@@ -76,6 +77,7 @@
             yamlDetail,
             outputDetail,
             qualityDetail,
+            errorCodeDetail,
             versionLogDetail,
         },
 
@@ -118,6 +120,7 @@
                         { componentName: 'outputDetail', label: this.$t('store.输出参数'), name: 'output', bindData: { outputData: this.detail.outputData, name: 'output', currentTab: this.currentTab, classifyCode: this.detail.classifyCode } },
                         { componentName: 'qualityDetail', label: this.$t('store.质量红线指标'), name: 'quality', bindData: { qualityData: this.detail.qualityData }, hidden: this.detail.qualityData && !this.detail.qualityData.length },
                         { componentName: 'versionLogDetail', label: this.$t('store.版本日志'), name: 'versionLog', bindData: { name: 'versionLog', currentTab: this.currentTab } }
+                        // { componentName: 'errorCodeDetail', label: this.$t('store.错误码'), name: 'errorCode', bindData: { errorCodeData: this.detail.errorCodeData, name: 'errorCode', currentTab: this.currentTab } }
                     ],
                     creative: [
                         { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
