@@ -97,7 +97,6 @@ class PipelineDraftSaveHandler @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId
                 )
-                pipelineResourceWithoutVersion.model.latestVersion = resourceOnlyVersion.version
                 pipelineVersionPersistenceService.createDraftVersion(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion
