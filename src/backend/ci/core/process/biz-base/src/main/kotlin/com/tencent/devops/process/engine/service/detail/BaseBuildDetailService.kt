@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service.detail
 
-import com.google.common.base.Preconditions
 import com.tencent.devops.common.api.constant.BUILD_CANCELED
 import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
@@ -84,7 +83,7 @@ open class BaseBuildDetailService constructor(
         buildStatus: BuildStatus,
         cancelUser: String? = null,
         operation: String = ""
-    ): Model {
+    ): Model? {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         var record: TPipelineBuildDetailRecord? = null // 在异常catch处共享，减少一次db查询
@@ -95,11 +94,10 @@ open class BaseBuildDetailService constructor(
             lock.lock()
 
             watcher.start("getDetail")
-            record = buildDetailDao.get(dslContext, projectId, buildId)
-            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
             watcher.start("model")
-            val model = JsonUtil.to(record!!.model, Model::class.java)
+            val model = JsonUtil.to(record.model, Model::class.java)
 
             watcher.start("traverseModel")
             traverseModel(model, modelInterface)
@@ -135,9 +133,9 @@ open class BaseBuildDetailService constructor(
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
             watcher.start("getDetail")
-            Preconditions.checkArgument(record != null, "The build detail is not exist")
+            record ?: return null
             watcher.start("model")
-            return JsonUtil.to(record!!.model, Model::class.java)
+            return JsonUtil.to(record.model, Model::class.java)
         } finally {
             lock.unlock()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
