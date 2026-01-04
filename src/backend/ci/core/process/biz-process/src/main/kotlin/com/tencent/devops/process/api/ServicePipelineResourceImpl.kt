@@ -435,7 +435,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode?,
-        checkPermission: Boolean?
+        checkPermission: Boolean?,
+        filterByPipelineName: String?
     ): Result<Page<Pipeline>> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -446,7 +447,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pageSize = pageSize,
             sortType = PipelineSortType.CREATE_TIME,
             channelCode = channelCode ?: ChannelCode.BS,
-            checkPermission = false
+            checkPermission = false,
+            filterByPipelineName = filterByPipelineName
         )
         return Result(Page(result.page, result.pageSize, result.count, result.records))
     }

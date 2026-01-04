@@ -124,7 +124,24 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 userId = userId,
                 workspaceName = workspaceName,
                 ip = null,
-                workspaceProperty = WorkspaceProperty(displayName)
+                workspaceProperty = WorkspaceProperty(displayName),
+                checkPermission = false
+            )
+        )
+    }
+
+    override fun modifyWorkspaceProperty(
+        userId: String,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean> {
+        return Result(
+            workspaceService.modifyWorkspaceProperty(
+                userId = userId,
+                workspaceName = workspaceName,
+                ip = null,
+                workspaceProperty = workspaceProperty,
+                checkPermission = false
             )
         )
     }

@@ -101,7 +101,6 @@ export default {
 
   methods: {
     initStatus() {
-
       const commonPrefix = `${this.ajaxPrefix}/auth/api/user/auth/resource/${encodeURIComponent(this.projectCode)}/${this.resourceType}/${this.resourceCode}`;
       Promise
         .all([

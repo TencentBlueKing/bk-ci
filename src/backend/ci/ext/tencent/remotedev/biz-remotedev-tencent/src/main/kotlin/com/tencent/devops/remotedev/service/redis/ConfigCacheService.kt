@@ -7,7 +7,11 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.ConfigDao
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WhiteListDao
+import com.tencent.devops.remotedev.dao.WindowsResourceTypeDao
+import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.pojo.WhiteListType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.expert.ExpertSupportConfigType
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -22,11 +26,14 @@ class ConfigCacheService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val whiteListDao: WhiteListDao,
     private val expertSupportDao: ExpertSupportDao,
-    private val configDao: ConfigDao
+    private val configDao: ConfigDao,
+    private val windowsResourceTypeDao: WindowsResourceTypeDao,
+    private val windowsResourceZoneDao: WindowsResourceZoneDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ConfigCacheService::class.java)
+        private const val WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES = 5L
     }
 
     fun opFetchAllConfig(): Map<String, String> {
@@ -84,6 +91,34 @@ class ConfigCacheService @Autowired constructor(
             expertSupportDao.fetchExpertSupportConfig(dslContext, type).map { it.content }
         }
 
+    // Windows 资源配置缓存
+    private val windowsResourceTypeCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, List<WindowsResourceTypeConfig>> { key ->
+            val parts = key.split("_")
+            val withUnavailable = parts.getOrNull(1)?.toBoolean() ?: false
+            val onlySpecModel = parts.getOrNull(2)?.toBooleanStrictOrNull()
+            logger.info("load windows resource type config from database: $key")
+            windowsResourceTypeDao.fetchAll(dslContext, withUnavailable, onlySpecModel)
+        }
+
+    private val windowsResourceZoneCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, List<WindowsResourceZoneConfig>> { key ->
+            logger.info("load windows resource zone config from database: $key")
+            windowsResourceZoneDao.fetchAll(dslContext, true)
+        }
+
+    private val windowsResourceSpecZoneCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(WINDOWS_RESOURCE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, List<WindowsResourceZoneConfig>> { key ->
+            logger.info("load windows resource spec zone config from database: $key")
+            windowsResourceZoneDao.fetchAllSpec(dslContext)
+        }
+
     fun get(key: String): String? = redisCache.get(key)
 
     fun getSetMembers(key: String) = redisCacheSet.get(key)
@@ -96,4 +131,27 @@ class ConfigCacheService @Autowired constructor(
         expertSupportCache.get(ExpertSupportConfigType.SUPPORTER)?.contains(userId) ?: false
 
     fun getUserName(key: String): String = userNameCache.get(key)
+
+    // Windows 资源配置缓存相关方法
+    fun getWindowsResourceType(withUnavailable: Boolean, onlySpecModel: Boolean?): List<WindowsResourceTypeConfig> {
+        val key = "type_${withUnavailable}_$onlySpecModel"
+        return windowsResourceTypeCache.get(key) ?: emptyList()
+    }
+
+    fun getWindowsResourceZone(): List<WindowsResourceZoneConfig> {
+        return windowsResourceZoneCache.get("all") ?: emptyList()
+    }
+
+    fun getWindowsResourceSpecZone(): List<WindowsResourceZoneConfig> {
+        return windowsResourceSpecZoneCache.get("spec") ?: emptyList()
+    }
+
+    fun invalidateWindowsResourceTypeCache() {
+        windowsResourceTypeCache.invalidateAll()
+    }
+
+    fun invalidateWindowsResourceZoneCache() {
+        windowsResourceZoneCache.invalidateAll()
+        windowsResourceSpecZoneCache.invalidateAll()
+    }
 }

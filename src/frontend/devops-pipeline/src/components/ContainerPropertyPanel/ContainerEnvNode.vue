@@ -80,6 +80,7 @@
                         :disabled="disabled"
                         :is-loading="isLoading"
                         :handle-change="handleChange"
+                        :pipeline-dialect="pipelineDialect"
                         :options="nodeList"
                         @focus="handleFocus"
                         @blur="handleBlur"
@@ -189,6 +190,10 @@
             stage: {
                 type: Object,
                 default: () => () => {}
+            },
+            pipelineDialect: {
+                type: String,
+                default: "CLASSIC"
             }
         },
         data () {

@@ -30,7 +30,6 @@ package com.tencent.devops.common.pipeline.container
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.IModelTemplate
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.v3.oas.annotations.media.Schema
@@ -40,9 +39,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonSubTypes(
     JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
     JsonSubTypes.Type(value = NormalContainer::class, name = NormalContainer.classType),
-    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType)
+    JsonSubTypes.Type(value = VMBuildContainer::class, name = VMBuildContainer.classType),
+    JsonSubTypes.Type(value = JobTemplateContainer::class, name = JobTemplateContainer.classType)
 )
-interface Container : IModelTemplate {
+interface Container {
     var id: String? // seq id
     var name: String
     var elements: List<Element>
@@ -110,4 +110,6 @@ interface Container : IModelTemplate {
     fun containerEnabled(): Boolean
 
     fun setContainerEnable(enable: Boolean)
+
+    fun copyElements(elements: List<Element>): Container
 }

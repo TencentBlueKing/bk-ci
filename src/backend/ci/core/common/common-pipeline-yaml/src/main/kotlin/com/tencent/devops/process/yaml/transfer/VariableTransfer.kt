@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -58,9 +58,9 @@ class VariableTransfer {
             listOf(MAJORVERSION, "MajorVersion", MINORVERSION, "MinorVersion", FIXVERSION, "FixVersion")
     }
 
-    fun makeVariableFromModel(model: Model): Map<String, Variable>? {
+    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        model.getTriggerContainer().params.forEach {
+        triggerContainer?.params?.forEach {
             if (it.id in ignoredVariable) return@forEach
             var props = when {
                 // 字符串
@@ -161,7 +161,7 @@ class VariableTransfer {
             }
             val const = it.constant.nullIfDefault(false)
 
-            if (it.name?.isNotEmpty() == true) {
+            if (it.name?.isNotEmpty() == true && it.name != it.id) {
                 props = props ?: VariableProps()
                 props.label = it.name
             }
@@ -188,6 +188,7 @@ class VariableTransfer {
                 },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
+                asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
                 const = const,
                 props = if (props?.empty() == false) props else null,
                 ifCondition = it.displayCondition?.ifEmpty { null }
@@ -200,12 +201,12 @@ class VariableTransfer {
         }
     }
 
-    fun makeRecommendedVersion(model: Model): RecommendedVersion? {
-        val triggerContainer = model.getTriggerContainer()
-        val res = triggerContainer.buildNo?.let {
+    fun makeRecommendedVersion(triggerContainer: TriggerContainer?): RecommendedVersion? {
+        val res = triggerContainer?.buildNo?.let {
             RecommendedVersion(
                 enabled = true,
                 allowModifyAtStartup = it.required,
+                asInstanceInput = it.asInstanceInput,
                 buildNo = RecommendedVersion.BuildNo(
                     it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
@@ -228,6 +229,35 @@ class VariableTransfer {
         return res
     }
 
+    fun makeVariableFromYamlTemplate(
+        variables: Map<String, String>?
+    ): List<BuildFormProperty> {
+        if (variables.isNullOrEmpty()) {
+            return emptyList()
+        }
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        variables.forEach { (key, value) ->
+            val type = BuildFormPropertyType.STRING
+            buildFormProperties.add(
+                BuildFormProperty(
+                    id = key,
+                    type = type,
+                    defaultValue = value,
+                    required = true,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
+        }
+        return buildFormProperties
+    }
+
     fun makeVariableFromYaml(
         variables: Map<String, Variable>?
     ): List<BuildFormProperty> {
@@ -239,11 +269,12 @@ class VariableTransfer {
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
             check(key, variable)
+            val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.props?.label,
-                    required = variable.allowModifyAtStartup ?: true,
+                    required = allowModifyAtStartup,
                     constant = variable.const ?: false,
                     type = type,
                     defaultValue = when {
@@ -278,7 +309,10 @@ class VariableTransfer {
                     },
                     valueNotEmpty = variable.props?.required ?: false,
                     payload = variable.props?.payload,
-                    displayCondition = variable.ifCondition ?: emptyMap()
+                    displayCondition = variable.ifCondition ?: emptyMap(),
+                    asInstanceInput = if (allowModifyAtStartup) {
+                        variable.asInstanceInput ?: true
+                    } else null
                 )
             )
         }

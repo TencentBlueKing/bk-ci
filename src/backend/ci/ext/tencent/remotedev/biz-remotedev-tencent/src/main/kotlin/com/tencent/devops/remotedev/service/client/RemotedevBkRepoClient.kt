@@ -16,6 +16,15 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.remotedev.config.BkRepoRegion
 import com.tencent.devops.remotedev.config.BkRepoRegionConfig
 import com.tencent.devops.remotedev.config.RemoteDevBkRepoConfig
+import com.tencent.devops.remotedev.constant.BkRepoConstants
+import com.tencent.devops.remotedev.pojo.bkrepo.AutoIndexConfig
+import com.tencent.devops.remotedev.pojo.bkrepo.RepoConfiguration
+import com.tencent.devops.remotedev.pojo.bkrepo.RepoCreateRequest
+import com.tencent.devops.remotedev.pojo.bkrepo.RepoPermissionCreateRequest
+import com.tencent.devops.remotedev.pojo.bkrepo.RepoSettings
+import com.tencent.devops.remotedev.pojo.bkrepo.RepoToggleRequest
+import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateRequest
+import com.tencent.devops.remotedev.pojo.bkrepo.TemporaryTokenCreateResponse
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateProjectData
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -25,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.IOException
+import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service
@@ -36,12 +46,17 @@ class RemotedevBkRepoClient @Autowired constructor(
         region: BkRepoRegion,
         projectId: String,
         repoName: String,
-        userId: String
+        userId: String,
+        media: Boolean
     ): String? {
-        val config = bkRepoConfig.getRegionConfig(region)
+        val config = bkRepoConfig.getRegionConfig(region, media)
+        var url = "${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
-            .url("${config.url}/media/api/user/stream/create/$projectId/$repoName?display=false")
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .url(url)
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(
                 objectMapper.writeValueAsString(JsonUtil.toJson(mapOf<String, String>()))
                     .toRequestBody(MediaTypes.APPLICATION_JSON.toMediaTypeOrNull())
@@ -50,27 +65,34 @@ class RemotedevBkRepoClient @Autowired constructor(
         return doRequest(config, request).resolveResponse<Response<String>>()?.data
     }
 
-    fun existProject(region: BkRepoRegion, projectId: String): Boolean? {
-        val config = bkRepoConfig.getRegionConfig(region)
-        val url = "${config.url}/repository/api/project/exist/$projectId"
+    fun existProject(region: BkRepoRegion, projectId: String, media: Boolean): Boolean? {
+        val config = bkRepoConfig.getRegionConfig(region, media)
+        var url = "${config.url}/repository/api/project/exist/$projectId"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, BKREPO_ROOT_USERID).toHeaders())
+            .headers(getCommonHeaders(region, BKREPO_ROOT_USERID, media).toHeaders())
             .get()
             .build()
         return doRequest(config, request).resolveResponse<Response<Boolean?>>()!!.data
     }
 
-    fun createProject(region: BkRepoRegion, userId: String, projectId: String) {
-        val config = bkRepoConfig.getRegionConfig(region)
+    fun createProject(region: BkRepoRegion, userId: String, projectId: String, media: Boolean) {
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val requestData = CreateProjectData(
             name = projectId,
             displayName = projectId,
             description = ""
         )
+        var url = "${config.url}/repository/api/project/create"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
-            .url("${config.url}/repository/api/project/create")
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .url(url)
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(config, request).resolveResponse<Response<Void>>()
@@ -99,20 +121,195 @@ class RemotedevBkRepoClient @Autowired constructor(
     fun nodeSearch(
         region: BkRepoRegion,
         userId: String,
-        body: NodeSearchBody
+        body: NodeSearchBody,
+        media: Boolean
     ): Page<BkRepoNodeDetail>? {
-        val config = bkRepoConfig.getRegionConfig(region)
-        val url = "${config.url}/repository/api/node/search"
+        val config = bkRepoConfig.getRegionConfig(region, media)
+        var url = "${config.url}/repository/api/node/search"
+        if (media && config.proxyUrl.isNotBlank()) {
+            url = "${config.proxyUrl}${URLEncoder.encode(url, "UTF8")}"
+        }
         val request = Request.Builder()
             .url(url)
-            .headers(getCommonHeaders(region, userId).toHeaders())
+            .headers(getCommonHeaders(region, userId, media).toHeaders())
             .post(objectMapper.writeValueAsString(body).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(config, request).resolveResponse<Response<Page<BkRepoNodeDetail>>>()!!.data
     }
 
-    private fun getCommonHeaders(region: BkRepoRegion, userId: String): MutableMap<String, String> {
+    /**
+     * 检查BkRepo仓库是否存在
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     * @return 仓库是否存在
+     */
+    fun checkRepoExist(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String
+    ): Boolean {
         val config = bkRepoConfig.getRegionConfig(region)
+        val url = "${config.url}/repository/api/repo/exist/$projectId/$repoName"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .get()
+            .build()
+        return doRequest(config, request).resolveResponse<Response<Boolean>>()?.data ?: false
+    }
+
+    /**
+     * 创建BkRepo仓库
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     */
+    fun createRepo(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String
+    ) {
+        val config = bkRepoConfig.getRegionConfig(region)
+        val requestData = RepoCreateRequest(
+            projectId = projectId,
+            type = BkRepoConstants.REPO_TYPE,
+            name = repoName,
+            public = false,
+            display = false,
+            description = "云桌面截图仓库",
+            category = BkRepoConstants.REPO_CATEGORY,
+            configuration = RepoConfiguration(
+                type = "local",
+                settings = RepoSettings(
+                    system = false,
+                    autoIndex = AutoIndexConfig(enabled = false)
+                )
+            )
+        )
+        val request = Request.Builder()
+            .url("${config.url}/repository/api/repo/create")
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(config, request).resolveResponse<Response<Void>>()
+        logger.info("create bkrepo repo success: projectId=$projectId, repoName=$repoName")
+    }
+
+    /**
+     * 切换仓库权限模式为STRICT
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     */
+    fun changeRepoToggle(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String
+    ) {
+        val config = bkRepoConfig.getRegionConfig(region)
+        val requestData = RepoToggleRequest(
+            projectId = projectId,
+            repoName = repoName,
+            accessControlMode = BkRepoConstants.ACCESS_CONTROL_MODE
+        )
+        val request = Request.Builder()
+            .url("${config.url}/auth/api/mode/repo/toggle")
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(config, request).resolveResponse<Response<Void>>()
+        logger.info("change repo toggle success: projectId=$projectId, repoName=$repoName")
+    }
+
+    /**
+     * 创建仓库权限
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param userId 用户ID
+     */
+    fun createRepoPermission(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        userId: String
+    ) {
+        val config = bkRepoConfig.getRegionConfig(region)
+        val requestData = RepoPermissionCreateRequest(
+            resourceType = "NODE",
+            permName = "$repoName-permission",
+            projectId = projectId,
+            repos = listOf(repoName),
+            includePattern = listOf("/"),
+            users = listOf(userId),
+            actions = listOf("MANAGE"),
+            createBy = userId,
+            updatedBy = userId
+        )
+        val request = Request.Builder()
+            .url("${config.url}/auth/api/permission/create")
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(config, request).resolveResponse<Response<Void>>()
+        logger.info("create repo permission success: projectId=$projectId, repoName=$repoName")
+    }
+
+    /**
+     * 创建临时访问Token
+     *
+     * @param region BkRepo区域配置
+     * @param projectId 项目ID
+     * @param repoName 仓库名称
+     * @param fullPathSet 文件路径集合
+     * @param expireSeconds 过期时间（秒，默认600）
+     * @param type Token类型（UPLOAD, DOWNLOAD, ALL）
+     * @param userId 用户ID
+     * @return 临时访问Token
+     */
+    fun createTemporaryAccessToken(
+        region: BkRepoRegion,
+        projectId: String,
+        repoName: String,
+        fullPathSet: List<String>,
+        expireSeconds: Int = 600,
+        type: String,
+        userId: String
+    ): String {
+        val config = bkRepoConfig.getRegionConfig(region)
+        val requestData = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = fullPathSet,
+            expireSeconds = expireSeconds,
+            type = type
+        )
+        val request = Request.Builder()
+            .url("${config.url}/generic/temporary/token/create")
+            .headers(getCommonHeaders(region, userId).toHeaders())
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        val response = doRequest(config, request).resolveResponse<Response<List<TemporaryTokenCreateResponse>>>()
+        return response?.data?.firstOrNull()?.token ?: throw RemoteServiceException("create temporary token failed")
+    }
+
+    private fun getCommonHeaders(
+        region: BkRepoRegion,
+        userId: String,
+        media: Boolean = false
+    ): MutableMap<String, String> {
+        val config = bkRepoConfig.getRegionConfig(region, media)
         val headers = mutableMapOf<String, String>()
         headers["Authorization"] = config.headerUserAuth
         headers["X-BKREPO-UID"] = userId

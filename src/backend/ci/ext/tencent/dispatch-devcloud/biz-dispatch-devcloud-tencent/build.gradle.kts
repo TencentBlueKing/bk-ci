@@ -43,5 +43,5 @@ dependencies {
     api("org.apache.commons:commons-collections4")
     api("ch.qos.logback:logback-classic")
     api("org.json:json")
-    api("io.github.openfeign.form:feign-form")
+//    api("io.github.openfeign.form:feign-form")
 }

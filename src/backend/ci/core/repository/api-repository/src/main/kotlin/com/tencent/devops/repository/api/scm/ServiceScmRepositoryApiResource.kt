@@ -41,6 +41,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -53,6 +54,21 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceScmRepositoryApiResource {
+
+    @Operation(summary = "获取服务端仓库信息(通过代码库HashId)")
+    @GET
+    @Path("/getServerRepositoryById")
+    fun getServerRepositoryById(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库类型,ID或Name", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "代码库ID或名称", required = true)
+        @QueryParam("repoHashIdOrName")
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository>
 
     @Operation(summary = "获取服务端仓库信息")
     @POST
@@ -79,10 +95,10 @@ interface ServiceScmRepositoryApiResource {
         authRepository: AuthRepository
     ): Result<Perm>
 
-    @Operation(summary = "获取仓库分支信息")
+    @Operation(summary = "获取仓库分支列表")
     @POST
-    @Path("/findBranches")
-    fun findBranches(
+    @Path("/listBranches")
+    fun listBranches(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -113,10 +129,10 @@ interface ServiceScmRepositoryApiResource {
         branch: String
     ): Result<Reference?>
 
-    @Operation(summary = "获取目标Tag信息")
+    @Operation(summary = "获取Tag列表")
     @POST
-    @Path("/findTags")
-    fun findTags(
+    @Path("/listTags")
+    fun listTags(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

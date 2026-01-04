@@ -38,6 +38,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceEnv
+import com.tencent.devops.remotedev.pojo.WorkspaceGroupByOrg
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
@@ -141,6 +142,15 @@ class UserWorkspaceResourceImpl @Autowired constructor(
                 ?: listOf(WorkspaceStatus.DISTRIBUTING, WorkspaceStatus.PREPARING)
         }
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize, updatedSearch))
+    }
+
+    override fun getWorkspaceListGroupByOrg(
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: WorkspaceSearch?
+    ): Result<List<WorkspaceGroupByOrg>> {
+        return Result(workspaceService.getProjectWorkspaceListGroupByOrg(userId, page, pageSize, search))
     }
 
     override fun getEnvs4PublicWorkspace(userId: String): Result<List<WorkspaceEnv>> {

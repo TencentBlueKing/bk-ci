@@ -121,7 +121,7 @@
                 return !this.isSupportVar ? 'nonVarRule' : ''
             },
             keyRules () {
-                return `required|unique:${this.paramList.map(p => p.key).join(',')}|max: 50|${this.snonVarRule}`
+                return `required|unique:${this.paramList.map(p => p.key).join(',')}|max: 50|${this.snonVarRule}:{{}}`
             },
             paramKeyPlaceholder () {
                 if (this.keyPlaceholder) return this.keyPlaceholder

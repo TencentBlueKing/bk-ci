@@ -19,8 +19,4 @@ class TxUserStorePublishersResourceImpl @Autowired constructor(
             actionTitle = "updateComponentFirstPublisher"
         )
     }
-
-
 }
-
-

@@ -38,7 +38,7 @@ import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.ExtServiceCreateInfo

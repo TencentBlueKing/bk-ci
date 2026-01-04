@@ -50,6 +50,8 @@ data class TimerTriggerElement(
     override var status: String? = null,
     @get:Schema(title = "插件版本", required = false)
     override var version: String = "1.*",
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     // express是老的接口数据， 后面要废弃掉
     @get:Schema(title = "定时表达式", required = false)
     @Deprecated(message = "@see advanceExpression")

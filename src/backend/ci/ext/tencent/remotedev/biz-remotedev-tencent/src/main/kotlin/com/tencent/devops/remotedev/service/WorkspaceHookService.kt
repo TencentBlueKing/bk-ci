@@ -59,7 +59,9 @@ class WorkspaceHookService @Autowired constructor(
     private val bkConfig: BkConfig,
     private val client: Client,
     private val configCacheService: ConfigCacheService,
-    private val workspaceJoinDao: WorkspaceJoinDao
+    private val workspaceJoinDao: WorkspaceJoinDao,
+    private val cacheService: ConfigCacheService
+
 ) {
 
     private data class Actions(
@@ -103,6 +105,8 @@ class WorkspaceHookService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceHookService::class.java)
+        // "C:\tools\hooks\cdshk.exe"  script {{PROJECT_ID}} --log cdshk.log
+        const val DEFAULT_EXIT_HOOK_COMMAND = "remotedev:hook:defaultExitCommand" // 默认退出钩子命令模板
     }
 
     private fun DEVXHook.executableCommand(): String {
@@ -158,7 +162,8 @@ class WorkspaceHookService @Autowired constructor(
         }.getOrNull() ?: return
         installHook(
             ip = getIpByNodeHashId(projectId = projectId, nodeHashIds = setOf(nodeHashId)) ?: emptySet(),
-            hooks = load
+            hooks = load,
+            projectId = projectId
         )
     }
 
@@ -176,7 +181,8 @@ class WorkspaceHookService @Autowired constructor(
                 projectId = projectId,
                 envHashId = envHashId
             ),
-            hooks = load
+            hooks = load,
+            projectId = projectId
         )
     }
 
@@ -191,16 +197,43 @@ class WorkspaceHookService @Autowired constructor(
         )
     }
 
-    private fun installHook(ip: Set<String>, hooks: List<DEVXHook>) {
+    private fun installHook(ip: Set<String>, hooks: List<DEVXHook>, projectId: String) {
         if (ip.isEmpty() || hooks.isEmpty()) {
             logger.warn("installHook|empty install|ip: $ip, hooks: $hooks")
             return
         }
+
+        // 从配置读取默认退出钩子命令模板
+        val defaultExitCommandTemplate = cacheService.get(DEFAULT_EXIT_HOOK_COMMAND)
+
+        // 将模板中的 {{PROJECT_ID}} 替换为实际的 projectId（仅当模板不为空时）
+        val defaultExitCommand = defaultExitCommandTemplate
+            ?.takeIf { it.isNotEmpty() }
+            ?.replace("{{PROJECT_ID}}", projectId)
+
         val actions = hooks.filter { it.enable }.groupBy { it.executionType }.map { (executionType, group) ->
-            val executables = group.map { it.executableCommand() }
+            val executables = group.map { it.executableCommand() }.toMutableList()
+
+            // 如果是 EXIT 类型且默认退出命令不为空，添加默认的退出钩子命令到列表开头
+            if (executionType == DEVXHook.ExecutionType.LOG_OUT && !defaultExitCommand.isNullOrEmpty()) {
+                executables.add(0, defaultExitCommand)
+            }
+
             Actions.Action(
                 type = Actions.Type.load(executionType).name.lowercase(),
                 executables = executables
+            )
+        }.toMutableList()
+
+        // 如果没有配置任何启用的 EXIT 类型钩子，且默认退出命令不为空，手动添加一个包含默认命令的 EXIT action
+        if (hooks.none { it.executionType == DEVXHook.ExecutionType.LOG_OUT && it.enable } &&
+            !defaultExitCommand.isNullOrEmpty()
+        ) {
+            actions.add(
+                Actions.Action(
+                    type = Actions.Type.EXIT.name.lowercase(),
+                    executables = listOf(defaultExitCommand)
+                )
             )
         }
         val vmIp = ip.joinToString(",")

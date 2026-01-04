@@ -57,6 +57,7 @@ function _M:isSafe()
             "/artifactory/api/external/url/visit", -- 短链接
             "/bkrepo/bkci%-desktop", -- 蓝盾桌面端
             "/artifactory/api/external/artifactories/.+/.+/.+/hapJson5.json5", -- HAP Json5
+            "/ms/process/api/external/pipelines/ba608114e8854757b36994c42bed7477/build", -- BK-Base的外网触发
         }
         local is_secure = false
         for _, item in ipairs(security_paths) do

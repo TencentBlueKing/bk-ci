@@ -49,7 +49,11 @@ data class WorkspaceStartCloudDetail(
     val resourceId: String? = null,
     @get:Schema(title = "实例别名")
     val displayName: String? = null,
-    @get:Schema(title = "单向网络配置 0 - 非单向； 1 - 单向")
+    @get:Schema(
+        title = "单向网络配置",
+        description = "0-未启用单向网络；1-Mesh单向网络；2-SSL单向网络",
+        allowableValues = ["0", "1", "2"]
+    )
     val cdsMesh: Int? = null,
     @get:Schema(title = "独立域名")
     val cdsDomain: String? = null,

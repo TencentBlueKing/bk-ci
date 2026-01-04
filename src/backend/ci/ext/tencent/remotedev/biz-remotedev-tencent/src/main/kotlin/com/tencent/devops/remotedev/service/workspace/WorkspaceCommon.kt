@@ -72,11 +72,12 @@ import com.tencent.devops.remotedev.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.remotedev.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.remotedev.pojo.remotedev.FetchWinPoolData
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.ApiGwService
 import com.tencent.devops.remotedev.service.BKCCService
-import com.tencent.devops.remotedev.service.RemotedevProjectService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.redis.ConfigCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CONFIG_INFO
+import com.tencent.devops.remotedev.service.redis.RedisKeys.PIPELINE_CREATE_WORKSPACE_INFO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_OWNER_CHANGE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
@@ -113,13 +114,13 @@ class WorkspaceCommon @Autowired constructor(
     private val notifyControl: NotifyControl,
     private val kafkaClient: KafkaClient,
     private val bkccService: BKCCService,
-    private val remotedevProjectService: RemotedevProjectService,
     private val projectStartAppLinkDao: ProjectStartAppLinkDao,
     private val config: RemoteDevCommonConfig,
     private val streamBridge: StreamBridge,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val workspaceDailyCgsdataDao: WorkspaceDailyCgsdataDao,
-    private val remoteDevCommonConfig: RemoteDevCommonConfig
+    private val remoteDevCommonConfig: RemoteDevCommonConfig,
+    private val apiGwService: ApiGwService
 ) {
 
     companion object {
@@ -554,7 +555,10 @@ class WorkspaceCommon @Autowired constructor(
                         )
                     )
                     // 分配拥有者后触发L盘挂载
-                    makeDiskMount(cgsId.substringAfter("."), operator)
+                    makeDiskMount(
+                        ip = cgsId.substringAfter("."),
+                        user = operator
+                    )
                 }
                 notifyControl.dispatchWebsocketPushEvent(
                     userId = it.userId,
@@ -646,6 +650,19 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+        // 记录取消共享操作
+        sharedUsers.forEach { sharedUser ->
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.SHARE,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.UNSHARE),
+                    sharedUser
+                )
+            )
+        }
         // 解绑后对原先的共享人推送websocket刷新客户端列表
         sharedUsers.forEach {
             notifyControl.dispatchWebsocketPushEvent(
@@ -747,7 +764,8 @@ class WorkspaceCommon @Autowired constructor(
     fun makeDiskMount(
         ip: String,
         user: String,
-        owner: String? = null
+        owner: String? = null,
+        type: String? = null
     ) {
         try {
             val infoS = redisCache.get(PIPELINE_CONFIG_INFO) ?: return
@@ -761,9 +779,11 @@ class WorkspaceCommon @Autowired constructor(
                     "repoId" -> newParam[k] = REPOID
                     "localDriver" -> newParam[k] = LOCALDRIVER
                     "owner" -> newParam[k] = owner ?: ""
+                    "type" -> newParam[k] = type ?: ""
                     else -> newParam[k] = v
                 }
             }
+
             AsyncExecute.dispatch(
                 streamBridge,
                 AsyncPipelineEvent(
@@ -777,6 +797,66 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("execute make disk mount pipeline error", e)
         }
     }
+
+    // 创建实例成功后异步执行流水线
+    fun executeCreateWorkspacePipeline(
+        ips: Set<String>,
+        user: String
+    ) {
+        try {
+            val infoS = redisCache.get(PIPELINE_CREATE_WORKSPACE_INFO) ?: return
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+            val newParam = mutableMapOf<String, String>()
+            newParam["job_ip_list"] = ips.joinToString(separator = " ")
+
+            AsyncExecute.dispatch(
+                streamBridge,
+                AsyncPipelineEvent(
+                    userId = info.userId ?: user,
+                    projectId = info.projectId,
+                    pipelineId = info.pipelineId,
+                    values = newParam
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("execute create workspace pipeline error", e)
+        }
+    }
+    /**
+     * 克隆 bksec 安全策略（异步，不阻塞主流程）
+     * @param oldWorkspaceName 旧工作空间名称
+     * @param newWorkspaceName 新工作空间名称
+     */
+    fun cloneBkSecPolicy(
+        oldWorkspaceName: String,
+        newWorkspaceName: String
+    ) {
+        try {
+            logger.info("Start cloning bksec policy|old=$oldWorkspaceName|new=$newWorkspaceName")
+
+            val taskId = apiGwService.cloneMachinePolicy(oldWorkspaceName, newWorkspaceName)
+
+            if (taskId != null) {
+                logger.info(
+                    "BkSec policy clone task created successfully|taskId=$taskId|" +
+                        "old=$oldWorkspaceName|new=$newWorkspaceName"
+                )
+            } else {
+                logger.warn(
+                    "BkSec policy clone task creation failed|" +
+                        "old=$oldWorkspaceName|new=$newWorkspaceName"
+                )
+            }
+        } catch (e: Exception) {
+            logger.error(
+                "Exception when cloning bksec policy|" +
+                    "old=$oldWorkspaceName|new=$newWorkspaceName|error=${e.message}",
+                e
+            )
+            // 不影响主流程，仅记录错误
+        }
+    }
+
 
     fun updateHostMonitor(workspaceName: String, props: Map<String, Any>, type: WorkspaceSystemType) {
         if (!type.checkWindows()) {

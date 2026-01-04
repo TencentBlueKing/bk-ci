@@ -36,7 +36,8 @@ const optionConfigMixin = {
                 type: 'boolean',
                 component: 'atom-checkbox',
                 text: this.$t('storeMap.enableAtom'),
-                default: true
+                default: true,
+                canOverride: true
             },
             continueWhenFailed: {
                 isHidden: true,
@@ -124,7 +125,7 @@ const optionConfigMixin = {
                 }
             },
             timeoutVar: {
-                rule: { timeoutsRule: true },
+                rule: { timeoutsRule: this.pipelineDialect },
                 component: 'vuex-input',
                 label: this.$t('storeMap.atomTimeout'),
                 desc: this.$t('storeMap.timeoutDesc'),

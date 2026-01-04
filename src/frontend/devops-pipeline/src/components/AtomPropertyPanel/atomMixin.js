@@ -19,6 +19,7 @@
 
 import DefineParam from '@/components/AtomFormComponent/DefineParam'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
+import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import SubParameter from '@/components/AtomFormComponent/SubParameter'
 import Tips from '@/components/AtomFormComponent/Tips'
@@ -60,7 +61,6 @@ import { mapActions, mapGetters, mapState } from 'vuex'
 import { bkVarWrapper, rely, urlJoin } from '../../utils/util'
 import FormField from './FormField'
 import FormFieldGroup from './FormFieldGroup'
-import MetadataNormal from '@/components/AtomFormComponent/MetadataNormal'
 
 const atomMixin = {
     props: {
@@ -72,7 +72,12 @@ const atomMixin = {
         stage: Object,
         atomPropsModel: Object,
         setAtomValidate: Function,
-        disabled: Boolean
+        atomValue: Object,
+        disabled: Boolean,
+        pipelineDialect: {
+            type: String,
+            default: "CLASSIC"
+        }
     },
     components: {
         Accordion,
@@ -121,7 +126,8 @@ const atomMixin = {
     computed: {
         ...mapGetters('atom', [
             'isThirdPartyContainer',
-            'atomVersionChangedKeys'
+            'atomVersionChangedKeys',
+            'instanceFromTemplate'
         ]),
         ...mapState('atom', [
             'pipelineCommonSetting'
@@ -254,6 +260,12 @@ const atomMixin = {
                 || { maxSize: 16384 }
 
             return componentItem.maxSize
+        },
+        checkCanOverride (obj) {
+            if (!this.instanceFromTemplate) {
+                return true
+            }
+            return obj.canOverride && this.element?.isOverride
         }
     }
 }

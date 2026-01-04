@@ -1,50 +1,86 @@
 package com.tencent.devops.remotedev.config
 
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 
 @Component
 class RemoteDevBkRepoConfig {
-    @Value("\${bkrepo.devx.url:}")
-    val bkrepoDevxUrl: String = ""
 
-    @Value("\${bkrepo.devx.headerUserAuth:}")
-    val bkrepoDevxHeaderUserAuth: String = ""
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devx")
+    fun devxBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
-    @Value("\${bkrepo.devx.dnsIp:}")
-    val bkrepoDevxDnsIp: String = ""
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devxmedia")
+    fun devxMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
-    @Value("\${bkrepo.csig.url:}")
-    val bkrepoCsigUrl: String = ""
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.csig")
+    fun csigBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
-    @Value("\${bkrepo.csig.headerUserAuth:}")
-    val bkrepoCsigHeaderUserAuth: String = ""
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devcloud")
+    fun devcloudBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
-    @Value("\${bkrepo.csig.webUrl:}")
-    val bkrepoCsigWebUrl: String = ""
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devcloudmedia")
+    fun devcloudMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
-    fun getRegionConfig(region: BkRepoRegion): BkRepoRegionConfig {
+    @Qualifier("devxBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devxConfig: BkRepoRegionConfig
+
+    @Qualifier("devxMediaBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devxMediaConfig: BkRepoRegionConfig
+
+    @Qualifier("csigBkRepoRegionConfig")
+    @Autowired
+    private lateinit var csigConfig: BkRepoRegionConfig
+
+    @Qualifier("devcloudBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devcloudConfig: BkRepoRegionConfig
+
+    @Qualifier("devcloudMediaBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devcloudMediaConfig: BkRepoRegionConfig
+
+    fun getRegionConfig(region: BkRepoRegion, media: Boolean = false): BkRepoRegionConfig {
         return when (region) {
-            BkRepoRegion.DEVX -> BkRepoRegionConfig(
-                url = bkrepoDevxUrl,
-                headerUserAuth = bkrepoDevxHeaderUserAuth,
-                webUrl = bkrepoDevxUrl,
-                dnsIp = bkrepoDevxDnsIp
-            )
+            BkRepoRegion.DEVX -> {
+                if (media) {
+                    devxMediaConfig
+                } else {
+                    devxConfig
+                }
+            }
 
-            BkRepoRegion.CSIG -> BkRepoRegionConfig(bkrepoCsigUrl, bkrepoCsigHeaderUserAuth, bkrepoCsigWebUrl, null)
+            BkRepoRegion.CSIG -> csigConfig
+            BkRepoRegion.DEVCLOUD -> {
+                if (media) {
+                    devcloudMediaConfig
+                } else {
+                    devcloudConfig
+                }
+            }
         }
     }
 }
 
 enum class BkRepoRegion {
     DEVX,
-    CSIG
+    CSIG,
+    DEVCLOUD
 }
 
 data class BkRepoRegionConfig(
-    val url: String,
-    val headerUserAuth: String,
-    val webUrl: String,
-    val dnsIp: String?
+    var url: String = "",
+    var headerUserAuth: String = "",
+    var webUrl: String = "",
+    var dnsIp: String = "",
+    var proxyUrl: String = ""
 )

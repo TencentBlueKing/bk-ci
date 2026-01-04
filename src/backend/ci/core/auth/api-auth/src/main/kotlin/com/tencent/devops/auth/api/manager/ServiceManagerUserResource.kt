@@ -53,4 +53,9 @@ interface ServiceManagerUserResource {
         @PathParam("userId")
         userId: String
     ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
+
+    @GET
+    @Path("/")
+    @Operation(summary = "获取所有管理员用户")
+    fun getAllManagerUsers(): Result<List<String>>
 }

@@ -40,6 +40,8 @@ data class PipelineYamlFileReleaseResult(
     val filePath: String,
     @get:Schema(title = "分支名")
     val branch: String,
-    @get:Schema(title = "mr url")
-    val mrUrl: String?
+    @get:Schema(title = "合并请求链接")
+    val pullRequestUrl: String?,
+    @get:Schema(title = "合并请求ID")
+    val pullRequestId: Long?
 )

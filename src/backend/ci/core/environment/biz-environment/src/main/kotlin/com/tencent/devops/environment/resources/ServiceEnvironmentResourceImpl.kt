@@ -198,6 +198,38 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun enableNodeEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String?,
+        nodeHashId: String?,
+        envName: String?,
+        nodeName: String?,
+        enableNode: Boolean
+    ): Result<Boolean> {
+        if (envHashId.isNullOrBlank() && envName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("envHashId or envName")
+            )
+        }
+        if (nodeHashId.isNullOrBlank() && nodeName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("nodeHashId or nodeName")
+            )
+        }
+        return envService.enableNodeEnv(
+            projectId = projectId,
+            userId = userId,
+            envHashId = envHashId,
+            nodeHashId = nodeHashId,
+            envName = envName,
+            nodeName = nodeName,
+            enableNode = enableNode
+        )
+    }
+
     private fun checkParam(
         userId: String,
         projectId: String,

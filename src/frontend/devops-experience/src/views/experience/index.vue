@@ -31,7 +31,7 @@
                     title: this.$t('experience.experience'),
                     menu: [{
                                id: 'experienceList',
-                               name: this.$t('experience.mobileRelease'),
+                               name: this.$t('experience.expManage'),
                                icon: 'devops-icon icon-release',
                                showChildren: false,
                                children: [

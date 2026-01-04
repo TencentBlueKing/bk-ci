@@ -1,30 +1,3 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 Tencent.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
- * the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package fileutil
 
 import (
@@ -36,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func Exists(file string) bool {
@@ -155,18 +129,44 @@ func Unzip(archive, target string) error {
 	}
 	defer func() { _ = reader.Close() }()
 
-	if err := os.MkdirAll(target, os.ModePerm); err != nil {
+	// 获取目标目录的绝对路径
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(absTarget, os.ModePerm); err != nil {
 		return err
 	}
 
 	for _, file := range reader.File {
-		path := filepath.Join(target, file.Name)
+		// 清理文件名中的路径遍历字符
+		cleanName := filepath.Clean(file.Name)
+		
+		// 构建完整路径并获取绝对路径
+		path := filepath.Join(absTarget, cleanName)
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+
+		// 验证解压路径是否在目标目录内,防止 Zip Slip 攻击
+		// 使用 filepath.Rel 来检查相对路径关系
+		rel, err := filepath.Rel(absTarget, absPath)
+		if err != nil {
+			return err
+		}
+		// 如果相对路径以 .. 开头,说明目标路径在目标目录之外
+		if strings.HasPrefix(rel, ".."+string(filepath.Separator)) || rel == ".." {
+			return errors.New("illegal file path: " + file.Name)
+		}
+
 		if file.FileInfo().IsDir() {
-			os.MkdirAll(path, os.ModePerm)
+			os.MkdirAll(absPath, os.ModePerm)
 			continue
 		}
 
-		err2 := unzipFile(file, path)
+		err2 := unzipFile(file, absPath)
 		if err2 != nil {
 			return err2
 		}
@@ -176,6 +176,11 @@ func Unzip(archive, target string) error {
 }
 
 func unzipFile(file *zip.File, path string) error {
+	// 确保父目录存在
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return err
+	}
+
 	fileReader, err := file.Open()
 	if err != nil {
 		return err

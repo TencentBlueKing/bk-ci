@@ -161,15 +161,17 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 
 	ip := config.GAgentEnv.GetAgentIp()
 	templateData := map[string]string{
-		"ProjectType": projectType,
-		"AgentId":     config.GAgentConfig.AgentId,
-		"AgentSecret": config.GAgentConfig.SecretKey,
-		"Gateway":     buildGateway,
-		"ProjectId":   config.GAgentConfig.ProjectId,
-		"HostName":    config.GAgentEnv.HostName,
-		"HostIp":      config.GAgentEnv.GetAgentIp(),
-		"BuildType":   config.GAgentConfig.BuildType,
-		"TlsCa":       tlsCa,
+		"ProjectType":    projectType,
+		"AgentId":        config.GAgentConfig.AgentId,
+		"AgentSecret":    config.GAgentConfig.SecretKey,
+		"Gateway":        buildGateway,
+		"ProjectId":      config.GAgentConfig.ProjectId,
+		"HostName":       config.GAgentEnv.HostName,
+		"HostIp":         config.GAgentEnv.GetAgentIp(),
+		"BuildType":      config.GAgentConfig.BuildType,
+		"TlsCa":          tlsCa,
+		"CPUProductInfo": config.GAgentEnv.CPUProductInfo,
+		"GPUProductInfo": config.GAgentEnv.GPUProductInfo,
 	}
 	logs.Debugf("telegraf agentip %s", ip)
 

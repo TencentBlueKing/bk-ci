@@ -42,7 +42,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: projectId,
                                     action: RESOURCE_ACTION.CREATE
                                 }
@@ -243,19 +243,19 @@
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
     import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
+    import PipelineProblemTips from '@/components/PipelineProblemTips'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
+    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
+    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     import { mapActions, mapState } from 'vuex'
     import PipelineSearcher from './PipelineSearcher'
-    import ArchiveViewName from '@/components/pipelineList/archiveViewName'
-    import ArchiveDialog from '@/views/PipelineList/ArchiveDialog'
-    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
-    import PipelineProblemTips from '@/components/PipelineProblemTips'
 
     import Logo from '@/components/Logo'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -268,6 +268,7 @@
     import {
         PROJECT_RESOURCE_ACTION,
         RESOURCE_ACTION,
+        RESOURCE_TYPE,
         handlePipelineNoPermission
     } from '@/utils/permission'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -313,6 +314,7 @@
                     action: this.toggleImportPipelinePopup
                 }],
                 RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 PROJECT_RESOURCE_ACTION,
                 tableHeight: null
             }
@@ -438,7 +440,7 @@
                 'requestHasCreatePermission'
             ]),
             updateTableHeight () {
-                this.tableHeight = this.$refs.tableBox.offsetHeight
+                this.tableHeight = this.$refs.tableBox?.offsetHeight
             },
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
