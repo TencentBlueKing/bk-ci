@@ -111,15 +111,17 @@ class PipelineTriggerEventDao {
         }
     }
 
-    fun update(
+    fun updateEventBody(
         dslContext: DSLContext,
-        triggerEvent: PipelineTriggerEvent
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.update(this)
-                .set(EVENT_BODY, triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) })
-                .where(PROJECT_ID.eq(triggerEvent.projectId))
-                .and(EVENT_ID.eq(triggerEvent.eventId))
+                .set(EVENT_BODY, JsonUtil.toJson(eventBody, false))
+                .where(PROJECT_ID.eq(projectId))
+                .and(EVENT_ID.eq(eventId))
                 .execute()
         }
     }

@@ -49,6 +49,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
+import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -179,25 +180,39 @@ class WebhookRequestService(
             } ?: return
             val grayRepo = grayService.isGrayRepo(repository.scmCode, repository.projectName)
             if (grayRepo) {
-                logger.info(
-                    "${repository.scmCode}|${repository.projectName}|" +
-                            "The current replay event will execute the new trigger logic"
+                logger.info("The current replay event will execute the new trigger logic")
+                val webhook = client.get(ServiceRepositoryWebhookResource::class).webhookParseByRepo(
+                    scmCode = repository.scmCode,
+                    projectId = projectId,
+                    repoHashId = repository.repoHashId!!,
+                    request = WebhookParseRequest(
+                        requestId = triggerEvent.requestId,
+                        headers = repoWebhookRequest.requestHeader,
+                        queryParams = repoWebhookRequest.requestParam,
+                        body = repoWebhookRequest.requestBody
+                    )
+                ).data ?: run {
+                    logger.info("replay webhook request body is null|$replayRequestId")
+                    return
+                }
+                val eventBody = ScmWebhookEventBody(
+                    headers = repoWebhookRequest.requestHeader,
+                    queryParams = repoWebhookRequest.requestParam,
+                    webhook = webhook
                 )
-                // 读取当前回放操作依赖的trigger event
-                pipelineTriggerEventDao.getEventByRequestId(
+                pipelineTriggerEventDao.updateEventBody(
                     dslContext = dslContext,
                     projectId = projectId,
-                    requestId = replayRequestId,
-                    eventSource = repository.repoHashId!!
-                )?.let {
-                    webhookManager.fireEvent(
-                        eventId = triggerEvent.eventId!!,
-                        eventTime = LocalDateTime.now(),
-                        repository = repository,
-                        webhook = (it.eventBody!! as ScmWebhookEventBody).webhook,
-                        replayPipelineId = pipelineId
-                    )
-                }
+                    eventId = eventId,
+                    eventBody = eventBody
+                )
+                webhookManager.fireEvent(
+                    eventId = triggerEvent.eventId!!,
+                    eventTime = LocalDateTime.now(),
+                    repository = repository,
+                    webhook = webhook,
+                    replayPipelineId = pipelineId
+                )
             } else {
                 val webhookRequest = WebhookRequest(
                     headers = repoWebhookRequest.requestHeader,

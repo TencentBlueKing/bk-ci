@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventVo
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -138,10 +139,16 @@ class PipelineTriggerEventService @Autowired constructor(
         )
     }
 
-    fun updateTriggerEvent(triggerEvent: PipelineTriggerEvent) {
-        pipelineTriggerEventDao.update(
+    fun updateEventBody(
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
+    ) {
+        pipelineTriggerEventDao.updateEventBody(
             dslContext = dslContext,
-            triggerEvent = triggerEvent
+            projectId = projectId,
+            eventId = eventId,
+            eventBody = eventBody
         )
     }
 
@@ -439,8 +446,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 ).toJsonStr(),
                 replayRequestId = replayRequestId,
                 requestParams = requestParams,
-                createTime = LocalDateTime.now(),
-                eventBody = eventBody
+                createTime = LocalDateTime.now()
             )
         }
         pipelineTriggerEventDao.save(

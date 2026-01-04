@@ -16,6 +16,7 @@ import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
 import com.tencent.devops.repository.service.code.CodeRepositoryManager
 import com.tencent.devops.repository.service.hub.ScmWebhookApiService
 import com.tencent.devops.scm.api.pojo.HookRequest
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,6 +104,26 @@ class RepositoryWebhookService @Autowired constructor(
         return WebhookData(
             webhook = enWebhook,
             repositories = repositories
+        )
+    }
+
+    fun webhookParseByRepo(
+        scmCode: String,
+        projectId: String,
+        repoHashId: String,
+        request: WebhookParseRequest
+    ): Webhook? {
+        val hookRequest = with(request) {
+            HookRequest(headers, body, queryParams)
+        }
+        val webhook = webhookApiService.webhookParse(scmCode = scmCode, request = hookRequest) ?: run {
+            logger.warn("Unsupported webhook request $scmCode [${JsonUtil.toJson(request, false)}]")
+            return null
+        }
+        return webhookApiService.webhookEnrich(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            webhook = webhook
         )
     }
 
