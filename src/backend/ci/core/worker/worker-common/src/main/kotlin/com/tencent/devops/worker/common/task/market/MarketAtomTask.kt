@@ -287,7 +287,8 @@ open class MarketAtomTask : ITask() {
                 atomTmpSpace = atomTmpSpace,
                 workspace = workspace,
                 projectId = projectId,
-                buildId = buildTask.buildId
+                buildId = buildTask.buildId,
+                containerType = buildTask.containerType
             )
             // 检查插件包的完整性
             checkSha(atomExecuteFile, atomData.shaContent!!)
@@ -428,7 +429,8 @@ open class MarketAtomTask : ITask() {
         atomTmpSpace: File,
         workspace: File,
         projectId: String,
-        buildId: String
+        buildId: String,
+        containerType: String? = null
     ): File {
         // 取插件文件名
         val atomFilePath = atomData.pkgPath!!
@@ -478,7 +480,8 @@ open class MarketAtomTask : ITask() {
                     atomFilePath = atomFilePath,
                     atomExecuteFile = atomExecuteFile,
                     authFlag = atomData.authFlag ?: true,
-                    queryCacheFlag = cacheFlag
+                    queryCacheFlag = cacheFlag,
+                    containerType = containerType
                 )
 
                 val shouldCache = atomData.authFlag != true && checkSha(
@@ -1113,7 +1116,8 @@ open class MarketAtomTask : ITask() {
         atomFilePath: String,
         atomExecuteFile: File,
         authFlag: Boolean,
-        queryCacheFlag: Boolean
+        queryCacheFlag: Boolean,
+        containerType: String? = null
     ): File {
         try {
             atomApi.downloadAtom(
@@ -1121,7 +1125,8 @@ open class MarketAtomTask : ITask() {
                 atomFilePath = atomFilePath,
                 file = atomExecuteFile,
                 authFlag = authFlag,
-                queryCacheFlag = queryCacheFlag
+                queryCacheFlag = queryCacheFlag,
+                containerType = containerType
             )
             return atomExecuteFile
         } catch (t: Throwable) {
