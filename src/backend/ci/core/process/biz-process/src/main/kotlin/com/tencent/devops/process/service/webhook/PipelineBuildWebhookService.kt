@@ -177,9 +177,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                     }
                     pipelineTriggerMeasureService.recordTaskExecutionTime(
                         name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
-                        tags = Tags.of(MeasureConstant.TAG_STATUS, status.name)
-                            .and(MeasureConstant.TAG_YAML, "false")
-                            .and("old", "true")
+                        tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, "false")
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "true")
                             .toList(),
                         timeConsumingMills = timeConsumingMills
                     )

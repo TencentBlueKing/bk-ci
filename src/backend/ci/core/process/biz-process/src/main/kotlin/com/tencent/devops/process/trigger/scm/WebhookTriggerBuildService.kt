@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -68,6 +69,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class WebhookTriggerBuildService @Autowired constructor(
@@ -119,7 +121,7 @@ class WebhookTriggerBuildService @Autowired constructor(
                     eventId = eventId,
                     repository = repository,
                     webhook = webhook,
-                    requestTime = requestTime
+                    eventTime = eventTime
                 )
             }
         } finally {
@@ -143,7 +145,7 @@ class WebhookTriggerBuildService @Autowired constructor(
         eventId: Long,
         repository: Repository,
         webhook: Webhook,
-        requestTime: Long? = null,
+        eventTime: LocalDateTime? = null,
         isYaml: Boolean = false
     ) {
         val context = WebhookTriggerContext(projectId = projectId, pipelineId = pipelineId, eventId = eventId)
@@ -178,7 +180,7 @@ class WebhookTriggerBuildService @Autowired constructor(
                 variables[PIPELINE_PAC_REPO_HASH_ID] = repository.repoHashId!!
             }
             val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
-            watcher.start("match element ")
+            watcher.start("match element")
             container.elements.filterIsInstance<WebHookTriggerElement>().forEach elements@{ element ->
                 if (!element.elementEnabled()) {
                     return@elements
@@ -236,13 +238,13 @@ class WebhookTriggerBuildService @Autowired constructor(
             webhookTriggerManager.fireError(context, ignored)
         } finally {
             LogUtils.printCostTimeWE(watcher)
-            requestTime?.let {
-                val timeConsumingMills = System.currentTimeMillis() - it
+            eventTime?.let {
+                val timeConsumingMills = System.currentTimeMillis() - it.timestampmilli()
                 pipelineTriggerMeasureService.recordTaskExecutionTime(
                     name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
-                    tags = Tags.of(MeasureConstant.TAG_STATUS, status.name)
-                        .and(MeasureConstant.TAG_YAML, isYaml.toString())
-                        .and("old", "false")
+                    tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
+                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
+                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
                         .toList(),
                     timeConsumingMills = timeConsumingMills
                 )
@@ -292,6 +294,7 @@ class WebhookTriggerBuildService @Autowired constructor(
                 eventId = eventId,
                 repository = repository,
                 webhook = (eventBody as ScmWebhookEventBody).webhook,
+                eventTime = eventTime,
                 isYaml = true
             )
         }
@@ -342,7 +345,6 @@ class WebhookTriggerBuildService @Autowired constructor(
         context.buildId = buildId
         context.startParams = startParams
         webhookTriggerManager.fireBuildSuccess(context = context)
-        logger.info("$pipelineId|WEBHOOK_TRIGGER|time=${System.currentTimeMillis() - startEpoch}")
     }
 
     private fun convertBuildParameters(
