@@ -31,9 +31,13 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -41,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NO_CHANGE
@@ -59,6 +64,9 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.store.pojo.common.KEY_CREATIVE_TASK_LIST
+import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_START_TASK_TYPE
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -77,7 +85,8 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
+    private val client: Client
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
@@ -122,13 +131,79 @@ class PipelineTimerBuildListener @Autowired constructor(
     ): String? {
         with(event) {
             try {
-                val buildResult = serviceTimerBuildResource.timerTrigger(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    params = params,
-                    channelCode = channelCode
-                )
+                val buildResult = when (channelCode) {
+                    // 此处需要修改成CREATIVE_STREAM
+                    ChannelCode.BS -> {
+                        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
+                            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                                logger.warn("[$projectId|$pipelineId]|pipeline is null, try clean timer record[$it]")
+                            }
+                            return null
+                        }
+                        // 查找触发器
+                        val triggerElement = model.getTriggerContainer().elements
+                                .find { it.id == taskId && it is MarketEventAtomElement } ?: run {
+                            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                                logger.warn(
+                                    "[$projectId|$pipelineId|$taskId]|timer task not found, " +
+                                            "try clean timer record[$it]"
+                                )
+                            }
+                        }
+                        triggerElement as MarketEventAtomElement
+                        val input = triggerElement.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
+                        val startType = input[KEY_START_TASK_TYPE]
+                        if (startType == "CREATIVE_TASK") {
+                            val creativeTaskList = input[KEY_CREATIVE_TASK_LIST] as List<String>? ?: listOf()
+                            if (creativeTaskList.isEmpty()) {
+                                saveTriggerEvent(
+                                    projectId = projectId,
+                                    userId = event.userId,
+                                    pipelineId = pipelineId,
+                                    reasonDetail = PipelineTriggerFailedMsg(
+                                        JsonUtil.toJson(
+                                            I18nUtil.getCodeLanMessage(BK_CREATIVE_STREAM_START_TASK_IS_EMPTY)
+                                        )
+                                    )
+                                )
+                            } else {
+                                // 对创作环境下选中的创作节点，逐一启动
+                                creativeTaskList.forEach {
+                                    serviceTimerBuildResource.timerTrigger(
+                                        userId = userId,
+                                        projectId = projectId,
+                                        pipelineId = pipelineId,
+                                        params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
+                                        channelCode = channelCode
+                                    )
+                                }
+                            }
+                        } else {
+                            // 对创作环境下所有的创作节点，逐一启动
+                            val workspaceName = ""
+                            getEnvNodeList(projectId, workspaceName).forEach {
+                                serviceTimerBuildResource.timerTrigger(
+                                    userId = userId,
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
+                                    channelCode = channelCode
+                                )
+                            }
+                        }
+                        Result(null)
+                    }
+
+                    else -> {
+                        serviceTimerBuildResource.timerTrigger(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            params = params,
+                            channelCode = channelCode
+                        )
+                    }
+                }
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
                 if (buildResult.data.isNullOrBlank()) {
@@ -338,5 +413,16 @@ class PipelineTimerBuildListener @Autowired constructor(
             triggerEvent = triggerEventBuilder.build(),
             triggerDetail = triggerDetailBuilder.build()
         )
+    }
+
+    fun getEnvNodeList(
+        projectId: String,
+        workspaceName:String
+    ) : List<String> {
+//        client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
+//            projectId = projectId,
+//            workspaceName = workspaceName
+//        )
+        return listOf()
     }
 }

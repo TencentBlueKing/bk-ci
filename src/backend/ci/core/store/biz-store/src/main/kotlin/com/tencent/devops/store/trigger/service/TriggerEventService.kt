@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
@@ -14,6 +15,7 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
+import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
@@ -63,7 +65,9 @@ class TriggerEventService @Autowired constructor(
         val finalComponentGroup = componentGroupCount.map {
             TriggerGroupInfo(
                 ownerStoreCode = it.first,
-                name = ownerAppInfos[it.first] ?: it.first,
+                name = ownerAppInfos[it.first] ?: I18nUtil.getCodeLanMessage(
+                    messageCode = it.first
+                ).ifBlank { it.first },
                 count = it.second
             )
         }

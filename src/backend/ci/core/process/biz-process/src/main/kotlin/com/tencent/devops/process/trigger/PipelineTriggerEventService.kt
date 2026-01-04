@@ -416,6 +416,7 @@ class PipelineTriggerEventService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
             params = arrayOf(eventId.toString())
         )
+        // :TODO 回放操作需支持创作流触发事件
         val scmType = PipelineTriggerType.toScmType(triggerEvent.triggerType) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)

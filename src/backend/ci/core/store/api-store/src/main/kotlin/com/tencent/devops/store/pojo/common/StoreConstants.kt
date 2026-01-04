@@ -158,6 +158,10 @@ const val KEY_TRIGGER_EVENT_CONFIG = "triggerEventConfig"
 const val KEY_TRIGGER_TARGET = "triggerTarget"
 const val KEY_TRIGGER_EVENT_TYPE = "ci.event_type"
 const val KEY_TRIGGER_EVENT_SOURCE = "ci.event_source"
+const val KEY_ADVANCE_EXPRESSION = "advanceExpression" // 定时触发规则字段
+const val KEY_START_PARAMS = "startParams" // 启动参数
+const val KEY_CREATIVE_TASK_LIST = "creativeTaskList" // 启动节点列表
+const val KEY_START_TASK_TYPE = "startTaskType" // 启动节点类型
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
@@ -201,3 +205,4 @@ const val USE_REPO_COMMITS_FOR_RELEASE_NOTES = "useRepoCommitsForReleaseNotes"
 const val BK_STORE_CLOUD_DESKTOP_TRIGGER = "storeCloudDesktopTrigger" // 云桌面应用触发器
 const val BK_STORE_COMMON_TRIGGER = "storeCommonTrigger" // 通用触发器
 const val BK_STORE_ALL_TRIGGER = "storeAllTrigger" // 全部触发器
+const val BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER = "CREATIVE_STREAM_TIMER_TRIGGER" // 创作流定时触发器

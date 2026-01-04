@@ -727,4 +727,7 @@ object ProcessMessageCode {
 
     // [条件字段名][条件实际值]和预期[配置值]不匹配
     const val BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
+
+    // 创作流启动节点为空
+    const val BK_CREATIVE_STREAM_START_TASK_IS_EMPTY = "bkCreativeStreamStartTaskIsEmpty"
 }

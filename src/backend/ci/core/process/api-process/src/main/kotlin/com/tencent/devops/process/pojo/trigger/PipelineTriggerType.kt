@@ -71,7 +71,11 @@ enum class PipelineTriggerType {
 
     // 远程触发
     @Schema(title = "远程触发")
-    REMOTE;
+    REMOTE,
+
+    // 远程触发
+    @Schema(title = "远程触发")
+    TRIGGER_EVENT;
 
     companion object {
         // 通用触发类型
