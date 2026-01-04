@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -75,7 +76,22 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     companion object {
         private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
         private const val AUTH_HEADER_BKREPO_MODE = "X-DEVOPS-BKREPO-MODE"
+        private const val BKREPO_MODE_DOWNLOAD = "dl"
+        private const val DOWNLOAD_READ_TIMEOUT_SEC = 180L
     }
+
+    /**
+     * 下载请求参数
+     */
+    private data class DownloadRequest(
+        val host: String,
+        val bkrepoProjectName: String,
+        val atomFilePath: String,
+        val authFlag: Boolean,
+        val cacheFlag: Boolean,
+        val headers: MutableMap<String, String>,
+        val file: File
+    )
 
     /**
      * 获取原子信息
@@ -104,7 +120,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_PLUG,
                 language = AgentEnv.getLocaleLanguage()
-            ))
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -144,7 +161,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_SENSITIVE_INFORMATION,
                 language = AgentEnv.getLocaleLanguage()
-            ))
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -156,14 +174,16 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         buildHostType: String,
         buildHostOs: String
     ): Result<List<AtomDevLanguageEnvVar>?> {
-        val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
+        val path =
+            "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
         val responseContent = request(
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION,
                 language = AgentEnv.getLocaleLanguage()
-            ))
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -182,7 +202,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ADD_INFORMATION,
                 language = AgentEnv.getLocaleLanguage()
-            ))
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -214,7 +235,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ARCHIVE_PLUG_FILES,
                 language = AgentEnv.getLocaleLanguage()
-            ) + " >>> ${file.name}")
+            ) + " >>> ${file.name}"
+        )
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
             repoName = BkRepoEnum.PLUGIN.repoName,
@@ -279,36 +301,103 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         }
     }
 
+    /**
+     * 下载插件文件
+     * 实现域名降级机制：优先使用优选域名下载，失败后自动降级到默认域名
+     * @param projectId 项目ID，用于权限验证和请求头设置
+     * @param atomFilePath 插件文件在BKRepo中的存储路径
+     * @param file 目标文件对象，下载内容将写入此文件
+     * @param authFlag 是否启用认证标志，控制下载时的认证行为
+     * @param queryCacheFlag 是否查询缓存标志，优化下载性能
+     * @param containerType 容器类型，用于确定优选下载域名（IDC或DevNet环境）
+     */
     override fun downloadAtom(
         projectId: String,
         atomFilePath: String,
         file: File,
         authFlag: Boolean,
-        queryCacheFlag: Boolean
+        queryCacheFlag: Boolean,
+        containerType: String?
     ) {
+        // 获取当前环境类型
         val envType = AgentEnv.getEnv().name.lowercase()
-        val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
-        val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
-        val bkrepoUrl = "${HomeHostUtil.getHost(AgentEnv.getGateway())}/repo/storge/build/atom/$bkrepoProjectName/" +
-            "bk-plugin/$atomFilePath?authFlag=$authFlag&queryCacheFlag=$queryCacheFlag"
-        val headers = mutableMapOf(
-            AUTH_HEADER_PROJECT_ID to projectId,
-            AUTH_HEADER_BKREPO_MODE to "dl"
+        // 根据环境类型获取BKRepo项目名称配置
+        val bkrepoProjectName = PropertyUtil.getPropertyValue(
+            "bkrepo.store.project.name.$envType", AGENT_PROPERTIES_FILE_NAME
         )
-        var request = buildGet(bkrepoUrl, headers)
+        // 构建请求头，包含项目ID和BKRepo下载模式
+        val headers = mutableMapOf(
+            AUTH_HEADER_PROJECT_ID to projectId, AUTH_HEADER_BKREPO_MODE to BKREPO_MODE_DOWNLOAD
+        )
+        // 获取默认回退域名（当前网关域名），作为降级目标
+        val fallbackHost = HomeHostUtil.getHost(AgentEnv.getGateway())
+        // 根据容器类型获取优选下载域名并解析为主机地址
+        val preferredHost = getPreferredDownloadHost(envType, containerType).let {
+            HomeHostUtil.getHost(it)
+        }
+        // 构建下载请求参数对象
+        val downloadRequest = DownloadRequest(
+            host = preferredHost,
+            bkrepoProjectName = bkrepoProjectName,
+            atomFilePath = atomFilePath,
+            authFlag = authFlag,
+            cacheFlag = queryCacheFlag,
+            headers = headers,
+            file = file
+        )
+        // 优先使用新域名下载，失败后降级到旧域名
         try {
-            download(request = request, destPath = file, readTimeoutInSec = 180)
-        } catch (ignored: RemoteServiceException) {
-            val httpStatus = ignored.httpStatus
-            if (httpStatus == HTTP_401 || httpStatus == HTTP_403) {
-                // 访问新域名请求的http状态码为401或403时，则降级访问原域名请求
-                headers.remove(AUTH_HEADER_BKREPO_MODE)
-                request = buildGet(bkrepoUrl, headers)
-                download(request = request, destPath = file, readTimeoutInSec = 180)
+            // 尝试使用优选域名进行下载，优先保证性能
+            doDownload(downloadRequest.copy(host = preferredHost))
+            return
+        } catch (ignored: Throwable) {
+            // 优选域名下载失败，记录警告日志并继续执行降级逻辑
+            logger.warn("Download from preferred host[$preferredHost] failed, fallback to default host: ${ignored.message}")
+        }
+        // 使用默认域名下载（降级机制），确保下载可靠性
+        doDownload(downloadRequest.copy(host = fallbackHost))
+    }
+
+    /**
+     * 获取优先使用的下载域名
+     */
+    private fun getPreferredDownloadHost(envType: String, containerType: String?): String {
+        val propertyKey = if (containerType == NormalContainer.classType) {
+            "bkrepo.file.idc.download.host.$envType"
+        } else {
+            "bkrepo.file.devnet.download.host.$envType"
+        }
+        return PropertyUtil.getPropertyValue(propertyKey, AGENT_PROPERTIES_FILE_NAME)
+    }
+
+    /**
+     * 执行下载
+     */
+    private fun doDownload(request: DownloadRequest) {
+        val bkrepoUrl = "${request.host}/repo/storge/build/atom/${request.bkrepoProjectName}/" +
+                "bk-plugin/${request.atomFilePath}?authFlag=${request.authFlag}&queryCacheFlag=${request.cacheFlag}"
+        try {
+            downloadWithHeaders(bkrepoUrl, request.headers, request.file)
+        } catch (e: RemoteServiceException) {
+            // 当状态码为401或403时，移除BKREPO_MODE头后重试
+            if (e.httpStatus == HTTP_401 || e.httpStatus == HTTP_403) {
+                logger.warn("Download failed with ${e.httpStatus}, retry without BKREPO_MODE header")
+                val retryHeaders = request.headers.toMutableMap().apply {
+                    remove(AUTH_HEADER_BKREPO_MODE)
+                }
+                downloadWithHeaders(bkrepoUrl, retryHeaders, request.file)
             } else {
-                throw ignored
+                throw e
             }
         }
+    }
+
+    /**
+     * 使用指定headers执行下载
+     */
+    private fun downloadWithHeaders(url: String, headers: Map<String, String>, file: File) {
+        val request = buildGet(url, headers)
+        download(request = request, destPath = file, readTimeoutInSec = DOWNLOAD_READ_TIMEOUT_SEC)
     }
 
     override fun getStorePkgRunEnvInfo(
@@ -318,9 +407,10 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         runtimeVersion: String
     ): Result<StorePkgRunEnvInfo?> {
         val path = "/store/api/build/store/pkg/envs/types/ATOM/languages/$language/versions/$runtimeVersion/get?" +
-            "osName=$osName&osArch=$osArch"
+                "osName=$osName&osArch=$osArch"
         val request = buildGet(path)
         val responseContent = request(request, "get pkgRunEnvInfo fail")
         return objectMapper.readValue(responseContent)
     }
 }
+
