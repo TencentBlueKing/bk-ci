@@ -8,7 +8,7 @@
 |-----|------|----------|
 | CodeBuddy | https://copilot.tencent.com/ide/ | `.codebuddy/` |
 | Cursor | https://cursor.sh/ | `.cursor/` |
-| Claude Code | https://docs.anthropic.com/en/docs/claude-code | `.claude/` |
+| Claude Code | https://claude.com/download | `.claude/` |
 
 ## 配置方法
 
