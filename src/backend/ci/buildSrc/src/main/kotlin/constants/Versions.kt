@@ -53,6 +53,6 @@ object Versions {
     const val Winp = "1.28"
     const val Jna = "5.14.0"
     const val JenkinsVersionNumber = "1.1"
-    const val devopsScm = "1.1.7"
+    const val devopsScm = "1.1.8-SNAPSHOT"
     const val lettuce = "6.4.2.RELEASE"
 }
