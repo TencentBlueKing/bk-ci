@@ -2,7 +2,7 @@
 
 ## 结论
 
-在已有项目中，通过 **CodeBuddy + Claude 4.5 + OpenSpec**，可以在显著降低成本的前提下，获得高质量的 AI SDD（规范驱动开发）体验。
+在已有项目中，通过 **OpenSpec**，可以在显著降低成本的前提下，获得高质量的 AI SDD（规范驱动开发）体验。
 
 ## 路线
 
@@ -19,6 +19,7 @@ OpenSpec 需要 Node 20+，若已经安装可直接跳过此步：
 nvm install 20
 nvm use 20
 ```
+### * 以CodeBuddy为例 *
 
 ### 2. 安装 CodeBuddy-Code 和 OpenSpec
 
@@ -49,7 +50,9 @@ openspec/
 ```bash
 codebuddy                # 进入命令行界面，首次需登录
 /model                   # 切换模型（推荐 Claude-4.5-Opus）
+# 接下来初始化项目
 > Please read openspec/project.md and help me fill it out with details about my project, tech stack, and conventions，后续工作请用中文
+
 ```
 
 AI 会扫描项目结构、识别代码模式，将分析结果写入 `openspec/project.md`。
