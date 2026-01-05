@@ -3014,11 +3014,11 @@ class PipelineBuildFacadeService(
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue.toString()
-                for (option in item.options!!) {
+                item.options?.forEach { option ->
                     valueList.add(
                         StartUpInfo(
-                            option.key,
-                            option.value
+                            id = option.key,
+                            name = option.value
                         )
                     )
                 }
