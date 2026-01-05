@@ -352,7 +352,9 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             return
         } catch (ignored: Throwable) {
             // 优选域名下载失败，记录警告日志并继续执行降级逻辑
-            logger.warn("Download from preferred host[$preferredHost] failed, fallback to default host: ${ignored.message}")
+            logger.warn(
+                "Download from preferred host[$preferredHost] failed, fallback to " + "default host: ${ignored.message}"
+            )
         }
         // 使用默认域名下载（降级机制），确保下载可靠性
         doDownload(downloadRequest.copy(host = fallbackHost))
