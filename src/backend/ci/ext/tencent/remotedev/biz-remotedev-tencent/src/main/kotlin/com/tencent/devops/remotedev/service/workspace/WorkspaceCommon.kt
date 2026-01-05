@@ -650,6 +650,19 @@ class WorkspaceCommon @Autowired constructor(
             sharedUsers = sharedUsers,
             assignType = assignType
         )
+        // 记录取消共享操作
+        sharedUsers.forEach { sharedUser ->
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.SHARE,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.UNSHARE),
+                    sharedUser
+                )
+            )
+        }
         // 解绑后对原先的共享人推送websocket刷新客户端列表
         sharedUsers.forEach {
             notifyControl.dispatchWebsocketPushEvent(

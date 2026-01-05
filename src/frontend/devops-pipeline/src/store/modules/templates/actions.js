@@ -185,7 +185,7 @@ const actions = {
     getTagsListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
         return ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listTags?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
     },
-    updateInstancePageLoading ({ commit} , value) {
+    updateInstancePageLoading ({ commit }, value) {
         commit(UPDATE_INSTANCE_PAGE_LOADING, value)
     },
     requestTemplatePreviewByVersion (_, { projectId, templateId, ...params }) {

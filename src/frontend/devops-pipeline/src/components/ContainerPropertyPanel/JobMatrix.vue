@@ -13,7 +13,7 @@
                 class="title-link"
                 target="blink"
                 :href="matrixDocsLink"
-            >{{ $t('editPage.linkDesc') }}</a>
+            >{{ $t('editPage.customTriggerLinkDesc') }}</a>
             <input
                 class="accordion-checkbox"
                 :disabled="disabled"

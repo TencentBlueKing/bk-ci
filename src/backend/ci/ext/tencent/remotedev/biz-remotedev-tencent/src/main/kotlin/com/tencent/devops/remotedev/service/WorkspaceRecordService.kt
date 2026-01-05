@@ -92,8 +92,8 @@ class WorkspaceRecordService @Autowired constructor(
         val region = genRegion(record.hostIp)
 
         // 区域可能没有，需要判断创建bkrepo项目
-        if (remotedevBkRepoClient.existProject(region, record.projectId) != true) {
-            remotedevBkRepoClient.createProject(region, enableUser, record.projectId)
+        if (remotedevBkRepoClient.existProject(region, record.projectId, true) != true) {
+            remotedevBkRepoClient.createProject(region, enableUser, record.projectId, true)
         }
 
         // 创建工作空间编码密钥
@@ -154,7 +154,8 @@ class WorkspaceRecordService @Autowired constructor(
                 region = region,
                 projectId = projectId,
                 repoName = genRepoName(workspaceName),
-                userId = enableUser
+                userId = enableUser,
+                media = true
             ) + "&skToken=$token&recordUser=$userId"
         )
     }
@@ -281,7 +282,8 @@ class WorkspaceRecordService @Autowired constructor(
         val resp = remotedevBkRepoClient.nodeSearch(
             region = region,
             userId = userId,
-            body = searchBody
+            body = searchBody,
+            media = true
         ) ?: return Page(0, 0, 0, emptyList())
 
         // 生成访问token

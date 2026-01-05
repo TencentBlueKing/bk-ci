@@ -501,7 +501,7 @@ class PipelineVersionGenerator constructor(
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
             val checkoutBranch = "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$templateId-$templateVersion"
-            return getStatusAndBranchNameWithPac(
+            getStatusAndBranchNameWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 repoHashId = repoHashId,
@@ -529,7 +529,7 @@ class PipelineVersionGenerator constructor(
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
             val checkoutBranch = "$PAC_BRANCH_PREFIX$pipelineId-$version"
-            return getStatusAndBranchNameWithPac(
+            getStatusAndBranchNameWithPac(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 repoHashId = repoHashId,

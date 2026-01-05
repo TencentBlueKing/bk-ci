@@ -484,14 +484,10 @@ class PipelineRepositoryService constructor(
         // 清理无用的options
         c.params = PipelineUtils.cleanOptions(c.params)
 
-        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                 e.id = modelTaskIdGenerator.getNextId()
-            }
-            if (!e.stepId.isNullOrBlank()) {
-                stepIdDuplicateChecker.addId(e.stepId!!)
             }
             distIds.add(e.id!!)
             if (versionStatus?.isReleasing() == true) {
@@ -524,12 +520,6 @@ class PipelineRepositoryService constructor(
                     taskParams = e.genTaskParams(),
                     additionalOptions = e.additionalOptions
                 )
-            )
-        }
-        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
             )
         }
     }
@@ -616,16 +606,12 @@ class PipelineRepositoryService constructor(
             if (!c.jobId.isNullOrBlank()) {
                 jobIdDuplicateChecker.addId(c.jobId!!)
             }
-            val stepIdDuplicateChecker = ModelIdDuplicateChecker()
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
-                if (!e.stepId.isNullOrBlank()) {
-                    stepIdDuplicateChecker.addId(e.stepId!!)
-                }
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -660,12 +646,6 @@ class PipelineRepositoryService constructor(
                         containerEnable = c.containerEnabled(),
                         stageEnable = stage.stageEnabled()
                     )
-                )
-            }
-            if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                    params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
                 )
             }
         }
