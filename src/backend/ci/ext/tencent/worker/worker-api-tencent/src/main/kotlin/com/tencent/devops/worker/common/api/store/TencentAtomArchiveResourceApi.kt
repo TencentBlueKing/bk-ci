@@ -378,16 +378,17 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
                 "bk-plugin/${request.atomFilePath}?authFlag=${request.authFlag}&queryCacheFlag=${request.cacheFlag}"
         try {
             downloadWithHeaders(bkrepoUrl, request.headers, request.file)
-        } catch (e: RemoteServiceException) {
+        } catch (ignored: RemoteServiceException) {
             // 当状态码为401或403时，移除BKREPO_MODE头后重试
-            if (e.httpStatus == HTTP_401 || e.httpStatus == HTTP_403) {
-                logger.warn("Download failed with ${e.httpStatus}, retry without BKREPO_MODE header")
+            val httpStatus = ignored.httpStatus
+            if (httpStatus == HTTP_401 || httpStatus == HTTP_403) {
+                logger.warn("Download failed with $httpStatus, retry without BKREPO_MODE header")
                 val retryHeaders = request.headers.toMutableMap().apply {
                     remove(AUTH_HEADER_BKREPO_MODE)
                 }
                 downloadWithHeaders(bkrepoUrl, retryHeaders, request.file)
             } else {
-                throw e
+                throw ignored
             }
         }
     }
