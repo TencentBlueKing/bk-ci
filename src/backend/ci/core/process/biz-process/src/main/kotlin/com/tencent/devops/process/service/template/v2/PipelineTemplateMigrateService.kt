@@ -325,7 +325,6 @@ class PipelineTemplateMigrateService(
         return CleanupStats(v2AllTemplateIds.size, v2AllTemplateIds.size - deleteRecords.size)
     }
 
-
     /**
      * 主协调函数，负责迁移单个模板的所有版本。
      * 原始的 migrateTemplate 函数被重构为这个更高阶的协调者。
