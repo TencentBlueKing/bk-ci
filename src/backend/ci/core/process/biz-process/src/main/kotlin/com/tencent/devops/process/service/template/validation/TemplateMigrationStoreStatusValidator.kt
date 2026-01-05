@@ -131,8 +131,8 @@ class TemplateMigrationStoreStatusValidator(
                     v2Value = v2StoreStatus.name,
                     templateId = templateId,
                     version = null,
-                    suggestion = "V2 表中的商店状态(${v2StoreStatus.name})与研发商店实际状态" +
-                        "(${actualStoreStatus?.name})不一致"
+                    suggestion = "V2表中的商店状态(${v2StoreStatus.name})" +
+                        "与研发商店实际状态(${actualStoreStatus?.name})不一致"
                 )
             )
         }

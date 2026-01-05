@@ -134,16 +134,16 @@ class TemplateMigrationIntegrityValidator(
             // 约束模式模板：V2 版本数应该等于父模板的 V1 版本数
             if (templateInfo?.mode == TemplateType.CONSTRAINT) {
                 val srcTemplateId = templateInfo.srcTemplateId
-                if (srcTemplateId.isNullOrBlank()) {
+                val srcTemplateProjectId = templateInfo.srcTemplateProjectId
+                if (srcTemplateId.isNullOrBlank() || srcTemplateProjectId.isNullOrBlank()) {
                     logger.warn(
-                        "CONSTRAINT template missing srcTemplateId: " +
+                        "CONSTRAINT template missing srcTemplateId or srcTemplateProjectId: " +
                             "projectId=$projectId, templateId=$templateId"
                     )
                     continue
                 }
 
                 // 获取父模板的 V1 版本数
-                val srcTemplateProjectId = templateInfo.srcTemplateProjectId!!
                 val srcV1VersionCount = templateDao.countTemplateVersions(
                     dslContext, srcTemplateProjectId, srcTemplateId
                 )
