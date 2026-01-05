@@ -10,6 +10,7 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
 /**
@@ -25,12 +26,15 @@ class ThirdCondition(
             return true
         }
         val requestId = MDC.get(TraceTag.BIZID)
-        // 原始的请求body
+        // 原始的请求body,如果请求体不存在,则应该直接失败
         val requestBody = requestId?.let {
             client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
                 requestId = it
             ).data?.requestBody
-        } ?: return true
+        } ?: run {
+            logger.info("request body not found|${context.projectId}|${context.pipelineId}|$requestId")
+            return false
+        }
         with(context.webhookParams) {
             return ThirdFilter(
                 projectId = context.projectId,
@@ -45,5 +49,9 @@ class ThirdCondition(
                 eventType = context.factParam.eventType
             ).doFilter(context.response)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ThirdCondition::class.java)
     }
 }
