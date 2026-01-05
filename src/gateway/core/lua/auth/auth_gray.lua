@@ -37,7 +37,7 @@ else
 end
 
 local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
-if tag == 'rbac-red' or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-red到容器环境
+if tag == 'rbac-gray' or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-gray到容器环境
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
 else
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
