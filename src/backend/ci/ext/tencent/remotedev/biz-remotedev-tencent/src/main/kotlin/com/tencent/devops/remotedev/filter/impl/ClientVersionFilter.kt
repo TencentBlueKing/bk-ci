@@ -44,7 +44,7 @@ class ClientVersionFilter constructor(
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private const val HEADER_IP = "x-client-ip"
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
-        private const val HEADER_MAC_OS = "BK-CI-CLIENT-OS"
+        private const val HEADER_CLIENT_OS = "BK-CI-CLIENT-OS"
         private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
 
         private fun String.format(): String {
@@ -107,7 +107,7 @@ class ClientVersionFilter constructor(
             return false
         }
         val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
-        val os = requestContext.headers[HEADER_MAC_OS]?.get(0) ?: ""
+        val os = requestContext.headers[HEADER_CLIENT_OS]?.get(0) ?: ""
         kotlin.runCatching {
             recordClientVersion(
                 ip = requestContext.headers[HEADER_IP]?.get(0).toString(),
