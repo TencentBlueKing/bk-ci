@@ -166,8 +166,8 @@ class WebhookRequestService(
                 logger.info("replay trigger event not found|$eventId")
                 return
             }
-            val repoWebhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-                requestId = replayRequestId
+            val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = triggerEvent.requestId
             ).data ?: run {
                 logger.info("replay webhook request not found|$replayRequestId")
                 return
@@ -187,17 +187,17 @@ class WebhookRequestService(
                     repoHashId = repository.repoHashId!!,
                     request = WebhookParseRequest(
                         requestId = triggerEvent.requestId,
-                        headers = repoWebhookRequest.requestHeader,
-                        queryParams = repoWebhookRequest.requestParam,
-                        body = repoWebhookRequest.requestBody
+                        headers = webhookRequest.requestHeader,
+                        queryParams = webhookRequest.requestParam,
+                        body = webhookRequest.requestBody
                     )
                 ).data ?: run {
                     logger.info("replay webhook request body is null|$replayRequestId")
                     return
                 }
                 val eventBody = ScmWebhookEventBody(
-                    headers = repoWebhookRequest.requestHeader,
-                    queryParams = repoWebhookRequest.requestParam,
+                    headers = webhookRequest.requestHeader,
+                    queryParams = webhookRequest.requestParam,
                     webhook = webhook
                 )
                 pipelineTriggerEventDao.updateEventBody(
@@ -215,8 +215,8 @@ class WebhookRequestService(
                 )
             } else {
                 val webhookRequest = WebhookRequest(
-                    headers = repoWebhookRequest.requestHeader,
-                    body = repoWebhookRequest.requestBody
+                    headers = webhookRequest.requestHeader,
+                    body = webhookRequest.requestBody
                 )
                 val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
                     logger.warn("Failed to parse webhook event")
