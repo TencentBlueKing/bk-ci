@@ -565,6 +565,15 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            // 如果是渠道是创作流，环境名称不能为空
+            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envName.isNullOrBlank()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                    params = arrayOf(PipelineSetting::envName.name)
+                )
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")

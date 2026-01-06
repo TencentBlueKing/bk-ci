@@ -3007,7 +3007,7 @@ class PipelineBuildFacadeService(
             } else {
                 true
             }
-            const && required
+            const && required && it.id != CREATIVE_STREAM_NODE_AGENT_ID
         }
         for (item in prop) {
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
