@@ -367,13 +367,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         // 转换为服务范围配置列表
         val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
-        // 构建服务范围列表
-        val serviceScopes = serviceScopeConfigs.map { it.serviceScope.name }
-
-        // 为每个服务范围创建/更新分类和标签关联
         serviceScopeConfigs.forEach { config ->
             // 1. 验证分类是否存在且匹配服务范围
-            val classify = classifyDao.getClassifyByCode(
+            classifyDao.getClassifyByCode(
                 dslContext = dslContext,
                 classifyCode = config.classifyCode,
                 type = StoreTypeEnum.ATOM,
@@ -382,7 +378,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
             // 2. 验证标签是否存在且匹配服务范围
             config.labelIdList?.forEach { labelId ->
-                val label = labelDao.getLabel(
+                labelDao.getLabel(
                     dslContext = dslContext,
                     id = labelId
                 ) ?: throw IllegalArgumentException("Label not found: $labelId for scope: ${config.serviceScope}")

@@ -3011,18 +3011,18 @@ class PipelineBuildFacadeService(
             } else {
                 true
             }
-            const && required
+            const && required && it.id != CREATIVE_STREAM_NODE_AGENT_ID
         }
         for (item in prop) {
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue.toString()
-                for (option in item.options!!) {
+                item.options?.forEach { option ->
                     valueList.add(
                         StartUpInfo(
-                            option.key,
-                            option.value
+                            id = option.key,
+                            name = option.value
                         )
                     )
                 }

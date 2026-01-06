@@ -436,7 +436,7 @@ class MarketAtomDao : AtomBaseDao() {
                     marketAtomCreateRequest.name,
                     marketAtomCreateRequest.atomCode,
                     "",
-                    "",
+                    "[]",
                     "",
                     "",
                     "",
