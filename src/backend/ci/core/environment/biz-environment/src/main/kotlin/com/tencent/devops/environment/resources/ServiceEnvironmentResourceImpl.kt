@@ -264,4 +264,30 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     override fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): Result<List<EnvData>> {
         return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName))
     }
+
+    override fun listNodesNewByName(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envName: String
+    ): Result<Page<NodeBaseInfo>> {
+        if (envName.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        return Result(
+            envService.listAllEnvNodesNew(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                envHashIds = null,
+                envName = envName,
+                nodeIp = null,
+                displayName = null,
+                createdUser = null,
+                nodeStatus = null
+            )
+        )
+    }
 }

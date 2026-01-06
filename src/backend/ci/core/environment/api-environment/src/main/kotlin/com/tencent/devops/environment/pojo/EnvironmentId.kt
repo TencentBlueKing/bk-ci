@@ -38,4 +38,5 @@ data class EnvironmentId(
 data class EnvData(
     val id: Long,
     val name: String,
+    val agentHashId: String
 )
