@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.trigger.enums.TriggerTargetEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 
 @Service
@@ -42,6 +43,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
     private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
     private val client: Client,
     private val pipelineTimerService: PipelineTimerService,
+    @Lazy
     private val pipelineTimerTriggerTaskService: PipelineTimerTriggerTaskService
 ) : PipelineTaskVersionProcessor {
 
