@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.1](#v311)
+  - [Changelog since v3.1.0](#changelog-since-v310)
+
 - [v3.1.0](#v310)
   - [Changelog since v3.0.0](#changelog-since-v300)
 
@@ -16,6 +19,29 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.1
+## 2026-01-06
+### Changelog since v3.1.0
+#### New
+- [New] feat: Maven repository release migrated from oss to central [link](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [New] feat: Support inter-service jwt verification [link](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [New] feat: Remove proxy cross-network region code [link](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [New] feat: Upgrade turbo version [link](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+- [New] feat: Fix chart package issues that need to be resolved [link](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
+#### Optimization
+- [Optimization] chore: Upgrade api-turbo to 0.0.7-RELEASE [link](http://github.com/TencentBlueKing/bk-ci/issues/12382)
+
+#### Fixes
+
+##### Pipeline
+- [Fix] bug: Fix tgit trigger 2.0 version content is empty [link](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### Uncategorized
+- [Fix] bugfix: Default image initialization script error [link](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+- [Fix] bug: User interface adds project access permission verification [link](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+- [Fix] bug: Fix v3.0 version helm chart package build error [link](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 # v3.1.0
 ## 2025-01-08
 ### Changelog since v3.0.0
