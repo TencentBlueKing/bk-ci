@@ -2198,7 +2198,9 @@ class PipelineBuildFacadeService(
             if (pageSize != -1) PageUtil.convertPageSizeToSQLLimit(page, pageSize) else null
         val offset = sqlLimit?.offset ?: 0
         val limit = sqlLimit?.limit ?: 1000
-        UserPipelinePermissionCheckContext(SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)).checkUserPipelinePermission(
+        UserPipelinePermissionCheckContext(
+            SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)
+        ).checkUserPipelinePermission(
             userId = userId!!,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -2214,7 +2216,7 @@ class PipelineBuildFacadeService(
             endTimeStartTime = endTimeStartTime,
             endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
+            buildNoEnd = buildNoEnd
         )
 
         // 查询构建历史记录
@@ -2230,13 +2232,13 @@ class PipelineBuildFacadeService(
             endTimeStartTime = endTimeStartTime,
             endTimeEndTime = endTimeEndTime,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd,
+            buildNoEnd = buildNoEnd
         )
         return Page(
             page = page,
             pageSize = limit,
             count = newTotalCount + 0L,
-            records = newHistoryBuilds,
+            records = newHistoryBuilds
         )
     }
 
