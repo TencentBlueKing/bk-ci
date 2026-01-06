@@ -43,6 +43,8 @@
     "successfullyImported": "Successfully imported",
     "successfullySubmited": "Successfully submited",
     "successfullyCopyed": "Successfully copyed",
+    "reinstallAgent": "Reinstall Agent",
+    "reinstallAgentTips": "Copy the installation command to the target node and execute it to reinstall the Agent",
     "loading": "Loading",
     "loadingTitle": "Loading data, please wait",
     "pleaseEnter": "Please enter",
@@ -517,7 +519,7 @@
     "labelInUseRemoveNodesBeforeEditOrDelete": "Tags used by environments cannot be modified/deleted. If you need to operate, please remove all nodes under the tag first",
     "tagLabel": "Tag Label",
     "tagValue": "Tag Value",
-    "pleaseEnterTag": "Search node tags",
+    "pleaseEnterTag": "Filter by tag",
     "builtInLabelCannotBeDeleted": "Built-in labels cannot be deleted",
     "builtInLabelCannotBeModified": "Built-in labels cannot be modified",
     "tagValueDuplicate": "Tag values cannot be duplicated",
@@ -570,7 +572,7 @@
     "allEnv": "All Environments",
     "thirdPartyEnv": "Build Environment",
     "cmdbEnv": "Deployment - Development/Testing Environment",
-    "typeFilter": "Type Filter",
+    "typeFilter": "By Environment Type",
     "chargePerson": "Responsible Person",
     "fieldCannotEmpty": "Field cannot be empty",
     "deployTask": "Deployment task",
@@ -659,5 +661,6 @@
     "offlineTime": "Offline time period",
     "offlineDuration": "Offline duration",
     "nodeUsage": "Node Usage",
-    "buildAgent": "Build Agent"
+    "buildAgent": "Build Agent",
+    "filterNodeBy": "Filter by {0}, etc."
 }

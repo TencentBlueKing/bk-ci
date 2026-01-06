@@ -89,6 +89,22 @@ export default function useEnvDetail () {
         }
     }
 
+    // 启用/停用节点
+    const toggleEnableNode = async (nodeHashId, enableNode) => {
+        if (!envHashId.value) return
+        try {
+            const res = await proxy.$store.dispatch('environment/enableNode', {
+                projectId: projectId.value,
+                envHashId: envHashId.value,
+                nodeHashId,
+                enableNode
+            })
+            return res
+        } catch (e) {
+            throw e
+        }
+    }
+
     const relatedProjectList = ref([])
     const fetchEnvRelatedProject = async (params) => {
         try {
@@ -123,6 +139,7 @@ export default function useEnvDetail () {
         fetchEnvDetail,
         fetchEnvParamsList,
         updateEnvDetail,
-        fetchEnvRelatedProject
+        fetchEnvRelatedProject,
+        toggleEnableNode
     }
 }

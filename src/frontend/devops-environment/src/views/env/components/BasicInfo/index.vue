@@ -156,6 +156,9 @@
                 if (field?.isTime && value) {
                     return convertTime(value * 1000)
                 }
+                if (key === 'envType' && value) {
+                    return proxy.$t(`environment.envInfo.${value}EnvType`)
+                }
                 return value
             }
             

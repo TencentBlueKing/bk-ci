@@ -142,6 +142,13 @@
                     <bk-button
                         theme="primary"
                         text
+                        @click="handleToggleEnableNode(row)"
+                    >
+                        {{ row.envEnableNode ? $t('environment.Disable') : $t('environment.Enable') }}
+                    </bk-button>
+                    <bk-button
+                        theme="primary"
+                        text
                         @click="handleRemoveNode(row)"
                     >
                         {{ $t('environment.remove') }}
@@ -190,7 +197,8 @@
                 envNodeList,
                 fetchEnvDetail,
                 fetchEnvNodeList,
-                requestRemoveNode
+                requestRemoveNode,
+                toggleEnableNode
             } = useEnvDetail()
             const isLoading = ref(false)
             const tableSize = ref('small')
@@ -361,6 +369,21 @@
                 })
             }
 
+            // 启用/停用节点
+            const handleToggleEnableNode = async (row) => {
+                try {
+                    const enableNode = !row.envEnableNode
+                    await toggleEnableNode(row.nodeHashId, enableNode)
+                    proxy.$bkMessage({
+                        message: enableNode ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess'),
+                        theme: 'success'
+                    })
+                    fetchData()
+                } catch (err) {
+                    console.error('启用/停用节点失败:', err)
+                }
+            }
+
             const handlePageChange = (page) => {
                 pageChange(page)
                 fetchData()
@@ -409,7 +432,8 @@
                 handleRelateSuccess,
                 handleSelectionChange,
                 handleBatchRemove,
-                handleRemoveNode
+                handleRemoveNode,
+                handleToggleEnableNode
             }
         }
     }

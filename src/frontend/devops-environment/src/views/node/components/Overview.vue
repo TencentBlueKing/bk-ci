@@ -2,64 +2,27 @@
     <div class="node-overview-container">
         <div class="overview-main">
             <div class="overview-section">
-                <div class="node-basic-info">
-                    <div class="info-row">
-                        <div class="info-item">
-                            <span class="info-label">{{ $t('environment.nodeInfo.os') }}:</span>
-                            <span class="info-value">{{ currentNode.osName || '-' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">IP:</span>
-                            <span class="info-value">{{ currentNode.ip || '-' }}</span>
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-item">
-                            <span class="info-label">{{ $t('environment.envInfo.creator') }}:</span>
-                            <span class="info-value">{{ currentNode.createdUser || '-' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">{{ $t('environment.envInfo.creationTime') }}:</span>
-                            <span class="info-value">{{ currentNode.createdTime || '-' }}</span>
-                        </div>
+                <div class="node-basic-info info-grid">
+                    <div
+                        v-for="field in basicInfoFields"
+                        :key="field.key"
+                        class="info-item"
+                    >
+                        <span class="info-label">{{ field.label }}:</span>
+                        <span class="info-value">{{ getFieldValue(field) }}</span>
                     </div>
                 </div>
                 <div class="section-header mt10">
                     <span class="section-title">{{ $t('environment.buildAgent') }}</span>
                 </div>
                 <div class="agent-info info-grid">
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeInfo.agentVersion') }}:</span>
-                        <span class="info-value">{{ currentNode.agentVersion || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeUsage') }}:</span>
-                        <span class="info-value">{{ $t('environment.build') }}</span>
-                    </div>
-                    
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeInfo.workerVersion') }}:</span>
-                        <span class="info-value">{{ currentNode.slaveVersion || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeInfo.installPath') }}:</span>
-                        <span class="info-value">{{ currentNode.agentInstallPath || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeInfo.lastActiveTime') }}:</span>
-                        <span class="info-value">{{ currentNode.lastHeartbeatTime || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">{{ $t('environment.nodeInfo.startUser') }}:</span>
-                        <span class="info-value">{{ currentNode.startedUser || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">
-                            {{ currentNode.os === 'WINDOWS'
-                                ? $t('environment.nodeInfo.downloadLink')
-                                : $t('environment.nodeInfo.installCommand')
-                            }}:</span>
-                        <span class="info-value">{{ currentNode.os === 'WINDOWS' ? currentNode.agentUrl : currentNode.agentScript }}</span>
+                    <div
+                        v-for="field in agentInfoFields"
+                        :key="field.key"
+                        class="info-item"
+                    >
+                        <span class="info-label">{{ getFieldLabel(field) }}:</span>
+                        <span class="info-value">{{ getFieldValue(field) }}</span>
                     </div>
                 </div>
             </div>
@@ -84,32 +47,43 @@
             const { currentNode } = useNodeDetail()
             const { proxy } = useInstance()
 
-            // 构建 Agent 状态
-            const agentStatusClass = computed(() => {
-                const status = currentNode.value?.agentStatus
-                if (status === 'IMPORT_OK') return 'status-normal'
-                if (status === 'IMPORT_EXCEPTION' || status === 'DELETE' || status === 'UN_IMPORT_OK') return 'status-exception'
-                return ''
-            })
+            // 基本信息字段配置
+            const basicInfoFields = computed(() => [
+                { label: proxy.$t('environment.nodeInfo.hostName'), key: 'hostname' },
+                { label: proxy.$t('environment.nodeInfo.os'), key: 'osName' },
+                { label: 'IP', key: 'ip' },
+                { label: proxy.$t('environment.envInfo.creator'), key: 'createdUser' },
+                { label: proxy.$t('environment.envInfo.creationTime'), key: 'createdTime' }
+            ])
 
-            // 部署 Agent 状态
-            const buildAgentStatusClass = computed(() => {
-                const status = currentNode.value?.dockerAgentStatus
-                if (status === 'IMPORT_OK') return 'status-normal'
-                if (status === 'IMPORT_EXCEPTION' || status === 'DELETE' || status === 'UN_IMPORT_OK') return 'status-exception'
-                return ''
-            })
-            // 获取进程名称（保留完整信息）
-            const getProcessName = (fullName) => {
-                if (!fullName) return '-'
-                return fullName
+            // Agent 信息字段配置
+            const agentInfoFields = computed(() => [
+                { label: proxy.$t('environment.nodeInfo.agentVersion'), key: 'agentVersion' },
+                { label: proxy.$t('environment.nodeUsage'), key: 'usage', staticValue: proxy.$t('environment.build') },
+                { label: proxy.$t('environment.nodeInfo.workerVersion'), key: 'slaveVersion' },
+                { label: proxy.$t('environment.nodeInfo.installPath'), key: 'agentInstallPath' },
+                { label: proxy.$t('environment.nodeInfo.lastActiveTime'), key: 'lastHeartbeatTime' },
+                { label: proxy.$t('environment.nodeInfo.startUser'), key: 'startedUser' }
+            ])
+
+            // 获取字段标签
+            const getFieldLabel = (field) => {
+                return field.dynamicLabel ? field.dynamicLabel() : field.label
+            }
+
+            // 获取字段值
+            const getFieldValue = (field) => {
+                if (field.staticValue) return field.staticValue
+                if (field.dynamicValue) return field.dynamicValue() || '-'
+                return currentNode.value?.[field.key] || '-'
             }
 
             return {
                 currentNode,
-                agentStatusClass,
-                buildAgentStatusClass,
-                getProcessName
+                basicInfoFields,
+                agentInfoFields,
+                getFieldLabel,
+                getFieldValue
             }
         }
     }
