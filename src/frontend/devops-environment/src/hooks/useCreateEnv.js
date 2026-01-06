@@ -31,13 +31,13 @@ export default function useCreateEnv (onSuccess, onError) {
         isLoading.value = true
         try {
             const projectId = proxy.$route.params.projectId
-            await proxy.$store.dispatch('environment/createNewEnv', {
+            const res = await proxy.$store.dispatch('environment/createNewEnv', {
                 projectId,
                 params: envParams.value
             })
             
             closeCreateEnvDialog()
-            onSuccess?.()
+            onSuccess?.(res)
         } catch (err) {
             console.error(err)
             onError?.(err)

@@ -98,9 +98,10 @@
             })
             const envTypeDisplayName = computed(() => {
                 const envTypeMap = {
-                    'DEV': proxy.$t('environment.envInfo.devEnvType'),
-                    'PROD': proxy.$t('environment.envInfo.testEnvType'),
-                    'BUILD': proxy.$t('environment.envInfo.buildEnvType')
+                    'DEV': proxy.$t('environment.envInfo.DEVEnvType'),
+                    'PROD': proxy.$t('environment.envInfo.PRODEnvType'),
+                    'BUILD': proxy.$t('environment.envInfo.BUILDEnvType'),
+                    'DEVX': proxy.$t('environment.envInfo.DEVXEnvType')
                 }
                 return envTypeMap[currentEnv.value?.envType]
             })

@@ -114,7 +114,7 @@
                 },
                 {
                     id: ENV_TYPE_MAP.BUILD,
-                    name: proxy.$t('environment.envInfo.buildEnvType'),
+                    name: proxy.$t('environment.envInfo.BUILDEnvType'),
                     count: envCountData.value?.[ENV_TYPE_MAP.BUILD] ?? 0
                 }
                 // {
@@ -128,9 +128,14 @@
                 //     count: envCountData.value?.[ENV_TYPE_MAP.DEV] ?? 0
                 // }
             ]))
-            const handleCreateEnvSuccess = () => {
-                // todo..
+            const handleCreateEnvSuccess = (envId) => {
                 fetchEnvList()
+                proxy.$router.replace({
+                    params: {
+                        ...proxy.$route.params,
+                        envId
+                    }
+                })
             }
             const handleChangeEnvType = async (type) => {
                 await proxy.$router.replace({

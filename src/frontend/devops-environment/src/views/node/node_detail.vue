@@ -4,22 +4,46 @@
         v-bkloading="{ isLoading: !nodeDetailLoaded }"
     >
         <header class="node-info-header">
-            <span
-                v-bk-overflow-tips
-                class="node-name"
-            >
-                {{ currentNode?.displayName || '--' }}
-            </span>
-            <span
-                class="node-os"
-            >
-                {{ currentNode?.osName || '--' }}
-            </span>
-            <span
-                class="node-ip"
-            >
-                {{ currentNode?.ip || '--' }}
-            </span>
+            <section>
+                <span
+                    v-bk-overflow-tips
+                    class="node-name"
+                >
+                    {{ currentNode?.displayName || '--' }}
+                </span>
+                <span
+                    class="node-os"
+                >
+                    {{ currentNode?.osName || '--' }}
+                </span>
+                <span
+                    class="node-ip"
+                >
+                    {{ currentNode?.ip || '--' }}
+                </span>
+            </section>
+
+            <section>
+                <bk-popover
+                    theme="dot-menu light"
+                >
+                    <a
+                        class="reinstall-agent-btn"
+                        @click="handleReinstallAgent"
+                    >
+                        {{ $t('environment.reinstallAgent') }}
+                    </a>
+                    <template slot="content">
+                        {{ $t('environment.reinstallAgentTips') }}
+                    </template>
+                </bk-popover>
+                <a
+                    class="refresh-btn"
+                    @click="handleRefresh"
+                >
+                    {{ $t('environment.refresh') }}
+                </a>
+            </section>
         </header>
         <div
             class="node-content-main"
@@ -205,6 +229,30 @@
                 await fetchNodeDetail()
                 nodeDetailLoaded.value = true
             })
+
+            // 重装 Agent - 复制安装命令到剪贴板
+            const handleReinstallAgent = () => {
+                const command = currentNode.value?.os === 'WINDOWS'
+                    ? currentNode.value?.agentUrl
+                    : currentNode.value?.agentScript
+                if (command) {
+                    navigator.clipboard.writeText(command).then(() => {
+                        proxy.$bkMessage({
+                            theme: 'success',
+                            message: proxy.$t('environment.successfullyCopyed')
+                        })
+                    }).catch((e) => {
+                        throw e
+                    })
+                }
+            }
+
+            // 刷新节点详情
+            const handleRefresh = async () => {
+                nodeDetailLoaded.value = false
+                await fetchNodeDetail()
+                nodeDetailLoaded.value = true
+            }
             
             return {
                 renderComponent,
@@ -214,7 +262,9 @@
                 nodeDetailLoaded,
                 nodeTypeDisplayName,
                 nodeStatusDisplayName,
-                nodeStatusClass
+                nodeStatusClass,
+                handleReinstallAgent,
+                handleRefresh
             }
         }
     }
@@ -230,6 +280,7 @@
 .node-info-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     height: 48px;
     line-height: 48px;
     background: #FAFBFD;
@@ -254,6 +305,18 @@
             content: '|';
             margin: 0 6px;
         }
+    }
+    .reinstall-agent-btn {
+        font-size: 12px;
+        margin-left: auto;
+        color: #3A84FF;
+        cursor: pointer;
+    }
+    .refresh-btn {
+        font-size: 12px;
+        margin-left: 10px;
+        color: #3A84FF;
+        cursor: pointer;
     }
 }
 .node-content-main {
