@@ -119,14 +119,14 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER -> {
                 logger.info("$projectId|$pipelineId|save timer trigger")
                 val inputMap = element.data[KEY_INPUT] as Map<String, Any>
-                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION] as List<String>?
+                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION] as String?
                 if (advanceExpression.isNullOrEmpty()) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                     )
                 }
                 val expressions = pipelineTimerTriggerTaskService.convertAdvanceExpression(
-                    advanceExpression = advanceExpression,
+                    advanceExpression = listOf(advanceExpression),
                     params = variables
                 )
                 val startParam = (inputMap[KEY_START_PARAMS] as String?)?.let {
