@@ -58,6 +58,8 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import jakarta.ws.rs.core.Response
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -67,8 +69,6 @@ import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -1269,6 +1269,9 @@ class PipelineBuildDao {
         if (startTimeEndTime != null && startTimeEndTime > 0) {
             where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
         }
+        if (buildNoStart != null && buildNoStart > 0) {
+            where.and(BUILD_NUM.ge(buildNoStart))
+        }
         if (endTimeStartTime != null && endTimeStartTime > 0) {
             where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
         }
@@ -2206,9 +2209,19 @@ class PipelineBuildDao {
         }
     }
 
-    class PipelineBuildLightInfoJooqMapper :
-        RecordMapper<Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String, String, String>, LightBuildHistory> {
-        override fun map(record: Record15<String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int, String, String, String, String, String, String, String>?): LightBuildHistory? {
+    class PipelineBuildLightInfoJooqMapper : RecordMapper<
+        Record15<
+            String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
+            String, String, String, String, String, String, String
+        >,
+        LightBuildHistory
+    > {
+        override fun map(
+            record: Record15<
+                String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
+                String, String, String, String, String, String, String
+            >?
+        ): LightBuildHistory? {
             val tTPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
             return record?.let { t ->
                 LightBuildHistory(
