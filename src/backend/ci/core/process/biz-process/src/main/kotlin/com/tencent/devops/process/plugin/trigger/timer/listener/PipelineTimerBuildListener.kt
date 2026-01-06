@@ -128,17 +128,17 @@ class PipelineTimerBuildListener @Autowired constructor(
         event: PipelineTimerBuildEvent,
         params: Map<String, String> = emptyMap(),
         taskId: String
-    ): String? {
+    ) {
         with(event) {
             try {
-                val buildResult = when (channelCode) {
+                when (channelCode) {
                     // 此处需要修改成CREATIVE_STREAM
                     ChannelCode.BS -> {
                         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
                             pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
                                 logger.warn("[$projectId|$pipelineId]|pipeline is null, try clean timer record[$it]")
                             }
-                            return null
+                            return
                         }
                         // 查找触发器
                         val triggerElement = model.getTriggerContainer().elements
@@ -169,12 +169,13 @@ class PipelineTimerBuildListener @Autowired constructor(
                             } else {
                                 // 对创作环境下选中的创作节点，逐一启动
                                 creativeTaskList.forEach {
-                                    serviceTimerBuildResource.timerTrigger(
+                                    timerTriggerPipeline(
                                         userId = userId,
                                         projectId = projectId,
                                         pipelineId = pipelineId,
                                         params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
-                                        channelCode = channelCode
+                                        channelCode = channelCode,
+                                        taskId = taskId
                                     )
                                 }
                             }
@@ -182,43 +183,61 @@ class PipelineTimerBuildListener @Autowired constructor(
                             // 对创作环境下所有的创作节点，逐一启动
                             val workspaceName = ""
                             getEnvNodeList(projectId, workspaceName).forEach {
-                                serviceTimerBuildResource.timerTrigger(
+                                timerTriggerPipeline(
                                     userId = userId,
                                     projectId = projectId,
                                     pipelineId = pipelineId,
                                     params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
-                                    channelCode = channelCode
+                                    channelCode = channelCode,
+                                    taskId = taskId
                                 )
                             }
                         }
-                        Result(null)
                     }
 
                     else -> {
-                        serviceTimerBuildResource.timerTrigger(
+                        timerTriggerPipeline(
                             userId = userId,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             params = params,
-                            channelCode = channelCode
+                            channelCode = channelCode,
+                            taskId = taskId
                         )
                     }
                 }
-
-                // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
-                if (buildResult.data.isNullOrBlank()) {
-                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
-                    logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
-                } else {
-                    logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
-                }
-                return buildResult.data
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
             }
-            return null
+        }
+    }
+
+    /**
+     * 触发目标流水线
+     */
+    private fun timerTriggerPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        params: Map<String, String>,
+        channelCode: ChannelCode,
+        taskId: String
+    ) {
+        val buildResult = serviceTimerBuildResource.timerTrigger(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            params = params,
+            channelCode = channelCode
+        )
+        // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
+        if (buildResult.data.isNullOrBlank()) {
+            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId)
+            logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
+        } else {
+            logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
         }
     }
 
