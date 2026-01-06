@@ -1233,8 +1233,21 @@ class PipelineBuildDao {
     ): List<LightBuildHistory> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.select(
-                BUILD_ID, BUILD_NUM, START_TIME, END_TIME, STATUS, REMARK, EXECUTE_TIME,
-                EXECUTE_COUNT, CHANNEL, TRIGGER, ERROR_INFO, STAGE_STATUS, BUILD_PARAMETERS, TRIGGER_USER, START_USER
+                BUILD_ID,
+                BUILD_NUM,
+                START_TIME,
+                END_TIME,
+                STATUS,
+                REMARK,
+                EXECUTE_TIME,
+                EXECUTE_COUNT,
+                CHANNEL,
+                TRIGGER,
+                ERROR_INFO,
+                STAGE_STATUS,
+                BUILD_PARAMETERS,
+                TRIGGER_USER,
+                START_USER
             ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
             makeQueryConditions(
                 status,
