@@ -42,6 +42,9 @@ data class RecommendedVersion(
     @JsonProperty("allow-modify-at-startup")
     @get:Schema(title = "是否为入参")
     val allowModifyAtStartup: Boolean? = true,
+    @get:JsonProperty("as-instance-input")
+    @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
+    var asInstanceInput: Boolean? = null,
     @get:Schema(title = "主版本")
     var major: Int = 0,
     @get:Schema(title = "特性版本")

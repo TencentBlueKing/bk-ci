@@ -893,7 +893,8 @@ class RepositoryService @Autowired constructor(
                 aliasName = it.aliasName,
                 url = it.url,
                 type = ScmType.valueOf(it.type),
-                updatedTime = it.updatedTime.timestamp()
+                updatedTime = it.updatedTime.timestamp(),
+                scmCode = it.scmCode
             )
         }
         return SQLPage(count, repositoryList)

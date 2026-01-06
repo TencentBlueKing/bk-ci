@@ -47,7 +47,7 @@ import com.tencent.devops.store.common.service.StoreBaseCreateService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.STORE_BUS_NUM_LEN
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum

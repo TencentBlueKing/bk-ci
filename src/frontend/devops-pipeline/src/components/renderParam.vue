@@ -1,7 +1,9 @@
 <template>
     <section class="render-param">
+        <!-- desc在form-field中不需要显示，由于v-bind="param",导致desc显示问题，所以这里需要重写传入desc为空 -->
         <form-field
             v-bind="param"
+            :desc="''"
             :required="param.required && isExecPreview"
             :is-error="errors.has(param.fieldName)"
             :error-msg="errors.first(param.fieldName)"
