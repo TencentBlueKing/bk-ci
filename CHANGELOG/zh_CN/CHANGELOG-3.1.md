@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.1.1](#v311)
+   - [Changelog since v3.1.0](#changelog-since-v310)
+
 - [v3.1.0](#v310)
    - [Changelog since v3.0.0](#changelog-since-v300)
 
@@ -25,6 +28,29 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.1.1
+## 2026-01-06
+### Changelog since v3.1.0
+#### 新增
+- [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
+#### 优化
+- [优化] chore: 升级api-turbo到0.0.7-RELEASE [链接](http://github.com/TencentBlueKing/bk-ci/issues/12382)
+
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### 其他
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 # v3.1.0
 ## 2025-01-08
 ### Changelog since v3.0.0
