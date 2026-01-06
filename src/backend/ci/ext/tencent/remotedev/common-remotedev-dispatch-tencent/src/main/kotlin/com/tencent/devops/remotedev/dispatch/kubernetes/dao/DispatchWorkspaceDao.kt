@@ -109,4 +109,16 @@ class DispatchWorkspaceDao {
                 .fetchOne()
         }
     }
+
+    fun getWorkspaceNameByEnvId(
+        envId: String,
+        dslContext: DSLContext
+    ): String? {
+        with(TDispatchWorkspace.T_DISPATCH_WORKSPACE) {
+            return dslContext.select(WORKSPACE_NAME)
+                .from(this)
+                .where(ENVIRONMENT_UID.eq(envId))
+                .fetchAny()?.value1()
+        }
+    }
 }

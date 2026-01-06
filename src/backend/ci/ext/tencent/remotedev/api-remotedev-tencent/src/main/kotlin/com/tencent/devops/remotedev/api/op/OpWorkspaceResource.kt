@@ -166,7 +166,10 @@ interface OpWorkspaceResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        @Parameter(description = "类型", required = false)
+        @QueryParam("type")
+        type: String?
     ): Result<Boolean>
 
     @Operation(summary = "由于取消了任务轮询，现在状态流转依赖于回调，所以增加此监控手段")
@@ -180,4 +183,22 @@ interface OpWorkspaceResource {
         @QueryParam("ww")
         ww: String?
     ): Result<String>
+
+    @Operation(summary = "更新工作空间录屏密钥启用状态")
+    @POST
+    @Path("/update_workspace_record_ticket_enable")
+    fun updateWorkspaceRecordTicketEnable(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @Parameter(description = "密钥类型", required = true)
+        @QueryParam("type")
+        type: String,
+        @Parameter(description = "是否启用", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }
