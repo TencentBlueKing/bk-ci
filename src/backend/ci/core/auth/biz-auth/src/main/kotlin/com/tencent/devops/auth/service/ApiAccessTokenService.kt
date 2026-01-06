@@ -51,7 +51,7 @@ class ApiAccessTokenService @Autowired constructor(
     val dslContext: DSLContext
 ) {
     @Value("\${auth.accessToken.expirationTime:#{null}}")
-    private val expirationTime: Int? = null
+    private val expirationTime: Double? = null
 
     @Value("\${auth.accessToken.secret:#{null}}")
     private val secret: String? = null
@@ -94,7 +94,7 @@ class ApiAccessTokenService @Autowired constructor(
         }
         val tokenInfo = TokenInfo(
             userId = userDetails,
-            expirationTime = System.currentTimeMillis() + (expirationTime ?: EXPIRE_TIME_MILLS),
+            expirationTime = System.currentTimeMillis() + (expirationTime ?: EXPIRE_TIME_MILLS).toLong(),
             accessToken = null
         )
         tokenInfo.accessToken = try {
@@ -146,7 +146,7 @@ class ApiAccessTokenService @Autowired constructor(
     }
 
     companion object {
-        private const val EXPIRE_TIME_MILLS: Int = 14400000
+        private const val EXPIRE_TIME_MILLS: Double = 14400000.0
         private val logger = LoggerFactory.getLogger(ApiAccessTokenService::class.java)
     }
 }

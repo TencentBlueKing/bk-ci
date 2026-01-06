@@ -1,8 +1,23 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v3.0.16](#v3016)
+   - [Changelog since v3.0.15](#changelog-since-v3015)
+
+- [v3.0.15](#v3015)
+   - [Changelog since v3.0.14](#changelog-since-v3014)
+
+- [v3.0.14](#v3014)
+   - [Changelog since v3.0.13](#changelog-since-v3013)
+
+- [v3.0.13](#v3013)
+   - [Changelog since v3.0.12](#changelog-since-v3012)
+
+- [v3.0.12](#v3012)
+   - [Changelog since v3.0.11](#changelog-since-v3011)
+
 - [v3.0.11](#v3011)
    - [Changelog since v3.0.0](#changelog-since-v300)
-- [v3.0.1-v3.0.11]
-   - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.11已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
+- [v3.0.1-v3.0.10]
+   - 因镜像版本与仓库版本没有统一,v3.0.1-v3.0.10已有镜像版本,但没有仓库版本,所以仓库这些版本直接跳过
 - [v3.0.0](#v300)
   - [Changelog since v2.1.0](#changelog-since-v210)
 - [v3.0.0-rc.1](#v300-rc1)
@@ -13,6 +28,52 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v3.0.16
+## 2025-12-29
+### Changelog since v3.0.15
+#### 修复
+
+##### 流水线
+- [修复] bug: 修复tgit触发器2.0版本内容为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12530)
+
+##### 其他
+- [修复] bugfix: 初始化默认镜像脚本报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12216)
+
+# v3.0.15
+## 2025-08-08
+### Changelog since v3.0.14
+#### 新增
+
+##### 未分类
+- [新增] feat: Maven仓库发布从oss迁移到central [链接](http://github.com/TencentBlueKing/bk-ci/issues/11817)
+- [新增] feat: 支持服务间jwt验证 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12067)
+- [新增] feat: 去掉proxy跨网络区域的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12091)
+- [新增] feat: 升级turbo版本 [链接](http://github.com/TencentBlueKing/bk-ci/issues/12055)
+
+# v3.0.14
+## 2025-07-11
+### Changelog since v3.0.13
+#### 修复
+
+##### 未分类
+- [修复] bug: 用户态接口增加项目访问权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11971)
+
+# v3.0.13
+## 2025-02-12
+### Changelog since v3.0.12
+#### 新增
+
+##### 未分类
+- [新增] feat: 需要修复的chart包问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11105)
+
+# v3.0.12
+## 2025-01-08
+### Changelog since v3.0.11
+#### 修复
+
+##### 未分类
+- [修复] bug: 修复v3.0版本打helm chart包时报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/11391)
+
 # v3.0.11
 ## 2024-12-05
 ### Changelog since v3.0.0
