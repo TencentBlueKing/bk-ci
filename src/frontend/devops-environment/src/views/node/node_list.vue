@@ -586,7 +586,8 @@
                 })
             },
             filterPlaceHolder () {
-                return this.filterData.map(item => item.name).join(' / ')
+                const str = this.filterData.filter((i, index) => index < 7).map(item => item.name).join(' / ')
+                return this.$t('environment.filterNodeBy', [str])
             },
             installModeAsService () {
                 return this.constructImportForm.installType === 'SERVICE'

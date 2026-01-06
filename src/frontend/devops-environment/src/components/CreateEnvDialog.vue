@@ -36,7 +36,7 @@
                 property="envType"
             >
                 <bk-radio-group v-model="envParams.envType">
-                    <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
+                    <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.BUILDEnvType') }}</bk-radio>
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item
@@ -127,12 +127,12 @@
                 }
             }
 
-            function onSuccess () {
+            function onSuccess (envId) {
                 proxy.$bkMessage({
                     theme: 'success',
                     message: proxy.$t('environment.successfullyAdded')
                 })
-                proxy.$emit('success')
+                proxy.$emit('success', envId)
             }
             function onError (err) {
                 proxy.$bkMessage({
