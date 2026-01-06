@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.service.template.validation
 
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.migration.ValidationRuleType
 import com.tencent.devops.process.pojo.template.migration.ValidationSeverity
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import io.mockk.every
@@ -89,7 +91,14 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                 templateDao.countTemplateVersions(dslContext, PROJECT_ID, TEMPLATE_ID, any())
             } returns 2
             every {
-                pipelineTemplateResourceService.countVersions(PROJECT_ID, TEMPLATE_ID)
+                pipelineTemplateResourceService.count(
+                    PipelineTemplateResourceCommonCondition(
+                        projectId = PROJECT_ID,
+                        templateId = TEMPLATE_ID,
+                        includeDeleted = true,
+                        excludeBranchAction = BranchVersionAction.INACTIVE
+                    )
+                )
             } returns 2
 
             // Act
@@ -113,7 +122,14 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                 templateDao.countTemplateVersions(dslContext, PROJECT_ID, any(), any())
             } returns 1
             every {
-                pipelineTemplateResourceService.countVersions(PROJECT_ID, any())
+                pipelineTemplateResourceService.count(
+                    PipelineTemplateResourceCommonCondition(
+                        projectId = PROJECT_ID,
+                        templateId = TEMPLATE_ID,
+                        includeDeleted = true,
+                        excludeBranchAction = BranchVersionAction.INACTIVE
+                    )
+                )
             } returns 1
 
             // Act
@@ -163,7 +179,14 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                 templateDao.countTemplateVersions(dslContext, PROJECT_ID, TEMPLATE_ID, any())
             } returns 5
             every {
-                pipelineTemplateResourceService.countVersions(PROJECT_ID, TEMPLATE_ID)
+                pipelineTemplateResourceService.count(
+                    PipelineTemplateResourceCommonCondition(
+                        projectId = PROJECT_ID,
+                        templateId = TEMPLATE_ID,
+                        includeDeleted = true,
+                        excludeBranchAction = BranchVersionAction.INACTIVE
+                    )
+                )
             } returns 3
 
             // Act
@@ -221,7 +244,14 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                 templateDao.countTemplateVersions(dslContext, PROJECT_ID, TEMPLATE_ID, any())
             } returns 1
             every {
-                pipelineTemplateResourceService.countVersions(PROJECT_ID, TEMPLATE_ID)
+                pipelineTemplateResourceService.count(
+                    PipelineTemplateResourceCommonCondition(
+                        projectId = PROJECT_ID,
+                        templateId = TEMPLATE_ID,
+                        includeDeleted = true,
+                        excludeBranchAction = BranchVersionAction.INACTIVE
+                    )
+                )
             } returns 1
 
             // Act
