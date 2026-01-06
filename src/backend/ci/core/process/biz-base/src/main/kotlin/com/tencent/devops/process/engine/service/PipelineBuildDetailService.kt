@@ -283,10 +283,10 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         errorMsg: String?
-    ): Pair<Model, List<BuildStageStatus>> {
+    ) {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        val model = update(
+        update(
             projectId = projectId, buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -354,7 +354,6 @@ class PipelineBuildDetailService @Autowired constructor(
             },
             buildStatus = buildStatus, operation = "buildEnd"
         )
-        return model to allStageStatus
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
