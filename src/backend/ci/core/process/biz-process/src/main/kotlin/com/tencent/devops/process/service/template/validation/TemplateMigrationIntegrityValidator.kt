@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.service.template.validation
 
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.migration.TemplateMigrationDiscrepancy
 import com.tencent.devops.process.pojo.template.migration.ValidationRuleType
 import com.tencent.devops.process.pojo.template.migration.ValidationSeverity
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import org.jooq.DSLContext
@@ -130,7 +132,14 @@ class TemplateMigrationIntegrityValidator(
 
         for (templateId in v1TemplateIds) {
             val templateInfo = pipelineTemplateInfoService.getOrNull(projectId, templateId)
-
+            val v2VersionCount = pipelineTemplateResourceService.count(
+                PipelineTemplateResourceCommonCondition(
+                    projectId = projectId,
+                    templateId = templateId,
+                    includeDeleted = true,
+                    excludeBranchAction = BranchVersionAction.INACTIVE
+                )
+            )
             // 约束模式模板：V2 版本数应该等于父模板的 V1 版本数
             if (templateInfo?.mode == TemplateType.CONSTRAINT) {
                 val srcTemplateId = templateInfo.srcTemplateId
@@ -147,10 +156,6 @@ class TemplateMigrationIntegrityValidator(
                 val srcV1VersionCount = templateDao.countTemplateVersions(
                     dslContext, srcTemplateProjectId, srcTemplateId
                 )
-                val v2VersionCount = pipelineTemplateResourceService.countVersions(
-                    projectId, templateId
-                )
-
                 if (srcV1VersionCount != v2VersionCount) {
                     discrepancies.add(
                         TemplateMigrationDiscrepancy(
@@ -175,9 +180,6 @@ class TemplateMigrationIntegrityValidator(
                 // 普通模板：V1 版本数应该等于 V2 版本数
                 val v1VersionCount = templateDao.countTemplateVersions(
                     dslContext, projectId, templateId
-                )
-                val v2VersionCount = pipelineTemplateResourceService.countVersions(
-                    projectId, templateId
                 )
 
                 if (v1VersionCount != v2VersionCount) {
