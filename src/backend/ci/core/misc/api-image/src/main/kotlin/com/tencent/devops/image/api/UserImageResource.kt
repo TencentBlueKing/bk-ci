@@ -120,31 +120,16 @@ interface UserImageResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "查询关键字", required = false)
-        @QueryParam("searchKey")
-        searchKey: String?,
+        @Parameter(description = "镜像名称", required = true)
+        @QueryParam("imageName")
+        imageName: String,
         @Parameter(description = "分页start", required = false)
         @QueryParam("start")
         start: Int?,
         @Parameter(description = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?
-    ): Result<ImagePageData>
-
-    @Operation(summary = "获取所有项目镜像列表")
-    @Path("/{projectId}/listAllProjectImages")
-    @GET
-    fun listAllProjectImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @Parameter(description = "查询关键字", required = false)
-        @QueryParam("searchKey")
-        searchKey: String?
-    ): Result<ImageListResp>
+    ): Result<ImagePageData?>
 
     @Operation(summary = "获取项目构建镜像列表")
     @Path("/{projectId}/listBuildImages")
@@ -204,6 +189,12 @@ interface UserImageResource {
         @Parameter(description = "镜像repo", required = true)
         @QueryParam("imageRepo")
         imageRepo: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像名", required = true)
+        @QueryParam("imageName")
+        imageName: String,
         @Parameter(description = "开始索引", required = false)
         @QueryParam("tagStart")
         tagStart: Int?,
@@ -219,9 +210,12 @@ interface UserImageResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像repo", required = true)
-        @QueryParam("imageRepo")
-        imageRepo: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "镜像名", required = true)
+        @QueryParam("imageName")
+        imageName: String,
         @Parameter(description = "镜像tag", required = true)
         @QueryParam("imageTag")
         imageTag: String
