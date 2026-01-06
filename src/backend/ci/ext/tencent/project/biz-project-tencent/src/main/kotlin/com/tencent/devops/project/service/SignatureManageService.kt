@@ -23,6 +23,7 @@ import com.tencent.devops.project.dao.SignaturePlatformDetailsDao
 import com.tencent.devops.project.pojo.SignatureCallbackInfo
 import com.tencent.devops.project.pojo.SignatureCallbackResponse
 import com.tencent.devops.project.pojo.SignaturePlatformDetails
+import com.tencent.devops.project.pojo.SignaturePlatformUpdateRequest
 import com.tencent.devops.project.pojo.UserSignatureStatusDTO
 import com.tencent.devops.project.pojo.UserSignatureStatusResponse
 import jakarta.servlet.http.HttpServletRequest
@@ -216,17 +217,18 @@ class SignatureManageService(
             )
         } else {
             val targetLanguage = I18nUtil.getLanguage(userId)
-            val information = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
-                platformDetails.informationCn
+            val (information, agreementTips) = if (targetLanguage == DEFAULT_LOCALE_LANGUAGE) {
+                Pair(platformDetails.platformName, platformDetails.informationCn)
             } else {
-                platformDetails.informationEn
+                Pair(platformDetails.platform, platformDetails.informationEn)
             }
             UserSignatureStatusResponse(
                 userId = userId,
                 signed = false,
                 schemeQrcodeUrl = statusData.schemeQrcodeUrl,
                 qrCodeUrl = statusData.qrCodeUrl,
-                projectInformation = information
+                projectInformation = information,
+                agreementTips = agreementTips
             )
         }
     }
@@ -438,6 +440,22 @@ class SignatureManageService(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun updatePlatformInformation(platform: String, request: SignaturePlatformUpdateRequest) {
+        if (request.platformName == null && request.informationCn == null && request.informationEn == null) {
+            throw CustomMessageException("At least one field must be provided for update")
+        }
+        signaturePlatformDetailsDao.get(dslContext, platform)
+            ?: throw CustomMessageException("Platform not found: $platform")
+        logger.info("Updating platform information for: $platform, request: $request")
+        signaturePlatformDetailsDao.updateInformation(
+            dslContext = dslContext,
+            platform = platform,
+            platformName = request.platformName,
+            informationCn = request.informationCn,
+            informationEn = request.informationEn
+        )
     }
 
     private fun eSignControl(): Boolean {
