@@ -133,8 +133,8 @@ class DevCloudMacosService @Autowired constructor(
                     else -> Triple(macOSEnv[0], macOSEnv[1], macOSEnv[2])
                 }
             }*/
-        var macOSHwSpec = dispatchType.macOSEvn
-        if (macOSHwSpec.isBlank()) {
+        var macOSHwSpec = dispatchType.macOSHwSpec
+        if (macOSHwSpec.isNullOrBlank()) {
             macOSHwSpec = DEFAULT_HW_TYPE
         }
         var systemVersion = dispatchType.systemVersion
