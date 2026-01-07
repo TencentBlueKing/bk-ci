@@ -124,7 +124,7 @@ class DevCloudMacosService @Autowired constructor(
 
         val dispatchType = dispatchMessage.event.dispatchType as MacOSDispatchType
         logger.info("dispatchType: ${dispatchType.macOSEvn}")
-        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSEvn.split(":")
+/*        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSEvn.split(":")
             .let { macOSEnv ->
                 when (macOSEnv.size) {
                     0 -> Triple(null, null, null)
@@ -132,8 +132,13 @@ class DevCloudMacosService @Autowired constructor(
                     2 -> Triple(null, macOSEnv[0], macOSEnv[1])
                     else -> Triple(macOSEnv[0], macOSEnv[1], macOSEnv[2])
                 }
-            }
-
+            }*/
+        var macOSHwSpec = dispatchType.macOSEvn
+        if (macOSHwSpec.isBlank()) {
+            macOSHwSpec = DEFAULT_HW_TYPE
+        }
+        var systemVersion = dispatchType.systemVersion
+        var xcodeVersion = dispatchType.xcodeVersion
         logger.info("macOSHwSpec: $macOSHwSpec, systemVersion: $systemVersion, xcodeVersion: $xcodeVersion")
 
         val isStreamProject = dispatchMessage.event.projectId.startsWith("git_")
@@ -162,7 +167,7 @@ class DevCloudMacosService @Autowired constructor(
                     DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
                     DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
                     XCODE_VERSION to (xcodeVersion ?: ""),
-                    DockerConstants.ENV_KEY_DEVCLOUD_MODEL to (macOSHwSpec ?: DEFAULT_HW_TYPE)
+                    DockerConstants.ENV_KEY_DEVCLOUD_MODEL to macOSHwSpec
                 )
             )
         }
