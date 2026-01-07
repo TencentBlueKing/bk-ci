@@ -50,7 +50,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
-import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.LabelDao
@@ -1340,13 +1339,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeType = StoreTypeEnum.DEVX,
             storeCodes = ownerStoreCodes
         ).associate { it.storeCode to it.storeName }
-        // 获取关联的流水线数量
-        val pipelineCount = storeInfos.map {it[tStoreBase.STORE_CODE] }.toSet().associateWith {
-            client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(
-                atomCode = it,
-                projectCode = null
-            ).data
-        }
         watcher.start("handleStoreInfos")
         storeInfos.forEach { record ->
             val storeId = record[tStoreBase.ID]
@@ -1379,12 +1371,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             ).firstOrNull()?.fieldValue?.toBoolean()
             val extData = getBaseExtData(storeId, storeCode, storeTypeEnum)
             val publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG] ?: false
-            // 宿主应用名 to 组件关联流水线数量
-            val (ownerStoreName, pipelineCount) = if (ownerStoreCode.isNullOrBlank()) {
-                null
-            } else {
-                ownerStoreInfos[ownerStoreCode]
-            } to (pipelineCount[storeCode] ?: 0)
             val marketItem = MarketItem(
                 id = storeId,
                 name = record[tStoreBase.NAME],
@@ -1423,9 +1409,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 recentExecuteNum = statistic?.recentExecuteNum,
                 hotFlag = statistic?.hotFlag,
                 extData = extData,
-                ownerStoreName = ownerStoreName,
-                ownerStoreCode = ownerStoreCode,
-                pipelineCnt = pipelineCount
+                ownerStoreName = if (ownerStoreCode.isNullOrBlank()) {
+                    null
+                } else {
+                    ownerStoreInfos[ownerStoreCode]
+                },
+                ownerStoreCode = ownerStoreCode
             )
             results.add(marketItem)
         }
