@@ -348,6 +348,20 @@ export const actions = {
             console.log(e)
         }
     },
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, baseDebugVersion }) => {
+        const params = new URLSearchParams({ actionType })
+        if (version) params.append('version', version)
+        if (baseDebugVersion) params.append('baseDebugVersion', baseDebugVersion)
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
+        const response = await request.get(url)
+        return response.data
+    },
+    getDraftVersion: async ({ commit }, { projectId, pipelineId }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions`).then(response => {
+            return response.data
+        })
+    },
     isPACOAuth: async (_, { projectId, ...query }) => {
         const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
             params: query

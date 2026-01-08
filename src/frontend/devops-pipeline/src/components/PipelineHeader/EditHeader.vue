@@ -18,6 +18,71 @@
             :save="saveDraft"
         />
         <aside class="pipeline-edit-right-aside">
+            <div
+                class="draft-content"
+                v-if="draftList.length > 0"
+            >
+                <p
+                    class="last-save-time"
+                    @click="handleShowDraftList"
+                >
+                    <span>{{ $t("lastSaveTime") }}：</span>
+                    {{ lasterDraftInfo?.updater }} {{ lasterDraftInfo?.updateTime }}
+                    <i :class="['bk-icon', `icon-angle-${isShowDraftList ? 'up' : 'down'}`]" />
+                </p>
+
+                <ul
+                    class="draft-list"
+                    v-if="isShowDraftList"
+                >
+                    <li>
+                        <i class="bk-icon icon-info-circle tips-icon" />
+                        {{ $t('draftsClearedAfterVersionRelease') }}
+                    </li>
+                    <li
+                        v-for="(item, index) in draftList"
+                        :key="item.draftVersion"
+                        :class="['draft-item', item.draftVersion === lasterDraftInfo?.draftVersion ? 'draft-item-active' : '']"
+                    >
+                        <p>
+                            <span class="version-name">{{ $t('basedOn', item.baseVersion) }}</span>
+                            <span class="update-info">{{ item.updater }}{{ item.updateTime }}</span>
+                        </p>
+                        <span
+                            v-if="index !== 0"
+                            class="options"
+                        >
+                            <VersionDiffEntry
+                                style="cursor: pointer;"
+                                :text="true"
+                                :base-yaml="currentEditYaml"
+                                :version="item.baseDraftVersion"
+                                :can-switch-version="false"
+                                @click.native.stop="handleDiff"
+                                class="diff-button"
+                            >
+                                <Logo
+                                    name="diff"
+                                    size="14"
+                                />
+                            </VersionDiffEntry>
+                            <span
+                                class="rollback-icon rollback-button"
+                                @click.stop="handleRollback(item)"
+                            >
+                                <Logo
+                                    name="refresh"
+                                    size="14"
+                                />
+                            </span>
+                        </span>
+                        <span
+                            v-else
+                            class="update-tip"
+                        >{{ $t('lastSaveTime') }}</span>
+                    </li>
+                </ul>
+            </div>
             <bk-button
                 :disabled="saveStatus"
                 :loading="saveStatus"
@@ -43,7 +108,13 @@
                     }
                 }"
             >
-                {{ $t("saveDraft") }}
+                <span
+                    v-bk-tooltips="{
+                        content: $t('noChange'),
+                        arrow: true,
+                        disabled: !(saveStatus || !isEditing)
+                    }"
+                >{{ $t("saveDraft") }}</span>
             </bk-button>
             <bk-button
                 :disabled="!canDebug"
@@ -90,16 +161,28 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
             ModeSwitch,
+            VersionDiffEntry,
+            Logo,
             PipelineEditMoreAction
         },
         props: {
             isSwitchPipeline: Boolean
+        },
+        data () {
+            return {
+                draftList: [],
+                lasterDraftInfo: null,
+                isShowDraftList: false,
+                currentEditYaml: '' // 当前编辑的 YAML 内容
+            }
         },
         computed: {
             ...mapState([
@@ -176,8 +259,18 @@
                 immediate: true
             }
         },
+        mounted () {
+            this.getDraftList()
+            // 监听全局点击事件
+            document.addEventListener('click', this.handleGlobalClick)
+        },
+        beforeDestroy () {
+            // 移除全局点击事件监听
+            document.removeEventListener('click', this.handleGlobalClick)
+        },
         methods: {
             ...mapActions({
+                getDraftVersion: 'common/getDraftVersion',
                 updatePipelineMode: 'updatePipelineMode'
             }),
             ...mapActions('atom', [
@@ -185,8 +278,84 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'requestPipelineSummary',
+                'transfer',
                 'updateContainer'
             ]),
+            async getDraftList () {
+                try {
+                    const res = await this.getDraftVersion({
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId
+                    })
+                    this.draftList = res
+                    this.lasterDraftInfo = this.draftList?.[0]
+                } catch (error) {
+                    console.log(error)
+                }
+            },
+            // 构建 modelAndSetting 对象
+            buildModelAndSetting () {
+                const pipeline = Object.assign({}, this.pipeline, {
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+                
+                return {
+                    model: {
+                        ...pipeline,
+                        name: this.pipelineSetting.pipelineName,
+                        desc: this.pipelineSetting.desc
+                    },
+                    setting: Object.assign(this.pipelineSetting, {
+                        failSubscription: undefined,
+                        successSubscription: undefined
+                    })
+                }
+            },
+            async handleDiff () {
+                const modelAndSetting = this.buildModelAndSetting()
+                const res = await this.transfer({
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    actionType: 'FULL_MODEL2YAML',
+                    modelAndSetting
+                })
+                this.currentEditYaml = res.newYaml
+            },
+            handleGlobalClick (event) {
+                // 检查点击的是否在 diff 或 rollback 按钮区域内
+                const isDiffButton = event.target.closest('.diff-button')
+                const isRollbackButton = event.target.closest('.rollback-button')
+                const isOptionsArea = event.target.closest('.options')
+                // 检查是否点击在弹窗内（弹窗通常有 .bk-dialog 类名）
+                const isInDialog = event.target.closest('.bk-dialog-wrapper') || event.target.closest('.bk-dialog')
+                
+                // 如果点击的不是这些区域，才关闭草稿列表
+                if (!isDiffButton && !isRollbackButton && !isOptionsArea && !isInDialog && this.isShowDraftList) {
+                    this.isShowDraftList = false
+                }
+            },
+            closeDraftList () {
+                this.isShowDraftList = false
+            },
+            async handleShowDraftList (event) {
+                // 阻止事件冒泡，避免立即触发全局点击事件
+                event.stopPropagation()
+                
+                this.isShowDraftList = !this.isShowDraftList
+            },
+            handleRollback (item) {
+                this.$bkInfo({
+                    maskClose: false,
+                    title: this.$t('confirmRollbackToThisHistory'),
+                    subTitle: this.$t('historyRollback', [item.updater, item.updateTime]),
+                    confirmFn: () => {
+                        // TODO 调用回滚接口
+                    }
+                })
+            },
             async exec (debug) {
                 if (debug && this.isEditing) {
                     const result = await this.saveDraft()
@@ -237,6 +406,7 @@
                     }
                     // 清除流水线参数渲染过程中添加的key
                     this.formatParams(pipeline)
+                    const modelAndSetting = this.buildModelAndSetting()
 
                     // 请求执行构建
                     const { version } = await this.saveDraftPipeline({
@@ -244,17 +414,7 @@
                         pipelineId,
                         baseVersion: this.pipelineInfo?.baseVersion,
                         storageType: this.pipelineMode,
-                        modelAndSetting: {
-                            model: {
-                                ...pipeline,
-                                name: pipelineSetting.pipelineName,
-                                desc: pipelineSetting.desc
-                            },
-                            setting: Object.assign(pipelineSetting, {
-                                failSubscription: undefined,
-                                successSubscription: undefined
-                            })
-                        },
+                        modelAndSetting,
                         yaml: pipelineYaml
                     })
                     this.setPipelineEditing(false)
@@ -328,6 +488,77 @@
     height: 100%;
     align-items: center;
     justify-content: center;
+    .draft-content {
+        position: relative;
+        font-size: 12px;
+        .last-save-time {
+            display: flex;
+            align-items: center;
+            color: #979BA5;
+            cursor: pointer;
+            i {
+                font-size: 18px;
+            }
+        }
+        .draft-list {
+            position: absolute;
+            z-index: 2019;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 388px;
+            background-color: #fff;
+            border: 1px solid #DCDEE5;
+            box-shadow: 0 2px 6px 0 #0000001a;
+            border-radius: 2px;
+            .tips-icon {
+                font-size: 15px;
+            }
+            li {
+                height: 32px;
+                padding: 8px 12px;
+                &:first-child {
+                    color: #979BA5;
+                }
+            }
+            .draft-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                color: #4D4F56;
+                &:hover {
+                    background: #F5F7FA;
+                }
+                &:hover .options {
+                    visibility: inherit;
+                }
+                .version-name {
+                    background-color: #F0F1F5;
+                    border-radius: 2px;
+                    padding: 0 8px;
+                }
+            }
+            .draft-item-active {
+                background: #E1ECFF;
+                .update-info {
+                    color: #3A84FF;
+                }
+            }
+            .options {
+                // visibility: hidden;
+                .rollback-icon {
+                    transform: rotate(180deg);
+                }
+            }
+            .update-tip {
+                padding: 0 4px;
+                background: #FDEED8;
+                border-radius: 2px;
+                color: #E38B02;
+            }
+        }
+    }
   }
 }
 .pipeline-save-error-list-box {
