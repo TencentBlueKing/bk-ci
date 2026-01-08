@@ -236,9 +236,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
-            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
-        }
+        val subjectScopes = projectCreateInfo.subjectScopes.takeUnless { it.isNullOrEmpty() }?.onEach {
+            if (it.id == ALL_MEMBERS) it.name = getAllMembersName()
+        } ?: listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
