@@ -357,8 +357,8 @@ export const actions = {
         const response = await request.get(url)
         return response.data
     },
-    getDraftVersion: async ({ commit }, { projectId, pipelineId }) => {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions`).then(response => {
+    getDraftVersion: async ({ commit }, { projectId, pipelineId, version }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions?version=${version}`).then(response => {
             return response.data
         })
     },

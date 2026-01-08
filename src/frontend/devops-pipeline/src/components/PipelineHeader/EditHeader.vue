@@ -285,7 +285,8 @@
                 try {
                     const res = await this.getDraftVersion({
                         projectId: this.projectId,
-                        pipelineId: this.pipelineId
+                        pipelineId: this.pipelineId,
+                        version: this.$route.params.version
                     })
                     this.draftList = res
                     this.lasterDraftInfo = this.draftList?.[0]
