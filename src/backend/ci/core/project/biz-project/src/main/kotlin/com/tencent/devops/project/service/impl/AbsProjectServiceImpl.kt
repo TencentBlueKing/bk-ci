@@ -118,6 +118,7 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import jakarta.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -127,7 +128,6 @@ import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
-import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -234,9 +234,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
-            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
-        }
+        val subjectScopes = projectCreateInfo.subjectScopes.takeUnless { it.isNullOrEmpty() }?.onEach {
+            if (it.id == ALL_MEMBERS) it.name = getAllMembersName()
+        } ?: listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
