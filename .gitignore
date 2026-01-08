@@ -61,6 +61,6 @@ pre-*-bkcodeai
 specs/
 .specify/
 .cursorrules
-openspec/
-AGENTS.md
 CODEBUDDY.md
+AGENTS.md
+openspec/

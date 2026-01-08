@@ -349,6 +349,7 @@
         }
         .template-detail-entry-history-header {
             padding-right: 10px;
+            padding-left: 24px;
         }
     }
     .template-detail-entry-aside {

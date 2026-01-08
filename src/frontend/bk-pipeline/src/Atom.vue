@@ -458,7 +458,7 @@
             reviewUsers () {
                 try {
                     const list
-                        = this.atom?.reviewUsers ?? this.atom?.data?.input?.reviewers ?? []
+                        = this.atom?.actualReviewUsers ?? this.atom?.reviewUsers ?? this.atom?.data?.input?.reviewers ?? []
                     const reviewUsers = list
                         .map((user) => user.split(';').map((val) => val.trim()))
                         .reduce((prev, curr) => {

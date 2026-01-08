@@ -366,7 +366,7 @@
     "noticeGroup": "Groups",
     "emptyNoticeGroup": "Groups to be notified are empty",
     "additionUser": "Additional Users",
-    "additionUserPlaceholder": "Support environment variables (${var}), multiple environment variables are separated by commas",
+    "additionUserPlaceholder": "Support environment variables (${'{'}var{'}'}), multiple environment variables are separated by commas",
     "noticeContent": "Content",
     "noticeGroupIds": "Wework Group IDs",
     "pipelineLink": "Attached pipeline link in the content",
@@ -609,7 +609,7 @@
     },
     "modifyConfig": "Modify Configuration",
     "batchEditInstance": "Batch Edit Instance",
-    "batchEditInstanceTips": "Changes will be applied to all instances in batch. Unset parameter values will be cleared upon confirmation.",
+    "batchEditInstanceTips": "Changes will be applied to all instances in batch(If the instance is included in the parameter as a follow template, it is skipped). Unset parameter values will be cleared upon confirmation.",
     "releaseTaskHeaderTips": "{0} release tasks are in progress.",
     "views": "Views",
     "from": "Src Template Ver:",
@@ -690,7 +690,25 @@
     "followTemplateTips": "Will automatically sync {0} changes from new template versions during instance upgrades.",
     "unfollowTemplateTips": "Will NOT automatically sync {0} changes from new template versions - manual updates required when upgrading.",
     "setTimeCron": "Set timing rule",
-    "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback"
+    "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
+    "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "propertyUpdate": {
+      "constName": "Constant Name",
+      "constAlias": "Constant Alias",
+      "constDesc": "Constant Desc",
+      "constType": "Constant Type",
+      "varType": "Variable Type",
+      "varName": "Variable Name",
+      "varAlias": "Variable Alias",
+      "varDesc": "Variable Desc",
+      "defaultValue": "Default Value",
+      "required": "Set as input variable",
+      "valueNotEmpty": "Required",
+      "readOnly": "ReadOnly when executing",
+      "category": "Group labels"
+    },
+    "propertyUpdated": "Updated",
+    "toInstance": "To instantiate"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
@@ -1317,7 +1335,10 @@
     "enableVersionControl": "Enable version control",
     "versionControlTip": "Once enabled, uploading files will automatically generate versioned paths within the directory to prevent overwriting files with the same name.",
     "controlOption": "Control Options",
-    "displayCondition": "Display Condition"
+    "displayCondition": "Display Condition",
+    "instanceRequired": "Defaults to instance input parameter",
+    "instanceRequiredTips": "This is set to the default value. It can be adjusted to be an instance parameter in the specific instance when instantiating the pipeline.",
+    "templateBuildParamTips": "Parameters set as input parameters to the template. Their values ​​can be modified during instantiation, and they can also be set as input parameters to the instance."
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -1889,7 +1910,7 @@
   "differenceItem": "Difference Item",
   "expressionFormat": "Expression Format",
   "traditionalFormat": "Single or Double Curly Braces",
-  "traditionalFormatExample": "e.g., ${var}, ${'{{'}var{'}}'}",
+  "traditionalFormatExample": "e.g.,${'{'}var{'}'}, ${'{{'}var{'}}'}",
   "constraintFormat": "Only Double Curly Braces Supported to Avoid System Assignment Issues in Bash Scripts",
   "constraintFormatExample": "e.g., ${'{{'}variables.var{'}}'}",
   "expressionFunction": "Expression Functions",
@@ -2042,6 +2063,12 @@
   "noVariablesAvailable": "No Variables Available",
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
+  "switchToVarMode": "Click to switch to variable input mode",
+  "closeVarMode": "Click to close variable input mode",
+  "placeholderConstraintVar": "Please enter the variable, such as ${{var}}",
+  "placeholderVar": "Please enter the variable, such as ${{var}} or ${var}",
+  "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }
+

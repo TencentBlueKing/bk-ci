@@ -342,7 +342,8 @@ class ParamFacadeService @Autowired constructor(
             replaceKey = replaceKey,
             valueNotEmpty = property.valueNotEmpty,
             category = property.category,
-            displayCondition = property.displayCondition
+            displayCondition = property.displayCondition,
+            asInstanceInput = property.asInstanceInput
         )
     }
 

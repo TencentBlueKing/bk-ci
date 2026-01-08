@@ -113,7 +113,11 @@ const customeRules = {
     },
     timeoutsRule: {
         validate: function (value, args) {
-            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+            const numberPattern = /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/
+            const isValidNumber = numberPattern.test(value)
+            const isValidVar = args[0] === 'CLASSIC' ? value.isBkVar() : value.isBKConstraintVar()
+    
+            return isValidNumber || isValidVar
         }
     },
     reminderTimeRule: {

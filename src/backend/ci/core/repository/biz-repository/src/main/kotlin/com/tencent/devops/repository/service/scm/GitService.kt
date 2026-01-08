@@ -45,11 +45,13 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
+import com.tencent.devops.common.security.util.BkCryptoUtil
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -107,6 +109,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.RefSpec
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -127,7 +130,8 @@ import java.util.concurrent.Executors
 class GitService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val objectMapper: ObjectMapper,
-    private val gitOauthService: IGitOauthService,
+    private val gitTokenDao: GitTokenDao,
+    private val dslContext: DSLContext
 ) : IGitService {
 
     companion object {
@@ -150,6 +154,9 @@ class GitService @Autowired constructor(
 
     @Value("\${scm.git.queryCommitNumLimit.max:10}")
     private var max: Int = 10
+
+    @Value("\${aes.git:#{null}}")
+    private val aesKey: String = ""
 
     private val redirectUrl = gitConfig.redirectUrl
 
@@ -2137,14 +2144,10 @@ class GitService @Autowired constructor(
                         " between $min and $max, but got $commitNumber"
             )
         }
-        val accessToken = gitOauthService.getAccessToken(userId)?.accessToken
-        if (accessToken.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = NOT_AUTHORIZED_BY_OAUTH,
-                params = arrayOf(userId),
-                defaultMessage = "User [$userId] has not performed OAUTH authorization, please authorize first",
-            )
-        }
+        val tokenRecord = gitTokenDao.getAccessToken(dslContext, userId) ?: throw ErrorCodeException(
+            errorCode = NOT_AUTHORIZED_BY_OAUTH, params = arrayOf(userId)
+        )
+        val accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, tokenRecord.accessToken)
         val projectId = gitProjectId ?: run {
             if (codeSrc.isNullOrBlank()) {
                 throw ErrorCodeException(
