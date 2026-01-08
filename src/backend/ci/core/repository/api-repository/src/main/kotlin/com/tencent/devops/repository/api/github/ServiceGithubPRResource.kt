@@ -3,7 +3,9 @@ package com.tencent.devops.repository.api.github
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.request.ListPullRequestCommitRequest
 import com.tencent.devops.repository.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestFileResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -41,4 +43,14 @@ interface ServiceGithubPRResource {
         token: String,
         request: ListPullRequestFileRequest
     ): Result<List<PullRequestFileResponse>>
+
+    @Operation(summary = "PR提交列表")
+    @POST
+    @Path("/listPullRequestCommits")
+    fun listPullRequestCommits(
+        @Parameter(description = "授权token", required = true)
+        @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
+        token: String,
+        request: ListPullRequestCommitRequest
+    ): Result<List<CommitResponse>>
 }

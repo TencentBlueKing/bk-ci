@@ -27,7 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -84,6 +86,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -92,13 +95,16 @@ import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHand
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.Date
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
 class GithubPrTriggerHandler @Autowired constructor(
+    private val gitScmService: GitScmService,
     val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GithubPullRequestEvent> {
 
@@ -317,5 +323,25 @@ class GithubPrTriggerHandler @Autowired constructor(
         }
         startParams[PIPELINE_GIT_MR_ACTION] = event.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.action ?: ""
+    }
+
+    override fun getWebhookCommitList(
+        event: GithubPullRequestEvent,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        if (projectId == null || repository == null) {
+            return emptyList()
+        }
+        val pullNumber = event.pullRequest.number.toLong()
+        return eventCacheService.getWebhookCommitList(
+            projectId = projectId,
+            repo = repository,
+            mrId = pullNumber,
+            page = page,
+            size = size
+        )
     }
 }

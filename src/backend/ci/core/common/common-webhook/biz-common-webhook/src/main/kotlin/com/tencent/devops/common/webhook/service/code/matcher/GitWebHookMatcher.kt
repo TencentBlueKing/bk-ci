@@ -70,7 +70,6 @@ open class GitWebHookMatcher(
 
     override fun getWebhookCommitList(
         projectId: String,
-        pipelineId: String,
         repository: Repository,
         page: Int,
         size: Int

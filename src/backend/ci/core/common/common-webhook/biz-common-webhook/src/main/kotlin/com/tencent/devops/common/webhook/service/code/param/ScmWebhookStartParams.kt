@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CODE_BASE_TRIGGERING
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_COMMIT_LIST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
@@ -157,6 +159,12 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[PIPELINE_GIT_REPO_NAME] = name
         startParams[PIPELINE_GIT_REPO_GROUP] = group
         startParams[PIPELINE_GIT_SHA] = matcher.getRevision()
+        startParams[BK_REPO_WEBHOOK_COMMIT_LIST] = matcher.getWebhookCommitList(
+            projectId = repo.projectId ?: "",
+            repository = repo,
+            page = 1,
+            size = 50
+        )
         return startParams
     }
 

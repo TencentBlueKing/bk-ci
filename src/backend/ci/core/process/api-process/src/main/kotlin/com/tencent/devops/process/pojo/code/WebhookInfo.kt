@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.code
 
+import com.tencent.devops.scm.pojo.WebhookCommit
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class WebhookInfo(
@@ -87,5 +88,7 @@ data class WebhookInfo(
     // 自定义触发材料ID
     val materialId: String?,
     // 自定义触发材料名
-    val materialName: String?
+    val materialName: String?,
+    // 触发提交列表
+    val commitList: List<WebhookCommit>? = null
 )

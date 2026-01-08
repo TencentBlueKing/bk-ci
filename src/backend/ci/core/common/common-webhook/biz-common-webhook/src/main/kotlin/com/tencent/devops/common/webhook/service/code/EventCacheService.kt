@@ -1,8 +1,10 @@
 package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
@@ -21,6 +23,7 @@ import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Date
 
 /**
  * 蓝盾事件触发变量缓存处理
@@ -214,28 +217,73 @@ class EventCacheService @Autowired constructor(
 
     @SuppressWarnings("NestedBlockDepth")
     fun getWebhookCommitList(
-        repo: Repository,
-        matcher: ScmWebhookMatcher,
         projectId: String,
-        pipelineId: String
+        repo: Repository,
+        mrId: Long?,
+        page: Int,
+        size: Int
     ): List<WebhookCommit> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
-        // 缓存第一页的数据
         return eventCache?.webhookCommitList ?: run {
             try {
-                val webhookCommitList = matcher.getWebhookCommitList(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    repository = repo,
-                    page = 1,
-                    size = WEBHOOK_COMMIT_PAGE_SIZE
-                )
+                val scmType = repo.getScmType()
+                val webhookCommitList = when (scmType) {
+                    ScmType.CODE_TGIT, ScmType.CODE_GIT, ScmType.CODE_GITLAB -> {
+                        gitScmService.getWebhookCommitList(
+                            projectId = projectId,
+                            repo = repo,
+                            mrId = mrId,
+                            page = page,
+                            size = size
+                        ).map {
+                            val commitTime = DateTimeUtil.convertDateToLocalDateTime(
+                                Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date))
+                            )
+                            WebhookCommit(
+                                commitId = it.id,
+                                authorName = it.author_name,
+                                message = it.message,
+                                repoType = scmType.name,
+                                commitTime = commitTime,
+                                eventType = CodeEventType.MERGE_REQUEST.name,
+                                mrId = mrId.toString(),
+                                action = null
+                            )
+                        }
+                    }
+
+                    ScmType.GITHUB -> {
+                        gitScmService.getGithubPrCommitList(
+                            repoName = repo.projectName,
+                            repo = repo,
+                            pullNumber = mrId.toString(),
+                            page = page,
+                            pageSize = size
+                        )?.map {
+                            val commitTime = DateTimeUtil.convertDateToLocalDateTime(
+                                Date(DateTimeUtil.zoneDateToTimestamp(it.commit.committer.date))
+                            )
+                            WebhookCommit(
+                                commitId = it.sha,
+                                authorName = it.author?.login ?: "",
+                                message = it.commit.message,
+                                repoType = scmType.name,
+                                commitTime = commitTime,
+                                eventType = CodeEventType.PULL_REQUEST.name,
+                                mrId = mrId.toString(),
+                                action = null
+                            )
+                        }
+                    }
+
+                    else -> listOf()
+                }
                 eventCache?.webhookCommitList = webhookCommitList
                 webhookCommitList
             } catch (ignored: Throwable) {
-                logger.info("fail to get webhook commit list | err is $ignored")
+                logger.info("fail to get webhook commit list", ignored)
                 emptyList()
-            }
+            } ?: listOf()
         }
     }
 
@@ -295,6 +343,5 @@ class EventCacheService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
-        private const val WEBHOOK_COMMIT_PAGE_SIZE = 500
     }
 }

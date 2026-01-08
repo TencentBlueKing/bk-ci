@@ -56,6 +56,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_COMMIT_LIST
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
@@ -93,6 +94,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PipelineVarUtil.CONTEXT_PREFIX
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -418,7 +420,10 @@ data class StartBuildContext(
                     params[PIPELINE_GIT_EVENT_URL]
                 },
                 materialId = params[BK_CI_MATERIAL_ID],
-                materialName = params[BK_CI_MATERIAL_NAME]
+                materialName = params[BK_CI_MATERIAL_NAME],
+                commitList = params[BK_REPO_WEBHOOK_COMMIT_LIST]?.let {
+                    it as? List<WebhookCommit>
+                }
             )
         }
 

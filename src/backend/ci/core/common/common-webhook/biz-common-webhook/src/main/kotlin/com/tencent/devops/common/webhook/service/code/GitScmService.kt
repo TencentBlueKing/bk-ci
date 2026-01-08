@@ -47,6 +47,7 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.request.ListPullRequestCommitRequest
 import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.pojo.GitCommit
@@ -644,6 +645,33 @@ class GitScmService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("fail to get tapd item", e)
             listOf()
+        }
+    }
+
+    fun getGithubPrCommitList(
+        repoName: String,
+        pullNumber: String,
+        repo: Repository,
+        page: Int,
+        pageSize: Int
+    ): List<CommitResponse>? {
+        return try {
+            val accessToken = client.get(ServiceGithubResource::class).getAccessToken(
+                userId = repo.userName
+            ).data?.accessToken ?: ""
+            val commits = client.get(ServiceGithubPRResource::class).listPullRequestCommits(
+                request = ListPullRequestCommitRequest(
+                    repoName = repoName,
+                    pullNumber = pullNumber,
+                    page = page,
+                    perPage = pageSize
+                ),
+                token = accessToken
+            ).data
+            commits
+        } catch (ignored: Exception) {
+            logger.warn("fail to get github pull request commits", ignored)
+            null
         }
     }
 }

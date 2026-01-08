@@ -96,7 +96,6 @@ interface ScmWebhookMatcher {
 
     fun getWebhookCommitList(
         projectId: String,
-        pipelineId: String,
         repository: Repository,
         page: Int,
         size: Int

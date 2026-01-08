@@ -4,7 +4,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.request.ListPullRequestCommitRequest
 import com.tencent.devops.repository.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestFileResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.repository.sdk.github.service.GithubPRService
@@ -30,6 +32,18 @@ class ServiceGithubPRResourceImpl @Autowired constructor(
     ): Result<List<PullRequestFileResponse>> {
         return Result(
             githubPRService.listPullRequestFiles(
+                request = request,
+                token = token
+            )
+        )
+    }
+
+    override fun listPullRequestCommits(
+        token: String,
+        request: ListPullRequestCommitRequest
+    ): Result<List<CommitResponse>> {
+        return Result(
+            githubPRService.listPullRequestCommits(
                 request = request,
                 token = token
             )

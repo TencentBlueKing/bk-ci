@@ -27,9 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -383,6 +381,8 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.source_branch
         }
+        // 记录本次MR的变更记录
+
         // 有覆盖风险的上下文做二次确认
         startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
@@ -420,26 +420,13 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.id
         }
-        return gitScmService.getWebhookCommitList(
+        return eventCacheService.getWebhookCommitList(
             projectId = projectId,
             repo = repository,
             mrId = mrId,
             page = page,
             size = size
-        ).map {
-            val commitTime =
-                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
-            WebhookCommit(
-                commitId = it.id,
-                authorName = it.author_name,
-                message = it.message,
-                repoType = ScmType.CODE_TGIT.name,
-                commitTime = commitTime,
-                eventType = CodeEventType.MERGE_REQUEST.name,
-                mrId = mrId.toString(),
-                action = event.object_attributes.action
-            )
-        }
+        )
     }
 
     private fun mrStartParam(

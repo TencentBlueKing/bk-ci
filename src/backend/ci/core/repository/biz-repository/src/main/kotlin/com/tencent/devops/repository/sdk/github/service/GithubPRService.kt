@@ -29,7 +29,9 @@ package com.tencent.devops.repository.sdk.github.service
 
 import com.tencent.devops.repository.sdk.github.DefaultGithubClient
 import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.request.ListPullRequestCommitRequest
 import com.tencent.devops.repository.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestFileResponse
 import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,6 +53,13 @@ class GithubPRService @Autowired constructor(
         request: ListPullRequestFileRequest,
         token: String
     ): List<PullRequestFileResponse> {
+        return defaultGithubClient.execute(request = request, oauthToken = token)
+    }
+
+    fun listPullRequestCommits(
+        request: ListPullRequestCommitRequest,
+        token: String
+    ): List<CommitResponse> {
         return defaultGithubClient.execute(request = request, oauthToken = token)
     }
 }
