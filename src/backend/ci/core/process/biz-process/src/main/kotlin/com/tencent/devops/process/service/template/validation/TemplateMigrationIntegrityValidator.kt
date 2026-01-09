@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.template.validation
 
-import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.migration.TemplateMigrationDiscrepancy
