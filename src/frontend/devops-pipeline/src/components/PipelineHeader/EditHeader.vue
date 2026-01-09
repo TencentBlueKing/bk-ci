@@ -27,7 +27,7 @@
                     @click="handleShowDraftList"
                 >
                     <span>{{ $t("lastSaveTime") }}：</span>
-                    {{ lasterDraftInfo?.updater }} {{ lasterDraftInfo?.updateTime }}
+                    {{ lasterDraftInfo?.updater }} {{ formatTime(lasterDraftInfo?.updateTime) }}
                     <i :class="['bk-icon', `icon-angle-${isShowDraftList ? 'up' : 'down'}`]" />
                 </p>
 
@@ -46,7 +46,7 @@
                     >
                         <p>
                             <span class="version-name">{{ $t('basedOn', item.baseVersion) }}</span>
-                            <span class="update-info">{{ item.updater }}{{ item.updateTime }}</span>
+                            <span class="update-info">{{ item.updater }} {{ formatTime(item.updateTime) }}</span>
                         </p>
                         <span
                             v-if="index !== 0"
@@ -56,9 +56,9 @@
                                 style="cursor: pointer;"
                                 :text="true"
                                 :base-yaml="currentEditYaml"
-                                :version="item.baseDraftVersion"
-                                :can-switch-version="false"
-                                @click.native.stop="handleDiff"
+                                :draft-yaml="draftYaml"
+                                :draft-info="item"
+                                @click.native.stop="handleDiff(item.draftVersion)"
                                 class="diff-button"
                             >
                                 <Logo
@@ -146,6 +146,82 @@
                 :id="pipelineId"
             />
         </aside>
+
+        <bk-dialog
+            v-model="isConflictDraft"
+            :width="480"
+            :mask-close="false"
+            footer-position="center"
+        >
+            <header
+                class="draft-hint-title"
+                slot="header"
+            >
+                <i class="devops-icon icon-exclamation"></i>
+                <span>{{ dialogTitle }}</span>
+            </header>
+            <div>
+                <div
+                    class="conflict-draft"
+                    v-if="isConflictStatus"
+                >
+                    <span class="label">{{ $t('conflictingDraft') }}: </span>
+                    <span>{{ conflictDraftInfo?.updater }} </span>
+                    <span class="label"> {{ $t('savedAt') }}: </span>
+                    <span>{{ conflictDraftInfo?.updateTime }}</span>
+
+                    <VersionDiffEntry
+                        style="cursor: pointer;"
+                        :text="true"
+                        :base-yaml="currentEditYaml"
+                        :draft-yaml="draftYaml"
+                        :draft-info="conflictDraftInfo"
+                        @click.native.stop="handleDiff(conflictDraftInfo?.draftVersion)"
+                        class="diff-button"
+                    >
+                        <Logo
+                            name="diff"
+                            size="14"
+                        />
+                    </VersionDiffEntry>
+                </div>
+                <div v-else-if="isPublishedStatus">
+                    <span class="label">{{ $t('publisher') }}: </span>
+                    <span>{{ publishedInfo?.updater }} </span>
+                    <span class="label"> {{ $t('publishTime') }}: </span>
+                    <span>{{ publishedInfo?.updateTime }}</span>
+                </div>
+
+                <p class="conflict-draft-tips">
+                    <span
+                        v-if="isConflictStatus"
+                    >
+                        {{ tipsText }}
+                    </span>
+                    <span
+                        v-else-if="isPublishedStatus"
+                        v-html="tipsText"
+                    ></span>
+                </p>
+            </div>
+            <footer slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="continueSaveDraft"
+                >
+                    {{ primaryButtonText }}
+                </bk-button>
+                <bk-button @click="goPipelineModel">
+                    {{ secondaryButtonText }}
+                </bk-button>
+                <bk-button
+                    v-if="isConflictStatus"
+                    @click="isConflictDraft = false"
+                >
+                    {{ $t('returnToEditing') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
     </div>
 </template>
 
@@ -157,7 +233,7 @@
         RESOURCE_TYPE
     } from '@/utils/permission'
     import { UI_MODE } from '@/utils/pipelineConst'
-    import { showPipelineCheckMsg } from '@/utils/util'
+    import { showPipelineCheckMsg, convertTime } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ReleaseButton from './ReleaseButton'
@@ -181,7 +257,9 @@
                 draftList: [],
                 lasterDraftInfo: null,
                 isShowDraftList: false,
-                currentEditYaml: '' // 当前编辑的 YAML 内容
+                isConflictDraft: false,
+                currentEditYaml: '', // 当前编辑的 YAML 内容
+                draftYaml: '' // 选中的草稿的 YAML 内容
             }
         },
         computed: {
@@ -247,6 +325,51 @@
             },
             isPipelineNameReady () {
                 return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
+            },
+            // 草稿冲突状态相关
+            isConflictStatus () {
+                return this.lasterDraftInfo?.status === 'CONFLICT'
+            },
+            isPublishedStatus () {
+                return this.lasterDraftInfo?.status === 'PUBLISHED'
+            },
+            conflictDraftInfo () {
+                return this.lasterDraftInfo?.draft
+            },
+            publishedInfo () {
+                return this.lasterDraftInfo?.release
+            },
+            dialogTitle () {
+                if (this.isConflictStatus) {
+                    return this.$t('otherUserEditingDetected')
+                } else if (this.isPublishedStatus) {
+                    return this.$t('alreadyPublished')
+                }
+                return ''
+            },
+            primaryButtonText () {
+                if (this.isConflictStatus) {
+                    return this.$t('continueSaving')
+                } else if (this.isPublishedStatus) {
+                    return this.$t('newDraft')
+                }
+                return ''
+            },
+            secondaryButtonText () {
+                if (this.isConflictStatus) {
+                    return this.$t('discardChanges')
+                } else if (this.isPublishedStatus) {
+                    return this.$t('exitEditing')
+                }
+                return ''
+            },
+            tipsText () {
+                if (this.isConflictStatus) {
+                    return this.$t('reviewDifferencesAndOverrideChanges')
+                } else if (this.isPublishedStatus) {
+                    return this.$t('alreadyPublishedTip')
+                }
+                return ''
             }
         },
         watch: {
@@ -271,6 +394,7 @@
         methods: {
             ...mapActions({
                 getDraftVersion: 'common/getDraftVersion',
+                getDraftStatus: 'common/getDraftStatus',
                 updatePipelineMode: 'updatePipelineMode'
             }),
             ...mapActions('atom', [
@@ -279,6 +403,7 @@
                 'setSaveStatus',
                 'requestPipelineSummary',
                 'transfer',
+                'fetchPipelineByVersion',
                 'updateContainer'
             ]),
             async getDraftList () {
@@ -286,7 +411,7 @@
                     const res = await this.getDraftVersion({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
-                        version: this.$route.params.version
+                        version: this.pipelineInfo?.version
                     })
                     this.draftList = res
                     this.lasterDraftInfo = this.draftList?.[0]
@@ -315,15 +440,34 @@
                     })
                 }
             },
-            async handleDiff () {
-                const modelAndSetting = this.buildModelAndSetting()
-                const res = await this.transfer({
-                    projectId: this.projectId,
-                    pipelineId: this.pipelineId,
-                    actionType: 'FULL_MODEL2YAML',
-                    modelAndSetting
-                })
-                this.currentEditYaml = res.newYaml
+            formatTime (value) {
+                return convertTime(value)
+            },
+            async handleDiff (draftVersion) {
+                try {
+                    const modelAndSetting = this.buildModelAndSetting()
+                    const [newDraftInfo, draftInfo] = await Promise.all([
+                        // 获取当前编辑的yaml数据
+                        this.transfer({
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            actionType: 'FULL_MODEL2YAML',
+                            modelAndSetting
+                        }),
+                        // 获取选中草稿的yaml数据
+                        this.fetchPipelineByVersion({
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            version: this.pipelineInfo?.version,
+                            draftVersion
+                        })
+                    ])
+                    
+                    this.currentEditYaml = newDraftInfo.newYaml
+                    this.draftYaml = draftInfo?.yamlPreview?.yaml
+                } catch (error) {
+                    
+                }
             },
             handleGlobalClick (event) {
                 // 检查点击的是否在 diff 或 rollback 按钮区域内
@@ -390,65 +534,108 @@
                     }
                 })
             },
+            goPipelineModel () {
+                this.$router.push({
+                    name: 'pipelinesHistory',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'pipeline'
+                    },
+                    query: this.$route.query
+                })
+            },
+            // 执行草稿保存的核心逻辑
+            async executeSaveDraft () {
+                this.setSaveStatus(true)
+                const pipeline = Object.assign({}, this.pipeline, {
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+                const { projectId, pipelineId, pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
+                const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
+                if (inValid) {
+                    throw new Error(message)
+                }
+                const modelAndSetting = this.buildModelAndSetting()
+                // 清除流水线参数渲染过程中添加的key
+                this.formatParams(pipeline)
 
-            async saveDraft () {
+                // 请求执行构建
+                const { version } = await this.saveDraftPipeline({
+                    projectId,
+                    pipelineId,
+                    baseVersion: this.pipelineInfo?.baseVersion,
+                    baseDraftVersion: this.pipelineInfo?.draftVersion,
+                    storageType: this.pipelineMode,
+                    modelAndSetting,
+                    yaml: pipelineYaml
+                })
+                this.setPipelineEditing(false)
+
+                await this.requestPipelineSummary(this.$route.params)
+                this.$router.replace({
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
+                await this.getDraftList()
+                this.$bkMessage({
+                    theme: 'success',
+                    message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
+                    limit: 1
+                })
+                return true
+            },
+
+            async continueSaveDraft () {
                 try {
-                    this.setSaveStatus(true)
-                    const pipeline = Object.assign({}, this.pipeline, {
-                        stages: [
-                            this.pipeline.stages[0],
-                            ...this.pipelineWithoutTrigger.stages
-                        ]
-                    })
-                    const { projectId, pipelineId, pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
-                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-                    if (inValid) {
-                        throw new Error(message)
-                    }
-                    // 清除流水线参数渲染过程中添加的key
-                    this.formatParams(pipeline)
-                    const modelAndSetting = this.buildModelAndSetting()
-
-                    // 请求执行构建
-                    const { version } = await this.saveDraftPipeline({
-                        projectId,
-                        pipelineId,
-                        baseVersion: this.pipelineInfo?.baseVersion,
-                        storageType: this.pipelineMode,
-                        modelAndSetting,
-                        yaml: pipelineYaml
-                    })
-                    this.setPipelineEditing(false)
-
-                    await this.requestPipelineSummary(this.$route.params)
-                    this.$router.replace({
-                        params: {
-                            ...this.$route.params,
-                            version
-                        }
-                    })
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
-                        limit: 1
-                    })
-
-                    return true
+                    return await this.executeSaveDraft()
                 } catch (e) {
-                    const { projectId, pipelineId } = this.$route.params
-
-                    if (e.code === 2101244) {
-                        showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
-                    } else {
-                        this.handleError(e, {
-                            projectId,
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EDIT
-                        })
-                    }
+                    this.handleSaveDraftError(e)
                     return false
                 } finally {
                     this.setSaveStatus(false)
+                }
+            },
+
+            async saveDraft () {
+                try {
+                    const draftStatus = await this.getDraftStatus({
+                        projectId: this.projectId,
+                        pipelineId: this.uniqueId,
+                        actionType: 'SAVE'
+                    })
+                    this.lasterDraftInfo = draftStatus
+                    if (this.lasterDraftInfo.status === 'NORMAL') {
+                        return await this.executeSaveDraft()
+                    } else if (this.lasterDraftInfo.status === 'CONFLICT' || this.lasterDraftInfo.status === 'PUBLISHED') {
+                        this.isConflictDraft = true
+                        return false
+                    }
+                } catch (e) {
+                    this.handleSaveDraftError(e)
+                    return false
+                } finally {
+                    this.setSaveStatus(false)
+                }
+            },
+
+            // 处理保存草稿时的错误
+            handleSaveDraftError (e) {
+                const { projectId, pipelineId } = this.$route.params
+
+                if (e.code === 2101244) {
+                    showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                } else {
+                    this.handleError(e, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    })
                 }
             },
             goBack () {
@@ -583,5 +770,40 @@
         }
     }
 }
-
+.draft-hint-title {
+    color: #313238;
+    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    grid-gap: 24px;
+    align-items: center;
+    > i {
+        border-radius: 50%;
+        background-color: #ffe8c3;
+        color: #ff9c01;
+        border-radius: 50%;
+        font-size: 24px;
+        height: 42px;
+        line-height: 42px;
+        width: 42px;
+    }
+}
+.conflict-draft {
+    font-size: 14px;
+    color: #313238;
+    .label {
+        color: #b4b4b7;
+    }
+    .diff-button {
+        margin-left: 16px;
+    }
+}
+.conflict-draft-tips {
+    padding: 12px 16px;
+    margin-top: 16px;
+    background: #F5F6FA;
+    border-radius: 2px;
+    color: #4d4f56;
+    font-size: 14px;
+}
 </style>

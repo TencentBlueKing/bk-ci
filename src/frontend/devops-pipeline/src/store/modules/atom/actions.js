@@ -267,10 +267,13 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, draftVersion }) {
         const query = {}
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
+        }
+        if (draftVersion !== undefined && draftVersion !== null) {
+            query.draftVersion = encodeURIComponent(draftVersion)
         }
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
         return request.get(url, {

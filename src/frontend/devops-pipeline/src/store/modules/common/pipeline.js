@@ -348,10 +348,9 @@ export const actions = {
             console.log(e)
         }
     },
-    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version, baseDebugVersion }) => {
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version }) => {
         const params = new URLSearchParams({ actionType })
         if (version) params.append('version', version)
-        if (baseDebugVersion) params.append('baseDebugVersion', baseDebugVersion)
         
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
         const response = await request.get(url)
