@@ -61,7 +61,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             pipelineId = pipelineResourceVersion.pipelineId,
             channelCode = context.pipelineBasicInfo.channelCode,
             element = element as MarketEventAtomElement,
-            variables = variables
+            variables = variables,
+            pipelineSetting = pipelineSetting
         )
     }
 
@@ -69,6 +70,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        pipelineSetting: PipelineSetting,
         channelCode: ChannelCode,
         element: MarketEventAtomElement,
         variables: Map<String, String>
@@ -98,7 +100,8 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 element = element,
                 variables = variables,
                 componentDetail = componentDetail,
-                userId = userId
+                userId = userId,
+                pipelineSetting = pipelineSetting
             )
         }
     }
@@ -164,6 +167,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        pipelineSetting: PipelineSetting,
         channelCode: ChannelCode,
         element: MarketEventAtomElement,
         variables: Map<String, String>,
@@ -178,7 +182,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     pipelineId = pipelineId,
                     taskId = element.id!!,
                     eventCode = element.atomCode,
-                    eventSource = "",
+                    eventSource = pipelineSetting.envName ?: "",
                     eventType = eventType,
                     channelCode = channelCode,
                     triggerTarget = TriggerTargetEnum.CREATIVE
