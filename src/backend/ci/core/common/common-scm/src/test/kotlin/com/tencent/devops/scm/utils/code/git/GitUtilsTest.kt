@@ -29,6 +29,7 @@ package com.tencent.devops.scm.utils.code.git
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class GitUtilsTest {
@@ -170,5 +171,23 @@ class GitUtilsTest {
     fun getShortSha() {
         assertEquals(GitUtils.getShortSha("e49ca115cf9a5fd433cbb539ee37316b67bde243"), "e49ca115")
         assertEquals(GitUtils.getShortSha(""), "")
+    }
+
+    @Test
+    fun tryGetRepoName() {
+        var repoUrl = "git@git.xxx.com:Tencent/bk-ci.git"
+        assertTrue(GitUtils.isValidGitUrl(repoUrl))
+        assertEquals(GitUtils.tryGetRepoName(repoUrl), repoName)
+
+        repoUrl = "http://github.com:8080/Tencent/bk-ci.git"
+        assertTrue(GitUtils.isValidGitUrl(repoUrl))
+        assertEquals(GitUtils.tryGetRepoName(repoUrl), repoName)
+
+        repoUrl = "https://github.com/Tencent/bk-ci.git"
+        assertTrue(GitUtils.isValidGitUrl(repoUrl))
+        assertEquals(GitUtils.tryGetRepoName(repoUrl), repoName)
+
+        repoUrl = "Tencent/bk-ci"
+        assertEquals(GitUtils.tryGetRepoName(repoUrl), repoUrl)
     }
 }
