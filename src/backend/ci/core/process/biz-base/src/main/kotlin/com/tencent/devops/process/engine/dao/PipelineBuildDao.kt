@@ -69,6 +69,7 @@ import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -80,6 +81,7 @@ class PipelineBuildDao {
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
         private val lightMapper = PipelineBuildLightInfoJooqMapper()
         private const val DEFAULT_PAGE_SIZE = 50
+        private val logger = LoggerFactory.getLogger(PipelineBuildDao::class.java)
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
@@ -1239,58 +1241,45 @@ class PipelineBuildDao {
                 BUILD_PARAMETERS,
                 TRIGGER_USER,
                 START_USER
-            ).from(this).where(PROJECT_ID.eq(query.projectId)).and(PIPELINE_ID.eq(query.pipelineId))
-            makeQueryConditions(
-                query.status,
-                where,
-                query.startTimeFrom,
-                query.startTimeTo,
-                query.endTimeFrom,
-                query.endTimeTo,
-                query.buildNoStart,
-                query.buildNoEnd
-            )
+            ).from(this).where(DSL.trueCondition())
+            makeQueryConditions(query = query, where = where)
             where.limit(query.offset, query.limit).fetch(lightMapper)
         }
     }
 
     private fun TPipelineBuildHistory.makeQueryConditions(
-        status: List<BuildStatus>?,
-        where: SelectConditionStep<*>,
-        startTimeFrom: String?,
-        startTimeTo: String?,
-        endTimeFrom: String?,
-        endTimeTo: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?
+        query: PipelineBuildQuery,
+        where: SelectConditionStep<*>
     ) {
-        if (!status.isNullOrEmpty()) {
-            where.and(STATUS.`in`(status.map { it.ordinal }))
+        where.and(PROJECT_ID.eq(query.projectId))
+        where.and(PIPELINE_ID.eq(query.pipelineId))
+        if (!query.status.isNullOrEmpty()) {
+            where.and(STATUS.`in`(query.status!!.map { it.ordinal }))
         }
-        val startTimeFromTimestamp = parseTimeString(startTimeFrom)
+        val startTimeFromTimestamp = parseTimeString(query.startTimeFrom)
         if (startTimeFromTimestamp != null && startTimeFromTimestamp > 0) {
             where.and(START_TIME.ge(Timestamp(startTimeFromTimestamp).toLocalDateTime()))
         }
-        val startTimeToTimestamp = parseTimeString(startTimeTo)
+        val startTimeToTimestamp = parseTimeString(query.startTimeTo)
         if (startTimeToTimestamp != null && startTimeToTimestamp > 0) {
             where.and(START_TIME.le(Timestamp(startTimeToTimestamp).toLocalDateTime()))
         }
-        if (buildNoStart != null && buildNoStart > 0) {
-            where.and(BUILD_NUM.ge(buildNoStart))
+        if (query.buildNoStart != null && query.buildNoStart!! > 0) {
+            where.and(BUILD_NUM.ge(query.buildNoStart))
         }
-        val endTimeFromTimestamp = parseTimeString(endTimeFrom)
+        val endTimeFromTimestamp = parseTimeString(query.endTimeFrom)
         if (endTimeFromTimestamp != null && endTimeFromTimestamp > 0) {
             where.and(END_TIME.ge(Timestamp(endTimeFromTimestamp).toLocalDateTime()))
         }
-        val endTimeToTimestamp = parseTimeString(endTimeTo)
+        val endTimeToTimestamp = parseTimeString(query.endTimeTo)
         if (endTimeToTimestamp != null && endTimeToTimestamp > 0) {
             where.and(END_TIME.le(Timestamp(endTimeToTimestamp).toLocalDateTime()))
         }
-        if (buildNoStart != null && buildNoStart > 0) {
-            where.and(BUILD_NUM.ge(buildNoStart))
+        if (query.buildNoStart != null && query.buildNoStart!! > 0) {
+            where.and(BUILD_NUM.ge(query.buildNoStart))
         }
-        if (buildNoEnd != null && buildNoEnd > 0) {
-            where.and(BUILD_NUM.le(buildNoEnd))
+        if (query.buildNoEnd != null && query.buildNoEnd!! > 0) {
+            where.and(BUILD_NUM.le(query.buildNoEnd))
         }
     }
 
@@ -1299,18 +1288,8 @@ class PipelineBuildDao {
         query: PipelineBuildQuery
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            val where =
-                dslContext.selectCount().from(this).where(PROJECT_ID.eq(query.projectId)).and(PIPELINE_ID.eq(query.pipelineId))
-            makeQueryConditions(
-                query.status,
-                where,
-                query.startTimeFrom,
-                query.startTimeTo,
-                query.endTimeFrom,
-                query.endTimeTo,
-                query.buildNoStart,
-                query.buildNoEnd
-            )
+            val where = dslContext.selectCount().from(this).where(DSL.trueCondition())
+            makeQueryConditions(query = query, where = where)
             where.fetchOne(0, Int::class.java)!!
         }
     }
@@ -2238,6 +2217,7 @@ class PipelineBuildDao {
                                 .readValue(t[tTPipelineBuildHistory.ERROR_INFO]) as List<ErrorInfo>
                         } else null
                     } catch (ignored: Exception) {
+                        logger.warn("PipelineBuildLightInfoJooqMapper parse error info failed", ignored)
                         null
                     },
                     buildParameters = t[tTPipelineBuildHistory.BUILD_PARAMETERS]?.let { self ->
@@ -2265,6 +2245,7 @@ class PipelineBuildDao {
             val localDateTime = java.time.LocalDateTime.parse(timeString, formatter)
             localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
         } catch (e: Exception) {
+            logger.warn("parseTimeString failed", e)
             null
         }
     }
