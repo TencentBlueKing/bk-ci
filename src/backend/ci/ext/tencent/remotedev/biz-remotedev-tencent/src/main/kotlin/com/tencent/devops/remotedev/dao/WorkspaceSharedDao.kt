@@ -193,15 +193,41 @@ class WorkspaceSharedDao {
             .fetch()
     }
 
-    fun bakWorkspaceShareInfo(
+    fun bakAndTransferWorkspaceShareInfo(
         dslContext: DSLContext,
         workspaceName: String,
         bakName: String
-    ): Int {
+    ) {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
-            return dslContext.update(this)
-                .set(WORKSPACE_NAME, bakName)
-                .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                val record = transactionContext.selectFrom(this)
+                    .where(WORKSPACE_NAME.eq(workspaceName))
+                    .fetch()
+                transactionContext.update(this)
+                    .set(WORKSPACE_NAME, bakName)
+                    .where(WORKSPACE_NAME.equal(workspaceName)).execute()
+                transactionContext.batch(
+                    record.map {
+                        DSL.insertInto(
+                            this,
+                            WORKSPACE_NAME,
+                            OPERATOR,
+                            SHARED_USER,
+                            ASSIGN_TYPE,
+                            RESOURCE_ID,
+                            EXPIRATION
+                        ).values(
+                            workspaceName,
+                            it.operator,
+                            it.sharedUser,
+                            it.assignType,
+                            it.resourceId,
+                            it.expiration
+                        ).onDuplicateKeyIgnore()
+                    }
+                ).execute()
+            }
         }
     }
 
