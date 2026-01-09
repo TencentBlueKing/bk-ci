@@ -1,5 +1,5 @@
 ---
-name: skill-writer
+name: 48-skill-writer
 description: 指导用户为 CodeBuddy 创建 Agent Skills。当用户想要创建、编写、设计新的 Skill，或需要帮助编写 SKILL.md 文件、frontmatter、skill 结构时使用。
 ---
 

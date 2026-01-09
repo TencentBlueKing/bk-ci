@@ -40,6 +40,21 @@ class PipelineTemplateSettingService @Autowired constructor(
         ) ?: throw ErrorCodeException(errorCode = ERROR_TEMPLATE_SETTING_NOT_EXISTS)
     }
 
+    fun getOrNull(
+        projectId: String,
+        templateId: String,
+        settingVersion: Int
+    ): PipelineSetting? {
+        return pipelineTemplateSettingDao.get(
+            commonCondition = PipelineTemplateSettingCommonCondition(
+                projectId = projectId,
+                templateId = templateId,
+                settingVersion = settingVersion
+            ),
+            dslContext = dslContext
+        )
+    }
+
     fun count(commonCondition: PipelineTemplateSettingCommonCondition): Int {
         return pipelineTemplateSettingDao.count(
             commonCondition = commonCondition,
