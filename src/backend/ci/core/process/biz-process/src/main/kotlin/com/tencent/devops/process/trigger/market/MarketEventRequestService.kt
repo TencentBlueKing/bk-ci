@@ -2,6 +2,7 @@ package com.tencent.devops.process.trigger.market
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,7 +49,7 @@ class MarketEventRequestService constructor(
             }
             val eventDesc = I18Variable(
                 code = BK_REMOTE_DEV_TRIGGER_DESC,
-                params = listOf(cdsIp, eventType)
+                params = listOf(cdsIp, userId, eventType)
             ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             val requestTime = System.currentTimeMillis()
@@ -70,7 +71,8 @@ class MarketEventRequestService constructor(
                             headers = mapOf(
                                 AUTH_HEADER_WORKSPACE_NAME to workspaceName,
                                 AUTH_HEADER_CDS_IP to cdsIp,
-                                AUTH_HEADER_EVENT_TYPE to eventType
+                                AUTH_HEADER_EVENT_TYPE to eventType,
+                                AUTH_HEADER_USER_ID to userId
                             ),
                             body = event.body,
                             queryParams = mapOf(),

@@ -1,5 +1,7 @@
 package com.tencent.devops.store.trigger.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.AtomFormComponent
@@ -160,90 +162,53 @@ object TriggerEventConverter {
 fun main() {
     val triggerEventConfig = TriggerEventConfig(
         conditions = listOf(
-            CheckboxListCondition(
-                label = "动作",
-                options = listOf(
-                    ConditionOption(
-                        label = "open",
-                        value = "open"
-                    ),
-                    ConditionOption(
-                        label = "update",
-                        value = "update"
-                    )
-                ),
-                desc = "触发动作",
-                targetField = "ci.action",
-                defaultValue = listOf("open"),
-                operator = ConditionOperatorEnum.NOT_IN,
-                required = false
-            ),
-            EnumInputCondition(
-                label = "事件",
-                options = listOf(
-                    ConditionOption(
-                        label = "push",
-                        value = "push"
-                    ),
-                    ConditionOption(
-                        label = "mr",
-                        value = "mr"
-                    )
-                ),
-                desc = "触发事件",
-                targetField = "ci.action",
-                defaultValue = null,
-                operator = ConditionOperatorEnum.IN,
-                required = false
-            ),
             InputCondition(
-                label = "路径",
-                group = "路径",
-                desc = "触发路径",
-                targetField = "ci.action",
+                label = "监听的云桌面",
+                group = "云桌面设置",
+                desc = "默认监听当前创作环境下的所有云桌面，范围不超过当前创作环境",
+                targetField = "cdsIp",
                 defaultValue = null,
                 operator = ConditionOperatorEnum.LIKE,
                 required = false
             ),
             InputCondition(
-                label = "排除路径",
-                group = "路径",
-                desc = "排除路径",
-                targetField = "ci.action",
+                label = "忽略的云桌面",
+                group = "云桌面设置",
+                desc = "多个云桌面间以英文逗号分隔",
+                targetField = "cdsIp",
                 defaultValue = null,
                 operator = ConditionOperatorEnum.NOT_LIKE,
                 required = false
             ),
-            SelectCondition(
-                label = "评论来源",
-                options = listOf(
-                    ConditionOption(
-                        label = "commit",
-                        value = "commit"
-                    ),
-                    ConditionOption(
-                        label = "mr",
-                        value = "mr"
-                    )
-                ),
-                desc = "评论来源",
-                targetField = "ci.action",
+            InputCondition(
+                label = "触发用户",
+                group = "触发用户设置",
+                desc = "多个用户间以英文逗号分隔符",
+                targetField = "userId",
                 defaultValue = null,
-                operator = ConditionOperatorEnum.IN,
-                required = false,
-                multiple = true
+                operator = ConditionOperatorEnum.LIKE,
+                required = false
+            ),
+            InputCondition(
+                label = "忽略用户",
+                group = "触发用户设置",
+                desc = "多个用户间以英文逗号分隔符",
+                targetField = "userId",
+                defaultValue = null,
+                operator = ConditionOperatorEnum.NOT_LIKE,
+                required = false
             )
         ),
         fieldMapping = listOf(
             EventFieldMappingItem(
-                sourcePath = "ci.action",
-                targetField = "action",
-                source = MappingSource.BODY
+                sourcePath = AUTH_HEADER_USER_ID,
+                targetField = "userId",
+                source = MappingSource.HEADER
             ),
             EventFieldMappingItem(
-                sourcePath = "ci.event_type",
-                targetField = "event_type",
-                source = MappingSource.BODY
+                sourcePath = AUTH_HEADER_CDS_IP,
+                targetField = "cdsIp",
+                source = MappingSource.HEADER
             )
         )
     )
