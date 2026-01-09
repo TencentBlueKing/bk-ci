@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.openapi.BkApigwApi
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -358,27 +359,28 @@ interface ApigwBuildResourceV4 {
         @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = true, example = "1")
         @QueryParam("page")
-        page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        page: Int,
+        @Parameter(description = "每页条数(默认20, 最大100)", required = true, example = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int,
         @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>?,
-        @Parameter(description = "开始于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
-        @QueryParam("startTimeStartTime")
-        startTimeStartTime: Long?,
-        @Parameter(description = "开始于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
-        @QueryParam("startTimeEndTime")
-        startTimeEndTime: Long?,
-        @Parameter(description = "结束于-流水线的执行开始时间(时间戳毫秒级别，13位数字)", required = false)
-        @QueryParam("endTimeStartTime")
-        endTimeStartTime: Long?,
-        @Parameter(description = "结束于-流水线的执行结束时间(时间戳毫秒级别，13位数字)", required = false)
-        @QueryParam("endTimeEndTime")
-        endTimeEndTime: Long?,
+        @Parameter(description = "开始于-流水线的执行开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeFrom")
+        startTimeFrom: String?,
+        @Parameter(description = "开始于-流水线的执行结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeTo")
+        startTimeTo: String?,
+        @Parameter(description = "结束于-流水线的执行开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeFrom")
+        endTimeFrom: String?,
+        @Parameter(description = "结束于-流水线的执行结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeTo")
+        endTimeTo: String?,
         @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int?,
