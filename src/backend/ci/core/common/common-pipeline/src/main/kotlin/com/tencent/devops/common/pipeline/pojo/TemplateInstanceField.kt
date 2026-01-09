@@ -1,6 +1,6 @@
 package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 
 /**
@@ -19,11 +19,19 @@ data class TemplateInstanceField(
         const val BK_CI_BUILD_NO = "BK_CI_BUILD_NO"
 
         fun initFromTrigger(
-            triggerContainer: TriggerContainer
+            model: Model
         ): TemplateInstanceField {
-            val paramIds = triggerContainer.params.filter {
-                it.constant != true && it.required
-            }.map { it.id }.toMutableList()
+            val triggerContainer = model.getTriggerContainer()
+            val paramIds = if (model.template == null) {
+                // pac模版之前的流水线,除了常量,其他参数都需要自定义
+                triggerContainer.params.filter {
+                    it.constant != true
+                }.map { it.id }.toMutableList()
+            } else {
+                triggerContainer.params.filter {
+                    it.constant != true && it.required
+                }.map { it.id }.toMutableList()
+            }
             if (triggerContainer.buildNo != null) {
                 paramIds.add(BK_CI_BUILD_NO)
             }

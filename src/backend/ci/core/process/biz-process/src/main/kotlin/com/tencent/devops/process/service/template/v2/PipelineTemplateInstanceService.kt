@@ -18,6 +18,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
@@ -661,18 +662,23 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     )
                 } else {
                     val overrideTemplateField = model.overrideTemplateField ?: run {
-                        TemplateInstanceField.initFromTrigger(triggerContainer = model.getTriggerContainer())
+                        TemplateInstanceField.initFromTrigger(model = model)
                     }
                     val instanceTriggerContainer = model.getTriggerContainer()
-                    val instanceParams = paramService.filterParams(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        params = instanceTriggerContainer.params
+                    val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+                        templateParams = templateParams,
+                        pipelineParams = instanceTriggerContainer.params
                     )
-                    val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
-                        currentBuildNo = pipelineCurrentBuildNos[pipelineId]
-                    )
+                    // 模板中的buildNo存在才需要回显
+                    // 将实例自己维护的当前值一起返回
+                    val instanceBuildNoObj = templateModel.getTriggerContainer().buildNo?.let { no ->
+                        BuildNo(
+                            buildNoType = no.buildNoType,
+                            required = no.required ?: instanceTriggerContainer.buildNo?.required,
+                            buildNo = no.buildNo,
+                            currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+                        )
+                    }
                     pipelineId to TemplateInstanceParams(
                         pipelineId = pipelineId,
                         pipelineName = pipelineId2Name[pipelineId] ?: "",
@@ -723,15 +729,16 @@ class PipelineTemplateInstanceService @Autowired constructor(
             pipelineId = null,
             params = triggerContainer.params
         )
-        // 返回给前端,那些字段是可以覆盖模版的值
+        // 返回给前端,哪些字段流水线可以自定义
         val overrideTemplateField = TemplateInstanceField.initFromTrigger(
-            triggerContainer = triggerContainer
+            model = templateModel
         )
         return TemplateInstanceParams(
             pipelineId = "",
             pipelineName = "",
             buildNo = triggerContainer.buildNo,
-            param = instanceParams,
+            // 历史数据,流水线保存时,如果变量别名为null,会设置成id
+            param = instanceParams.onEach { it.name = it.name ?: it.id },
             triggerElements = triggerContainer.elements,
             overrideTemplateField = overrideTemplateField
         )
