@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
+import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
@@ -134,7 +135,7 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
-            return pipelineVersionCreateContextFactory.create(
+            val context = pipelineVersionCreateContextFactory.create(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -148,6 +149,15 @@ class PipelineDraftSaveReqConverter(
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
+            // 更新时,验证参数的准确性
+            pipelineId?.let {
+                validateParams(
+                    projectId = projectId,
+                    pipelineId = it,
+                    templateInstanceBasicInfo = context.templateInstanceBasicInfo
+                )
+            }
+            return context
         }
     }
 
@@ -252,6 +262,36 @@ class PipelineDraftSaveReqConverter(
                 overrideTemplateField = overrideTemplateField
             )
         }
+    }
+
+    private fun validateParams(
+        projectId: String,
+        pipelineId: String,
+        templateInstanceBasicInfo: PipelineTemplateInstanceBasicInfo?
+    ) {
+        if (templateInstanceBasicInfo == null) {
+            return
+        }
+        val oldResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateInstanceBasicInfo.templateId,
+            version = templateInstanceBasicInfo.templateVersion
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        TemplateInstanceUtil.validateParams(
+            oldModel = oldResource?.model,
+            newModel = templateInstanceBasicInfo.instanceModel,
+            templateResource = templateResource
+        )
     }
 
     companion object {

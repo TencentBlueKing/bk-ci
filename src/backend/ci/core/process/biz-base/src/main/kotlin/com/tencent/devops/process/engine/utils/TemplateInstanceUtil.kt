@@ -19,6 +19,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.utils.PipelineUtils.getFixedStages
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -624,6 +625,57 @@ object TemplateInstanceUtil {
             result.add(template)
         }
         return result
+    }
+
+    fun validateParams(
+        oldModel: Model?,
+        newModel: Model,
+        templateResource: PipelineTemplateResource?,
+    ) {
+        if (templateResource == null || oldModel == null) {
+            return
+        }
+        val oldParams = oldModel.getTriggerContainer().params
+        val newParams = newModel.getTriggerContainer().params
+
+        // 2. 对比各项属性数量
+        val oldConstantCount = oldParams.count { it.constant == true }
+        val newConstantCount = newParams.count { it.constant == true }
+        val oldRequiredCount = oldParams.count { it.required }
+        val newRequiredCount = newParams.count { it.required }
+        val oldReadOnlyCount = oldParams.count { it.readOnly == true }
+        val newReadOnlyCount = newParams.count { it.readOnly == true }
+
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+
+        // 检查是否所有变量的新旧默认值不同且新默认值等于模板默认值
+        val allDefaultValueException = oldParams.all { oldParam ->
+            val newParam = newParams.find { it.id == oldParam.id }
+            val templateParam = templateModel.getTriggerContainer().params.find { it.id == oldParam.id }
+
+            // 如果找不到对应的新参数或模板参数，则认为不满足条件
+            if (newParam == null || templateParam == null) {
+                false
+            } else {
+                // 检查新旧默认值不同且新默认值等于模板默认值
+                oldParam.defaultValue != newParam.defaultValue &&
+                        newParam.defaultValue == templateParam.defaultValue
+            }
+        }
+        if (oldRequiredCount != newRequiredCount ||
+            oldConstantCount != newConstantCount ||
+            oldReadOnlyCount != newReadOnlyCount ||
+            allDefaultValueException
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TOO_MANY_PARAM_CHANGES
+            )
+        }
     }
 
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
