@@ -160,6 +160,7 @@
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
     watch(() => currentVersion.value,  () => {
+        if (isInstanceCreateType.value) return
         fetchPipelinesDetails()
     })
     watch(() => curTemplateDetail.value, (val) => {
