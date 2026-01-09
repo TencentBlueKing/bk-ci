@@ -131,6 +131,7 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         userId: String,
         projectId: String,
         templateId: String,
+        version: Long,
         pipelineIds: Set<String>
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(
@@ -138,6 +139,7 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
+                version = version,
                 pipelineIds = pipelineIds
             )
         )

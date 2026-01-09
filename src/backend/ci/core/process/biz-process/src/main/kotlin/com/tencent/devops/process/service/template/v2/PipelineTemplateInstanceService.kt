@@ -568,12 +568,24 @@ class PipelineTemplateInstanceService @Autowired constructor(
         userId: String,
         projectId: String,
         templateId: String,
+        version: Long,
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
         pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
+        val templateResource = pipelineTemplateResourceService.get(
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        val templateModel = templateResource.model
+        if (templateModel !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
         val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
             projectId = projectId,
             pipelineIds = pipelineIds
@@ -599,6 +611,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
         val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
         // 增加缓存,防止相同的版本重复解析
         val templateResourceCache = mutableMapOf<String, PipelineTemplateResource>()
+        val templateParams = paramService.filterParams(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            params = templateModel.getTriggerContainer().params
+        )
 
         return try {
             pipelineId2Model.map {
@@ -612,7 +630,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     } else {
                         "${template.templatePath}_${template.templateRef}"
                     }
-                    val templateResource = templateResourceCache.getOrPut(templateCacheKey) {
+                    val oldTemplateResource = templateResourceCache.getOrPut(templateCacheKey) {
                         pipelineModelParser.parseTemplateDescriptor(
                             projectId = projectId,
                             descriptor = template
@@ -620,17 +638,16 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     }
                     val instanceModel = TemplateInstanceUtil.instanceModel(
                         model = model,
-                        templateResource = templateResource
+                        templateResource = oldTemplateResource
                     )
                     val instanceTriggerContainer = instanceModel.getTriggerContainer()
                     val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
                         currentBuildNo = pipelineCurrentBuildNos[pipelineId]
                     )
-                    val instanceParams = paramService.filterParams(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        params = instanceTriggerContainer.params
+
+                    val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+                        templateParams = templateParams,
+                        pipelineParams = instanceTriggerContainer.params
                     )
                     pipelineId to TemplateInstanceParams(
                         pipelineId = pipelineId,

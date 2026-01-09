@@ -173,6 +173,9 @@ interface UserPipelineTemplateInstanceV2Resource {
         @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
+        @Parameter(description = "模板版本", required = true)
+        @QueryParam("version")
+        version: Long,
         @Parameter(description = "创建实例", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String/*pipelineId*/, TemplateInstanceParams>>

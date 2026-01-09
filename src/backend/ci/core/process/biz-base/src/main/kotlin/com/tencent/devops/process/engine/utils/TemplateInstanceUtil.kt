@@ -601,6 +601,31 @@ object TemplateInstanceUtil {
         }.map { TemplateInstanceTriggerConfig(it) }
     }
 
+    /**
+     * 合并模版的options到流水线的options
+     *
+     * 如果模版的options改了,则实例化时应该使用模版的
+     */
+    fun mergeTemplateOptions(
+        templateParams: List<BuildFormProperty>,
+        pipelineParams: List<BuildFormProperty>
+    ): List<BuildFormProperty> {
+        if (templateParams.isEmpty()) {
+            return emptyList()
+        }
+        val result = ArrayList<BuildFormProperty>()
+        templateParams.forEach outside@{ template ->
+            pipelineParams.forEach { pipeline ->
+                if (pipeline.id == template.id) {
+                    result.add(pipeline.copy(options = template.options))
+                    return@outside
+                }
+            }
+            result.add(template)
+        }
+        return result
+    }
+
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
     private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }
