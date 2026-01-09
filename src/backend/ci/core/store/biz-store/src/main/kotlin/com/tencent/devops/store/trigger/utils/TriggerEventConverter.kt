@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
+import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromInputGroup
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.AtomFormComponent
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.CheckBoxListComponentOption
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.CheckboxListComponent
@@ -15,11 +16,11 @@ import com.tencent.devops.common.pipeline.pojo.atom.form.components.SelectInputC
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.SelectInputComponentOption
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.SelectInputComponentConfig
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.VueInputComponent
+import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentGroupType
 import com.tencent.devops.common.pipeline.pojo.atom.form.enums.AtomFormComponentType
 import com.tencent.devops.store.pojo.trigger.EventFieldMappingItem
 import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
 import com.tencent.devops.store.pojo.trigger.conditions.CheckboxListCondition
-import com.tencent.devops.store.pojo.trigger.conditions.ConditionOption
 import com.tencent.devops.store.pojo.trigger.conditions.EnumInputCondition
 import com.tencent.devops.store.pojo.trigger.conditions.InputCondition
 import com.tencent.devops.store.pojo.trigger.conditions.SelectCondition
@@ -32,9 +33,27 @@ object TriggerEventConverter {
         return convertAtomForm(triggerEventConfig.conditions, storeCode)
     }
 
-    fun convertAtomForm(conditions: List<TriggerCondition>, storeCode: String): AtomForm {
+    fun convertAtomForm(
+        conditions: List<TriggerCondition>,
+        storeCode: String,
+        groupType: AtomFormComponentGroupType = AtomFormComponentGroupType.STORE_GROUP
+    ): AtomForm {
         val groupNames = conditions.map { it.group }
         val inputs = mutableListOf<AtomFormComponent>()
+        val inputGroups = if (groupType == AtomFormComponentGroupType.STORE_GROUP) {
+            conditions.map { it.group }
+                    .filter { !it.isNullOrBlank() }
+                    .toSet()
+                    .map {
+                        AtomFromInputGroup(
+                            label = it!!,
+                            name = it,
+                            expanded = true
+                        )
+                    }
+        } else {
+            listOf()
+        }
         // 已处理分组
         val existsGroup = mutableListOf<String>()
         conditions.forEachIndexed { index, condition ->
@@ -43,13 +62,18 @@ object TriggerEventConverter {
             if (existsGroup.contains(currentGroup)) {
                 return@forEachIndexed
             }
-            val component = if (currentGroup.isNullOrBlank() || !groupNames.contains(currentGroup)) {
+            // 生成对应的组件
+            if (
+                    currentGroup.isNullOrBlank() ||
+                    !groupNames.contains(currentGroup) ||
+                    groupType == AtomFormComponentGroupType.STORE_GROUP
+            ) {
                 convertComponent(condition)
             } else {
                 val groupFields = conditions.subList(index + 1, conditions.size).filter { it.group == currentGroup }
                 val children = listOf(condition).plus(groupFields).map {
                     convertComponent(it)
-                }.map { covertGroupComponent(it) }
+                }.map { covertTriggerGroupComponent(it) }
                 // 记录已处理的分组
                 existsGroup.add(currentGroup)
                 GroupComponent(
@@ -57,22 +81,24 @@ object TriggerEventConverter {
                     key = condition.key(),
                     children = children
                 )
+            }.let {
+                inputs.add(it)
             }
-            inputs.add(component)
         }
 
         return AtomForm(
             atomCode = storeCode,
-            input = inputs.associateBy { it.key ?: "" }
+            input = inputs.associateBy { it.key ?: "" },
+            inputGroups = inputGroups
         )
     }
 
-    private fun covertGroupComponent(condition: AtomFormComponent) = when (condition) {
+    private fun covertTriggerGroupComponent(condition: AtomFormComponent) = when (condition) {
         is VueInputComponent -> {
             GroupItemComponent(
                 key = condition.key,
                 prependText = condition.label,
-                placeholder = "请输入",
+                placeholder = condition.placeholder,
                 required = condition.required,
                 label = "",
                 component = AtomFormComponentType.COMPOSITE_INPUT.value
@@ -82,7 +108,7 @@ object TriggerEventConverter {
         else -> GroupItemComponent(
             key = condition.key,
             prependText = condition.label ?: "",
-            placeholder = "请输入",
+            placeholder = condition.placeholder,
             required = condition.required,
             label = "",
             component = condition.type
@@ -103,7 +129,8 @@ object TriggerEventConverter {
                     } ?: listOf(),
                     desc = condition.desc,
                     required = condition.required,
-                    key = condition.key()
+                    key = condition.key(),
+                    groupName = condition.group
                 )
             }
 
@@ -119,7 +146,8 @@ object TriggerEventConverter {
                     } ?: listOf(),
                     desc = condition.desc,
                     required = condition.required,
-                    key = condition.key()
+                    key = condition.key(),
+                    groupName = condition.group
                 )
             }
 
@@ -129,7 +157,8 @@ object TriggerEventConverter {
                     default = condition.defaultValue,
                     desc = condition.desc,
                     required = condition.required,
-                    key = condition.key()
+                    key = condition.key(),
+                    groupName = condition.group
                 )
             }
 
@@ -148,7 +177,8 @@ object TriggerEventConverter {
                     optionsConf = SelectInputComponentConfig(
                         multiple = condition.multiple
                     ),
-                    key = condition.key()
+                    key = condition.key(),
+                    groupName = condition.group
                 )
             }
 

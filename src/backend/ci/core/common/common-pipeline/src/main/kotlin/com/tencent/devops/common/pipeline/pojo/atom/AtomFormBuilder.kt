@@ -2,7 +2,7 @@ package com.tencent.devops.common.pipeline.pojo.atom
 
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomForm
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromExecution
-import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromInputGroups
+import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromInputGroup
 import com.tencent.devops.common.pipeline.pojo.atom.form.AtomFromOutputItem
 import com.tencent.devops.common.pipeline.pojo.atom.form.components.AtomFormComponent
 
@@ -19,8 +19,8 @@ class AtomFormBuilder {
         return this
     }
 
-    fun inputGroup(inputGroup: List<AtomFromInputGroups>): AtomFormBuilder {
-        form.inputGroup = inputGroup
+    fun inputGroup(inputGroups: List<AtomFromInputGroup>): AtomFormBuilder {
+        form.inputGroups = inputGroups
         return this
     }
 

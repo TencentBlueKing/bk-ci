@@ -8,7 +8,7 @@ data class AtomForm(
     @get:Schema(title = "插件唯一标识")
     var atomCode: String,
     @get:Schema(title = "名称")
-    var inputGroup: List<AtomFromInputGroups>? = null,
+    var inputGroups: List<AtomFromInputGroup>? = null,
     @get:Schema(title = "执行命令入口")
     var execution: AtomFromExecution? = null,
     @get:Schema(title = "插件输入字段")

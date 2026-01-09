@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * 分组信息
  */
 @Schema(title = "插件分组信息")
-data class AtomFromInputGroups(
+data class AtomFromInputGroup(
     @get:Schema(title = "名称")
     val name: String,
     @get:Schema(title = "标识")

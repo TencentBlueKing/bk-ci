@@ -45,6 +45,6 @@ enum class AtomFormComponentType(
     GROUP(value = "group"),
     @Schema(title = "分组组件子集", description = "分组组件的下级组件")
     GROUP_ITEM(value = "groupItem"),
-    @Schema(title = "分组输入框", description = "分组组件的下级组件")
+    @Schema(title = "分组输入框", description = "分组组件的下级组件[输入框]")
     COMPOSITE_INPUT(value = "composite-input");
 }
