@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -1219,17 +1220,7 @@ class PipelineBuildDao {
 
     fun listLightPipelineBuildInfo(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        status: List<BuildStatus>?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        offset: Int,
-        limit: Int,
-        buildNoStart: Int?,
-        buildNoEnd: Int?
+        query: PipelineBuildQuery
     ): List<LightBuildHistory> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where = dslContext.select(
@@ -1248,48 +1239,52 @@ class PipelineBuildDao {
                 BUILD_PARAMETERS,
                 TRIGGER_USER,
                 START_USER
-            ).from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+            ).from(this).where(PROJECT_ID.eq(query.projectId)).and(PIPELINE_ID.eq(query.pipelineId))
             makeQueryConditions(
-                status,
+                query.status,
                 where,
-                startTimeStartTime,
-                startTimeEndTime,
-                endTimeStartTime,
-                endTimeEndTime,
-                buildNoStart,
-                buildNoEnd
+                query.startTimeFrom,
+                query.startTimeTo,
+                query.endTimeFrom,
+                query.endTimeTo,
+                query.buildNoStart,
+                query.buildNoEnd
             )
-            where.limit(offset, limit).fetch(lightMapper)
+            where.limit(query.offset, query.limit).fetch(lightMapper)
         }
     }
 
     private fun TPipelineBuildHistory.makeQueryConditions(
         status: List<BuildStatus>?,
         where: SelectConditionStep<*>,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
+        startTimeFrom: String?,
+        startTimeTo: String?,
+        endTimeFrom: String?,
+        endTimeTo: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ) {
         if (!status.isNullOrEmpty()) {
             where.and(STATUS.`in`(status.map { it.ordinal }))
         }
-        if (startTimeStartTime != null && startTimeStartTime > 0) {
-            where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
+        val startTimeFromTimestamp = parseTimeString(startTimeFrom)
+        if (startTimeFromTimestamp != null && startTimeFromTimestamp > 0) {
+            where.and(START_TIME.ge(Timestamp(startTimeFromTimestamp).toLocalDateTime()))
         }
-        if (startTimeEndTime != null && startTimeEndTime > 0) {
-            where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+        val startTimeToTimestamp = parseTimeString(startTimeTo)
+        if (startTimeToTimestamp != null && startTimeToTimestamp > 0) {
+            where.and(START_TIME.le(Timestamp(startTimeToTimestamp).toLocalDateTime()))
         }
         if (buildNoStart != null && buildNoStart > 0) {
             where.and(BUILD_NUM.ge(buildNoStart))
         }
-        if (endTimeStartTime != null && endTimeStartTime > 0) {
-            where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
+        val endTimeFromTimestamp = parseTimeString(endTimeFrom)
+        if (endTimeFromTimestamp != null && endTimeFromTimestamp > 0) {
+            where.and(END_TIME.ge(Timestamp(endTimeFromTimestamp).toLocalDateTime()))
         }
-        if (endTimeEndTime != null && endTimeEndTime > 0) {
-            where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
+        val endTimeToTimestamp = parseTimeString(endTimeTo)
+        if (endTimeToTimestamp != null && endTimeToTimestamp > 0) {
+            where.and(END_TIME.le(Timestamp(endTimeToTimestamp).toLocalDateTime()))
         }
         if (buildNoStart != null && buildNoStart > 0) {
             where.and(BUILD_NUM.ge(buildNoStart))
@@ -1301,28 +1296,20 @@ class PipelineBuildDao {
 
     fun lightPipelineBuildHistoryCount(
         dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        status: List<BuildStatus>?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?
+        query: PipelineBuildQuery
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val where =
-                dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+                dslContext.selectCount().from(this).where(PROJECT_ID.eq(query.projectId)).and(PIPELINE_ID.eq(query.pipelineId))
             makeQueryConditions(
-                status,
+                query.status,
                 where,
-                startTimeStartTime,
-                startTimeEndTime,
-                endTimeStartTime,
-                endTimeEndTime,
-                buildNoStart,
-                buildNoEnd
+                query.startTimeFrom,
+                query.startTimeTo,
+                query.endTimeFrom,
+                query.endTimeTo,
+                query.buildNoStart,
+                query.buildNoEnd
             )
             where.fetchOne(0, Int::class.java)!!
         }
@@ -2241,7 +2228,7 @@ class PipelineBuildDao {
                     id = t[tTPipelineBuildHistory.BUILD_ID],
                     buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
-                    status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].name,
+                        status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
                     startTime = t[tTPipelineBuildHistory.START_TIME]?.timestampmilli() ?: 0L,
                     endTime = t[tTPipelineBuildHistory.END_TIME]?.timestampmilli(),
@@ -2261,6 +2248,24 @@ class PipelineBuildDao {
                     retry = t[tTPipelineBuildHistory.EXECUTE_COUNT]?.let { it > 1 } == true
                 )
             }
+        }
+    }
+
+    /**
+     * 将时间字符串转换为时间戳（毫秒）
+     * @param timeString 时间字符串，格式为 yyyy-MM-dd HH:mm:ss
+     * @return 时间戳（毫秒），如果转换失败返回null
+     */
+    private fun parseTimeString(timeString: String?): Long? {
+        if (timeString.isNullOrBlank()) {
+            return null
+        }
+        return try {
+            val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val localDateTime = java.time.LocalDateTime.parse(timeString, formatter)
+            localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        } catch (e: Exception) {
+            null
         }
     }
 }

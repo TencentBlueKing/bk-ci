@@ -555,18 +555,18 @@ interface ServiceBuildResource {
         @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>? = null,
-        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
-        @QueryParam("startTimeStartTime")
-        startTimeStartTime: Long? = null,
-        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
-        @QueryParam("startTimeEndTime")
-        startTimeEndTime: Long? = null,
-        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
-        @QueryParam("endTimeStartTime")
-        endTimeStartTime: Long? = null,
-        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
-        @QueryParam("endTimeEndTime")
-        endTimeEndTime: Long? = null,
+        @Parameter(description = "开始于-开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeFrom")
+        startTimeFrom: String? = null,
+        @Parameter(description = "开始于-结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("startTimeTo")
+        startTimeTo: String? = null,
+        @Parameter(description = "结束于-开始时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeFrom")
+        endTimeFrom: String? = null,
+        @Parameter(description = "结束于-结束时间(格式：yyyy-MM-dd HH:mm:ss)", required = false)
+        @QueryParam("endTimeTo")
+        endTimeTo: String? = null,
         @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int? = null,

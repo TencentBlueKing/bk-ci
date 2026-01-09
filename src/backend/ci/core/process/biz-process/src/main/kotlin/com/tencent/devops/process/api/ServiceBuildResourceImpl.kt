@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.RestResource
@@ -461,28 +462,33 @@ class ServiceBuildResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int,
         status: List<BuildStatus>?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
+        startTimeFrom: String?,
+        startTimeTo: String?,
+        endTimeFrom: String?,
+        endTimeTo: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?
     ): Result<Page<LightBuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
-        val result = pipelineBuildFacadeService.getLightHistoryBuild(
-            userId = userId,
+        val query = PipelineBuildQuery(
             projectId = projectId,
             pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize,
             status = status?.filterNotNull(),
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
+            startTimeFrom = startTimeFrom,
+            startTimeTo = startTimeTo,
+            endTimeFrom = endTimeFrom,
+            endTimeTo = endTimeTo,
+            offset = 0,
+            limit = pageSize,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd
+        )
+        val result = pipelineBuildFacadeService.getLightHistoryBuild(
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            query = query
         )
         return Result(result)
     }

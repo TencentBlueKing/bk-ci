@@ -57,7 +57,7 @@ data class LightBuildHistory(
     @get:Schema(title = "触发条件", required = true)
     val trigger: String,
     @get:Schema(title = "流水线任务执行错误", required = false)
-    var errorInfoList: List<ErrorInfo>?,
+    val errorInfoList: List<ErrorInfo>?,
     @get:Schema(title = "启动参数", required = false)
     val buildParameters: List<LightBuildParameter>?
 )
@@ -68,13 +68,13 @@ data class LightBuildHistory(
 @Schema(title = "轻量构建模型-构建参数")
 data class LightBuildParameter(
     @get:Schema(title = "元素值ID-标识符", required = true)
-    var key: String,
+    val key: String,
     @get:Schema(title = "元素值名称-显示用", required = true)
-    var value: Any,
+    val value: Any,
     @get:Schema(title = "元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
     @get:Schema(title = "描述", required = false)
-    var desc: String? = null,
+    val desc: String? = null,
     @get:Schema(title = "默认值", required = false)
-    var defaultValue: Any? = null,
+    val defaultValue: Any? = null,
 )

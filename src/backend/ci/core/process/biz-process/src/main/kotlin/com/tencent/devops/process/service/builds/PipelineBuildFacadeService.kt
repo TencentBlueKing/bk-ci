@@ -65,6 +65,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.EmptyElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -2195,17 +2196,9 @@ class PipelineBuildFacadeService(
      */
     fun getLightHistoryBuild(
         userId: String?,
-        projectId: String,
-        pipelineId: String,
         page: Int,
         pageSize: Int,
-        status: List<BuildStatus>?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?
+        query: PipelineBuildQuery
     ): Page<LightBuildHistory> {
         val sqlLimit =
             if (pageSize != -1) PageUtil.convertPageSizeToSQLLimit(page, pageSize) else null
@@ -2215,42 +2208,24 @@ class PipelineBuildFacadeService(
             SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)
         ).checkUserPipelinePermission(
             userId = userId!!,
-            projectId = projectId,
-            pipelineId = pipelineId,
+            projectId = query.projectId,
+            pipelineId = query.pipelineId,
             permission = AuthPermission.VIEW
         )
         // 查询总数
-        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            status = status,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
-        )
+        val countQuery = query.copy(offset = offset, limit = limit)
+        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query = countQuery)
 
         // 查询构建历史记录
+        val listQuery = query.copy(offset = offset, limit = limit)
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
             userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            offset = offset,
-            limit = limit,
-            status = status,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime,
-            buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            query = listQuery
         )
         return Page(
             page = page,
             pageSize = limit,
-            count = newTotalCount + 0L,
+            count = newTotalCount.toLong(),
             records = newHistoryBuilds
         )
     }
