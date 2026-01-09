@@ -136,8 +136,7 @@ class TemplateMigrationIntegrityValidator(
                 PipelineTemplateResourceCommonCondition(
                     projectId = projectId,
                     templateId = templateId,
-                    includeDeleted = true,
-                    excludeBranchAction = BranchVersionAction.INACTIVE
+                    includeDeleted = true
                 )
             )
             // 约束模式模板：V2 版本数应该等于父模板的 V1 版本数

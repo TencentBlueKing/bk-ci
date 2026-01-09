@@ -456,7 +456,6 @@ class PipelineTemplateResourceDao {
                 if (baseVersion != null) conditions.add(BASE_VERSION.eq(baseVersion))
                 if (status != null) conditions.add(STATUS.eq(status!!.name))
                 if (branchAction != null) conditions.add(BRANCH_ACTION.eq(branchAction!!.name))
-                if (excludeBranchAction != null) conditions.add(BRANCH_ACTION.notEqual(excludeBranchAction!!.name))
                 if (creator != null) conditions.add(CREATOR.eq(creator))
                 if (updater != null) conditions.add(UPDATER.eq(updater))
                 if (releaseTime != null) conditions.add(RELEASE_TIME.eq(releaseTime))
