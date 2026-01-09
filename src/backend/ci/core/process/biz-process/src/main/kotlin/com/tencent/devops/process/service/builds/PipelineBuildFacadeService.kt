@@ -91,6 +91,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.process.engine.common.Timeout
@@ -118,9 +119,11 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.BuildReplayStatus
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
@@ -130,6 +133,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -147,6 +151,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.strategy.bus.impl.UserNormalPipelinePermissionCheckStrategy
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
@@ -195,7 +200,9 @@ class PipelineBuildFacadeService(
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineBuildRetryService: PipelineBuildRetryService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
+    private val pipelineTriggerEventService: PipelineTriggerEventService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2783,7 +2790,7 @@ class PipelineBuildFacadeService(
         buildId: String,
         userId: String,
         forceTrigger: Boolean
-    ): BuildId {
+    ): BuildReplayResult {
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -2849,72 +2856,45 @@ class PipelineBuildFacadeService(
                 triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
-            StartType.PIPELINE -> {
+            else -> {
                 EmptyElement()
             }
-        } != null
+        }?.takeIf { it.elementEnabled() } != null
         if (!checkTriggerResult) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_CONDITION_NOT_MATCH,
                 params = arrayOf(resource.versionName ?: "")
             )
         }
-        return triggerPipeline(
+        if (startType == StartType.WEB_HOOK) {
+            val replayEventId = pipelineTriggerEventService.getTriggerDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )?.let {
+                pipelineTriggerEventService.replay(
+                    userId = userId,
+                    projectId = projectId,
+                    detailId = it.detailId!!
+                )
+            } ?: throw ErrorCodeException(errorCode = ERROR_TRIGGER_EVENT_EXPIRED)
+            return BuildReplayResult(
+                status = BuildReplayStatus.REPLAYING,
+                eventId = replayEventId
+            )
+        }
+        val replayBuildId = buildManualStartup(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId,
-            startParameters = startParameters,
-            startType = if (startType == StartType.WEB_HOOK) {
-                StartType.WEB_HOOK
-            } else {
-                StartType.MANUAL
-            },
-            pipelineInfo = readyToBuildPipelineInfo,
-            pipelineResourceVersion = resource
+            channelCode = ChannelCode.BS,
+            values = startParameters,
+            startType = StartType.MANUAL
         )
-    }
-
-    private fun triggerPipeline(
-        startType: StartType,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        startParameters: MutableMap<String, String>,
-        pipelineInfo: PipelineInfo? = null,
-        pipelineResourceVersion: PipelineResourceVersion? = null,
-        userId: String
-    ) = when (startType) {
-        StartType.WEB_HOOK -> {
-            // webhook触发
-            webhookBuildParameterService.getBuildParameters(buildId = buildId)?.forEach { param ->
-                startParameters[param.key] = param.value.toString()
-            }
-            // webhook触发
-            BuildId(
-                webhookTriggerPipelineBuild(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    parameters = startParameters,
-                    checkPermission = false,
-                    startType = startType,
-                    pipelineInfo = pipelineInfo,
-                    pipelineResource = pipelineResourceVersion
-                )!!
-            )
-        }
-
-        else -> {
-            buildManualStartup(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = ChannelCode.BS,
-                values = startParameters,
-                startType = startType
-            )
-        }
+        return BuildReplayResult(
+            status = BuildReplayStatus.REPLAY_SUCCESS,
+            id = replayBuildId.id
+        )
     }
 
     fun buildRestart(
@@ -3036,7 +3016,8 @@ class PipelineBuildFacadeService(
             userId = userId,
             debug = false,
             checkPermission = true,
-            triggerParams = triggerContainer.params
+            triggerParams = triggerContainer.params,
+            isTemplate = isTemplate
         ).toMutableList()
         // 推荐版本号需额外处理
         handleVersionParam(properties, triggerContainer.buildNo)
@@ -3171,6 +3152,36 @@ class PipelineBuildFacadeService(
         )
     }
 
+    fun replayStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): BuildReplayResult {
+        // 校验是否pipeline跟buildId匹配, 防止误传参数
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        return when (StartType.toStartType(buildInfo.trigger)) {
+            StartType.WEB_HOOK -> {
+                pipelineTriggerEventService.getTriggerDetail(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )?.let {
+                    BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
+                } ?: BuildReplayResult(
+                    status = BuildReplayStatus.CANNOT_REPLAY,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_EXPIRED
+                    )
+                )
+            }
+
+            else -> {
+                BuildReplayResult(BuildReplayStatus.CAN_REPLAY)
+            }
+        }
+    }
+
     private fun getBuildManualParams(
         projectId: String,
         pipelineId: String,
@@ -3178,23 +3189,34 @@ class PipelineBuildFacadeService(
         debug: Boolean,
         checkPermission: Boolean,
         triggerParams: List<BuildFormProperty>,
-        manualBuildMsg: String? = null
+        manualBuildMsg: String? = null,
+        isTemplate: Boolean? = false
     ): List<BuildFormProperty> {
-        if (checkPermission) { // 不用校验查看权限，只校验执行权限
-            val permission = AuthPermission.EXECUTE
-            pipelinePermissionService.validPipelinePermission(
-                userId = userId!!,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
+        if (checkPermission) {
+            if (isTemplate == true) {
+                pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+                    userId = userId!!,
+                    projectId = projectId,
+                    templateId = pipelineId,
+                    permission = AuthPermission.EDIT
+                )
+            } else {
+                // 不用校验查看权限，只校验执行权限
+                val permission = AuthPermission.EXECUTE
+                pipelinePermissionService.validPipelinePermission(
+                    userId = userId!!,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = permission,
+                    message = MessageUtil.getMessageByLocale(
+                        CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(
+                            userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
+                        )
                     )
                 )
-            )
+            }
         }
         // #2902 默认增加构建信息
         val params = mutableListOf<BuildFormProperty>()

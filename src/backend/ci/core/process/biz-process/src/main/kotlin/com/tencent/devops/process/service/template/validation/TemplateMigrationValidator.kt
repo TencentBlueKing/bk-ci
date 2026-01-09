@@ -25,42 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.process.service.template.validation
 
-import com.tencent.bkrepo.generic.pojo.FileInfo
-import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
+import com.tencent.devops.process.pojo.template.migration.TemplateMigrationDiscrepancy
+import com.tencent.devops.process.pojo.template.migration.ValidationRuleType
 
-data class QueryNodeInfo(
-    var createdBy: String,
-    var createdDate: String,
-    var lastModifiedBy: String,
-    var lastModifiedDate: String,
-    var folder: Boolean,
-    var path: String,
-    var name: String,
-    var fullPath: String,
-    var size: Long,
-    var sha256: String? = null,
-    var md5: String? = null,
-    var crc64ecma: String? = null,
-    var projectId: String,
-    var repoName: String,
-    var metadata: Map<String, Any>?,
-    var nodeMetadata: List<MetadataModel>? = emptyList()
-) {
-    fun toFileInfo() = FileInfo(
-        createdBy = createdBy,
-        createdDate = createdDate,
-        lastModifiedBy = lastModifiedBy,
-        lastModifiedDate = lastModifiedDate,
-        folder = folder,
-        path = path,
-        name = name,
-        fullPath = fullPath,
-        size = size,
-        sha256 = sha256,
-        md5 = md5,
-        projectId = projectId,
-        repoName = repoName
-    )
+/**
+ * 模板迁移验证器接口
+ */
+interface TemplateMigrationValidator {
+    /**
+     * 验证器类型
+     */
+    fun getType(): ValidationRuleType
+
+    /**
+     * 执行验证
+     * @param projectId 项目ID
+     * @return 验证发现的差异列表
+     */
+    fun validate(projectId: String): List<TemplateMigrationDiscrepancy>
 }

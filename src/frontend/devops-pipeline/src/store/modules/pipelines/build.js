@@ -308,6 +308,21 @@ const actions = {
         }).catch(e => {
             return e
         })
+    },
+    requestPipelineRePlayStatus ({ commit, state, dispatch }, { projectId, pipelineId, buildId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/${buildId}/replay/status`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
+        })
+    },
+
+    requestRePlayEventDetail ({ commit, state, dispatch }, { projectId, eventId }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail`).then(response => {
+            return response.data
+        }).catch(e => {
+            return e
+        })
     }
 }
 

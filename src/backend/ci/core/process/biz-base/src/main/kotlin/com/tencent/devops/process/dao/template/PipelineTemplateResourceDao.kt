@@ -198,6 +198,22 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    /**
+     * 统计模板版本数量
+     */
+    fun countVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): Int {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition
@@ -440,6 +456,7 @@ class PipelineTemplateResourceDao {
                 if (baseVersion != null) conditions.add(BASE_VERSION.eq(baseVersion))
                 if (status != null) conditions.add(STATUS.eq(status!!.name))
                 if (branchAction != null) conditions.add(BRANCH_ACTION.eq(branchAction!!.name))
+                if (excludeBranchAction != null) conditions.add(BRANCH_ACTION.notEqual(excludeBranchAction!!.name))
                 if (creator != null) conditions.add(CREATOR.eq(creator))
                 if (updater != null) conditions.add(UPDATER.eq(updater))
                 if (releaseTime != null) conditions.add(RELEASE_TIME.eq(releaseTime))
