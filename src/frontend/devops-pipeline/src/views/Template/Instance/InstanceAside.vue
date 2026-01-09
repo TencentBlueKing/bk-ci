@@ -159,6 +159,9 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    watch(() => currentVersion.value,  () => {
+        fetchPipelinesDetails()
+    })
     watch(() => curTemplateDetail.value, (val) => {
         if (instanceList.value.length) return
         if (pipelineName.value && isInstanceCreateType.value) {
@@ -243,6 +246,7 @@
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
+                version: currentVersion.value,
                 templateId: templateId.value
             })
             const list = renderInstanceList.value.map(i => {
