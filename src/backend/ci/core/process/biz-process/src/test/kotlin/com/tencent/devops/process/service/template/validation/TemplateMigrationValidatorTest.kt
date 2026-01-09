@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.template.validation
 
-import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.migration.ValidationRuleType
@@ -95,8 +94,7 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                     PipelineTemplateResourceCommonCondition(
                         projectId = PROJECT_ID,
                         templateId = TEMPLATE_ID,
-                        includeDeleted = true,
-                        excludeBranchAction = BranchVersionAction.INACTIVE
+                        includeDeleted = true
                     )
                 )
             } returns 2
@@ -126,8 +124,7 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                     PipelineTemplateResourceCommonCondition(
                         projectId = PROJECT_ID,
                         templateId = TEMPLATE_ID,
-                        includeDeleted = true,
-                        excludeBranchAction = BranchVersionAction.INACTIVE
+                        includeDeleted = true
                     )
                 )
             } returns 1
@@ -183,8 +180,7 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                     PipelineTemplateResourceCommonCondition(
                         projectId = PROJECT_ID,
                         templateId = TEMPLATE_ID,
-                        includeDeleted = true,
-                        excludeBranchAction = BranchVersionAction.INACTIVE
+                        includeDeleted = true
                     )
                 )
             } returns 3
@@ -248,8 +244,7 @@ class TemplateMigrationValidatorTest : BkCiAbstractTest() {
                     PipelineTemplateResourceCommonCondition(
                         projectId = PROJECT_ID,
                         templateId = TEMPLATE_ID,
-                        includeDeleted = true,
-                        excludeBranchAction = BranchVersionAction.INACTIVE
+                        includeDeleted = true
                     )
                 )
             } returns 1
