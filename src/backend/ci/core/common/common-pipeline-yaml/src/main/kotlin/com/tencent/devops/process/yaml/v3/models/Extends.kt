@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 
@@ -65,5 +66,5 @@ data class ExtendsTemplate(
     @JsonProperty("trigger-conf")
     val triggerConfig: Map<String, ExtendsTriggerConfig>? = null,
     @JsonProperty("recommended-version")
-    val recommendedVersion: RecommendedVersion? = null
+    val recommendedVersion: ExtendsRecommendedVersion? = null
 ) : CodeTemplate

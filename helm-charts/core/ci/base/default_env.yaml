@@ -57,5 +57,6 @@ bkCiOpenapiApiAuth: false
 bkCiMqDefaultBinder: core-rabbit
 bkCiJwtEnable: false
 bkCiNotifyUserBlackListCacheSize: 50000
+bkCiPlatformManager: admin
 bkCiRabbitQuorumEnable: false
 bkCiAuthSyncCronEnabled: true
