@@ -1264,9 +1264,6 @@ class PipelineBuildDao {
         if (startTimeToTimestamp != null && startTimeToTimestamp > 0) {
             where.and(START_TIME.le(Timestamp(startTimeToTimestamp).toLocalDateTime()))
         }
-        if (query.buildNoStart != null && query.buildNoStart!! > 0) {
-            where.and(BUILD_NUM.ge(query.buildNoStart))
-        }
         val endTimeFromTimestamp = parseTimeString(query.endTimeFrom)
         if (endTimeFromTimestamp != null && endTimeFromTimestamp > 0) {
             where.and(END_TIME.ge(Timestamp(endTimeFromTimestamp).toLocalDateTime()))
