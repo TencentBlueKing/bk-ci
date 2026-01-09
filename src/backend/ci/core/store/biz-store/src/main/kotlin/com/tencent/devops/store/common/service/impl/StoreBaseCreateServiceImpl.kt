@@ -141,7 +141,9 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             modifier = userId,
             latestFlag = true,
             busNum = CommonUtils.generateNumber(VersionUtils.getMajorVersion(version, storeType), 1, STORE_BUS_NUM_LEN),
-            ownerStoreCode = storeBaseCreateRequest.ownerStoreCode
+            ownerStoreCode = storeBaseCreateRequest.ownerStoreCode,
+            logoUrl = storeBaseCreateRequest.logoUrl,
+            summary = storeBaseCreateRequest.summary ?: ""
         )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,

@@ -56,5 +56,10 @@ data class StoreBaseCreateRequest(
     @Valid
     val baseEnvInfos: List<StoreBaseEnvRequest>? = null,
     @get:Schema(title = "归属应用标识", required = false)
-    val ownerStoreCode: String? = null
+    val ownerStoreCode: String? = null,
+    @get:Schema(title = "logoUrl", required = false)
+    val logoUrl: String? = null,
+    @get:Schema(title = "简介", required = false)
+    @field:BkField(maxLength = 256)
+    val summary: String? = null
 )
