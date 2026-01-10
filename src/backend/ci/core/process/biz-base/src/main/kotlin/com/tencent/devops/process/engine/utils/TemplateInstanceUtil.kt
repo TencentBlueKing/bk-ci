@@ -626,69 +626,6 @@ object TemplateInstanceUtil {
         return result
     }
 
-    fun validateParams(
-        oldModel: Model?,
-        newModel: Model,
-        templateResource: PipelineTemplateResource?,
-    ) {
-        if (templateResource == null || oldModel == null) {
-            return
-        }
-        val oldParams = oldModel.getTriggerContainer().params
-        val newParams = newModel.getTriggerContainer().params
-
-        // 2. 对比各项属性数量
-        val oldConstantCount = oldParams.count { it.constant == true }
-        val newConstantCount = newParams.count { it.constant == true }
-        val oldRequiredCount = oldParams.count { it.required }
-        val newRequiredCount = newParams.count { it.required }
-        val oldReadOnlyCount = oldParams.count { it.readOnly == true }
-        val newReadOnlyCount = newParams.count { it.readOnly == true }
-
-        val templateModel = templateResource.model
-        if (templateModel !is Model) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
-            )
-        }
-        
-        // 检查是否所有变量的新旧默认值不同且新默认值等于模板默认值
-        val allDefaultValueException = oldParams.all { oldParam ->
-            val newParam = newParams.find { it.id == oldParam.id }
-            val templateParam = templateModel.getTriggerContainer().params.find { it.id == oldParam.id }
-
-            logger.info(
-                "validate param|${oldParam.id}|${oldParam.defaultValue}" +
-                        "|${newParam?.defaultValue}|${templateParam?.defaultValue}"
-            )
-
-            // 如果找不到对应的新参数或模板参数，则认为不满足条件
-            if (newParam == null || templateParam == null) {
-                false
-            } else {
-                // 检查新旧默认值不同且新默认值等于模板默认值
-                oldParam.defaultValue != newParam.defaultValue &&
-                    newParam.defaultValue == templateParam.defaultValue
-            }
-        }
-        val result = oldRequiredCount != newRequiredCount ||
-            oldConstantCount != newConstantCount ||
-            oldReadOnlyCount != newReadOnlyCount ||
-            allDefaultValueException
-        logger.info(
-            "save draft param compare: " +
-                    "oldRequiredCount: $oldRequiredCount|newRequiredCount: $newRequiredCount|" +
-                    "oldConstantCount: $oldConstantCount|newConstantCount: $newConstantCount|" +
-                    "oldReadOnlyCount: $oldReadOnlyCount|newReadOnlyCount: $newReadOnlyCount|" +
-                    "allDefaultValueException: $allDefaultValueException|result: $result"
-        )
-        if (result) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TOO_MANY_PARAM_CHANGES
-            )
-        }
-    }
-
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
     private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }

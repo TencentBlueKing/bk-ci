@@ -42,7 +42,6 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
-import com.tencent.devops.process.pojo.pipeline.PipelineTemplateInstanceBasicInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineDraftSaveReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
@@ -149,12 +148,12 @@ class PipelineDraftSaveReqConverter(
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
-            // 更新时,验证参数的准确性
-            pipelineId?.let {
-                validateParams(
+            if (pipelineId != null && context.templateInstanceBasicInfo != null) {
+                assertModel(
                     projectId = projectId,
-                    pipelineId = it,
-                    templateInstanceBasicInfo = context.templateInstanceBasicInfo
+                    pipelineId = pipelineId,
+                    inputModel = modelAndSetting.model,
+                    instanceModel = context.templateInstanceBasicInfo.instanceModel
                 )
             }
             return context
@@ -264,34 +263,77 @@ class PipelineDraftSaveReqConverter(
         }
     }
 
-    private fun validateParams(
+    /**
+     * 验证实例化的model与前端传入的model正确性
+     *
+     * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
+     */
+    private fun assertModel(
         projectId: String,
         pipelineId: String,
-        templateInstanceBasicInfo: PipelineTemplateInstanceBasicInfo?
+        inputModel: Model,
+        instanceModel: Model
     ) {
-        if (templateInstanceBasicInfo == null) {
-            return
-        }
-        val oldResource = pipelineRepositoryService.getPipelineResourceVersion(
-            projectId = projectId,
-            pipelineId = pipelineId
-        )
-        val templateResource = pipelineTemplateResourceService.get(
-            projectId = projectId,
-            templateId = templateInstanceBasicInfo.templateId,
-            version = templateInstanceBasicInfo.templateVersion
-        )
-        val templateModel = templateResource.model
-        if (templateModel !is Model) {
+        val inputTriggerContainer = inputModel.getTriggerContainer()
+        val instanceTriggerContainer = instanceModel.getTriggerContainer()
+        val inputParams = inputTriggerContainer.params
+        val instanceParams = instanceTriggerContainer.params
+        if (inputParams.size != instanceParams.size) {
+            logger.warn(
+                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
+                        "${inputParams.size}|${instanceParams.size}"
+            )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
             )
         }
-        TemplateInstanceUtil.validateParams(
-            oldModel = oldResource?.model,
-            newModel = templateInstanceBasicInfo.instanceModel,
-            templateResource = templateResource
-        )
+        val requiredExceptions = mutableListOf<String>()
+        val constantExceptions = mutableListOf<String>()
+        val defaultValueExceptions = mutableListOf<String>()
+        instanceParams.forEach { instanceParam ->
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
+                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
+                )
+            }
+            if (inputParam.required != instanceParam.required) {
+                requiredExceptions.add(instanceParam.id)
+            }
+            if (inputParam.constant != instanceParam.constant) {
+                constantExceptions.add(instanceParam.id)
+            }
+            if (inputParam.defaultValue != instanceParam.defaultValue) {
+                defaultValueExceptions.add(instanceParam.id)
+            }
+        }
+        if (requiredExceptions.isNotEmpty()) {
+            logger.warn(
+                "required exceptions|$projectId|$pipelineId|$requiredExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(requiredExceptions.joinToString(","), "required")
+            )
+        }
+        if (constantExceptions.isNotEmpty()) {
+            logger.warn(
+                "constant exceptions|$projectId|$pipelineId|$constantExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(constantExceptions.joinToString(","), "constant")
+            )
+        }
+        if (defaultValueExceptions.isNotEmpty()) {
+            logger.warn(
+                "default value exceptions|$projectId|$pipelineId|$defaultValueExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
+            )
+        }
     }
 
     companion object {
