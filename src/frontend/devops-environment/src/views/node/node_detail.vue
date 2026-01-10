@@ -91,11 +91,9 @@
             const {
                 currentNode,
                 nodeHashId,
-                fetchNodeDetail
+                fetchNodeDetail,
+                nodeDetailLoaded
             } = useNodeDetail()
-            
-            // 节点详情是否加载完成
-            const nodeDetailLoaded = ref(false)
             
             // 从路由查询参数中获取初始 tab，如果没有则默认为 'overview'
             const initialTab = proxy.$route.query.tabName || 'overview'
@@ -208,9 +206,7 @@
             // 监听 nodeHashId 变化，当 nodeHashId 存在但没有 tabName 时，添加默认的 tabName
             watch(() => nodeHashId.value, async (newNodeHashId) => {
                 if (newNodeHashId) {
-                    nodeDetailLoaded.value = false
                     await fetchNodeDetail()
-                    nodeDetailLoaded.value = true
                 }
                 if (newNodeHashId && !proxy.$route.query.tabName) {
                     proxy.$router.replace({
@@ -225,9 +221,7 @@
             })
             
             onMounted(async () => {
-                nodeDetailLoaded.value = false
                 await fetchNodeDetail()
-                nodeDetailLoaded.value = true
             })
 
             // 重装 Agent - 复制安装命令到剪贴板
@@ -249,9 +243,7 @@
 
             // 刷新节点详情
             const handleRefresh = async () => {
-                nodeDetailLoaded.value = false
                 await fetchNodeDetail()
-                nodeDetailLoaded.value = true
             }
             
             return {
