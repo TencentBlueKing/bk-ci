@@ -670,6 +670,12 @@ object TemplateInstanceUtil {
             oldConstantCount != newConstantCount ||
             oldReadOnlyCount != newReadOnlyCount ||
             allDefaultValueException
+        logger.info(
+            "save draft param compare: oldRequiredCount: $oldRequiredCount|newRequiredCount: $newRequiredCount|" +
+                    "oldConstantCount: $oldConstantCount|newConstantCount: $newConstantCount|" +
+                    "oldReadOnlyCount: $oldReadOnlyCount|oldReadOnlyCount: $oldReadOnlyCount|" +
+                    "allDefaultValueException: $allDefaultValueException|result: $result"
+        )
         if (result) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TOO_MANY_PARAM_CHANGES
