@@ -651,11 +651,16 @@ object TemplateInstanceUtil {
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
             )
         }
-
+        
         // 检查是否所有变量的新旧默认值不同且新默认值等于模板默认值
         val allDefaultValueException = oldParams.all { oldParam ->
             val newParam = newParams.find { it.id == oldParam.id }
             val templateParam = templateModel.getTriggerContainer().params.find { it.id == oldParam.id }
+
+            logger.info(
+                "validate param|${oldParam.id}|${oldParam.defaultValue}" +
+                        "|${newParam?.defaultValue}|${templateParam?.defaultValue}"
+            )
 
             // 如果找不到对应的新参数或模板参数，则认为不满足条件
             if (newParam == null || templateParam == null) {
@@ -671,9 +676,10 @@ object TemplateInstanceUtil {
             oldReadOnlyCount != newReadOnlyCount ||
             allDefaultValueException
         logger.info(
-            "save draft param compare: oldRequiredCount: $oldRequiredCount|newRequiredCount: $newRequiredCount|" +
+            "save draft param compare: " +
+                    "oldRequiredCount: $oldRequiredCount|newRequiredCount: $newRequiredCount|" +
                     "oldConstantCount: $oldConstantCount|newConstantCount: $newConstantCount|" +
-                    "oldReadOnlyCount: $oldReadOnlyCount|oldReadOnlyCount: $oldReadOnlyCount|" +
+                    "oldReadOnlyCount: $oldReadOnlyCount|newReadOnlyCount: $newReadOnlyCount|" +
                     "allDefaultValueException: $allDefaultValueException|result: $result"
         )
         if (result) {
