@@ -4,12 +4,28 @@
             <div class="header-left">
                 <bk-button
                     theme="primary"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: envHashId,
+                            action: ENV_RESOURCE_ACTION.EDIT
+                        }
+                    }"
                     @click="handleShowAddNodesDialog"
                 >
                     {{ $t('environment.relatedNodes') }}
                 </bk-button>
                 <bk-button
                     :disabled="!selectedNodesList.length"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: envHashId,
+                            action: ENV_RESOURCE_ACTION.EDIT
+                        }
+                    }"
                     @click="handleBatchRemove"
                 >
                     {{ $t('environment.bulkRemove') }}
@@ -165,6 +181,10 @@
 
 <script>
     import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+    import {
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -193,6 +213,7 @@
                 handleShowRelatedNodes
             } = useRelatedNodes()
             const {
+                projectId,
                 envHashId,
                 envNodeList,
                 fetchEnvDetail,
@@ -421,6 +442,10 @@
                 runningStatus,
                 successStatus,
                 failStatus,
+                projectId,
+                envHashId,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
 
                 // function
                 fetchData,

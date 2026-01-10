@@ -10,6 +10,14 @@
         <div class="operation-area">
             <bk-button
                 theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
                 @click="handleAddVariable"
             >
                 {{ $t('environment.addVariable') }}
@@ -170,6 +178,10 @@
 
 <script>
     import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+    import {
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -192,6 +204,7 @@
             } = usePagination()
             const {
                 currentEnv,
+                projectId,
                 envHashId,
                 envParamsList,
                 fetchEnvParamsList,
@@ -484,6 +497,9 @@
                 formData,
                 formRules,
                 tableMaxHeight,
+                projectId,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 
                 // function
                 resetPagination,

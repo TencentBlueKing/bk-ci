@@ -1,10 +1,10 @@
 import { ref } from 'vue'
 import useInstance from './useInstance'
 
-const defaultCreateEnvParam = () => {
+const defaultCreateEnvParam = (envType = 'BUILD') => {
     return {
         desc: '',
-        envType: 'BUILD',
+        envType,
         name: '',
         // createdUser: '',
         source: 'EXISTING'
@@ -18,9 +18,9 @@ const isLoading = ref(false)
 export default function useCreateEnv (onSuccess, onError) {
     const { proxy } = useInstance()
     
-    const showCreateEnvDialog = () => {
+    const showCreateEnvDialog = (envType) => {
         isShow.value = true
-        envParams.value = defaultCreateEnvParam()
+        envParams.value = defaultCreateEnvParam(envType)
     }
     
     const closeCreateEnvDialog = () => {

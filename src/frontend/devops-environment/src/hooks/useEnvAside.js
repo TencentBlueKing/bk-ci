@@ -1,14 +1,20 @@
 import { ref, computed, watch } from 'vue'
 import useInstance from './useInstance'
+import useEnvDetail from './useEnvDetail'
+
 import {
     ENV_TYPE_MAP
 } from '@/store/constants'
+
+const envList = ref([])
 export default function useEnvAside () {
     const { proxy } = useInstance()
     const isLoading = ref(false)
-    const envList = ref([])
     const envName = ref('')
     const envCountData = ref({})
+    const {
+        setEnvDetailLoaded,
+    } = useEnvDetail()
     
     // 初始化方法：检查并设置默认的 envType，获取列表
     const initData = async () => {
@@ -61,6 +67,9 @@ export default function useEnvAside () {
             const validEnvId = currentEnvId && res.find(env => env.envHashId === currentEnvId)
                 ? currentEnvId
                 : res[0]?.envHashId
+            if (envList.value.length === 0) {
+                setEnvDetailLoaded(true)
+            }
                 
             if (currentEnvId !== validEnvId) {
                 proxy.$router.replace({
@@ -75,7 +84,7 @@ export default function useEnvAside () {
                 })
             }
         } catch (error) {
-            proxy.$showTips({
+            proxy?.$showTips({
                 message: error.message,
                 theme: 'error'
             })
@@ -93,7 +102,7 @@ export default function useEnvAside () {
             envCountData.value = res
             return res
         } catch (error) {
-            proxy.$showTips({
+            proxy?.$showTips({
                 message: error.message || error,
                 theme: 'error'
             })
