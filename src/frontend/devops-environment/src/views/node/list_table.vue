@@ -638,7 +638,8 @@
                     { tagKeyId: '', tagValueId: '' }
                 ],
                 currentNodeId: null,
-                visibleLabelCountList: {}
+                visibleLabelCountList: {},
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
             }
         },
         computed: {
