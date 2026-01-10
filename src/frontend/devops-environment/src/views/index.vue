@@ -28,7 +28,7 @@
             </bk-tab>
             <span class="monitoring">
                 <span
-                    v-if="isEnableDashboard && activePanel === 'nodeList'"
+                    v-if="isEnableDashboard && activePanel === 'nodeList' && currentResType === SERVICE_RESOURCE_TYPE.PIPELINE"
                     class="enable-monitoring ml5"
                 >
                     <i class="devops-icon icon-tiaozhuan jump-icon"></i>

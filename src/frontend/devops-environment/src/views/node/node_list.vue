@@ -779,7 +779,15 @@
         },
         watch: {
             projectId: function () {
-                this.$router.push({ name: 'envList' })
+                this.$router.push({
+                    name: 'envDetail',
+                    params: {
+                        resType: this.$route.params.resType,
+                        envType: 'ALL',
+                        envId: undefined,
+                        tabName: undefined
+                    }
+                })
             },
             nodeTagList: {
                 immediate: true,

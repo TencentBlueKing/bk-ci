@@ -63,8 +63,10 @@ export default function useCollapseLayout (storageKey, defaultFlod = false) {
         setTimeout(() => {
             initLayout()
         }, 0)
+    }, {
+        immediate: true
     })
-    
+
     // 左侧样式
     const leftStyles = computed(() => {
         if (flod.value) {
