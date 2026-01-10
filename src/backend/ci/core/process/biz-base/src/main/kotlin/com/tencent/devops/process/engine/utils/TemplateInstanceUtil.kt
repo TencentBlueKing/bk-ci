@@ -19,7 +19,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.utils.PipelineUtils.getFixedStages
-import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -664,14 +663,14 @@ object TemplateInstanceUtil {
             } else {
                 // 检查新旧默认值不同且新默认值等于模板默认值
                 oldParam.defaultValue != newParam.defaultValue &&
-                        newParam.defaultValue == templateParam.defaultValue
+                    newParam.defaultValue == templateParam.defaultValue
             }
         }
-        if (oldRequiredCount != newRequiredCount ||
+        val result = oldRequiredCount != newRequiredCount ||
             oldConstantCount != newConstantCount ||
             oldReadOnlyCount != newReadOnlyCount ||
             allDefaultValueException
-        ) {
+        if (result) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TOO_MANY_PARAM_CHANGES
             )
