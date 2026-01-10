@@ -152,7 +152,7 @@ class PipelineDraftSaveReqConverter(
                 assertModel(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    inputModel = modelAndSetting.model,
+                    inputModel = request.modelAndSetting!!.model,
                     instanceModel = context.templateInstanceBasicInfo.instanceModel
                 )
             }

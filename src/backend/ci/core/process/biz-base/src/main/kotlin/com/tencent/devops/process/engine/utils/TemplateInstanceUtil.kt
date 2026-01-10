@@ -351,9 +351,6 @@ object TemplateInstanceUtil {
         templateParam: BuildFormProperty,
         templateVariable: TemplateVariable
     ): Any {
-        logger.info(
-            "template instance default value|$templateParam|$templateVariable|${templateVariable.value?.javaClass}"
-        )
         return when {
             // 如果实例没有声明默认值,则使用模版的值
             templateVariable.value == null -> templateParam.defaultValue
