@@ -13,6 +13,7 @@ export default function useNodeDetail () {
     const { proxy } = useInstance()
     const nodeHashId = computed(() => proxy.$route.query?.nodeHashId)
     const projectId = computed(() => proxy.$route.params?.projectId)
+    const nodeDetailLoaded = ref(false) // 节点详情是否加载完成
    
     /**
      * 获取节点详情
@@ -20,13 +21,16 @@ export default function useNodeDetail () {
     const fetchNodeDetail = async () => {
         if (!nodeHashId.value) return
         try {
+            nodeDetailLoaded.value = false
             const res = await proxy.$store.dispatch('environment/requestNodeDetail', {
                 projectId: projectId.value,
                 nodeHashId: nodeHashId.value
             })
             currentNode.value = res ?? {}
+            nodeDetailLoaded.value = true
             return res
         } catch (e) {
+            nodeDetailLoaded.value = false
             proxy.$bkMessage({
                 message: e.message || proxy.$t('environment.fetchNodeDetailFailed'),
                 theme: 'error'
@@ -218,6 +222,7 @@ export default function useNodeDetail () {
         nodeHashId,
         agentOfflineData,
         nodeEnvsList,
+        nodeDetailLoaded,
 
         // function
         fetchNodeDetail,
