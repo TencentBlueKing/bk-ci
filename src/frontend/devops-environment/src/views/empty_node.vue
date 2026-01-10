@@ -19,7 +19,7 @@
                 class="create-env-btn"
                 @click="toCreateNode"
             >
-                {{ $t('environment.newPool') }}
+                {{ emptyInfo.btnText || $t('environment.newPool') }}
             </bk-button>
         </div>
         <div

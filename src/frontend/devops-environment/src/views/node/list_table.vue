@@ -20,7 +20,7 @@
             :pagination="pagination"
             :default-sort="defaultSort"
             height="100%"
-            :key="isFlod"
+            :key="`${isFlod}-${queryNodeHashId}`"
             @row-click="handleRowClick"
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
@@ -28,35 +28,38 @@
             @selection-change="handleSelectionChange"
         >
             <template v-if="isFlod">
-                <!-- <bk-table-column
-                    type="selection"
-                    fixed="left"
-                    width="40"
-                ></bk-table-column> -->
                 <bk-table-column
                     :label="$t('environment.nodeInfo.displayName')"
                     prop="displayName"
                     min-width="200"
                 >
                     <template slot-scope="props">
-                        <a
-                            v-perm="canShowDetail(props.row) ? {
-                                hasPermission: props.row.canView,
-                                disablePermissionApi: true,
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: props.row.nodeHashId,
-                                    action: NODE_RESOURCE_ACTION.VIEW
-                                }
-                            } : {}"
-                            class="node-name"
-                            :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
-                            :title="props.row.displayName"
-                            @click="toNodeDetail(props.row)"
+                        <div
+                            class="table-node-item node-item-id"
                         >
-                            {{ props.row.displayName || '-' }}
-                        </a>
+                            <a
+                                v-perm="canShowDetail(props.row) ? {
+                                    hasPermission: props.row.canView,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.VIEW
+                                    }
+                                } : {}"
+                                class="node-name"
+                                :class="{
+                                    'pointer': canShowDetail(props.row),
+                                    'useless': !canShowDetail(props.row) || !props.row.canUse,
+                                    'unavailable': removedStatus.includes(props.row.nodeStatus)
+                                }"
+                                :title="props.row.displayName"
+                                @click="toNodeDetail(props.row)"
+                            >
+                                {{ props.row.displayName || '-' }}
+                            </a>
+                        </div>
                     </template>
                 </bk-table-column>
             </template>
@@ -84,7 +87,7 @@
                                     class="bk-form-input env-name-input"
                                     maxlength="30"
                                     name="nodeName"
-                                    v-validate="'required'"
+                                    v-validate.initial="'required'"
                                     v-model="curEditNodeDisplayName"
                                     :class="{ 'is-danger': errors.has('nodeName') }"
                                 >
@@ -800,6 +803,7 @@
                 if (this.canShowDetail(node)) {
                     this.$router.replace({
                         params: {
+                            projectId: this.projectId,
                             ...this.$route.params,
                         },
                         query: {
@@ -1005,11 +1009,14 @@
                 return row.nodeType === 'THIRDPARTY'
             },
             tableRowClassName ({ row }) {
+                let className = 'node-item-row'
                 if (row.nodeHashId === this.queryNodeHashId) {
-                    return 'node-item-row is-active'
+                    className += ' is-active'
                 }
-
-                return 'node-item-row'
+                if (this.removedStatus.includes(row?.nodeStatus)) {
+                    className += ' unavailable'
+                }
+                return className
             }
         }
     }
@@ -1037,7 +1044,11 @@
         }
     }
   .node-table-wrapper {
-      td:nth-child(2) {
+        .bk-table-body-wrapper,
+        .bk-table-pagination-wrapper {
+            background-color: #fff !important;
+        }
+        .node-item-id {
           position: relative;
           color: $primaryColor;
           .node-name {
@@ -1052,6 +1063,9 @@
           }
           .useless {
             color: $fontLigtherColor;
+          }
+          .unavailable {
+            text-decoration: line-through;
           }
           .icon-edit {
               position: relative;
@@ -1106,9 +1120,16 @@
           }
         }
         &.is-active {
-            background: #F0F5FF !important;
-            .node-name {
-                color: $primaryColor !important;
+            td {
+                background: #F0F5FF !important;
+                .node-name {
+                    color: $primaryColor !important;
+                }
+            }
+        }
+        &.unavailable {
+            td {
+                cursor: pointer;
             }
         }
       }

@@ -21,6 +21,14 @@
                     <i
                         v-if="field.editable"
                         class="bk-icon icon-edit-line edit-icon"
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        }"
                         @click="handleStartEdit(field.key)"
                     ></i>
                 </template>
@@ -67,6 +75,10 @@
 
 <script>
     import { ref, computed, watch, nextTick, onMounted } from 'vue'
+    import {
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
     import { convertTime } from '@/utils/util'
@@ -78,6 +90,7 @@
             const {
                 currentEnv,
                 envHashId,
+                projectId,
                 fetchEnvDetail,
                 updateEnvDetail
             } = useEnvDetail()
@@ -233,6 +246,11 @@
                 editingField,
                 editingValue,
                 editInput,
+                envHashId,
+                projectId,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
+
                 getFieldValue,
                 handleStartEdit,
                 handleSaveEdit,

@@ -3,56 +3,70 @@
         class="env-entry-main"
         v-bkloading="{ isLoading: !envDetailLoaded }"
     >
-        <header class="env-info-header">
-            <span
-                v-bk-overflow-tips
-                class="env-name"
-            >
-                {{ currentEnv?.name || '--' }}
-            </span>
-            <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
-            <span class="env-type-tag">
-                {{ envTypeDisplayName }}
-            </span>
-        </header>
-        <div
-            class="env-content-main"
-        >
-            <template v-if="envDetailLoaded">
-                <bk-tab
-                    :active.sync="tabActive"
-                    type="unborder-card"
-                    ext-cls="env-details-tab"
+        <template v-if="envList.length">
+            <header class="env-info-header">
+                <span
+                    v-bk-overflow-tips
+                    class="env-name"
                 >
-                    <bk-tab-panel
-                        v-for="(panel, index) in panels"
-                        v-bind="panel"
-                        :key="index"
+                    {{ currentEnv?.name || '--' }}
+                </span>
+                <bk-tag>{{ envNodeTypeDisplayName }}</bk-tag>
+                <span class="env-type-tag">
+                    {{ envTypeDisplayName }}
+                </span>
+            </header>
+            <div
+                class="env-content-main"
+            >
+                <template v-if="envDetailLoaded">
+                    <bk-tab
+                        :active.sync="tabActive"
+                        type="unborder-card"
+                        ext-cls="env-details-tab"
+                    >
+                        <bk-tab-panel
+                            v-for="(panel, index) in panels"
+                            v-bind="panel"
+                            :key="index"
+                        />
+                    </bk-tab>
+                    <component
+                        :is="renderComponent"
+                        :key="currentEnv?.envType"
                     />
-                </bk-tab>
-                <component
-                    :is="renderComponent"
-                    :key="currentEnv?.envType"
-                />
-            </template>
-        </div>
+                </template>
+            </div>
+        </template>
+
+        <template v-else>
+            <empty-node
+                is-env
+                :to-create-node="handleCreateEnv"
+                :empty-info="emptyInfo"
+            />
+        </template>
     </div>
 </template>
 
 <script>
-    import { ref, watch, computed, onMounted } from 'vue'
+    import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
     import {
         ENV_TYPE_MAP
     } from '@/store/constants'
     import useInstance from '@/hooks/useInstance'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useCreateEnv from '@/hooks/useCreateEnv'
+    import useEnvAside from '@/hooks/useEnvAside'
     import Node from './components/Node/index.vue'
     import EnvParam from './components/EnvParam/index.vue'
     import BasicInfo from './components/BasicInfo/index.vue'
     import SharedSettings from './components/SharedSetting/index.vue'
     import BuildTask from './components/BuildTask/index.vue'
     import DeployTask from './components/DeployTask/index.vue'
-    
+    import AuthManage from './components/Auth/index.vue'
+    import emptyNode from '../empty_node'
+
     export default {
         name: 'EnvDetail',
         components: {
@@ -61,18 +75,28 @@
             BasicInfo,
             SharedSettings,
             BuildTask,
-            DeployTask
+            DeployTask,
+            emptyNode
         },
         setup () {
             const { proxy } = useInstance()
             const {
                 currentEnv,
-                fetchEnvDetail
+                fetchEnvDetail,
+                envDetailLoaded,
+                setEnvDetailLoaded,
+                projectId
             } = useEnvDetail()
+            const {
+                envList
+            } = useEnvAside()
             
-            
-            // 环境详情是否加载完成
-            const envDetailLoaded = ref(false)
+
+            const emptyInfo = ref({
+                title: proxy.$t('environment.envInfo.emptyEnv'),
+                desc: proxy.$t('environment.envInfo.emptyEnvTips'),
+                btnText: proxy.$t('environment.createEnvrionment')
+            })
             
             // 从路由参数中获取初始 tab，如果没有则默认为 'node'
             const initialTab = proxy.$route.params.tabName || 'node'
@@ -84,7 +108,8 @@
                     basicInfo: BasicInfo,
                     sharedSettings: SharedSettings,
                     buildTask: BuildTask,
-                    deployTask: DeployTask
+                    deployTask: DeployTask,
+                    auth: AuthManage
                 }
                 return comMap[tabActive.value]
             })
@@ -124,15 +149,16 @@
                     name: 'basicInfo',
                     label: proxy.$t('environment.basicInfo')
                 },
+                ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
+                    {
+                        name: 'buildTask',
+                        label: proxy.$t('environment.nodeInfo.buildTask')
+                    }
+                ] : []),
                 {
-                    name: 'buildTask',
-                    label: proxy.$t('environment.nodeInfo.buildTask')
+                    name: 'auth',
+                    label: proxy.$t('environment.authManage')
                 }
-                // 部署Agent 暂时没有任务
-                // {
-                //     name: 'deployTask',
-                //     label: proxy.$t('environment.deployTask')
-                // }
             ])
             
             // 获取可用的 tab 名称列表
@@ -187,9 +213,7 @@
             // 监听 envId 变化，当 envId 存在但没有 tabName 时，添加默认的 tabName
             watch(() => proxy.$route.params.envId, async (newEnvId) => {
                 if (newEnvId) {
-                    envDetailLoaded.value = false
                     await fetchEnvDetail()
-                    envDetailLoaded.value = true
                 }
                 if (newEnvId && !proxy.$route.params.tabName) {
                     proxy.$router.replace({
@@ -203,19 +227,38 @@
                     })
                 }
             })
+
+            watch(() => projectId.value, async (newProjectId) => {
+                if (newProjectId) {
+                    setEnvDetailLoaded(false)
+                }
+            })
+
+            const {
+                showCreateEnvDialog
+            } = useCreateEnv()
+            const curEnvType = computed(() => proxy.$route.params.envType)
+            const handleCreateEnv = () => {
+                console.log(curEnvType.value, 1)
+                showCreateEnvDialog(curEnvType.value)
+            }
             onMounted(async () => {
-                envDetailLoaded.value = false
                 await fetchEnvDetail()
-                envDetailLoaded.value = true
+            })
+            onBeforeUnmount(() => {
+                setEnvDetailLoaded(false)
             })
             return {
                 renderComponent,
                 currentEnv,
+                envList,
+                emptyInfo,
                 tabActive,
                 panels,
                 envDetailLoaded,
                 envTypeDisplayName,
-                envNodeTypeDisplayName
+                envNodeTypeDisplayName,
+                handleCreateEnv
             }
         }
     }
@@ -247,8 +290,8 @@
         margin-right: 16px;
     }
     .env-type-tag {
-        width: 68px;
         height: 22px;
+        padding: 0 6px;
         line-height: 22px;
         font-size: 12px;
         text-align: center;

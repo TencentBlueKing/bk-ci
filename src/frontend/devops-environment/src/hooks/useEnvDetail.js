@@ -4,6 +4,7 @@ import useInstance from './useInstance'
 
 const currentEnv = ref({})
 
+const envDetailLoaded = ref(false) // 环境详情是否加载完成
 export default function useEnvDetail () {
     const { proxy } = useInstance()
     const envNodeList = ref([]) // 节点列表
@@ -49,13 +50,16 @@ export default function useEnvDetail () {
     const fetchEnvDetail = async () => {
         if (!envHashId.value) return
         try {
+            envDetailLoaded.value = false
             const res = await proxy.$store.dispatch('environment/requestEnvDetail', {
                 projectId: projectId.value,
                 envHashId: envHashId.value
             })
             currentEnv.value = res ?? {}
+            envDetailLoaded.value = true
             return res
         } catch (e) {
+            envDetailLoaded.value = false
             throw e
         }
     }
@@ -124,6 +128,10 @@ export default function useEnvDetail () {
         }
     }
 
+    const setEnvDetailLoaded = (value) => {
+        envDetailLoaded.value = value
+    }
+
     return {
         // data
         currentEnv,
@@ -132,6 +140,7 @@ export default function useEnvDetail () {
         projectId,
         envHashId,
         relatedProjectList,
+        envDetailLoaded,
 
         // function
         fetchEnvNodeList,
@@ -140,6 +149,7 @@ export default function useEnvDetail () {
         fetchEnvParamsList,
         updateEnvDetail,
         fetchEnvRelatedProject,
-        toggleEnableNode
+        toggleEnableNode,
+        setEnvDetailLoaded
     }
 }

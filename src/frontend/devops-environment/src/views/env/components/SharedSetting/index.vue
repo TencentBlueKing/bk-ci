@@ -10,6 +10,14 @@
         <div class="operation-area">
             <bk-button
                 theme="primary"
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
                 @click="handleAddProject"
             >
                 {{ $t('environment.relatedProject') }}
@@ -77,6 +85,10 @@
 
 <script>
     import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+    import {
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
     import useEnvDetail from '@/hooks/useEnvDetail'
@@ -308,6 +320,8 @@
                 projectId,
                 envHashId,
                 showProjectDialog,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 
                 // function
                 resetPage,

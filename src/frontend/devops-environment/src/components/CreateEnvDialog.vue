@@ -36,7 +36,13 @@
                 property="envType"
             >
                 <bk-radio-group v-model="envParams.envType">
-                    <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.BUILDEnvType') }}</bk-radio>
+                    <bk-radio
+                        v-for="envType in envTypeEnums"
+                        :key="envType"
+                        :value="envType"
+                    >
+                        <div class="mr10">{{ $t(`environment.envInfo.${envType}EnvType`) }}</div>
+                    </bk-radio>
                 </bk-radio-group>
             </bk-form-item>
             <bk-form-item
@@ -104,6 +110,7 @@
                 closeCreateEnvDialog
             } = useCreateEnv(onSuccess, onError)
 
+            const envTypeEnums = computed(() => (['BUILD', 'DEV', 'PROD', 'DEVX']))
             const formRules = computed(() => ({
                 name: [
                     {
@@ -146,7 +153,8 @@
                 isLoading,
                 envParams,
                 formRules,
-                
+                envTypeEnums,
+
                 // function
                 onError,
                 handleConfirm,

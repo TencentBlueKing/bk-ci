@@ -1,8 +1,20 @@
 <template>
-    <section class="env-group-aside">
+    <section
+        class="env-group-aside"
+        v-bkloading="{ isLoading }"
+    >
         <bk-button
             class="add-env-btn"
             icon="plus"
+            v-perm="{
+                permissionData: {
+                    projectId: projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: projectId,
+                    action: ENV_RESOURCE_ACTION.CREATE
+                }
+            }"
+            :key="projectId"
             @click="showCreateEnvDialog"
         >
             {{ $t('environment.createEnvrionment') }}
@@ -39,10 +51,7 @@
         </div>
         <div class="env-list-menu">
             <p class="title">{{ $t('environment.environmentList') }}</p>
-            <div
-                class="env-list"
-                v-bkloading="{ isLoading }"
-            >
+            <div class="env-list">
                 <span
                     v-for="env in envList"
                     :key="env.id"
@@ -76,10 +85,14 @@
 </template>
 
 <script>
-    import { ref, computed, onMounted } from 'vue'
+    import { watch, computed, onMounted } from 'vue'
     import {
         ENV_TYPE_MAP
     } from '@/store/constants'
+    import {
+        ENV_RESOURCE_ACTION,
+        ENV_RESOURCE_TYPE
+    } from '@/utils/permission'
     import UseInstance from '@/hooks/useInstance'
     import CreateEnvDialog from '@/components/CreateEnvDialog.vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
@@ -105,6 +118,7 @@
                 initData,
                 fetchEnvList
             } = useEnvAside()
+            const projectId = computed(() => proxy.$route.params.projectId)
             const envId = computed(() => proxy.$route.params?.envId)
             const envTypList = computed(() => ([
                 {
@@ -115,18 +129,23 @@
                 {
                     id: ENV_TYPE_MAP.BUILD,
                     name: proxy.$t('environment.envInfo.BUILDEnvType'),
-                    count: envCountData.value?.[ENV_TYPE_MAP.BUILD] ?? 0
+                    count: envCountData.value[ENV_TYPE_MAP.BUILD] ?? 0
+                },
+                {
+                    id: ENV_TYPE_MAP.PROD,
+                    name: proxy.$t('environment.envInfo.PRODEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.PROD] ?? 0
+                },
+                {
+                    id: ENV_TYPE_MAP.DEV,
+                    name: proxy.$t('environment.envInfo.DEVEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.DEV] ?? 0
+                },
+                {
+                    id: ENV_TYPE_MAP.DEVX,
+                    name: proxy.$t('environment.envInfo.DEVXEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
                 }
-                // {
-                //     id: ENV_TYPE_MAP.PROD,
-                //     name: proxy.$t('environment.envInfo.testEnvType')
-                //     count: envCountData.value?.[ENV_TYPE_MAP.PROD] ?? 0
-                // },
-                // {
-                //     id: ENV_TYPE_MAP.DEV,
-                //     name: proxy.$t('environment.envInfo.devEnvType')
-                //     count: envCountData.value?.[ENV_TYPE_MAP.DEV] ?? 0
-                // }
             ]))
             const handleCreateEnvSuccess = (envId) => {
                 fetchEnvList()
@@ -157,6 +176,12 @@
                 })
             }
 
+            watch(() => projectId.value, async (newProjectId) => {
+                if (newProjectId) {
+                    await initData()
+                }
+            })
+
             onMounted(() => {
                 initData()
             })
@@ -167,10 +192,14 @@
                 envName,
                 envList,
                 envTypList,
+                projectId,
                 isLoading,
                 initData,
                 fetchEnvList,
                 showCreateEnvDialog,
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
+
                 handleChangeEnv,
                 handleChangeEnvType,
                 handleCreateEnvSuccess
@@ -236,6 +265,7 @@
             display: flex;
             flex-direction: column;
             min-height: 300px;
+            padding-bottom: 40px;
             gap: 4px;
             margin: 0 -16px;
             background: #FFFFFF;
