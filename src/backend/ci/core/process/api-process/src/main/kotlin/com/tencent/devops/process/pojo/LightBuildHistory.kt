@@ -43,9 +43,9 @@ data class LightBuildHistory(
     @get:Schema(title = "构建号", required = true)
     val buildNum: Int?,
     @get:Schema(title = "流水线的执行开始时间", required = true)
-    val startTime: Long,
+    val startTime: String,
     @get:Schema(title = "流水线的执行结束时间", required = true)
-    val endTime: Long?,
+    val endTime: String?,
     @get:Schema(title = "状态", required = true)
     val status: String,
     @get:Schema(title = "备注", required = false)
