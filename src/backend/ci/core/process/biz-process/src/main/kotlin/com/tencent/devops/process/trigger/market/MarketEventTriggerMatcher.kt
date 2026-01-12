@@ -9,7 +9,8 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomEle
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION_EXCLUDE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION_NOT_MATCH
 import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.pojo.WebhookAtomResponse
 import com.tencent.devops.store.api.common.ServiceStoreComponentResource
@@ -19,6 +20,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.trigger.TriggerEventConfig
 import com.tencent.devops.store.pojo.trigger.conditions.InputCondition
+import com.tencent.devops.store.pojo.trigger.enums.ConditionOperatorEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -132,10 +134,17 @@ class MarketEventTriggerMatcher @Autowired constructor(
                         "triggerOn:${eventValue}|${condition.operator}|$finalInputValue|$result"
             )
             if (!result) {
+                val messageCode = when (condition.operator) {
+                    ConditionOperatorEnum.EQ, ConditionOperatorEnum.IN, ConditionOperatorEnum.LIKE ->
+                        BK_FIELD_CONDITION_NOT_MATCH
+
+                    ConditionOperatorEnum.NOT_LIKE, ConditionOperatorEnum.NOT_EQ, ConditionOperatorEnum.NOT_IN ->
+                        BK_FIELD_CONDITION_EXCLUDE
+                }
                 return WebhookMatchResult(
                     isMatch = false,
                     reason = I18Variable(
-                        BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH,
+                        messageCode,
                         params = listOf(
                             condition.label,
                             eventValue.toString(),
