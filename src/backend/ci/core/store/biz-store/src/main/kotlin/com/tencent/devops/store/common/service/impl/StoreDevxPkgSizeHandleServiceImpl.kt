@@ -135,7 +135,6 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
         storePackageInfoReqs: List<StorePackageInfoReq>,
         storeType: StoreTypeEnum
     ): Boolean {
-        // 创建Redis分布式锁，防止并发更新冲突
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "store:$storeId:${storeType.name}",
@@ -165,7 +164,6 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
 
             }
         } finally {
-            // 确保锁一定会被释放
             redisLock.unlock()
         }
 
