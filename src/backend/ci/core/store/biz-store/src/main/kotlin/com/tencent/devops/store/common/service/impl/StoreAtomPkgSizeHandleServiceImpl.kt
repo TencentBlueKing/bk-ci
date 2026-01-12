@@ -39,7 +39,6 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         val bathSize = 100L
 
         while (offset < count) {
-
             val storeIds = atomDao.selectComponentIds(
                 dslContext = dslContext,
                 offset = offset,
@@ -49,34 +48,58 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                 break
             }
             offset += bathSize
-            val atomEnvInfos =
-                atomDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
-            if (!atomEnvInfos.isNullOrEmpty()) {
-                val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("ATOM_ID").toString() }
-                atomEnvInfosMap.forEach { (atomId, records) ->
-                    val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
-                    records.forEach {
-                        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                            .getFileSize(StoreTypeEnum.ATOM, it.get("PKG_PATH").toString()).data
-                        if (nodeSize != null) {
-                            storePackageInfoReqs.add(
-                                StorePackageInfoReq(
-                                    storeType = StoreTypeEnum.ATOM,
-                                    osName = it.get("OS_NAME").toString(),
-                                    arch = it.get("OS_ARCH").toString(),
-                                    size = nodeSize
-                                )
-                            )
-                        }
-                    }
-                    atomDao.updateComponentVersionInfo(
-                        dslContext = dslContext,
-                        atomId,
-                        JsonUtil.toJson(storePackageInfoReqs)
-                    )
-                }
-            }
+            
+            processAtomEnvInfos(storeIds)
         }
+    }
+
+    /**
+     * 处理原子环境信息并更新版本大小
+     */
+    private fun processAtomEnvInfos(storeIds: List<String>) {
+        val atomEnvInfos = atomDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
+        if (atomEnvInfos.isNullOrEmpty()) {
+            return
+        }
+
+        val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("ATOM_ID").toString() }
+        atomEnvInfosMap.forEach { (atomId, records) ->
+            updateAtomVersionSize(atomId, records)
+        }
+    }
+
+    /**
+     * 更新单个原子的版本大小信息
+     */
+    private fun updateAtomVersionSize(atomId: String, records: List<org.jooq.Record>) {
+        val storePackageInfoReqs = records.mapNotNull { record ->
+            buildStorePackageInfo(record)
+        }
+
+        if (storePackageInfoReqs.isNotEmpty()) {
+            atomDao.updateComponentVersionInfo(
+                dslContext = dslContext,
+                atomId,
+                JsonUtil.toJson(storePackageInfoReqs)
+            )
+        }
+    }
+
+    /**
+     * 构建存储包信息
+     */
+    private fun buildStorePackageInfo(record: org.jooq.Record): StorePackageInfoReq? {
+        val pkgPath = record.get("PKG_PATH").toString()
+        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
+            .getFileSize(StoreTypeEnum.ATOM, pkgPath).data
+            ?: return null
+
+        return StorePackageInfoReq(
+            storeType = StoreTypeEnum.ATOM,
+            osName = record.get("OS_NAME").toString(),
+            arch = record.get("OS_ARCH").toString(),
+            size = nodeSize
+        )
     }
 
     override fun updateComponentVersionSize(

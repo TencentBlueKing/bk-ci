@@ -27,8 +27,6 @@
 package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.model.store.tables.TAtom
-import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageVersionLog
@@ -43,13 +41,13 @@ import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository(value = "IMAGE_COMMON_DAO")
 class ImageCommonDao : AbstractStoreCommonDao() {
