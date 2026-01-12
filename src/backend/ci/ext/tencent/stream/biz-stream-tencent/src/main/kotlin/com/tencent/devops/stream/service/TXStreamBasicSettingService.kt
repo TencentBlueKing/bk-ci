@@ -52,8 +52,10 @@ import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
+import org.springframework.core.task.TaskExecutor
 import org.springframework.stereotype.Service
 
 @Primary
@@ -66,7 +68,9 @@ class TXStreamBasicSettingService @Autowired constructor(
     private val streamGitTransferService: StreamGitTransferService,
     private val tokenService: StreamGitTokenService,
     private val streamScmService: StreamScmService,
-    private val streamGitConfig: StreamGitConfig
+    private val streamGitConfig: StreamGitConfig,
+    @Qualifier("streamSettingExecutor")
+    private val streamSettingExecutor: TaskExecutor
 ) : StreamBasicSettingService(
     dslContext = dslContext,
     client = client,
@@ -78,8 +82,6 @@ class TXStreamBasicSettingService @Autowired constructor(
 
     @Value("\${bkci.defaultProductId:#{0}}")
     val defaultBkProductId: Int = 0
-
-    private val executorService = java.util.concurrent.Executors.newSingleThreadExecutor()
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
@@ -408,10 +410,8 @@ class TXStreamBasicSettingService @Autowired constructor(
         )
     }
 
-    fun checkAndUpdateDepartedUsers(gitProjectIds: List<Long>): Int {
-        if (gitProjectIds.isEmpty()) {
-            return 0
-        }
+    fun checkAndUpdateDepartedUsers(gitProjectIds: List<Long>) {
+        if (gitProjectIds.isEmpty()) return
 
         val userIdMap = streamBasicSettingDao.getEnableUserIdMapByIds(
             dslContext = dslContext,
@@ -431,20 +431,17 @@ class TXStreamBasicSettingService @Autowired constructor(
             }
         }
 
-        return if (departedProjectIds.isNotEmpty()) {
+        if (departedProjectIds.isNotEmpty()) {
             streamBasicSettingDao.updateEnableUserIdByIds(
                 dslContext = dslContext,
                 newUserId = "devops",
                 idList = departedProjectIds
             )
-        } else {
-            0
         }
     }
 
     fun refreshAllStreamProjectDepartedUsers(userId: String): Boolean {
-        executorService.execute {
-            Thread.sleep(500)
+        streamSettingExecutor.execute {
             val startTime = System.currentTimeMillis()
             var page = PageUtil.DEFAULT_PAGE
             val pageSize = PageUtil.MAX_PAGE_SIZE
