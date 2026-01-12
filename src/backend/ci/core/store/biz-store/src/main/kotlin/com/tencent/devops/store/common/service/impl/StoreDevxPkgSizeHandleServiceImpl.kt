@@ -15,14 +15,12 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-
 /**
  * DEVX类型组件包大小处理服务实现类
  * 负责批量更新和查询DEVX类型组件的版本包大小信息
  */
 @Service("DEVX_PKG_SIZE_HANDLE_SERVICE")
-class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleService() {
-
+class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleService() {
     @Autowired
     lateinit var dslContext: DSLContext
 
@@ -34,7 +32,6 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
 
     @Autowired
     lateinit var storeVersionLogDao: StoreVersionLogDao
-
 
     /**
      * 批量更新所有DEVX组件的版本包大小信息

@@ -153,7 +153,6 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
     @Autowired
     lateinit var storeVersionLogDao: StoreVersionLogDao
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
     }

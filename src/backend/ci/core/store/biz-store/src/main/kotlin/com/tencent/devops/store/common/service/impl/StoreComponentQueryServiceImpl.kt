@@ -103,16 +103,16 @@ import com.tencent.devops.store.pojo.common.version.StoreVersionLogInfo
 import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -1299,7 +1299,8 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     }
 
     override fun getStoreVersionSize(
-        storeCode: String, storeType: StoreTypeEnum,
+        storeCode: String,
+        storeType: StoreTypeEnum,
         version: String,
         osName: String?,
         osArch: String?

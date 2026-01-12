@@ -28,10 +28,8 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
     @Autowired
     lateinit var client: Client
 
-
     @Autowired
     lateinit var redisOperation: RedisOperation
-
 
     override fun batchUpdateComponentsVersionSize() {
         val count = atomDao.countComponent(dslContext, AtomStatusEnum.RELEASED.status.toByte())
@@ -48,7 +46,6 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                 break
             }
             offset += bathSize
-            
             processAtomEnvInfos(storeIds)
         }
     }
@@ -130,12 +127,11 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                     storeId = storeId,
                     pkgSize = JsonUtil.toJson(mutableList)
                 )
-
             }
         } finally {
             redisLock.unlock()
         }
-            return true
+        return true
     }
 
     override fun getComponentVersionSize(
@@ -165,4 +161,3 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         )
     }
 }
-
