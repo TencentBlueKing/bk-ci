@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -219,7 +219,8 @@ const actions = {
         svnType,
         codelib,
         instance,
-        scmCode = ''
+        scmCode = '',
+        userName
     }) {
         try {
             commit(TOGGLE_CODE_LIB_DIALOG, {
@@ -253,7 +254,8 @@ const actions = {
                     credentialType,
                     authType,
                     svnType,
-                    scmCode
+                    scmCode,
+                    userName
                 })
             }
         } catch (e) {
@@ -290,14 +292,15 @@ const actions = {
         projectId,
         scmCode,
         type,
-        search = ''
-
+        search = '',
+        username
     }) {
         try {
             const query = {
                 projectId,
                 scmCode,
-                search
+                search,
+                oauthUserId: username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
@@ -324,13 +327,15 @@ const actions = {
         projectId,
         repositoryHashId,
         search = '',
-        type = 'git'
+        type = 'git',
+        username
     }) {
         try {
             const query = {
                 projectId,
                 repositoryHashId,
-                search
+                search,
+                oauthUserId: username
             }
             commit(DIALOG_LOADING_MUTATION, true)
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
@@ -676,6 +681,9 @@ const actions = {
         commit
     }, value) {
         commit(SET_PROVIDER_CONFIG, value)
+    },
+    getOauthUserList ({ commit }, { scmCode }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/oauth/userList?scmCode=${scmCode}`)
     }
 }
 

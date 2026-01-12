@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -93,7 +93,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 size = 0,
                 createdTime = 0,
                 modifiedTime = 0,
-                checksums = FileChecksums(sha256 = "", sha1 = "", md5 = ""),
+                checksums = FileChecksums(sha256 = "", sha1 = "", md5 = "", crc64ecma = ""),
                 meta = emptyMap()
             )
         } else {
@@ -111,7 +111,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 checksums = FileChecksums(
                     sha256 = FileDigestUtils.fileSha256(inputFiles) ?: "",
                     sha1 = FileDigestUtils.fileSha1(inputFiles) ?: "",
-                    md5 = FileDigestUtils.fileMD5(inputFiles) ?: ""
+                    md5 = FileDigestUtils.fileMD5(inputFiles) ?: "",
+                    crc64ecma = ""
                 ),
                 meta = fileDao.getFileMeta(dslContext, infoRecord.id)
             )
@@ -678,7 +679,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun getFileContent(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String
@@ -693,7 +693,6 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun listFileNamesByPath(
-        userId: String,
         projectId: String,
         repoName: String,
         filePath: String

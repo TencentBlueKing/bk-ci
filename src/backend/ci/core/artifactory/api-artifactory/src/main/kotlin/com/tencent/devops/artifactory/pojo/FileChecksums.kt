@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,5 +36,7 @@ data class FileChecksums(
     @get:Schema(title = "sha1", required = true)
     val sha1: String,
     @get:Schema(title = "md5", required = true)
-    val md5: String
+    val md5: String,
+    @get:Schema(title = "crc64ecma", required = false)
+    val crc64ecma: String?,
 )

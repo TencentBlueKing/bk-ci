@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,8 +43,10 @@ data class StorePkgEnvInfo(
     val minVersion: String? = null,
     @get:Schema(title = "执行入口", required = false)
     val target: String? = "",
-    @get:Schema(title = "SHA签名串", required = false)
+    @get:Schema(title = "SHA1签名串", required = false)
     var shaContent: String? = null,
+    @get:Schema(title = "SHA256签名串", required = false)
+    var sha256Content: String? = null,
     @get:Schema(title = "执行前置命令", required = false)
     var preCmd: String? = null,
     @get:Schema(title = "支持的操作系统名称", required = false)

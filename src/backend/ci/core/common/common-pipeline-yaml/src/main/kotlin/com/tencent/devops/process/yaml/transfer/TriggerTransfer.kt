@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,9 +27,10 @@
 
 package com.tencent.devops.process.yaml.transfer
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -41,6 +42,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeScmGitWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerData
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerInput
@@ -65,6 +69,7 @@ import com.tencent.devops.process.yaml.v3.models.on.PushRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.scm.api.enums.EventAction
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -90,6 +95,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
+                    stepId = push.id,
                     name = push.name ?: "Git事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -118,6 +124,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
+                    stepId = tag.id,
                     name = tag.name ?: "Git事件触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -135,42 +142,20 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
         triggerOn.mr?.let { mr ->
             elementQueue.add(
-                CodeGitWebHookTriggerElement(
-                    name = mr.name ?: "Git事件触发",
-                    branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
-                    excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
-                    excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includePaths = mr.paths.nonEmptyOrNull()?.join(),
-                    excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
-                    includeUsers = mr.users,
-                    excludeUsers = mr.usersIgnore,
-                    block = mr.blockMr,
-                    webhookQueue = mr.webhookQueue,
-                    enableCheck = mr.reportCommitCheck,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
-                        ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action ?: listOf(
-                        TGitMrEventAction.OPEN.value,
-                        TGitMrEventAction.REOPEN.value,
-                        TGitMrEventAction.PUSH_UPDATE.value
-                    ),
-                    eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName,
-                    enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
-                    thirdUrl = mr.custom?.url,
-                    thirdSecretToken = mr.custom?.credentials,
-                    skipWip = mr.skipWip
-                ).checkTriggerElementEnable(mr.enable).apply {
-                    version = "2.*"
-                }
+                convertGitTriggerElement(mr, false, repositoryType, triggerOn.repoName)
+            )
+        }
+
+        triggerOn.mrMerged?.let { mr ->
+            elementQueue.add(
+                convertGitTriggerElement(mr, true, repositoryType, triggerOn.repoName)
             )
         }
 
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
+                    stepId = review.id,
                     name = review.name ?: "Git事件触发",
                     includeCrState = review.states,
                     includeCrTypes = review.types,
@@ -186,6 +171,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
+                    stepId = issue.id,
                     name = issue.name ?: "Git事件触发",
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
@@ -200,6 +186,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
+                    stepId = note.id,
                     name = note.name ?: "Git事件触发",
                     includeNoteTypes = note.types?.map {
                         when (it) {
@@ -247,11 +234,12 @@ class TriggerTransfer @Autowired(required = false) constructor(
             /*由于存在多个相同代码库并且配置了相同触发条件的触发器，所以需要设计存储多个触发器*/
             val index = indexName.getOrPut("$name-${git.eventType}") { 0 }
             val nowExist = res.getOrPut("$name-$index") {
-                TriggerOn(repoName = repoName)
+                TriggerOn(repoName = repoName, scmCode = git.scmCode)
             }
             indexName["$name-${git.eventType}"] = index + 1
             when (git.eventType) {
                 CodeEventType.PUSH -> nowExist.push = PushRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     branches = git.branchName?.disjoin(),
@@ -269,6 +257,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 )
 
                 CodeEventType.TAG_PUSH -> nowExist.tag = TagRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     tags = git.tagName?.disjoin(),
@@ -279,6 +268,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 )
 
                 CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     targetBranches = git.branchName?.disjoin(),
@@ -300,13 +290,25 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     ) else null,
                     skipWip = git.skipWip
                 )
-                CodeEventType.MERGE_REQUEST_ACCEPT ->
-                    throw PipelineTransferException(
-                        errorCode = CommonMessageCode.MR_ACCEPT_EVENT_NOT_SUPPORT_TRANSFER,
-                        params = arrayOf(git.name)
-                    )
+                CodeEventType.MERGE_REQUEST_ACCEPT -> nowExist.mrMerged = MrRule(
+                    id = git.id,
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    targetBranches = git.branchName?.disjoin(),
+                    targetBranchesIgnore = git.excludeBranchName?.disjoin(),
+                    sourceBranches = git.includeSourceBranchName?.disjoin(),
+                    sourceBranchesIgnore = git.excludeSourceBranchName?.disjoin(),
+                    paths = git.includePaths?.disjoin(),
+                    pathsIgnore = git.excludePaths?.disjoin(),
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers,
+                    reportCommitCheck = git.enableCheck.nullIfDefault(true),
+                    pathFilterType = git.pathFilterType?.name.nullIfDefault(PathFilterType.NamePrefixFilter.name),
+                    skipWip = git.skipWip
+                )
 
                 CodeEventType.REVIEW -> nowExist.review = ReviewRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     states = git.includeCrState,
@@ -314,12 +316,14 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 )
 
                 CodeEventType.ISSUES -> nowExist.issue = IssueRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     action = git.includeIssueAction
                 )
 
                 CodeEventType.NOTE -> nowExist.note = NoteRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     types = git.includeNoteTypes?.map {
@@ -334,6 +338,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 )
 
                 CodeEventType.POST_COMMIT -> nowExist.push = PushRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     branches = null,
@@ -349,6 +354,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         codeEventType = git.eventType,
                         triggerOn = nowExist,
                         rule = PushRule(
+                            id = git.id,
                             name = git.name.nullIfDefault(defaultName),
                             enable = git.enable.nullIfDefault(true),
                             branches = null,
@@ -360,6 +366,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
 
                 CodeEventType.PULL_REQUEST -> nowExist.mr = MrRule(
+                    id = git.id,
                     name = git.name.nullIfDefault(defaultName),
                     enable = git.enable.nullIfDefault(true),
                     targetBranches = git.branchName?.disjoin(),
@@ -391,6 +398,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
+                    stepId = push.id,
                     name = push.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -420,6 +428,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
+                    stepId = tag.id,
                     name = tag.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -441,43 +450,20 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
         triggerOn.mr?.let { mr ->
             elementQueue.add(
-                CodeTGitWebHookTriggerElement(
-                    name = mr.name ?: "TGit事件触发",
-                    data = CodeTGitWebHookTriggerData(
-                        input = CodeTGitWebHookTriggerInput(
-                            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
-                            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
-                            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
-                            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
-                            includePaths = mr.paths.nonEmptyOrNull()?.join(),
-                            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
-                            includeUsers = mr.users,
-                            excludeUsers = mr.usersIgnore,
-                            block = mr.blockMr,
-                            webhookQueue = mr.webhookQueue,
-                            enableCheck = mr.reportCommitCheck,
-                            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
-                                ?: PathFilterType.NamePrefixFilter,
-                            includeMrAction = mr.action ?: listOf(
-                                TGitMrEventAction.OPEN.value,
-                                TGitMrEventAction.REOPEN.value,
-                                TGitMrEventAction.PUSH_UPDATE.value
-                            ),
-                            eventType = CodeEventType.MERGE_REQUEST,
-                            repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName,
-                            skipWip = mr.skipWip
-                        )
-                    )
-                ).checkTriggerElementEnable(mr.enable).apply {
-                    version = "2.*"
-                }
+                convertTGitTriggerElement(mr, false, repositoryType, triggerOn.repoName)
+            )
+        }
+
+        triggerOn.mrMerged?.let { mr ->
+            elementQueue.add(
+                convertTGitTriggerElement(mr, true, repositoryType, triggerOn.repoName)
             )
         }
 
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
+                    stepId = review.id,
                     name = review.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -497,6 +483,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
+                    stepId = issue.id,
                     name = issue.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -515,6 +502,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
+                    stepId = note.id,
                     name = note.name ?: "TGit事件触发",
                     data = CodeTGitWebHookTriggerData(
                         input = CodeTGitWebHookTriggerInput(
@@ -549,6 +537,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = push.id,
                     name = push.name ?: "GitHub事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -569,6 +558,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = tag.id,
                     name = tag.name ?: "GitHub事件触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -585,6 +575,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.mr?.let { mr ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = mr.id,
                     name = mr.name ?: "GitHub事件触发",
                     branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
                     excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
@@ -609,6 +600,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.review?.let { review ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = review.id,
                     name = review.name ?: "GitHub事件触发",
                     includeCrState = review.states,
                     includeCrTypes = review.types,
@@ -622,6 +614,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.issue?.let { issue ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = issue.id,
                     name = issue.name ?: "GitHub事件触发",
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
@@ -634,6 +627,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.note?.let { note ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
+                    stepId = note.id,
                     name = note.name ?: "GitHub事件触发",
                     includeNoteTypes = note.types?.map {
                         when (it) {
@@ -662,6 +656,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeSVNWebHookTriggerElement(
+                    stepId = push.id,
                     name = push.name ?: "SVN事件触发",
                     relativePath = push.paths.nonEmptyOrNull()?.join(),
                     excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
@@ -704,7 +699,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             elementQueue.add(
                 ManualTriggerElement(
                     name = manual.name ?: "手动触发",
-                    id = "T-1-1-1",
+                    stepId = manual.id,
                     canElementSkip = manual.canElementSkip,
                     useLatestParameters = manual.useLatestParameters
                 ).apply {
@@ -729,6 +724,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
                 elementQueue.add(
                     TimerTriggerElement(
+                        stepId = timer.id,
                         name = timer.name ?: "定时触发",
                         repositoryType = repositoryType,
                         repoHashId = timer.repoId,
@@ -736,7 +732,25 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         branches = timer.branches,
                         newExpression = timer.newExpression,
                         advanceExpression = timer.advanceExpression,
-                        noScm = timer.always != true
+                        noScm = timer.always != true,
+                        startParams = timer.startParams?.let {
+                            val params = it.map { entry ->
+                                mapOf(
+                                    "key" to entry.key,
+                                    "value" to entry.value
+                                )
+                            }
+                            JsonUtil.toJson(params, false)
+                        },
+                        version = if (timer.newExpression.filterNonEmpty().isEmpty() &&
+                                (timer.advanceExpression?.size ?: 0) == 1
+                        ) {
+                            // 2.*仅支持一个触发规则, 且没有newExpression入参
+                            "2.*"
+                        } else {
+                            // 1.* 插件支持支持多个触发规则
+                            "1.*"
+                        }
                     ).checkTriggerElementEnable(timer.enable)
                 )
             }
@@ -745,6 +759,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.remote?.let { remote ->
             elementQueue.add(
                 RemoteTriggerElement(
+                    stepId = remote.id,
                     name = remote.name ?: "远程触发",
                     remoteToken = yamlInput.pipelineInfo?.pipelineId?.let {
                         transferCache.getPipelineRemoteToken(
@@ -768,6 +783,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
+                    stepId = push.id,
                     name = push.name ?: "Gitlab事件触发",
                     branchName = push.branches.nonEmptyOrNull()?.join(),
                     excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
@@ -785,7 +801,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable).apply {
-                    version = "2.*"
+                    version = "1.*"
                 }
             )
         }
@@ -793,6 +809,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
         triggerOn.tag?.let { tag ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
+                    stepId = tag.id,
                     name = tag.name ?: "Gitlab变更触发",
                     tagName = tag.tags.nonEmptyOrNull()?.join(),
                     excludeTagName = tag.tagsIgnore.nonEmptyOrNull()?.join(),
@@ -801,36 +818,122 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(tag.enable)
+                ).checkTriggerElementEnable(tag.enable).apply {
+                    version = "1.*"
+                }
             )
         }
 
         triggerOn.mr?.let { mr ->
             elementQueue.add(
-                CodeGitlabWebHookTriggerElement(
-                    name = mr.name ?: "Gitlab事件触发",
-                    branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
-                    excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
-                    excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
-                    includePaths = mr.paths.nonEmptyOrNull()?.join(),
-                    excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
-                    includeUsers = mr.users,
-                    excludeUsers = mr.usersIgnore,
-                    block = mr.blockMr,
-                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                convertGitlabTriggerElement(mr, false, repositoryType, triggerOn.repoName)
+            )
+        }
+
+        triggerOn.mrMerged?.let { mr ->
+            elementQueue.add(
+                convertGitlabTriggerElement(mr, true, repositoryType, triggerOn.repoName)
+            )
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    fun yaml2TriggerScmGit(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
+        triggerOn.push?.let { push ->
+            elementQueue.add(
+                CodeScmGitWebHookTriggerElement(
+                    stepId = push.id,
+                    name = push.name ?: "Git通用事件触发",
+                    data = CodeScmGitWebHookTriggerData(
+                        input = CodeScmGitWebHookTriggerInput(
+                            branchName = push.branches.nonEmptyOrNull()?.join(),
+                            excludeBranchName = push.branchesIgnore.nonEmptyOrNull()?.join(),
+                            includePaths = push.paths.nonEmptyOrNull()?.join(),
+                            excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
+                            includeUsers = push.users?.joinToString(separator = ","),
+                            excludeUsers = push.usersIgnore?.joinToString(separator = ","),
+                            pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
+                            eventType = CodeEventType.PUSH,
+                            actions = push.action ?: listOf(
+                                EventAction.PUSH_FILE.value,
+                                EventAction.NEW_BRANCH.value
+                            ),
+                            repositoryType = repositoryType,
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
+                        )
+                    )
+                ).checkTriggerElementEnable(push.enable).apply {
+                    version = "1.*"
+                }
+            )
+        }
+
+        triggerOn.mr?.let { mr ->
+            elementQueue.add(
+                CodeScmGitWebHookTriggerElement(
+                    stepId = mr.id,
+                    name = mr.name ?: "Git通用事件触发",
+                    data = CodeScmGitWebHookTriggerData(
+                        input = CodeScmGitWebHookTriggerInput(
+                            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+                            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+                            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+                            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+                            includePaths = mr.paths.nonEmptyOrNull()?.join(),
+                            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+                            includeUsers = mr.users?.joinToString(separator = ","),
+                            excludeUsers = mr.usersIgnore?.joinToString(separator = ","),
+                            block = mr.blockMr,
+                            enableCheck = mr.reportCommitCheck,
+                            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                                ?: PathFilterType.NamePrefixFilter,
+                            actions = mr.action ?: listOf(
+                                EventAction.OPEN.value,
+                                EventAction.REOPEN.value,
+                                EventAction.PUSH_UPDATE.value
+                            ),
+                            eventType = CodeEventType.MERGE_REQUEST,
+                            repositoryType = repositoryType,
+                            repositoryName = triggerOn.repoName,
+                            scmCode = triggerOn.scmCode ?: ScmType.SCM_GIT.name
+                        )
+                    )
+                ).checkTriggerElementEnable(mr.enable).apply {
+                    version = "1.*"
+                }
+            )
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    fun yaml2TriggerScmSvn(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
+        triggerOn.push?.let { push ->
+            elementQueue.add(
+                CodeSVNWebHookTriggerElement(
+                    stepId = push.id,
+                    name = push.name ?: "SVN通用事件触发",
+                    relativePath = push.paths.nonEmptyOrNull()?.join(),
+                    excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = push.users,
+                    excludeUsers = push.usersIgnore.nonEmptyOrNull(),
+                    pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
-                    includeMrAction = mr.action ?: listOf(
-                        TGitMrEventAction.OPEN.value,
-                        TGitMrEventAction.REOPEN.value,
-                        TGitMrEventAction.PUSH_UPDATE.value
-                    ),
-                    eventType = CodeEventType.MERGE_REQUEST,
+                    // todo action
                     repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
-                ).checkTriggerElementEnable(mr.enable).apply {
-                    version = "2.*"
-                }
+                ).checkTriggerElementEnable(push.enable)
             )
         }
     }
@@ -849,6 +952,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     private fun List<String>?.nonEmptyOrNull() = this?.ifEmpty { null }
 
+    private fun List<String>?.filterNonEmpty() = this?.filter { it.isNotBlank() } ?: listOf()
+
     private fun buildP4TriggerElement(
         rule: PushRule?,
         eventType: CodeEventType,
@@ -857,6 +962,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
     ): Element? {
         return rule?.let {
             CodeP4WebHookTriggerElement(
+                stepId = rule.id,
                 name = rule.name ?: "P4事件触发",
                 data = CodeP4WebHookTriggerData(
                     input = CodeP4WebHookTriggerInput(
@@ -882,6 +988,140 @@ class TriggerTransfer @Autowired(required = false) constructor(
             CodeEventType.SHELVE_COMMIT -> triggerOn.shelveCommit = rule
             CodeEventType.SHELVE_SUBMIT -> triggerOn.shelveSubmit = rule
             else -> {}
+        }
+    }
+
+    private fun convertGitTriggerElement(
+        mr: MrRule,
+        merged: Boolean,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element {
+        val (includeMrAction, eventType, elementVersion) = if (merged) {
+            // MR_ACC 事件使用1.*版本
+            Triple(null, CodeEventType.MERGE_REQUEST_ACCEPT, "1.*")
+        } else {
+            // 其他场景默认使用2.*版本
+            val actions = mr.action ?: listOf(
+                TGitMrEventAction.OPEN.value,
+                TGitMrEventAction.REOPEN.value,
+                TGitMrEventAction.PUSH_UPDATE.value
+            )
+            Triple(actions, CodeEventType.MERGE_REQUEST, "2.*")
+        }
+        return CodeGitWebHookTriggerElement(
+            stepId = mr.id,
+            name = mr.name ?: "Git事件触发",
+            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+            includePaths = mr.paths.nonEmptyOrNull()?.join(),
+            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+            includeUsers = mr.users,
+            excludeUsers = mr.usersIgnore,
+            block = mr.blockMr,
+            webhookQueue = mr.webhookQueue,
+            enableCheck = mr.reportCommitCheck,
+            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                ?: PathFilterType.NamePrefixFilter,
+            includeMrAction = includeMrAction,
+            eventType = eventType,
+            repositoryType = repositoryType,
+            repositoryName = repoName,
+            enableThirdFilter = !mr.custom?.url.isNullOrBlank(),
+            thirdUrl = mr.custom?.url,
+            thirdSecretToken = mr.custom?.credentials,
+            skipWip = mr.skipWip
+        ).checkTriggerElementEnable(mr.enable).apply {
+            version = elementVersion
+        }
+    }
+
+    private fun convertTGitTriggerElement(
+        mr: MrRule,
+        merged: Boolean,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element {
+        val (includeMrAction, eventType, elementVersion) = if (merged) {
+            // MR_ACC 事件使用1.*版本
+            Triple(null, CodeEventType.MERGE_REQUEST_ACCEPT, "1.*")
+        } else {
+            // 其他场景默认使用2.*版本
+            val actions = mr.action ?: listOf(
+                TGitMrEventAction.OPEN.value,
+                TGitMrEventAction.REOPEN.value,
+                TGitMrEventAction.PUSH_UPDATE.value
+            )
+            Triple(actions, CodeEventType.MERGE_REQUEST, "2.*")
+        }
+        return CodeTGitWebHookTriggerElement(
+            stepId = mr.id,
+            name = mr.name ?: "TGit事件触发",
+            data = CodeTGitWebHookTriggerData(
+                input = CodeTGitWebHookTriggerInput(
+                    branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+                    excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+                    includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+                    excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+                    includePaths = mr.paths.nonEmptyOrNull()?.join(),
+                    excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+                    includeUsers = mr.users,
+                    excludeUsers = mr.usersIgnore,
+                    block = mr.blockMr,
+                    webhookQueue = mr.webhookQueue,
+                    enableCheck = mr.reportCommitCheck,
+                    pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                        ?: PathFilterType.NamePrefixFilter,
+                    includeMrAction = includeMrAction,
+                    eventType = eventType,
+                    repositoryType = repositoryType,
+                    repositoryName = repoName,
+                    skipWip = mr.skipWip
+                )
+            )
+        ).checkTriggerElementEnable(mr.enable).apply {
+            version = elementVersion
+        }
+    }
+
+    private fun convertGitlabTriggerElement(
+        mr: MrRule,
+        merged: Boolean,
+        repositoryType: TriggerRepositoryType,
+        repoName: String?
+    ): Element {
+        val (includeMrAction, eventType) = if (merged) {
+            Pair(null, CodeEventType.MERGE_REQUEST_ACCEPT)
+        } else {
+            val actions = mr.action ?: listOf(
+                TGitMrEventAction.OPEN.value,
+                TGitMrEventAction.REOPEN.value,
+                TGitMrEventAction.PUSH_UPDATE.value
+            )
+            Pair(actions, CodeEventType.MERGE_REQUEST)
+        }
+        return CodeGitlabWebHookTriggerElement(
+            stepId = mr.id,
+            name = mr.name ?: "Gitlab事件触发",
+            branchName = mr.targetBranches.nonEmptyOrNull()?.join(),
+            excludeBranchName = mr.targetBranchesIgnore.nonEmptyOrNull()?.join(),
+            includeSourceBranchName = mr.sourceBranches.nonEmptyOrNull()?.join(),
+            excludeSourceBranchName = mr.sourceBranchesIgnore.nonEmptyOrNull()?.join(),
+            includePaths = mr.paths.nonEmptyOrNull()?.join(),
+            excludePaths = mr.pathsIgnore.nonEmptyOrNull()?.join(),
+            includeUsers = mr.users,
+            excludeUsers = mr.usersIgnore,
+            block = mr.blockMr,
+            pathFilterType = mr.pathFilterType?.let { PathFilterType.valueOf(it) }
+                ?: PathFilterType.NamePrefixFilter,
+            includeMrAction = includeMrAction,
+            eventType = eventType,
+            repositoryType = repositoryType,
+            repositoryName = repoName
+        ).checkTriggerElementEnable(mr.enable).apply {
+            version = "1.*"
         }
     }
 }

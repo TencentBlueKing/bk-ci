@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,14 +38,15 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_TASK_RETRY_NOTICE
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -52,7 +54,6 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -65,15 +66,15 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.JOB_RETRY_TASK_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Suppress(
     "TooManyFunctions",
@@ -90,7 +91,6 @@ class PipelineTaskService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
@@ -296,14 +296,20 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun getBuildTask(projectId: String, buildId: String, taskId: String?, stepId: String? = null): PipelineBuildTask? {
+    fun getBuildTask(
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        stepId: String? = null,
+        executeCount: Int? = null
+    ): PipelineBuildTask? {
         return pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
             stepId = stepId,
-            executeCount = null
+            executeCount = executeCount
         )
     }
 
@@ -440,7 +446,7 @@ class PipelineTaskService @Autowired constructor(
         return dataMap
     }
 
-    fun isRetryWhenFail(projectId: String, taskId: String, buildId: String): Boolean {
+    fun isRetryWhenFail(projectId: String, taskId: String, buildId: String, failedMsg: String?): Boolean {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return false
         val retryCount = redisOperation.get(
@@ -455,7 +461,11 @@ class PipelineTaskService @Autowired constructor(
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "[${taskRecord.taskName}] failed, and retry $nextCount",
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_TASK_RETRY_NOTICE,
+                    params = arrayOf(taskRecord.taskName, nextCount.toString(), failedMsg ?: "run failed"),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = taskRecord.taskId,
                 containerHashId = taskRecord.containerId,
                 executeCount = 1,
@@ -526,7 +536,14 @@ class PipelineTaskService @Autowired constructor(
     fun createFailTaskVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
         val taskRecord = getBuildTask(projectId, buildId, taskId)
             ?: return
-        val model = taskBuildDetailService.getBuildModel(projectId, buildId)
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = taskRecord.containerId,
+            executeCount = taskRecord.executeCount
+        ) ?: return
+        val containerName = buildRecordContainer.containerVar[NAME]?.toString() ?: taskRecord.containerId
         val failTask = pipelineVariableService.getVariable(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKS
         )
@@ -534,7 +551,7 @@ class PipelineTaskService @Autowired constructor(
             projectId, pipelineId, buildId, BK_CI_BUILD_FAIL_TASKNAMES
         )
         try {
-            val errorElement = findElementMsg(model, taskRecord)
+            val errorElement = findElementMsg(containerName, taskRecord)
 
             // 存在的不重复添加 fix：流水线设置的变量重试一次就会叠加一次变量值 #6058
             if (inFailTasks(failTasks = failTask, failTask = errorElement.first)) {
@@ -619,10 +636,9 @@ class PipelineTaskService @Autowired constructor(
     }
 
     private fun findElementMsg(
-        model: Model?,
+        containerName: String,
         taskRecord: PipelineBuildTask
     ): Pair<String, String> {
-        val containerName = model?.getContainer(taskRecord.containerId)?.name ?: ""
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = taskRecord.taskName
 

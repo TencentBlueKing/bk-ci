@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,15 @@
 package com.tencent.devops.process.yaml
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
@@ -43,7 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileSyncReq
@@ -57,7 +59,6 @@ import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.PacRepoSetting
 import com.tencent.devops.process.yaml.actions.data.YamlTriggerPipeline
 import com.tencent.devops.process.yaml.actions.internal.event.PipelineYamlManualEvent
-import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.mq.PipelineYamlEnableEvent
 import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -90,7 +91,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
     private val pipelineYamlViewService: PipelineYamlViewService,
     private val pipelineYamlFileManager: PipelineYamlFileManager,
-    private val webhookGrayService: WebhookGrayService
+    private val webhookGrayService: WebhookGrayService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService
 ) {
 
     companion object {
@@ -109,7 +111,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
-            scmType = scmType
+            scmType = scmType,
+            authUserId = repository.userName
         )
         val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
 
@@ -130,7 +133,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -244,7 +247,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 userId = action.data.getUserId(),
                 projectId = projectId,
                 repoHashId = repoHashId,
-                repoFullName = action.data.setting.projectName,
+                aliasName = action.data.setting.aliasName,
                 directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
@@ -321,53 +324,9 @@ class PipelineYamlFacadeService @Autowired constructor(
         )[pipelineId] ?: false
     }
 
-    fun checkPushParam(yamlFileReleaseReq: PipelineYamlFileReleaseReq) {
-        with(yamlFileReleaseReq) {
-            logger.info(
-                "check push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName"
-            )
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
-            // TODO 代码源灰度验证,后续需删除
-            if (webhookGrayService.isPacGrayRepo(repository.scmCode, repository.projectName)) {
-                return validateReleaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
-            }
-            checkPushParam(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                content = content,
-                repoHashId = repoHashId,
-                filePath = filePath,
-                targetAction = targetAction,
-                versionName = versionName,
-                targetBranch = targetBranch
-            )
-            val setting = PacRepoSetting(repository = repository)
-            val event = PipelineYamlManualEvent(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                scmType = scmType
-            )
-            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-            if (!action.checkPushPermission()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_YAML_PUSH_NO_REPO_PERMISSION,
-                    params = arrayOf(userId, repository.url)
-                )
-            }
-        }
-    }
-
     fun pushYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
-            logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
+            logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$version|$versionName")
             val repository = client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId,
                 repositoryId = repoHashId,
@@ -381,7 +340,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 return releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
             }
 
-            checkPushParam(
+            pipelineYamlCommonService.checkPushParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 content = content,
@@ -397,7 +356,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    scmType = scmType
+                    scmType = ScmType.CODE_GIT,
+                    authUserId = repository.userName
                 )
                 val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
                 // 发布时创建流水线
@@ -405,7 +365,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                     userId = action.data.getUserId(),
                     projectId = projectId,
                     repoHashId = repoHashId,
-                    repoFullName = action.data.setting.projectName,
+                    aliasName = action.data.setting.aliasName,
                     directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
                 )
                 val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(
@@ -427,7 +387,8 @@ class PipelineYamlFacadeService @Autowired constructor(
                     repoHashId = repoHashId,
                     filePath = gitPushResult.filePath,
                     branch = gitPushResult.branch,
-                    mrUrl = gitPushResult.mrUrl
+                    pullRequestUrl = gitPushResult.mrUrl,
+                    pullRequestId = null
                 )
             } catch (exception: Exception) {
                 logger.error("Failed to push yaml file|$userId|$projectId|$pipelineId|$repoHashId")
@@ -438,7 +399,7 @@ class PipelineYamlFacadeService @Autowired constructor(
 
     fun validateReleaseYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq) {
         with(yamlFileReleaseReq) {
-            checkPushParam(
+            pipelineYamlCommonService.checkPushParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 content = content,
@@ -457,10 +418,29 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf(repoHashId)
             )
             val authRepository = AuthRepository(repository)
-            val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
-                projectId = projectId,
-                authRepository = authRepository
-            ).data
+            val serverRepository = try {
+                client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
+                    projectId = projectId,
+                    authRepository = authRepository
+                ).data
+            } catch (ignored: RemoteServiceException) {
+                throw when (ignored.errorCode) {
+                    // 目标仓库被删除
+                    HTTP_404 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                        params = arrayOf(repository.projectName)
+                    )
+
+                    HTTP_401, HTTP_403 -> ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_USER_NO_PUSH_PERMISSION,
+                        params = arrayOf(repository.userName, repository.projectName)
+                    )
+
+                    else -> ignored
+                }
+            } catch (ignored: Exception) {
+                throw ignored
+            }
             if (serverRepository !is GitScmServerRepository) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
@@ -482,7 +462,7 @@ class PipelineYamlFacadeService @Autowired constructor(
 
     fun releaseYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
-            checkPushParam(
+            pipelineYamlCommonService.checkPushParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 content = content,
@@ -493,71 +473,6 @@ class PipelineYamlFacadeService @Autowired constructor(
                 targetBranch = targetBranch
             )
             return pipelineYamlFileManager.releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
-        }
-    }
-
-    private fun checkPushParam(
-        projectId: String,
-        pipelineId: String,
-        content: String,
-        repoHashId: String,
-        filePath: String,
-        targetAction: CodeTargetAction,
-        versionName: String?,
-        targetBranch: String?
-    ) {
-        if (content.isBlank()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY,
-                params = arrayOf(repoHashId)
-            )
-        }
-        if (filePath.startsWith(Constansts.ciFileDirectoryName) &&
-            !GitActionCommon.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
-            )
-        }
-        if (
-            (targetAction != CodeTargetAction.COMMIT_TO_MASTER &&
-                    targetAction != CodeTargetAction.COMMIT_TO_BRANCH) &&
-            versionName.isNullOrBlank()
-        ) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("versionName")
-            )
-        }
-        if (targetAction == CodeTargetAction.COMMIT_TO_BRANCH && targetBranch.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("targetBranch")
-            )
-        }
-        pipelineYamlService.getPipelineYamlInfo(
-            projectId = projectId, repoHashId = repoHashId, filePath = filePath
-        )?.let {
-            if (it.pipelineId != pipelineId) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_YAML_BOUND_PIPELINE,
-                    params = arrayOf(filePath, it.pipelineId)
-                )
-            }
-        }
-        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-            if (it.repoHashId != repoHashId) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_REPO,
-                    params = arrayOf(it.repoHashId)
-                )
-            }
-            if (it.filePath != filePath) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
-                    params = arrayOf(it.filePath)
-                )
-            }
         }
     }
 

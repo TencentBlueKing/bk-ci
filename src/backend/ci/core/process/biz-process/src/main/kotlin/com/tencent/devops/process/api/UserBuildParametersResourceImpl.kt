@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,21 +30,28 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
+import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
 import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildParamCombinationService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
-import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.webhook.TriggerBuildParamUtils
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.enums.Permission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,7 +60,9 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserBuildParametersResourceImpl @Autowired constructor(
     private val client: Client,
     private val pipelineListFacadeService: PipelineListFacadeService,
-    private val scmProxyService: ScmProxyService
+    private val scmProxyService: ScmProxyService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelineBuildParamCombinationService: PipelineBuildParamCombinationService
 ) : UserBuildParametersResource {
 
     companion object {
@@ -75,6 +84,14 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                     params = TriggerBuildParamUtils.getBasicBuildParams().map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }.sortedBy { it.name }
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getJobParamName(),
+                    params = TriggerBuildParamUtils.getJobBuildParams()
+                ),
+                BuildParameterGroup(
+                    name = TriggerBuildParamUtils.getStepParamName(),
+                    params = TriggerBuildParamUtils.getStepBuildParams()
                 )
             )
         )
@@ -113,6 +130,7 @@ class UserBuildParametersResourceImpl @Autowired constructor(
                 pageSize = pageSize,
                 aliasName = aliasName
             ).map { BuildFormValue(it.aliasName, it.aliasName) }
+            .distinctBy { it.key }
         )
     }
 
@@ -254,6 +272,129 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return result
+        return result.distinct()
+    }
+
+    override fun buildParamFormProp(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        includeConst: Boolean?,
+        includeNotRequired: Boolean?,
+        version: Int?,
+        isTemplate: Boolean?
+    ): Result<List<PipelineBuildParamFormProp>> {
+        val buildParamFormProp = pipelineBuildFacadeService.getBuildParamFormProp(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            includeConst = includeConst,
+            includeNotRequired = includeNotRequired,
+            userId = userId,
+            version = version,
+            isTemplate = isTemplate
+        )
+        return Result(buildParamFormProp)
+    }
+
+    override fun saveCombination(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        request: BuildParamCombinationReq
+    ): Result<Long> {
+        return Result(
+            pipelineBuildParamCombinationService.saveCombination(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                request = request
+            )
+        )
+    }
+
+    override fun editCombination(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        combinationId: Long,
+        request: BuildParamCombinationReq
+    ): Result<Boolean> {
+        pipelineBuildParamCombinationService.editCombination(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            combinationId = combinationId,
+            request = request
+        )
+        return Result(true)
+    }
+
+    override fun getCombination(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        combinationId: Long
+    ): Result<List<BuildFormProperty>> {
+        return Result(
+            pipelineBuildParamCombinationService.getCombination(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                combinationId = combinationId
+            )
+        )
+    }
+
+    override fun deleteCombination(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        combinationId: Long
+    ): Result<Boolean> {
+        pipelineBuildParamCombinationService.deleteCombination(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            combinationId = combinationId
+        )
+        return Result(true)
+    }
+
+    override fun listCombination(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        combinationName: String?,
+        varName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<BuildParamCombination>> {
+        return Result(
+            pipelineBuildParamCombinationService.listCombination(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                combinationName = combinationName,
+                varName = varName,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getCombinationFromBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<BuildFormProperty>> {
+        return Result(
+            pipelineBuildParamCombinationService.getCombinationFromBuild(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
     }
 }

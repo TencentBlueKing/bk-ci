@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,14 +28,11 @@ package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.security.autoconfig.ServiceSecurityAutoConfiguration
 import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
-import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.SchedulingConfigurer
-import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -46,12 +43,14 @@ import java.time.Instant
 import java.util.Base64
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 
 class JwtManager(
     private val privateKeyString: String?,
     private val publicKeyString: String?,
     private val enable: Boolean
-) : SchedulingConfigurer {
+) {
     private var token: String? = null
     private val publicKey: PublicKey?
     private val privateKey: PrivateKey?
@@ -77,8 +76,8 @@ class JwtManager(
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
         val json = if (securityJwtInfo == null) "X-DEVOPS-JWT-TOKEN AUTH" else JsonUtil.toJson(securityJwtInfo)
-        token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
-            .signWith(privateKey, SignatureAlgorithm.RS512).compact()
+        token = Jwts.builder().subject(json).expiration(Date(expireAt))
+            .signWith(privateKey, Jwts.SIG.RS512).compact()
         return token
     }
 
@@ -93,7 +92,7 @@ class JwtManager(
         val tokenExpireAt = tokenCache.getIfPresent(token)
         if (tokenExpireAt != null) {
             // 如果未超时
-            if (tokenExpireAt > Instant.now().epochSecond) {
+            if (tokenExpireAt > Instant.now().toEpochMilli()) {
                 return true
             }
         }
@@ -101,11 +100,11 @@ class JwtManager(
             val claims = Jwts.parser()
                 .verifyWith(publicKey)
                 .build()
-                .parseClaimsJws(token)
-                .body
-            logger.info("Verify jwt sub:${claims["sub"]}")
+                .parseSignedClaims(token)
+                .payload
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
+                logger.info("Verify jwt expireAt: $expireAt")
                 tokenCache.put(token, expireAt.time)
             }
         } catch (e: ExpiredJwtException) {
@@ -123,15 +122,7 @@ class JwtManager(
         return true
     }
 
-    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
-        if (isAuthEnable()) {
-            taskRegistrar?.addFixedDelayTask(
-                this@JwtManager::refreshToken,
-                5 * 60 * 1000
-            )
-        }
-    }
-
+    @Scheduled(cron = "0 0/4 * * * ?", scheduler = ServiceSecurityAutoConfiguration.JWT_MANAGER_SCHEDULER)
     fun refreshToken() {
         logger.info("Refresh service jwt token")
         generateToken()

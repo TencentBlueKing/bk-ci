@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.dispatch.dao.JobQuotaProjectDao
 import com.tencent.devops.dispatch.dao.JobQuotaSystemDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaProject
+import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import org.jooq.DSLContext
@@ -92,7 +93,7 @@ class JobQuotaManagerService @Autowired constructor(
     }
 
     /**
-     * 获取job的某类构件机配额，如果没有，则取系统默认值
+     * 获取job的某类构建机配额，如果没有，则取系统默认值
      */
     fun getProjectQuota(
         projectId: String,
@@ -128,6 +129,41 @@ class JobQuotaManagerService @Autowired constructor(
     }
 
     /**
+     * 获取job的某类构建机配额状态，如果没有，则取系统默认值
+     * 使用本地缓存提升性能
+     */
+    fun getProjectQuotaStatus(
+        projectId: String,
+        jobQuotaVmType: JobQuotaVmType,
+        channelCode: String = ChannelCode.BS.name
+    ): JobQuotaStatus {
+        return JobProjectQuotaCache.get(projectId, jobQuotaVmType, channelCode) {
+            // 缓存未命中时，从数据库加载
+            val record = jobQuotaProjectDao.get(dslContext, projectId, jobQuotaVmType, channelCode)
+            val systemDefault = getSystemQuota(jobQuotaVmType, channelCode)
+            if (null == record) {
+                JobQuotaStatus(
+                    jobQuota = systemDefault.runningJobMaxProject,
+                    runningJobCount = 0,
+                    jobThreshold = systemDefault.projectRunningJobThreshold,
+                    timeQuota = systemDefault.runningTimeJobMaxProject.toLong(),
+                    runningJobTime = 0,
+                    timeThreshold = systemDefault.projectRunningTimeThreshold
+                )
+            } else {
+                JobQuotaStatus(
+                    jobQuota = record.runningJobsMax,
+                    runningJobCount = 0,
+                    jobThreshold = systemDefault.projectRunningJobThreshold,
+                    timeQuota = record.runningTimeProjectMax.toLong(),
+                    runningJobTime = 0,
+                    timeThreshold = systemDefault.projectRunningTimeThreshold
+                )
+            }
+        }
+    }
+
+    /**
      * 添加项目配额
      */
     fun addProjectQuota(projectId: String, jobQuota: JobQuotaProject): Boolean {
@@ -137,6 +173,8 @@ class JobQuotaManagerService @Autowired constructor(
         } else {
             jobQuotaProjectDao.update(dslContext, projectId, jobQuota.vmType, jobQuota)
         }
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuota.vmType, jobQuota.channelCode)
         return true
     }
 
@@ -149,6 +187,8 @@ class JobQuotaManagerService @Autowired constructor(
         channelCode: String = ChannelCode.BS.name
     ): Boolean {
         jobQuotaProjectDao.delete(dslContext, projectId, jobQuotaVmType, channelCode)
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuotaVmType, channelCode)
         return true
     }
 
@@ -156,7 +196,10 @@ class JobQuotaManagerService @Autowired constructor(
      * 更新项目配额
      */
     fun updateProjectQuota(projectId: String, jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaProject): Boolean {
-        return jobQuotaProjectDao.update(dslContext, projectId, jobQuotaVmType, jobQuota)
+        val result = jobQuotaProjectDao.update(dslContext, projectId, jobQuotaVmType, jobQuota)
+        // 清除缓存
+        JobProjectQuotaCache.invalidate(projectId, jobQuotaVmType, jobQuota.channelCode)
+        return result
     }
 
     /**

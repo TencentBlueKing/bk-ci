@@ -124,6 +124,54 @@
                   "id": "codecc_ignore_type_manage"
                 }
               ]
+            },
+            {
+              "name": "SCC扫描方案",
+              "name_en": "SCC Scan Schema Permissions",
+              "actions": [
+                {
+                  "id": "scc_scan_schema_create"
+                },
+                {
+                  "id": "scc_scan_schema_list"
+                }
+              ]
+            },
+            {
+              "name": "SCC任务",
+              "name_en": "SCC Task Permissions",
+              "actions": [
+                {
+                  "id": "scc_task_create"
+                },
+                {
+                  "id": "scc_task_list"
+                },
+                {
+                  "id": "scc_task_view"
+                },
+                {
+                  "id": "scc_task_edit"
+                },
+                {
+                  "id": "scc_task_delete"
+                },
+                {
+                  "id": "scc_task_execute"
+                },
+                {
+                  "id": "scc_task_enable"
+                },
+                {
+                  "id": "scc_task_manage"
+                },
+                {
+                  "id": "scc_task_manage-defect"
+                },
+                {
+                  "id": "scc_task_view-defect"
+                }
+              ]
             }
           ]
         },
@@ -399,6 +447,33 @@
               ]
             },
             {
+              "name": "云桌面组",
+              "name_en": "CGS Group Permissions",
+              "actions": [
+                {
+                  "id": "cgs_group_list"
+                },
+                {
+                  "id": "cgs_group_view"
+                },
+                {
+                  "id": "cgs_group_edit"
+                },
+                {
+                  "id": "cgs_group_create"
+                },
+                {
+                  "id": "cgs_group_delete"
+                },
+                {
+                  "id": "cgs_group_add-remove"
+                },
+                {
+                  "id": "cgs_group_manage"
+                }
+              ]
+            },
+            {
               "name": "镜像",
               "name_en": "Image Notice Group Permissions",
               "actions": [
@@ -425,6 +500,30 @@
                 },
                 {
                   "id": "code_proxy_delete"
+                }
+              ]
+            },
+            {
+              "name": "公共变量组",
+              "name_en": "Public Variable Group Permissions",
+              "actions": [
+                {
+                  "id": "public_variable_list"
+                },
+                {
+                  "id": "public_variable_view"
+                },
+                {
+                  "id": "public_variable_edit"
+                },
+                {
+                  "id": "public_variable_create"
+                },
+                {
+                  "id": "public_variable_delete"
+                },
+                {
+                  "id": "public_variable_use"
                 }
               ]
             },

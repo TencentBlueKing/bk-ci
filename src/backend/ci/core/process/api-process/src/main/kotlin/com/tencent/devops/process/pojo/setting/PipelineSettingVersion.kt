@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -75,8 +76,12 @@ data class PipelineSettingVersion(
     var concurrencyCancelInProgress: Boolean?,
     @get:Schema(title = "并发构建数量限制", required = false)
     var maxConRunningQueueSize: Int? = null, // MULTIPLE类型时，并发构建数量限制
+    @get:Schema(title = "是否配置流水线变量值超长时终止执行", required = false)
+    val failIfVariableInvalid: Boolean? = false,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
-    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+    var pipelineAsCodeSettings: PipelineAsCodeSettings? = null,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy? = null
 ) {
     companion object {
 
@@ -97,7 +102,9 @@ data class PipelineSettingVersion(
             concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
             concurrencyGroup = setting.concurrencyGroup,
             maxConRunningQueueSize = setting.maxConRunningQueueSize,
-            pipelineAsCodeSettings = setting.pipelineAsCodeSettings
+            pipelineAsCodeSettings = setting.pipelineAsCodeSettings,
+            failIfVariableInvalid = setting.failIfVariableInvalid,
+            buildCancelPolicy = setting.buildCancelPolicy
         )
     }
 }

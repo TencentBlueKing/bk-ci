@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.auth.resources.open
 import com.tencent.devops.auth.api.open.OpenProjectAuthResource
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -41,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpenProjectAuthResourceImpl @Autowired constructor(
-    val permissionProjectService: PermissionProjectService
+    val permissionProjectService: PermissionProjectService,
+    val permissionResourceMemberService: PermissionResourceMemberService
 ) : OpenProjectAuthResource {
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun getProjectUsers(
@@ -128,21 +130,6 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun checkProjectManager(
-        token: String,
-        type: String?,
-        userId: String,
-        projectCode: String
-    ): Result<Boolean> {
-        return Result(
-            permissionProjectService.checkProjectManager(
-                userId = userId,
-                projectCode = projectCode
-            )
-        )
-    }
-
-    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
     override fun createProjectUser(
         token: String,
         userId: String,
@@ -159,19 +146,16 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
     }
 
     @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
-    override fun batchCreateProjectUser(
+    override fun checkProjectManager(
         token: String,
+        type: String?,
         userId: String,
-        projectCode: String,
-        roleCode: String,
-        members: List<String>
+        projectCode: String
     ): Result<Boolean> {
         return Result(
-            permissionProjectService.batchCreateProjectUser(
+            permissionProjectService.checkProjectManager(
                 userId = userId,
-                projectCode = projectCode,
-                roleCode = roleCode,
-                members = members
+                projectCode = projectCode
             )
         )
     }
@@ -198,6 +182,20 @@ class OpenProjectAuthResourceImpl @Autowired constructor(
         return Result(
             permissionProjectService.getProjectPermissionInfo(
                 projectCode = projectCode
+            )
+        )
+    }
+
+    @BkApiPermission([BkApiHandleType.API_OPEN_TOKEN_CHECK])
+    override fun getMemberGroupsInProject(
+        token: String,
+        projectCode: String,
+        memberId: String
+    ): Result<List<Int>> {
+        return Result(
+            permissionResourceMemberService.getMemberGroupsInProject(
+                projectCode = projectCode,
+                memberId = memberId
             )
         )
     }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,9 @@ package com.tencent.devops.common.stream.config.processor
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.stream.constants.StreamBinder
+import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
 import java.util.function.Consumer
@@ -89,10 +92,15 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
                 )
                 val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName"
                 setProperty("$rabbitPropPrefix.producer.delayedExchange", "true")
-                setProperty("$rabbitPropPrefix.producer.exchangeType", "topic")
+                setProperty("$rabbitPropPrefix.producer.exchangeType", ExchangeTypes.TOPIC)
                 val prefix = "spring.cloud.stream.bindings.$bindingName"
-                setProperty("$prefix.destination", event.destination)
-                setProperty("$prefix.binder", event.binder)
+                if (event.binder != StreamBinder.CUSTOM) {
+                    setProperty("$prefix.binder", event.binder)
+                    setProperty("$prefix.destination", event.destination)
+                } else {
+                    val namespace = KubernetesUtils.getNamespace()
+                    setProperty("$prefix.destination", "$namespace.${event.destination}")
+                }
             }
 
             // 反射扫描所有带有 StreamConsumer 注解的bean方法
@@ -137,8 +145,13 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         val bindingPrefix = "spring.cloud.stream.bindings.$bindingName-in-0"
         val rabbitPropPrefix = "spring.cloud.stream.rabbit.bindings.$bindingName-in-0"
         val pulsarPropPrefix = "spring.cloud.stream.pulsar.bindings.$bindingName-in-0"
-        setProperty("$bindingPrefix.destination", event.destination)
-        setProperty("$bindingPrefix.binder", event.binder)
+        if (event.binder != StreamBinder.CUSTOM) {
+            setProperty("$bindingPrefix.binder", event.binder)
+            setProperty("$bindingPrefix.destination", event.destination)
+        } else {
+            val namespace = KubernetesUtils.getNamespace()
+            setProperty("$bindingPrefix.destination", "$namespace.${event.destination}")
+        }
         setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
             // 如果队列匿名则在消费者销毁后删除该队列
@@ -153,6 +166,10 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         setProperty("$rabbitPropPrefix.consumer.maxConcurrency", concurrencyExpression)
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")
         setProperty("$rabbitPropPrefix.consumer.exchangeType", ExchangeTypes.TOPIC)
+        val quorumExpression = "\${bkci.rabbitQuorumEnable:false}"
+        if (consumer.type == RabbitQueueType.QUORUM && !consumer.anonymous) {
+            setProperty("$rabbitPropPrefix.consumer.quorum.enabled", quorumExpression)
+        }
     }
 
     override fun getOrder(): Int {

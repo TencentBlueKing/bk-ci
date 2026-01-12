@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,8 +28,12 @@
 package com.tencent.devops.repository.service.oauth2
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.security.util.BkCryptoUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryGithubTokenRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.pojo.oauth.OauthTokenInfo
@@ -61,21 +65,14 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
             userId = userId,
             githubTokenType = GithubTokenType.GITHUB_APP
         )?.let {
-            OauthTokenInfo(
-                accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, it.accessToken),
-                tokenType = it.tokenType,
-                expiresIn = null,
-                refreshToken = null,
-                createTime = it.createTime.timestampmilli(),
-                userId = it.userId,
-                operator = it.operator
-            )
+            it.convertOauthTokenInfo()
         }
     }
 
     override fun store(scmCode: String, oauthTokenInfo: OauthTokenInfo) {
         with(oauthTokenInfo) {
             val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
+            val finalOperator = operator ?: throw InvalidParamException("operator is null")
             val record = githubTokenDao.getOrNull(
                 dslContext = dslContext,
                 userId = userId,
@@ -89,23 +86,47 @@ class CodeGithubOauth2TokenStoreService @Autowired constructor(
                     tokenType = tokenType,
                     scope = "",
                     githubTokenType = GithubTokenType.GITHUB_APP,
-                    operator = operator ?: userId
+                    operator = finalOperator
                 )
             } else {
                 githubTokenDao.update(
                     dslContext,
-                    userId = userId,
+                    userId = record.userId,
                     accessToken = encryptedAccessToken,
                     tokenType = tokenType,
                     scope = "",
                     githubTokenType = GithubTokenType.GITHUB_APP,
-                    operator = operator ?: userId
+                    operator = finalOperator
                 )
             }
         }
     }
 
-    override fun delete(userId: String, scmCode: String) {
-        githubTokenDao.delete(dslContext = dslContext, userId = userId)
+    override fun delete(userId: String, scmCode: String, username: String) {
+        get(username, scmCode)?.let {
+            // 非OAUTH授权代持人不得删除
+            if (it.operator != userId) {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.ERROR_NOT_OAUTH_PROXY_FORBIDDEN_DELETE
+                )
+            }
+            githubTokenDao.delete(dslContext = dslContext, oauthUserId = username)
+        }
     }
+
+    override fun list(userId: String, scmCode: String): List<OauthTokenInfo> {
+        return githubTokenDao.listToken(dslContext = dslContext, operator = userId).map {
+            it.convertOauthTokenInfo()
+        }
+    }
+
+    private fun TRepositoryGithubTokenRecord.convertOauthTokenInfo() = OauthTokenInfo(
+        accessToken = BkCryptoUtil.decryptSm4OrAes(aesKey, this.accessToken),
+        tokenType = this.tokenType,
+        expiresIn = null,
+        refreshToken = null,
+        createTime = this.createTime.timestampmilli(),
+        userId = this.userId,
+        operator = this.operator
+    )
 }

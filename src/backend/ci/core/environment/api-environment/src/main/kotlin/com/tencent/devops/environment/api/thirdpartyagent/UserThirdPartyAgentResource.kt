@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,6 +36,8 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.BatchUpdateParallelTaskCountData
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
@@ -107,7 +109,19 @@ interface UserThirdPartyAgentResource {
         os: OS,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
-        zoneName: String?
+        zoneName: String?,
+        @Parameter(description = "登录账户名", required = false)
+        @QueryParam("loginName")
+        loginName: String?,
+        @Parameter(description = "登录账户密码", required = false)
+        @QueryParam("loginPassword")
+        loginPassword: String?,
+        @Parameter(description = "Agent安装模式", required = false)
+        @QueryParam("installType")
+        installType: TPAInstallType?,
+        @Parameter(description = "重装使用的AgentHashId", required = false)
+        @QueryParam("reInstallId")
+        reInstallId: String?
     ): Result<String>
 
     @Operation(summary = "获取网关列表")
@@ -303,6 +317,19 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "count", required = true)
         @QueryParam("count")
         count: Int
+    ): Result<Boolean>
+
+    @Operation(summary = "批量修改agent并发数")
+    @POST
+    @Path("/projects/{projectId}/nodes/batchUpdateParallelTaskCount")
+    fun batchUpdateParallelTaskCount(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        data: BatchUpdateParallelTaskCountData
     ): Result<Boolean>
 
     @Operation(summary = "获取构建机详情")

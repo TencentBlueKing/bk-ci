@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,8 +29,12 @@ package com.tencent.devops.process.yaml.v3.models.step
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.process.yaml.v3.models.IfField
 import io.swagger.v3.oas.annotations.media.Schema
+
+interface IStep
 
 data class Step(
     val enable: Boolean? = null,
@@ -41,6 +45,7 @@ data class Step(
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
+    val namespace: String? = null,
     val with: Map<String, Any?>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: String? = null,
@@ -48,6 +53,10 @@ data class Step(
     val continueOnError: String?,
     @JsonProperty("retry-times")
     val retryTimes: Int?,
+    @JsonProperty("can-pause-before-run")
+    var canPauseBeforeRun: Boolean? = null,
+    @JsonProperty("pause-notice-receivers")
+    var pauseNoticeReceivers: List<String>? = null,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
     @get:Schema(title = "run 插件的附加参数")
@@ -58,7 +67,7 @@ data class Step(
     // 在系统内唯一标识step唯一性，不参与yaml打印
     @JsonIgnore
     val taskId: String? = null
-) {
+) : IStep {
     enum class ContinueOnErrorType(val alis: String) {
         AUTO_SKIP("auto"),
         MANUAL_SKIP("manual");
@@ -75,3 +84,11 @@ data class Step(
         }
     }
 }
+
+data class StepTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : IStep, CodeTemplate

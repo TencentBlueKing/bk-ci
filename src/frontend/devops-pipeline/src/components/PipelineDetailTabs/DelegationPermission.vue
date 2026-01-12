@@ -70,7 +70,7 @@
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipelineId,
                                     action: RESOURCE_ACTION.MANAGE
                                 }
@@ -166,11 +166,12 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { mapActions, mapState } from 'vuex'
-    import { convertTime } from '@/utils/util'
     import {
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        RESOURCE_TYPE
     } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             Logo
@@ -192,6 +193,9 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            RESOURCE_TYPE () {
+                return RESOURCE_TYPE
             },
             pipelineId () {
                 return this.pipelineInfo.pipelineId
@@ -223,7 +227,7 @@
                     this.isLoading = true
                     this.resourceAuthData = await this.getResourceAuthorization({
                         projectId: this.projectId,
-                        resourceType: 'pipeline',
+                        resourceType: RESOURCE_TYPE.PIPELINE,
                         resourceCode: this.pipelineId
                     })
                 } catch (e) {
@@ -240,12 +244,12 @@
                         projectId: this.projectId,
                         params: {
                             projectCode: this.projectId,
-                            resourceType: 'pipeline',
+                            resourceType: RESOURCE_TYPE.PIPELINE,
                             handoverChannel: 'OTHER',
                             resourceAuthorizationHandoverList: [
                                 {
                                     projectCode: this.projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceName: this.resourceAuthData.resourceName,
                                     resourceCode: this.resourceAuthData.resourceCode,
                                     handoverFrom: this.resourceAuthData.handoverFrom,

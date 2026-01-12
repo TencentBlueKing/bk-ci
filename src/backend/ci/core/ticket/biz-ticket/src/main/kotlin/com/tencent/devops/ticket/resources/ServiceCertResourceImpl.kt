@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -79,21 +79,57 @@ class ServiceCertResourceImpl @Autowired constructor(
         actionId = ActionId.CERT_VIEW,
         subActionIds = [ActionId.CREDENTIAL_VIEW]
     )
-    override fun getAndroid(projectId: String, certId: String, publicKey: String): Result<CertAndroidWithCredential> {
+    override fun getAndroid(
+        projectId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean?
+    ): Result<CertAndroidWithCredential> {
         checkParams(projectId, certId)
-        return Result(certService.queryAndroidByProject(projectId, certId, publicKey))
+        return Result(
+            certService.queryAndroidByProject(
+                projectId = projectId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CERT_VIEW)
-    override fun getTls(projectId: String, certId: String, publicKey: String): Result<CertTls> {
+    override fun getTls(
+        projectId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean?
+    ): Result<CertTls> {
         checkParams(projectId, certId)
-        return Result(certService.queryTlsByProject(projectId, certId, publicKey))
+        return Result(
+            certService.queryTlsByProject(
+                projectId = projectId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     @AuditEntry(actionId = ActionId.CERT_VIEW)
-    override fun getEnterprise(projectId: String, certId: String, publicKey: String): Result<CertEnterprise> {
+    override fun getEnterprise(
+        projectId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean?
+    ): Result<CertEnterprise> {
         checkParams(projectId, certId)
-        return Result(certService.queryEnterpriseByProject(projectId, certId, publicKey))
+        return Result(
+            certService.queryEnterpriseByProject(
+                projectId = projectId,
+                certId = certId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     fun checkParams(projectId: String, certId: String) {

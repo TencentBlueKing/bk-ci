@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import io.swagger.v3.oas.annotations.media.Schema
@@ -92,5 +93,7 @@ data class PipelineDetail(
     @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
     var yamlExist: Boolean? = false,
     @get:Schema(title = "运行锁定", required = false)
-    val locked: Boolean
+    val locked: Boolean,
+    @get:Schema(title = "构建取消权限策略", required = false)
+    var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION
 )

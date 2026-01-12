@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,8 +30,8 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -63,8 +63,11 @@ interface ServiceSubPipelineResource {
         projectId: String,
         @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>>
+        pipelineId: String,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
+    ): Result<List<PipelineBuildParamFormProp>>
 
     @Operation(summary = "从构建机启动指定项目的子流水线")
     @POST
@@ -98,6 +101,9 @@ interface ServiceSubPipelineResource {
         @QueryParam("runMode")
         runMode: String,
         @Parameter(description = "启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @Parameter(description = "分支版本", required = false)
+        @QueryParam("branch")
+        branch: String?
     ): Result<ProjectBuildId>
 }

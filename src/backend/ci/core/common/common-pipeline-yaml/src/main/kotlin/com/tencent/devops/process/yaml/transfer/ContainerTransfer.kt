@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -63,6 +63,7 @@ import com.tencent.devops.process.yaml.utils.ModelCreateUtil
 import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.IfField.Mode
 import com.tencent.devops.process.yaml.v3.models.job.Container3
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
@@ -172,7 +173,6 @@ class ContainerTransfer @Autowired(required = false) constructor(
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ) {
-
         containerList.add(
             NormalContainer(
                 jobId = job.id,
@@ -191,7 +191,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
     fun addYamlNormalContainer(
         job: NormalContainer,
         steps: List<PreStep>?
-    ): PreJob {
+    ): IPreJob {
         return PreJob(
             enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
@@ -244,7 +244,7 @@ class ContainerTransfer @Autowired(required = false) constructor(
         projectId: String,
         job: VMBuildContainer,
         steps: List<PreStep>?
-    ): PreJob {
+    ): IPreJob {
         return PreJob(
             enable = job.containerEnabled().nullIfDefault(true),
             name = job.name,
@@ -310,27 +310,44 @@ class ContainerTransfer @Autowired(required = false) constructor(
         }
 
         /*修正docker配额数据*/
-        if (hwSpec != null && buildType != null) {
-            kotlin.run {
-                val res = transferCache.getDockerResource(userId, projectId, buildType)
-                // hwSpec为0和1时为特殊值，表示默认配置Basic
-                if (res?.default == hwSpec || hwSpec == "0" || hwSpec == "1") {
-                    hwSpec = null
-                    return@run
-                }
-                val hw = res?.dockerResourceOptionsMaps?.find {
-                    it.id == hwSpec
-                }
-                hwSpec = hw?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
+        if (hwSpec != null && buildType != null && isSpecialHwSpec(hwSpec)) {
+            val dockerResource = transferCache.getDockerResource(userId, projectId, buildType)
+            // hwSpec为0和1时为特殊值，表示默认配置Basic
+            if (isDefaultHwSpec(hwSpec, dockerResource?.default)) {
+                hwSpec = null
+            } else {
+                val matchedResource = dockerResource?.dockerResourceOptionsMaps?.find { it.id == hwSpec }
+                hwSpec = matchedResource?.dockerResourceOptionsShow?.description ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("jobId:$jobId resource type not support transfer.[poolName:$poolName,hwSpec:$hwSpec]")
                 )
             }
         }
+
         if (JSONObject(this).similar(defaultRunsOn)) {
             return null
         }
         return this
+    }
+
+    /**
+     * 判断是否为旧版本的 hwSpec 值
+     * 旧版本值说明：
+     * - "0", "1": 默认配置 Basic
+     * - "2": Premium
+     * - "10000": High
+     */
+    private fun isSpecialHwSpec(hwSpec: String?): Boolean {
+        return hwSpec in setOf("0", "1", "2", "10000")
+    }
+
+    /**
+     * 判断是否为默认的 hwSpec 配置
+     * @param hwSpec 当前的 hwSpec 值
+     * @param defaultSpec 资源的默认配置值
+     */
+    private fun isDefaultHwSpec(hwSpec: String?, defaultSpec: String?): Boolean {
+        return hwSpec == defaultSpec || hwSpec == "0" || hwSpec == "1"
     }
 
     private fun makeJobTimeout(controlOption: JobControlOption?): String? {

@@ -1,30 +1,50 @@
 <template>
     <section class="version-container">
-        <div class="operate-version">
-            <section>
-                <atom-checkbox
-                    :disabled="disabled"
-                    :text="$t('newui.enableVersions')"
-                    :value="showVersions"
-                    :handle-change="(name, value) => toggleVersions(name, value)"
-                />
-                <atom-checkbox
-                    style="margin-left: 40px;"
-                    v-if="showVersions"
-                    :disabled="disabled"
-                    name="required"
-                    :text="$t('newui.isBuildParam')"
-                    :value="execuVisible"
-                    :handle-change="handleBuildNoChange"
-                />
-            </section>
-            <bk-button
-                v-if="showVersions && !disabled"
-                @click="editVersions"
-            >
-                {{ $t('newui.editVersions') }}
-            </bk-button>
-        </div>
+        <constraint-wraper
+            class="operate-version"
+            :classify="CLASSIFY_ENUM.PARAM"
+            field="buildNo"
+            @toggleConstraint="toggleBuildNoConstraint"
+        >
+            <template #constraint-title="{ props: { isOverride } }">
+                <div class="version-config-options">
+                    <atom-checkbox
+                        :disabled="disabled"
+                        :text="$t('newui.enableVersions')"
+                        :value="showVersions"
+                        :handle-change="(name, value) => toggleVersions(name, value)"
+                    />
+                    <div>
+                        <atom-checkbox
+                            v-if="showVersions"
+                            :disabled="disabled && !isOverride"
+                            name="required"
+                            :text="$t('newui.isBuildParam')"
+                            :value="isRequired"
+                            :handle-change="handleBuildNoChange"
+                        />
+                        <atom-checkbox
+                            v-if="!!templateId && showVersions && isRequired"
+                            name="asInstanceInput"
+                            class="ml10"
+                            :disabled="disabled && !isOverride"
+                            :desc="$t('editPage.instanceRequiredTips')"
+                            :text="$t('editPage.instanceRequired')"
+                            :value="asInstanceInput"
+                            :handle-change="handleBuildNoChange"
+                        />
+                    </div>
+                </div>
+            </template>
+            <template #constraint-area="{ props: { isOverride } }">
+                <bk-button
+                    v-if="showVersions && !(disabled && !isOverride)"
+                    @click="editVersions"
+                >
+                    {{ $t('newui.editVersions') }}
+                </bk-button>
+            </template>
+        </constraint-wraper>
         <!-- 展示已有的versionlist -->
         <section
             v-show="showVersions"
@@ -62,12 +82,12 @@
                     <div class="value-row">
                         <span class="default-value">
                             <span v-if="param.isBuildNo">
-                                {{ `${$t('buildNoBaseline.baselineValue')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
+                                {{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${renderBuildNo.buildNo}（${getLabelByBuildType(renderBuildNo.buildNoType)}）` }}
                                 <span
                                     class="dafault-value-current"
-                                    v-if="pipelineModel"
+                                    v-if="pipelineModel && !isTemplate"
                                 >
-                                    {{ `${$t('buildNoBaseline.currentValue')}${buildNo.currentBuildNo}` }}
+                                    {{ `${$t('buildNoBaseline.currentValue')}${$t('colon')}${buildNo.currentBuildNo}` }}
                                     <span
                                         class="dafault-value-reset"
                                         @click="goResetBuildNo"
@@ -134,7 +154,7 @@
                                     :data-vv-scope="'pipelineVersion'"
                                     input-type="number"
                                     class="version-input"
-                                    :disabled="disabled"
+                                    :disabled="disabled && !overrideConstraint"
                                     :name="v"
                                     :value="editVersionValues[v]"
                                     :handle-change="handleEditVersionChange"
@@ -165,7 +185,7 @@
                                 style="width: 228px;"
                                 v-validate.initial="'required|numeric'"
                                 :data-vv-scope="'pipelineVersion'"
-                                :disabled="disabled"
+                                :disabled="disabled && !overrideConstraint"
                                 :value="editBuildNo.buildNo"
                                 :handle-change="handleEditBuildNoChange"
                             />
@@ -196,7 +216,7 @@
                     >
                         <enum-input
                             :list="buildNoRules"
-                            :disabled="disabled"
+                            :disabled="disabled && !overrideConstraint"
                             name="buildNoType"
                             v-validate.initial="'required|string'"
                             :data-vv-scope="'pipelineVersion'"
@@ -212,14 +232,14 @@
             >
                 <bk-button
                     theme="primary"
-                    :disabled="disabled"
+                    :disabled="disabled && !overrideConstraint"
                     @click="handleSaveVersion"
                 >
                     {{ $t('confirm') }}
                 </bk-button>
                 <bk-button
                     style="margin-left: 8px;"
-                    :disabled="disabled"
+                    :disabled="disabled && !overrideConstraint"
                     @click="cancelEditVersion"
                 >
                     {{ $t('cancel') }}
@@ -239,7 +259,7 @@
                 <h3>{{ $t('buildNoBaseline.isSureReset') }}</h3>
             </template>
             <div>
-                <p>{{ `${$t('buildNoBaseline.baselineValue')}${buildNo.buildNo}` }}</p>
+                <p>{{ `${$t('buildNoBaseline.baselineValue')}${$t('colon')}${buildNo.buildNo}` }}</p>
                 <p class="reset-tips">
                     <i18n
                         :path="`buildNoBaseline.${buildNo.buildNoType}`"
@@ -270,14 +290,16 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
-    import { getParamsValuesMap, bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import ConstraintWraper from '@/components/ConstraintWraper.vue'
     import Logo from '@/components/Logo'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import VuexInput from '@/components/atomFormField/VuexInput'
+    import { CLASSIFY_ENUM } from '@/hook/useTemplateConstraint'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
+    import { bkVarWrapper, copyToClipboard, getParamsValuesMap } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -285,7 +307,8 @@
             VuexInput,
             EnumInput,
             AtomCheckbox,
-            Logo
+            Logo,
+            ConstraintWraper
         },
         props: {
             disabled: {
@@ -315,8 +338,8 @@
         },
         data () {
             return {
+                CLASSIFY_ENUM,
                 showVersions: false,
-                isRequired: false,
                 showEditVersion: false,
                 renderBuildNo: {},
                 editBuildNo: {},
@@ -327,13 +350,15 @@
                     content: '#baseline-tooltip-content'
                 },
                 resetBuildNoDialog: false,
-                resetLoading: false
+                resetLoading: false,
+                overrideConstraint: false
             }
         },
         computed: {
             ...mapGetters('atom', [
                 'buildNoRules',
-                'defaultBuildNo'
+                'defaultBuildNo',
+                'isTemplate'
             ]),
             globalParams: {
                 get () {
@@ -366,16 +391,22 @@
                 return getVersionConfig()
             },
             buildNo () {
-                return this.container?.buildNo || {}
+                return this.container?.buildNo ?? {}
             },
-            execuVisible () {
-                return this.buildNo && this.buildNo.required ? this.buildNo.required : false
+            isRequired () {
+                return !!this.buildNo?.required
+            },
+            asInstanceInput () {
+                return !!this.buildNo?.asInstanceInput
             },
             buildNoBaselineTips () {
                 return Array(7).fill(0).map((_, i) => this.$t(`buildNoBaseline.tips${i + 1}`))
             },
             resetBuildNo () {
                 return this.buildNo.buildNo + 1
+            },
+            templateId () {
+                return this.$route.params.templateId
             }
         },
         watch: {
@@ -398,6 +429,15 @@
         methods: {
             bkVarWrapper,
             ...mapActions('atom', ['updateBuildNo', 'fetchPipelineByVersion']),
+            toggleBuildNoConstraint (isOverride) {
+                this.overrideConstraint = isOverride
+                this.$nextTick(() => {
+                    if (!isOverride) {
+                        this.renderBuildNo = this.buildNo
+                        this.showVersions = this.versions.length !== 0
+                    }
+                })
+            },
             handleCopy (con) {
                 copyToClipboard(con)
                 this.$bkMessage({
@@ -413,10 +453,16 @@
                 Object.assign(this.editBuildNo, { [name]: value })
             },
             handleBuildNoChange (name, value) {
-                Object.assign(this.renderBuildNo, { [name]: value })
-                this.updateContainerParams('buildNo', {
-                    ...this.renderBuildNo
-                })
+                // 创建新对象以触发响应式更新
+                const newBuildNo = {
+                    ...this.buildNo,
+                    [name]: value
+                }
+                if (name === 'required') {
+                    // 如果设置为入参，则更新默认为实例入参
+                    newBuildNo.asInstanceInput = value
+                }
+                this.updateContainerParams('buildNo', newBuildNo)
             },
             getLabelByBuildType (type) {
                 const item = this.buildNoRules.find(item => item.value === type)
@@ -434,14 +480,18 @@
                         required: false,
                         type: versionConfig[v].type
                     }))
-                    this.renderBuildNo = Object.assign({}, this.defaultBuildNo)
+                    this.renderBuildNo = Object.assign({}, {
+                        ...this.defaultBuildNo,
+                        required: false,
+                        asInstanceInput: false
+                    })
 
                     this.updateContainerParams('params', [
                         ...this.globalParams,
                         ...newVersions
                     ])
                     this.updateContainerParams('buildNo', {
-                        ...this.defaultBuildNo
+                        ...this.renderBuildNo
                     })
                 } else {
                     this.updateContainerParams('params', this.globalParams)
@@ -450,7 +500,7 @@
             },
             editVersions () {
                 this.editVersionValues = Object.assign({}, this.versionValues)
-                this.editBuildNo = Object.assign({}, this.renderBuildNo)
+                this.editBuildNo = Object.assign({}, this.buildNo)
                 this.showEditVersion = true
             },
             handleSaveVersion () {
@@ -469,9 +519,10 @@
                             ...newVersions
                         ])
                         this.updateContainerParams('buildNo', {
+                            ...this.buildNo,
                             ...this.editBuildNo
                         })
-                        this.renderBuildNo = Object.assign({}, this.editBuildNo)
+                        this.renderBuildNo = Object.assign({}, this.buildNo, this.editBuildNo)
                         this.showEditVersion = false
                     }
                 })
@@ -521,13 +572,22 @@
     .operate-version {
         margin-top: 8px;
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        grid-gap: 10px;
+        & > :first-child {
+            flex: 1;
+        }
     }
+    .version-config-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
     .version-list {
         width: 100%;
         border-bottom: none;
-        margin-top: 24px;
+        margin-top: 10px;
         .version-item {
             width: 100%;
             position: relative;
@@ -566,7 +626,6 @@
                     justify-content: space-between;
                     .default-value {
                         color: #979BA5;
-                        max-width: 300px;
                         .dafault-value-current {
                             // margin-left: 16px;
                             .dafault-value-reset {

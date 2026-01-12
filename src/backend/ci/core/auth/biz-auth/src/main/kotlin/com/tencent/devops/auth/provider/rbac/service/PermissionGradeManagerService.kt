@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -46,6 +46,7 @@ import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.provider.rbac.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupSyncService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -84,7 +85,8 @@ class PermissionGradeManagerService @Autowired constructor(
     private val itsmService: ItsmService,
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val permissionResourceGroupService: PermissionResourceGroupService,
-    private val resourceGroupSyncService: PermissionResourceGroupSyncService
+    private val resourceGroupSyncService: PermissionResourceGroupSyncService,
+    private val deptService: DeptService
 ) {
 
     companion object {
@@ -279,25 +281,29 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
+
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+        val finalMembers = gradeManagerDetail.members.filterNot {
+            deptService.isUserDeparted(it)
+        }
+        val description = gradeManagerDetail.description
         // 创建项目审批通过后，会调用更新分级管理员接口去修改项目的授权范围，此时不走审批流程
         return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status ||
             registerMonitorPermission) {
-            val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
-                .members(gradeManagerDetail.members)
-                .description(gradeManagerDetail.description)
+                .members(finalMembers)
+                .description(description)
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
                 .groupName(groupConfig.groupName)
                 .build()
-            logger.info("update grade manager|$name|${gradeManagerDetail.members}")
+            logger.info("update grade manager|$name|$finalMembers")
             iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
             true
         } else {
             val callbackId = UUIDUtil.generate()
-
             val itsmContentDTO = itsmService.buildGradeManagerItsmContentDTO(
                 projectName = projectName,
                 projectId = projectCode,
@@ -314,16 +320,16 @@ class PermissionGradeManagerService @Autowired constructor(
                 productName = projectApprovalInfo.productName!!,
                 isCreateProject = false
             )
-            val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+
             val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
                 .name(name)
-                .description(gradeManagerDetail.description)
+                .description(description)
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
                 .groupName(groupConfig.groupName)
                 .applicant(projectApprovalInfo.updator)
-                .members(gradeManagerDetail.members)
+                .members(finalMembers)
                 .reason(
                     IamGroupUtils.buildItsmDefaultReason(
                         projectName = projectCode,

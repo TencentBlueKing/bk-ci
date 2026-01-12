@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,20 +30,50 @@ package com.tencent.devops.process.permission.template
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.process.dao.template.PipelineTemplateInfoDao
+import org.jooq.DSLContext
 
-class MockPipelineTemplatePermissionService constructor(
+class MockPipelineTemplatePermissionService(
     authProjectApi: AuthProjectApi,
-    pipelineAuthServiceCode: PipelineAuthServiceCode
+    pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val templateDao: PipelineTemplateInfoDao,
+    private val dslContext: DSLContext
 ) : AbstractPipelineTemplatePermissionService(
     authProjectApi = authProjectApi,
     pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
+    override fun checkPipelineTemplatePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun checkPipelineTemplatePermissionWithMessage(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        templateId: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun hasCreateTemplateInstancePermission(userId: String, projectId: String): Boolean {
+        return true
+    }
+
     override fun getResourcesByPermission(
         userId: String,
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val templateIds = templateDao.listAllIds(
+            dslContext = dslContext,
+            projectId = projectId
+        )
+        return permissions.associateWith { templateIds }
     }
 
     override fun createResource(

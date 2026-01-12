@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,7 +43,7 @@ data class BuildFormProperty(
     @get:Schema(title = "是否为常量", required = true)
     var constant: Boolean? = false,
     @get:Schema(title = "元素类型", required = true)
-    val type: BuildFormPropertyType,
+    var type: BuildFormPropertyType,
     @get:Schema(title = "默认值", required = true)
     var defaultValue: Any,
     @get:Schema(title = "上次构建的取值", required = true)
@@ -54,6 +54,8 @@ data class BuildFormProperty(
     var desc: String?,
     @get:Schema(title = "分组信息", required = false)
     val category: String? = null,
+    @get:Schema(title = "展示条件", required = false)
+    var displayCondition: Map<String, String>? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)
@@ -100,7 +102,12 @@ data class BuildFormProperty(
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
     val payload: Any? = null,
     @get:Schema(title = "级联选择器属性", required = false)
-    var cascadeProps: BuildCascadeProps? = null
+    var cascadeProps: BuildCascadeProps? = null,
+    @get:Schema(
+        title = "在新增实例、以及新增变量时作用，控制实例化页面「实例入参」按钮, 当required:true时,值才生效",
+        required = false
+    )
+    var asInstanceInput: Boolean? = null
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

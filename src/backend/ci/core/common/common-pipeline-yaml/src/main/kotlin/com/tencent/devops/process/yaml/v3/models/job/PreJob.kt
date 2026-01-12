@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,10 +29,12 @@ package com.tencent.devops.process.yaml.v3.models.job
 
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.pojo.transfer.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlMetaData
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import io.swagger.v3.oas.annotations.media.Schema
 
 interface IPreJob
@@ -60,7 +62,7 @@ data class PreJob(
     @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    val steps: List<PreStep>?,
+    val steps: List<IPreStep>?,
     @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: String? = null,
@@ -74,3 +76,15 @@ data class PreJob(
     val dependOn: List<String>? = null,
     override val yamlMetaData: MetaData? = null
 ) : YamlMetaData, IPreJob
+
+data class PreJobTemplateList(
+    val template: List<PreJobTemplate>
+) : IPreJob
+
+data class PreJobTemplate(
+    override val templatePath: String?,
+    override val templateRef: String?,
+    override val templateId: String?,
+    override val templateVersionName: String?,
+    override val variables: Map<String, PreTemplateVariable>?
+) : CodeTemplate

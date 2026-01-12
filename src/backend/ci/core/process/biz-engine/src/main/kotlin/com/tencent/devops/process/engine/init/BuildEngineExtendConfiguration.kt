@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
+import com.tencent.devops.process.engine.listener.run.start.PipelineBuildVersionDiffRecordListener
 import com.tencent.devops.process.engine.listener.run.start.SubPipelineBuildQueueListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -49,5 +50,10 @@ class BuildEngineExtendConfiguration {
     @EventConsumer
     fun subPipelineQueueFinishConsumer(
         @Autowired buildListener: SubPipelineBuildQueueListener
+    ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
+
+    @EventConsumer
+    fun buildVersionDiffRecordListenerConsumer(
+        @Autowired buildListener: PipelineBuildVersionDiffRecordListener
     ) = ScsConsumerBuilder.build<PipelineBuildQueueBroadCastEvent> { buildListener.run(it) }
 }

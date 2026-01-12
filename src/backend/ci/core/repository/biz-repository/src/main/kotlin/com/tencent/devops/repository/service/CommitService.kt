@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.repository.dao.CommitDao
@@ -68,7 +69,7 @@ class CommitService @Autowired constructor(
         )?.map { it.aliasName.toString() to it }?.toMap() ?: mapOf()
 
         return commits.map {
-            val repoUrl = idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
+            val repoUrl = it.url ?: idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
             CommitData(
                 type = it.type,
                 pipelineId = it.pipelineId,
@@ -93,10 +94,13 @@ class CommitService @Autowired constructor(
             val repoName = a.value[0].repoName
             // 代码库URL
             val repoUrl = a.value[0].repoUrl
+            // 代码库URL
+            val scmType = ScmType.parseShort(a.value[0].type ?: 0)
             CommitResponse(
                 name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoUrl ?: "unknown repo"),
                 elementId = elementId,
-                records = a.value.filter { it.commit.isNotBlank() }
+                records = a.value.filter { it.commit.isNotBlank() }.distinctBy { it.commit },
+                scmType = scmType
             )
         } ?: listOf()
     }

@@ -5,7 +5,7 @@
     >
         <div
             v-if="!isDebugPipeline"
-            class="pipeline-execute-version-select"
+            class="pipeline-execute-version-select params-content-item"
         >
             <span>
                 {{ $t('history.tableMap.pipelineVersion') }}
@@ -20,7 +20,7 @@
                 :include-draft="false"
                 :show-extension="false"
                 refresh-list-on-expand
-                build-only
+                :unique-id="pipelineId"
             />
             <i
                 class="bk-icon icon-info-circle"
@@ -33,220 +33,297 @@
         ></bk-alert>
         <div class="pipeline-execute-preview-content">
             <template v-if="!isDebugPipeline && buildList.length">
-                <header
-                    :class="['params-collapse-trigger', {
-                        'params-collapse-expand': activeName.has(1)
-                    }]"
-                    @click="toggleCollapse(1)"
-                >
-                    <i class="devops-icon icon-angle-right" />
-                    {{ $t('buildMsg') }}
-                </header>
-                <div
-                    v-if="activeName.has(1)"
-                    class="params-collapse-content"
-                >
-                    <pipeline-params-form
-                        ref="buildForm"
-                        :param-values="buildValues"
-                        :handle-param-change="handleBuildChange"
-                        :params="buildList"
-                    />
-                </div>
+                <section class="params-content-item">
+                    <header
+                        :class="['params-collapse-trigger', {
+                            'params-collapse-expand': activeName.has(1)
+                        }]"
+                        @click="toggleCollapse(1)"
+                    >
+                        <bk-icon
+                            type="right-shape"
+                            class="icon-angle-right"
+                        />
+
+                        {{ $t('buildMsg') }}
+                    </header>
+                    <div
+                        v-if="activeName.has(1)"
+                        class="params-collapse-content"
+                    >
+                        <pipeline-params-form
+                            ref="buildForm"
+                            :param-values="buildValues"
+                            :handle-param-change="handleBuildChange"
+                            :params="buildList"
+                        />
+                    </div>
+                </section>
             </template>
-            <template v-if="isVisibleVersion">
+            <section class="params-content-item">
                 <header
                     :class="['params-collapse-trigger', {
                         'params-collapse-expand': activeName.has(2)
                     }]"
                     @click="toggleCollapse(2)"
                 >
-                    <i class="devops-icon icon-angle-right" />
-                    {{ $t('preview.introVersion') }}
-                </header>
-                <div
-                    v-if="activeName.has(2)"
-                    class="params-collapse-content"
-                >
-                    <pipeline-versions-form
-                        ref="versionParamForm"
-                        :build-no="buildNo"
-                        :is-preview="true"
-                        :version-param-values="versionParamValues"
-                        :handle-version-change="handleVersionChange"
-                        :handle-build-no-change="handleBuildNoChange"
+                    <bk-icon
+                        type="right-shape"
+                        class="icon-angle-right"
                     />
-                </div>
-            </template>
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(3)
-                }]"
-                @click="toggleCollapse(3)"
-            >
-                <i class="devops-icon icon-angle-right" />
-                {{ $t('buildParams') }}
-                <template v-if="paramList.length > 0">
-                    <span class="collapse-trigger-divider">|</span>
-                    <span
-                        v-if="useLastParams"
-                        class="text-link"
-                        @click.stop="updateParams()"
-                    >
-                        {{ $t('resetDefault') }}
+
+                    {{ $t('buildParams') }}
+                    
+                    <template v-if="hasPipelineParams">
+                        <span
+                            @click.stop=""
+                        >
+                            <param-set
+                                ref="paramSetSelector"
+                                :all-params="pipelineParams"
+                                :use-last-params="useLastParams"
+                                :is-visible-version="isVisibleVersion"
+                                @change="updateParamsValues"
+                            />
+                        </span>
                         <i
                             class="devops-icon icon-question-circle"
-                            v-bk-tooltips="resetDefaultParamsTips"
+                            v-bk-tooltips="$t('paramSetTips')"
                         />
-                    </span>
-                    <span
-                        v-else
-                        class="text-link"
-                        @click.stop="updateParams('value')"
-                    >
-                        {{ $t('useLastParams') }}
-                    </span>
-                </template>
-            </header>
-            <div
-                v-show="activeName.has(3)"
-                class="params-collapse-content"
-            >
-                <bk-alert
-                    v-if="showChangedParamsAlert && changedParams.length"
-                    type="warning"
-                    :title="$t('paramChangeTips', [changedParams.length])"
-                >
-                </bk-alert>
-                <pipeline-params-form
-                    v-if="paramList.length > 0"
-                    ref="paramsForm"
-                    :param-values="paramsValues"
-                    :highlight-changed-param="showChangedParamsAlert"
-                    :handle-param-change="handleParamChange"
-                    :params="paramList"
-                />
-                <bk-exception
-                    v-else
-                    type="empty"
-                    scene="part"
-                >
-                    {{ $t('noParams') }}
-                </bk-exception>
-            </div>
-
-            <template v-if="constantParams.length > 0">
-                <header
-                    :class="['params-collapse-trigger', {
-                        'params-collapse-expand': activeName.has(4)
-                    }]"
-                    @click="toggleCollapse(4)"
-                >
-                    <i class="devops-icon icon-angle-right" />
-                    {{ $t('newui.const') }}
+                        <span
+                            :class="['text-link', {
+                                'disabled': !showChangedParamsAlert
+                            }]"
+                            @click.stop="resetDefaultParams"
+                        >
+                            {{ $t('resetDefault') }}
+                        </span>
+                        <span class="collapse-trigger-divider">|</span>
+                        <span
+                            class="text-link"
+                            @click.stop="saveAsParamSet"
+                        >
+                            {{ $t('saveAsParamSet') }}
+                        </span>
+                    </template>
                 </header>
                 <div
-                    v-if="activeName.has(4)"
+                    v-show="activeName.has(2)"
                     class="params-collapse-content"
                 >
+                    <bk-alert
+                        v-if="showChangedParamsAlert"
+                        class="changed-tips-alert"
+                        type="warning"
+                    >
+                        <template #title>
+                            <div>
+                                {{ $t('paramSetApplyTips', [applySetDiff.setName]) }}
+                                <ul
+                                    class="param-set-diff-tips"
+                                    v-if="paramSetDiffTips.length"
+                                >
+                                    <li
+                                        v-for="(tip, index) in paramSetDiffTips"
+                                        :key="index"
+                                    >
+                                        {{ tip }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                    </bk-alert>
                     <pipeline-params-form
-                        ref="constParamsForm"
-                        disabled
-                        :param-values="constantValues"
-                        :params="constantParams"
-                    />
+                        v-if="hasPipelineParams"
+                        ref="paramsForm"
+                        :param-values="paramsValues"
+                        :highlight-changed-param="showChangedParamsAlert"
+                        :handle-param-change="handleParamChange"
+                        :params="paramList"
+                        sort-category
+                    >
+                        <template
+                            slot="versionParams"
+                            v-if="isVisibleVersion"
+                        >
+                            <renderSortCategoryParams :name="$t('preview.introVersion')">
+                                <template slot="content">
+                                    <pipeline-versions-form
+                                        class="mb20"
+                                        ref="versionParamForm"
+                                        :build-no="buildNo"
+                                        :is-preview="true"
+                                        :version-param-values="versionParamValues"
+                                        :handle-version-change="handleVersionChange"
+                                        :handle-build-no-change="handleBuildNoChange"
+                                        :highlight-changed-param="showChangedParamsAlert"
+                                        :version-param-list="versionParamList"
+                                    />
+                                </template>
+                            </renderSortCategoryParams>
+                        </template>
+                    </pipeline-params-form>
+                    <bk-exception
+                        v-else
+                        type="empty"
+                        scene="part"
+                    >
+                        {{ $t('noParams') }}
+                    </bk-exception>
                 </div>
+            </section>
+            <template v-if="constantParams.length > 0">
+                <section class="params-content-item">
+                    <header
+                        :class="['params-collapse-trigger', {
+                            'params-collapse-expand': activeName.has(3)
+                        }]"
+                        @click="toggleCollapse(3)"
+                    >
+                        <bk-icon
+                            type="right-shape"
+                            class="icon-angle-right"
+                        />
+                        {{ $t('newui.const') }}
+                    </header>
+                    <div
+                        v-if="activeName.has(3)"
+                        class="params-collapse-content"
+                    >
+                        <pipeline-params-form
+                            ref="constParamsForm"
+                            disabled
+                            :param-values="constantValues"
+                            :params="constantParams"
+                            sort-category
+                        />
+                    </div>
+                </section>
             </template>
-            <template v-if="otherParams.length > 0">
+            <template v-if="hasOtherParams">
+                <section class="params-content-item">
+                    <header
+                        :class="['params-collapse-trigger', {
+                            'params-collapse-expand': activeName.has(4)
+                        }]"
+                        @click="toggleCollapse(4)"
+                    >
+                        <bk-icon
+                            type="right-shape"
+                            class="icon-angle-right"
+                        />
+
+                        {{ $t('newui.pipelineParam.otherVar') }}
+                    </header>
+                    <div
+                        v-if="activeName.has(4)"
+                        class="params-collapse-content"
+                    >
+                        <pipeline-params-form
+                            ref="otherParamsForm"
+                            disabled
+                            :param-values="otherValues"
+                            :params="otherParams"
+                            sort-category
+                        >
+                            <template
+                                slot="versionParams"
+                                v-if="!isVisibleVersion && versionParamValues.length"
+                            >
+                                <pipeline-versions-form
+                                    class="mb20"
+                                    ref="versionParamForm"
+                                    :build-no="buildNo"
+                                    is-preview
+                                    disabled
+                                    :version-param-values="versionParamValues"
+                                    :handle-version-change="handleVersionChange"
+                                    :handle-build-no-change="handleBuildNoChange"
+                                    :version-param-list="versionParamList"
+                                />
+                            </template>
+                        </pipeline-params-form>
+                    </div>
+                </section>
+            </template>
+
+            <section class="params-content-item">
                 <header
                     :class="['params-collapse-trigger', {
                         'params-collapse-expand': activeName.has(5)
                     }]"
                     @click="toggleCollapse(5)"
                 >
-                    <i class="devops-icon icon-angle-right" />
-                    {{ $t('newui.pipelineParam.otherVar') }}
+                    <bk-icon
+                        type="right-shape"
+                        class="icon-angle-right"
+                    />
+
+                    {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
+                    <template v-if="canElementSkip">
+                        <span
+                            v-if="!isDebugPipeline"
+                            class="no-bold-font"
+                        >
+                            ({{ $t('preview.skipTipsPrefix') }}
+                            <span
+                                @click.stop="editTrigger"
+                                class="text-link item-title-tips-link"
+                            >
+                                {{ $t('preview.manualTrigger') }}
+                            </span>
+                            {{ $t('preview.skipTipsSuffix') }})
+                        </span>
+                        <span
+                            @click.stop
+                            class="no-bold-font"
+                        >
+                            <bk-checkbox
+                                @change="handleCheckTotalChange"
+                                v-model="checkTotal"
+                            >
+                                {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
+                            </bk-checkbox>
+                        </span>
+                    </template>
                 </header>
                 <div
                     v-if="activeName.has(5)"
-                    class="params-collapse-content"
+                    class="params-collapse-content pipeline-optional-model"
                 >
-                    <pipeline-params-form
-                        ref="otherParamsForm"
-                        disabled
-                        :param-values="otherValues"
-                        :params="otherParams"
+                    <pipeline
+                        is-preview
+                        :show-header="false"
+                        :pipeline="pipelineModel"
+                        :editable="false"
+                        :can-skip-element="canElementSkip"
                     />
                 </div>
-            </template>
-
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(6)
-                }]"
-                @click="toggleCollapse(6)"
-            >
-                <i class="devops-icon icon-angle-right" />
-                {{ $t(canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
-                <template v-if="canElementSkip">
-                    <span
-                        v-if="!isDebugPipeline"
-                        class="no-bold-font"
-                    >
-                        ({{ $t('preview.skipTipsPrefix') }}
-                        <span
-                            @click.stop="editTrigger"
-                            class="text-link item-title-tips-link"
-                        >
-                            {{ $t('preview.manualTrigger') }}
-                        </span>
-                        {{ $t('preview.skipTipsSuffix') }})
-                    </span>
-                    <span
-                        @click.stop
-                        class="no-bold-font"
-                    >
-                        <bk-checkbox
-                            @change="handleCheckTotalChange"
-                            v-model="checkTotal"
-                        >
-                            {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
-                        </bk-checkbox>
-                    </span>
-                </template>
-            </header>
-            <div
-                v-if="activeName.has(6)"
-                class="params-collapse-content pipeline-optional-model"
-            >
-                <pipeline
-                    is-preview
-                    :show-header="false"
-                    :pipeline="pipelineModel"
-                    :editable="false"
-                    :can-skip-element="canElementSkip"
-                />
-            </div>
+            </section>
         </div>
     </div>
 </template>
 
 <script>
+    import ParamSet from '@/components/ParamSet.vue'
     import Pipeline from '@/components/Pipeline'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
+    import renderSortCategoryParams from '@/components/renderSortCategoryParams'
     import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import VersionSelector from '../../components/PipelineDetailTabs/VersionSelector.vue'
 
     export default {
         components: {
             VersionSelector,
             PipelineVersionsForm,
             PipelineParamsForm,
-            Pipeline
+            Pipeline,
+            renderSortCategoryParams,
+            ParamSet
         },
         data () {
             return {
@@ -267,7 +344,16 @@
                 otherParams: [],
                 otherValues: {},
                 showChangedParamsAlert: false,
-                checkTotal: true
+                checkTotal: true,
+                isApplySet: false,
+                applySetDiff: {
+                    setName: '',
+                    diffMap: {
+                        changed: [],
+                        deleted: [],
+                        noRequired: []
+                    }
+                }
             }
         },
         computed: {
@@ -302,14 +388,39 @@
             useLastParams () {
                 return this.isDebugPipeline || this.startupInfo?.useLatestParameters
             },
-            changedParams () {
-                return this.paramList.filter(p => p.isChanged)
+            hasOtherParams () {
+                if (!this.isVisibleVersion) {
+                    return [...this.otherParams, ...this.versionParamList].length
+                }
+                return this.otherParams.length
             },
-            resetDefaultParamsTips () {
-                return this.$t(this.isDebugPipeline ? 'debugParamsTips' : 'restoreDetaulParamsTips')
+            pipelineParams () {
+                if (this.isVisibleVersion) {
+                    return [...this.paramList, ...this.versionParamList]
+                }
+                return this.paramList
+            },
+            hasPipelineParams () {
+                return this.pipelineParams.length
             },
             canElementSkip () {
                 return this.isDebugPipeline || (this.startupInfo?.canElementSkip ?? false)
+            },
+            paramSetDiffTips () {
+                const diffs = Object.keys(this.applySetDiff.diffMap).reduce((acc, key) => {
+                    const item = this.applySetDiff.diffMap[key]
+                    if (item.length > 0) {
+                        acc[key] = item
+                    }
+                    return acc
+                }, {})
+                if (diffs.length === 0) {
+                    return []
+                }
+                return Object.keys(diffs).map(key => {
+                    const item = diffs[key]
+                    return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
+                })
             }
         },
         watch: {
@@ -373,6 +484,7 @@
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
+
                     this.paramList = startupInfo.properties.filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
                         isChanged: isObject(p.defaultValue)
@@ -381,7 +493,10 @@
                         readOnly: false,
                         label: `${p.id}${p.name ? `(${p.name})` : ''}`
                     }))
-                    this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
+                    this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id)).map(p => ({
+                        ...p,
+                        isChanged: p.defaultValue !== p.value
+                    }))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
                     this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
                         ...p,
@@ -409,6 +524,11 @@
                     })
                 }
             },
+            resetDefaultParams () {
+                if (!this.showChangedParamsAlert) return
+                this.$refs.paramSetSelector?.clear()
+                this.updateParams()
+            },
             handleCheckTotalChange (checkedTotal) {
                 this.setPipelineSkipProp(this.pipelineModel.stages, checkedTotal)
             },
@@ -420,15 +540,35 @@
                 this.constantValues = getParamsValuesMap(this.constantParams, key, values)
                 this.otherValues = getParamsValuesMap(this.otherParams, key, values)
             },
-            updateParams (valueKey = 'defaultValue') {
+            updateParams (valueKey = 'defaultValue', values, versionValues) {
                 this.showChangedParamsAlert = valueKey === 'value'
-                this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
+                this.paramsValues = values ?? getParamsValuesMap(this.paramList, valueKey)
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {
                         ...this.paramsValues
                     }
                 })
+                if (this.isVisibleVersion) {
+                    this.versionParamValues = versionValues ?? getParamsValuesMap(this.versionParamList, valueKey)
+                    this.setExecuteParams({
+                        pipelineId: this.pipelineId,
+                        params: {
+                            ...this.versionParamValues
+                        }
+                    })
+                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
+                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
+                        this.buildNo.isChanged = true
+
+                        this.setExecuteParams({
+                            pipelineId: this.pipelineId,
+                            params: {
+                                buildNo: this.buildNo
+                            }
+                        })
+                    }
+                }
             },
             async handleValidate () {
                 const result = await this.validateForm()
@@ -445,12 +585,12 @@
                     case 'versionParamForm':
                         return await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
                     case 'paramsForm':
-                        return await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        return await this.$refs?.paramsForm?.validateAll?.() ?? true
                     case 'buildForm':
                         return await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                     default: {
                         const versionValid = await this.$refs?.versionParamForm?.$validator?.validateAll?.() ?? true
-                        const paramsFormValid = await this.$refs?.paramsForm?.$validator?.validateAll?.() ?? true
+                        const paramsFormValid = await this.$refs?.paramsForm?.validateAll() ?? true
                         const buildFormValid = await this.$refs?.buildForm?.$validator?.validateAll?.() ?? true
                         return versionValid && paramsFormValid && buildFormValid
                     }
@@ -475,11 +615,7 @@
                 this.handleChange('versionParam', ...args)
             },
             handleBuildNoChange (name, value) {
-                if (name === 'currentBuildNo') {
-                    this.buildNo.currentBuildNo = value
-                } else {
-                    this.buildNo.buildNo = value
-                }
+                this.buildNo[name] = value
 
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
@@ -607,7 +743,67 @@
             editTrigger () {
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit/?tab=trigger`
                 window.open(url, '_blank')
+            },
+
+            saveAsParamSet () {
+                this.$refs.paramSetSelector.saveAsParamSet(this.pipelineParams, {
+                    ...this.paramsValues,
+                    ...this.versionParamValues
+                })
+            },
+            particalyUpdateParams (origin, partical, diffMap) {
+                const allParamMap = this.startupInfo.properties.reduce((acc, param) => {
+                    acc.set(param.id, param)
+                    return acc
+                }, new Map())
+                Object.keys(partical).forEach(key => {
+                    const param = allParamMap.get(key)
+                    if (Object.prototype.hasOwnProperty.call(origin, key)) {
+                        origin[key] = partical[key]
+                    }
+
+                    if (!param) {
+                        diffMap.deleted.push(key)
+                    } else if (!(param.required === true) && !allVersionKeyList.includes(key)) {
+                        diffMap.noRequired.push(key)
+                    } else if (!isShallowEqual(param.defaultValue, partical[key])) {
+                        diffMap.changed.push(key)
+                    }
+                })
+                return {
+                    origin,
+                    diffMap
+                }
+            },
+            updateParamsValues (setName, paramsValues, versionValues) {
+                const applySetDiff = {
+                    setName,
+                    diffMap: {
+                        changed: [],
+                        deleted: [],
+                        noRequired: []
+                    }
+                }
+                this.particalyUpdateParams(this.paramsValues, paramsValues, applySetDiff.diffMap)
+                if (versionValues) {
+                    this.particalyUpdateParams(this.versionParamValues, versionValues, applySetDiff.diffMap)
+                }
+                const changedMap = applySetDiff.diffMap.changed.reduce((acc, key) => {
+                    acc[key] = true
+                    return acc
+                }, {})
+                
+                this.paramList.forEach(param => {
+                    param.isChanged = changedMap[param.id] ?? false
+                })
+                this.versionParamList.forEach(param => {
+                    param.isChanged = changedMap[param.id] ?? false
+                })
+                this.applySetDiff = applySetDiff
+                this.isApplySet = true
+                this.updateParams('value', this.paramsValues, this.versionParamValues)
             }
+            
         }
     }
 </script>
@@ -624,9 +820,13 @@ $header-height: 36px;
     margin: 24px 24px 12px 24px;
     overflow: hidden;
     &-content {
-        box-shadow: 0 2px 2px 0 #00000026;
-        background-color: white;
         overflow: auto !important;
+    }
+    .params-content-item {
+        background: #FFFFFF;
+        box-shadow: 0 2px 4px 0 #1919290d;
+        border-radius: 2px;
+        margin-bottom: 20px;
     }
 
     .pipeline-execute-version-select {
@@ -684,12 +884,13 @@ $header-height: 36px;
         align-items: center;
         font-size: 14px;
         font-weight: 700;
-        border-bottom: 1px solid #DCDEE5;
         height: $header-height;
+        cursor: pointer;
         top: 0;
         margin: 0 24px;
         position: sticky;
-        grid-gap: 10px;
+        grid-gap: 8px;
+        color: #313238;
         background-color: white;
         z-index: 6;
 
@@ -705,16 +906,11 @@ $header-height: 36px;
 
         .icon-angle-right {
             transition: all 0.3 ease;
-            font-size: 12px;
-            width: 12px;
-            height: 12px;
-            line-height: 1;
-            text-align: center;
+            color: #4D4F56;
         }
 
         .collapse-trigger-divider {
             display: inline-block;
-            margin: 0 10px;
             color: #DCDEE5;
         }
 
@@ -723,11 +919,11 @@ $header-height: 36px;
             ;
             font-weight: normal;
 
-            .icon-question-circle {
-                display: inline-block;
-                color: #979BA5;
-                margin-left: 4px;
-            }
+        }
+        .icon-question-circle {
+            display: inline-block;
+            color: #979BA5;
+            margin-left: 4px;
         }
     }
 
@@ -752,6 +948,20 @@ $header-height: 36px;
                 overflow: hidden;
                 padding: 0 0 0 20px !important;
             }
+        }
+    }
+    .pipeline-optional-model {
+        height: calc(100vh - 160px) !important;
+    }
+
+    .changed-tips-alert {
+        margin-bottom: 12px;
+    }
+    .param-set-diff-tips {
+        padding: 12px;
+        list-style: disc;
+        > li {
+            list-style: disc;
         }
     }
 }

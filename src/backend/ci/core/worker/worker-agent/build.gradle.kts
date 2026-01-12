@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,9 +30,23 @@ plugins {
     `task-i18n-load`
 }
 
-application.mainClassName = "com.tencent.devops.agent.ApplicationKt"
+application {
+    mainClass.set("com.tencent.devops.agent.ApplicationKt")
+}
 
 dependencies {
     api(project(":core:worker:worker-common"))
     api(project(":core:worker:worker-api-sdk"))
+}
+
+// 解决任务依赖问题：startShadowScripts 需要等待所有 copyToRelease 任务完成
+// 所有 boot-* 模块都有 copyToRelease 任务，它们都会输出到 release/ 目录
+tasks.named("startShadowScripts") {
+    // 动态查找所有 copyToRelease 任务并声明执行顺序
+    mustRunAfter(rootProject.allprojects.mapNotNull { 
+        it.tasks.findByName("copyToRelease") 
+    })
+    mustRunAfter(rootProject.allprojects.mapNotNull {
+        it.tasks.findByName("shadowJar")
+    })
 }

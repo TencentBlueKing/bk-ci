@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,13 +35,14 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
-import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.IJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.Stage
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 
@@ -49,19 +50,19 @@ import org.slf4j.LoggerFactory
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTemplateScriptBuildYamlV3Parser(
     override var version: String?,
-    override val name: String?,
-    override val desc: String?,
-    override val label: List<String>? = null,
+    override var name: String? = null,
+    override var desc: String? = null,
+    override var label: List<String>? = null,
     @JsonProperty("on")
     var triggerOn: Any? = null,
     override var variables: Map<String, Any>? = null,
     override var stages: ArrayList<Map<String, Any>>? = null,
     override val jobs: LinkedHashMap<String, Any>? = null,
     override val steps: ArrayList<Map<String, Any>>? = null,
-    override var extends: Extends? = null,
+    override var extends: PreExtends? = null,
     override var resources: Resources? = null,
     override var finally: LinkedHashMap<String, Any>? = null,
-    override val notices: List<PacNotices>?,
+    override var notices: List<PacNotices>? = null,
     override var concurrency: Concurrency? = null,
     @JsonProperty("disable-pipeline")
     override var disablePipeline: Boolean? = null,
@@ -70,7 +71,11 @@ data class PreTemplateScriptBuildYamlV3Parser(
     @JsonProperty("custom-build-num")
     override var customBuildNum: String? = null,
     @JsonProperty("syntax-dialect")
-    override var syntaxDialect: String? = null
+    override var syntaxDialect: String? = null,
+    @JsonProperty("fail-if-variable-invalid")
+    override var failIfVariableInvalid: Boolean? = null,
+    @JsonProperty("cancel-policy")
+    override var cancelPolicy: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTemplateScriptBuildYamlV3Parser::class.java)
@@ -92,13 +97,17 @@ data class PreTemplateScriptBuildYamlV3Parser(
             notices = notices,
             concurrency = concurrency,
             disablePipeline = disablePipeline,
-            syntaxDialect = syntaxDialect
+            syntaxDialect = syntaxDialect,
+            failIfVariableInvalid = failIfVariableInvalid,
+            extends = extends,
+            cancelPolicy = cancelPolicy
         )
     }
 
     @JsonIgnore
     lateinit var preYaml: PreScriptBuildYamlV3Parser
 
+    private val formatExtends = lazy { ScriptYmlUtils.preExtend2Extend(preYaml.extends) }
     private val formatStages = lazy { ScriptYmlUtils.formatStage(preYaml, transferData) }
     private val formatFinallyStage = lazy { ScriptYmlUtils.preJobs2Jobs(preYaml.finally, transferData) }
 
@@ -141,14 +150,19 @@ data class PreTemplateScriptBuildYamlV3Parser(
         return res
     }
 
-    override fun formatStages(): List<Stage> {
+    override fun formatStages(): List<IStage> {
         checkInitialized()
         return formatStages.value
     }
 
-    override fun formatFinallyStage(): List<Job> {
+    override fun formatFinallyStage(): List<IJob> {
         checkInitialized()
         return formatFinallyStage.value
+    }
+
+    override fun formatExtends(): Extends? {
+        checkInitialized()
+        return formatExtends.value
     }
 
     override fun formatResources(): Resources? {
@@ -156,6 +170,22 @@ data class PreTemplateScriptBuildYamlV3Parser(
     }
 
     override fun templateFilter(): ITemplateFilter = this
+
+    override fun settingGroups(): List<PipelineSettingGroupType>? {
+        val res = mutableListOf<PipelineSettingGroupType>()
+        if (concurrency != null) {
+            res.add(PipelineSettingGroupType.CONCURRENCY)
+        }
+        if (customBuildNum != null) {
+            res.add(PipelineSettingGroupType.CUSTOM_BUILD_NUM)
+        }
+        if (notices != null) {
+            res.add(PipelineSettingGroupType.NOTICES)
+        }
+        return res
+    }
+
+    override fun checkForTemplateUse() = formatExtends()?.template != null
 
     private fun checkInitialized() {
         if (!this::preYaml.isInitialized) throw RuntimeException("need replaceTemplate before")

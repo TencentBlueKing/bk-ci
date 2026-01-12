@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -56,17 +56,17 @@ class LogMQConfiguration {
         @Autowired logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
-    @EventConsumer(defaultConcurrency = 10)
+    @EventConsumer(defaultConcurrency = 5)
     fun logOriginEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogOriginEvent> { listenerService.handleEvent(it) }
 
-    @EventConsumer(defaultConcurrency = 10)
+    @EventConsumer(defaultConcurrency = 5)
     fun logStorageEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStorageEvent> { listenerService.handleEvent(it) }
 
-    @EventConsumer(defaultConcurrency = 10)
+    @EventConsumer(defaultConcurrency = 5)
     fun logStatusEventConsumer(
         @Autowired listenerService: BuildLogListenerService
     ) = ScsConsumerBuilder.build<LogStatusEvent> { listenerService.handleEvent(it) }

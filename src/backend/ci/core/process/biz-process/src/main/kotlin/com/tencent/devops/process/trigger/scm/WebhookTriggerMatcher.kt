@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,7 @@ package com.tencent.devops.process.trigger.scm
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
@@ -88,11 +89,17 @@ class WebhookTriggerMatcher @Autowired constructor(
                     matchStatus = MatchStatus.REPOSITORY_NOT_MATCH
                 )
             }
-            if (eventType?.name != webhook.eventType) {
+            // 兼容V1版本触发器
+            val eventType = eventType?.let {
+                if (it == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else it
+            }?.name
+            if (eventType != webhook.eventType) {
                 return WebhookAtomResponse(
                     matchStatus = MatchStatus.EVENT_TYPE_NOT_MATCH
                 )
             }
+            // 保存代码库关联时的url
+            sourceRepoUrl = repository.url
             webhookRuleManager.evaluate(
                 projectId = projectId,
                 pipelineId = pipelineId,

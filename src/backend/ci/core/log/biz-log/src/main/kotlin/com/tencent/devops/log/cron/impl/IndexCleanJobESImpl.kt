@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -68,12 +68,14 @@ class IndexCleanJobESImpl @Autowired constructor(
     override fun cleanIndex() {
         logger.info("Start to clean index")
         // #9602 每个实例轮流获得锁进行幂等清理操作
-        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20).use {
-            try {
-                makeColdESIndexes()
-                deleteESIndexes()
-            } catch (ignore: Throwable) {
-                logger.warn("Fail to clean the index", ignore)
+        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20).use { lock ->
+            if (lock.tryLock()) {
+                try {
+                    makeColdESIndexes()
+                    deleteESIndexes()
+                } catch (ignore: Throwable) {
+                    logger.warn("Fail to clean the index", ignore)
+                }
             }
         }
     }

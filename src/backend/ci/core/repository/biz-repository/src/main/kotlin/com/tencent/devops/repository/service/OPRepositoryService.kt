@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,7 +30,9 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.util.ThreadPoolUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.RepoPipelineRefDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
@@ -74,7 +76,8 @@ class OPRepositoryService @Autowired constructor(
     private val credentialService: RepoCredentialService,
     private val repoPipelineRefDao: RepoPipelineRefDao,
     private val codeSvnDao: RepositoryCodeSvnDao,
-    private val client: Client
+    private val client: Client,
+    private val gitTokenDao: GitTokenDao
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -671,6 +674,33 @@ class OPRepositoryService @Autowired constructor(
         logger.info("OPRepositoryService:end updateRepoCredentialType")
     }
 
+    fun updateRepoScmCode(projectId: String?, repoHashId: String?) {
+        var offset = 0
+        val limit = 100
+        logger.info("OPRepositoryService:begin updateRepoScmCode")
+        do {
+            // 获取仓库列表
+            val repoList = repositoryDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                repositoryTypes = null,
+                nullScmCode = true,
+                limit = limit,
+                offset = offset
+            )
+            repoList.chunked(25) {
+                repositoryDao.updateScmCode(
+                    dslContext = dslContext,
+                    repositoryId = it.map { it.repositoryId }.toSet()
+                )
+            }
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoList.size == 100)
+        logger.info("OPRepositoryService:end updateRepoCredentialType")
+    }
+
     private fun getCredentialType(projectId: String, credentialIds: Set<String>): Map<String, String> {
         val credentialInfos = try {
             client.get(ServiceCredentialResource::class)
@@ -683,6 +713,44 @@ class OPRepositoryService @Autowired constructor(
             setOf()
         }
         return credentialInfos.associate { it.credentialId to it.credentialType.name }
+    }
+
+    fun addGithubOperator() {
+        ThreadPoolUtil.submitAction(
+            action = {
+                val limit = 100
+                do {
+                    val list = githubTokenService.listEmptyOperator(
+                        dsl = dslContext,
+                        limit = limit
+                    )
+                    githubTokenService.updateOperator(
+                        dsl = dslContext,
+                        userIds = list.map { it.userId }.toSet()
+                    )
+                } while (list.size == limit)
+            },
+            actionTitle = "add github operator"
+        )
+    }
+
+    fun addGitOperator() {
+        ThreadPoolUtil.submitAction(
+            action = {
+                val limit = 100
+                do {
+                    val list = gitTokenDao.listEmptyOperator(
+                        dslContext = dslContext,
+                        limit = limit
+                    )
+                    gitTokenDao.updateOperator(
+                        dslContext = dslContext,
+                        userIds = list.map { it.userId }.toSet()
+                    )
+                } while (list.size == limit)
+            },
+            actionTitle = "add git operator"
+        )
     }
 
     companion object {

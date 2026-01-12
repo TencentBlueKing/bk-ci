@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,19 +31,42 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateReleaseReq
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateV2Request
 import org.jooq.DSLContext
 
 @Suppress("ALL")
 interface TemplateReleaseService {
-
+    /**
+     * 关联研发商店模板
+     */
     fun addMarketTemplate(
         userId: String,
         templateCode: String,
         marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean>
 
-    fun updateMarketTemplate(userId: String, marketTemplateUpdateRequest: MarketTemplateUpdateRequest): Result<String?>
+    /**
+     * 更新研发商店模板-v1
+     */
+    fun updateMarketTemplate(
+        userId: String,
+        marketTemplateUpdateRequest: MarketTemplateUpdateRequest
+    ): Result<String?>
+
+    /**
+     * 上架研发商店-v2
+     */
+    fun releaseMarketTemplate(
+        userId: String,
+        request: MarketTemplateUpdateV2Request
+    ): Result<String>
+
+    fun releaseMarketTemplateVersions(
+        userId: String,
+        request: MarketTemplateReleaseReq
+    ): Boolean
 
     fun handleTemplateRelease(
         context: DSLContext,
@@ -60,12 +83,37 @@ interface TemplateReleaseService {
     fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo>
 
     /**
+     * 获取发布进度-根据模板CODE
+     */
+    fun getProcessInfoByCode(userId: String, templateCode: String): Result<StoreProcessInfo>
+
+    /**
      * 取消发布
      */
     fun cancelRelease(userId: String, templateId: String): Result<Boolean>
 
     /**
+     * 取消发布-根据CODE
+     */
+    fun cancelReleaseByCode(userId: String, templateCode: String): Result<Boolean>
+
+    /**
      * 下架模板
      */
-    fun offlineTemplate(userId: String, templateCode: String, version: String?, reason: String?): Result<Boolean>
+    fun offlineTemplate(
+        userId: String,
+        templateCode: String,
+        version: String?,
+        reason: String?
+    ): Result<Boolean>
+
+    /**
+     * 下架模板-v2
+     */
+    fun offlineTemplateV2(
+        userId: String,
+        templateCode: String,
+        templateVersion: Long?,
+        reason: String?
+    ): Result<Boolean>
 }

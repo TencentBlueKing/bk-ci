@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,12 @@ object ShaUtils {
     fun sha1InputStream(inputStream: InputStream): String {
         // 指定sha1算法
         val messageDigest = MessageDigest.getInstance("SHA-1")
+        val digestBytes = generateDigestBytes(inputStream, messageDigest)
+        // 字节数组转换为 十六进制 数
+        return digestBytes.toHexString()
+    }
+
+    private fun generateDigestBytes(inputStream: InputStream, messageDigest: MessageDigest): ByteArray {
         DigestInputStream(inputStream, messageDigest).use { ins ->
             val buffer = ByteArray(1024 * 16) // 16KB
             var size: Int
@@ -49,10 +55,7 @@ object ShaUtils {
                 size = ins.read(buffer)
             } while (size > -1)
         }
-
-        val digestBytes = messageDigest.digest()
-        // 字节数组转换为 十六进制 数
-        return digestBytes.toHexString()
+        return messageDigest.digest()
     }
 
     /**
@@ -72,6 +75,14 @@ object ShaUtils {
     fun sha256(input: String) = MessageDigest
         .getInstance("SHA-256")
         .digest(input.toByteArray()).toHexString()
+
+    fun sha256InputStream(inputStream: InputStream): String {
+        // 指定sha256算法
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        val digestBytes = generateDigestBytes(inputStream, messageDigest)
+        // 字节数组转换为 十六进制 数
+        return digestBytes.toHexString()
+    }
 
     private fun ByteArray.toHexString() = joinToString("") { String.format("%02x", it) }
 

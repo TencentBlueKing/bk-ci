@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -67,11 +67,25 @@ object StreamBinding {
 
     const val PIPELINE_ARCHIVE = "engine.pipeline.archive"
 
+    const val PIPELINE_BATCH_ARCHIVE = "engine.pipeline.batch.archive"
+
+    const val PIPELINE_BATCH_ARCHIVE_PUBLISH = "engine.pipeline.batch.archive.publish"
+
+    const val PIPELINE_BATCH_ARCHIVE_FINISH = "engine.pipeline.batch.archive.finish"
+
+    const val PIPELINE_TEMPLATE_INSTANCE = "engine.pipeline.template.instance"
+
+    const val PIPELINE_TEMPLATE_TRIGGER_UPDATES = "engine.pipeline.template.trigger.updates"
+
+    const val PIPELINE_TEMPLATE_MIGRATE = "engine.pipeline.template.migrate"
+
     // 监控相关的队列
     const val PIPELINE_BUILD_MONITOR = "engine.pipeline.listener.monitor"
     const val PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
+
     // 构建产生的审核通知类队列
     const val PIPELINE_BUILD_NOTIFY = "engine.pipeline.build.notify"
+
     // 构建状态Websocket推送解耦
     const val PIPELINE_BUILD_WEBSOCKET = "engine.pipeline.build.websocket"
 
@@ -148,6 +162,9 @@ object StreamBinding {
     // scm webhook请求回调
     const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
 
+    // 流水线构建check-run事件
+    const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"
+
     // webSocket消息
     const val WEBSOCKET_TMP_FANOUT = "websocket.fanout"
     const val WEBSOCKET_SESSION_CLEAR = "websocket.session.clear.fanout"
@@ -166,6 +183,7 @@ object StreamBinding {
 
     // 蓝盾构建结束后metrics数据上报事件广播
     const val BUILD_END_METRICS_DATA_REPORT_FANOUT = "metrics.engine.build.end.data.report.fanout"
+
     // 流水线标签变化metrics数据同步广播
     const val PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC_FANOUT =
         "metrics.pipeline.label.change.data.sync.fanout"
@@ -203,6 +221,9 @@ object StreamBinding {
     // 权限资源关联用户组修改事件
     const val AUTH_RESOURCE_GROUP_MODIFY = "auth.resource.group.modify"
 
+    // 权限项目级权限变更同步事件
+    const val AUTH_PROJECT_LEVEL_GROUP_PERMISSIONS_SYNC = "auth.project.level.group.permissions.sync"
+
     // 数据库分片
     const val SHARDING_ROUTING_RULE_FANOUT = "sharding.routing.rule.exchange.fanout"
 
@@ -213,4 +234,9 @@ object StreamBinding {
     const val PIPELINE_YAML_LISTENER_DISABLE = "pipeline.yaml.listener.disable"
     const val PIPELINE_YAML_LISTENER_TRIGGER = "pipeline.yaml.listener.trigger"
     const val PIPELINE_YAML_LISTENER_FILE = "pipeline.yaml.listener.file"
+
+    // yaml文件调度事件
+    const val PIPELINE_YAML_FILE_SCHEDULER = "pipeline.yaml.file.scheduler"
+    // yaml文件执行事件
+    const val PIPELINE_YAML_FILE_EXECUTOR = "pipeline.yaml.file.executor"
 }

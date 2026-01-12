@@ -8,6 +8,8 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
+import com.tencent.devops.process.yaml.v3.models.job.Job
+import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
@@ -31,11 +33,36 @@ object PipelineTransferAspectLoader {
         return instance
     }
 
+    fun yaml2ModelAspects(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        checkLockResourceJob(aspects)
+        checkJobId(aspects)
+    }
+
+    private fun checkJobId(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        val jobsCheck = mutableSetOf<String/*job_id*/>()
+        aspects.add(
+            object : IPipelineTransferAspectJob {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    val job = jp.modelJob()
+                    if (job?.jobId != null && !jobsCheck.add(job.jobId!!)) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
+                            params = arrayOf(job.name, job.jobId!!)
+                        )
+                    }
+                }
+            })
+    }
+
     /*
     * feat：第三方构建机 Job 间复用构建环境支持 Code 配置 #10254
     * 支持检查值的有效性
     * */
-    fun checkLockResourceJob(
+    private fun checkLockResourceJob(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
         val jobsCheck = mutableListOf<String/*job_id*/>()
@@ -107,6 +134,7 @@ object PipelineTransferAspectLoader {
         )
     }
 
+    @Suppress("ComplexCondition")
     fun sharedEnvTransfer(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
@@ -114,12 +142,13 @@ object PipelineTransferAspectLoader {
         aspects.add(
             object : IPipelineTransferAspectJob {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlJob() != null && jp.yaml()?.formatResources()?.pools != null) {
+                    val job = jp.yamlJob()
+                    if (job != null && job is Job && jp.yaml()?.formatResources()?.pools != null) {
                         jp.yaml()?.formatResources()?.pools?.find {
-                            it.name == jp.yamlJob()!!.runsOn.poolName
+                            it.name == job.runsOn.poolName
                         }?.let { pool ->
-                            jp.yamlJob()!!.runsOn.envProjectId = pool.from?.substringBefore("@")
-                            jp.yamlJob()!!.runsOn.poolName = pool.from?.substringAfter("@")
+                            job.runsOn.envProjectId = pool.from?.substringBefore("@")
+                            job.runsOn.poolName = pool.from?.substringAfter("@")
                         }
                     }
 
@@ -127,11 +156,12 @@ object PipelineTransferAspectLoader {
                 }
 
                 override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yamlPreJob()?.runsOn != null &&
-                        jp.yamlPreJob()?.runsOn is RunsOn &&
-                        (jp.yamlPreJob()?.runsOn as RunsOn).envProjectId != null
+                    val job = jp.yamlPreJob()
+                    if (job is PreJob && job.runsOn != null &&
+                        job.runsOn is RunsOn &&
+                        job.runsOn.envProjectId != null
                     ) {
-                        val pool = jp.yamlPreJob()?.runsOn as RunsOn
+                        val pool = job.runsOn
                         pools.add(
                             ResourcesPools(
                                 from = "${pool.envProjectId}@${pool.poolName}",
@@ -165,49 +195,14 @@ object PipelineTransferAspectLoader {
         defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
-        // val repoName = lazy { defaultRepo() }
-        /*aspects.add(
-            object : IPipelineTransferAspectTrigger {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = repoName.value
-                    }
-                    return null
-                }
-            }
-        )*/
-        /*checkout 新增 self类型，此处暂时去掉转换 */
-//        aspects.add(
-//            object : IPipelineTransferAspectElement {
-//                override fun before(jp: PipelineTransferJoinPoint): Any? {
-//                    if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
-//                        jp.yamlStep()!!.checkout = repoName.value
-//                    }
-//                    return null
-//                }
-//            }
-//        )
-        /*aspects.add(
-            // 一个触发器时，如果为默认仓库则忽略repoName和type
-            object : IPipelineTransferAspectModel {
-                override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yaml() is PreTemplateScriptBuildYamlV3 &&
-                        (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
-                    ) {
-                        val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
-                        if (triggerOn.repoName == repoName.value) {
-                            triggerOn.repoName = null
-                            triggerOn.type = null
-                        }
-                    }
-                }
-            }
-        )*/
+        // 可以在此添加公共策略
         return aspects
     }
 
+    // MODEL2YAML 时使用
     fun checkInvalidElement(
         invalidElement: MutableList<String>,
+        invalidNameSpaceElement: MutableList<String>,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
         aspects.add(

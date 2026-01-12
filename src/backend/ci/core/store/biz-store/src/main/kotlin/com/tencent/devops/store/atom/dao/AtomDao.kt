@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,7 +49,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -1331,15 +1331,12 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getPublishedAtomCount(
-        dslContext: DSLContext
-    ): Int {
+    fun getPublishedAtomCount(dslContext: DSLContext): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.select()
+            return dslContext.select(DSL.countDistinct(ATOM_CODE))
                 .from(this)
                 .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
-                .groupBy(ATOM_CODE)
-                .execute()
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

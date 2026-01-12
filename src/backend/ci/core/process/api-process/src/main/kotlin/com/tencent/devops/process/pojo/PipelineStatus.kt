@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -66,5 +66,7 @@ data class PipelineStatus(
     @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
     @get:Schema(title = "触发方式", required = false)
-    var trigger: String? = null
+    var trigger: String? = null,
+    @get:Schema(title = "最后一次构建各阶段状态", required = true)
+    var latestBuildStageStatus: List<BuildStageStatus>? = null
 )

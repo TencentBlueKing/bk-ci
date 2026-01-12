@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,12 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils.values
 import com.tencent.devops.model.store.tables.TStoreBaseExt
 import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreBaseExtManageDao {
@@ -71,9 +71,9 @@ class StoreBaseExtManageDao {
                 }
             }
                 .onDuplicateKeyUpdate()
-                .set(FIELD_NAME, MySQLDSL.values(FIELD_NAME))
-                .set(FIELD_VALUE, MySQLDSL.values(FIELD_VALUE))
-                .set(MODIFIER, MySQLDSL.values(MODIFIER))
+                .set(FIELD_NAME, values(FIELD_NAME))
+                .set(FIELD_VALUE, values(FIELD_VALUE))
+                .set(MODIFIER, values(MODIFIER))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }

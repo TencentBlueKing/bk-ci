@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,9 +39,11 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
@@ -58,6 +60,7 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
@@ -311,7 +314,13 @@ class CodeWebhookService @Autowired constructor(
                 logger.info("Process instance($buildId) is not web hook triggered")
                 return
             }
-
+            val codeType = CodeType.valueOf(webhookTypeStr)
+            if (!supportRepo(codeType)) {
+                logger.info(
+                    "Process instance($buildId) not support write repo($codeType) check run"
+                )
+                return
+            }
             val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             val targetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
@@ -401,7 +410,17 @@ class CodeWebhookService @Autowired constructor(
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
+            val webhookMrEventAction = variables[PIPELINE_GIT_MR_ACTION]
+            // GIT触发器v2, MR合并操作时将webhookEventType置为 [MERGE_REQUEST_ACCEPT]
+            val finalEventType = if (webhookEventType == CodeEventType.MERGE_REQUEST.name &&
+                    webhookMrEventAction == TGitMergeActionKind.MERGE.value
+            ) {
+                CodeEventType.MERGE_REQUEST_ACCEPT.name
+            } else {
+                webhookEventType ?: ""
+            }
             val context = "$pipelineName@$webhookEventType"
+            val newContext = "$pipelineName@$finalEventType"
 
             if (buildNum == null) {
                 logger.warn("Build($buildId) number is null")
@@ -434,7 +453,7 @@ class CodeWebhookService @Autowired constructor(
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
-                        context = context,
+                        context = newContext,
                         targetBranch = targetBranch
                     ) ?: pluginGitCheckDao.getOrNull(
                         dslContext = dslContext,
@@ -442,14 +461,14 @@ class CodeWebhookService @Autowired constructor(
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
                         context = context,
-                        targetBranch = null
+                        targetBranch = targetBranch
                     )
                     // 新提交，直接添加commit check
                     if (record == null) {
                         scmCheckService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
-                            context = context,
+                            context = newContext, // 统一用新的Context
                             description = description,
                             targetBranch = if (targetBranch != null) {
                                 mutableListOf(targetBranch!!)
@@ -466,7 +485,7 @@ class CodeWebhookService @Autowired constructor(
                                 repositoryHashId = repositoryConfig.repositoryHashId,
                                 repositoryName = repositoryConfig.repositoryName,
                                 commitId = commitId,
-                                context = context,
+                                context = newContext, // 统一用新的Context
                                 targetBranch = targetBranch
                             )
                         )
@@ -622,7 +641,14 @@ class CodeWebhookService @Autowired constructor(
         val name = "$pipelineName@$webhookEventType"
 
         val channelCode = variables[PIPELINE_START_CHANNEL]?.let { ChannelCode.getChannel(it) } ?: ChannelCode.BS
-        val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        // 构建任务链接
+        val detailUrl = getBuildUrl(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode,
+            variables = variables
+        )
 
         while (true) {
             val lockKey = "code_github_check_run_lock_$pipelineId"
@@ -711,5 +737,31 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
         }
+    }
+
+    private fun getBuildUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        variables: Map<String, String>
+    ) = if (channelCode == ChannelCode.GONGFENGSCAN) {
+        val codeccTaskId = variables[CodeccUtils.BK_CI_CODECC_TASK_ID]
+        val codeccPrefix = "${HomeHostUtil.innerCodeccHost()}/codecc/$projectId/task"
+        if (codeccTaskId != null) {
+            "$codeccPrefix/$codeccTaskId/detail"
+        } else {
+            "$codeccPrefix/list?pipelineId=$pipelineId&buildId=$buildId&from=check_run"
+        }
+    } else {
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
+    /**
+     * 支持的仓库类型
+     */
+    private fun supportRepo(codeType: CodeType) = when (codeType) {
+        CodeType.GIT, CodeType.TGIT, CodeType.GITHUB -> true
+        else -> false
     }
 }

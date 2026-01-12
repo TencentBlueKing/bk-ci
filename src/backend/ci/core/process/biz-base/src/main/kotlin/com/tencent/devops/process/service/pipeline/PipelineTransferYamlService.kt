@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertBody
 import com.tencent.devops.common.pipeline.pojo.transfer.ElementInsertResponse
@@ -42,13 +45,26 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.FULL_MODEL2YAML
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.FULL_YAML2MODEL
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_MODEL2YAML_JOB
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_MODEL2YAML_PIPELINE
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_MODEL2YAML_STAGE
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_MODEL2YAML_STEP
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_YAML2MODEL_JOB
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_YAML2MODEL_PIPELINE
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_YAML2MODEL_STAGE
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.TEMPLATE_YAML2MODEL_STEP
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType.YAML_INSERT_TASK
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.yaml.pojo.TemplatePath
@@ -56,12 +72,14 @@ import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.ElementTransfer
 import com.tencent.devops.process.yaml.transfer.ModelTransfer
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
+import com.tencent.devops.process.yaml.transfer.TemplateModelTransfer
 import com.tencent.devops.process.yaml.transfer.TransferMapper
 import com.tencent.devops.process.yaml.transfer.YamlIndexService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
+import com.tencent.devops.process.yaml.transfer.pojo.TemplateModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.transfer.schema.CodeSchemaCheck
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYamlParser
@@ -82,6 +100,7 @@ import org.springframework.stereotype.Service
 class PipelineTransferYamlService @Autowired constructor(
     private val dslContext: DSLContext,
     private val modelTransfer: ModelTransfer,
+    private val templateModelTransfer: TemplateModelTransfer,
     private val elementTransfer: ElementTransfer,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineInfoDao: PipelineInfoDao,
@@ -95,10 +114,23 @@ class PipelineTransferYamlService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTransferYamlService::class.java)
         private const val TEMPLATE_ROOT_FILE = "TEMPLATE_ROOT_FILE"
-        private val pipeline_key = listOf("stages", "jobs", "steps", "finally")
-        private val trigger_key = listOf("on")
-        private val notice_key = listOf("notices")
-        private val setting_key = listOf("concurrency", "name", "version", "label")
+        val pipeline_key = listOf(
+            ITemplateFilter::stages.name,
+            ITemplateFilter::jobs.name,
+            ITemplateFilter::steps.name,
+            ITemplateFilter::finally.name,
+            ITemplateFilter::extends.name
+        )
+        val trigger_key = listOf("on")
+        val notice_key = listOf(IPreTemplateScriptBuildYamlParser::notices.name)
+        val setting_key = listOf(
+            IPreTemplateScriptBuildYamlParser::concurrency.name,
+            IPreTemplateScriptBuildYamlParser::name.name,
+            IPreTemplateScriptBuildYamlParser::version.name,
+            IPreTemplateScriptBuildYamlParser::label.name,
+            IPreTemplateScriptBuildYamlParser::desc.name,
+            IPreTemplateScriptBuildYamlParser::syntaxDialect.name
+        )
         private const val DEFAULT_REPO_ALIAS_NAME = "self"
     }
 
@@ -116,20 +148,13 @@ class PipelineTransferYamlService @Autowired constructor(
         actionType: TransferActionType,
         data: TransferBody,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList(),
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false
     ): TransferResponse {
         val watcher = Watcher(id = "yaml and model transfer watcher")
         // #8161 蓝盾PAC默认使用V3版本的YAML语言
         val defaultVersion = YamlVersion.V3_0
         try {
-            if (aspects.isEmpty()) {
-                PipelineTransferAspectLoader.initByDefaultTriggerOn(
-                    {
-                        getRepoAliasName(projectId = projectId, pipelineId)
-                    },
-                    aspects
-                )
-            }
             val model = data.modelAndSetting?.model
             // 无编辑权限需要对流水线插件敏感参数做处理
             if (editPermission == false && model != null) {
@@ -144,11 +169,12 @@ class PipelineTransferYamlService @Autowired constructor(
                     }
                 }
             }
+            actionType.check(data)
             PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
             val pipelineInfo = pipelineId?.let {
                 pipelineInfoDao.convert(
                     t = pipelineInfoDao.getPipelineInfo(
-                        dslContext = dslContext,
+                        dslContext = CommonUtils.getJooqDslContext(archiveFlag, ARCHIVE_SHARDING_DSL_CONTEXT),
                         projectId = projectId,
                         pipelineId = pipelineId
                     ),
@@ -156,67 +182,222 @@ class PipelineTransferYamlService @Autowired constructor(
                 )
             }
             when (actionType) {
-                TransferActionType.FULL_MODEL2YAML -> {
-                    watcher.start("step_1|FULL_MODEL2YAML start")
-                    val invalidElement = mutableListOf<String>()
-                    aspects.addAll(PipelineTransferAspectLoader.checkInvalidElement(invalidElement))
-                    val response = modelTransfer.model2yaml(
-                        ModelTransferInput(
-                            userId = userId,
-                            model = data.modelAndSetting!!.model,
-                            setting = data.modelAndSetting!!.setting,
-                            pipelineInfo = pipelineInfo,
-                            version = defaultVersion,
-                            aspectWrapper = PipelineTransferAspectWrapper(aspects)
-                        )
-                    )
-                    if (invalidElement.isNotEmpty()) {
-                        throw PipelineTransferException(
-                            ELEMENT_NOT_SUPPORT_TRANSFER,
-                            arrayOf(invalidElement.joinToString("\n- ", "- "))
-                        )
-                    }
-                    watcher.start("step_2|mergeYaml")
-                    val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
-                    watcher.stop()
-                    logger.info(watcher.toString())
-                    return TransferResponse(
-                        yamlWithVersion = YamlWithVersion(yamlStr = newYaml, versionTag = defaultVersion.tag)
+                FULL_MODEL2YAML -> {
+                    return fullModel2Yaml(
+                        watcher = watcher,
+                        aspects = aspects,
+                        userId = userId,
+                        data = data,
+                        pipelineInfo = pipelineInfo,
+                        defaultVersion = defaultVersion
                     )
                 }
 
-                TransferActionType.FULL_YAML2MODEL -> {
-                    watcher.start("step_1|FULL_YAML2MODEL start")
-                    PipelineTransferAspectLoader.checkLockResourceJob(aspects)
-                    yamlSchemaCheck.check(data.oldYaml)
-                    watcher.start("step_2|parse template")
-                    val pYml = loadYaml(data.oldYaml)
-                    watcher.start("step_3|transfer start")
-                    val input = YamlTransferInput(
-                        userId = userId,
-                        projectCode = projectId,
-                        pipelineInfo = pipelineInfo,
-                        yaml = pYml,
-                        yamlFileName = data.yamlFileName,
-                        asCodeSettings = data.modelAndSetting?.setting?.pipelineAsCodeSettings,
-                        aspectWrapper = PipelineTransferAspectWrapper(aspects)
-                    )
-                    val model = modelTransfer.yaml2Model(input)
-                    val setting = modelTransfer.yaml2Setting(input)
-                    logger.info(watcher.toString())
-                    return TransferResponse(
-                        yamlWithVersion = YamlWithVersion(
-                            yamlStr = data.oldYaml, versionTag = input.yaml.version
-                        ),
-                        modelAndSetting = PipelineModelAndSetting(model, setting)
+                FULL_YAML2MODEL -> {
+                    return fullYaml2Model(
+                        watcher = watcher,
+                        aspects = aspects,
+                        data = data,
+                        pipelineId = pipelineId,
+                        projectId = projectId,
+                        userId = userId
                     )
                 }
-                else -> {}
+
+                TEMPLATE_MODEL2YAML_PIPELINE -> {
+                    return templateModel2YamlPipeline(
+                        watcher = watcher,
+                        aspects = aspects,
+                        userId = userId,
+                        projectId = projectId,
+                        data = data,
+                        defaultVersion = defaultVersion
+                    )
+                }
+
+                TEMPLATE_YAML2MODEL_PIPELINE -> {
+                    return templateYaml2ModelPipeline(
+                        watcher = watcher,
+                        aspects = aspects,
+                        data = data,
+                        projectId = projectId,
+                        userId = userId
+                    )
+                }
+
+                TEMPLATE_MODEL2YAML_STAGE -> TODO()
+                TEMPLATE_YAML2MODEL_STAGE -> TODO()
+                TEMPLATE_MODEL2YAML_JOB -> TODO()
+                TEMPLATE_YAML2MODEL_JOB -> TODO()
+                TEMPLATE_MODEL2YAML_STEP -> TODO()
+                TEMPLATE_YAML2MODEL_STEP -> TODO()
+                YAML_INSERT_TASK -> return TransferResponse()
             }
         } finally {
             watcher.stop()
         }
-        return TransferResponse()
+    }
+
+    private fun fullModel2Yaml(
+        watcher: Watcher,
+        aspects: LinkedList<IPipelineTransferAspect>,
+        userId: String,
+        data: TransferBody,
+        pipelineInfo: PipelineInfo?,
+        defaultVersion: YamlVersion
+    ): TransferResponse {
+        watcher.start("step_1|FULL_MODEL2YAML start")
+        val invalidElement = mutableListOf<String>()
+        val invalidNameSpaceElement = mutableListOf<String>()
+        aspects.addAll(
+            PipelineTransferAspectLoader.checkInvalidElement(
+                invalidElement, invalidNameSpaceElement
+            )
+        )
+        val response = modelTransfer.model2yaml(
+            ModelTransferInput(
+                userId = userId,
+                model = data.modelAndSetting!!.model,
+                setting = data.modelAndSetting!!.setting,
+                pipelineInfo = pipelineInfo,
+                version = defaultVersion,
+                aspectWrapper = PipelineTransferAspectWrapper(aspects)
+            )
+        )
+        if (invalidElement.isNotEmpty()) {
+            throw PipelineTransferException(
+                ELEMENT_NOT_SUPPORT_TRANSFER,
+                arrayOf(invalidElement.joinToString("\n- ", "- "))
+            )
+        }
+        if (invalidNameSpaceElement.isNotEmpty()) {
+            throw PipelineTransferException(
+                ELEMENT_NOT_SUPPORT_TRANSFER,
+                arrayOf(invalidNameSpaceElement.joinToString("\n- ", "- "))
+            )
+        }
+        watcher.start("step_2|mergeYaml")
+        val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
+        watcher.stop()
+        logger.info(watcher.toString())
+        return TransferResponse(
+            yamlWithVersion = YamlWithVersion(yamlStr = newYaml, versionTag = defaultVersion.tag)
+        )
+    }
+
+    private fun fullYaml2Model(
+        watcher: Watcher,
+        aspects: LinkedList<IPipelineTransferAspect>,
+        data: TransferBody,
+        pipelineId: String?,
+        projectId: String,
+        userId: String
+    ): TransferResponse {
+        watcher.start("step_1|FULL_YAML2MODEL start")
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
+        yamlSchemaCheck.check(data.oldYaml)
+        val pipelineInfo = pipelineId?.let {
+            pipelineInfoDao.convert(
+                t = pipelineInfoDao.getPipelineInfo(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ),
+                templateId = null
+            )
+        }
+        watcher.start("step_2|parse template")
+        val pYml = loadYaml(data.oldYaml)
+        watcher.start("step_3|transfer start")
+        val input = YamlTransferInput(
+            userId = userId,
+            projectCode = projectId,
+            pipelineInfo = pipelineInfo,
+            yaml = pYml,
+            yamlFileName = data.yamlFileName,
+            aspectWrapper = PipelineTransferAspectWrapper(aspects)
+        )
+        val model = modelTransfer.yaml2Model(input)
+        val setting = modelTransfer.yaml2Setting(input)
+
+        logger.info(watcher.toString())
+        return TransferResponse(
+            yamlWithVersion = YamlWithVersion(
+                yamlStr = data.oldYaml, versionTag = input.yaml.version
+            ),
+            modelAndSetting = PipelineModelAndSetting(model, setting)
+        )
+    }
+
+    private fun templateModel2YamlPipeline(
+        watcher: Watcher,
+        aspects: LinkedList<IPipelineTransferAspect>,
+        userId: String,
+        projectId: String,
+        data: TransferBody,
+        defaultVersion: YamlVersion
+    ): TransferResponse {
+        watcher.start("step_1|TEMPLATE_MODEL2YAML_PIPELINE start")
+        val invalidElement = mutableListOf<String>()
+        val invalidNameSpaceElement = mutableListOf<String>()
+        aspects.addAll(PipelineTransferAspectLoader.checkInvalidElement(invalidElement, invalidNameSpaceElement))
+        val response = templateModelTransfer.templateModel2yaml(
+            TemplateModelTransferInput(
+                userId = userId,
+                projectId = projectId,
+                model = data.templateModelAndSetting!!.templateModel,
+                setting = data.templateModelAndSetting!!.setting,
+                version = defaultVersion,
+                aspectWrapper = PipelineTransferAspectWrapper(aspects)
+            )
+        )
+        if (invalidElement.isNotEmpty()) {
+            throw PipelineTransferException(
+                ELEMENT_NOT_SUPPORT_TRANSFER,
+                arrayOf(invalidElement.joinToString("\n- ", "- "))
+            )
+        }
+        watcher.start("step_2|mergeYaml")
+        val newYaml = TransferMapper.mergeYaml(data.oldYaml, TransferMapper.toYaml(response))
+        watcher.stop()
+        logger.info(watcher.toString())
+        return TransferResponse(
+            yamlWithVersion = YamlWithVersion(yamlStr = newYaml, versionTag = defaultVersion.tag)
+        )
+    }
+
+    private fun templateYaml2ModelPipeline(
+        watcher: Watcher,
+        aspects: LinkedList<IPipelineTransferAspect>,
+        data: TransferBody,
+        projectId: String,
+        userId: String
+    ): TransferResponse {
+        watcher.start("step_1|TEMPLATE_YAML2MODEL_PIPELINE start")
+        PipelineTransferAspectLoader.yaml2ModelAspects(aspects)
+        yamlSchemaCheck.check(data.oldYaml)
+        watcher.start("step_2|parse template")
+        val pYml = loadYaml(data.oldYaml)
+        watcher.start("step_3|transfer start")
+        val input = YamlTransferInput(
+            userId = userId,
+            projectCode = projectId,
+            pipelineInfo = null,
+            yaml = pYml,
+            yamlFileName = data.yamlFileName,
+            aspectWrapper = PipelineTransferAspectWrapper(aspects),
+            templateType = Model::class.java
+        )
+        val model = templateModelTransfer.yaml2TemplateModel(input)
+        val setting = modelTransfer.yaml2Setting(input)
+
+        logger.info(watcher.toString())
+        return TransferResponse(
+            yamlWithVersion = YamlWithVersion(
+                yamlStr = data.oldYaml, versionTag = input.yaml.version
+            ),
+            templateModelAndSetting = TemplateModelAndSetting(model, setting)
+        )
     }
 
     fun loadYaml(yaml: String): IPreTemplateScriptBuildYamlParser {
@@ -264,19 +445,25 @@ class PipelineTransferYamlService @Autowired constructor(
         return elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
+    /**
+     * @param force 是否强制更新
+     */
     fun buildPreview(
         userId: String,
         projectId: String,
         pipelineId: String,
         resource: PipelineResourceVersion,
-        editPermission: Boolean? = null
+        editPermission: Boolean? = null,
+        archiveFlag: Boolean? = false,
+        force: Boolean = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             detailInfo = null,
-            version = resource.settingVersion ?: 1
+            version = resource.settingVersion ?: 1,
+            archiveFlag = archiveFlag
         )
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
@@ -286,14 +473,15 @@ class PipelineTransferYamlService @Autowired constructor(
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        val yaml = if (editPermission == false || resource.yaml.isNullOrBlank()) {
+        val yaml = if (force || editPermission == false || resource.yaml.isNullOrBlank()) {
             transfer(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                actionType = TransferActionType.FULL_MODEL2YAML,
+                actionType = FULL_MODEL2YAML,
                 data = TransferBody(modelAndSetting),
-                editPermission = editPermission
+                editPermission = editPermission,
+                archiveFlag = archiveFlag
             ).yamlWithVersion?.yamlStr ?: return PreviewResponse("")
         } else {
             resource.yaml

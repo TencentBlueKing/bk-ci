@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,8 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板可见范围请求报文体")
 data class TemplateVisibleDeptReq(
-    @get:Schema(title = "模板代码", required = true)
-    val templateCode: String,
     @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

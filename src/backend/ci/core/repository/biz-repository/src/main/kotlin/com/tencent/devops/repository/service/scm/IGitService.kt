@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -401,4 +401,14 @@ interface IGitService {
         gitProjectId: String,
         gitCreateMergeRequest: GitCreateMergeRequest
     ): Result<GitMrInfo>
+
+    fun getRecentGitCommitMessages(
+        userId: String,
+        branch: String?,
+        codeSrc: String?,
+        gitProjectId: Long?,
+        commitNumber: Int,
+        prefixes: String?,
+        keywords: String?
+    ): Result<String>
 }

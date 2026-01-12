@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -104,12 +105,14 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions", "LargeClass")
 @Service
@@ -195,7 +198,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
+        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
     }
+
+    private val storeBusNumCache = Caffeine.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(100, TimeUnit.DAYS)
+        .build<String, Long>()
 
     override fun getMyComponents(
         userId: String,
@@ -762,7 +771,12 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         } else {
             null
         }
-        return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
+        return storeCommonService.getStoreShowVersionInfo(
+            storeType = storeTypeEnum,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion
+        )
     }
 
     override fun getComponentUpgradeVersionInfo(
@@ -776,7 +790,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
     ): VersionInfo? {
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
 
-        // 判断测试环境标志
+        // 判断是否需要处理测试中的版本
         val isTestEnv = storeProjectRelDao.getProjectRelInfo(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -784,18 +798,24 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             storeProjectType = StoreProjectTypeEnum.TEST,
             projectCode = projectCode,
             instanceId = instanceId
-        )?.firstOrNull() != null
+        )?.any() ?: false
 
-        // 获取最新可用版本
-        val statusList = if (isTestEnv) StoreStatusEnum.getTestStatusList() else listOf(StoreStatusEnum.RELEASED.name)
-        val latestVersion = storeBaseQueryDao.getMaxVersionComponentByCode(
+        // 获取最新可用版本：根据环境状态构建版本状态过滤条件
+        val statusList = mutableListOf(StoreStatusEnum.RELEASED.name).apply {
+            if (isTestEnv) {
+                // 增加测试中的状态
+                addAll(StoreStatusEnum.getTestStatusList())
+            }
+        }
+        // 查询符合条件的最新版本组件
+        val validLatestVersionRecord = storeBaseQueryDao.getMaxVersionComponentByCode(
             dslContext = dslContext,
             storeType = storeTypeEnum,
             storeCode = storeCode,
             statusList = statusList
-        )?.takeIf { it.version.isNotBlank() } ?: return null
+        ) ?: return null
 
-        // 获取已安装组件关系信息
+        // 获取已安装组件关系信息：查询项目关联记录
         val installedRel = storeProjectRelDao.getProjectRelInfo(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -804,18 +824,56 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             projectCode = projectCode,
             instanceId = instanceId
         )?.firstOrNull()
+        val installedVersion = installedRel?.version
+        val validLatestBusNum = validLatestVersionRecord.busNum
+        val validLatestVersion = validLatestVersionRecord.version
+        // 未安装时直接返回最新版本信息
+        if (installedVersion.isNullOrBlank()) {
+            return createVersionInfo(validLatestVersion)
+        }
 
-        // 处理版本比对逻辑
+        // 获取当前安装版本对应的业务号（用于版本比较）
+        val currentBusNum = storeBaseQueryDao.getMaxBusNumByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeTypeEnum,
+            version = installedVersion
+        )
+
+        // 业务号比较逻辑（决定是否需要升级）
         return when {
-            installedRel == null -> createVersionInfo(latestVersion.version)
-            isUpdateRequired(
-                storeId = latestVersion.id,
+            // 无法获取当前业务号时返回null
+            currentBusNum == null -> null
+            // 最新业务号更大时需要升级
+            validLatestBusNum > currentBusNum -> createVersionInfo(validLatestVersion)
+            // 业务号相同，但是安装时间晚于最新版本发布时间，需要更新
+            validLatestBusNum == currentBusNum && isUpdateRequired(
+                storeId = validLatestVersionRecord.id,
                 installedTime = installedRel.createTime,
                 osName = osName,
                 osArch = osArch
-            ) -> createVersionInfo(latestVersion.version, latestVersion.version)
+            ) -> createVersionInfo(validLatestVersion)
+            // 其他情况不需要升级
             else -> null
         }
+    }
+
+    override fun getStoreUpgradeStatusInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String
+    ): Result<String?> {
+        val record = storeBaseQueryDao.getComponentStatusInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = StoreTypeEnum.valueOf(storeType)
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        return Result(record.value1())
     }
 
     private fun isUpdateRequired(
@@ -835,114 +893,164 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         }
     }
 
-    private fun createVersionInfo(latestVersion: String, currentVersion: String = latestVersion) =
+    private fun createVersionInfo(versionValue: String, versionName: String = versionValue) =
         VersionInfo(
-            versionName = latestVersion,
-            versionValue = currentVersion.takeIf { it.isNotBlank() } ?: latestVersion
+            versionName = versionName.takeIf { it.isNotBlank() } ?: versionValue,
+            versionValue = versionValue
         )
 
-    private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
+    private fun getStoreInfos(userDeptList: List<Int>, storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         if (storeInfoQuery.getSpecQueryFlag()) {
             handleQueryStoreCodes(storeInfoQuery)
         }
-        val count = marketStoreQueryDao.count(
-            dslContext = dslContext,
-            storeInfoQuery = storeInfoQuery
-        )
-        val storeInfos = marketStoreQueryDao.list(
-            dslContext = dslContext,
-            storeInfoQuery = storeInfoQuery
-        )
-
-        return Pair(count.toLong(), storeInfos)
+        return marketStoreQueryDao.run {
+            val count = count(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            val storeList = list(
+                dslContext = dslContext,
+                userDeptList = userDeptList,
+                storeInfoQuery = storeInfoQuery
+            )
+            count.toLong() to storeList
+        }
     }
 
-    private fun handleQueryStoreCodes(
-        storeInfoQuery: StoreInfoQuery
-    ) {
+    private fun handleQueryStoreCodes(storeInfoQuery: StoreInfoQuery) {
         val projectCode = storeInfoQuery.projectCode!!
         val storeType = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
         val queryTestFlag = storeInfoQuery.queryTestFlag
-        // 查询项目下已安装的组件版本信息
-        val installComponentMap = storeProjectService.getProjectComponents(
-            projectCode = projectCode,
-            storeType = storeType.type.toByte(),
-            storeProjectTypes = listOf(
-                StoreProjectTypeEnum.COMMON.type.toByte()
-            ),
-            instanceId = storeInfoQuery.instanceId
-        ) ?: emptyMap()
-        val tStoreBase = TStoreBase.T_STORE_BASE
-        var testStoreCodes = emptySet<String>()
-        var testComponentVersionMap: Map<String, String>? = null
-        if (queryTestFlag != false) {
-            // 查询项目下可调试的组件版本信息
-            val testComponentMap = storeProjectService.getProjectComponents(
+        val storeBaseTable = TStoreBase.T_STORE_BASE
+
+        // 1. 封装可复用查询逻辑 - 获取指定类型的项目组件
+        /**
+         * 获取项目组件映射
+         * @param projectType 项目类型枚举
+         * @return 组件代码与版本的映射表
+         */
+        fun getComponents(projectType: StoreProjectTypeEnum): Map<String, String?> =
+            storeProjectService.getProjectComponents(
                 projectCode = projectCode,
                 storeType = storeType.type.toByte(),
-                storeProjectTypes = listOf(
-                    StoreProjectTypeEnum.TEST.type.toByte()
-                ),
+                storeProjectTypes = listOf(projectType.type.toByte()),
                 instanceId = storeInfoQuery.instanceId
             ) ?: emptyMap()
-            // 查询测试或者审核中组件最新版本信息
-            testComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
-                dslContext = dslContext,
-                storeCodes = testComponentMap.keys,
-                storeType = storeType,
-                testComponentFlag = true
-            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] })
-            testStoreCodes = testComponentVersionMap.keys
-        }
-        val componentVersionMap = if (queryTestFlag != true) {
-            // 查询非测试或者审核中组件最新发布版本信息
-            val publicComponentList = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
-            val normalStoreCodes = installComponentMap.keys.plus(publicComponentList).toMutableSet()
-            normalStoreCodes.removeAll(testStoreCodes)
-            val normalComponentVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
-                dslContext = dslContext,
-                storeCodes = normalStoreCodes,
-                storeType = storeType,
-                testComponentFlag = false
-            ).intoMap({ it[tStoreBase.STORE_CODE] }, { it[tStoreBase.VERSION] }).toMutableMap()
-            testComponentVersionMap?.let {
-                normalComponentVersionMap += it
+
+        // 2. 优化测试组件查询逻辑 - 根据查询标志获取测试组件
+        val installComponentMap = getComponents(StoreProjectTypeEnum.COMMON)
+        val testComponentVersionMap = when (queryTestFlag ?: true) {
+            true -> {
+                val testMap = getComponents(StoreProjectTypeEnum.TEST)
+                // 查询有效的测试组件版本信息
+                storeBaseQueryDao.getValidComponentsByCodes(
+                    dslContext = dslContext,
+                    storeCodes = testMap.keys,
+                    storeType = storeType,
+                    testComponentFlag = true
+                ).associate {
+                    it[storeBaseTable.STORE_CODE] to it[storeBaseTable.VERSION]
+                }
             }
-            normalComponentVersionMap
-        } else {
-            testComponentVersionMap
+            false -> null
+        }
+        val testStoreCodes = testComponentVersionMap?.keys.orEmpty()
+
+        // 3. 版本映射合并逻辑 - 合并公共组件和测试组件版本信息
+        val componentVersionMap = when {
+            queryTestFlag == true -> testComponentVersionMap ?: emptyMap()
+            else -> {
+                // 获取所有公共组件
+                val publicComponents = storeBaseFeatureQueryDao.getAllPublicComponent(dslContext, storeType)
+                // 计算普通组件代码集合（排除测试组件）
+                val normalStoreCodes = installComponentMap.keys + publicComponents - testStoreCodes
+                // 查询普通组件版本信息
+                val normalVersionMap = storeBaseQueryDao.getValidComponentsByCodes(
+                    dslContext = dslContext,
+                    storeCodes = normalStoreCodes,
+                    storeType = storeType,
+                    testComponentFlag = false
+                ).associate {
+                    it[storeBaseTable.STORE_CODE] to it[storeBaseTable.VERSION]
+                }
+                // 合并普通组件和测试组件版本映射
+                normalVersionMap + testComponentVersionMap.orEmpty()
+            }
         }
 
-        val finalNormalStoreCodes = mutableSetOf<String>()
-        val finalTestStoreCodes = mutableSetOf<String>()
-        componentVersionMap?.forEach {
-            val storeCode = it.key
-            val version = it.value
-            val updateFlag = storeInfoQuery.updateFlag
-            val installed = storeInfoQuery.installed
-            installed?.let {
-                // 根据是否安装条件筛选组件
-                if (installed != installComponentMap.containsKey(storeCode)) {
-                    return@forEach
-                }
-            }
-            val installedVersion = installComponentMap[storeCode]
-            if (testStoreCodes.contains(storeCode) && updateFlag != false) {
-                finalTestStoreCodes.add(storeCode)
-            } else {
-                // 比较当前安装的版本与组件最新版本
-                val shouldAddStoreCode = when {
-                    updateFlag == null -> true
-                    updateFlag -> installedVersion == null || StoreUtils.isGreaterVersion(version, installedVersion)
-                    else -> installedVersion != null && !StoreUtils.isGreaterVersion(version, installedVersion)
-                }
-                if (shouldAddStoreCode) {
-                    finalNormalStoreCodes.add(storeCode)
-                }
-            }
+        // 4. 缓存处理逻辑 - 缓存业务编号避免重复计算
+        val busNumCache = mutableMapOf<Pair<String, String>, Long>()
+        /**
+         * 获取缓存中的业务编号
+         * @param storeCode 组件代码
+         * @param version 组件版本
+         * @return 业务编号值
+         */
+        fun getCachedBusNum(storeCode: String, version: String) = busNumCache.getOrPut(storeCode to version) {
+            getStoreBusNum(storeType, storeCode, version) ?: 0
         }
+
+        // 5. 过滤逻辑链式调用 - 根据查询条件过滤组件
+        val filteredEntries = componentVersionMap
+            .entries
+            .filter { (storeCode, _) ->
+                // 根据安装状态过滤组件
+                storeInfoQuery.installed?.let { it == installComponentMap.containsKey(storeCode) } ?: true
+            }
+
+        // 处理测试组件过滤逻辑
+        val finalTestStoreCodes = filteredEntries
+            .asSequence()
+            .filter { (storeCode, _) -> storeCode in testStoreCodes }
+            .filter { storeInfoQuery.updateFlag != false } // 当updateFlag不为false时保留测试组件
+            .map { it.key }
+            .toSet()
+
+        // 处理普通组件更新标志过滤逻辑
+        val normalCandidates = filteredEntries.filterNot { it.key in finalTestStoreCodes }
+        val finalNormalStoreCodes = normalCandidates
+            .filter { (storeCode, version) ->
+                val installedVersion = installComponentMap[storeCode]
+                when (storeInfoQuery.updateFlag) {
+                    // 需要更新的组件：当前版本业务编号大于已安装版本
+                    true -> installedVersion?.let {
+                        getCachedBusNum(storeCode, version) > getCachedBusNum(storeCode, it)
+                    } ?: true
+                    // 不需要更新的组件：当前版本业务编号小于等于已安装版本
+                    false -> installedVersion?.let {
+                        getCachedBusNum(storeCode, version) <= getCachedBusNum(storeCode, it)
+                    } ?: false
+
+                    null -> true // 不进行更新标志过滤
+                }
+            }
+            .map { it.key }
+            .toSet()
+
+        // 6. 结果赋值 - 设置最终查询结果
         storeInfoQuery.normalStoreCodes = finalNormalStoreCodes
         storeInfoQuery.testStoreCodes = finalTestStoreCodes
+    }
+
+    private fun getStoreBusNum(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String
+    ): Long? {
+        val storeBusNumCacheKey = StoreUtils.getStoreFieldKeyPrefix(storeType, storeCode, version)
+        // 尝试从缓存获取业务编号，若不存在则从数据库查询
+        val busNum = storeBusNumCache.getIfPresent(storeBusNumCacheKey) ?: storeBaseQueryDao.getMaxBusNumByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            version = version
+        )
+        // 若获取到有效业务编号，更新缓存
+        busNum?.let {
+            storeBusNumCache.put(storeBusNumCacheKey, busNum)
+        }
+        return busNum
     }
 
     private fun doList(
@@ -961,7 +1069,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
                 val results: List<MarketItem>?
                 watcher.start("getStoreInfos")
                 // 分页查询组件信息
-                val (count, storeInfos) = getStoreInfos(storeInfoQuery)
+                val (count, storeInfos) = getStoreInfos(userDeptList, storeInfoQuery)
                 try {
                     watcher.start("handleMarketItem")
                     results = handleMarketItem(
@@ -1054,10 +1162,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 是否可更新
             val installedVersion = installedInfoMap?.get(storeCode)
             val updateFlag = storeInfoQuery.updateFlag ?: run {
-                installedVersion == null || StoreUtils.isGreaterVersion(
-                    version,
-                    installedVersion
-                ) || status in StoreStatusEnum.getTestStatusList()
+                // 当已安装版本不存在时或处于测试状态直接返回true，避免后续无效计算
+                if (installedVersion == null || status in StoreStatusEnum.getTestStatusList()) true
+                else {
+                    val currentBusNum = record[tStoreBase.BUS_NUM] ?: 0
+                    val installedBusNum = getStoreBusNum(storeTypeEnum, storeCode, installedVersion) ?: 0
+                    currentBusNum > installedBusNum
+                }
             }
             val osList = queryComponentOsName(storeCode, storeTypeEnum)
             // 无构建环境组件是否可以在有构建环境运行

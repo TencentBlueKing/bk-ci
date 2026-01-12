@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -145,7 +145,8 @@ class BuildRecordTaskDao {
         executeCount: Int,
         buildStatus: BuildStatus,
         stageId: String? = null,
-        containerId: String? = null
+        containerId: String? = null,
+        taskIds: Set<String>? = null
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
@@ -158,6 +159,7 @@ class BuildRecordTaskDao {
                 )
             stageId?.let { update.and(STAGE_ID.eq(stageId)) }
             containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
+            taskIds?.let { update.and(TASK_ID.`in`(taskIds)) }
             update.execute()
         }
     }
@@ -169,7 +171,8 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatusSet: Set<BuildStatus>? = null
+        buildStatusSet: Set<BuildStatus>? = null,
+        queryPostTaskFlag: Boolean? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -179,8 +182,12 @@ class BuildRecordTaskDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
-            return dslContext.selectFrom(this)
-                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+            if (queryPostTaskFlag == true) {
+                conditions.add(POST_INFO.isNotNull)
+            } else if (queryPostTaskFlag == false) {
+                conditions.add(POST_INFO.isNull)
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -177,6 +177,20 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
                     updateFlag = updateFlag
                 )
             )
+        )
+    }
+
+    override fun getStoreUpgradeStatusInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String
+    ): Result<String?> {
+        return storeComponentQueryService.getStoreUpgradeStatusInfo(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version
         )
     }
 

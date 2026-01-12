@@ -91,25 +91,27 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        :width="280"
                         :label="$t('operate')"
+                        :width="250"
+                        prop="operate"
+                        fixed="right"
                     >
                         <div
                             slot-scope="props"
                             class="pipeline-history-version-operate"
                         >
                             <bk-button
-                                v-if="props.row.isDraft"
+                                v-if="props.row.isDraft && !isTemplate"
                                 text
                                 @click="goDebugRecords"
                             >
                                 {{ $t('draftExecRecords') }}
                             </bk-button>
                             <rollback-entry
-                                v-if="props.row.canRollback"
+                                v-if="props.row.canRollback && !archiveFlag"
                                 :has-permission="canEdit"
                                 :version="props.row.version"
-                                :pipeline-id="$route.params.pipelineId"
+                                :rollback-id="isTemplate ? $route.params.templateId : $route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-base-version-name="draftBaseVersionName"
@@ -120,10 +122,12 @@
                             />
                             <version-diff-entry
                                 v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
+                                :version="props.row.currentDiffVersion"
+                                :latest-version="props.row.latestDiffVersion"
+                                :archive-flag="archiveFlag"
                             />
                             <bk-button
+                                v-if="!archiveFlag"
                                 text
                                 theme="primary"
                                 :disabled="releaseVersion === props.row.version"
@@ -175,7 +179,8 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             ...mapGetters({
-                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName',
+                isTemplate: 'atom/isTemplate'
             }),
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
@@ -186,10 +191,12 @@
             columns () {
                 return [{
                     prop: 'versionName',
+                    width: 120,
                     label: this.$t('versionNum'),
                     showOverflowTooltip: true
                 }, {
                     prop: 'description',
+                    width: 120,
                     label: this.$t('versionDesc'),
                     showOverflowTooltip: true
                 }, {
@@ -202,8 +209,8 @@
                     }
                 }, {
                     prop: 'creator',
-                    width: 90,
-                    label: this.$t('creator')
+                    width: 120,
+                    label: this.isTemplate ? this.$t('creator') : this.$t('template.lastModifiedBy')
                 }, {
                     prop: 'updateTime',
                     label: this.$t('lastUpdateTime'),
@@ -214,8 +221,8 @@
                     }
                 }, {
                     prop: 'updater',
-                    width: 90,
-                    label: this.$t('audit.operator')
+                    width: 120,
+                    label: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator')
                 }]
             },
             filterTips () {
@@ -224,12 +231,13 @@
             filterData () {
                 return [{
                     name: this.$t('version'),
+                    default: true,
                     id: 'versionName'
                 }, {
                     name: this.$t('versionDesc'),
                     id: 'description'
                 }, {
-                    name: this.$t('audit.operator'),
+                    name: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator'),
                     id: 'creator'
                 }]
             },
@@ -241,6 +249,9 @@
             },
             emptyType () {
                 return this.filterKeys.length > 0 ? 'search-empty' : 'empty'
+            },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
             }
         },
         mounted () {
@@ -254,7 +265,10 @@
             ...mapActions({
                 requestPipelineSummary: 'atom/requestPipelineSummary',
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
-                deletePipelineVersion: 'pipelines/deletePipelineVersion'
+                requestTemplateVersionList: 'templates/requestTemplateVersionList',
+                deletePipelineVersion: 'pipelines/deletePipelineVersion',
+                deleteTempalteVersion: 'templates/deleteTempalteVersion',
+                requestTemplateSummary: 'atom/requestTemplateSummary'
             }),
             handleShown () {
                 this.handlePageChange(1)
@@ -286,12 +300,15 @@
                 })
             },
             async getPipelineVersions (page) {
-                const { projectId, pipelineId } = this.$route.params
-                const res = await this.requestPipelineVersionList({
+                const { projectId, pipelineId, templateId } = this.$route.params
+                const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                const param = this.isTemplate ? { templateId } : { pipelineId }
+                const res = await dataSource({
                     projectId,
-                    pipelineId,
                     page,
                     pageSize: this.pagination.limit,
+                    ...param,
+                    archiveFlag: this.archiveFlag,
                     ...this.filterQuery
                 })
                 Object.assign(this.pagination, {
@@ -306,33 +323,40 @@
                         isDraft,
                         canRollback: !isDraft,
                         isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName]),
+                        currentDiffVersion: !isDraft ? item.version : this.releaseVersion,
+                        latestDiffVersion: !isDraft ? this.releaseVersion : item.version
                     }
                 })
             },
             async deleteVersion (row) {
                 if (this.releaseVersion !== row.version) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId, templateId } = this.$route.params
                     const content = this.$t('deleteVersionConfirm', [row.versionName])
                     const confirm = await navConfirm({
                         content,
                         type: 'error',
                         theme: 'danger'
                     })
+                    const params = {
+                        projectId,
+                        version: row.version,
+                        ...(this.isTemplate ? { templateId } : { pipelineId })
+                    }
                     if (confirm) {
                         try {
-                            await this.deletePipelineVersion({
-                                projectId,
-                                pipelineId,
-                                version: row.version
-                            })
+                            if (this.isTemplate) {
+                                await this.deleteTempalteVersion(params)
+                                this.requestTemplateSummary(this.$route.params)
+                            } else {
+                                await this.deletePipelineVersion(params)
+                                this.requestPipelineSummary(this.$route.params)
+                            }
                             this.handlePageChange(1)
                             this.$showTips({
                                 message: this.$t('delete') + this.$t('version') + this.$t('success'),
                                 theme: 'success'
                             })
-
-                            this.requestPipelineSummary(this.$route.params)
                         } catch (err) {
                             this.$showTips({
                                 message: err.message || err,
@@ -353,7 +377,10 @@
             },
             goDebugRecords () {
                 this.$router.push({
-                    name: 'draftDebugRecord'
+                    name: 'draftDebugRecord',
+                    query: {
+                        ...(this.archiveFlag ? { archiveFlag: this.archiveFlag } : {})
+                    }
                 })
             }
         }
@@ -390,6 +417,7 @@
                 > span {
                     flex-shrink: 0;
                     font-size: 16px;
+                    line-height: 16px;
                 }
                 &.active-version-name .icon-check-circle {
                     color: #2DCB56;

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,19 +32,31 @@ import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.dao.AuthProjectResetRecordDao
+import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
+import com.tencent.devops.auth.dao.AuthSyncDataTaskDao
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
+import com.tencent.devops.auth.pojo.enum.AuthSyncDataType
+import com.tencent.devops.auth.pojo.enum.MemberType
+import com.tencent.devops.auth.pojo.enum.ProjectResetStatus
+import com.tencent.devops.auth.pojo.enum.ProjectResetType
 import com.tencent.devops.auth.provider.rbac.service.AuthResourceService
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
+import com.tencent.devops.auth.provider.rbac.service.RbacCommonService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
@@ -60,6 +72,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionException
 import java.util.concurrent.Executors
 
@@ -83,7 +97,11 @@ class RbacPermissionMigrateService(
     private val authMonitorSpaceDao: AuthMonitorSpaceDao,
     private val permissionResourceMemberService: PermissionResourceMemberService,
     private val migrateResourceAuthorizationService: MigrateResourceAuthorizationService,
-    private val migrateResourceGroupService: MigrateResourceGroupService
+    private val migrateResourceGroupService: MigrateResourceGroupService,
+    private val syncDataTaskDao: AuthSyncDataTaskDao,
+    private val rbacCommonService: RbacCommonService,
+    private val authResourceGroupMemberDao: AuthResourceGroupMemberDao,
+    private val authProjectResetRecordDao: AuthProjectResetRecordDao
 ) : PermissionMigrateService {
 
     companion object {
@@ -200,98 +218,236 @@ class RbacPermissionMigrateService(
         return true
     }
 
-    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
-        logger.info("start to migrate specific resource |$migrateResourceDTO")
-        val projectCodes = migrateResourceDTO.projectCodes ?: return true
-        val resourceType = migrateResourceDTO.resourceType
-        val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
-        val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true &&
-            resourceType != null
-        val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
-            .data!!.filter {
-                val r = it.routerTag
-                if (migrateResourceDTO.includeNullRouterTag == true) {
-                    r == null || r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx")
-                } else {
-                    r != null && (r.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || r.contains("devx"))
-                }
+    /**
+     * 根据参数组合确定重置类型
+     */
+    private fun determineResetType(migrateResourceDTO: MigrateResourceDTO): ProjectResetType {
+        val migrateResource = migrateResourceDTO.migrateResource
+        val hasResourceTypes = migrateResourceDTO.filterResourceTypes.isNotEmpty()
+        val hasActions = migrateResourceDTO.filterActions.isNotEmpty()
+        val isProjectResource = migrateResourceDTO.filterResourceTypes.contains(ResourceTypeId.PROJECT)
+
+        return when {
+            // 场景一：为已有资源增加新操作权限
+            // migrateResource=true, filterResourceTypes=非空, filterActions=非空
+            migrateResource && hasResourceTypes && hasActions -> {
+                logger.info("Reset type: ADD_RESOURCE_ACTION - 为已有资源增加新操作权限")
+                ProjectResetType.ADD_RESOURCE_ACTION
             }
-        val traceId = MDC.get(TraceTag.BIZID)
-        projectInfoList.forEach {
-            migrateProjectsExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                try {
-                    if (isMigrateProjectResource) {
-                        val gradeManagerId = authResourceService.get(
-                            projectCode = it.englishName,
-                            resourceType = AuthResourceType.PROJECT.value,
-                            resourceCode = it.englishName
-                        ).relationId
-                        val isRegisterMonitorPermission = authMonitorSpaceDao.get(
+            // 场景二：新服务接入权限中心（无存量数据）
+            // migrateResource=false, filterResourceTypes=非空, filterActions=空, 非project资源
+            !migrateResource && hasResourceTypes && !hasActions && !isProjectResource -> {
+                logger.info("Reset type: NEW_SERVICE_WITHOUT_DATA - 新服务接入权限中心(无存量数据)")
+                ProjectResetType.NEW_SERVICE_WITHOUT_DATA
+            }
+            // 场景三：已有服务接入权限中心（有存量数据）
+            // migrateResource=true, filterResourceTypes=非空, filterActions=空
+            migrateResource && hasResourceTypes && !hasActions -> {
+                logger.info("Reset type: EXISTING_SERVICE_WITH_DATA - 已有服务接入权限中心(有存量数据)")
+                ProjectResetType.EXISTING_SERVICE_WITH_DATA
+            }
+            // 场景四：增加项目级别操作权限
+            // migrateResource=false, filterResourceTypes=包含project, filterActions=非空
+            !migrateResource && isProjectResource && hasActions -> {
+                logger.info("Reset type: ADD_PROJECT_ACTION - 增加项目级别操作权限")
+                ProjectResetType.ADD_PROJECT_ACTION
+            }
+            // 其他场景
+            else -> {
+                logger.info("Reset type: OTHER - 其他重置场景")
+                ProjectResetType.OTHER
+            }
+        }
+    }
+
+    // 包含修改分级管理员范围/重置项目级别默认组权限/迁移某类资源并创建用户组
+    @Suppress("NestedBlockDepth")
+    private fun resetProjectPermissions(
+        projectCode: String,
+        migrateResource: Boolean,
+        filterResourceTypes: List<String> = emptyList(),
+        filterActions: List<String> = emptyList(),
+        recordId: Long? = null
+    ) {
+        logger.info(
+            "reset project permissions {}|{}|{}|{}|recordId:{}",
+            projectCode, migrateResource, filterResourceTypes, filterActions, recordId
+        )
+        try {
+            val projectInfo = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+            val projectDetails = client.get(ServiceProjectResource::class).get(projectCode).data!!
+            // 修改分级管理员范围
+            permissionGradeManagerService.modifyGradeManager(
+                gradeManagerId = projectInfo.relationId,
+                projectCode = projectCode,
+                projectName = projectDetails.projectName,
+                registerMonitorPermission = true
+            )
+            // 重置项目级用户组权限
+            migrateResourceService.resetOtherProjectLevelGroupPermissions(
+                projectCode = projectCode,
+                projectName = projectInfo.resourceName,
+                registerMonitorPermission = false,
+                filterResourceTypes = filterResourceTypes,
+                filterActions = filterActions
+            )
+            // 迁移资源，若资源从未迁移过，则进行注册。迁移过，将重置资源下用户组的权限
+            if (migrateResource && filterResourceTypes.isNotEmpty()) {
+                filterResourceTypes.forEach {
+                    // 当资源的创建人离职时，将使用当前项目的管理员身份来代替，若管理员也都离职或者过期了，则随机选择一个项目成员
+                    val fixResourceCreator = permissionResourceMemberService.getResourceGroupMembers(
+                        projectCode = projectCode,
+                        resourceType = ResourceTypeId.PROJECT,
+                        resourceCode = projectCode,
+                        group = BkAuthGroup.MANAGER
+                    ).ifEmpty {
+                        authResourceGroupMemberDao.listResourceGroupMember(
                             dslContext = dslContext,
-                            projectCode = it.englishName
-                        ) != null
-                        migrateResourceService.migrateProjectResource(
-                            projectCode = it.englishName,
-                            projectName = it.projectName,
-                            gradeManagerId = gradeManagerId,
-                            registerMonitorPermission = isRegisterMonitorPermission,
-                            migrateManagerGroup = true,
-                            migrateOtherGroup = migrateResourceDTO.migrateProjectDefaultGroup!!
+                            projectCode = projectCode,
+                            minExpiredTime = LocalDateTime.now(),
+                            memberType = MemberType.USER.type
+                        ).map { memberInfo -> memberInfo.memberId }.distinct()
+                    }.ifEmpty {
+                        logger.warn(
+                            "All members of the project have resigned and no migration is required.$projectCode"
                         )
-                    }
-                    if (isMigrateOtherResource) {
-                        migrateResourceService.migrateResource(
-                            projectCode = it.englishName,
-                            resourceType = resourceType!!,
-                            projectCreator = migrateCreatorFixService.getProjectCreator(
-                                projectCode = it.projectCode,
-                                authSystemType = AuthSystemType.V0_AUTH_TYPE,
-                                projectCreator = it.creator!!,
-                                projectUpdator = it.updator
-                            )!!
-                        )
-                    }
+                        return@forEach
+                    }.random()
+                    migrateResourceService.migrateResource(
+                        projectCode = projectCode,
+                        resourceType = it,
+                        projectCreator = fixResourceCreator,
+                        throwException = false
+                    )
                     // 若迁移流水线模板权限，需要修改项目的properties字段
-                    if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
-                        val properties = it.properties ?: ProjectProperties()
+                    if (it == ResourceTypeId.PIPELINE_TEMPLATE) {
+                        val properties = projectDetails.properties ?: ProjectProperties()
                         properties.enableTemplatePermissionManage = true
-                        logger.info("update project(${it.englishName}) properties|$properties")
-                        client.get(ServiceProjectResource::class).updateProjectProperties(it.englishName, properties)
+                        logger.info("update project(${projectDetails.englishName}) properties|$properties")
+                        client.get(ServiceProjectResource::class).updateProjectProperties(
+                            projectDetails.englishName,
+                            properties
+                        )
                     }
-                } catch (ex: Exception) {
-                    logger.warn("migrate resource failed :${it.englishName}|$ex")
                 }
             }
+            // 更新重置记录状态为成功
+            if (recordId != null) {
+                authProjectResetRecordDao.updateStatus(
+                    dslContext = dslContext,
+                    id = recordId,
+                    status = ProjectResetStatus.SUCCESS
+                )
+            }
+        } catch (ex: Exception) {
+            logger.warn("reset project permissions failed :$projectCode|$ex", ex)
+            // 更新重置记录状态为失败
+            if (recordId != null) {
+                authProjectResetRecordDao.updateStatus(
+                    dslContext = dslContext,
+                    id = recordId,
+                    status = ProjectResetStatus.FAILED,
+                    errorMessage = ex.message ?: ex.toString()
+                )
+            }
+        }
+    }
+
+    /**
+     * 根据条件重置项目权限
+     * 场景一：为流水线增加某个操作，如归档流水线权限，此时需要修改分级管理员范围、重置项目级用户组权限、重置流水线级别组权限
+     * 此时参数组合：migrateResource:true;filterResourceTypes:listOf(pipeline);filterActions:listOf(pipeline_archive)
+     * 场景二：新增服务需要接入权限中心，如SCC任务，只需要重置分级管员范围/项目级别用户组权限，不需要迁移资源，因为没有存量数据
+     * 此时参数组合：migrateResource:false;filterResourceTypes:listOf(scc_task);
+     * 场景三：已有的服务需要接入权限中心，如流水线模板，只需要重置分级管员范围/项目级别用户组权限/迁移资源，因为有存量数据
+     * 此时参数组合：migrateResource:true;filterResourceTypes:listOf(pipeline_template);
+     * 场景四：增加一个项目级别的操作，如project_manage-archived-pipeline/project_api-operate
+     * 此时参数组合：migrateResource:false;filterResourceTypes:listOf(project);
+     * filterActions:listOf(project_api-operate,project_api-operate)
+     */
+    override fun resetProjectPermissions(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        logger.info("reset project permissions by conditions {}", migrateResourceDTO)
+        toRbacExecutorService.execute {
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE
+            var count = 0
+            val uuid = UUIDUtil.generate()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.PROJECT_PERMISSIONS_RESET_TASK_TYPE.type
+            )
+            val result = mutableListOf<CompletableFuture<*>>()
+            val traceId = MDC.get(TraceTag.BIZID)
+
+            // 根据参数组合确定重置类型
+            val resetType = determineResetType(migrateResourceDTO)
+
+            do {
+                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                    projectConditionDTO = migrateResourceDTO.conditions,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                migrateProjects.forEach {
+                    // 创建项目重置记录
+                    val recordId = authProjectResetRecordDao.create(
+                        dslContext = dslContext,
+                        taskId = uuid,
+                        projectCode = it.englishName,
+                        resetType = resetType,
+                        migrateResource = migrateResourceDTO.migrateResource,
+                        filterResourceTypes = if (migrateResourceDTO.filterResourceTypes.isNotEmpty()) {
+                            JsonUtil.toJson(migrateResourceDTO.filterResourceTypes)
+                        } else null,
+                        filterActions = if (migrateResourceDTO.filterActions.isNotEmpty()) {
+                            JsonUtil.toJson(migrateResourceDTO.filterActions)
+                        } else null
+                    )
+
+                    result.add(
+                        CompletableFuture.supplyAsync(
+                            {
+                                MDC.put(TraceTag.BIZID, traceId)
+                                resetProjectPermissions(
+                                    projectCode = it.englishName,
+                                    migrateResource = migrateResourceDTO.migrateResource,
+                                    filterResourceTypes = migrateResourceDTO.filterResourceTypes,
+                                    filterActions = migrateResourceDTO.filterActions,
+                                    recordId = recordId
+                                )
+                            },
+                            migrateProjectsExecutorService
+                        )
+                    )
+                }
+                offset += limit
+                count += migrateProjects.size
+            } while (migrateProjects.size == limit)
+            CompletableFuture.allOf(*result.toTypedArray()).join()
+            syncDataTaskDao.recordSyncDataTask(
+                dslContext = dslContext,
+                taskId = uuid,
+                taskType = AuthSyncDataType.PROJECT_PERMISSIONS_RESET_TASK_TYPE.type
+            )
+            logger.info("migrate specific resource of all projects successfully :$count")
         }
         return true
     }
 
-    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
-        logger.info("start to migrate specific resource of all project|$migrateResourceDTO")
-        toRbacExecutorService.submit {
-            var offset = 0
-            val limit = PageUtil.MAX_PAGE_SIZE
-            var count = 0
-            do {
-                val migrateProjects = client.get(ServiceProjectResource::class).listProjectsByCondition(
-                    projectConditionDTO = ProjectConditionDTO(
-                        routerTag = AuthSystemType.RBAC_AUTH_TYPE,
-                        enabled = true,
-                        includeNullRouterTag = migrateResourceDTO.includeNullRouterTag
-                    ),
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                migrateSpecificResource(
-                    migrateResourceDTO = migrateResourceDTO.copy(
-                        projectCodes = migrateProjects.map { it.englishName })
-                )
-                offset += limit
-                count += migrateProjects.size
-            } while (migrateProjects.size == limit)
-            logger.info("migrate specific resource of all projects successfully :$count")
-        }
+    override fun resetPermissionsWhenEnabledProject(projectCode: String): Boolean {
+        logger.info("reset permissions when enabled project:{}", projectCode)
+        resetProjectPermissions(
+            projectCode = projectCode,
+            migrateResource = true,
+            filterResourceTypes = rbacCommonService.listResourceTypes()
+                .map { it.resourceType }.filterNot { it == ResourceTypeId.PROJECT },
+            filterActions = emptyList()
+        )
         return true
     }
 
@@ -321,7 +477,7 @@ class RbacPermissionMigrateService(
                 )
             }
             if (!asyncMigrateOtherGroup) {
-                migrateResourceService.migrateProjectOtherGroup(
+                migrateResourceService.resetOtherProjectLevelGroupPermissions(
                     projectCode = projectInfo.projectCode,
                     projectName = projectInfo.resourceName,
                     registerMonitorPermission = true

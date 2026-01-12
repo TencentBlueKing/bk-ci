@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -70,7 +70,7 @@ class BuildLessListener @Autowired constructor(
             if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.BUILD_LESS)) {
                 logger.warn("[${event.buildId}]|BUILD_LESS| AgentLess Job quota exceed quota.")
                 with(event) {
-                    jobQuotaService.jobQuoteOverrunHandler(
+                    jobQuotaService.handleJobQuotaOverrun(
                         logPrefix = "$projectId$pipelineId$buildId$vmSeqId$executeCount",
                         buildId = buildId,
                         containerId = containerId,

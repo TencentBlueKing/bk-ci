@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,11 +31,14 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
+import org.slf4j.LoggerFactory
 
 @Schema(title = "定时触发")
 data class TimerTriggerElement(
@@ -45,6 +48,10 @@ data class TimerTriggerElement(
     override var id: String? = null,
     @get:Schema(title = "状态", required = false)
     override var status: String? = null,
+    @get:Schema(title = "插件版本", required = false)
+    override var version: String = "1.*",
+    @get:Schema(title = "插件用户ID", required = false)
+    override var stepId: String? = null,
     // express是老的接口数据， 后面要废弃掉
     @get:Schema(title = "定时表达式", required = false)
     @Deprecated(message = "@see advanceExpression")
@@ -62,10 +69,13 @@ data class TimerTriggerElement(
     @get:Schema(title = "代码库HashId", required = false)
     val repoHashId: String? = null,
     @get:Schema(title = "指定代码库别名", required = false)
-    val repoName: String? = null
+    val repoName: String? = null,
+    @get:Schema(title = "定时启动参数,格式: [{key:'id',value:1},{key:'name',value:'xxx'}]", required = false)
+    val startParams: String? = null
 ) : Element(name, id, status) {
     companion object {
         const val classType = "timerTrigger"
+        val logger = LoggerFactory.getLogger(TimerTriggerElement::class.java)
     }
 
     override fun getClassType() = classType
@@ -139,5 +149,21 @@ data class TimerTriggerElement(
         return repositoryType == TriggerRepositoryType.SELF ||
                 repositoryType == TriggerRepositoryType.ID && !repoHashId.isNullOrBlank() ||
                 repositoryType == TriggerRepositoryType.NAME && !repoName.isNullOrBlank()
+    }
+
+    /**
+     * 启动参数
+     */
+    fun convertStartParams() = if (startParams.isNullOrBlank()) {
+        null
+    } else {
+        try {
+            JsonUtil.to(startParams, object : TypeReference<List<Map<String, Any>>>() {})
+        } catch (ignored: Exception) {
+            // 跳过，存在异常启动参数
+            logger.warn("startParams is not a valid json, skip it: $startParams")
+            listOf()
+        }.filter { it.containsKey("key") }
+                .associate { it["key"].toString() to (it["value"]?.toString() ?: "") }
     }
 }

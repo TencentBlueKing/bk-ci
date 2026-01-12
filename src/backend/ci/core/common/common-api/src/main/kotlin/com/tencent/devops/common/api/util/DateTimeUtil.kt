@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,6 +49,14 @@ fun LocalDateTime.timestamp(): Long {
 fun LocalDateTime.timestampmilli(): Long {
     val zoneId = ZoneId.systemDefault()
     return this.atZone(zoneId).toInstant().toEpochMilli()
+}
+
+fun Long?.toLocalDateTimeOrDefault(): LocalDateTime {
+    return this?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) } ?: LocalDateTime.now()
+}
+
+fun Long?.toLocalDateTime(): LocalDateTime? {
+    return this?.let { DateTimeUtil.convertTimestampToLocalDateTime(it / 1000) }
 }
 
 @Suppress("ALL")
@@ -223,8 +231,8 @@ object DateTimeUtil {
         val minute = (time - hour * timeGap * timeGap * million) / (timeGap * million)
         val second = (time - hour * timeGap * timeGap * million - minute * timeGap * million) / million
         return (if (hour == zero) "00" else if (hour >= ten) hour.toString() else "0$hour").toString() + "时" +
-                (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
-                (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
+            (if (minute == zero) "00" else if (minute >= ten) minute else "0$minute") + "分" +
+            (if (second == zero) "00" else if (second >= ten) second.toShort() else "0$second") + "秒"
     }
 
     fun formatMilliTime(time: Long): String {
@@ -242,8 +250,8 @@ object DateTimeUtil {
         val minute = (time - hour * 60 * 60 * 1000) / (60 * 1000)
         val second = (time - hour * 60 * 60 * 1000 - minute * 60 * 1000) / 1000
         return (if (hour == 0L) "00" else if (hour >= 10) hour.toString() else "0$hour").toString() + "时" +
-                (if (minute == 0L) "00" else if (minute >= 10) minute else "0$minute") + "分" +
-                (if (second == 0L) "00" else if (second >= 10) second.toShort() else "0$second") + "秒"
+            (if (minute == 0L) "00" else if (minute >= 10) minute else "0$minute") + "分" +
+            (if (second == 0L) "00" else if (second >= 10) second.toShort() else "0$second") + "秒"
     }
 
     fun formatMillSecond(mss: Long): String {

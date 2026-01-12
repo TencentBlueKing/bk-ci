@@ -34,35 +34,44 @@ spec:
                python3 do_migrate.py -t {{ .Values.config.bkCiIamApigwUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i --apigateway
               done
               
+              # 生成jwt_token
+              chmod +x ../../scripts/bk-ci-gen-jwt-token.sh
+              JWT_TOKEN=$(../../scripts/bk-ci-gen-jwt-token.sh '{{ .Values.config.bkCiJwtRsaPrivateKey}}' "init-iam")
+
+              # 调用接口
               services="auth"
               for service in $services
               do
                 until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
-                do 
+                do
                   echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
                   sleep 2;
                 done
                 echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done
-              
+
               # 注册auth回调
               echo "{{ include "bkci.names.fullname" . }}-auth is available";
               sed -i 's/bk-ci.service.consul/{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}/g' ../ms-init/auth/iam-callback-resource-registere.conf
               iam_json_file="../ms-init/auth/iam-callback-resource-registere.conf"
-              curl -f -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/iam/callback/" 
+              curl -f -X POST -H "Content-Type:application/json" -d "@$iam_json_file" "http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/iam/callback/" -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
 
               # 迁移所有项目的特定资源类型资源
-              curl -f -X 'POST' \
-                'http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/migrate/migrateSpecificResourceOfAllProject' \
-                -H 'accept: application/json' \
-                -H 'Content-Type: application/json' \
-                -d '{
-                "resourceType": "pipeline",
-                "includeNullRouterTag": true,
-                "migrateProjectResource": true,
-                "migrateProjectDefaultGroup": true,
-                "migrateOtherResource": true
-              }'
+              curl -X 'POST' \
+              'http://{{ include "bkci.names.fullname" . }}-auth.{{ .Release.Namespace }}.svc.cluster.local/api/op/auth/migrate/resetProjectPermissions' \
+              -H 'accept: application/json' \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "conditions": {
+                  "enabled": true
+                },
+                "migrateResource": true,
+                "filterResourceTypes": [
+                  "pipeline",
+                  "pipeline_template"
+                ],
+                "filterActions": []
+              }' -H "X-DEVOPS-JWT-TOKEN: $JWT_TOKEN"
       restartPolicy: OnFailure
 {{- end -}}
 {{- end -}}

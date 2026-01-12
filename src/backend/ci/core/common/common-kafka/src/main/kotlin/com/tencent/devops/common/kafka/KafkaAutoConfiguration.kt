@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,7 +51,7 @@ class KafkaAutoConfiguration {
 
     @Bean
     fun producerConfigs(@Autowired kafkaProperties: KafkaProperties): Map<String, Any> {
-        val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties())
+        val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties(null))
         props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JsonSerializer::class.java
 
@@ -70,7 +70,7 @@ class KafkaAutoConfiguration {
 
     @Bean
     fun stringProducerConfigs(@Autowired kafkaProperties: KafkaProperties): Map<String, Any> {
-        val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties())
+        val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties(null))
         props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
 
@@ -89,7 +89,7 @@ class KafkaAutoConfiguration {
 
     @Bean
     fun consumerFactory(@Autowired kafkaProperties: KafkaProperties): ConsumerFactory<String, Any> {
-        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties())
+        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties(null))
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
 
@@ -109,7 +109,7 @@ class KafkaAutoConfiguration {
 
     @Bean
     fun stringConsumerFactory(@Autowired kafkaProperties: KafkaProperties): ConsumerFactory<String, String> {
-        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties())
+        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties(null))
         props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
 

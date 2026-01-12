@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
@@ -63,6 +64,7 @@ import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -83,8 +85,8 @@ class StartActionTaskContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-                !commandContext.buildStatus.isFinish() &&
-                commandContext.container.matrixGroupFlag != true
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -137,7 +139,11 @@ class StartActionTaskContainerCmd(
                     stepId = null,
                     executeCount = executeCount,
                     buildStatus = commandContext.buildStatus.name,
-                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_JOB_START,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp()
+                    )
                 )
             )
         }
@@ -267,8 +273,8 @@ class StartActionTaskContainerCmd(
 
         LOG.info(
             "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-                    "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-                    "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
         )
 
         if (!needTerminate && breakFlag) {
@@ -281,7 +287,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-                FastKillUtils.isTerminateCode(containerContext.event.errorCode)
+            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -357,14 +363,14 @@ class StartActionTaskContainerCmd(
         } catch (ignore: Throwable) {
             buildLogPrinter.addErrorLine(
                 message = "[EXPRESSION_ERROR] failed to parse condition(${additionalOptions?.customCondition}) " +
-                        "with error: ${ignore.message}",
+                    "with error: ${ignore.message}",
                 buildId = buildId, containerHashId = containerHashId, tag = taskId, executeCount = executeCount ?: 1,
                 jobId = null, stepId = stepId
             )
             LOG.error(
                 "BKSystemErrorMonitor|findNeedToRunTask|$buildId|$source|" +
-                        "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
-                        "customCondition=${additionalOptions?.customCondition}",
+                    "EXPRESSION_CHECK_FAILED|$stageId|j($containerId)|$taskId|" +
+                    "customCondition=${additionalOptions?.customCondition}",
                 ignore
             )
             Pair(false, ignore)
@@ -390,9 +396,13 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 taskBuildRecordService.updateTaskStatus(
-                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                    stageId = stageId, containerId = containerId, taskId = taskId,
-                    executeCount = executeCount ?: 1, buildStatus = taskStatus, operation = "taskNeedTerminate"
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount ?: 1,
+                    buildStatus = taskStatus,
+                    operation = "taskNeedTerminate"
                 )
                 // 打印构建日志
                 message.append(
@@ -422,7 +432,7 @@ class StartActionTaskContainerCmd(
                     executeCount = executeCount ?: 1,
                     buildStatus = taskStatus
                 )
-                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
+                val (updateTaskStatusInfos, _) = taskBuildRecordService.taskEnd(endParam)
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
@@ -432,8 +442,6 @@ class StartActionTaskContainerCmd(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
                     taskId = taskId,
                     executeCount = executeCount ?: 1,
                     buildStatus = BuildStatus.FAILED,
@@ -573,7 +581,7 @@ class StartActionTaskContainerCmd(
             toDoTask = pipelineBuildTask
             LOG.info(
                 "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                        "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
             )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
@@ -663,8 +671,6 @@ class StartActionTaskContainerCmd(
                     projectId = currentTask.projectId,
                     pipelineId = currentTask.pipelineId,
                     buildId = currentTask.buildId,
-                    stageId = currentTask.stageId,
-                    containerId = currentTask.containerId,
                     taskId = currentTask.taskId,
                     executeCount = currentTask.executeCount ?: 1,
                     buildStatus = taskStatus,

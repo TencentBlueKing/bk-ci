@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -54,8 +54,10 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -384,8 +386,10 @@ class GitScmService @Autowired constructor(
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId = projectId, credentialId = credentialId,
-            publicKey = encoder.encodeToString(pair.publicKey)
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             throw ErrorCodeException(
@@ -559,6 +563,87 @@ class GitScmService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.warn("Fail to get credential: $credentialId", ignored)
             null
+        }
+    }
+
+    fun getTag(
+        projectId: String,
+        repo: Repository,
+        tagName: String
+    ): GitTagInfo? {
+        val type = getType(repo) ?: return null
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTagInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    tagName = tagName
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("fail to get tag info", e)
+            null
+        }
+    }
+
+    fun getTapdItem(
+        repo: Repository,
+        projectId: String,
+        refType: String,
+        iid: Long
+    ): List<TapdWorkItem> {
+        val type = getType(repo) ?: return listOf()
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType,
+                scmType = repo.getScmType(),
+                repoUrl = repo.url
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getTapdWorkItems(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    refType = refType,
+                    iid = iid
+                ).data
+            } ?: listOf()
+        } catch (e: Exception) {
+            logger.warn("fail to get tapd item", e)
+            listOf()
         }
     }
 }

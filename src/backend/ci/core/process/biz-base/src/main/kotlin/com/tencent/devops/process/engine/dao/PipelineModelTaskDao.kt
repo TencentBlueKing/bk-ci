@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,15 +38,14 @@ import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
-import org.jooq.impl.DSL.groupConcatDistinct
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -235,8 +234,7 @@ class PipelineModelTaskDao {
             val tpi = TPipelineInfo.T_PIPELINE_INFO
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
-                PROJECT_ID.`as`(KEY_PROJECT_ID),
-                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION)
+                PROJECT_ID.`as`(KEY_PROJECT_ID)
             )
                 .from(this)
                 .join(tpi)
@@ -286,15 +284,18 @@ class PipelineModelTaskDao {
         projectId: String? = null,
         version: String? = null,
         startUpdateTime: LocalDateTime? = null,
-        endUpdateTime: LocalDateTime? = null
+        endUpdateTime: LocalDateTime? = null,
+        includePipelineInfoCondition: Boolean = true
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.ATOM_CODE.eq(atomCode))
-        val tpi = TPipelineInfo.T_PIPELINE_INFO
-        if (!projectId.isNullOrEmpty()) {
-            condition.add(tpi.PROJECT_ID.eq(projectId))
+        if (includePipelineInfoCondition) {
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            if (!projectId.isNullOrEmpty()) {
+                condition.add(tpi.PROJECT_ID.eq(projectId))
+            }
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
         }
-        condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
         if (!version.isNullOrEmpty()) {
             condition.add(a.ATOM_VERSION.contains(version))
         }
@@ -346,6 +347,71 @@ class PipelineModelTaskDao {
                 .and(CONTAINER_ID.eq(containerId))
                 .and(TASK_ID.eq(taskId))
                 .execute()
+        }
+    }
+
+    fun selectPipelineInfosByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null,
+        page: Int,
+        pageSize: Int
+    ): Result<out Record>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime
+            )
+
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            val baseStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                PROJECT_ID.`as`(KEY_PROJECT_ID),
+            )
+                .from(this)
+                .join(tpi)
+                .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
+                .where(condition)
+                .groupBy(PIPELINE_ID)
+                .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
+
+
+    fun selectPipelineAtomVersions(
+        dslContext: DSLContext,
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null,
+        pipelineIds: Set<String>,
+        projectIds: Set<String>,
+    ): Result<out Record>? {
+
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val queryPipelineModeCondition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime,
+                includePipelineInfoCondition = false
+            )
+            return dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                ATOM_VERSION.`as`(KEY_VERSION)
+            )
+                .from(this)
+                .where(queryPipelineModeCondition)
+                .and(
+                    PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.`in`(projectIds))
+                ).fetch()
         }
     }
 }

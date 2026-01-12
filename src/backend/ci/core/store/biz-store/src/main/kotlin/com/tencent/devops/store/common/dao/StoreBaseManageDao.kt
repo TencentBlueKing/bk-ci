@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -241,5 +242,21 @@ class StoreBaseManageDao {
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
                 .execute()
         }
+    }
+
+    fun getStoreBaseRecordsByStoreType(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        offset: Int,
+        limit: Int
+    ): List<TStoreBaseRecord>? {
+        val t = TStoreBase.T_STORE_BASE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(t.STORE_TYPE.eq(storeType.type.toByte()))
+        return dslContext.selectFrom(t)
+            .where(conditions)
+            .orderBy(t.ID.asc())
+            .limit(offset, limit)
+            .fetch()
     }
 }

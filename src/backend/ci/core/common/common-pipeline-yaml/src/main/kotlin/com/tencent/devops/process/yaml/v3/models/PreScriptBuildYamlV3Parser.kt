@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,12 +30,12 @@ package com.tencent.devops.process.yaml.v3.models
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.process.yaml.pojo.YamlVersion
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 
 /**
  * model
@@ -51,18 +51,20 @@ data class PreScriptBuildYamlV3Parser(
     @JsonProperty("on")
     var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
-    override var stages: List<PreStage>? = null,
-    override var jobs: LinkedHashMap<String, PreJob>? = null,
-    override var steps: List<PreStep>? = null,
-    override var extends: Extends? = null,
+    override var stages: List<IPreStage>? = null,
+    override var jobs: LinkedHashMap<String, IPreJob>? = null,
+    override var steps: List<IPreStep>? = null,
+    override var extends: PreExtends? = null,
     override var resources: Resources?,
     var notices: List<PacNotices>?,
-    override var finally: LinkedHashMap<String, PreJob>? = null,
+    override var finally: LinkedHashMap<String, IPreJob>? = null,
     override val concurrency: Concurrency? = null,
     override val disablePipeline: Boolean? = null,
     override val recommendedVersion: RecommendedVersion? = null,
     override val customBuildNum: String? = null,
-    override val syntaxDialect: String?
+    override val syntaxDialect: String?,
+    override val failIfVariableInvalid: Boolean? = null,
+    override val cancelPolicy: String? = null
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V3_0
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,20 +32,24 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -95,7 +99,11 @@ interface ServiceEnvironmentResource {
         projectId: String,
         @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
-        envHashId: String
+        envHashId: String,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("true")
+        checkPermission: Boolean? = true
     ): Result<EnvWithPermission>
 
     @Operation(summary = "删除环境")
@@ -251,5 +259,33 @@ interface ServiceEnvironmentResource {
         envHashId: String,
         @Parameter(description = "共享的项目列表", required = true)
         sharedProjects: SharedProjectInfoWrap
+    ): Result<Boolean>
+
+    @Operation(summary = "停用或者启用节点")
+    @PUT
+    @Path("/{projectId}/enable_node")
+    fun enableNodeEnv(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?,
+        @Parameter(description = "节点 hashId", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "环境名称", required = true)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "节点名称", required = true)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "启动或者停用", required = true)
+        @QueryParam("enableNode")
+        @BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE, required = true)
+        enableNode: Boolean
     ): Result<Boolean>
 }

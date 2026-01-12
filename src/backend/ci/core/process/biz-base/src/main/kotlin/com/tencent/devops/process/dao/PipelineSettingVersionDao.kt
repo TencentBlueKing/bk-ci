@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
@@ -78,7 +79,9 @@ class PipelineSettingVersionDao {
                 FAILURE_SUBSCRIPTION,
                 PIPELINE_AS_CODE_SETTINGS,
                 VERSION,
-                MAX_CON_RUNNING_QUEUE_SIZE
+                MAX_CON_RUNNING_QUEUE_SIZE,
+                FAIL_IF_VARIABLE_INVALID,
+                BUILD_CANCEL_POLICY
             ).values(
                 id,
                 setting.projectId,
@@ -101,7 +104,9 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 },
                 version,
-                setting.maxConRunningQueueSize ?: -1
+                setting.maxConRunningQueueSize ?: -1,
+                setting.failIfVariableInvalid,
+                setting.buildCancelPolicy.value
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -118,6 +123,39 @@ class PipelineSettingVersionDao {
                 .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
                     JsonUtil.toJson(self, false)
                 })
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
+                .execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        setting: PipelineSetting
+    ) {
+        val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+        val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            dslContext.update(this)
+                .set(NAME, setting.pipelineName)
+                .set(DESC, setting.desc)
+                .set(LABELS, setting.labels.let { self -> JsonUtil.toJson(self, false) })
+                .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
+                .set(BUILD_NUM_RULE, setting.buildNumRule)
+                .set(CONCURRENCY_GROUP, setting.concurrencyGroup)
+                .set(CONCURRENCY_CANCEL_IN_PROGRESS, setting.concurrencyCancelInProgress)
+                .set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(successSubscriptionList, false))
+                .set(FAILURE_SUBSCRIPTION, JsonUtil.toJson(failSubscriptionList, false))
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize ?: -1)
+                .set(PIPELINE_AS_CODE_SETTINGS, setting.pipelineAsCodeSettings?.let { self ->
+                    JsonUtil.toJson(self, false)
+                })
+                .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
+                .where(PROJECT_ID.eq(setting.projectId))
+                .and(PIPELINE_ID.eq(setting.pipelineId))
+                .and(VERSION.eq(setting.version))
                 .execute()
         }
     }
@@ -148,17 +186,6 @@ class PipelineSettingVersionDao {
                 .and(PROJECT_ID.eq(projectId))
                 .orderBy(VERSION.desc()).limit(1)
                 .fetchOne(mapper)
-        }
-    }
-
-    fun getSettingByPipelineIds(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): List<PipelineSettingVersion> {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch(mapper)
         }
     }
 
@@ -249,7 +276,9 @@ class PipelineSettingVersionDao {
                     maxConRunningQueueSize = t.maxConRunningQueueSize,
                     pipelineAsCodeSettings = t.pipelineAsCodeSettings?.let { self ->
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
-                    }
+                    },
+                    failIfVariableInvalid = t.failIfVariableInvalid,
+                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy)
                 )
             }
         }

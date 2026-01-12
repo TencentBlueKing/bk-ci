@@ -28,6 +28,7 @@
                     </bk-button>
                 </template>
                 <bk-input
+                    class="search-input"
                     v-model="searchStr"
                     :clearable="true"
                     :placeholder="$t('newui.pipelineParam.searchPipelineVar')"
@@ -38,17 +39,14 @@
 
         <div
             class="container-bottom"
-            :style="{ marginTop: `${offsetData}px` }"
+            :style="{ marginTop: `${offsetData}px`, height: `calc(100% - ${(isAlertTips && editable) ? '89' : '54'}px)` }"
             v-if="!showSlider"
         >
             <param-group
                 v-for="group in pipelineParamGroups"
-                :editable="editable"
+                v-bind="group"
                 :key="group.key"
-                :title="group.title"
-                :tips="group.tips"
-                :item-num="group.list.length"
-                :list="group.list"
+                :editable="editable"
                 :handle-edit="handleEdit"
                 :handle-update="handleUpdate"
                 :handle-sort="handleSort"
@@ -56,7 +54,7 @@
         </div>
 
         <div
-            v-else-if="editable"
+            v-else
             class="current-edit-param-item"
         >
             <div class="edit-var-header">
@@ -74,6 +72,7 @@
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
+                    :disabled="!editable"
                     :param-type="paramType"
                     :update-param="updateEditItem"
                     :reset-edit-item="resetEditItem"
@@ -101,8 +100,11 @@
 </template>
 
 <script>
-    import { navConfirm, deepCopy } from '@/utils/util'
+    import {
+        getParamsGroupByLabel
+    } from '@/store/modules/atom/paramsConfig'
     import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { deepCopy, navConfirm } from '@/utils/util'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
 
@@ -121,6 +123,10 @@
                 required: true
             },
             editable: {
+                type: Boolean,
+                default: true
+            },
+            canEditParam: {
                 type: Boolean,
                 default: true
             }
@@ -146,14 +152,26 @@
             },
             globalParams: {
                 get () {
-                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
+                    return this.params.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG').map(i => ({
+                        ...i,
+                        category: i.category ?? ''
+                    }))
                 },
                 set (params) {
                     this.updateContainerParams('params', [...params, ...this.versions])
                 }
             },
             renderParams () {
-                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id.includes(this.searchStr) || item.name.includes(this.searchStr) || item.desc.includes(this.searchStr)))
+                return !this.searchStr ? this.globalParams : this.globalParams.filter(item => (item.id?.includes(this.searchStr) || item.name?.includes(this.searchStr) || item.desc?.includes(this.searchStr)))
+            },
+            requiredParamList () {
+                return this.renderParams.filter(item => !item.constant && item.required)
+            },
+            constantParamList () {
+                return this.renderParams.filter(item => item.constant === true)
+            },
+            otherParamList () {
+                return this.renderParams.filter(item => !item.constant && !item.required)
             },
             pipelineParamGroups () {
                 return [
@@ -161,43 +179,65 @@
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
                         tips: this.$t('newui.pipelineParam.buildParamTips'),
-                        list: this.renderParams.filter(item => !item.constant && item.required)
+                        itemNum: this.requiredParamList.length,
+                        listMap: getParamsGroupByLabel(this.requiredParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.requiredParamList).sortedCategories ?? []
                     },
                     {
                         key: 'constantParam',
                         title: this.$t('newui.pipelineParam.constParam'),
-                        list: this.renderParams.filter(item => item.constant === true)
+                        itemNum: this.constantParamList.length,
+                        listMap: getParamsGroupByLabel(this.constantParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.constantParamList).sortedCategories ?? []
                     },
                     {
                         key: 'otherParam',
                         title: this.$t('newui.pipelineParam.otherVar'),
-                        list: this.renderParams.filter(item => !item.constant && !item.required)
+                        itemNum: this.otherParamList.length,
+                        listMap: getParamsGroupByLabel(this.otherParamList).listMap ?? {},
+                        sortedCategories: getParamsGroupByLabel(this.otherParamList).sortedCategories ?? []
                     }
                 ]
             },
             sliderTitle () {
                 return `${this.editIndex === -1 ? this.$t('editPage.append') : this.$t('edit')}${this.paramType === 'constant' ? this.$t('newui.pipelineParam.constTitle') : this.$t('newui.pipelineParam.varTitle')}`
+            },
+            sortParamsList () {
+                return [
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.requiredParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.constantParamList)),
+                    ...this.flattenMultipleObjects(getParamsGroupByLabel(this.otherParamList))
+                ]
             }
         },
         methods: {
-            handleSort (preEleId, newEleId) {
+            flattenMultipleObjects (objects) {
+                return Object.values(objects).flat()
+            },
+            initParamsSort () {
+                this.updateContainerParams('params', [...this.sortParamsList, ...this.versions])
+            },
+         
+            handleSort (preEleId, newEleId, isPrefix) {
                 // 从原列表找出被拖拽的element
                 const newEle = this.globalParams.find(item => item.id === newEleId)
                 // 从原列表中删除该element
                 const oldIndex = this.globalParams.findIndex(item => item.id === newEleId)
                 this.globalParams.splice(oldIndex, 1)
-                // 把拖拽的element插入到preEleId对应的element后面
+                // 把拖拽的element插入到preEleId对应的element前面或后面
                 const preEleIndex = this.globalParams.findIndex(item => item.id === preEleId)
-                this.globalParams.splice(preEleIndex + 1, 0, newEle)
+                this.globalParams.splice((isPrefix ? preEleIndex : preEleIndex + 1), 0, newEle)
+                this.initParamsSort()
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             // toTop为true，表示移到最前, 为false为delete操作
             handleUpdate (paramId, toTop = false) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 const index = this.globalParams.findIndex(item => item.id === paramId)
                 const item = this.globalParams.find(item => item.id === paramId)
+                const preEleIndex = this.globalParams.findIndex(i => i.category === item.category)
                 this.globalParams.splice(index, 1)
-                toTop && this.globalParams.unshift(item)
+                toTop && this.globalParams.splice(preEleIndex, 0, item)
                 this.updateContainerParams('params', [...this.globalParams, ...this.versions])
             },
             handleAdd (type = 'var') {
@@ -207,7 +247,7 @@
                 this.paramType = type
             },
             handleEdit (paramId) {
-                if (!this.editable) return
+                if (!this.canEditParam) return
                 this.showSlider = true
                 this.editIndex = this.globalParams.findIndex(item => item.id === paramId)
                 this.sliderEditItem = deepCopy(this.globalParams.find(item => item.id === paramId) || {})
@@ -233,11 +273,12 @@
                 // 单选、复选类型， 需要先校验options
                 const optionValid = await this.validParamOptions()
                 this.$validator.validate('pipelineParam.*').then((result) => {
+                    const {isInvalid, ...param} = this.sliderEditItem
                     if (result && optionValid) {
                         if (this.editIndex > -1) {
-                            this.globalParams[this.editIndex] = this.sliderEditItem
+                            this.globalParams[this.editIndex] = param
                         } else {
-                            this.globalParams.push(this.sliderEditItem)
+                            this.globalParams.push(param)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
                         this.hideSlider(false)
@@ -291,7 +332,6 @@
         .container-bottom {
             width: 100%;
             position: absolute;
-            height: calc(100% - 89px);
             overflow-y: auto;
         }
         
@@ -321,7 +361,11 @@
             justify-content: space-between;
             .var-btn {
                 min-width: 88px;
+                width: -webkit-fill-available;
                 margin-right: 8px;
+            }
+            .search-input {
+                min-width: 215px;
             }
         }
         .variable-content {

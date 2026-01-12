@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,11 +40,13 @@ import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
@@ -72,6 +74,18 @@ class RbacPermissionResourceService(
         async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val resource = authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resource != null) {
+            logger.info(
+                "This resource has been registered. no need to register again" +
+                    ":$projectCode|$resourceType$resourceCode"
+            )
+            return true
+        }
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
@@ -294,6 +308,23 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode
             )
             if (resourceInfo != null) {
+                val projectInfo = authResourceService.get(
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode
+                )
+                val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
+                val deleteResourceName = "${resourceInfo.resourceName}[$deleteTime]"
+                // 权限中心删除是异步删除,当删除后,立马创建重名资源,权限中心会报资源冲突,所以需要先修改资源名称后删除
+                permissionSubsetManagerService.modifySubsetManager(
+                    subsetManagerId = resourceInfo.relationId,
+                    projectCode = projectCode,
+                    projectName = projectInfo.resourceName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = deleteResourceName,
+                    iamResourceCode = resourceInfo.iamResourceCode
+                )
                 permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
             }
         }

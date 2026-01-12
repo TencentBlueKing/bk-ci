@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -54,8 +55,6 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -65,6 +64,8 @@ import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -1677,6 +1678,7 @@ class PipelineBuildDao {
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,
+        artifactQualityList: String?,
         projectId: String,
         pipelineId: String,
         buildId: String
@@ -1684,6 +1686,7 @@ class PipelineBuildDao {
         val success = with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -1692,11 +1695,29 @@ class PipelineBuildDao {
         return if (!success) with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
+                .set(ARTIFACT_QUALITY_INFO, artifactQualityList)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         } else 1
+    }
+
+    fun updateBuildVersionChangeFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        versionChange: Boolean
+    ) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(VERSION_CHANGE, versionChange)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
     }
 
     fun updateBuildMaterial(dslContext: DSLContext, projectId: String, buildId: String, material: String?) {
@@ -1926,6 +1947,17 @@ class PipelineBuildDao {
         }
     }
 
+    fun getDebugFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
     fun clearDebugHistory(
         dslContext: DSLContext,
         projectId: String,
@@ -1982,6 +2014,9 @@ class PipelineBuildDao {
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.getObjectMapper().readValue(self) as List<FileInfo>
                     },
+                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
+                    },
                     retryFlag = t.isRetry,
                     executeCount = t.executeCount ?: 1,
                     executeTime = t.executeTime ?: 0,
@@ -1999,7 +2034,8 @@ class PipelineBuildDao {
                     recommendVersion = t.recommendVersion,
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
-                    debug = false // #8164 原历史表中查出的记录均为非调试的记录
+                    debug = false, // #8164 原历史表中查出的记录均为非调试的记录
+                    versionChange = t.versionChange
                 )
             }
         }
@@ -2050,6 +2086,9 @@ class PipelineBuildDao {
                     artifactList = t.artifactInfo?.let { self ->
                         JsonUtil.to(self, object : TypeReference<List<FileInfo>?>() {})
                     },
+                    artifactQualityList = t.artifactQualityInfo?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<ArtifactQualityMetadataAnalytics>
+                    },
                     buildMsg = t.buildMsg,
                     errorType = t.errorType,
                     errorCode = t.errorCode,
@@ -2061,7 +2100,8 @@ class PipelineBuildDao {
                     recommendVersion = t.recommendVersion,
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
-                    debug = true // #8164 原历史表中查出的记录均为非调试的记录
+                    debug = true, // #8164 原历史表中查出的记录均为非调试的记录
+                    versionChange = t.versionChange
                 )
             }
         }

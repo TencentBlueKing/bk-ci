@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -61,3 +61,4 @@ export const imageStatusList = {
     UNDERCARRIAGING: 'store.下架中',
     UNDERCARRIAGED: 'store.已下架'
 }
+export const STORE_TEMPLATE_TABLE_COLUMN_CACHE = 'STORE_TEMPLATE_TABLE_COLUMN_CACHE'

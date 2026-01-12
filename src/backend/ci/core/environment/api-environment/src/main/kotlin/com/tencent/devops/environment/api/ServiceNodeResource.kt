@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,9 +29,12 @@ package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -77,6 +80,27 @@ interface ServiceNodeResource {
         @Parameter(description = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeWithPermission>>
+
+    @Operation(summary = "获取项目节点详情")
+    @POST
+    @Path("/projects/{projectId}/node_status")
+    fun getNodeStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
+    ): Result<NodeWithPermission>
 
     @Operation(summary = "根据hashId获取项目节点列表(不校验权限)")
     @POST
@@ -191,4 +215,65 @@ interface ServiceNodeResource {
         @QueryParam("envName")
         envName: String?
     ): Result<List<NodeWithPermission>>
+
+    @Operation(summary = "获取项目节点列表")
+    @POST
+    @Path("/projects/{projectId}/fetch_nodes")
+    fun fetchNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
+        @Parameter(description = "IP", required = false)
+        @QueryParam("nodeIp")
+        nodeIp: String?,
+        @Parameter(description = "别名", required = false)
+        @QueryParam("displayName")
+        displayName: String?,
+        @Parameter(description = "创建人", required = false)
+        @QueryParam("createdUser")
+        createdUser: String?,
+        @Parameter(description = "最后修改人", required = false)
+        @QueryParam("lastModifiedUser")
+        lastModifiedUser: String?,
+        @Parameter(description = "关键字", required = false)
+        @QueryParam("keywords")
+        keywords: String?,
+        @Parameter(description = "节点类型|用途 (构建: THIRDPARTY;部署: CMDB)", required = false)
+        @QueryParam("nodeType")
+        nodeType: NodeType?,
+        @Parameter(description = "Agent 状态", required = false)
+        @QueryParam("nodeStatus")
+        nodeStatus: NodeStatus?,
+        @Parameter(description = "Agent 版本", required = false)
+        @QueryParam("agentVersion")
+        agentVersion: String?,
+        @Parameter(description = "操作系统", required = false)
+        @QueryParam("osName")
+        osName: String?,
+        @Parameter(description = "最近执行流水线", required = false)
+        @QueryParam("latestBuildPipelineId")
+        latestBuildPipelineId: String?,
+        @Parameter(description = "最近构建执行时间 (开始)", required = false)
+        @QueryParam("latestBuildTimeStart")
+        latestBuildTimeStart: Long?,
+        @Parameter(description = "最近构建执行时间 (结束)", required = false)
+        @QueryParam("latestBuildTimeEnd")
+        latestBuildTimeEnd: Long?,
+        @Parameter(description = "排序字段", required = false)
+        @QueryParam("sortType")
+        sortType: String?,
+        @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
+        @QueryParam("collation")
+        collation: String?,
+        data: NodeFetchReq?
+    ): Result<Page<NodeWithPermission>>
 }

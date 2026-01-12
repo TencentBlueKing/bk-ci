@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceGroupMemberDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.service.BkInternalPermissionCache
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupPermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
@@ -113,6 +114,16 @@ class AuthResourceService @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
+            )
+            val memberIds = authResourceGroupMemberDao.listResourceGroupMember(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            ).map { it.memberId }.distinct()
+            BkInternalPermissionCache.batchInvalidateProjectUserGroups(
+                projectCode = projectCode,
+                userIds = memberIds
             )
             authResourceGroupMemberDao.deleteByResource(
                 dslContext = transactionContext,
@@ -318,6 +329,19 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType,
             iamResourceCodes = iamResourceCodes
         ).map { authResourceDao.convert(it) }
+    }
+
+    fun listByResourceCodes(
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByResourceCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCodes = resourceCodes
+        )
     }
 
     fun updateCreator(

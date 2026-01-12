@@ -3,6 +3,7 @@ package com.tencent.devops.common.auth.api
 object ActionId {
     // 项目
     const val PROJECT_VISIT = "project_visit"
+    const val PROJECT_VIEW = "project_view"
     const val PROJECT_CREATE = "project_create"
     const val PROJECT_EDIT = "project_edit"
     const val PROJECT_ENABLE = "project_enable"
@@ -31,6 +32,7 @@ object ActionId {
     const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
     const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
     const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+    const val PIPELINE_TEMPLATE_VIEW = "pipeline_template_view"
 
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"
@@ -63,6 +65,12 @@ object ActionId {
     const val ENV_NODE_DELETE = "env_node_delete"
     const val ENV_NODE_LIST = "env_node_list"
     const val ENV_NODE_USE = "env_node_use"
+
+    // 环境节点标签
+    const val ENV_NODE_TAG_CREATE = "env_node_tag_create"
+    const val ENV_NODE_TAG_EDIT = "env_node_tag_edit"
+    const val ENV_NODE_TAG_DELETE = "env_node_tag_delete"
+    const val ENV_NODE_TAG_UPDATE = "env_node_tag_update"
 
     // 质量红线
     const val RULE_CREATE = "rule_create"

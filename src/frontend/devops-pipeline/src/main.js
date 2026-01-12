@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,13 +29,14 @@ import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
 
+import createLocale from '@locale'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
+import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import createLocale from '@locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
@@ -52,7 +53,8 @@ import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 
 const { lang, i18n, setLocale } = createLocale(
-    require.context('@locale/pipeline/', false, /\.json$/)
+    require.context('@locale/pipeline/', false, /\.json$/),
+    Vue
 )
 const { pipelineDocs } = createDocs(lang, window.BK_CI_VERSION)
 const isInIframe = window.self !== window.parent
@@ -66,12 +68,12 @@ Vue.use(PermissionDirective(handlePipelineNoPermission))
 Vue.use(BkPermission, {
     i18n
 })
-
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
     i18n,
     fieldsBagName: 'veeFields',
     dictionary: {
+        'ja-JP': validationJAMessages,
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }
@@ -87,9 +89,22 @@ Vue.prototype.$bkMessage = function (config) {
     bkMagic.bkMessage(config)
 }
 /* eslint-disable */
-// 扩展字符串，判断是否为蓝盾变量格式
+// 扩展字符串，判断是否为蓝盾变量格式（传统模式变量格式）
 String.prototype.isBkVar = function () {
-    return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
+    return (
+        /\$\{\{([\w_.-]+)\}\}/.test(this) || 
+        /\$\{([\w_.-]+)\}/.test(this)
+      )
+}
+// 制约模式下的变量格式
+String.prototype.isBKConstraintVar = function () {
+    return /\$\{\{([\w_.-]+)\}\}/.test(this)
+}
+// 提取蓝盾变量名
+String.prototype.extractBkVar = function () {
+    return this.replace(/\$\{\{([\w_.-]+)\}\}|\$\{([\w_.-]+)\}/g, (match, p1, p2) => {
+        return p1 || p2
+    })
 }
 /* eslint-disable */
 
@@ -117,8 +132,8 @@ if (!isInIframe) {
 global.pipelineVue = new Vue({
     el: "#app",
     router: createRouter(store, isInIframe),
-    i18n,
     store,
+    i18n,
     components: {
         App
     },

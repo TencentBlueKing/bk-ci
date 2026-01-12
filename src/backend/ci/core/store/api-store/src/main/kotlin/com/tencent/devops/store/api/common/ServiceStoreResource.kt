@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,7 +27,10 @@
 
 package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
@@ -37,9 +40,11 @@ import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
@@ -184,4 +189,27 @@ interface ServiceStoreResource {
         @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<List<Classify>>
+
+    @Operation(summary = "插件工作台-新增插件")
+    @POST
+    @Path("/market/desk/atom/")
+    fun addMarketAtom(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
+        @Valid
+        marketAtomCreateRequest: MarketAtomCreateRequest
+    ): Result<String>
+
+    @Operation(summary = "插件工作台-升级插件为测试版本")
+    @PUT
+    @Path("/market/desk/atom/test")
+    fun updateMarketAtomTest(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<String?>
 }

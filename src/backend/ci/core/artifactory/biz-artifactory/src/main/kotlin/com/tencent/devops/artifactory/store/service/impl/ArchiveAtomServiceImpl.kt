@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -159,7 +159,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     packageFileName = packageFile.name,
                     packageFilePath = "$BK_CI_ATOM_DIR/$pkgLocalPath",
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
                 val storePackageInfo = StorePackageInfoReq(
                     osName = atomEnvRequest.osName,
@@ -167,7 +167,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     size = packageFileInfo.packageFileSize
                 )
                 storePackageInfos.add(storePackageInfo)
-                atomEnvRequest.shaContent = packageFileInfo.shaContent
+                atomEnvRequest.shaContent = packageFileInfo.sha256Content
                 atomEnvRequest.pkgName = packageFileInfo.packageFileName
                 packageFileInfos.add(packageFileInfo)
             }
@@ -227,7 +227,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.shaContent)
+                    props = mapOf(KEY_SHA_CONTENT to packageFileInfo.sha256Content)
                 )
             }
         }

@@ -95,15 +95,30 @@
                     }]"
                 />
                 <p class="pipeline-version-name">
-                    <span v-bk-overflow-tips>
-                        {{ item.displayName }}
+                    <span>
+                        <span v-bk-overflow-tips>
+                            {{ item.displayName }}
+                        </span>
+                        <i
+                            v-if="isCurrentVersion(item)"
+                            class="pipeline-release-version-tag"
+                        >
+                            {{ $t('latest') }}
+                        </i>
                     </span>
-                    <i
-                        v-if="isCurrentVersion(item)"
-                        class="pipeline-release-version-tag"
+                    <span
+                        v-bk-overflow-tips
+                        class="src-template-version-name"
+                        v-if="item.srcTemplateVersionName"
                     >
-                        {{ $t('latest') }}
-                    </i>
+                        [
+                        <logo
+                            class="main-branch-icon"
+                            size="14"
+                            name="main-branch"
+                        /> {{ item.srcTemplateVersionName }}
+                        ]
+                    </span>
                 </p>
                 <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
@@ -178,6 +193,14 @@
             buildOnly: {
                 type: Boolean,
                 default: false
+            },
+            isTemplate: {
+                type: Boolean,
+                default: false
+            },
+            uniqueId: {
+                type: [String, Number],
+                required: true
             }
         },
         data () {
@@ -206,9 +229,6 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             // 最新的流水线版本信息
             activeDisplayName () {
                 return this.activeVersion?.displayName ?? '--'
@@ -233,7 +253,7 @@
                     this.activeVersion = activeVersion
                 }
             },
-            pipelineId: {
+            uniqueId: {
                 handler () {
                     this.hasNext = true
                     this.loadMore(1)
@@ -251,12 +271,13 @@
             convertTime,
             ...mapActions({
                 requestPipelineVersionList: 'pipelines/requestPipelineVersionList',
+                requestTemplateVersionList: 'templates/requestTemplateVersionList',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
 
             async loadMore (page) {
                 try {
-                    const { projectId, pipelineId, pagination } = this
+                    const { projectId, pagination } = this
                     const nextPage = page ?? pagination.page + 1
                     if (nextPage > 1 && !this.hasNext) return
                     if (nextPage === 1) {
@@ -264,14 +285,18 @@
                     } else {
                         this.bottomLoadingOptions.isLoading = true
                     }
-                    const res = await this.requestPipelineVersionList({
+                    const dataSource = this.isTemplate ? this.requestTemplateVersionList : this.requestPipelineVersionList
+                    const res = await dataSource({
                         projectId,
-                        pipelineId,
+                        ...{
+                            [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId
+                        },
                         page: nextPage,
                         pageSize: pagination.limit,
-                        versionName: this.searchKeyword,
+                        fuzzyVersionName: this.searchKeyword,
                         includeDraft: this.includeDraft,
-                        buildOnly: this.buildOnly
+                        buildOnly: this.buildOnly,
+                        archiveFlag: this.$route.query.archiveFlag
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit
@@ -293,12 +318,16 @@
                         this.versionList = versions
                         const releaseVersion = versions.find(item => item.status === VERSION_STATUS_ENUM.RELEASED)
                         if (releaseVersion?.version > this.pipelineInfo.releaseVersion) {
-                            this.requestPipelineSummary(this.$route.params)
+                            await this.requestPipelineSummary(this.$route.params)
+                            this.switchVersion(this.activeVersion.version)
                         }
+                        
                     } else {
                         this.versionList.push(...versions)
                     }
-                    this.switchVersion(this.value)
+                    if (!this.activeVersion) {
+                        this.switchVersion(this.value)
+                    }
                 } catch (error) {
                     console.log(error)
                 } finally {
@@ -460,11 +489,23 @@
 
         .pipeline-version-name {
             display: flex;
+            justify-content: space-between;
             grid-gap: 8px;
             overflow: hidden;
             > span {
                 font-weight: 700;
                 @include ellipsis();
+            }
+            
+            .src-template-version-name {
+                display: flex;
+                align-items: center;
+                color: #979BA5;
+                font-weight: 400;
+                max-width: 100px;
+            }
+            .main-branch-icon {
+                margin-right: 4px;
             }
         }
     }

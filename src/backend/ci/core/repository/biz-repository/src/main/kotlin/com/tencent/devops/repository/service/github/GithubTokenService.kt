@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -72,7 +72,7 @@ class GithubTokenService @Autowired constructor(
         operator: String
     ) {
         val encryptedAccessToken = BkCryptoUtil.encryptSm4ButAes(aesKey, accessToken)
-        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, operator, githubTokenType)
+        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, githubTokenType)
         if (githubTokenRecord == null) {
             githubTokenDao.create(
                 dslContext = dslContext,
@@ -127,26 +127,66 @@ class GithubTokenService @Autowired constructor(
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }
+        val accessToken = getAccessToken(userId) ?: return null
+        val operator = if (!accessToken.operator.isNullOrBlank()) {
+            accessToken.operator!!
+        } else {
+            accessToken.userId!!
+        }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         val projectUserCheck = authProjectApi.checkProjectUser(
-            user = userId,
+            user = operator,
             serviceCode = repoAuthServiceCode,
             projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
-            throw ErrorCodeException(
-                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
-                params = arrayOf(userId, buildBasicInfo.projectId)
-            )
+            if (operator != userId) {
+                logger.warn(
+                    "Github OAuth account [$userId]'s operator [$operator] " +
+                            "is not a member of project [${buildBasicInfo.projectId}]"
+                )
+            } else {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                    params = arrayOf(operator, buildBasicInfo.projectId)
+                )
+            }
         }
-        return getAccessToken(userId)
+        return accessToken
     }
 
     @Throws(CustomException::class)
     fun getAccessTokenMustExist(userId: String): GithubToken {
         return getAccessToken(userId)
             ?: throw CustomException(status = Response.Status.NOT_FOUND, message = "$userId githubToken not exist")
+    }
+
+    fun getAccessTokenByOperator(
+        operator: String,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken? {
+        val githubTokenRecord = githubTokenDao.getByOperator(dslContext, operator, tokenType) ?: return null
+        return GithubToken(
+            BkCryptoUtil.decryptSm4OrAes(aesKey, githubTokenRecord.accessToken),
+            githubTokenRecord.tokenType,
+            githubTokenRecord.scope,
+            githubTokenRecord.createTime.timestampmilli(),
+            githubTokenRecord.userId,
+            githubTokenRecord.operator
+        )
+    }
+
+    fun listEmptyOperator(
+        dsl: DSLContext = dslContext,
+        limit: Int
+    ) = githubTokenDao.listEmptyOperator(dsl, limit)
+
+    fun updateOperator(
+        dsl: DSLContext = dslContext,
+        userIds: Set<String>
+    ) {
+        githubTokenDao.updateOperator(dsl, userIds)
     }
 
     companion object {

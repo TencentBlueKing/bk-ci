@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ENV_NOT_YET_SUPPORTED
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -62,7 +63,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -87,7 +87,6 @@ import org.springframework.stereotype.Component
 class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineEventDispatcher: SampleEventDispatcher,
@@ -114,7 +113,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             NameAndValue(mit.key, EnvUtils.parseEnv(mit.value, context))
         }
         val fixParam = param.copy(customEnv = buildEnv)
-
+        val executeCount = task.executeCount ?: 1
         try {
             atomResponse = if (!checkBeforeStart(task, param, context)) {
                 AtomResponse(
@@ -130,7 +129,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 buildId = task.buildId,
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = param.jobId,
                 stepId = task.stepId
             )
@@ -140,7 +139,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
@@ -157,7 +156,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 message = "Fail to execute the task atom: ${ignored.message}",
                 tag = task.taskId,
                 containerHashId = task.containerHashId,
-                executeCount = task.executeCount ?: 1,
+                executeCount = executeCount,
                 jobId = null,
                 stepId = task.stepId
             )
@@ -189,36 +188,44 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-        Preconditions.checkNotNull(pipelineInfo) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getDefaultLocaleLanguage()
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
-
-        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
-        Preconditions.checkNotNull(container) {
-            BuildTaskException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getDefaultLocaleLanguage(),
-                    arrayOf(vmNames)
-                ),
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId
-            )
-        }
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
+            errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_PIPELINE_NOT_EXISTS, I18nUtil.getDefaultLocaleLanguage()
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
+        val executeCount = task.executeCount ?: 1
+        val buildRecordContainer = containerBuildRecordService.getRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID, params = arrayOf(buildId)
+        )
+        val container = containerBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildRecordContainer.resourceVersion,
+            buildId = buildId,
+            executeCount = executeCount
+        )?.getContainer(vmSeqId) ?: throw BuildTaskException(
+            errorType = ErrorType.SYSTEM,
+            errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
+            errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS,
+                I18nUtil.getDefaultLocaleLanguage(),
+                arrayOf(vmNames)
+            ),
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
 
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
@@ -226,7 +233,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         containerBuildRecordService.containerPreparing(
             projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
         )
-        dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds, pipelineAuthorizer)
+        dispatch(
+            task = task,
+            pipelineInfo = pipelineInfo,
+            param = param,
+            vmNames = vmNames,
+            container = container,
+            ignoreEnvAgentIds = ignoreEnvAgentIds,
+            pipelineAuthorizer = pipelineAuthorizer
+        )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.RUNNING)
     }
@@ -367,7 +382,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,
-                        executeCount = task.executeCount
+                        executeCount = task.executeCount,
+                        jobId = task.jobId,
+                        containerHashId = task.containerHashId
                     )
                 )
                 defaultFailAtomResponse

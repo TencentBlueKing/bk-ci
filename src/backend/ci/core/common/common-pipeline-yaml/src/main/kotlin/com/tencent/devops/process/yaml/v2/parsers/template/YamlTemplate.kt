@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,10 @@ package com.tencent.devops.process.yaml.v2.parsers.template
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.yaml.v2.check.Gate
+import com.tencent.devops.process.yaml.v2.check.GateTemplate
+import com.tencent.devops.process.yaml.v2.check.PreStageCheck
+import com.tencent.devops.process.yaml.v2.check.PreTemplateStageCheck
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Extends
@@ -50,10 +54,6 @@ import com.tencent.devops.process.yaml.v2.parameter.PreParametersTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.process.yaml.v2.check.Gate
-import com.tencent.devops.process.yaml.v2.check.GateTemplate
-import com.tencent.devops.process.yaml.v2.check.PreStageCheck
-import com.tencent.devops.process.yaml.v2.check.PreTemplateStageCheck
 
 @Suppress("ALL")
 class YamlTemplate<T>(

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,7 +25,7 @@ export const handlePipelineNoPermission = (query) => {
     return handleNoPermission(
         BKUI,
         {
-            resourceType: 'pipeline',
+            resourceType: RESOURCE_TYPE.PIPELINE,
             ...query
         },
         global.pipelineVue.$createElement
@@ -49,7 +49,7 @@ export const handleTemplateNoPermission = (query) => {
     return handleNoPermission(
         BKUI,
         {
-            resourceType: 'pipeline_template',
+            resourceType: RESOURCE_TYPE.TEMPLATE,
             ...query
         },
         global.pipelineVue.$createElement
@@ -65,8 +65,10 @@ export const RESOURCE_ACTION = {
     EDIT: 'pipeline_edit',
     DOWNLOAD: 'pipeline_download',
     DELETE: 'pipeline_delete',
-    MANAGE: 'pipeline_manage'
+    MANAGE: 'pipeline_manage',
+    ARCHIVED: 'pipeline_archive'
 }
+
 
 export const PROJECT_RESOURCE_ACTION = {
     MANAGE: 'project_manage',
@@ -75,7 +77,8 @@ export const PROJECT_RESOURCE_ACTION = {
     VIEWS_MANAGE: 'project_views_manage',
     CREATE: 'project_create',
     EDIT: 'project_edit',
-    ENABLE: 'project_enable'
+    ENABLE: 'project_enable',
+    ARCHIVED: 'project_manage-archived-pipeline'
 }
 
 export const TEMPLATE_RESOURCE_ACTION = {
@@ -83,5 +86,12 @@ export const TEMPLATE_RESOURCE_ACTION = {
     VIEW: 'pipeline_template_view',
     CREATE: 'pipeline_template_create',
     EDIT: 'pipeline_template_edit',
-    ENABLE: 'pipeline_template_enable'
+    ENABLE: 'pipeline_template_enable',
+    DELETE: 'pipeline_template_delete'
+}
+
+export const RESOURCE_TYPE = {
+    PROJECT: 'project',
+    PIPELINE: 'pipeline',
+    TEMPLATE: 'pipeline_template'
 }

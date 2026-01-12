@@ -22,6 +22,7 @@
                             <component
                                 :is="obj.type"
                                 :container="container"
+                                :pipeline-dialect="pipelineDialect"
                                 :atom-value="atomValue"
                                 :disabled="disabled"
                                 :name="key"
@@ -69,6 +70,7 @@
                                 <component
                                     :is="obj.type"
                                     :container="container"
+                                    :pipeline-dialect="pipelineDialect"
                                     :atom-value="atomValue"
                                     :name="key"
                                     v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
@@ -119,6 +121,7 @@
                                 <component
                                     :is="obj.type"
                                     :container="container"
+                                    :pipeline-dialect="pipelineDialect"
                                     :atom-value="atomValue"
                                     :name="key"
                                     v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
@@ -148,6 +151,7 @@
                         <component
                             :is="group.type"
                             :container="container"
+                            :pipeline-dialect="pipelineDialect"
                             :atom-value="atomValue"
                             :disabled="disabled"
                             :name="groupKey"
@@ -316,7 +320,6 @@
                         }
                         return res
                     }, this.element.data.input)
-                    console.log(1111, atomDefaultValue, this.atomPropsModel, atomValue)
                     return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)

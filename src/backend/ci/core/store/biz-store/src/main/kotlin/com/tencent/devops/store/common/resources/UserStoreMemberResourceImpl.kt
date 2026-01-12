@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,17 +27,19 @@
 
 package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreMemberResource
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.member.StoreMemberItem
 import com.tencent.devops.store.pojo.common.member.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreMemberService
 
 @RestResource
-class UserStoreMemberResourceImpl : UserStoreMemberResource {
+class UserStoreMemberResourceImpl(val storeMemberService: StoreMemberService) : UserStoreMemberResource {
 
     override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
         return getStoreMemberService(storeType).list(userId, storeCode, storeType)
@@ -70,6 +72,25 @@ class UserStoreMemberResourceImpl : UserStoreMemberResource {
             storeCode = storeCode,
             storeType = storeType
         )
+    }
+
+    override fun isStoreMember(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+    ): Result<Boolean> {
+        val check = storeMemberService.isStoreMember(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!check) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        return Result(true)
     }
 
     private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {

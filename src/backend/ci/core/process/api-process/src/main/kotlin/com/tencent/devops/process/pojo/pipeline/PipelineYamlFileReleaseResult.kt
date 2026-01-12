@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,6 +40,8 @@ data class PipelineYamlFileReleaseResult(
     val filePath: String,
     @get:Schema(title = "分支名")
     val branch: String,
-    @get:Schema(title = "mr url")
-    val mrUrl: String?
+    @get:Schema(title = "合并请求链接")
+    val pullRequestUrl: String?,
+    @get:Schema(title = "合并请求ID")
+    val pullRequestId: Long?
 )

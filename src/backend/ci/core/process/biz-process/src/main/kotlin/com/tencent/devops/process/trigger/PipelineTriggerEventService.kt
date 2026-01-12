@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -359,7 +359,7 @@ class PipelineTriggerEventService @Autowired constructor(
         userId: String,
         projectId: String,
         detailId: Long
-    ): Boolean {
+    ): Long {
         logger.info("replay pipeline trigger event|$userId|$projectId|$detailId")
         val triggerDetail = pipelineTriggerEventDao.getTriggerDetail(
             dslContext = dslContext,
@@ -385,13 +385,12 @@ class PipelineTriggerEventService @Autowired constructor(
                 arrayOf(userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
             )
         )
-        replayAll(
+        return replayAll(
             userId = userId,
             projectId = projectId,
             eventId = triggerDetail.eventId,
             pipelineId = pipelineId
         )
-        return true
     }
 
     fun replayAll(
@@ -399,7 +398,7 @@ class PipelineTriggerEventService @Autowired constructor(
         projectId: String,
         eventId: Long,
         pipelineId: String? = null
-    ): Boolean {
+    ): Long {
         logger.info("replay all pipeline trigger event|$userId|$projectId|$eventId")
         val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
             dslContext = dslContext,
@@ -457,7 +456,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 pipelineId = pipelineId
             )
         )
-        return true
+        return replayEventId
     }
 
     fun triggerReasonStatistics(
@@ -474,6 +473,17 @@ class PipelineTriggerEventService @Autowired constructor(
             pipelineName = pipelineName
         )
     }
+
+    fun getTriggerDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = pipelineTriggerEventDao.getTriggerDetail(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        buildId = buildId
+    )
 
     /**
      * 获取国际化构建事件描述

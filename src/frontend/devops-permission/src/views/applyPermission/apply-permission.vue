@@ -52,16 +52,9 @@ const curProject = ref(null);
 const isDisabled = ref(true);
 
 const rules = {
-  projectCode: [
-    {
-      validator: (val: string) => val,
-      message: t('请选择项目'),
-      trigger: 'change',
-    },
-  ],
   groupIds: [
     {
-      validator: () => groupList.value.length,
+      validator: () => groupList.value.length > 0,
       message: t('请选择用户组'),
       trigger: 'change',
     },
@@ -168,7 +161,9 @@ const getAllProjectList = async (name = '') => {
     return
   }
   const { page, pageSize, projectName } = pageInfo.value;
-  scrollLoading.value = true;
+  if (pageInfo.value.page !== 1) {
+    scrollLoading.value = true;
+  }
   await http.getAllProjectList({
     page: page,
     pageSize: pageSize,

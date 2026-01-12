@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,10 +38,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import jakarta.ws.rs.NotFoundException
 
 @Suppress("LongParameterList")
 class RbacPipelineTemplatePermissionService constructor(
@@ -50,7 +52,8 @@ class RbacPipelineTemplatePermissionService constructor(
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
     val authResourceApi: AuthResourceApi,
-    private val pipelinePermissionService: PipelinePermissionService,
+    val pipelinePermissionService: PipelinePermissionService,
+    val pipelineTemplateInfoService: PipelineTemplateInfoService,
     authProjectApi: AuthProjectApi,
     pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AbstractPipelineTemplatePermissionService(
@@ -134,15 +137,32 @@ class RbacPipelineTemplatePermissionService constructor(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return permissions.associateWith {
-            authPermissionApi.getUserResourceByPermission(
-                user = userId,
+        return if (enableTemplatePermissionManage(projectId)) {
+            permissions.associateWith {
+                authPermissionApi.getUserResourceByPermission(
+                    user = userId,
+                    serviceCode = pipelineAuthServiceCode,
+                    resourceType = resourceType,
+                    projectCode = projectId,
+                    permission = it,
+                    supplier = null
+                )
+            }
+        } else {
+            val templateIds = pipelineTemplateInfoService.list(
+                commonCondition = PipelineTemplateCommonCondition(projectId = projectId)
+            ).map { it.id }
+            val isManager = authProjectApi.checkProjectManager(
+                userId = userId,
                 serviceCode = pipelineAuthServiceCode,
-                resourceType = resourceType,
-                projectCode = projectId,
-                permission = it,
-                supplier = null
+                projectCode = projectId
             )
+            permissions.associateWith { permission ->
+                when {
+                    permission == AuthPermission.LIST || isManager -> templateIds
+                    else -> emptyList()
+                }
+            }
         }
     }
 

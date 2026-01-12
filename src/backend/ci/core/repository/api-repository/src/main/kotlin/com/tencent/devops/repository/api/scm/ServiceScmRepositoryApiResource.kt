@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,14 +27,21 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Perm
+import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -47,6 +54,21 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceScmRepositoryApiResource {
+
+    @Operation(summary = "获取服务端仓库信息(通过代码库HashId)")
+    @GET
+    @Path("/getServerRepositoryById")
+    fun getServerRepositoryById(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库类型,ID或Name", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @Parameter(description = "代码库ID或名称", required = true)
+        @QueryParam("repoHashIdOrName")
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository>
 
     @Operation(summary = "获取服务端仓库信息")
     @POST
@@ -72,4 +94,126 @@ interface ServiceScmRepositoryApiResource {
         @Parameter(description = "代码库授权信息", required = true)
         authRepository: AuthRepository
     ): Result<Perm>
+
+    @Operation(summary = "获取仓库分支列表")
+    @POST
+    @Path("/listBranches")
+    fun listBranches(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库授权信息", required = true)
+        authRepository: AuthRepository,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<Reference>>
+
+    @Operation(summary = "获取目标分支信息")
+    @POST
+    @Path("/getBranch")
+    fun getBranch(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库授权信息", required = true)
+        authRepository: AuthRepository,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("branch")
+        branch: String
+    ): Result<Reference?>
+
+    @Operation(summary = "获取Tag列表")
+    @POST
+    @Path("/listTags")
+    fun listTags(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库授权信息", required = true)
+        authRepository: AuthRepository,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String?,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<Reference>>
+
+    @Operation(summary = "注册webhook")
+    @POST
+    @Path("/registerWebhook")
+    fun registerWebhook(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "事件类型", required = true)
+        @QueryParam("eventType")
+        eventType: String,
+        @Parameter(description = "代码库模型", required = true)
+        repository: Repository
+    )
+
+    @Operation(summary = "添加check-run")
+    @POST
+    @Path("/createCheckRun")
+    fun createCheckRun(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "checkRun参数", required = true)
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun>
+
+    @Operation(summary = "添加check-run")
+    @POST
+    @Path("/updateCheckRun")
+    fun updateCheckRun(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "checkRun参数", required = true)
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun>
+
+    @Operation(summary = "添加评论")
+    @POST
+    @Path("/addComment")
+    fun addComment(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("repoType")
+        repoType: RepositoryType,
+        @Parameter(description = "仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @Parameter(description = "number", required = true)
+        @QueryParam("number")
+        number: Int,
+        @Parameter(description = "comment参数", required = true)
+        input: CommentInput
+    ): Result<Boolean>
 }

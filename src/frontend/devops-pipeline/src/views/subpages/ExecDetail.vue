@@ -80,6 +80,7 @@
                 ref="detailSummary"
                 :visible="summaryVisible"
                 :exec-detail="execDetail"
+                :version-change="pipelineInfo?.versionChange"
             ></Summary>
 
             <p class="pipeline-exec-gap">
@@ -185,6 +186,14 @@
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
+    const PANELS = {
+        executeDetail: 'executeDetail',
+        outputs: 'outputs',
+        reports: 'reports',
+        codeRecords: 'codeRecords',
+        startupParams: 'startupParams'
+    }
+
     export default {
         components: {
             StagePropertyPanel,
@@ -239,6 +248,7 @@
 
         computed: {
             ...mapState('atom', [
+                'pipelineInfo',
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
@@ -256,22 +266,25 @@
             isRunning () {
                 return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             panels () {
                 return [
                     {
-                        name: 'executeDetail',
+                        name: PANELS.executeDetail,
                         label: this.$t('details.executeDetail'),
                         component: 'exec-pipeline',
                         className: 'exec-pipeline',
                         bindData: {
                             execDetail: this.execDetail,
-                            isLatestBuild: this.isLatestBuild,
+                            isLatestBuild: this.archiveFlag ? !this.archiveFlag : this.isLatestBuild,
                             matchRules: this.curMatchRules,
                             isRunning: this.isRunning
                         }
                     },
                     {
-                        name: 'outputs',
+                        name: PANELS.outputs,
                         label: this.$t('details.artifact'),
                         className: '',
                         component: 'outputs',
@@ -280,7 +293,7 @@
                         }
                     },
                     {
-                        name: 'reports',
+                        name: PANELS.reports,
                         label: this.$t('details.report'),
                         className: '',
                         component: 'outputs',
@@ -289,14 +302,14 @@
                         }
                     },
                     {
-                        name: 'codeRecords',
+                        name: PANELS.codeRecords,
                         label: this.$t('details.codeRecords'),
                         className: '',
                         component: 'code-record',
                         bindData: {}
                     },
                     {
-                        name: 'startupParams',
+                        name: PANELS.startupParams,
                         label: this.$t('details.startupParams'),
                         className: '',
                         component: 'start-params',
@@ -375,10 +388,16 @@
                     }
             },
             routerParams () {
-                return this.$route.params
+                return {
+                    ...this.$route.params,
+                    ...this.$route.query
+                }
             },
             curItemTab () {
-                return this.routerParams.type || 'executeDetail'
+                if (PANELS[this.routerParams.type]) {
+                    return this.routerParams.type
+                }
+                return PANELS.executeDetail
             },
             curPanel () {
                 return this.panels.find(panel => panel.name === this.curItemTab)
@@ -432,16 +451,29 @@
                 if (error.code === 403) {
                     this.hasNoPermission = true
                 }
+            },
+            '$route.params.type': {
+                handler (newVal) {
+                    if (newVal !== 'outputs') {
+                        const query = { ...this.$route.query }
+                        delete query.metadataKey
+                        delete query.metadataValues
+                        this.$router.replace({ query })
+                    }
+                },
+                immediate: true
             }
         },
         beforeRouteEnter (to, from, next) {
-            if (!to.params.type) {
+            
+            if (!PANELS[to.params.type]) {
                 next({
                     name: 'pipelinesDetail',
                     params: {
                         ...to.params,
-                        type: 'executeDetail'
-                    }
+                        type: PANELS.executeDetail
+                    },
+                    query: to.query
                 })
             } else {
                 next()
@@ -500,7 +532,7 @@
             hideSidePanel () {
                 this.showLog = false
             },
-            handlePiplineClick (args) {
+            handlePipelineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: args
@@ -549,7 +581,8 @@
                     params: {
                         ...this.routerParams,
                         type: panel.name
-                    }
+                    },
+                    query: this.$route.query
                 })
             },
             collapseSummary () {

@@ -55,8 +55,9 @@
 </template>
 
 <script>
-    import eventBus from '@/utils/eventBus.js'
     import card from '@/components/common/card'
+    import eventBus from '@/utils/eventBus.js'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -119,6 +120,11 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'requestMarketAtom',
+                'requestMarketTemplate',
+                'requestMarketImage'
+            ]),
             closeOrderList () {
                 this.showOrderList = false
             },
@@ -141,15 +147,16 @@
             },
 
             getListData (isReset = false) {
-                this.isLoadingMore = true
                 const { searchStr, classifyKey, classifyValue, score, features, pipeType } = this.$route.query || {}
 
-                const featureObj = {}
+                let featureObj = {}
                 if (features) {
                     const featuresArray = features.split(';')
                     featuresArray.forEach((feature) => {
                         feature = feature.split('-')
-                        featureObj[feature[0]] = feature[1]
+                        featureObj = {
+                            [feature[0]]: feature[1]
+                        }
                     })
                 }
 
@@ -159,17 +166,21 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     keyword: searchStr,
-                    ...featureObj
+                    ...featureObj,
+                    ...(classifyValue !== 'all' ? { [classifyKey]: classifyValue } : {})
                 }
-                if (classifyValue !== 'all') postData[classifyKey] = classifyValue
 
                 const apiFun = {
-                    atom: () => this.$store.dispatch('store/requestMarketAtom', postData),
-                    template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
-                    image: () => this.$store.dispatch('store/requestMarketImage', postData)
+                    atom: this.requestMarketAtom,
+                    template: this.requestMarketTemplate,
+                    image: this.requestMarketImage
                 }
-
-                apiFun[pipeType]().then((res) => {
+                if (!Object.keys(apiFun).includes(pipeType) || typeof apiFun[pipeType] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
+                this.isLoadingMore = true
+                apiFun[pipeType](postData).then((res) => {
                     this.cards = isReset ? res.records : this.cards.concat(res.records || [])
                     this.count = res.count || 0
                     this.page++

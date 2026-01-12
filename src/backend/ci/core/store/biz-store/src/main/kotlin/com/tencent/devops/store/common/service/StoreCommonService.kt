@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -127,7 +127,7 @@ interface StoreCommonService {
      * 获取组件可见范围
      */
     fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
@@ -135,9 +135,11 @@ interface StoreCommonService {
      * 获取回显版本信息
      */
     fun getStoreShowVersionInfo(
+        storeType: StoreTypeEnum,
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
-        version: String?
+        version: String?,
+        lastVersionContent: String? = null
     ): StoreShowVersionInfo
 
     /**

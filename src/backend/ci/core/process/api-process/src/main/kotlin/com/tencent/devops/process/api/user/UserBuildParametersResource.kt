@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,19 +30,27 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildFormValue
-import com.tencent.devops.process.pojo.BuildFormRepositoryValue
-import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildParameterGroup
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.process.pojo.BuildFormRepositoryValue
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombination
+import com.tencent.devops.process.pojo.pipeline.BuildParamCombinationReq
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
+import com.tencent.devops.repository.pojo.enums.Permission
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -201,4 +209,149 @@ interface UserBuildParametersResource {
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>
+
+    @Operation(summary = "查询流水线启动参数信息[下拉选填充]")
+    @GET
+    @Path("/{projectId}/{pipelineId}/buildParamFormProp")
+    fun buildParamFormProp(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "是否包含常量", required = false, example = "")
+        @QueryParam("includeConst")
+        includeConst: Boolean? = true,
+        @Parameter(description = "是否包含非入参", required = false, example = "")
+        @QueryParam("includeNotRequired")
+        includeNotRequired: Boolean? = true,
+        @Parameter(description = "当前流水线版本", required = false, example = "")
+        @QueryParam("version")
+        version: Int? = null,
+        @Parameter(description = "是否为模板", required = false, example = "")
+        @QueryParam("isTemplate")
+        isTemplate: Boolean? = false
+    ): Result<List<PipelineBuildParamFormProp>>
+
+    @Operation(summary = "保存启动参数组合")
+    @POST
+    @Path("{projectId}/{pipelineId}/combination")
+    fun saveCombination(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Valid
+        request: BuildParamCombinationReq
+    ): Result<Long>
+
+    @Operation(summary = "编辑启动参数组合")
+    @PUT
+    @Path("{projectId}/{pipelineId}/combination/{combinationId}")
+    fun editCombination(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "组合ID", required = true)
+        @PathParam("combinationId")
+        combinationId: Long,
+        @Valid
+        request: BuildParamCombinationReq
+    ): Result<Boolean>
+
+    @Operation(summary = "获取启动参数组合")
+    @GET
+    @Path("{projectId}/{pipelineId}/combination/{combinationId}")
+    fun getCombination(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "组合ID", required = true)
+        @PathParam("combinationId")
+        combinationId: Long
+    ): Result<List<BuildFormProperty>>
+
+    @Operation(summary = "删除启动参数组合")
+    @DELETE
+    @Path("{projectId}/{pipelineId}/combination/{combinationId}")
+    fun deleteCombination(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "组合ID", required = true)
+        @PathParam("combinationId")
+        combinationId: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "列举启动参数组合")
+    @GET
+    @Path("{projectId}/{pipelineId}/listCombination")
+    fun listCombination(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "组合名", required = false)
+        @QueryParam("combinationName")
+        combinationName: String?,
+        @Parameter(description = "变量名", required = false)
+        @QueryParam("varName")
+        varName: String?,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<BuildParamCombination>>
+
+    @Operation(summary = "从构建中获取启动参数组合")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/getCombinationFromBuild")
+    fun getCombinationFromBuild(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<BuildFormProperty>>
 }

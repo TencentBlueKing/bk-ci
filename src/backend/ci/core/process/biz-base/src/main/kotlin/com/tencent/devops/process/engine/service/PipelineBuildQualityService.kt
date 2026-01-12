@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
@@ -36,8 +37,11 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -95,7 +99,6 @@ class PipelineBuildQualityService(
     private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService
@@ -135,61 +138,39 @@ class PipelineBuildQualityService(
             )
         }
 
-        val model = buildDetailService.getBuildModel(projectId, buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId)
             )
-
-        var find = false
-        var taskType = ""
-        model.stages.forEachIndexed nextStage@{ index, s ->
-            if (index == 0) {
-                return@nextStage
-            }
-            s.containers.forEach nextContainer@{ c ->
-                c.elements.forEach nextElement@{ element ->
-                    if (element.id != elementId) return@nextElement
-                    logger.info("${element.id}, ${element.name}")
-                    when (element) {
-                        is QualityGateInElement -> {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                        is QualityGateOutElement -> {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                    }
-                    return@nextStage
-                }
-                c.fetchGroupContainers()?.forEach {
-                    it.elements.forEach nextElement@{ element ->
-                        if (element.id != elementId || element !is MatrixStatusElement) return@nextElement
-                        logger.info("${element.id}, ${element.name}")
-                        if (element.originClassType == QualityGateInElement.classType ||
-                            element.originClassType == QualityGateOutElement.classType
-                        ) {
-                            find = true
-                            taskType = element.interceptTask!!
-                        }
-                        return@nextStage
-                    }
-                }
-            }
-        }
-
-        if (!find) {
+        val buildRecordTask = taskBuildRecordService.getTaskBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = elementId,
+            executeCount = buildInfo.executeCount ?: 1
+        )
+        val atomCode = buildRecordTask?.atomCode
+        if (atomCode.isNullOrBlank() || atomCode !in listOf(
+                QualityGateInElement.classType,
+                QualityGateOutElement.classType
+            )
+        ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
                 params = arrayOf(elementId)
             )
         }
+        val interceptTaskKey = QualityGateInElement::interceptTask.name
+        val interceptTask = buildRecordTask.taskVar[interceptTaskKey]?.toString() ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(interceptTaskKey)
+        )
 
         // 校验审核权限
-        val auditUserSet = getAuditUserList(projectId, pipelineId, buildId, taskType)
+        val auditUserSet = getAuditUserList(projectId, pipelineId, buildId, interceptTask)
         if (!auditUserSet.contains(userId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -468,6 +449,7 @@ class PipelineBuildQualityService(
                     stepId = task.stepId
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
+                notifyEvent(task, BuildStatus.REVIEWING)
             }
 
             task.taskParams[QUALITY_RESULT] = checkResult.success
@@ -479,7 +461,7 @@ class PipelineBuildQualityService(
                     pipelineId = task.pipelineId,
                     userId = task.starter,
                     buildId = task.buildId,
-                    refreshTypes = RefreshType.DETAIL.binary or RefreshType.RECORD.binary
+                    refreshTypes = RefreshType.RECORD.binary
                 )
             )
             return AtomResponse(BuildStatus.RUNNING)
@@ -493,7 +475,8 @@ class PipelineBuildQualityService(
         runVariables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter,
         position: String,
-        templateId: String?
+        templateId: String?,
+        interceptTaskId: String?
     ): RuleCheckResult {
         val pipelineId = task.pipelineId
         val projectId = task.projectId
@@ -521,7 +504,8 @@ class PipelineBuildQualityService(
             position = position,
             templateId = templateId,
             stageId = "",
-            runtimeVariable = runVariables
+            runtimeVariable = runVariables,
+            interceptTaskId = interceptTaskId
         )
         val result = if (position == ControlPointPosition.AFTER_POSITION &&
             QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)
@@ -604,6 +588,7 @@ class PipelineBuildQualityService(
                     jobId = null,
                     stepId = task.stepId
                 )
+                notifyEvent(task, BuildStatus.REVIEW_ABORT)
                 AtomResponse(
                     buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
                     errorType = ErrorType.USER,
@@ -630,6 +615,7 @@ class PipelineBuildQualityService(
                             jobId = null,
                             stepId = task.stepId
                         )
+                        notifyEvent(task, BuildStatus.REVIEW_PROCESSED)
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
@@ -646,6 +632,7 @@ class PipelineBuildQualityService(
                             jobId = null,
                             stepId = task.stepId
                         )
+                        notifyEvent(task, BuildStatus.REVIEW_ABORT)
                         AtomResponse(
                             buildStatus = BuildStatus.REVIEW_ABORT,
                             errorType = ErrorType.USER,
@@ -657,6 +644,34 @@ class PipelineBuildQualityService(
             } else {
                 AtomResponse(BuildStatus.REVIEWING)
             }
+        }
+    }
+
+    private fun notifyEvent(task: PipelineBuildTask, status: BuildStatus) {
+        with(task) {
+            pipelineEventDispatcher.dispatch(
+                // 质量红线审核
+                PipelineBuildStatusBroadCastEvent(
+                    source = "quality reviewed with ${status.name}",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = "",
+                    buildId = buildId,
+                    actionType = ActionType.START,
+                    stageId = stageId,
+                    jobId = jobId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    buildStatus = status.name,
+                    type = PipelineBuildStatusBroadCastEventType.BUILD_QUALITY,
+                    labels = mapOf(
+                        PipelineBuildStatusBroadCastEvent.Labels::startTime.name to
+                            LocalDateTime.now().timestamp(),
+                        PipelineBuildStatusBroadCastEvent.Labels::stepName.name to
+                            taskName
+                    )
+                )
+            )
         }
     }
 }

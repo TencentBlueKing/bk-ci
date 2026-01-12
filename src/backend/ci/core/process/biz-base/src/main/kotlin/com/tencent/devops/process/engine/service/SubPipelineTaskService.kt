@@ -126,6 +126,10 @@ class SubPipelineTaskService @Autowired constructor(
             "NAME" -> SubPipelineType.NAME
             else -> return null
         }
+        // 分支版本
+        val branch = inputMap["subBranch"]?.toString().let {
+            EnvUtils.parseEnv(it, contextMap)
+        }
         val (finalProjectId, finalPipelineId, finalPipeName) = getSubPipelineParam(
             projectId = projectId,
             subProjectId = subProjectId,
@@ -141,7 +145,8 @@ class SubPipelineTaskService @Autowired constructor(
             taskPipelineName = subPipelineName,
             projectId = finalProjectId,
             pipelineId = finalPipelineId,
-            pipelineName = finalPipeName
+            pipelineName = finalPipeName,
+            branch = branch
         )
     }
 
@@ -346,6 +351,16 @@ class SubPipelineTaskService @Autowired constructor(
         val supportElement = supportAtomCode(this.atomCode) || this.taskAtom == SubPipelineCallElement.TASK_ATOM
         return elementEnable && supportElement
     }
+
+    fun getBranchVersionResource(
+        projectId: String,
+        pipelineId: String,
+        branchName: String?
+    ) = pipelineRepositoryService.getBranchVersionResource(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branchName
+    )
 
     companion object {
         val logger = LoggerFactory.getLogger(SubPipelineTaskService::class.java)

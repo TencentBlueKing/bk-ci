@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,6 +30,10 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.OpAtomResource
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.AtomService
+import com.tencent.devops.store.atom.service.MarketAtomService
+import com.tencent.devops.store.atom.service.OpAtomService
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -40,10 +44,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.AtomService
-import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.atom.service.OpAtomService
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
@@ -155,7 +155,11 @@ class OpAtomResourceImpl @Autowired constructor(
         return Result(opAtomService.setDefault(userId = userId, atomCode = atomCode))
     }
 
-    override fun updateAtomSensitiveCacheConfig(userId: String, atomCode: String?): Result<Boolean> {
-        return opAtomService.updateAtomSensitiveCacheConfig(userId, atomCode)
+    override fun updateAtomConfigCache(
+        userId: String,
+        kProperty: String,
+        atomCode: String?
+    ): Result<Boolean> {
+        return opAtomService.updateAtomConfigCache(userId, kProperty, atomCode)
     }
 }

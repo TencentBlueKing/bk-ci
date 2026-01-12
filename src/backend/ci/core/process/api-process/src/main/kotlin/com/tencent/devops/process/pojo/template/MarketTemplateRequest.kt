@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板市场-模板请求报文体")
@@ -45,4 +46,14 @@ data class MarketTemplateRequest(
     val publicFlag: Boolean,
     @get:Schema(title = "发布者", required = false)
     val publisher: String
-)
+) {
+    constructor(request: MarketTemplateV2Request) : this(
+        projectCodeList = arrayListOf(request.projectId),
+        templateCode = request.templateCode,
+        templateName = request.templateName,
+        logoUrl = request.logoUrl,
+        categoryCodeList = request.categoryCodeList,
+        publicFlag = request.publicFlag,
+        publisher = request.publisher
+    )
+}

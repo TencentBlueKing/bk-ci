@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -61,12 +61,12 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.tgitHttpRule}`
             aliasIndex = 2
             break
-        case isScmSvn(type) && svnType === 'SSH':
+        case isScmSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             aliasIndex = 3
             break
-        case isScmSvn(type) && (svnType === 'HTTPS' || svnType === 'OAUTH'):
+        case isScmSvn(type) && (svnType === 'http' || svnType === 'OAUTH'):
             reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             aliasIndex = 4

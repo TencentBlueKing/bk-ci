@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
+import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -98,4 +100,15 @@ interface ServiceAuthAuthorizationResource {
         @Parameter(description = "重置资源授权请求体", required = true)
         resourceAuthorizationHandoverList: List<ResourceAuthorizationHandoverDTO>
     ): Result<Boolean>
+
+    @POST
+    @Path("/resetResourceAuthorization")
+    @Operation(summary = "重置资源授权管理")
+    fun resetResourceAuthorization(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "资源授权交接条件实体", required = true)
+        condition: ResourceAuthorizationHandoverConditionRequest
+    ): Result<Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>>
 }

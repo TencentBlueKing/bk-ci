@@ -279,6 +279,8 @@ class PermissionAuthorizationServiceImpl(
     ): Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>> {
         logger.info("user reset resource authorization|$operator|$projectCode|$condition")
         val result = mutableMapOf<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>()
+        if (!needToHandoverResourceTypes.contains(condition.resourceType))
+            return emptyMap()
         if (condition.checkPermission) {
             validateOperatorPermission(
                 operator = operator,
@@ -286,6 +288,7 @@ class PermissionAuthorizationServiceImpl(
             )
         }
         val resourceAuthorizationList = getResourceAuthorizationList(condition = condition)
+        if (resourceAuthorizationList.isEmpty()) return emptyMap()
         val handoverResult2Records = handoverResourceAuthorizations(
             projectId = projectCode,
             preCheck = condition.preCheck,
@@ -376,6 +379,7 @@ class PermissionAuthorizationServiceImpl(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     handoverFrom = condition.handoverFrom,
+                    handoverFroms = condition.handoverFroms,
                     fullSelection = true,
                     preCheck = condition.preCheck,
                     handoverChannel = HandoverChannelCode.MANAGER,
@@ -383,13 +387,15 @@ class PermissionAuthorizationServiceImpl(
                     checkPermission = condition.checkPermission
                 )
             )
-            if (!handoverResult[ResourceAuthorizationHandoverStatus.FAILED].isNullOrEmpty()) {
+            val handoverFailedResult = handoverResult[ResourceAuthorizationHandoverStatus.FAILED]
+            if (!handoverFailedResult.isNullOrEmpty()) {
                 result.add(
                     ResourceTypeInfoVo(
                         resourceType = resourceType,
                         name = I18nUtil.getCodeLanMessage(
                             messageCode = resourceType + AuthI18nConstants.RESOURCE_TYPE_NAME_SUFFIX
-                        )
+                        ),
+                        memberIds = handoverFailedResult.mapNotNull { it.handoverFrom }.distinct()
                     )
                 )
             }

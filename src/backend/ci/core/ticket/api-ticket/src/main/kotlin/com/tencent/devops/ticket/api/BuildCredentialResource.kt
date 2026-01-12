@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -86,7 +86,10 @@ interface BuildCredentialResource {
         taskId: String?,
         @Parameter(description = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
         @HeaderParam("X-DEVOPS-TASK-ID")
-        oldTaskId: String?
+        oldTaskId: String?,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CredentialInfo?>
 
     @Operation(summary = "构建机获取跨项目凭据")
@@ -114,7 +117,10 @@ interface BuildCredentialResource {
         @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         @BkField(required = true)
-        publicKey: String
+        publicKey: String,
+        @Parameter(description = "是否填充,如果bcpPro版本高于1.46,则传true,否则传false", required = false)
+        @QueryParam("padding")
+        padding: Boolean? = false
     ): Result<CredentialInfo?>
 
     @Operation(summary = "插件获取凭据")

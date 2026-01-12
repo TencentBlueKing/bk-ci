@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,6 +37,8 @@ data class PackageFileInfo(
     val packageFilePath: String,
     @get:Schema(title = "包文件大小", required = true)
     val packageFileSize: Long,
-    @get:Schema(title = "sha摘要值", required = true)
-    val shaContent: String
+    @get:Schema(title = "sha1摘要值", required = true)
+    val shaContent: String = "",
+    @get:Schema(title = "sha256摘要值", required = true)
+    val sha256Content: String
 )

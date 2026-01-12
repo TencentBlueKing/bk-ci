@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,66 +47,67 @@ class PipelineWebSocketListener @Autowired constructor(
 ) : PipelineEventListener<PipelineBuildWebSocketPushEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildWebSocketPushEvent) {
-
         val channelCode = pipelineInfoFacadeService.getPipelineChannel(event.projectId, event.pipelineId)
         // 非页面类的流水线,直接返回。 不占用redis资源
-        if (channelCode != null && !ChannelCode.webChannel(channelCode)) {
-            return
-        }
+        if (channelCode != null && !ChannelCode.webChannel(channelCode)) return
 
-        if (event.refreshTypes and RefreshType.HISTORY.binary == RefreshType.HISTORY.binary) {
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildHistoryMessage(
-                    buildId = event.buildId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId
+        when {
+            event.refreshTypes.contains(RefreshType.HISTORY) -> dispatchHistoryMessage(event)
+            event.refreshTypes.contains(RefreshType.STATUS) -> dispatchStatusMessage(event)
+            event.refreshTypes.contains(RefreshType.RECORD) -> dispatchRecordMessage(event)
+        }
+    }
+
+    private fun dispatchHistoryMessage(event: PipelineBuildWebSocketPushEvent) {
+        val message = pipelineWebsocketService.buildHistoryMessage(
+            buildId = event.buildId,
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            userId = event.userId
+        )
+        webSocketDispatcher.dispatch(message)
+    }
+
+    private fun dispatchStatusMessage(event: PipelineBuildWebSocketPushEvent) {
+        val message = pipelineWebsocketService.buildStatusMessage(
+            buildId = event.buildId,
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            userId = event.userId
+        )
+        webSocketDispatcher.dispatch(message)
+    }
+
+    private fun dispatchRecordMessage(event: PipelineBuildWebSocketPushEvent) {
+        // #8955 增加对没有执行次数的默认页面的重复推送
+        val buildId = event.buildId
+        val projectId = event.projectId
+        val pipelineId = event.pipelineId
+        val userId = event.userId
+        val events = listOfNotNull(
+            event.executeCount?.let {
+                pipelineWebsocketService.buildRecordMessage(
+                    buildId = buildId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    executeCount = it
                 )
+            },
+            // 始终推送 executeCount = null 的消息（兼容默认进入的没带executeCount参数的页面）
+            pipelineWebsocketService.buildRecordMessage(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                executeCount = null
             )
-        }
+        ).toTypedArray()
+        webSocketDispatcher.dispatch(*events)
+    }
 
-        if (event.refreshTypes and RefreshType.DETAIL.binary == RefreshType.DETAIL.binary) {
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildDetailMessage(
-                    buildId = event.buildId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId
-                )
-            )
-        }
-
-        if (event.refreshTypes and RefreshType.STATUS.binary == RefreshType.STATUS.binary) {
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildStatusMessage(
-                    buildId = event.buildId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    userId = event.userId
-                )
-            )
-        }
-
-        if (event.refreshTypes and RefreshType.RECORD.binary == RefreshType.RECORD.binary) {
-            event.executeCount?.let { executeCount ->
-                webSocketDispatcher.dispatch(
-                    // #8955 增加对没有执行次数的默认页面的重复推送
-                    pipelineWebsocketService.buildRecordMessage(
-                        buildId = event.buildId,
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        userId = event.userId,
-                        executeCount = executeCount
-                    ),
-                    pipelineWebsocketService.buildRecordMessage(
-                        buildId = event.buildId,
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        userId = event.userId,
-                        executeCount = null
-                    )
-                )
-            }
-        }
+    // 为 RefreshType 添加扩展函数，简化位运算检查
+    fun Long.contains(refreshType: RefreshType): Boolean {
+        return this and refreshType.binary == refreshType.binary
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,10 +31,13 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.MetaData
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStepTemplate
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -51,13 +54,16 @@ import com.tencent.devops.process.yaml.v3.models.VariablePropType
 import com.tencent.devops.process.yaml.v3.models.VariableProps
 import com.tencent.devops.process.yaml.v3.models.job.Container
 import com.tencent.devops.process.yaml.v3.models.job.Credentials
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.job.Mutex
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.PreJobTemplate
 import com.tencent.devops.process.yaml.v3.models.job.Service
 import com.tencent.devops.process.yaml.v3.models.job.ServiceWith
 import com.tencent.devops.process.yaml.v3.models.job.Strategy
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.PreStageTemplate
 import com.tencent.devops.process.yaml.v3.parameter.Parameters
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.process.yaml.v3.utils.StreamEnvUtils
@@ -83,7 +89,8 @@ object YamlObjects {
             readonly = getNullValue("readonly", variable)?.toBoolean(),
             const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
-            props = props
+            props = props,
+            ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable)
         )
 
         // 只有列表需要判断
@@ -123,12 +130,15 @@ object YamlObjects {
         val propsMap = transValue<Map<String, Any?>>(fromPath, "props", props)
         val po = VariableProps(
             label = getNullValue("label", propsMap),
-            type = getNotNullValue("type", "props", propsMap),
+            type = getNullValue("type", propsMap),
             options = getVarPropOptions(fromPath, propsMap["options"]),
             description = getNullValue("description", propsMap),
-            multiple = getNullValue("multiple", propsMap)?.toBoolean(),
-            required = getNullValue("required", propsMap)?.toBoolean(),
+            group = getNullValue("group", propsMap),
+            multiple = getNullValue("multiple", propsMap)?.toBooleanStrictOrNull(),
+            required = getNullValue("required", propsMap)?.toBooleanStrictOrNull(),
             repoHashId = getNullValue("repo-id", propsMap),
+            relativePath = getNullValue("relative-path", propsMap),
+            versionControl = getNullValue("version-control", propsMap)?.toBooleanStrictOrNull(),
             scmType = getNullValue("scm-type", propsMap),
             containerType = getVarPropContainerType(fromPath, propsMap["container-type"]),
             glob = getNullValue("filter-rule", propsMap),
@@ -202,6 +212,7 @@ object YamlObjects {
                 ifModifyList.map { it.toString() }.toList()
             } else null,
             uses = step["uses"]?.toString(),
+            namespace = step["namespace"]?.toString(),
             with = if (step["with"] == null) {
                 null
             } else {
@@ -210,6 +221,11 @@ object YamlObjects {
             timeoutMinutes = getNullValue("timeout-minutes", step),
             continueOnError = getNullValue("continue-on-error", step),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
+            canPauseBeforeRun = getNullValue("can-pause-before-run", step)?.toBooleanStrictOrNull(),
+            pauseNoticeReceivers = if (step["pause-notice-receivers"] is List<*>) {
+                val receivers = step["pause-notice-receivers"] as List<*>
+                receivers.map { it.toString() }.toList()
+            } else null,
             env = if (step["env"] == null) {
                 null
             } else {
@@ -238,6 +254,18 @@ object YamlObjects {
         // 检测step env合法性
         StreamEnvUtils.checkEnv(preStep.env, fromPath)
         return preStep
+    }
+
+    fun getStepTemplate(fromPath: TemplatePath, step: Map<String, Any>, repo: TemplateInfo?): PreStepTemplate {
+        return PreStepTemplate(
+            templatePath = step["template"]?.toString(),
+            templateRef = step["ref"]?.toString(),
+            templateId = step["template-id"]?.toString(),
+            templateVersionName = step["version"]?.toString(),
+            variables = YamlObjects.transValue<Map<String, PreTemplateVariable>>(
+                fromPath, TemplateType.STAGE.text, step["variables"]
+            )
+        )
     }
 
     fun getResourceExclusiveDeclaration(fromPath: TemplatePath, resource: Any): Mutex {
@@ -441,6 +469,16 @@ object YamlObjects {
             throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file.toString(), type))
         }
     }
+    inline fun <reified T> transValue(path: String, type: String, value: Any?): T {
+        if (value == null) {
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(path, type))
+        }
+        return try {
+            value as T
+        } catch (e: Exception) {
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(path, type))
+        }
+    }
 
     inline fun <reified T> transNullValue(file: TemplatePath, type: String, key: String, map: Map<String, Any?>): T? {
         return if (map[key] == null) {
@@ -462,7 +500,7 @@ object YamlObjects {
         }
     }
 
-    private fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
+    fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
         return if (map[key] == null) {
             throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
@@ -470,13 +508,30 @@ object YamlObjects {
         }
     }
 
-    private fun getNotNullValueAny(key: String, mapName: String, map: Map<String, Any?>): Any {
+    fun getNotNullValueAny(key: String, mapName: String, map: Map<String, Any?>): Any {
         return if (map[key] == null) {
             throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
             map[key]!!
         }
     }
+}
+
+@Suppress("ComplexMethod")
+fun <T> YamlTemplate<T>.getStageTemplate(
+    fromPath: TemplatePath,
+    stage: Map<String, Any>,
+    deepTree: TemplateDeepTreeNode
+): PreStageTemplate {
+    return PreStageTemplate(
+        templatePath = stage["template"]?.toString(),
+        templateRef = stage["ref"]?.toString(),
+        templateId = stage["template-id"]?.toString(),
+        templateVersionName = stage["version"]?.toString(),
+        variables = YamlObjects.transValue<Map<String, PreTemplateVariable>>(
+            fromPath, TemplateType.STAGE.text, stage["variables"]
+        )
+    )
 }
 
 @Suppress("ComplexMethod")
@@ -500,14 +555,9 @@ fun <T> YamlTemplate<T>.getStage(
             null
         } else {
             val jobs = YamlObjects.transValue<Map<String, Any>>(fromPath, TemplateType.JOB.text, stage["jobs"])
-            val map = LinkedHashMap<String, PreJob>()
+            val map = LinkedHashMap<String, IPreJob>()
             jobs.forEach { (key, value) ->
-                // 检查根文件处jobId重复
-                val newJob = this.replaceJobTemplate(mapOf(key to value), filePath, deepTree)
-                if (key == Constants.TEMPLATE_KEY) {
-                    TemplateYamlUtil.checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
-                }
-                map.putAll(newJob)
+                map.putAll(this.replaceJobTemplate(mapOf(key to value), filePath, deepTree))
             }
             map
         },
@@ -531,6 +581,23 @@ fun <T> YamlTemplate<T>.getStage(
         } else {
             null
         }
+    )
+}
+
+@Suppress("ComplexMethod")
+fun <T> YamlTemplate<T>.getJobTemplate(
+    fromPath: TemplatePath,
+    job: Map<String, Any>,
+    deepTree: TemplateDeepTreeNode
+): PreJobTemplate {
+    return PreJobTemplate(
+        templatePath = job["template"]?.toString(),
+        templateRef = job["ref"]?.toString(),
+        templateId = job["template-id"]?.toString(),
+        templateVersionName = job["version"]?.toString(),
+        variables = YamlObjects.transValue<Map<String, PreTemplateVariable>>(
+            fromPath, TemplateType.STAGE.text, job["variables"]
+        )
     )
 }
 
@@ -566,7 +633,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: TemplatePath, job: Map<String, Any>, de
             null
         } else {
             val steps = YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.STEP.text, job["steps"])
-            val list = mutableListOf<PreStep>()
+            val list = mutableListOf<IPreStep>()
             steps.forEach {
                 list.addAll(this.replaceStepTemplate(listOf(it), filePath, deepTree))
             }

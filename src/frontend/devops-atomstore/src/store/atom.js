@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -243,7 +243,7 @@ export const actions = {
     /**
      * 安装流水线插件
      */
-    installAtom ({ commit }, { params }) {
+    installAtom ({ commit }, params) {
         return vue.$ajax.post(`${prefix}/user/market/atom/install`, params)
     },
 

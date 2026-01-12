@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -48,6 +49,7 @@ data class BuildInfo(
     var status: BuildStatus,
     var queueTime: Long,
     val executeTime: Long,
+    @Deprecated("已使用权限代持人替代")
     val startUser: String, // 真正用来执行构建的人的身份（一般像Git触发，有可能]与触发人不一样，因为Git平台账号不一定是人）
     val triggerUser: String, // 真正的触发人（不一定是人，也可能是机器账号，比如git平台账号）
     var startTime: Long?,
@@ -61,6 +63,7 @@ data class BuildInfo(
     var errorInfoList: List<ErrorInfo>?,
     val stageStatus: List<BuildStageStatus>?,
     val debug: Boolean,
+    val versionChange: Boolean? = null,
     @Deprecated("后续只用executeCount做判断")
     val retryFlag: Boolean? = null,
     val executeCount: Int = 1,
@@ -70,6 +73,7 @@ data class BuildInfo(
     val buildMsg: String? = null,
     val material: List<PipelineBuildMaterial>? = null,
     val artifactList: List<FileInfo>? = null,
+    val artifactQualityList: List<ArtifactQualityMetadataAnalytics>? = null,
     val remark: String? = null,
     val recommendVersion: String?,
     val buildNumAlias: String?,
@@ -86,6 +90,7 @@ data class BuildInfo(
             startTime != null &&
             endTime!! > startTime!!
         -> true
+
         else -> status.isFinish()
     }
 
@@ -96,6 +101,7 @@ data class BuildInfo(
             startTime != null &&
             endTime!! > startTime!!
         -> true
+
         else -> status.isSuccess()
     }
 

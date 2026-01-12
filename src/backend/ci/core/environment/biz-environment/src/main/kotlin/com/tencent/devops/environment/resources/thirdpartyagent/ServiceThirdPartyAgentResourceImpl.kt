@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,6 +40,7 @@ import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
@@ -53,10 +54,12 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdpartyagent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartAgentService
@@ -73,6 +76,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val agentPipelineService: AgentPipelineService,
     private val slaveGatewayService: SlaveGatewayService,
     private val nodeService: NodeService,
+    private val nodeTagService: NodeTagService,
     private val agentService: ThirdPartAgentService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
@@ -225,6 +229,24 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 
+    override fun getNodeDetailSimple(
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        agentHashId: String?,
+        checkPermission: Boolean?
+    ): Result<ThirdPartyAgentDetail?> {
+        return Result(
+            thirdPartyAgentService.getAgentDetailSimple(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                agentHashId = agentHashId,
+                checkPermission = checkPermission ?: false
+            )
+        )
+    }
+
     override fun listAgentBuilds(
         userId: String,
         projectId: String,
@@ -318,6 +340,20 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
                 type = data.type,
                 data = data.envVars
             )
+        )
+    }
+
+    override fun updateAgentInfo(
+        userId: String,
+        projectId: String,
+        data: UpdateAgentInfo
+    ): Result<Boolean> {
+        return Result(agentService.updateAgentInfo(userId, projectId, data))
+    }
+
+    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+        return Result(
+            nodeTagService.fetchTagAndNodeCount(projectId)
         )
     }
 }

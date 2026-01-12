@@ -17,7 +17,7 @@
                     <bk-radio
                         :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]"
                         :value="item.value"
-                        :disabled="disabled || item.disabled || readOnly"
+                        :disabled="disabled || item.disabled || (readOnlyCheck && readOnly)"
                     >
                         <span
                             :class="{
@@ -54,14 +54,14 @@
         computed: {
             enumList () {
                 return this.list.map((item) => {
-                    let { value, ...restProp } = item
+                    let { value } = item
                     if (value === 'true') {
                         value = true
                     } else if (value === 'false') {
                         value = false
                     }
                     return {
-                        ...restProp,
+                        ...item,
                         value
                     }
                 })

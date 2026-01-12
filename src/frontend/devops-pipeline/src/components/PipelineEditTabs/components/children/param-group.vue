@@ -1,6 +1,7 @@
 <template>
     <div class="bk-param-container">
         <header
+            v-if="showHeader"
             :active="isShow"
             @click="toggleContent"
             class="var-header"
@@ -29,93 +30,105 @@
                 class="var-content"
             >
                 <slot name="content">
-                    <vue-draggable
-                        class="bk-param-drag-list"
-                        ghost-class="ghost-item"
-                        handle=".drag-area"
-                        :list="list"
-                        :group="{ name: 'bk-param-list', pull: false, put: false }"
-                        @change="triggerSort"
+                    <div
+                        v-for="(key) in sortedCategories"
+                        :key="key"
                     >
-                        <div
-                            v-for="(param) in list"
-                            :key="param.id"
-                            :class="['variable-item', {
-                                'variable-item-editable': editable
-                            }]"
-                            @click="handleEdit(param.id)"
+                        <div class="group-label">
+                            <i class="label-icon"></i>
+                            {{ key }}
+                        </div>
+                        <vue-draggable
+                            :key="key"
+                            class="bk-param-drag-list"
+                            ghost-class="ghost-item"
+                            handle=".drag-area"
+                            :list="listMap[key]"
+                            :group="{ name: 'bk-param-list', pull: false, put: false }"
+                            @change="(event) => triggerSort(event, key, index)"
                         >
                             <div
-                                v-if="editable"
-                                class="drag-area"
-                                @click.stop
+                                v-for="(param) in listMap[key]"
+                                :key="param.id"
+                                :class="['variable-item variable-item-editable', {
+                                    'variable-item-invalid': param.isInvalid
+                                }]"
+                                @click="handleEdit(param.id)"
                             >
-                                <i class="bk-icon icon-grag-fill"></i>
-                            </div>
-                            <div class="var-con">
                                 <div
-                                    class="var-names"
-                                    :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc }"
-                                    v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }"
+                                    v-if="editable"
+                                    class="drag-area"
+                                    @click.stop
                                 >
-                                    <span>{{ param.id }}</span>
-                                    <span>({{ param.name || param.id }})</span>
+                                    <i class="bk-icon icon-grag-fill"></i>
                                 </div>
-                                <div
-                                    class="value-operate-row"
-                                    style="justify-content: space-between;"
-                                >
-                                    <div class="param-value">
-                                        <span
-                                            v-if="param.readOnly"
-                                            class="read-only"
-                                        >{{ $t('readonlyParams') }}</span>
-                                        <span
-                                            class="default-value"
-                                            v-bk-overflow-tips
-                                        >
-                                            {{ param.defaultValue || '--' }}
-                                        </span>
+                                <div class="var-con">
+                                    <div
+                                        class="var-names"
+                                        :class="{ 'required-param': param.valueNotEmpty, 'desc-param': param.desc, 'param-deleted': param.isDeleted }"
+                                        v-bk-tooltips="{ content: param.desc, disabled: !param.desc, allowHTML: false }"
+                                    >
+                                        <span>{{ param.id }}</span>
+                                        <span>({{ param.name || param.id }})</span>
                                     </div>
                                     <div
-                                        v-if="editable"
-                                        class="var-operate"
+                                        class="value-operate-row"
+                                        style="justify-content: space-between;"
                                     >
+                                        <div class="param-value">
+                                            <span
+                                                v-if="param.readOnly"
+                                                class="read-only"
+                                            >{{ $t('readonlyParams') }}</span>
+                                            <span
+                                                :class="['default-value', {
+                                                    'param-deleted': param.isDeleted
+                                                }]"
+                                                v-bk-overflow-tips
+                                            >
+                                                {{ param.defaultValue === '' ? '--' : (param.defaultValue ?? '--') }}
+                                            </span>
+                                        </div>
                                         <div
-                                            class="operate-btns"
-                                            @click.stop
+                                            v-if="editable"
+                                            class="var-operate"
                                         >
-                                            <i
-                                                @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))"
-                                                class="bk-icon icon-copy"
-                                            ></i>
-                                            <bk-popconfirm
-                                                ref="removePopConfirmRef"
-                                                :popover-options="{ appendTo: 'parent' }"
-                                                :title="$t('newui.pipelineParam.removeTitle')"
-                                                :confirm-text="$t('newui.pipelineParam.remove')"
-                                                :cancel-text="$t('cancel')"
-                                                trigger="click"
-                                                width="200"
-                                                ext-cls="delete-param-popconfrim"
-                                                ext-popover-cls="delete-param-popconfrim-content"
-                                                @confirm="handleUpdate(param.id)"
+                                            <div
+                                                class="operate-btns"
+                                                @click.stop
                                             >
-                                                <i class="bk-icon icon-minus-circle"></i>
-                                            </bk-popconfirm>
-                                            <i
-                                                v-bk-tooltips="{ content: $t('newui.pipelineParam.toTop') }"
-                                                @click.stop="handleUpdate(param.id, true)"
-                                                class="bk-icon icon-angle-double-up"
-                                                style="font-size: 16px"
-                                            >
-                                            </i>
+                                                <i
+                                                    @click.stop="handleCopy(bkVarWrapper('variables.' + param.id))"
+                                                    class="bk-icon icon-copy"
+                                                ></i>
+                                                <bk-popconfirm
+                                                    ref="removePopConfirmRef"
+                                                    :popover-options="{ appendTo: 'parent' }"
+                                                    :title="$t('newui.pipelineParam.removeTitle')"
+                                                    :confirm-text="$t('newui.pipelineParam.remove')"
+                                                    :cancel-text="$t('cancel')"
+                                                    trigger="click"
+                                                    width="200"
+                                                    ext-cls="delete-param-popconfrim"
+                                                    ext-popover-cls="delete-param-popconfrim-content"
+                                                    @confirm="handleUpdate(param.id)"
+                                                >
+                                                    <i class="bk-icon icon-minus-circle"></i>
+                                                </bk-popconfirm>
+                                                <i
+                                                    v-bk-tooltips="{ content: $t('newui.pipelineParam.toTop') }"
+                                                    @click.stop="handleUpdate(param.id, true)"
+                                                    class="bk-icon icon-angle-double-up"
+                                                    style="font-size: 16px"
+                                                >
+                                                </i>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </vue-draggable>
+                        </vue-draggable>
+                    </div>
                 </slot>
             </section>
         </transition>
@@ -123,13 +136,17 @@
 </template>
 
 <script>
-    import vueDraggable from 'vuedraggable'
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
+    import vueDraggable from 'vuedraggable'
     export default {
         components: {
             vueDraggable
         },
         props: {
+            showHeader: {
+                type: Boolean,
+                default: true
+            },
             showContent: {
                 type: Boolean,
                 default: true
@@ -146,10 +163,6 @@
                 type: Number,
                 default: 0
             },
-            list: {
-                type: Array,
-                default: () => ([])
-            },
             handleEdit: {
                 type: Function,
                 default: () => {}
@@ -165,6 +178,14 @@
             editable: {
                 type: Boolean,
                 default: true
+            },
+            listMap: {
+                type: Object,
+                default: () => {}
+            },
+            sortedCategories: {
+                type: Array,
+                default: () => []
             }
         },
         data () {
@@ -190,19 +211,14 @@
             toggleContent: function () {
                 this.isShow = !this.isShow
             },
-            triggerSort (event) {
-                this.$refs.removePopConfirmRef.forEach(i => i?.cancel())
-                // 判断拖拽element的newIndex，如果是newIndex=0, 放到最前面， 否则， 找出他的上一个element
-                const { element, newIndex } = event?.moved
-                if (!element?.id) return
-                if (newIndex === 0) {
-                    // 移到第一位
-                    this.handleUpdate(element.id, true)
-                } else {
-                    const preElement = this.list[newIndex - 1]
-                    // 把element插入到指定id的element后面
-                    this.handleSort(preElement?.id, element.id)
-                }
+          
+            triggerSort (event, key, index) {
+                const { element, newIndex, oldIndex } = event?.moved
+                const paramList = this.listMap[key]
+                if (!element) return
+                const curElement = paramList[newIndex]
+                const preElement = oldIndex < newIndex ? paramList[newIndex - 1] : paramList[newIndex + 1]
+                this.handleSort(preElement.id, curElement.id, oldIndex > newIndex)
             }
         }
     }
@@ -210,6 +226,7 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
+    @import "@/scss/conf.scss";
     .delete-param-popconfrim {
         .tippy-tooltip {
             padding: 6px;
@@ -227,7 +244,6 @@
         }
     }
     .bk-param-container {
-        margin-bottom: 16px;
         .var-header {
             display: flex;
             align-items: center;
@@ -291,6 +307,19 @@
                     opacity: 0.5;
                 }
             }
+            .group-label {
+                display: flex;
+                align-items: center;
+                font-size: 12px;
+                margin: 10px 0 5px;
+                .label-icon {
+                    display: inline-block;
+                    margin-right: 4px;
+                    width: 4px;
+                    height: 12px;
+                    background: #3A84FF;
+                }
+            }
             .variable-item {
                 width: 100%;
                 position: relative;
@@ -310,6 +339,9 @@
                             display: block;
                         }
                     }
+                }
+                &.variable-item-invalid {
+                   border-color: $dangerColor;
                 }
                 &:hover {
                     .drag-area {
@@ -347,6 +379,11 @@
                         color: #313238;
                         max-width: 350px;
                         @include ellipsis();
+                        
+                    }
+                    .param-deleted {
+                        text-decoration: line-through;
+                        color: #C4C6CC !important;
                     }
                     .desc-param {
                         display: inline;
@@ -413,6 +450,10 @@
                     }
                 }
             }
+        }
+
+        &:not(:last-child) {
+            margin-bottom: 16px;
         }
     }
 

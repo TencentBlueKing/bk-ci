@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,13 +28,16 @@
 package com.tencent.devops.environment.service.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.thirdpartyagent.TPAInstallType
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -81,12 +84,21 @@ class DownloadAgentInstallService @Autowired constructor(
     @Value("\${environment.jdkCompatibility:true}")
     private val jdkCompatibility = true
 
-    fun downloadInstallScript(agentId: String, isWinDownload: Boolean): Response {
+    fun downloadInstallScript(
+        agentId: String,
+        isWinDownload: Boolean,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?
+    ): Response {
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
-            throw RuntimeException("Agent already installed. Please obtain the install url again")
+            throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_AGENT_ALREADY_INSTALL,
+                defaultMessage = "Agent already installed. Please obtain the install url again"
+            )
         }
 
         /**
@@ -112,7 +124,7 @@ class DownloadAgentInstallService @Autowired constructor(
             logger.warn("The install script file(${scriptFile.absolutePath}) is not exist")
             throw FileNotFoundException("The install script file is not exist")
         }
-        val map = getAgentReplaceProperties(agentRecord, true)
+        val map = getAgentReplaceProperties(agentRecord, true, loginName, loginPassword, installType)
         var result = scriptFile.readText(Charset.forName("UTF-8"))
 
         map.forEach { (t, u) ->
@@ -127,7 +139,11 @@ class DownloadAgentInstallService @Autowired constructor(
             .build()
     }
 
-    fun downloadGoAgent(agentId: String, record: TEnvironmentThirdpartyAgentRecord, arch: AgentArchType?): Response {
+    fun downloadGoAgent(
+        agentId: String,
+        record: TEnvironmentThirdpartyAgentRecord,
+        arch: AgentArchType?
+    ): Response {
         logger.info("Trying to download the agent($agentId) arch($arch)")
 
         val jarFiles = getGoAgentJarFiles(record.os, arch)
@@ -136,7 +152,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val goInstallerFile = getGoFile(record.os, "installer", arch)
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
-        val scriptFiles = getGoAgentScriptFiles(record)
+        val scriptFiles = getGoAgentScriptFiles(record, null, null, null)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -210,9 +226,16 @@ class DownloadAgentInstallService @Autowired constructor(
         zipOut.closeArchiveEntry()
     }
 
-    fun downloadAgent(agentId: String, arch: AgentArchType?): Response {
+    fun downloadAgent(
+        agentId: String,
+        arch: AgentArchType?
+    ): Response {
         val agentRecord = getAgentRecord(agentId)
-        return downloadGoAgent(agentId, agentRecord, arch)
+        return downloadGoAgent(
+            agentId = agentId,
+            record = agentRecord,
+            arch = arch
+        )
     }
 
     private fun getAgentPackageFiles(os: String) =
@@ -248,10 +271,15 @@ class DownloadAgentInstallService @Autowired constructor(
         return daemonFile
     }
 
-    private fun getGoAgentScriptFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
+    private fun getGoAgentScriptFiles(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?
+    ): Map<String, String> {
         val file = File(agentPackage, "script/${agentRecord.os.lowercase()}")
         val scripts = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord, false)
+        val map = getAgentReplaceProperties(agentRecord, false, loginName, loginPassword, installType)
         return scripts?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -261,7 +289,7 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getPropertyFile(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val file = File(agentPackage, "config").listFiles()
-        val map = getAgentReplaceProperties(agentRecord, false)
+        val map = getAgentReplaceProperties(agentRecord, false, null, null, null)
         return file?.filter { it.isFile }?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
@@ -296,10 +324,14 @@ class DownloadAgentInstallService @Autowired constructor(
 
     private fun getAgentReplaceProperties(
         agentRecord: TEnvironmentThirdpartyAgentRecord,
-        enableCheckFiles: Boolean
+        enableCheckFiles: Boolean,
+        loginName: String?,
+        loginPassword: String?,
+        installType: TPAInstallType?
     ): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
         val agentUrl = agentUrlService.genAgentUrl(agentRecord)
+
         val gateWay = agentUrlService.genGateway(agentRecord)
         val fileGateway = agentUrlService.genFileGateway(agentRecord)
         return mapOf(
@@ -312,7 +344,10 @@ class DownloadAgentInstallService @Autowired constructor(
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn,
             "language" to commonConfig.devopsDefaultLocaleLanguage,
-            "enableCheckFiles" to enableCheckFiles.toString()
+            "enableCheckFiles" to enableCheckFiles.toString(),
+            "serviceUsername" to (loginName ?: ""),
+            "servicePassword" to (loginPassword ?: ""),
+            "installType" to (installType?.name ?: "")
         )
     }
 
@@ -370,7 +405,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 }
             }
 
-            getGoAgentScriptFiles(record).forEach { (name, content) ->
+            getGoAgentScriptFiles(record, null, null, null).forEach { (name, content) ->
                 logger.info("zip the script files ($name)")
                 val entry = ZipArchiveEntry(name)
                 val bytes = content.toByteArray()

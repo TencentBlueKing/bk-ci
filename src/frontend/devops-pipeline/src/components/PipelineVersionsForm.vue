@@ -5,110 +5,50 @@
     >
         <bk-form-item>
             <label class="pipeline-execute-version-label">
-                <span>{{ $t('versionNum') }}</span>
+                <span :class="{ 'deleted': isDelete }">{{ $t('versionNum') }}</span>
                 <span class="desc-text">{{ $t('mainMinorPatch') }}</span>
             </label>
             <div class="execute-build-version">
-                <span
+                <form-field
+                    :hide-colon="true"
                     class="execute-build-version-input"
-                    v-for="v in allVersionKeyList"
-                    :key="v"
+                    v-for="v in renderVersionParamList"
+                    :key="v.id"
+                    :required="v.required"
+                    :is-error="errors.has(v.id)"
                 >
                     <vuex-input
-                        :disabled="disabled"
+                        :disabled="disabled || isFollowTemplate"
                         input-type="number"
-                        :name="v"
-                        :placeholder="versionConfig[v].placeholder"
+                        :name="v.id"
+                        :class="{
+                            'is-diff-param': highlightChangedParam && v.isChanged,
+                            'is-change-param': v.isChange,
+                            'is-new-param': v.isNew,
+                            'is-delete-param': v.isDelete
+                        }"
+                        :placeholder="v.placeholder"
                         v-validate.initial="'required|numeric'"
-                        :value="versionParamValues[v]"
+                        :value="versionParamValues[v.id]"
                         :handle-change="handleVersionChange"
                     />
-                </span>
+                </form-field>
             </div>
         </bk-form-item>
-
-        <div
-            v-if="isTemplateEdit"
-            class="execute-buildno-params"
-        >
-            <bk-form-item
-                required
-                :label="$t('buildNoBaseline.buildNoBaseline')"
-                :desc="baselineTooltipContent"
+        <template v-if="showBaseline">
+            <div
+                v-if="isTemplateEdit"
+                class="execute-buildno-params"
             >
-                <form-field
-                    :required="true"
-                    :is-error="errors.has('buildNo')"
-                    :error-msg="errors.first('buildNo')"
+                <bk-form-item
+                    required
+                    :label="$t('buildNoBaseline.buildNoBaseline')"
+                    :desc="baselineTooltipContent"
                 >
-                    <vuex-input
-                        :disabled="isPreviewAndLockedNo"
-                        input-type="number"
-                        name="buildNo"
-                        placeholder="BK_CI_BUILD_NO"
-                        v-validate.initial="'required|numeric'"
-                        :value="buildNo.buildNo"
-                        :handle-change="handleBuildNoChange"
-                    />
-                </form-field>
-                <span class="baseline-tips">
-                    <Logo
-                        size="14"
-                        name="warning-circle-fill"
-                    />
-                    <span class="baseline-tips-text">{{ $t('buildNoBaseline.templateManualResetRequired') }}</span>
-                </span>
-                <div id="baseline-tooltip-content">
-                    <p
-                        v-for="(tip, index) in buildNoBaselineTips"
-                        :key="index"
-                    >
-                        {{ tip }}
-                    </p>
-                </div>
-            </bk-form-item>
-            <form-field
-                :required="true"
-                :is-error="errors.has('buildNoType')"
-                :error-msg="errors.first('buildNoType')"
-            >
-                <enum-input
-                    :list="buildNoRules"
-                    :disabled="disabled || isPreview"
-                    name="buildNoType"
-                    v-validate.initial="'required|string'"
-                    :value="buildNo.buildNoType"
-                    :handle-change="handleBuildNoChange"
-                />
-            </form-field>
-        </div>
-        <bk-form-item
-            v-else
-            ext-cls="preview-buildno"
-        >
-            <label class="pipeline-execute-version-label">
-                <span>{{ $t('buildNum') }}</span>
-                <bk-checkbox
-                    v-if="isInstance && !isInitInstance"
-                    class="instance_reset"
-                    :value="resetBuildNo"
-                    @change="handleCheckChange"
-                >
-                    {{ $t('buildNoBaseline.instanceBuildNo') }}
-                </bk-checkbox>
-            </label>
-            <div class="preview-buildno-params">
-                <div class="build">
-                    <span class="build-label">{{ $t('buildNoBaseline.baselineValue') }}</span>
-                    <span
-                        class="build-value"
-                        v-if="!isInstance"
-                    >
-                        {{ `${buildNo.buildNo} (${currentBuildNoType})` }}
-                    </span>
-                    <p
-                        class="build-input"
-                        v-else
+                    <form-field
+                        :required="true"
+                        :is-error="errors.has('buildNo')"
+                        :error-msg="errors.first('buildNo')"
                     >
                         <vuex-input
                             :disabled="isPreviewAndLockedNo"
@@ -119,58 +59,125 @@
                             :value="buildNo.buildNo"
                             :handle-change="handleBuildNoChange"
                         />
-                        <span class="bk-form-help is-danger">{{ errors.first('buildNo') }}</span>
-                    </p>
-                </div>
-                <div
-                    class="build"
-                    v-if="isInstance"
-                >
-                    <span class="build-label">{{ $t('buildNoBaseline.strategy') }}</span>
-                    <span class="build-value">
-                        {{ currentBuildNoType }}
-                    </span>
-                </div>
-                <div
-                    class="build"
-                    v-if="!isInitInstance"
-                >
-                    <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
-                    <p>
-                        <vuex-input
-                            :disabled="(isLockedNo && !isInstance) || isInstance"
-                            input-type="number"
-                            name="currentBuildNo"
-                            placeholder="CURRENT_BUILD_NO"
-                            v-validate.initial="'required|numeric'"
-                            :value="buildNo.currentBuildNo"
-                            :handle-change="handleBuildNoChange"
+                    </form-field>
+                    <span class="baseline-tips">
+                        <Logo
+                            size="14"
+                            name="warning-circle-fill"
                         />
-                        <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
-                        <span
-                            v-if="resetBuildNo && isInstance"
-                            class="reset-build-no"
+                        <span class="baseline-tips-text">{{ $t('buildNoBaseline.templateManualResetRequired') }}</span>
+                    </span>
+                    <div id="baseline-tooltip-content">
+                        <p
+                            v-for="(tip, index) in buildNoBaselineTips"
+                            :key="index"
                         >
-                            <Logo
-                                size="14"
-                                name="arrow-right"
-                            />
-                            {{ buildNo.buildNo }}
-                        </span>
-                    </p>
-                </div>
+                            {{ tip }}
+                        </p>
+                    </div>
+                </bk-form-item>
+                <form-field
+                    :required="true"
+                    :is-error="errors.has('buildNoType')"
+                    :error-msg="errors.first('buildNoType')"
+                >
+                    <enum-input
+                        :list="buildNoRules"
+                        :disabled="disabled || isPreview"
+                        name="buildNoType"
+                        v-validate.initial="'required|string'"
+                        :value="buildNo.buildNoType"
+                        :handle-change="handleBuildNoChange"
+                    />
+                </form-field>
             </div>
-        </bk-form-item>
+            <bk-form-item
+                v-else
+                ext-cls="preview-buildno"
+            >
+                <label class="pipeline-execute-version-label">
+                    <span>{{ $t('buildNum') }}</span>
+                    <bk-checkbox
+                        v-if="isInstance && !isInitInstance"
+                        class="instance_reset"
+                        :value="resetBuildNo"
+                        @change="handleCheckChange"
+                    >
+                        {{ $t('buildNoBaseline.instanceBuildNo') }}
+                    </bk-checkbox>
+                </label>
+                <div class="preview-buildno-params">
+                    <div class="build">
+                        <span class="build-label">{{ $t('buildNoBaseline.baselineValue') }}</span>
+                        <span
+                            class="build-value"
+                            v-if="!isInstance"
+                        >
+                            {{ `${buildNo.buildNo} (${currentBuildNoType})` }}
+                        </span>
+                        <p
+                            class="build-input"
+                            v-else
+                        >
+                            <vuex-input
+                                :disabled="isPreviewAndLockedNo || isFollowTemplate || disabled"
+                                :class="{
+                                    'is-change-param': buildNoChanged
+                                }"
+                                input-type="number"
+                                name="buildNo"
+                                placeholder="BK_CI_BUILD_NO"
+                                v-validate.initial="'required|numeric'"
+                                :value="buildNo.buildNo"
+                                :handle-change="handleBuildNoChange"
+                            />
+                            <span class="bk-form-help is-danger">{{ errors.first('buildNo') }}</span>
+                        </p>
+                    </div>
+                    <div
+                        class="build"
+                        v-if="isInstance"
+                    >
+                        <span class="build-label">{{ $t('buildNoBaseline.strategy') }}</span>
+                        <span class="build-value">
+                            {{ currentBuildNoType }}
+                        </span>
+                    </div>
+                    <div
+                        class="build"
+                        v-if="!isInitInstance"
+                    >
+                        <span class="build-label">{{ $t('buildNoBaseline.currentValue') }}</span>
+                        <p>
+                            <vuex-input
+                                :disabled="(isLockedNo && !isInstance) || isInstance || disabled"
+                                input-type="number"
+                                name="currentBuildNo"
+                                placeholder="CURRENT_BUILD_NO"
+                                v-validate.initial="'required|numeric'"
+                                :value="buildNo.currentBuildNo"
+                                :handle-change="handleBuildNoChange"
+                                :class="{
+                                    'is-diff-param': highlightChangedParam && buildNo.isChanged,
+                                    'is-change-param': resetBuildNo
+                                }"
+                            />
+                            <span class="bk-form-help is-danger">{{ errors.first('currentBuildNo') }}</span>
+                        </p>
+                    </div>
+                </div>
+            </bk-form-item>
+        </template>
     </bk-form>
 </template>
 
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import Logo from '@/components/Logo'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
     import { mapGetters } from 'vuex'
-    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -197,19 +204,33 @@
             },
             handleBuildNoChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             handleVersionChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             handleCheckChange: {
                 type: Function,
-                default: () => () => { }
+                default: () => () => {}
             },
             isInstance: Boolean,
             isInitInstance: Boolean,
-            resetBuildNo: Boolean
+            resetBuildNo: Boolean,
+            highlightChangedParam: Boolean,
+            isFollowTemplate: Boolean,
+            versionParamList: {
+                type: Array,
+                default: () => []
+            },
+            showBaseline: {
+                type: Boolean,
+                default: true
+            },
+            buildNoChanged: {
+                type: Boolean,
+                default: false
+            }
         },
         data () {
             return {
@@ -224,8 +245,15 @@
             ...mapGetters('atom', [
                 'buildNoRules'
             ]),
-            allVersionKeyList () {
-                return allVersionKeyList
+            renderVersionParamList () {
+                return this.versionParamList.length
+                    ? this.versionParamList
+                    : allVersionKeyList.map(v => ({
+                        id: v,
+                        value: this.versionParamValues[v],
+                        placeholder: this.versionConfig[v].placeholder,
+                        isChanged: false
+                    }))
             },
             versionConfig () {
                 return getVersionConfig()
@@ -255,6 +283,12 @@
             },
             isPreviewAndLockedNo () {
                 return (this.isLockedNo && this.isPreview) || this.disabled
+            },
+            isDelete () {
+                return this.versionParamList.every(i => i?.isDelete)
+            },
+            isNew () {
+                return this.versionParamList.every(i => i?.isNew)
             }
         }
     }
@@ -271,7 +305,10 @@
         align-items: center;
         font-size: 12px;
         font-weight: 700;
-
+        .deleted {
+            color: #a7a9ac !important;
+            text-decoration: line-through;
+        }
         .desc-text {
             font-weight: normal;
             color: #979ba5;
@@ -280,6 +317,23 @@
         .instance_reset {
             font-weight: normal;
             margin-left: 18px;
+        }
+        .status-tag {
+            padding: 0 8px;
+            border-radius: 2px;
+            margin-right: 40px;
+            font-size: 12px;
+            height: 16px;
+            line-height: 16px;
+            font-weight: 400;
+            &.success {
+                color: #299E56;
+                background: #DAF6E5;
+            }
+            &.danger {
+                color: #E71818;
+                background: #FFEBEB;
+            }
         }
     }
 
@@ -320,12 +374,12 @@
         margin-left: 0;
         .preview-buildno-params {
             display: flex;
-            
+
             .build {
                 display: grid;
                 grid-template-columns: auto auto;
                 column-gap: 0;
-                
+
                 .build-label,
                 .build-value {
                     font-size: 12px;
@@ -379,5 +433,9 @@
 
 .is-not-Preview {
     display: grid;
+}
+
+.is-change-param {
+    background: #FDF4E8 !important;
 }
 </style>

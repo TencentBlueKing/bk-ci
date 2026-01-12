@@ -1,12 +1,15 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceGroupMember
+import com.tencent.devops.auth.pojo.DepartmentUserCount
 import com.tencent.devops.auth.pojo.ResourceMemberInfo
 import com.tencent.devops.auth.pojo.dto.IamGroupIdsQueryConditionDTO
 import com.tencent.devops.auth.pojo.dto.InvalidAuthorizationsDTO
 import com.tencent.devops.auth.pojo.enum.BatchOperateType
 import com.tencent.devops.auth.pojo.enum.MemberType
 import com.tencent.devops.auth.pojo.enum.OperateChannel
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectReq
+import com.tencent.devops.auth.pojo.request.BatchRemoveMemberFromProjectResponse
 import com.tencent.devops.auth.pojo.request.GroupMemberCommonConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberHandoverConditionReq
 import com.tencent.devops.auth.pojo.request.GroupMemberRemoveConditionReq
@@ -75,14 +78,6 @@ interface PermissionManageFacadeService {
      * */
     fun listIamGroupIdsByConditions(
         condition: IamGroupIdsQueryConditionDTO
-    ): List<Int>
-
-    /**
-     * 获取用户在该项目加入的组
-     * */
-    fun listMemberGroupIdsInProject(
-        projectCode: String,
-        memberId: String
     ): List<Int>
 
     /**
@@ -215,12 +210,30 @@ interface PermissionManageFacadeService {
     ): List<ResourceMemberInfo>
 
     /**
+     * 批量将用户移出项目-管理员视角
+     * */
+    fun batchRemoveMemberFromProject(
+        userId: String,
+        projectCode: String,
+        removeMemberFromProjectReq: BatchRemoveMemberFromProjectReq
+    ): BatchRemoveMemberFromProjectResponse
+
+    /**
      * 将用户移出项目检查-管理员视角
      * */
     fun removeMemberFromProjectCheck(
         userId: String,
         projectCode: String,
         removeMemberFromProjectReq: RemoveMemberFromProjectReq
+    ): Boolean
+
+    /**
+     * 批量将用户移出项目检查-管理员视角
+     * */
+    fun batchRemoveMemberFromProjectCheck(
+        userId: String,
+        projectCode: String,
+        targetMembers: List<ResourceMemberInfo>
     ): Boolean
 
     /**
@@ -271,4 +284,12 @@ interface PermissionManageFacadeService {
         projectCode: String,
         request: RemoveMemberFromProjectReq
     ): String
+
+    /**
+     * 获取项目用户部门分布情况
+     * */
+    fun getProjectUserDepartmentDistribution(
+        projectCode: String,
+        parentDepartmentId: Int
+    ): List<DepartmentUserCount>
 }

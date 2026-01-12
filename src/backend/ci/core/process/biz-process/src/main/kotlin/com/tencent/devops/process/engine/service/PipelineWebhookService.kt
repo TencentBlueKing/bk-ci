@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -50,6 +51,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -75,6 +77,7 @@ class PipelineWebhookService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResourceDao: PipelineResourceDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -90,6 +93,20 @@ class PipelineWebhookService @Autowired constructor(
         version: Int?,
         userId: String
     ) {
+        val pipelineResourceVersion = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: run {
+            logger.info("pipeline resource not found|$projectId|$pipelineId|$version")
+            return
+        }
+        if (pipelineResourceVersion.status == VersionStatus.COMMITTING) {
+            logger.info("pipeline resource is committing status, skip|$projectId|$pipelineId|$version")
+            return
+        }
         val model = getModel(projectId, pipelineId, version)
         if (model == null) {
             logger.info("$pipelineId|$version|model is null")
@@ -233,6 +250,14 @@ class PipelineWebhookService @Autowired constructor(
                         )
                     }
 
+                ScmType.SCM_GIT, ScmType.SCM_SVN -> {
+                    scmProxyService.addScmWebhook(
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig,
+                        codeEventType = codeEventType
+                    )
+                }
+
                 else -> {
                     null
                 }
@@ -303,7 +328,8 @@ class PipelineWebhookService @Autowired constructor(
     fun getTriggerPipelines(
         name: String,
         repositoryType: ScmType,
-        yamlPipelineIds: List<String>?
+        yamlPipelineIds: List<String>?,
+        compatibilityRepoNames: Set<String>
     ): List<WebhookTriggerPipeline> {
         val pipelineSet = mutableSetOf<WebhookTriggerPipeline>()
         // 需要精确匹配的代码库类型
@@ -315,19 +341,22 @@ class PipelineWebhookService @Autowired constructor(
         ) && name != getProjectName(name)
         // 精准匹配结果
         val exactResults = if (needExactMatch) {
-            pipelineWebhookDao.getByProjectNameAndType(
+            pipelineWebhookDao.getByProjectNamesAndType(
                 dslContext = dslContext,
-                projectName = name,
+                projectNames = setOf(name),
                 repositoryType = repositoryType.name,
                 yamlPipelineIds = yamlPipelineIds
             )?.toSet() ?: setOf()
         } else {
             setOf()
         }
+        // 模糊匹配和兼容仓库名一起查
+        val repoNames = compatibilityRepoNames.map { getProjectName(it) }.toMutableSet()
+        repoNames.add(getProjectName(name))
         // 模糊匹配结果
-        val fuzzyResults = pipelineWebhookDao.getByProjectNameAndType(
+        val fuzzyResults = pipelineWebhookDao.getByProjectNamesAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
+            projectNames = repoNames,
             repositoryType = repositoryType.name,
             yamlPipelineIds = yamlPipelineIds
         )?.toSet() ?: setOf()

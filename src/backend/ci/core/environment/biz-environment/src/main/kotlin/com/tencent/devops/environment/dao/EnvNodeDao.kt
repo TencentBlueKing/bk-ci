@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -131,14 +131,29 @@ class EnvNodeDao {
         }
     }
 
-    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) {
+    fun disableOrEnableNode(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long, enable: Boolean) =
         with(TEnvNode.T_ENV_NODE) {
             dslContext.update(this)
                 .set(ENABLE_NODE, enable)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
                 .and(NODE_ID.eq(nodeId))
-                .execute()
+                .execute() == 1
+        }
+
+    fun exists(dslContext: DSLContext, projectId: String, envId: Long, nodeId: Long): Boolean {
+        // 参数校验，避免无效查询
+        if (projectId.isBlank() || envId <= 0 || nodeId <= 0) {
+            return false
+        }
+
+        return with(TEnvNode.T_ENV_NODE) {
+            dslContext.fetchExists(
+                /* table = */ this,
+                /* condition = */ PROJECT_ID.eq(projectId)
+                    .and(ENV_ID.eq(envId))
+                    .and(NODE_ID.eq(nodeId))
+            )
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,14 +27,111 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线互转操作类型")
 enum class TransferActionType {
     @Schema(title = "完整转换：model -> yaml")
-    FULL_MODEL2YAML,
+    FULL_MODEL2YAML {
+        override fun check(data: TransferBody) {
+            if (data.modelAndSetting == null) {
+                throw ParamBlankException("model 不能为空")
+            }
+        }
+    },
+
     @Schema(title = "完整转换：yaml -> model")
-    FULL_YAML2MODEL,
+    FULL_YAML2MODEL {
+        override fun check(data: TransferBody) {
+            if (data.oldYaml.isBlank()) {
+                throw ParamBlankException("yaml 不能为空")
+            }
+        }
+    },
+
     @Schema(title = "yaml 中插入的插件")
-    YAML_INSERT_TASK;
+    YAML_INSERT_TASK {
+        override fun check(data: TransferBody) = Unit
+    },
+
+    // 模板
+    @Schema(title = "流水线模板转换：model -> yaml")
+    TEMPLATE_MODEL2YAML_PIPELINE {
+        override fun check(data: TransferBody) {
+            if (data.templateModelAndSetting?.templateModel == null) {
+                throw ParamBlankException("templateModel 不能为空")
+            }
+
+            if (data.templateModelAndSetting.setting == null) {
+                throw ParamBlankException("setting 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "流水线模板转换：yaml -> model")
+    TEMPLATE_YAML2MODEL_PIPELINE {
+        override fun check(data: TransferBody) {
+            if (data.oldYaml.isBlank()) {
+                throw ParamBlankException("yaml 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "STAGE模板转换：model -> yaml")
+    TEMPLATE_MODEL2YAML_STAGE {
+        override fun check(data: TransferBody) {
+            if (data.templateModelAndSetting?.templateModel == null) {
+                throw ParamBlankException("templateModel 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "STAGE模板转换：yaml -> model")
+    TEMPLATE_YAML2MODEL_STAGE {
+        override fun check(data: TransferBody) {
+            if (data.oldYaml.isBlank()) {
+                throw ParamBlankException("yaml 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "JOB模板转换：model -> yaml")
+    TEMPLATE_MODEL2YAML_JOB {
+        override fun check(data: TransferBody) {
+            if (data.templateModelAndSetting?.templateModel == null) {
+                throw ParamBlankException("templateModel 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "JOB模板转换：yaml -> model")
+    TEMPLATE_YAML2MODEL_JOB {
+        override fun check(data: TransferBody) {
+            if (data.oldYaml.isBlank()) {
+                throw ParamBlankException("yaml 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "STEP模板转换：model -> yaml")
+    TEMPLATE_MODEL2YAML_STEP {
+        override fun check(data: TransferBody) {
+            if (data.templateModelAndSetting?.templateModel == null) {
+                throw ParamBlankException("templateModel 不能为空")
+            }
+        }
+    },
+
+    @Schema(title = "STEP模板转换：yaml -> model")
+    TEMPLATE_YAML2MODEL_STEP {
+        override fun check(data: TransferBody) {
+            if (data.oldYaml.isBlank()) {
+                throw ParamBlankException("yaml 不能为空")
+            }
+        }
+    };
+
+    @Throws(ParamBlankException::class)
+    abstract fun check(data: TransferBody)
 }

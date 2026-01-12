@@ -2,7 +2,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -30,11 +30,17 @@ const createEnv = () => import(/* webpackChunkName: 'createEnv' */ '../views/cre
 // 环境详情
 const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env_detail')
 
+// 节点入口
+const nodeEntry = () => import(/* webpackChunkName: 'nodeEntry' */ '../views/node/index')
+
 // 节点列表
-const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_list')
+const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node/node_list')
 
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
+
+// 批量设置节点标签
+const setNodeTag = () => import(/* webpackChunkName: 'setNodeTag' */ '../views/node/set_node_tag')
 
 const routes = [
     {
@@ -76,27 +82,51 @@ const routes = [
                 }
             },
             {
-                path: 'nodeList',
-                name: 'nodeList',
-                component: nodeList,
-                meta: {
-                    title: 'nodeList',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList',
-                    webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
-                }
-            },
-            {
-                path: 'nodeDetail/:nodeHashId',
-                name: 'nodeDetail',
-                component: nodeDetail,
-                meta: {
-                    title: 'nodeDetail',
-                    logo: 'environment',
-                    header: 'environmentManage',
-                    to: 'envList'
-                }
+                path: 'node',
+                component: nodeEntry,
+                children: [
+                    {
+                        path: ':nodeType',
+                        name: 'nodeList',
+                        component: nodeList,
+                        meta: {
+                            title: 'nodeList',
+                            logo: 'environment',
+                            header: 'environmentManage',
+                            to: 'envList',
+                            webSocket: ['^\/console\/environment\/[^\/]+\/node/allNode$']
+                        },
+                        beforeEnter (to, from, next) {
+                            if (!to.params.nodeType) {
+                                next({
+                                    name: to.name,
+                                    params: {
+                                        ...to.params,
+                                        nodeType: 'allNode'
+                                    }
+                                })
+                            } else {
+                                next(true)
+                            }
+                        }
+                    },
+                    {
+                        path: 'nodeDetail/:nodeHashId',
+                        name: 'nodeDetail',
+                        component: nodeDetail,
+                        meta: {
+                            title: 'nodeDetail',
+                            logo: 'environment',
+                            header: 'environmentManage',
+                            to: 'envList'
+                        }
+                    },
+                    {
+                        path: 'setNodeTag',
+                        name: 'setNodeTag',
+                        component: setNodeTag
+                    },
+                ]
             }
         ]
     }

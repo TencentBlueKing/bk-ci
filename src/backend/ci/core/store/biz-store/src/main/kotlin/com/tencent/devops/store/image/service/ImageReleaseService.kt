@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -59,7 +59,7 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StorePipelineService
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
 import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
@@ -178,6 +178,12 @@ abstract class ImageReleaseService {
     @Value("\${store.imageAgentTypes:DOCKER}")
     protected lateinit var imageAgentTypes: String
 
+    abstract fun handleImageExtend(
+        userId: String,
+        imageCode: String,
+        marketImageRelRequest: MarketImageRelRequest
+    )
+
     fun addMarketImage(
         userId: String,
         imageCode: String,
@@ -233,6 +239,7 @@ abstract class ImageReleaseService {
             }
         }
         val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest)
+        handleImageExtend(userId, imageCode, marketImageRelRequest)
         return if (null != imageId) {
             Result(imageId)
         } else {
@@ -640,8 +647,10 @@ abstract class ImageReleaseService {
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
             val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectCode, ticketId,
-                encoder.encodeToString(pair.publicKey)
+                projectId = projectCode,
+                credentialId = ticketId,
+                publicKey = encoder.encodeToString(pair.publicKey),
+                padding = true
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 throw ParamBlankException("Fail to get the credential($ticketId) of project($projectCode)")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,12 +40,17 @@ data class VersionModel(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     var publisher: String = "",
     @get:Schema(title = "发布类型", required = true)
-    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.NEW,
+    var releaseType: ReleaseTypeEnum = ReleaseTypeEnum.COMPATIBILITY_FIX,
     @get:Schema(title = "版本号", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.VERSION_STYLE)
     var version: String = "",
     @get:Schema(title = "版本日志内容", required = true)
-    @field:BkField(maxLength = 65535)
+    @field:BkField(
+        patternStyle = BkStyleEnum.LONG_TEXT_STYLE,
+        required = true,
+        minLength = 1,
+        maxLength = 65535,
+        message = "版本日志内容长度必须在1-65535个字符之间"
+    )
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val versionContent: String = ""
 )

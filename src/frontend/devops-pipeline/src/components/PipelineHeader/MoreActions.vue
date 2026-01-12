@@ -72,6 +72,12 @@
             @close="closeDisablePipeline"
             @done="afterDisablePipeline"
         />
+        <delete-archived-dialog
+            :is-show-delete-archived-dialog="pipelineActionState.isShowDeleteArchivedDialog"
+            :pipeline-list="pipelineActionState.activePipelineList"
+            @done="afterRemovePipeline"
+            @cancel="closeDeleteArchiveDialog"
+        />
     </div>
 </template>
 
@@ -85,8 +91,9 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import pipelineActionMixin from '@/mixins/pipeline-action-mixin'
-    import { RESOURCE_ACTION, TEMPLATE_RESOURCE_ACTION } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import DeleteArchivedDialog from '@/views/PipelineList/DeleteArchivedDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
     export default {
         components: {
@@ -95,6 +102,7 @@
             CopyPipelineDialog,
             SaveAsTemplateDialog,
             RemoveConfirmDialog,
+            DeleteArchivedDialog,
             DisableDialog
         },
         mixins: [pipelineActionMixin],
@@ -110,6 +118,9 @@
             ...mapState('atom', ['pipelineInfo']),
             ...mapState('pipelines', ['pipelineActionState']),
             ...mapGetters('atom', ['pacEnabled', 'isCurPipelineLocked']),
+            ...mapState('common', [
+                'hasProjectPermission'
+            ]),
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
@@ -119,6 +130,9 @@
             curPipelineId () {
                 return this.pipelineInfo?.pipelineId
             },
+            archiveFlag () {
+                return this.$route.query.archiveFlag
+            },
             actionConfMenus () {
                 const { projectId } = this.$route.params
                 const pipeline = {
@@ -126,7 +140,20 @@
                     projectId,
                     pac: this.pacEnabled
                 }
-                return [
+                const editPermData = {
+                    projectId,
+                    resourceType: RESOURCE_TYPE.PIPELINE,
+                    resourceCode: pipeline.pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+                const createPermData = {
+                    projectId,
+                    resourceType: RESOURCE_TYPE.PROJECT,
+                    resourceCode: projectId,
+                    action: RESOURCE_ACTION.CREATE
+                }
+                
+                const menuItems = [
                     [
                         {
                             label: this.pipelineInfo?.hasCollect ? 'uncollect' : 'collect',
@@ -149,14 +176,11 @@
                             label: 'newlist.exportPipelineJson',
                             handler: this.exportPipeline,
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canEdit,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
@@ -166,12 +190,7 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         ...(pipeline.templateId
@@ -182,12 +201,7 @@
                                     vPerm: {
                                         hasPermission: pipeline.permissions?.canManage,
                                         disablePermissionApi: true,
-                                        permissionData: {
-                                            projectId,
-                                            resourceType: 'project',
-                                            resourceCode: projectId,
-                                            action: RESOURCE_ACTION.CREATE
-                                        }
+                                        permissionData: createPermData
                                     }
                                 }
                             ]
@@ -198,24 +212,14 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline),
                             vPerm: {
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'project',
-                                    resourceCode: projectId,
-                                    action: TEMPLATE_RESOURCE_ACTION.CREATE
-                                }
+                                permissionData: createPermData
                             }
                         },
                         {
@@ -232,23 +236,26 @@
                             vPerm: {
                                 hasPermission: pipeline.permissions?.canEdit,
                                 disablePermissionApi: true,
-                                permissionData: {
-                                    projectId,
-                                    resourceType: 'pipeline',
-                                    resourceCode: pipeline.pipelineId,
-                                    action: RESOURCE_ACTION.EDIT
-                                }
+                                permissionData: editPermData
                             }
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(pipeline),
+                            handler: () => {
+                                if (this.archiveFlag) {
+                                    this.openDeleteArchivedDialog(pipeline)
+                                } else {
+                                    this.deleteHandler(pipeline)
+                                }
+                            },
                             vPerm: {
-                                hasPermission: pipeline.permissions?.canDelete,
+                                hasPermission: this.archiveFlag
+                                    ? this.hasProjectPermission
+                                    : pipeline.permissions?.canDelete,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId,
-                                    resourceType: 'pipeline',
+                                    resourceType: RESOURCE_TYPE.PIPELINE,
                                     resourceCode: pipeline.pipelineId,
                                     action: RESOURCE_ACTION.DELETE
                                 }
@@ -256,6 +263,18 @@
                         }
                     ]
                 ]
+
+                if (this.archiveFlag) {
+                    // 归档时只保留导出和删除
+                    return menuItems.map(subMenu =>
+                        subMenu.filter(item =>
+                            item.label === 'newlist.exportPipelineJson'
+                            || item.label === 'delete'
+                        )
+                    ).filter(subMenu => subMenu.length > 0)
+                }
+
+                return menuItems
             }
         },
         methods: {
@@ -313,7 +332,7 @@
             copyAsTemplateInstance (pipeline) {
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
                 const { templateId, pipelineId, projectId, templateVersion } = pipeline
-                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}?pipelineId=${pipelineId}`
+                window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/${templateVersion}/instance/create/?pipelineName=${pipelineName}&pipelineId=${pipelineId}`
             },
             afterRemovePipeline () {
                 this.$router.push({
@@ -357,7 +376,6 @@
   }
 }
 .more-operation-dropmenu {
-  width: 120px;
   > ul {
     &:first-child {
       border-bottom: 1px solid #dcdee5;

@@ -1,0 +1,75 @@
+<template>
+    <div class="bk-form bk-form-vertical">
+        <template v-for="(obj, key) in atomPropsModel">
+            <form-field
+                v-if="!obj.hidden && rely(obj, element)"
+                :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }"
+                :key="key"
+                v-bind="obj"
+                :is-error="errors.has(key)"
+                :error-msg="errors.first(key)"
+            >
+                <component
+                    :is="obj.component"
+                    v-validate.initial="Object.assign({}, { crontabArrayRule: obj.required && obj.component === 'timer-cron-tab' })"
+                    :name="key"
+                    :value="element[key]"
+                    :element="element"
+                    :disabled="disabled || !checkCanOverride(obj)"
+                    :handle-change="handleChange"
+                    v-bind="obj"
+                />
+            </form-field>
+        </template>
+    </div>
+</template>
+
+<script>
+    import TimerCronTab from '@/components/atomFormField/TimerCrontab/'
+    import BranchParameterArray from '../../AtomFormComponent/BranchParameterArray/index'
+    import validMixins from '../../validMixins'
+    import atomMixin from '../atomMixin'
+    import CodelibSelector from './CodelibSelector'
+    export default {
+        components: {
+            TimerCronTab,
+            BranchParameterArray,
+            CodelibSelector
+        },
+        mixins: [atomMixin, validMixins],
+        computed: {
+            disabled () {
+                return this.element?.disabled ?? false
+            }
+        },
+        watch: {
+            element: {
+                handler (newVal, oldVal) {
+                    this.$nextTick(() => {
+                        if (this.$validator) {
+                            this.$validator.validateAll()
+                        }
+                    })
+                },
+                deep: true
+            }
+        },
+        methods: {
+            updateProps (newParam) {
+                this.updateAtom({
+                    element: this.element,
+                    newParam
+                })
+            },
+            handleChange (name, value) {
+                this.updateProps({
+                    [name]: value
+                })
+            }
+        }
+    }
+</script>
+
+<style lang="scss">
+
+</style>

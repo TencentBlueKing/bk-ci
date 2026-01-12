@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -73,22 +73,42 @@ class ServiceCredentialResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "get"])
-    override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
+    override fun get(
+        projectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean?
+    ): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
+        return Result(
+            credentialService.serviceGet(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     override fun getCredentialItem(
         projectId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean?
     ): Result<CredentialItemVo?> {
-        return Result(credentialService.getCredentialItem(projectId, credentialId, publicKey))
+        return Result(
+            credentialService.getCredentialItem(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding ?: false
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "get"])

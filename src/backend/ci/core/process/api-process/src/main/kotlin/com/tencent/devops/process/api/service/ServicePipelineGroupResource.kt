@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
+import com.tencent.devops.process.pojo.classify.PipelineLabel
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -144,4 +145,16 @@ interface ServicePipelineGroupResource {
         @Parameter(description = "更改标签请求报文", required = true)
         pipelineLabel: PipelineLabelUpdate
     ): Result<Boolean>
+
+    @Operation(summary = "获取标签")
+    @GET
+    @Path("/labels/")
+    fun getLabel(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "标签ID", required = true)
+        @QueryParam("labelId")
+        labelId: String
+    ): Result<PipelineLabel?>
 }

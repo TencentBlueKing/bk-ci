@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -1460,7 +1460,13 @@ class CertServiceImpl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
-    override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
+    override fun queryIos(
+        projectId: String,
+        buildId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertIOS {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -1477,11 +1483,11 @@ class CertServiceImpl @Autowired constructor(
 
         val p12FileName = certRecord.certP12FileName
         val p12FileContent = certHelper.decryptBytes(certRecord.certP12FileContent)!!
-        val p12Base64Content = encryptCert(p12FileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val p12Base64Content = encryptCert(p12FileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
 
         val mpFileName = certRecord.certMpFileName
         val mpFileContent = certHelper.decryptBytes(certRecord.certMpFileContent)!!
-        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
 
         val credentialId = certRecord.credentialId
 
@@ -1492,7 +1498,8 @@ class CertServiceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CertEnterprise {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -1512,7 +1519,7 @@ class CertServiceImpl @Autowired constructor(
         // 加密内容
         val mpFileName = certRecord.certMpFileName
         val mpFileContent = certHelper.decryptBytes(certRecord.certMpFileContent)!!
-        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         val mpFileSha1 = ShaUtils.sha1(mpFileContent)
 
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
@@ -1529,7 +1536,12 @@ class CertServiceImpl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
-    override fun queryEnterpriseByProject(projectId: String, certId: String, publicKey: String): CertEnterprise {
+    override fun queryEnterpriseByProject(
+        projectId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertEnterprise {
         val certRecord = certDao.get(dslContext, projectId, certId)
         // 生成公钥和密钥
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
@@ -1541,7 +1553,7 @@ class CertServiceImpl @Autowired constructor(
         // 加密内容
         val mpFileName = certRecord.certMpFileName
         val mpFileContent = certHelper.decryptBytes(certRecord.certMpFileContent)!!
-        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val mpBase64Content = encryptCert(mpFileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         val mpFileSha1 = ShaUtils.sha1(mpFileContent)
 
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
@@ -1558,7 +1570,13 @@ class CertServiceImpl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
-    override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
+    override fun queryAndroid(
+        projectId: String,
+        buildId: String,
+        certId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CertAndroid {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
@@ -1575,7 +1593,7 @@ class CertServiceImpl @Autowired constructor(
 
         val jksFileName = certRecord.certJksFileName
         val jksFileContent = certHelper.decryptBytes(certRecord.certJksFileContent)!!
-        val jksBase64Content = encryptCert(jksFileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val jksBase64Content = encryptCert(jksFileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
 
         val credentialId = certRecord.credentialId
         val alias = certRecord.certJksAlias
@@ -1608,7 +1626,8 @@ class CertServiceImpl @Autowired constructor(
     override fun queryAndroidByProject(
         projectId: String,
         certId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CertAndroidWithCredential {
         val certRecord = certDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
@@ -1619,7 +1638,7 @@ class CertServiceImpl @Autowired constructor(
 
         val jksFileName = certRecord.certJksFileName
         val jksFileContent = certHelper.decryptBytes(certRecord.certJksFileContent)!!
-        val jksBase64Content = encryptCert(jksFileContent, publicKeyByteArray, serverPrivateKeyByteArray)
+        val jksBase64Content = encryptCert(jksFileContent, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         val jksFileSha1 = ShaUtils.sha1(jksFileContent)
 
         val credentialId = certRecord.credentialId
@@ -1672,7 +1691,7 @@ class CertServiceImpl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CERT_VIEW_CONTENT
     )
-    override fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls {
+    override fun queryTlsByProject(projectId: String, certId: String, publicKey: String, padding: Boolean): CertTls {
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
@@ -1682,12 +1701,12 @@ class CertServiceImpl @Autowired constructor(
 
         val serverCrtFileName = certTlsRecord.certServerCrtFileName
         val serverCrtFile = certHelper.decryptBytes(certTlsRecord.certServerCrtFile)!!
-        val serverBase64CrtFile = encryptCert(serverCrtFile, publicKeyByteArray, serverPrivateKeyByteArray)
+        val serverBase64CrtFile = encryptCert(serverCrtFile, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         val serverCrtSha1 = ShaUtils.sha1(serverCrtFile)
 
         val serverKeyFileName = certTlsRecord.certServerKeyFileName
         val serverKeyFile = certHelper.decryptBytes(certTlsRecord.certServerKeyFile)!!
-        val serverBase64KeyFile = encryptCert(serverKeyFile, publicKeyByteArray, serverPrivateKeyByteArray)
+        val serverBase64KeyFile = encryptCert(serverKeyFile, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         val serverKeySha1 = ShaUtils.sha1(serverKeyFile)
 
         var clientCrtFileName: String? = null
@@ -1696,7 +1715,7 @@ class CertServiceImpl @Autowired constructor(
         if (certTlsRecord.certClientCrtFile != null && certTlsRecord.certClientCrtFileName != null) {
             clientCrtFileName = certTlsRecord.certClientCrtFileName
             val clientCrtFile = certHelper.decryptBytes(certTlsRecord.certClientCrtFile)!!
-            clientBase64CrtFile = encryptCert(clientCrtFile, publicKeyByteArray, serverPrivateKeyByteArray)
+            clientBase64CrtFile = encryptCert(clientCrtFile, publicKeyByteArray, serverPrivateKeyByteArray, padding)
             clientCrtSha1 = ShaUtils.sha1(clientCrtFile)
         }
 
@@ -1706,7 +1725,7 @@ class CertServiceImpl @Autowired constructor(
         if (certTlsRecord.certClientKeyFile != null && certTlsRecord.certClientKeyFileName != null) {
             clientKeyFileName = certTlsRecord.certClientKeyFileName
             val clientKeyFile = certHelper.decryptBytes(certTlsRecord.certClientKeyFile)!!
-            clientBase64KeyFile = encryptCert(clientKeyFile, publicKeyByteArray, serverPrivateKeyByteArray)
+            clientBase64KeyFile = encryptCert(clientKeyFile, publicKeyByteArray, serverPrivateKeyByteArray, padding)
             clientKeySha1 = ShaUtils.sha1(clientKeyFile)
         }
 
@@ -1786,9 +1805,10 @@ class CertServiceImpl @Autowired constructor(
     private fun encryptCert(
         cert: ByteArray,
         publicKeyByteArray: ByteArray,
-        serverPrivateKeyByteArray: ByteArray
+        serverPrivateKeyByteArray: ByteArray,
+        padding: Boolean
     ): String {
-        val certEncryptedContent = DHUtil.encrypt(cert, publicKeyByteArray, serverPrivateKeyByteArray)
+        val certEncryptedContent = DHUtil.encrypt(cert, publicKeyByteArray, serverPrivateKeyByteArray, padding)
         return String(Base64.getEncoder().encode(certEncryptedContent))
     }
 

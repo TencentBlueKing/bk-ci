@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -53,14 +53,13 @@ class PipelineTemplateService @Autowired constructor(
     private val client: Client
 ) {
 
-    fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
+    fun getTemplateDetailInfo(templateCode: String): TemplateDetailInfo? {
         logger.info("getTemplateDetailInfo templateCode is:$templateCode")
         var templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
         if (templateRecord.srcTemplateId != null && templateRecord.type == TemplateType.CONSTRAINT.name) {
             templateRecord = templateDao.getLatestTemplate(dslContext, templateRecord.srcTemplateId)
         }
-        return Result(
-            TemplateDetailInfo(
+        return TemplateDetailInfo(
                 templateCode = templateRecord.id,
                 templateName = templateRecord.templateName,
                 templateModel = if (!StringUtils.isEmpty(templateRecord.template)) JsonUtil.to(
@@ -69,12 +68,11 @@ class PipelineTemplateService @Autowired constructor(
                 ) else null,
                 templateVersion = templateRecord.version
             )
-        )
     }
 
     fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
         logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
-        val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
+        val templateModel = getTemplateDetailInfo(templateCode)?.templateModel
             ?: return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)

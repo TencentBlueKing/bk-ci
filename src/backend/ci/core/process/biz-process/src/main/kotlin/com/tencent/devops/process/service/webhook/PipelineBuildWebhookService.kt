@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,8 +42,11 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -55,6 +58,7 @@ import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -80,17 +84,18 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import jakarta.ws.rs.core.Response
+import java.time.LocalDate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import jakarta.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
 class PipelineBuildWebhookService @Autowired constructor(
     private val client: Client,
     private val pipelineWebhookService: PipelineWebhookService,
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
@@ -227,12 +232,9 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 获取授权人
         val userId = pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
             ?: pipelineInfo.lastModifyUser
-        val variables = mutableMapOf<String, String>()
         val container = model.getTriggerContainer()
         // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
+        val variables = getDefaultParam(container.params)
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -422,12 +424,9 @@ class PipelineBuildWebhookService @Autowired constructor(
             )
         }
         val userId = pipelineInfo.lastModifyUser
-        val variables = mutableMapOf<String, String>()
         val container = model.getTriggerContainer()
         // 解析变量
-        container.params.forEach { param ->
-            variables[param.id] = param.defaultValue.toString()
-        }
+        val variables = getDefaultParam(container.params)
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
             variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
@@ -530,10 +529,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         if (pipelineInfo.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
         }
-        // 代码库触发支持仅有分支版本的情况，如果仅有草稿不需要在这里拦截
-//        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
-//            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-//        )
+        // 代码库触发支持仅有分支版本的情况，如果仅有草稿需要在这里拦截
+        if (pipelineInfo.latestVersionStatus == VersionStatus.COMMITTING) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+        )
         val version = webhookCommit.version ?: pipelineInfo.version
 
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
@@ -547,16 +546,24 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        val params = mutableMapOf<String, Any>()
-        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
+        val paramMap = buildParamCompatibilityTransformer.parseTriggerParam(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            paramProperties = resource.model.getTriggerContainer().params,
+            paramValues = startParams.mapValues { it.value.toString() }
+        )
+        val pipelineParamMap = mutableMapOf<String, BuildParameters>()
+        pipelineParamMap.putAll(paramMap)
         startParams.forEach {
+            if (paramMap.containsKey(it.key)) {
+                return@forEach
+            }
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
-                params[it.key] = it.value
                 pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
-            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
-                params[newVarName] = it.value
+            } else if (!pipelineParamMap.contains(newVarName)) { // 新变量还不存在，加入
                 pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
@@ -657,5 +664,19 @@ class PipelineBuildWebhookService @Autowired constructor(
         } catch (ignored: Exception) {
             logger.error("save auth user metrics", ignored)
         }
+    }
+
+    private fun getDefaultParam(params: List<BuildFormProperty>): MutableMap<String, String> {
+        val variables = mutableMapOf<String, String>()
+        params.forEach { param ->
+            variables[param.id] = if (CascadePropertyUtils.supportCascadeParam(param.type) &&
+                param.defaultValue is Map<*, *>
+            ) {
+                JsonUtil.toJson(param.defaultValue, false)
+            } else {
+                param.defaultValue.toString()
+            }
+        }
+        return variables
     }
 }

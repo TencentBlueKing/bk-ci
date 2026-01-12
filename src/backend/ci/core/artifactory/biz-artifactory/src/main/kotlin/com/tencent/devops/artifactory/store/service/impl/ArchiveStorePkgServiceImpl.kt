@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.CONFIG_YML_NAME
 import com.tencent.devops.store.pojo.common.QueryComponentPkgEnvInfoParam
@@ -49,6 +50,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
+import com.tencent.devops.store.utils.VersionUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -83,6 +85,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val storeCode = archiveStorePkgRequest.storeCode
         val storeType = archiveStorePkgRequest.storeType
         val version = archiveStorePkgRequest.version
+        // 判断版本号是否合法
+        VersionUtils.validateVersion(version, storeType)
         val releaseType = archiveStorePkgRequest.releaseType
         // 校验上传的包是否合法
         val verifyPackageResult = client.get(ServiceStoreArchiveResource::class)
@@ -160,7 +164,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     packageFileName = packageFileName,
                     packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
-                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
+                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) },
+                    sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
                 val pkgRepoPath = generatePkgRepoPath(
                     storeCode = storeCode,
@@ -171,6 +176,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 )
                 storePkgEnvInfo.pkgRepoPath = pkgRepoPath
                 storePkgEnvInfo.shaContent = packageFileInfo.shaContent
+                storePkgEnvInfo.sha256Content = packageFileInfo.sha256Content
                 storePkgEnvInfo.pkgName = packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
@@ -215,7 +221,10 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf(PackageFileInfo::shaContent.name to packageFileInfo.shaContent)
+                    props = mapOf(
+                        PackageFileInfo::shaContent.name to packageFileInfo.shaContent,
+                        PackageFileInfo::sha256Content.name to packageFileInfo.sha256Content
+                    )
                 )
             }
         }
@@ -345,36 +354,55 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         version: String,
         instanceId: String?,
         osName: String?,
-        osArch: String?
+        osArch: String?,
+        checkPermissionFlag: Boolean
     ): String {
-        val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
-            storeCode = storeCode,
-            storeType = storeType,
-            version = version,
-            projectCode = projectId,
-            userId = userId,
-            instanceId = instanceId
-        )
-        val storeBaseInfo = validateResult.data
-        if (validateResult.isNotOk() || storeBaseInfo == null) {
-            throw ErrorCodeException(
-                errorCode = validateResult.status.toString(),
-                defaultMessage = validateResult.message
+        var storeStatus: String? = null
+        if (checkPermissionFlag) {
+            val validateResult = client.get(ServiceStoreResource::class).validateComponentDownloadPermission(
+                storeCode = storeCode,
+                storeType = storeType,
+                version = version,
+                projectCode = projectId,
+                userId = userId,
+                instanceId = instanceId
             )
+            val storeBaseInfo = validateResult.data
+            if (validateResult.isNotOk() || storeBaseInfo == null) {
+                throw ErrorCodeException(
+                    errorCode = validateResult.status.toString(),
+                    defaultMessage = validateResult.message
+                )
+            }
+            storeStatus = storeBaseInfo.status
+        }
+        var finalOsName = osName
+        if (storeType == StoreTypeEnum.DEVX && osName.isNullOrBlank()) {
+            finalOsName = OSType.WINDOWS.name.lowercase()
         }
         val storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
             version = version,
-            osName = osName,
+            osName = finalOsName,
             osArch = osArch
         ).data
         if (storePkgEnvInfos.isNullOrEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         val storePkgEnvInfo = storePkgEnvInfos[0]
-        val queryCacheFlag = storeBaseInfo.status !in StoreStatusEnum.getTestStatusList()
+        val queryCacheFlag = if (storeStatus != null) {
+            storeStatus !in StoreStatusEnum.getTestStatusList()
+        } else {
+            val status = client.get(ServiceStoreComponentResource::class).getStoreUpgradeStatusInfo(
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.name,
+                version = version
+            ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            status !in StoreStatusEnum.getTestStatusList()
+        }
         return createPkgShareUri(
             userId = userId,
             storeType = storeType,

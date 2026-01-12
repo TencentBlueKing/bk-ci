@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TAPD_ISSUES
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
@@ -59,6 +60,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
@@ -240,6 +242,8 @@ object PipelineVarUtil {
         "ci.mr_iid" to PIPELINE_GIT_MR_IID,
         "ci.tag_message" to PIPELINE_GIT_TAG_MESSAGE,
         "ci.tag_from" to PIPELINE_GIT_TAG_FROM,
+        "ci.tag_desc" to PIPELINE_GIT_TAG_DESC,
+        "ci.mr_tapd_issues" to PIPELINE_GIT_MR_TAPD_ISSUES,
         "ci.mr_title" to PIPELINE_GIT_MR_TITLE,
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
@@ -372,6 +376,15 @@ object PipelineVarUtil {
             }
         }
         return allVars
+    }
+
+    /**
+     * 获取variable变量名
+     */
+    fun getVariableKey(key: String) = if (key.startsWith(CONTEXT_PREFIX)) {
+        key
+    } else {
+        CONTEXT_PREFIX + key
     }
 
     /**

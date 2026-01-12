@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -84,6 +84,31 @@ data class PipelineResourceVersion(
     @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null
 ) {
+    constructor(
+        pipelineResourceWithoutVersion: PipelineResourceWithoutVersion,
+        pipelineResourceOnlyVersion: PipelineResourceOnlyVersion
+    ) : this(
+        projectId = pipelineResourceWithoutVersion.projectId,
+        pipelineId = pipelineResourceWithoutVersion.pipelineId,
+        version = pipelineResourceOnlyVersion.version,
+        model = pipelineResourceWithoutVersion.model,
+        yaml = pipelineResourceWithoutVersion.yaml,
+        yamlVersion = pipelineResourceWithoutVersion.yamlVersion,
+        versionName = pipelineResourceOnlyVersion.versionName,
+        creator = pipelineResourceWithoutVersion.creator,
+        createTime = pipelineResourceWithoutVersion.createTime,
+        updater = pipelineResourceWithoutVersion.updater,
+        updateTime = pipelineResourceWithoutVersion.updateTime,
+        versionNum = pipelineResourceOnlyVersion.versionNum,
+        pipelineVersion = pipelineResourceOnlyVersion.pipelineVersion,
+        triggerVersion = pipelineResourceOnlyVersion.triggerVersion,
+        settingVersion = pipelineResourceOnlyVersion.settingVersion,
+        status = pipelineResourceWithoutVersion.status,
+        branchAction = pipelineResourceWithoutVersion.branchAction,
+        description = pipelineResourceWithoutVersion.description,
+        baseVersion = pipelineResourceWithoutVersion.baseVersion ?: pipelineResourceOnlyVersion.baseVersion,
+    )
+
     fun toSimple() = PipelineVersionSimple(
         pipelineId = pipelineId,
         creator = creator,

@@ -223,12 +223,13 @@
                 color: $iconPrimaryColor;
                 font-size: 16px;
                 font-weight: 600;
+                vertical-align: middle;
             }
         }
 
         .env-detail-container {
             padding: 20px;
-            height: 92%;
+            height: calc(100% - 108px);
             overflow: auto;
         }
 
@@ -496,42 +497,33 @@
                 margin: 0 20px;
                 border: 1px solid $borderWeightColor;
             }
-            .bk-form-item {
-                margin-top: 6px;
-                padding-bottom: 6px;
-                padding-left: 20px;
+            .base-form-item {
+                display: flex;
+                align-items: center;
+                padding-right: 20px;
                 border-bottom: 1px solid $borderWeightColor;
                 &:last-child {
                     border: none;
                 }
             }
-            .bk-label {
-                width: 90px;
+            .env-item-label {
+                width: 110px;
+                height: 100%;
+                line-height: 1;
+                padding: 8px 22px 8px 0;
+                text-align: right;
                 font-weight: normal;
-                &:after {
-                    position: absolute;
-                    content: '';
-                    top: -6px;
-                    left: 110px;
-                    height: 84px;
-                    width: 1px;
-                    background-color: $borderWeightColor;
-                }
             }
-            .create-user-item {
-                .bk-label:after {
-                    height: 45px;
-                }
-            }
-            .bk-form-content {
+            .env-item-content {
+                flex: 1;
                 display: flex;
-                margin-left: 110px;
+                padding: 6px 0 6px 20px;
+                border-left: 1px solid $borderWeightColor;
             }
             .env-name-input {
                 width: 320px;
             }
             .env-desc-input {
-                padding: 10px;
                 width: 540px;
                 min-height: 60px;
                 line-height: 20px;
@@ -542,8 +534,7 @@
                 font-size: 14px;
             }
             .env-type-radio {
-                position: relative;
-                top: 6px;
+                line-height: 32px;
                 margin-right: 10px;
             }
             .handler-btn {

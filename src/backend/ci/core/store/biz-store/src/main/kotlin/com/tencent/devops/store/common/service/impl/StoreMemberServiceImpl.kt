@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -62,14 +62,19 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
 
     @Autowired
     lateinit var client: Client
+
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
+
     @Autowired
     lateinit var storeNotifyService: StoreNotifyService
+
     @Autowired
     lateinit var storeInnerPipelineConfig: StoreInnerPipelineConfig
 
@@ -156,11 +161,13 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             if (null != projectCode) projectCodeList.add(projectCode)
             val projectMap = client.get(ServiceProjectResource::class)
                 .getNameByCode(projectCodeList.joinToString(",")).data
-            Result(generateStoreMemberItem(
-                memberRecord = memberRecord,
-                projectCode = projectCode ?: "",
-                projectName = projectMap?.get(projectCode) ?: ""
-            ))
+            Result(
+                generateStoreMemberItem(
+                    memberRecord = memberRecord,
+                    projectCode = projectCode ?: "",
+                    projectName = projectMap?.get(projectCode) ?: ""
+                )
+            )
         } else {
             Result(data = null)
         }
@@ -212,31 +219,42 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                storeMemberDao.addStoreMember(context, userId, storeCode, item, type, storeType.type.toByte())
-                if (null != testProjectCode) {
-                    storeProjectRelDao.updateUserStoreTestProject(
-                        dslContext = context,
-                        userId = item,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        projectCode = testProjectCode,
-                        storeProjectType = StoreProjectTypeEnum.TEST
-                    )
-                } else if (collaborationFlag != true && storeType != StoreTypeEnum.DEVX) {
-                    // 协作申请方式，添加成员时无需再添加调试项目
-                    storeProjectRelDao.addStoreProjectRel(
-                        dslContext = context,
-                        userId = item,
-                        storeCode = storeCode,
-                        projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                val storeTypeByte = storeType.type.toByte()
+                storeMemberDao.addStoreMember(context, userId, storeCode, item, type, storeTypeByte)
+                when {
+                    storeType == StoreTypeEnum.TEMPLATE -> {
+                        // 模板无调试项目
+                    }
+
+                    testProjectCode != null -> {
+                        storeProjectRelDao.updateUserStoreTestProject(
+                            dslContext = context,
+                            userId = item,
+                            storeCode = storeCode,
+                            storeType = storeType,
+                            projectCode = testProjectCode,
+                            storeProjectType = StoreProjectTypeEnum.TEST
+                        )
+                    }
+
+                    collaborationFlag != true && storeType != StoreTypeEnum.DEVX -> {
+                        // 协作申请方式，添加成员时无需再添加调试项目
+                        val fixTestProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                             dslContext = context,
                             userId = userId,
                             storeCode = storeCode,
                             storeType = storeType
-                        )!!,
-                        type = StoreProjectTypeEnum.TEST.type.toByte(),
-                        storeType = storeType.type.toByte()
-                    )
+                        ) ?: return@transaction
+
+                        storeProjectRelDao.addStoreProjectRel(
+                            dslContext = context,
+                            userId = item,
+                            storeCode = storeCode,
+                            projectCode = fixTestProjectCode,
+                            type = StoreProjectTypeEnum.TEST.type.toByte(),
+                            storeType = storeTypeByte
+                        )
+                    }
                 }
             }
             receivers.add(item)

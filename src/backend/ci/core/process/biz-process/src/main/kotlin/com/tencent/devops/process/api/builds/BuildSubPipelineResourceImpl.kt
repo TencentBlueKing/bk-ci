@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,18 +31,21 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServiceSubPipelineResource
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.PipelineBuildParamFormProp
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildSubPipelineResourceImpl @Autowired constructor(
-    private val subPipeService: SubPipelineStartUpService
+    private val subPipeService: SubPipelineStartUpService,
+    private val client: Client
 ) : BuildSubPipelineResource {
 
     @AuditEntry(actionId = ActionId.PIPELINE_EXECUTE)
@@ -56,20 +59,38 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         taskId: String,
         runMode: String,
         values: Map<String, String>,
-        executeCount: Int?
+        executeCount: Int?,
+        branch: String?
     ): Result<ProjectBuildId> {
-        return subPipeService.callPipelineStartup(
-            projectId = projectId,
-            parentPipelineId = parentPipelineId,
-            buildId = buildId,
-            callProjectId = callProjectId,
-            callPipelineId = callPipelineId,
-            atomCode = atomCode,
-            taskId = taskId,
-            runMode = runMode,
-            values = values,
-            executeCount = executeCount
-        )
+        return if (projectId != callProjectId) {
+            client.getGateway(ServiceSubPipelineResource::class).callOtherProjectPipelineStartup(
+                callProjectId = callProjectId,
+                callPipelineId = callPipelineId,
+                atomCode = atomCode,
+                parentProjectId = projectId,
+                parentPipelineId = parentPipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                runMode = runMode,
+                values = values,
+                executeCount = executeCount,
+                branch = branch
+            )
+        } else {
+            subPipeService.callPipelineStartup(
+                projectId = projectId,
+                parentPipelineId = parentPipelineId,
+                buildId = buildId,
+                callProjectId = callProjectId,
+                callPipelineId = callPipelineId,
+                atomCode = atomCode,
+                taskId = taskId,
+                runMode = runMode,
+                values = values,
+                executeCount = executeCount,
+                branch = branch
+            )
+        }
     }
 
     override fun callPipelineStartup(
@@ -82,7 +103,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         runMode: String,
         channelCode: ChannelCode?,
         values: Map<String, String>,
-        executeCount: Int?
+        executeCount: Int?,
+        branch: String?
     ): Result<ProjectBuildId> {
         return subPipeService.callPipelineStartup(
             projectId = projectId,
@@ -94,7 +116,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             runMode = runMode,
             channelCode = channelCode,
             values = values,
-            executeCount = executeCount
+            executeCount = executeCount,
+            branch = branch
         )
     }
 
@@ -113,8 +136,9 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         includeConst: Boolean?,
         includeNotRequired: Boolean?,
         parentProjectId: String,
-        parentPipelineId: String
-    ): Result<List<SubPipelineStartUpInfo>> {
+        parentPipelineId: String,
+        branch: String?
+    ): Result<List<PipelineBuildParamFormProp>> {
         checkParam(userId)
         return subPipeService.subPipelineManualStartupInfo(
             userId = userId,
@@ -123,7 +147,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             includeConst = includeConst,
             includeNotRequired = includeNotRequired,
             parentPipelineId = parentPipelineId,
-            parentProjectId = parentProjectId
+            parentProjectId = parentProjectId,
+            branch = branch
         )
     }
 

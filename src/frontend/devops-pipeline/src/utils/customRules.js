@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -37,12 +37,11 @@ const customeRules = {
     },
     notInList: {
         validate: function (value, args) {
-            if (args.indexOf(value) === -1) {
-                return true
-            } else {
-                return false
+            if (Array.isArray(args)) {
+                return !args.some(item => decodeURIComponent(item) === value)
             }
-        }
+            return true
+        },
     },
     // 不同时为空
     atlestNotEmpty: {
@@ -114,7 +113,11 @@ const customeRules = {
     },
     timeoutsRule: {
         validate: function (value, args) {
-            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+            const numberPattern = /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/
+            const isValidNumber = numberPattern.test(value)
+            const isValidVar = args[0] === 'CLASSIC' ? value.isBkVar() : value.isBKConstraintVar()
+    
+            return isValidNumber || isValidVar
         }
     },
     reminderTimeRule: {
@@ -130,6 +133,25 @@ const customeRules = {
     objectRequired: {
         validate: function (value, args) {
             return Object.values(value).every(val => !!val)
+        }
+    },
+    // cron 表达式数组校验规则 - 检查是否为空数组
+    crontabArrayRule: {
+        validate: function (value, args) {
+            // 检查是否为数组且不为空
+            if (Array.isArray(value)) {
+                return value.length > 0
+            }
+            // 支持字符串格式（用于组件内部错误标记）
+            if (typeof value === 'string') {
+                try {
+                    const parsed = JSON.parse(value)
+                    return Array.isArray(parsed) && parsed.length > 0
+                } catch (e) {
+                    return false
+                }
+            }
+            return false
         }
     }
 }

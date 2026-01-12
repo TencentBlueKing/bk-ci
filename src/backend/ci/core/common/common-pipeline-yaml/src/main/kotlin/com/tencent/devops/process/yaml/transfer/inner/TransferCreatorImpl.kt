@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -110,6 +110,7 @@ class TransferCreatorImpl @Autowired constructor(
         val data = mutableMapOf<String, Any>()
         data["input"] = inputMap
 
+        step.namespace?.let { data["namespace"] = it }
         return MarketBuildAtomElement(
             id = step.taskId,
             name = step.name ?: "checkout",
@@ -125,6 +126,7 @@ class TransferCreatorImpl @Autowired constructor(
     ): MarketBuildAtomElement {
         val data = mutableMapOf<String, Any>()
         data["input"] = TransferUtil.mixParams(transferCache.getAtomDefaultValue(step.uses!!), step.with)
+        step.namespace?.let { data["namespace"] = it }
         return MarketBuildAtomElement(
             id = step.taskId,
             name = step.name ?: step.uses!!.split('@')[0],
@@ -138,6 +140,7 @@ class TransferCreatorImpl @Autowired constructor(
     override fun transferMarketBuildLessAtomElement(step: Step): MarketBuildLessAtomElement {
         val data = mutableMapOf<String, Any>()
         data["input"] = TransferUtil.mixParams(transferCache.getAtomDefaultValue(step.uses!!), step.with)
+        step.namespace?.let { data["namespace"] = it }
         return MarketBuildLessAtomElement(
             id = step.taskId,
             name = step.name ?: step.uses!!.split('@')[0],

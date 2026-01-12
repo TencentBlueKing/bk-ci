@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,6 +42,7 @@ import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -129,6 +130,21 @@ interface UserStoreMemberResource {
         @QueryParam("storeCode")
         storeCode: String,
         @Parameter(description = "store组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    @Operation(summary = "判断用户是否是该组件的成员")
+    @GET
+    @Path("/codes/{storeCode}/user/validate")
+    fun isStoreMember(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>

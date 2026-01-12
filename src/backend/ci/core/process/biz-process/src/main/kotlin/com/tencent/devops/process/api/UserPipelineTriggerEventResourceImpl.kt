@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -191,13 +191,12 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         detailId: Long
     ): Result<Boolean> {
-        return Result(
-            pipelineTriggerEventService.replay(
-                userId = userId,
-                projectId = projectId,
-                detailId = detailId
-            )
+        pipelineTriggerEventService.replay(
+            userId = userId,
+            projectId = projectId,
+            detailId = detailId
         )
+        return Result(true)
     }
 
     override fun replayAll(
@@ -205,12 +204,11 @@ class UserPipelineTriggerEventResourceImpl(
         projectId: String,
         eventId: Long
     ): Result<Boolean> {
-        return Result(
-            pipelineTriggerEventService.replayAll(
-                userId = userId,
-                projectId = projectId,
-                eventId = eventId
-            )
+        pipelineTriggerEventService.replayAll(
+            userId = userId,
+            projectId = projectId,
+            eventId = eventId
         )
+        return Result(true)
     }
 }

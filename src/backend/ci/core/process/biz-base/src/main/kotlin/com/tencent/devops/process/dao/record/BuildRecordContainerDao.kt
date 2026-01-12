@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,7 +39,7 @@ import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record15
+import org.jooq.Record16
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.jooq.util.mysql.MySQLDSL
@@ -63,6 +63,7 @@ class BuildRecordContainerDao {
                 EXECUTE_COUNT,
                 CONTAINER_VAR,
                 CONTAINER_TYPE,
+                CONTAIN_POST_TASK,
                 MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID,
                 STATUS,
@@ -81,6 +82,7 @@ class BuildRecordContainerDao {
                         record.executeCount,
                         JsonUtil.toJson(record.containerVar, false),
                         record.containerType,
+                        record.containPostTaskFlag,
                         record.matrixGroupFlag,
                         record.matrixGroupId,
                         record.status,
@@ -161,13 +163,36 @@ class BuildRecordContainerDao {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             return dslContext.selectFrom(this)
                 .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
+                    PROJECT_ID.eq(projectId)
                         .and(PIPELINE_ID.eq(pipelineId))
                         .and(BUILD_ID.eq(buildId))
                         .and(CONTAINER_ID.eq(containerId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
+        }
+    }
+
+    fun getLatestRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int? = null
+    ): BuildRecordContainer? {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                PIPELINE_ID.eq(pipelineId),
+                BUILD_ID.eq(buildId),
+                CONTAINER_ID.eq(containerId)
+            )
+            executeCount?.let { conditions.add(EXECUTE_COUNT.le(it)) }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(EXECUTE_COUNT.desc())
+                .limit(1)
+                .fetchOne(mapper)
         }
     }
 
@@ -240,7 +265,7 @@ class BuildRecordContainerDao {
             ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
-                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
+                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, CONTAIN_POST_TASK, MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
@@ -273,7 +298,7 @@ class BuildRecordContainerDao {
             ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
-                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
+                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, CONTAIN_POST_TASK, MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
@@ -287,8 +312,8 @@ class BuildRecordContainerDao {
     }
 
     private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(
-        record: Record15<String, String, String, Int,
-            String, String, String, Int, String, String, Boolean, String, LocalDateTime, LocalDateTime, String>
+        record: Record16<String, String, String, Int,
+            String, String, String, Int, String, String, Boolean, Boolean, String, LocalDateTime, LocalDateTime, String>
     ) =
         BuildRecordContainer(
             buildId = record[BUILD_ID],
@@ -303,6 +328,7 @@ class BuildRecordContainerDao {
                 record[CONTAINER_VAR], object : TypeReference<MutableMap<String, Any>>() {}
             ),
             containerType = record[CONTAINER_TYPE],
+            containPostTaskFlag = record[CONTAIN_POST_TASK],
             matrixGroupFlag = record[MATRIX_GROUP_FLAG],
             matrixGroupId = record[MATRIX_GROUP_ID],
             startTime = record[START_TIME],

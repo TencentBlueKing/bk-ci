@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -49,11 +49,15 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.ScmGitRepository
+import com.tencent.devops.repository.pojo.ScmSvnRepository
+import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.github.IGithubService
+import com.tencent.devops.repository.service.hub.ScmFileApiService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.Ip4Service
 import com.tencent.devops.repository.utils.Credential
@@ -85,7 +89,8 @@ class RepoFileService @Autowired constructor(
     private val githubService: IGithubService,
     private val gitService: IGitService,
     private val svnService: ISvnService,
-    private val p4Service: Ip4Service
+    private val p4Service: Ip4Service,
+    private val fileApiService: ScmFileApiService
 ) {
 
     companion object {
@@ -124,7 +129,8 @@ class RepoFileService @Autowired constructor(
         branch: String?,
         subModule: String? = null,
         svnFullPath: Boolean = false,
-        credentialId: String
+        credentialId: String,
+        scmCode: String? = null
     ): String {
         logger.info("get repo($repoUrl) file content in: $filePath (reversion:$reversion, branch:$branch)")
         val repo = RepositoryUtils.buildRepository(
@@ -132,7 +138,8 @@ class RepoFileService @Autowired constructor(
             userName = "",
             scmType = scmType,
             repositoryUrl = repoUrl,
-            credentialId = credentialId
+            credentialId = credentialId,
+            scmCode = scmCode
         )
         return getFileContent(
             repo = repo,
@@ -246,6 +253,36 @@ class RepoFileService @Autowired constructor(
             is CodeP4Repository -> {
                 logger.info("get file content of tGit repo: $repo")
                 getP4SingleFile(repo = repo, filePath = filePath, reversion = reversion!!)
+            }
+            is ScmSvnRepository -> {
+                logger.info("get file content of scmSvn repo: $repo")
+                if (reversion.isNullOrBlank()) {
+                    throw ParamBlankException("Illegal reversion: $reversion")
+                }
+                fileApiService.getFileContent(
+                    projectId = repo.projectId ?: "",
+                    path = filePath,
+                    ref = reversion,
+                    authRepository = AuthRepository(repo)
+                )?.content ?: ""
+            }
+
+            is ScmGitRepository -> {
+                logger.info("get file content of scmGit repo: $repo")
+                fileApiService.getFileContent(
+                    projectId = repo.projectId ?: "",
+                    path = filePath,
+                    ref = if (reversion.isNullOrBlank()) {
+                        if (branch.isNullOrBlank()) {
+                            "master"
+                        } else {
+                            branch
+                        }
+                    } else {
+                        reversion
+                    },
+                    authRepository = AuthRepository(repo)
+                )?.content ?: ""
             }
             else -> {
                 "unsupported repo"
@@ -481,8 +518,10 @@ class RepoFileService @Autowired constructor(
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId = projectId, credentialId = credentialId,
-            publicKey = encoder.encodeToString(pair.publicKey)
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey),
+            padding = true
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             throw ErrorCodeException(

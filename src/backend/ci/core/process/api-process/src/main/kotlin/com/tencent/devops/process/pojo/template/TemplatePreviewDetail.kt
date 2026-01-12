@@ -1,13 +1,13 @@
 package com.tencent.devops.process.pojo.template
 
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferMark
+import com.tencent.devops.common.pipeline.template.ITemplateModel
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class TemplatePreviewDetail(
     @get:Schema(title = "模板模型")
-    val template: Model,
+    val template: ITemplateModel,
     @get:Schema(title = "模板Yaml")
     val templateYaml: String?,
     @get:Schema(title = "是否有操作权限", required = false)

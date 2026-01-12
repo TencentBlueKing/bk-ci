@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -38,8 +38,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TagRule(
-    val name: String? = null,
-    val enable: Boolean? = true,
+    override val id: String? = null,
+    override val name: String? = null,
+    override val enable: Boolean? = true,
     val tags: List<String>? = null,
 
     @get:Schema(title = "tags-ignore")
@@ -55,4 +56,4 @@ data class TagRule(
     @get:Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
-)
+) : Rule(id, name, enable)

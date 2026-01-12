@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,21 +27,58 @@
 
 package com.tencent.devops.process.pojo.template
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoV2
+import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "模板列表")
 data class OptionalTemplateList(
     @get:Schema(title = "数量", required = false)
-    val count: Int,
+    val count: Int = 1,
     @get:Schema(title = "页数", required = false)
-    val page: Int?,
+    val page: Int? = 1,
     @get:Schema(title = "每页数量", required = false)
-    val pageSize: Int?,
+    val pageSize: Int? = 1,
     @get:Schema(title = "模板列表", required = false)
-    val templates: Map<String, OptionalTemplate>
-)
+    val templates: Map<String, OptionalTemplate> = emptyMap()
+) {
+    fun withEmptyTemplate(templateInfo: PipelineTemplateInfoV2): OptionalTemplateList {
+        if (page != 1) {
+            return this
+        }
+        val newMap = linkedMapOf<String, OptionalTemplate>().apply {
+            val emptyTemplate = OptionalTemplate(
+                name = I18nUtil.getCodeLanMessage(messageCode = BK_EMPTY_PIPELINE),
+                templateId = templateInfo.id,
+                projectId = "",
+                version = templateInfo.releasedVersion,
+                versionName = templateInfo.name,
+                templateType = TemplateType.PUBLIC.name,
+                templateTypeDesc = TemplateType.PUBLIC.value,
+                category = emptyList(),
+                logoUrl = "",
+                stages = Model.defaultModel().stages,
+                cloneTemplateSettingExist = CloneTemplateSettingExist(
+                    notifySettingExist = false,
+                    concurrencySettingExist = false,
+                    labelSettingExist = false,
+                    inheritedDialect = true
+                ),
+                desc = templateInfo.desc
+            )
+
+            // 1. 先放入空模板
+            put(templateInfo.id, emptyTemplate)
+            // 2. 放入原有所有模板
+            putAll(this@OptionalTemplateList.templates)
+        }
+        return this.copy(templates = newMap)
+    }
+}
 
 @Schema(title = "模板")
 data class OptionalTemplate(
@@ -68,7 +105,9 @@ data class OptionalTemplate(
     @get:Schema(title = "克隆模板设置项是否存在", required = false)
     val cloneTemplateSettingExist: CloneTemplateSettingExist? = null,
     @get:Schema(title = "模版描述", required = false)
-    val desc: String? = null
+    val desc: String? = null,
+    @get:Schema(title = "父模版ID", required = false)
+    val srcTemplateId: String? = null
 )
 
 @Schema(title = "克隆模板设置")

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -105,8 +105,26 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_STATE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_REVIEW_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_SHA_SHORT
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_DESC
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAG_FROM
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_TAPD_ISSUES
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_WORKSPACE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_CONTAINER_NETWORK
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_CONTAINER_NODE_ALIAS
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_INDEX
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_OS
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_OUTCOME_TEMPLATE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_STAGE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_STAGE_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.JOB_STATUS_TEMPLATE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_NAME
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_OUTCOME_TEMPLATE
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_RETRY_COUNT_AUTO
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_RETRY_COUNT_MANUAL
+import com.tencent.devops.process.constant.PipelineBuildParamKey.STEP_STATUS_TEMPLATE
 
 @SuppressWarnings("TooManyFunctions")
 object TriggerBuildParamUtils {
@@ -159,6 +177,60 @@ object TriggerBuildParamUtils {
             BuildEnvParameters(
                 name = it,
                 desc = I18nUtil.getCodeLanMessage(it)
+            )
+        }
+    }
+
+    fun getStepParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.step")
+
+    fun getStepBuildParams(): List<BuildEnvParameters> {
+        return listOf(
+            STEP_NAME,
+            STEP_ID,
+            STEP_RETRY_COUNT_MANUAL,
+            STEP_RETRY_COUNT_AUTO,
+            STEP_STATUS_TEMPLATE,
+            STEP_OUTCOME_TEMPLATE
+        ).sortedBy {
+            it
+        }.map {
+            BuildEnvParameters(
+                name = it,
+                desc = I18nUtil.getCodeLanMessage(it),
+                remark = if (fillRemark(it)) {
+                    I18nUtil.getCodeLanMessage("$it.remark")
+                } else {
+                    null
+                }
+            )
+        }
+    }
+
+    fun getJobParamName() = I18nUtil.getCodeLanMessage("$TRIGGER_BUILD_PARAM_PREFIX.job")
+
+    fun getJobBuildParams(): List<BuildEnvParameters> {
+        return listOf(
+            JOB_NAME,
+            JOB_ID,
+            JOB_OS,
+            JOB_CONTAINER_NETWORK,
+            JOB_CONTAINER_NODE_ALIAS,
+            JOB_STAGE_ID,
+            JOB_STAGE_NAME,
+            JOB_INDEX,
+            JOB_STATUS_TEMPLATE,
+            JOB_OUTCOME_TEMPLATE
+        ).sortedBy {
+            it
+        }.map {
+            BuildEnvParameters(
+                name = it,
+                desc = I18nUtil.getCodeLanMessage(it),
+                remark = if (fillRemark(it)) {
+                    I18nUtil.getCodeLanMessage("$it.remark")
+                } else {
+                    null
+                }
             )
         }
     }
@@ -242,7 +314,7 @@ object TriggerBuildParamUtils {
      * git事件触发MR变量名列表
      */
     private fun gitWebhookTriggerMr() {
-        val params = listOf(
+        val params = mutableListOf(
             CI_MR_PROPOSER,
             CI_HEAD_REPO_URL,
             CI_BASE_REPO_URL,
@@ -258,13 +330,13 @@ object TriggerBuildParamUtils {
             CI_MILESTONE_ID
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+            mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGithubWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.PULL_REQUEST.name to params)
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.MERGE_REQUEST.name to params)
+            mapOf(CodeEventType.MERGE_REQUEST.name to params.plus(CI_TAPD_ISSUES))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.MERGE_REQUEST.name to params)
@@ -280,10 +352,10 @@ object TriggerBuildParamUtils {
             CI_TAG_FROM
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.TAG_PUSH.name to params)
+            mapOf(CodeEventType.TAG_PUSH.name to params.plus(CI_TAG_DESC))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeTGitWebHookTriggerElement.classType]?.putAll(
-            mapOf(CodeEventType.TAG_PUSH.name to params)
+            mapOf(CodeEventType.TAG_PUSH.name to params.plus(CI_TAG_DESC))
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeGitlabWebHookTriggerElement.classType]?.putAll(
             mapOf(CodeEventType.TAG_PUSH.name to params)
@@ -403,4 +475,19 @@ object TriggerBuildParamUtils {
         )
         TRIGGER_BUILD_PARAM_NAME_MAP[CodeP4WebHookTriggerElement.classType] = mutableMapOf("common" to params)
     }
+
+    /**
+     * 是否需要填充备注信息
+     */
+    private fun fillRemark(key: String) = listOf(
+        STEP_NAME,
+        STEP_ID,
+        STEP_STATUS_TEMPLATE,
+        STEP_OUTCOME_TEMPLATE,
+        JOB_NAME,
+        JOB_ID,
+        JOB_INDEX,
+        JOB_STATUS_TEMPLATE,
+        JOB_OUTCOME_TEMPLATE
+    ).contains(key)
 }

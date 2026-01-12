@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,19 +29,15 @@ package com.tencent.devops.environment.resources
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
@@ -104,8 +100,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
-    override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
-        return Result(envService.listEnvironment(userId, projectId))
+    override fun list(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?
+    ): Result<List<EnvWithPermission>> {
+        return Result(
+            envService.listEnvironment(
+                userId = userId,
+                projectId = projectId,
+                envName = envName,
+                envType = envType,
+                nodeHashId = nodeHashId
+            )
+        )
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
@@ -282,24 +292,15 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         nodeHashId: String,
         enableNode: Boolean
     ): Result<Boolean> {
-        if (!environmentPermissionService.checkEnvPermission(
-                userId = userId,
-                projectId = projectId,
-                envId = HashUtil.decodeIdToLong(envHashId),
-                permission = AuthPermission.EDIT
-            )
-        ) {
-            throw PermissionForbiddenException(
-                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
-            )
-        }
-        envService.enableNodeEnv(
+        return envService.enableNodeEnv(
             projectId = projectId,
+            userId = userId,
             envHashId = envHashId,
             nodeHashId = nodeHashId,
+            envName = null,
+            nodeName = null,
             enableNode = enableNode
         )
-        return Result(true)
     }
 
     private fun checkParam(

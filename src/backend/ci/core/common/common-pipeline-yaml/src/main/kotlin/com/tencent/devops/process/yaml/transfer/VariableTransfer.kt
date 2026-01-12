@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildContainerType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -58,21 +58,24 @@ class VariableTransfer {
             listOf(MAJORVERSION, "MajorVersion", MINORVERSION, "MinorVersion", FIXVERSION, "FixVersion")
     }
 
-    fun makeVariableFromModel(model: Model): Map<String, Variable>? {
+    fun makeVariableFromModel(triggerContainer: TriggerContainer?): Map<String, Variable>? {
         val result = mutableMapOf<String, Variable>()
-        model.getTriggerContainer().params.forEach {
+        triggerContainer?.params?.forEach {
             if (it.id in ignoredVariable) return@forEach
-            val props = when {
-                // 不带
-                it.type == BuildFormPropertyType.STRING && it.desc.isNullOrEmpty() -> null
+            var props = when {
+                // 字符串
                 it.type == BuildFormPropertyType.STRING -> VariableProps(
                     type = VariablePropType.VUEX_INPUT.value
                 )
-
+                // 文本框
                 it.type == BuildFormPropertyType.TEXTAREA -> VariableProps(
                     type = VariablePropType.VUEX_TEXTAREA.value
                 )
-
+                // 布尔值
+                it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
+                    type = VariablePropType.BOOLEAN.value
+                )
+                // 单选框
                 it.type == BuildFormPropertyType.ENUM -> VariableProps(
                     type = VariablePropType.SELECTOR.value,
                     options = it.options?.map { form ->
@@ -80,25 +83,7 @@ class VariableTransfer {
                     },
                     payload = it.payload
                 )
-
-                it.type == BuildFormPropertyType.DATE -> null // not use
-                it.type == BuildFormPropertyType.LONG -> null // not use
-                it.type == BuildFormPropertyType.BOOLEAN -> VariableProps(
-                    type = VariablePropType.BOOLEAN.value
-                )
-
-                it.type == BuildFormPropertyType.SVN_TAG -> null // not use
-                it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
-                    type = VariablePropType.GIT_REF.value,
-                    repoHashId = it.repoHashId
-                )
-                CascadePropertyUtils.supportCascadeParam(it.type) -> {
-                    // 级联选择器类型变量
-                    VariableProps(
-                        type = VariablePropType.REPO_REF.value
-                    )
-                }
-
+                // 复选框
                 it.type == BuildFormPropertyType.MULTIPLE -> VariableProps(
                     type = VariablePropType.CHECKBOX.value,
                     options = it.options?.map { form ->
@@ -106,12 +91,30 @@ class VariableTransfer {
                     },
                     payload = it.payload
                 )
-
+                // SVN分支或TAG
+                it.type == BuildFormPropertyType.SVN_TAG -> VariableProps(
+                    type = VariablePropType.SVN_TAG.value,
+                    repoHashId = it.repoHashId,
+                    relativePath = it.relativePath
+                )
+                // GIT分支或TAG
+                it.type == BuildFormPropertyType.GIT_REF -> VariableProps(
+                    type = VariablePropType.GIT_REF.value,
+                    repoHashId = it.repoHashId
+                )
+                // 代码库和分支
+                CascadePropertyUtils.supportCascadeParam(it.type) -> {
+                    // 级联选择器类型变量
+                    VariableProps(
+                        type = VariablePropType.REPO_REF.value
+                    )
+                }
+                // 代码库
                 it.type == BuildFormPropertyType.CODE_LIB -> VariableProps(
                     type = VariablePropType.CODE_LIB.value,
                     scmType = it.scmType?.alis
                 )
-
+                // 构建资源
                 it.type == BuildFormPropertyType.CONTAINER_TYPE -> VariableProps(
                     type = VariablePropType.CONTAINER_TYPE.value,
                     containerType = with(it.containerType) {
@@ -121,23 +124,62 @@ class VariableTransfer {
                             )
                         }
                     }
-                ) // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
+                )
+                // 版本仓库过滤器
                 it.type == BuildFormPropertyType.ARTIFACTORY -> VariableProps(
                     type = VariablePropType.ARTIFACTORY.value,
                     glob = it.glob,
                     properties = it.properties?.ifEmpty { null }
-                ) // 版本仓库
+                )
+                // 子流水线
                 it.type == BuildFormPropertyType.SUB_PIPELINE -> VariableProps(
                     type = VariablePropType.SUB_PIPELINE.value
-                ) // 子流水线
+                )
+                // 文件
                 it.type == BuildFormPropertyType.CUSTOM_FILE -> VariableProps(
-                    type = VariablePropType.CUSTOM_FILE.value
-                ) // 自定义仓库文件
-                it.type == BuildFormPropertyType.PASSWORD -> null // not use
-                it.type == BuildFormPropertyType.TEMPORARY -> null // not use
+                    type = VariablePropType.CUSTOM_FILE.value,
+                    versionControl = it.enableVersionControl.nullIfDefault(false)
+                )
+                // not use
+                it.type == BuildFormPropertyType.PASSWORD -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.TEMPORARY -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.DATE -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+                // not use
+                it.type == BuildFormPropertyType.LONG -> VariableProps(
+                    type = VariablePropType.VUEX_INPUT.value
+                )
+
                 else -> null
             }
             val const = it.constant.nullIfDefault(false)
+
+            if (it.name?.isNotEmpty() == true && it.name != it.id) {
+                props = props ?: VariableProps()
+                props.label = it.name
+            }
+
+            if (it.valueNotEmpty.nullIfDefault(false) != null) {
+                props = props ?: VariableProps()
+                props.required = it.valueNotEmpty
+            }
+
+            if (it.desc.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.description = it.desc
+            }
+
+            if (it.category.nullIfDefault("") != null) {
+                props = props ?: VariableProps()
+                props.group = it.category
+            }
             result[it.id] = Variable(
                 value = if (CascadePropertyUtils.supportCascadeParam(it.type)) {
                     CascadePropertyUtils.parseDefaultValue(it.id, it.defaultValue, it.type)
@@ -146,24 +188,11 @@ class VariableTransfer {
                 },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
+                asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
                 const = const,
-                props = props
+                props = if (props?.empty() == false) props else null,
+                ifCondition = it.displayCondition?.ifEmpty { null }
             )
-
-            if (it.name?.isNotEmpty() == true) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.label = it.name
-            }
-
-            if (it.valueNotEmpty.nullIfDefault(false) != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.required = it.valueNotEmpty
-            }
-
-            if (it.desc.nullIfDefault("") != null) {
-                val p = result[it.id]?.props ?: VariableProps()
-                p.description = it.desc
-            }
         }
         return if (result.isEmpty()) {
             null
@@ -172,12 +201,12 @@ class VariableTransfer {
         }
     }
 
-    fun makeRecommendedVersion(model: Model): RecommendedVersion? {
-        val triggerContainer = model.getTriggerContainer()
-        val res = triggerContainer.buildNo?.let {
+    fun makeRecommendedVersion(triggerContainer: TriggerContainer?): RecommendedVersion? {
+        val res = triggerContainer?.buildNo?.let {
             RecommendedVersion(
                 enabled = true,
                 allowModifyAtStartup = it.required,
+                asInstanceInput = it.asInstanceInput,
                 buildNo = RecommendedVersion.BuildNo(
                     it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
@@ -200,6 +229,35 @@ class VariableTransfer {
         return res
     }
 
+    fun makeVariableFromYamlTemplate(
+        variables: Map<String, String>?
+    ): List<BuildFormProperty> {
+        if (variables.isNullOrEmpty()) {
+            return emptyList()
+        }
+        val buildFormProperties = mutableListOf<BuildFormProperty>()
+        variables.forEach { (key, value) ->
+            val type = BuildFormPropertyType.STRING
+            buildFormProperties.add(
+                BuildFormProperty(
+                    id = key,
+                    type = type,
+                    defaultValue = value,
+                    required = true,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
+        }
+        return buildFormProperties
+    }
+
     fun makeVariableFromYaml(
         variables: Map<String, Variable>?
     ): List<BuildFormProperty> {
@@ -211,11 +269,12 @@ class VariableTransfer {
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
             check(key, variable)
+            val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.props?.label,
-                    required = variable.allowModifyAtStartup ?: true,
+                    required = allowModifyAtStartup,
                     constant = variable.const ?: false,
                     type = type,
                     defaultValue = when {
@@ -231,8 +290,9 @@ class VariableTransfer {
                         BuildFormValue(key = it.id.toString(), value = it.label ?: it.id.toString())
                     },
                     desc = variable.props?.description,
+                    category = variable.props?.group,
                     repoHashId = variable.props?.repoHashId,
-                    relativePath = null,
+                    relativePath = variable.props?.relativePath,
                     scmType = ScmType.parse(variable.props?.scmType),
                     containerType = with(variable.props?.containerType) {
                         this?.let {
@@ -241,13 +301,18 @@ class VariableTransfer {
                             )
                         }
                     },
+                    enableVersionControl = variable.props?.versionControl,
                     glob = variable.props?.glob,
                     properties = variable.props?.properties,
                     readOnly = if (variable.const == true) true else {
                         variable.readonly ?: false
                     },
                     valueNotEmpty = variable.props?.required ?: false,
-                    payload = variable.props?.payload
+                    payload = variable.props?.payload,
+                    displayCondition = variable.ifCondition ?: emptyMap(),
+                    asInstanceInput = if (allowModifyAtStartup) {
+                        variable.asInstanceInput ?: true
+                    } else null
                 )
             )
         }

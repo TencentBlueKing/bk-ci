@@ -21,9 +21,11 @@ import createLocale from '../../locale'
 import '@/assets/scss/index.scss'
 import Undeploy from '@/components/Undeploy/index.vue'
 import bsWebSocket from '@/utils/bsWebSocket.js'
+// @ts-ignore next-line
 import { BkPermission, PermissionDirective, handleNoPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VeeValidate from 'vee-validate'
+import validationJAMessages from 'vee-validate/dist/locale/ja'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import './assets/scss/icon/iconcool'
@@ -61,7 +63,7 @@ Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
 Vue.component('undeploy', Undeploy)
 
-const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
+const { lang, i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), Vue, true)
 const { BkciDocs } = createDocs(lang, window.BK_CI_VERSION)
 
 // @ts-ignore
@@ -70,6 +72,7 @@ Vue.use(VeeValidate, {
     i18n,
     fieldsBagName: 'veeFields',
     dictionary: {
+        'ja-JP': validationJAMessages,
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }
@@ -169,6 +172,7 @@ Vue.mixin({
 
 window.devops = new Vue({
     el: '#devops-root',
+    // @ts-ignore next-line
     i18n,
     router,
     store,

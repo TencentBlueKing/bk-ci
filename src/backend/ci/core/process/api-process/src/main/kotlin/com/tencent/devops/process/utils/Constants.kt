@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -51,8 +51,10 @@ const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.bu
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
+
 // 禁用定时触发器参数,当流水线配置这个参数，并且值为true,则禁用定时触发器
 const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
+
 // 子流水线运行方式
 const val PIPELINE_START_SUB_RUN_MODE = "BK_CI_SUB_PIPELINE_RUN_MODE"
 
@@ -66,6 +68,7 @@ const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
 const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "pipeline.build.id"
+const val PIPELINE_BUILD_DEBUG = "ci.debug"
 const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "pipeline.job.id"
 const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "pipeline.task.id"
 const val PIPELINE_TURBO_TASK_ID = "BK_CI_TURBO_ID" // "turbo.task.id"
@@ -82,6 +85,9 @@ const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.bu
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
 const val PIPELINE_RETRY_ALL_FAILED_CONTAINER = "BK_CI_RETRY_ALL_FAILED_CONTAINER"
 const val PIPELINE_SKIP_FAILED_TASK = "BK_CI_SKIP_FAILED_TASK"
+const val PIPELINE_RETRY_RUNNING_BUILD = "BK_CI_RETRY_RUNNING_BUILD"
+const val PIPELINE_RETRY_TASK_IN_STAGE_ID = "BK_CI_RETRY_TASK_IN_STAGE_ID"
+const val PIPELINE_RETRY_TASK_IN_CONTAINER_ID = "BK_CI_RETRY_TASK_IN_CONTAINER_ID"
 
 const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
@@ -125,6 +131,8 @@ const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步
 const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
 const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
 const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
+const val PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG = "BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG" // "流水线变量校验失败是否继续执行"
+
 /**
  * 自定义触发材料
  */
@@ -250,3 +258,5 @@ const val KEY_JOB = "job"
 const val KEY_TASK = "task"
 
 const val KEY_TASK_ATOM = "taskAtom"
+
+const val BK_EMPTY_PIPELINE = "bkEmptyPipeline"

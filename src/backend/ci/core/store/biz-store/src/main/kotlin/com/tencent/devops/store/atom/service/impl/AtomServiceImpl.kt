@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -78,7 +78,7 @@ import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.PROJECT_NO_PERMISSION
@@ -217,7 +217,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 获取插件列表
      */
-    @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtoms(
         userId: String,
@@ -327,12 +326,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
-        if (queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+        if (queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
             atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
                 atomCodes = atomCodeSet.joinToString(","),
                 projectCode = projectCode
             ).data
-        } else if (!queryProjectAtomFlag && !atomCodeSet.isNullOrEmpty()) {
+        } else if (!queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
             val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
             memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
@@ -765,7 +764,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
-    @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["get", "getPipelineAtom"], value = "store_get_pipeline_atom")
     override fun getPipelineAtomVersions(projectCode: String?, atomCode: String): Result<List<VersionInfo>> {
         logger.info("getPipelineAtomVersions projectCode is: $projectCode,atomCode is: $atomCode")

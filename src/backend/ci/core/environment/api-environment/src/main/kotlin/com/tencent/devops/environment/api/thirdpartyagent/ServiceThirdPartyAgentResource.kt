@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.EnvVar
+import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
@@ -53,6 +54,7 @@ import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.UpdateAgentInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
@@ -348,6 +350,28 @@ interface ServiceThirdPartyAgentResource {
         nodeName: String?
     ): Result<ThirdPartyAgentDetail?>
 
+    @Operation(summary = "获取构建机详情simple(by node id)")
+    @GET
+    @Path("/projects/{projectId}/agent_detail_simple_by_node_id")
+    fun getNodeDetailSimple(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "节点 Hash ID", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "agent Hash ID", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("false")
+        checkPermission: Boolean? = false
+    ): Result<ThirdPartyAgentDetail?>
+
     @Operation(summary = "获取第三方构建机任务")
     @GET
     @Path("/projects/{projectId}/listAgentBuilds")
@@ -452,4 +476,30 @@ interface ServiceThirdPartyAgentResource {
         @Parameter(description = "修改数据", required = true)
         data: BatchUpdateAgentEnvVar
     ): Result<Boolean>
+
+    @Operation(summary = "修改Agent信息")
+    @POST
+    @Path("/projects/update_agent_info")
+    fun updateAgentInfo(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "修改数据", required = true)
+        data: UpdateAgentInfo
+    ): Result<Boolean>
+
+    @Operation(summary = "查询项目标签和对应节点数")
+    @GET
+    @Path("/projects/{projectId}/fetchTag")
+    fun fetchTag(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<NodeTag>>
 }

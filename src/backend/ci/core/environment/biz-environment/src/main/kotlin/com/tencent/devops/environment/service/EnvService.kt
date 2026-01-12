@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -34,11 +34,13 @@ import com.tencent.bk.audit.annotations.ActionAuditRecord
 import com.tencent.bk.audit.annotations.AuditAttribute
 import com.tencent.bk.audit.annotations.AuditInstanceRecord
 import com.tencent.bk.audit.context.ActionAuditContext
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -53,6 +55,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_CAN_NOT_ADD_AGENT
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_EDIT_PERMISSSION
@@ -90,6 +93,7 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import jakarta.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -215,8 +219,27 @@ class EnvService @Autowired constructor(
         }
     }
 
-    override fun listEnvironment(userId: String, projectId: String): List<EnvWithPermission> {
-        val envRecordList = envDao.list(dslContext, projectId)
+    override fun listEnvironment(
+        userId: String,
+        projectId: String,
+        envName: String?,
+        envType: EnvType?,
+        nodeHashId: String?
+    ): List<EnvWithPermission> {
+        val envIds = nodeHashId?.let {
+            envNodeDao.listNodeIds(
+                dslContext,
+                projectId,
+                listOf(HashUtil.decodeIdToLong(nodeHashId))
+            ).map { it.envId }.toSet()
+        }
+        val envRecordList = envDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            envName = envName,
+            envType = envType,
+            envIds = envIds
+        )
         if (envRecordList.isEmpty()) {
             return listOf()
         }
@@ -455,9 +478,20 @@ class EnvService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENVIRONMENT_VIEW_CONTENT
     )
-    override fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
+    override fun getEnvironment(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        checkPermission: Boolean
+    ): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
+        if (checkPermission && !environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
             throw PermissionForbiddenException(
                 message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
             )
@@ -619,7 +653,9 @@ class EnvService @Autowired constructor(
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
         val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
-
+        if (nodeList.isEmpty()) {
+            return emptyList()
+        }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }
         return nodeList.map {
@@ -680,6 +716,9 @@ class EnvService @Autowired constructor(
             )
         } else {
             nodeDao.listByIds(dslContext, projectId, nodeIdMaps.keys)
+        }
+        if (nodeList.isEmpty()) {
+            return Page(0, 0, 0, emptyList())
         }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIdMaps.keys, projectId).associateBy { it.nodeId }
@@ -1134,28 +1173,94 @@ class EnvService @Autowired constructor(
     )
     fun enableNodeEnv(
         projectId: String,
-        envHashId: String,
-        nodeHashId: String,
+        userId: String,
+        envHashId: String?,
+        nodeHashId: String?,
+        envName: String?,
+        nodeName: String?,
         enableNode: Boolean
-    ) {
-        val envId = HashUtil.decodeIdToLong(envHashId)
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        ActionAuditContext.current()
-            .setInstanceId(nodeId.toString())
-            .setInstanceName(envId.toString())
-        if (enableNode) {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+    ): Result<Boolean> {
+        val env = if (envHashId != null) {
+            envDao.get(dslContext, projectId, envId = HashUtil.decodeIdToLong(envHashId))
+        } else if (envName != null) {
+            envDao.getByEnvName(dslContext, projectId, envName)
         } else {
-            ActionAuditContext.current()
-                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashId/envName")
+                )
+            )
         }
-        envNodeDao.disableOrEnableNode(
-            dslContext = dslContext,
-            projectId = projectId,
-            envId = envId,
-            nodeId = nodeId,
-            enable = enableNode
-        )
+        if (env == null) {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_ENV_NOT_EXISTS, params = arrayOf(envHashId ?: envName!!)
+                )
+            )
+        }
+
+        val envId = env.envId
+        if (!environmentPermissionService.checkEnvPermission(
+                userId = userId,
+                projectId = projectId,
+                envId = envId,
+                permission = AuthPermission.EDIT
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = I18nUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
+        }
+
+        val node = if (nodeHashId != null) {
+            nodeDao.get(dslContext, projectId, nodeId = HashUtil.decodeIdToLong(nodeHashId))
+        } else if (nodeName != null) {
+            nodeDao.getByDisplayName(
+                dslContext = dslContext,
+                projectId = projectId,
+                displayName = nodeName,
+                nodeType = listOf(NodeType.THIRDPARTY.name)
+            ).firstOrNull()
+        } else {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("nodeHashId/nodeName")
+                )
+            )
+        }
+        if (node == null) {
+            throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_NODE_NOT_EXISTS, params = arrayOf(nodeHashId ?: nodeName!!)
+                )
+            )
+        }
+
+        val nodeId = node.nodeId
+        ActionAuditContext.current().setInstanceId(nodeId.toString()).setInstanceName(envId.toString())
+        if (enableNode) {
+            ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current().addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
+        }
+        return if (envNodeDao.exists(dslContext, projectId, envId, nodeId)) {
+            Result(
+                data = envNodeDao.disableOrEnableNode(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    envId = envId,
+                    nodeId = nodeId,
+                    enable = enableNode
+                )
+            )
+        } else {
+            Result(data = false,
+                   status = 400,
+                   message = I18nUtil.getCodeLanMessage(
+                       messageCode = ERROR_NODE_NOT_EXISTS,
+                       params = arrayOf(node.displayName)
+                   )
+            )
+        }
     }
 }

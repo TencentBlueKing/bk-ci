@@ -48,16 +48,16 @@
 
 <script>
     import api from '@/api'
-    import { mapActions, mapGetters } from 'vuex'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import { mapActions, mapGetters } from 'vuex'
     import atomInfo from '../../components/common/detail-info/atom'
-    import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
-    import detailScore from '../../components/common/detailTab/detailScore'
+    import templateInfo from '../../components/common/detail-info/template'
     import codeSection from '../../components/common/detailTab/codeSection'
-    import yamlDetail from '../../components/common/detailTab/yamlDetail'
+    import detailScore from '../../components/common/detailTab/detailScore'
     import outputDetail from '../../components/common/detailTab/outputDetail'
     import qualityDetail from '../../components/common/detailTab/qualityDetail'
+    import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
         components: {
@@ -157,8 +157,12 @@
                     template: () => this.getTemplateDetail(),
                     image: () => this.getImageDetail()
                 }
+                if (!Object.keys(funObj).includes(type) || typeof funObj[type] !== 'function') {
+                    this.$bkMessage({ message: this.$t('store.typeError'), theme: 'error' })
+                    return
+                }
                 const getDetailMethod = funObj[type]
-
+                
                 getDetailMethod().catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoading = false))

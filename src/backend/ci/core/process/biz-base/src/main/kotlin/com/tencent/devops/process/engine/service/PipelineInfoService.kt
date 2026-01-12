@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,6 +46,11 @@ class PipelineInfoService @Autowired constructor(
 
     fun getPipelineName(projectId: String, pipelineId: String): String? {
         return pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)?.pipelineName
+    }
+
+    fun getPipelineInfo(projectId: String, pipelineId: String): PipelineInfo? {
+        val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
+        return record?.let { pipelineInfoDao.convert(it, null) }
     }
 
     // 敏感入参解析

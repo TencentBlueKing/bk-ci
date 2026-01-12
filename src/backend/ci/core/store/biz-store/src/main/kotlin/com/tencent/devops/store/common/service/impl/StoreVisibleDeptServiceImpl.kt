@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -36,11 +36,11 @@ import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.common.dao.StoreDeptRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
-import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.visible.DeptInfo
 import com.tencent.devops.store.pojo.common.visible.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.visible.UserStoreDeptInfoRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,16 +81,30 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             if (storeDeptRelRecords == null) {
                 null
             } else {
+                var fullScopeVisible = false
                 val deptInfos = mutableListOf<DeptInfo>()
                 storeDeptRelRecords.forEach {
-                    deptInfos.add(DeptInfo(
-                        deptId = it.deptId,
-                        deptName = it.deptName,
-                        status = DeptStatusEnum.getStatus(it.status.toInt()),
-                        comment = it.comment
-                    ))
+                    if (!fullScopeVisible) {
+                        // 判断该组件的可见范围是否设置了全公司可见，层级为0，最顶层部门，为全公司
+                        fullScopeVisible = client.get(ServiceProjectOrganizationResource::class)
+                            .getDeptInfo(
+                                userId = null,
+                                id = it.deptId
+                            ).data?.level?.toInt() == 0
+                    }
+                    deptInfos.add(
+                        DeptInfo(
+                            deptId = it.deptId,
+                            deptName = it.deptName,
+                            status = DeptStatusEnum.getStatus(it.status.toInt()),
+                            comment = it.comment
+                        )
+                    )
                 }
-                StoreVisibleDeptResp(deptInfos)
+                StoreVisibleDeptResp(
+                    deptInfos = deptInfos,
+                    fullScopeVisible = fullScopeVisible
+                )
             }
         )
     }
@@ -99,7 +113,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
      * 批量获取已经审核通过的可见范围
      */
     override fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
+        storeCodeList: List<String>,
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>> {
         val ret = hashMapOf<String, MutableList<Int>>()
@@ -153,7 +167,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 deptId = it.deptId,
                 storeType = storeType.type.toByte()
             )
-            if (count> 0) {
+            if (count > 0) {
                 return@forEach
             }
             pendingDeptInfoList.add(it)

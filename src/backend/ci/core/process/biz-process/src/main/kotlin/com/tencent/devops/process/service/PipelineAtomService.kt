@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -42,11 +42,11 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.PipelineAtomInfo
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -58,8 +58,10 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.util.PipelineAtomRelCacheUtil
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -69,8 +71,6 @@ import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import java.text.MessageFormat
-import java.time.LocalDateTime
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
@@ -80,6 +80,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
+import java.time.LocalDateTime
 
 @Service
 @RefreshScope
@@ -91,7 +93,6 @@ class PipelineAtomService @Autowired constructor(
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineAtomReplaceBaseDao: PipelineAtomReplaceBaseDao,
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
@@ -192,6 +193,7 @@ class PipelineAtomService @Autowired constructor(
         val convertEndUpdateTime = DateTimeUtil.stringToLocalDateTime(endUpdateTime)
         // 校验查询时间范围跨度
         validateQueryTimeRange(convertStartUpdateTime, convertEndUpdateTime)
+
         val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
             dslContext = dslContext,
             atomCode = atomCode,
@@ -201,31 +203,29 @@ class PipelineAtomService @Autowired constructor(
         )
         val secrecyProjectSet: Set<String>? = getSecrecyProjectSet(pipelineAtomRelCount)
         // 查询使用该插件的流水线信息
-        val pipelineAtomRelList =
-            pipelineModelTaskDao.listByAtomCode(
-                dslContext = dslContext,
-                atomCode = atomCode,
-                version = version,
-                startUpdateTime = convertStartUpdateTime,
-                endUpdateTime = convertEndUpdateTime,
-                page = page,
-                pageSize = pageSize
-            )?.map { pipelineModelTask ->
-                val pipelineId = pipelineModelTask[KEY_PIPELINE_ID] as String
-                val projectId = pipelineModelTask[KEY_PROJECT_ID] as String
-                val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
-                val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)
-                val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
-                val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, false)
-                PipelineAtomRel(
-                    pipelineUrl = pipelineUrl,
-                    atomVersion = pipelineModelTask[KEY_VERSION] as? String,
-                    modifier = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord!!.lastModifyUser,
-                    updateTime = DateTimeUtil.toDateTime(pipelineInfoRecord!!.updateTime),
-                    executor = if (secrecyFlag) HIDDEN_SYMBOL else pipelineBuildSummaryRecord?.latestStartUser,
-                    executeTime = DateTimeUtil.toDateTime(pipelineBuildSummaryRecord?.latestStartTime)
-                )
-            }
+        val pipelineAtomRelList = buildPipelineAtomRelInfoList(
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = convertStartUpdateTime,
+            endUpdateTime = convertEndUpdateTime,
+            page = page,
+            pageSize = pageSize
+        ).map { pipelineAtomInfo ->
+            val pipelineId = pipelineAtomInfo.pipelineId
+            val projectId = pipelineAtomInfo.projectId
+            val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
+            val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, pipelineId)
+            val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
+            val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, false)
+            PipelineAtomRel(
+                pipelineUrl = pipelineUrl,
+                atomVersion = pipelineAtomInfo.versions,
+                modifier = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord!!.lastModifyUser,
+                updateTime = DateTimeUtil.toDateTime(pipelineInfoRecord!!.updateTime),
+                executor = if (secrecyFlag) HIDDEN_SYMBOL else pipelineBuildSummaryRecord?.latestStartUser,
+                executeTime = DateTimeUtil.toDateTime(pipelineBuildSummaryRecord?.latestStartTime)
+            )
+        }
         val totalPages = PageUtil.calTotalPage(pageSize, pipelineAtomRelCount)
         return Result(
             Page(
@@ -233,7 +233,7 @@ class PipelineAtomService @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 totalPages = totalPages,
-                records = pipelineAtomRelList ?: listOf()
+                records = pipelineAtomRelList
             )
         )
     }
@@ -296,12 +296,12 @@ class PipelineAtomService @Autowired constructor(
                 params = arrayOf(maxRelQueryNum.toString())
             )
         }
+
         val secrecyProjectSet: Set<String>? = getSecrecyProjectSet(pipelineAtomRelCount)
         val dataList = mutableListOf<Array<String?>>()
         var page = 1
         do {
-            val pipelineAtomRelList = pipelineModelTaskDao.listByAtomCode(
-                dslContext = dslContext,
+            val pipelineAtomInfoList = buildPipelineAtomRelInfoList(
                 atomCode = atomCode,
                 version = version,
                 startUpdateTime = convertStartUpdateTime,
@@ -311,14 +311,14 @@ class PipelineAtomService @Autowired constructor(
             )
             val pageDataList = mutableListOf<Array<String?>>()
             val pagePipelineIdSet = mutableSetOf<String>()
-            pipelineAtomRelList?.forEach { pipelineAtomRel ->
-                val pipelineId = pipelineAtomRel[KEY_PIPELINE_ID] as String
-                val projectId = pipelineAtomRel[KEY_PROJECT_ID] as String
+            pipelineAtomInfoList.forEach { pipelineAtomInfo ->
+                val pipelineId = pipelineAtomInfo.pipelineId
+                val projectId = pipelineAtomInfo.projectId
                 val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 pagePipelineIdSet.add(pipelineId)
                 val dataArray = arrayOfNulls<String>(7)
                 dataArray[0] = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId, true)
-                dataArray[1] = pipelineAtomRel[KEY_VERSION] as? String
+                dataArray[1] = pipelineAtomInfo.versions
                 dataArray[6] = pipelineId
                 pageDataList.add(dataArray)
             }
@@ -353,7 +353,8 @@ class PipelineAtomService @Autowired constructor(
             }
             dataList.addAll(pageDataList)
             page++
-        } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
+        } while (pipelineAtomInfoList.size == DEFAULT_PAGE_SIZE)
+
         val headers = arrayOf(
             I18nUtil.getCodeLanMessage(PIPELINE_URL),
             I18nUtil.getCodeLanMessage(VERSION),
@@ -397,34 +398,114 @@ class PipelineAtomService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int?,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        archiveFlag: Boolean? = false
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
-            val permission = AuthPermission.VIEW
-            pipelinePermissionService.validPipelinePermission(
+            val userPipelinePermissionCheckStrategy =
+                UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+            UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = permission,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(
-                        userId,
-                        projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
+                permission = AuthPermission.VIEW
             )
         }
-        val model = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version, true)?.model
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-            )
+        val model = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true,
+            archiveFlag = archiveFlag
+        )?.model ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+        )
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
         return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
+    }
+
+    fun buildPipelineAtomRelInfoList(
+        atomCode: String,
+        version: String? = null,
+        startUpdateTime: LocalDateTime,
+        endUpdateTime: LocalDateTime,
+        page: Int,
+        pageSize: Int
+    ): List<PipelineAtomInfo> {
+        // 获取流水线信息
+        val pipelinesResult = pipelineModelTaskDao.selectPipelineInfosByAtomCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = startUpdateTime,
+            endUpdateTime = endUpdateTime,
+            page = page,
+            pageSize = pageSize
+        )
+
+        if (pipelinesResult.isNullOrEmpty()) {
+            return emptyList()
+        }
+
+        val pipelineIds = pipelinesResult.map { it[KEY_PIPELINE_ID] as String }.toSet()
+        val projectIds = pipelinesResult.map { it[KEY_PROJECT_ID] as String }.toSet()
+
+        val missingPipelineIds = mutableListOf<String>()
+        val cachedVersionMap = mutableMapOf<String, String>()
+
+        // 先从本地缓存里面获取到版本信息存放到cachedVersionMap并且将获取不到版本信息的流水线id放入missingPipelineIds
+        pipelineIds.forEach { pipelineId ->
+            val versions = PipelineAtomRelCacheUtil.getPipelineAtomRelVersions(atomCode, pipelineId)
+            if (versions == null) {
+                missingPipelineIds.add(pipelineId)
+            } else {
+                cachedVersionMap[pipelineId] = versions
+            }
+        }
+
+        // 将获取不到版本信息的流水线id在DB里面查询出具体插件的版本信息再放入缓存 同时更新到cachedVersionMap中供下游业务使用
+        if (missingPipelineIds.isNotEmpty()) {
+            val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
+            val atomVersionsList = pipelineModelTaskDao.selectPipelineAtomVersions(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime,
+                pipelineIds = missingPipelineIds.toSet(),
+                projectIds = projectIds.toSet()
+            )
+
+            atomVersionsList?.forEach { record ->
+                val atomVersion = record[KEY_VERSION] as String
+                val key = record[KEY_PIPELINE_ID] as String
+
+                if (pipelineAtomVersionInfo[key] == null) {
+                    pipelineAtomVersionInfo[key] = mutableSetOf()
+                }
+                pipelineAtomVersionInfo[key]?.add(atomVersion)
+            }
+            PipelineAtomRelCacheUtil.batchPutPipelineAtomRelVersions(
+                atomCode = atomCode,
+                pipelineVersionMap = pipelineAtomVersionInfo
+            )
+            pipelineAtomVersionInfo.forEach { (key, value) ->
+                cachedVersionMap[key] = value.joinToString(",")
+            }
+        }
+
+        return pipelinesResult.map { record ->
+            val atomPipelineId = record[KEY_PIPELINE_ID] as String
+            val atomProjectId = record[KEY_PROJECT_ID] as String
+            val versions = cachedVersionMap[atomPipelineId]
+            PipelineAtomInfo(
+                pipelineId = atomPipelineId,
+                projectId = atomProjectId,
+                versions = versions ?: "",
+                atomCode = atomCode
+            )
+        }
     }
 }

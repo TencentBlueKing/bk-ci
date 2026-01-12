@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,9 +31,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"text/template"
 	"time"
+
+	"github.com/pkg/errors"
 
 	telegrafconf "github.com/TencentBlueKing/bk-ci/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
@@ -160,15 +161,17 @@ func genTelegrafConfig() (*bytes.Buffer, error) {
 
 	ip := config.GAgentEnv.GetAgentIp()
 	templateData := map[string]string{
-		"ProjectType": projectType,
-		"AgentId":     config.GAgentConfig.AgentId,
-		"AgentSecret": config.GAgentConfig.SecretKey,
-		"Gateway":     buildGateway,
-		"ProjectId":   config.GAgentConfig.ProjectId,
-		"HostName":    config.GAgentEnv.HostName,
-		"HostIp":      config.GAgentEnv.GetAgentIp(),
-		"BuildType":   config.GAgentConfig.BuildType,
-		"TlsCa":       tlsCa,
+		"ProjectType":    projectType,
+		"AgentId":        config.GAgentConfig.AgentId,
+		"AgentSecret":    config.GAgentConfig.SecretKey,
+		"Gateway":        buildGateway,
+		"ProjectId":      config.GAgentConfig.ProjectId,
+		"HostName":       config.GAgentEnv.HostName,
+		"HostIp":         config.GAgentEnv.GetAgentIp(),
+		"BuildType":      config.GAgentConfig.BuildType,
+		"TlsCa":          tlsCa,
+		"CPUProductInfo": config.GAgentEnv.CPUProductInfo,
+		"GPUProductInfo": config.GAgentEnv.GPUProductInfo,
 	}
 	logs.Debugf("telegraf agentip %s", ip)
 

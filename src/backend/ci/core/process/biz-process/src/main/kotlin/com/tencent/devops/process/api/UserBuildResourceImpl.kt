@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -47,7 +47,9 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildStageProgressInfo
+import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.BuildRecordInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -376,7 +378,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildNum: Int,
-        debugVersion: Int?
+        debugVersion: Int?,
+        archiveFlag: Boolean?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildNum <= 0) {
@@ -389,7 +392,8 @@ class UserBuildResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 channelCode = ChannelCode.BS,
-                debugVersion = debugVersion
+                debugVersion = debugVersion,
+                archiveFlag = archiveFlag
             )
         )
     }
@@ -649,7 +653,7 @@ class UserBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         forceTrigger: Boolean?
-    ): Result<BuildId> {
+    ): Result<BuildReplayResult> {
         return Result(
             pipelineBuildFacadeService.replayBuild(
                 projectId = projectId,
@@ -657,6 +661,38 @@ class UserBuildResourceImpl @Autowired constructor(
                 buildId = buildId,
                 userId = userId,
                 forceTrigger = forceTrigger ?: false
+            )
+        )
+    }
+
+    override fun getBuildVersionDiff(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<BuildVersionDiff?> {
+        return Result(
+            pipelineBuildFacadeService.getBuildVersionDiff(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
+    }
+
+    override fun replayStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<BuildReplayResult> {
+        return Result(
+            pipelineBuildFacadeService.replayStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId
             )
         )
     }

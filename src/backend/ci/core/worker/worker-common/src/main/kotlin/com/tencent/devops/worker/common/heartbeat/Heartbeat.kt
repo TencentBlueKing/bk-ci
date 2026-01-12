@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -78,6 +78,7 @@ object Heartbeat {
                     failCnt++
                     if (failCnt >= EXIT_AFTER_FAILURE) {
                         logger.error("Heartbeat has been failed for $failCnt times, worker exit")
+                        LoggerService.archiveLogFiles()
                         exitProcess(-1)
                     }
                 }
@@ -91,6 +92,7 @@ object Heartbeat {
             if (running) {
                 LoggerService.addErrorLine("Job timout: ${TimeUnit.MILLISECONDS.toMinutes(jobTimeoutMills)}min")
                 EngineService.timeout()
+                LoggerService.archiveLogFiles()
                 exitProcess(99)
             }
         }, jobTimeoutMills, jobTimeoutMills, TimeUnit.MILLISECONDS)
@@ -105,6 +107,7 @@ object Heartbeat {
         // 流水线构建结束则正常结束进程，不再重试
         if (ignored.errorCode == 2101182) {
             logger.error("build end, worker exit")
+            LoggerService.archiveLogFiles()
             exitProcess(0)
         }
     }

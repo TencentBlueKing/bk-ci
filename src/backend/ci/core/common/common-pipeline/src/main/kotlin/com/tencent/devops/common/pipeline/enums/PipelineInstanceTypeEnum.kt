@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,6 +39,14 @@ enum class PipelineInstanceTypeEnum(val type: String) {
                 "FREEDOM" -> PipelineInstanceTypeEnum.FREEDOM.name
                 "CONSTRAINT" -> PipelineInstanceTypeEnum.CONSTRAINT.name
                 else -> PipelineInstanceTypeEnum.FREEDOM.name
+            }
+        }
+
+        fun get(type: String): PipelineInstanceTypeEnum {
+            return when (type) {
+                FREEDOM.type -> FREEDOM
+                CONSTRAINT.type -> CONSTRAINT
+                else -> throw IllegalArgumentException("No enum for constant $type")
             }
         }
     }

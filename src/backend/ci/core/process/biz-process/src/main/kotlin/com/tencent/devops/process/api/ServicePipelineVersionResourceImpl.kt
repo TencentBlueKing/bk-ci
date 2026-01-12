@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -39,17 +39,17 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineOperationDetail
-import com.tencent.devops.process.pojo.audit.Audit
-import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineDetail
+import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
@@ -57,8 +57,8 @@ import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
-import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineVersionResourceImpl @Autowired constructor(
@@ -469,6 +469,20 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             pipelineId = pipelineId
         )
     )
+
+    override fun exportPipelineAll(
+        userId: String,
+        projectId: String,
+        storageType: PipelineStorageType?,
+        page: Int?
+    ): Response {
+        return pipelineInfoFacadeService.exportPipelineAll(
+            userId = userId,
+            projectId = projectId,
+            storageType = storageType ?: PipelineStorageType.YAML,
+            page = page ?: 1
+        )
+    }
 
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,17 +27,33 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.db.utils.JooqUtils.values
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreBaseEnvManageDao {
 
+    /**
+     * 批量保存商店基础环境配置数据
+     *
+     * 使用MySQL的INSERT ... ON DUPLICATE KEY UPDATE语法实现批量插入或更新操作
+     * 当主键冲突时自动更新现有记录，避免重复插入导致的异常
+     *
+     * @param dslContext JOOQ数据库上下文
+     * @param storeBaseEnvDataPOs 商店基础环境数据对象列表
+     *
+     * 字段更新策略：
+     * - 使用coalesce(values(field), field)逻辑：新值不为null则更新，否则保留原值
+     * - MODIFIER字段：总是使用新值
+     * - UPDATE_TIME字段：总是更新为当前时间
+     * - DEFAULT_FLAG字段：默认值为true（当原值为null时）
+     */
     fun batchSave(
         dslContext: DSLContext,
         storeBaseEnvDataPOs: List<StoreBaseEnvDataPO>
@@ -53,6 +69,7 @@ class StoreBaseEnvManageDao {
                 PKG_PATH,
                 TARGET,
                 SHA_CONTENT,
+                SHA256_CONTENT,
                 PRE_CMD,
                 OS_NAME,
                 OS_ARCH,
@@ -73,6 +90,7 @@ class StoreBaseEnvManageDao {
                         storeBaseEnvDataPO.pkgPath,
                         storeBaseEnvDataPO.target,
                         storeBaseEnvDataPO.shaContent,
+                        storeBaseEnvDataPO.sha256Content,
                         storeBaseEnvDataPO.preCmd,
                         storeBaseEnvDataPO.osName,
                         storeBaseEnvDataPO.osArch,
@@ -86,55 +104,20 @@ class StoreBaseEnvManageDao {
                 }
             }
                 .onDuplicateKeyUpdate()
-                .set(
-                    LANGUAGE,
-                    DSL.`when`(MySQLDSL.values(LANGUAGE).isNotNull, MySQLDSL.values(LANGUAGE)).otherwise(LANGUAGE)
-                )
-                .set(
-                    MIN_VERSION,
-                    DSL.`when`(MySQLDSL.values(MIN_VERSION).isNotNull, MySQLDSL.values(MIN_VERSION))
-                        .otherwise(MIN_VERSION)
-                )
-                .set(
-                    PKG_NAME,
-                    DSL.`when`(MySQLDSL.values(PKG_NAME).isNotNull, MySQLDSL.values(PKG_NAME)).otherwise(PKG_NAME)
-                )
-                .set(
-                    PKG_PATH,
-                    DSL.`when`(MySQLDSL.values(PKG_PATH).isNotNull, MySQLDSL.values(PKG_PATH)).otherwise(PKG_PATH)
-                )
-                .set(
-                    TARGET,
-                    DSL.`when`(MySQLDSL.values(TARGET).isNotNull, MySQLDSL.values(TARGET)).otherwise(TARGET)
-                )
-                .set(
-                    SHA_CONTENT,
-                    DSL.`when`(MySQLDSL.values(SHA_CONTENT).isNotNull, MySQLDSL.values(SHA_CONTENT))
-                        .otherwise(SHA_CONTENT)
-                )
-                .set(
-                    PRE_CMD,
-                    DSL.`when`(MySQLDSL.values(PRE_CMD).isNotNull, MySQLDSL.values(PRE_CMD)).otherwise(PRE_CMD)
-                )
-                .set(
-                    OS_NAME,
-                    DSL.`when`(MySQLDSL.values(OS_NAME).isNotNull, MySQLDSL.values(OS_NAME)).otherwise(OS_NAME)
-                )
-                .set(
-                    OS_ARCH,
-                    DSL.`when`(MySQLDSL.values(OS_ARCH).isNotNull, MySQLDSL.values(OS_ARCH)).otherwise(OS_ARCH)
-                )
-                .set(
-                    RUNTIME_VERSION,
-                    DSL.`when`(MySQLDSL.values(RUNTIME_VERSION).isNotNull, MySQLDSL.values(RUNTIME_VERSION))
-                        .otherwise(RUNTIME_VERSION)
-                )
-                .set(
-                    DEFAULT_FLAG,
-                    DSL.`when`(MySQLDSL.values(DEFAULT_FLAG).isNotNull, MySQLDSL.values(DEFAULT_FLAG))
-                        .otherwise(DEFAULT_FLAG)
-                )
-                .set(MODIFIER, MySQLDSL.values(MODIFIER))
+                // 冲突更新策略：新值不为null则更新，否则保留原值
+                .set(LANGUAGE, DSL.coalesce(values(LANGUAGE), LANGUAGE))
+                .set(MIN_VERSION, DSL.coalesce(values(MIN_VERSION), MIN_VERSION))
+                .set(PKG_NAME, DSL.coalesce(values(PKG_NAME), PKG_NAME))
+                .set(PKG_PATH, DSL.coalesce(values(PKG_PATH), PKG_PATH))
+                .set(TARGET, DSL.coalesce(values(TARGET), TARGET))
+                .set(SHA_CONTENT, DSL.coalesce(values(SHA_CONTENT), SHA_CONTENT))
+                .set(SHA256_CONTENT, DSL.coalesce(values(SHA256_CONTENT), SHA256_CONTENT))
+                .set(PRE_CMD, DSL.coalesce(values(PRE_CMD), PRE_CMD))
+                .set(OS_NAME, DSL.coalesce(values(OS_NAME), OS_NAME))
+                .set(OS_ARCH, DSL.coalesce(values(OS_ARCH), OS_ARCH))
+                .set(RUNTIME_VERSION, DSL.coalesce(values(RUNTIME_VERSION), RUNTIME_VERSION))
+                .set(DEFAULT_FLAG, DSL.coalesce(values(DEFAULT_FLAG), DEFAULT_FLAG))
+                .set(MODIFIER, values(MODIFIER))
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
@@ -154,5 +137,20 @@ class StoreBaseEnvManageDao {
                 .where(STORE_ID.`in`(storeIds))
                 .execute()
         }
+    }
+
+    fun updateSha256(dslContext: DSLContext, envId: String, sha256Value: String) {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        dslContext.update(t)
+            .set(t.SHA256_CONTENT, sha256Value)
+            .where(t.ID.eq(envId))
+            .execute()
+    }
+
+    fun getStoreEnvRecordsByStoreId(dslContext: DSLContext, storeId: String): List<TStoreBaseEnvRecord>? {
+        val t = TStoreBaseEnv.T_STORE_BASE_ENV
+        return dslContext.selectFrom(t)
+            .where(t.STORE_ID.eq(storeId))
+            .fetch()
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -40,7 +40,7 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 timeoutVar: {
-                    rule: { timeoutsRule: true },
+                    rule: { timeoutsRule: this.pipelineDialect },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),
@@ -241,7 +241,7 @@ const jobOptionConfigMixin = {
                         {
                             key: 'prepareTimeout',
                             type: 'groupItem',
-                            rule: { timeoutsRule: true },
+                            rule: { timeoutsRule: this.pipelineDialect },
                             component: 'composite-input',
                             appendText: this.$t('storeMap.minutes'),
                             labelWidth: 90,
@@ -254,7 +254,7 @@ const jobOptionConfigMixin = {
                         {
                             key: 'timeoutVar',
                             type: 'groupItem',
-                            rule: { timeoutsRule: true },
+                            rule: { timeoutsRule: this.pipelineDialect },
                             component: 'composite-input',
                             appendText: this.$t('storeMap.minutes'),
                             labelWidth: 90,
@@ -267,7 +267,7 @@ const jobOptionConfigMixin = {
                     ]
                 },
                 timeoutVar: {
-                    rule: { timeoutsRule: true },
+                    rule: { timeoutsRule: this.pipelineDialect },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),
@@ -302,6 +302,7 @@ const jobOptionConfigMixin = {
                     default: '',
                     required: true,
                     label: this.$t('storeMap.customConditionExp'),
+                    docsLink: this.customExpressionsDoc,
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'
                     },
@@ -324,6 +325,9 @@ const jobOptionConfigMixin = {
                 }
             })
             return list
+        },
+        customExpressionsDoc () {
+            return this.$pipelineDocs.CUSTOM_EXPRESSIONS_DOC
         }
     },
     methods: {

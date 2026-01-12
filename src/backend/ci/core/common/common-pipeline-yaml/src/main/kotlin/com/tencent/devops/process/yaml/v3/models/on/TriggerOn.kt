@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -45,6 +45,10 @@ data class TriggerOn(
     var push: PushRule? = null,
     var tag: TagRule? = null,
     var mr: MrRule? = null,
+    // 对应MERGED_REQUEST_ACCEPT事件
+    @JsonProperty("mr-merged")
+    @get:Schema(title = "mr-merged")
+    var mrMerged: MrRule? = null,
     var schedules: List<SchedulesRule>? = null,
     var delete: DeleteRule? = null,
     var issue: IssueRule? = null,
@@ -73,7 +77,10 @@ data class TriggerOn(
     var shelveCommit: PushRule? = null,
     @JsonProperty("shelve-submit")
     @get:Schema(title = "shelve-submit")
-    var shelveSubmit: PushRule? = null
+    var shelveSubmit: PushRule? = null,
+    @JsonProperty("scm-code")
+    @get:Schema(title = "scm-code")
+    var scmCode: String? = null
 ) {
     fun toPre(version: YamlVersion) = when (version) {
         YamlVersion.V2_0 -> toPreV2()
@@ -107,6 +114,7 @@ data class TriggerOn(
         push = push,
         tag = tag,
         mr = mr,
+        mrMerged = mrMerged,
         schedules = if (schedules?.size == 1) schedules!!.first() else schedules,
         delete = delete,
         issue = issue,
@@ -121,7 +129,8 @@ data class TriggerOn(
         changeContent = changeContent,
         changeSubmit = changeSubmit,
         shelveCommit = shelveCommit,
-        shelveSubmit = shelveSubmit
+        shelveSubmit = shelveSubmit,
+        scmCode = scmCode
     )
 
     private fun simpleManual() = when {
@@ -136,6 +145,7 @@ interface IPreTriggerOn : YamlVersionParser {
     val push: Any?
     val tag: Any?
     val mr: Any?
+    val mrMerged: Any?
     val schedules: Any?
     val delete: DeleteRule?
     val issue: IssueRule?
@@ -158,6 +168,9 @@ data class PreTriggerOn(
     override val push: Any?,
     override val tag: Any?,
     override val mr: Any?,
+    @JsonProperty("mr-merged")
+    @get:Schema(title = "mr-merged")
+    override val mrMerged: Any? = null,
     override val schedules: Any?,
     override val delete: DeleteRule?,
     override val issue: IssueRule? = null,

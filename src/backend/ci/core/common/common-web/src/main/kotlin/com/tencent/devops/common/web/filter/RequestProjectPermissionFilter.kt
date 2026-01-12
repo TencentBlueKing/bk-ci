@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -50,6 +50,7 @@ import jakarta.ws.rs.container.ResourceInfo
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.UriInfo
 import jakarta.ws.rs.ext.Provider
+import org.springframework.core.annotation.AnnotationUtils
 
 @Provider
 @RequestFilter
@@ -76,8 +77,8 @@ class RequestProjectPermissionFilter(
         }
         // 判断接口是否标注了免权限校验的注解
         val method = resourceInfo!!.resourceMethod
-        val bkApiHandleType = method.getAnnotation(BkApiPermission::class.java)?.types?.toList()
-        val noAuthCheckFlag = bkApiHandleType?.contains(BkApiHandleType.API_NO_AUTH_CHECK) ?: false
+        val bkApiHandleTypes = AnnotationUtils.findAnnotation(method, BkApiPermission::class.java)?.types?.toList()
+        val noAuthCheckFlag = bkApiHandleTypes?.contains(BkApiHandleType.API_NO_AUTH_CHECK) ?: false
         // 如果接口免权限校验、接口类型是get请求或者接口是build接口等情况无需做权限校验（未结束的构建需要调build接口才能完成）
         val url = requestContext.uriInfo.requestUri.path
         val channel = I18nUtil.getRequestChannel()

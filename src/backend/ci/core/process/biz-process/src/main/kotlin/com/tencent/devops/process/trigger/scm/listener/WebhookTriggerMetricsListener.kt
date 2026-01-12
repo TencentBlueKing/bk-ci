@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -43,7 +43,7 @@ import java.time.LocalDate
 @Service
 class WebhookTriggerMetricsListener(
     private val measureEventDispatcher: SampleEventDispatcher
-) : WebhookTriggerListenerSupport() {
+) : WebhookTriggerListener {
     override fun onBuildSuccess(context: WebhookTriggerContext) {
         with(context) {
             // 上报项目用户度量

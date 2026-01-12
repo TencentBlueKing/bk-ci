@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,15 +33,15 @@ interface WebhookTriggerListener {
     /**
      * 构建成功
      */
-    fun onBuildSuccess(context: WebhookTriggerContext)
+    fun onBuildSuccess(context: WebhookTriggerContext) = Unit
 
     /**
      * webhook触发失败
      */
-    fun onError(context: WebhookTriggerContext, exception: Exception)
+    fun onError(context: WebhookTriggerContext, exception: Exception) = Unit
 
     /**
      * 匹配失败
      */
-    fun onMatchFailed(context: WebhookTriggerContext)
+    fun onMatchFailed(context: WebhookTriggerContext) = Unit
 }

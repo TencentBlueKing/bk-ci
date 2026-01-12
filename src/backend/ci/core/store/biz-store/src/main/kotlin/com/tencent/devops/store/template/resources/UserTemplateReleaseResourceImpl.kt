@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -31,7 +31,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserTemplateReleaseResource
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateReleaseReq
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
+import com.tencent.devops.store.pojo.template.MarketTemplateUpdateV2Request
+import com.tencent.devops.store.pojo.template.TemplateOfflineReq
 import com.tencent.devops.store.template.service.TemplateReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -55,12 +58,39 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
         return templateReleaseService.updateMarketTemplate(userId, marketTemplateUpdateRequest)
     }
 
+    override fun releaseMarketTemplate(
+        userId: String,
+        request: MarketTemplateUpdateV2Request
+    ): Result<String> {
+        return templateReleaseService.releaseMarketTemplate(userId, request)
+    }
+
+    override fun releaseMarketTemplateVersions(
+        userId: String,
+        request: MarketTemplateReleaseReq
+    ): Result<Boolean> {
+        return Result(
+            templateReleaseService.releaseMarketTemplateVersions(userId, request)
+        )
+    }
+
     override fun getProcessInfo(userId: String, templateId: String): Result<StoreProcessInfo> {
         return templateReleaseService.getProcessInfo(userId, templateId)
     }
 
+    override fun getProcessInfoByCode(
+        userId: String,
+        templateCode: String
+    ): Result<StoreProcessInfo> {
+        return templateReleaseService.getProcessInfoByCode(userId, templateCode)
+    }
+
     override fun cancelRelease(userId: String, templateId: String): Result<Boolean> {
         return templateReleaseService.cancelRelease(userId, templateId)
+    }
+
+    override fun cancelReleaseByCode(userId: String, templateCode: String): Result<Boolean> {
+        return templateReleaseService.cancelRelease(userId, templateCode)
     }
 
     override fun offlineTemplate(
@@ -70,5 +100,18 @@ class UserTemplateReleaseResourceImpl @Autowired constructor(
         reason: String?
     ): Result<Boolean> {
         return templateReleaseService.offlineTemplate(userId, templateCode, version, reason)
+    }
+
+    override fun offlineTemplateV2(
+        userId: String,
+        templateCode: String,
+        request: TemplateOfflineReq
+    ): Result<Boolean> {
+        return templateReleaseService.offlineTemplateV2(
+            userId = userId,
+            templateCode = templateCode,
+            templateVersion = request.version,
+            reason = request.reason
+        )
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -33,10 +33,16 @@ import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListe
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
+import com.tencent.devops.process.engine.listener.template.MQTemplateMigrateListener
+import com.tencent.devops.process.engine.listener.template.MQTemplateTriggerUpgradesListener
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineTemplateMigrateEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.service.template.v2.PipelineTemplateInstanceListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 
@@ -77,4 +83,28 @@ class PipelineBaseConfiguration {
     fun pipelineRestoreConsumer(
         @Autowired restoreListener: MQPipelineRestoreListener
     ) = ScsConsumerBuilder.build<PipelineRestoreEvent> { restoreListener.run(it) }
+
+    /**
+     * 流水线模板实例--- 并发一般
+     */
+    @EventConsumer
+    fun pipelineTemplateInstanceConsumer(
+        @Autowired listener: PipelineTemplateInstanceListener
+    ) = ScsConsumerBuilder.build<PipelineTemplateInstanceEvent> { listener.handle(it) }
+
+    /**
+     * 流水线模板触发升级--- 并发一般
+     */
+    @EventConsumer
+    fun pipelineTemplateTriggerUpgradesConsumer(
+        @Autowired listener: MQTemplateTriggerUpgradesListener
+    ) = ScsConsumerBuilder.build<PipelineTemplateTriggerUpgradesEvent> { listener.run(it) }
+
+    /**
+     * 流水线模板迁移--- 并发一般
+     */
+    @EventConsumer
+    fun pipelineTemplateMigrateConsumer(
+        @Autowired listener: MQTemplateMigrateListener
+    ) = ScsConsumerBuilder.build<PipelineTemplateMigrateEvent> { listener.run(it) }
 }

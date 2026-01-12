@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -122,6 +122,27 @@ class BuildRecordStageDao {
         }
     }
 
+    fun getRecord(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        executeCount: Int
+    ): BuildRecordStage? {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            return dslContext.selectFrom(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(BUILD_ID.eq(buildId))
+                        .and(STAGE_ID.eq(stageId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).fetchOne(mapper)
+        }
+    }
+
     fun getRecords(
         dslContext: DSLContext,
         projectId: String,
@@ -138,7 +159,7 @@ class BuildRecordStageDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
-                .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
+                .where(conditions).orderBy(SEQ.asc()).fetch(mapper)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -621,7 +621,8 @@ class CredentialServiceImpl @Autowired constructor(
         buildId: String,
         credentialId: String,
         publicKey: String,
-        taskId: String?
+        taskId: String?,
+        padding: Boolean
     ): CredentialInfo? {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -629,10 +630,20 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGet(buildBasicInfo.projectId, credentialId, publicKey) ?: run {
+        return serviceGet(
+            projectId = buildBasicInfo.projectId,
+            credentialId = credentialId,
+            publicKey = publicKey,
+            padding = padding
+        ) ?: run {
             // 获取跨项目凭证
             val acrossInfo = getAcrossInfo(projectId, buildId, taskId) ?: return null
-            serviceGet(acrossInfo.targetProjectId, credentialId, publicKey)
+            serviceGet(
+                projectId = acrossInfo.targetProjectId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                padding = padding
+            )
         }
     }
 
@@ -641,7 +652,8 @@ class CredentialServiceImpl @Autowired constructor(
         targetProjectId: String,
         buildId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CredentialInfo? {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -649,7 +661,12 @@ class CredentialServiceImpl @Autowired constructor(
         }
         buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGetAcrossProject(targetProjectId, credentialId, publicKey)
+        return serviceGetAcrossProject(
+            targetProjectId = targetProjectId,
+            credentialId = credentialId,
+            publicKey = publicKey,
+            padding = padding
+        )
     }
 
     override fun buildGetDetail(
@@ -699,10 +716,15 @@ class CredentialServiceImpl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
     )
-    override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
+    override fun serviceGet(
+        projectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
-        return credentialInfo(publicKey, credentialRecord)
+        return credentialInfo(publicKey = publicKey, credentialRecord = credentialRecord, padding = padding)
     }
 
     @ActionAuditRecord(
@@ -719,7 +741,8 @@ class CredentialServiceImpl @Autowired constructor(
     override fun serviceGetAcrossProject(
         targetProjectId: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        padding: Boolean
     ): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, targetProjectId, credentialId)?.let {
             if (!it.allowAcrossProject) {
@@ -729,10 +752,14 @@ class CredentialServiceImpl @Autowired constructor(
             }
         } ?: return null
 
-        return credentialInfo(publicKey, credentialRecord)
+        return credentialInfo(publicKey = publicKey, credentialRecord = credentialRecord, padding = padding)
     }
 
-    private fun credentialInfo(publicKey: String, credentialRecord: TCredentialRecord): CredentialInfo {
+    private fun credentialInfo(
+        publicKey: String,
+        credentialRecord: TCredentialRecord,
+        padding: Boolean
+    ): CredentialInfo {
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
         val serverPublicKeyByteArray = serverDHKeyPair.publicKey
@@ -742,22 +769,26 @@ class CredentialServiceImpl @Autowired constructor(
         val credentialV1 = credentialHelper.encryptCredential(
             aesEncryptedCredential = credentialRecord.credentialV1,
             publicKeyByteArray = publicKeyByteArray,
-            serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            serverPrivateKeyByteArray = serverPrivateKeyByteArray,
+            padding = padding
         )!!
         val credentialV2 = credentialHelper.encryptCredential(
             aesEncryptedCredential = credentialRecord.credentialV2,
             publicKeyByteArray = publicKeyByteArray,
-            serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            serverPrivateKeyByteArray = serverPrivateKeyByteArray,
+            padding = padding
         )
         val credentialV3 = credentialHelper.encryptCredential(
             aesEncryptedCredential = credentialRecord.credentialV3,
             publicKeyByteArray = publicKeyByteArray,
-            serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            serverPrivateKeyByteArray = serverPrivateKeyByteArray,
+            padding = padding
         )
         val credentialV4 = credentialHelper.encryptCredential(
             aesEncryptedCredential = credentialRecord.credentialV4,
             publicKeyByteArray = publicKeyByteArray,
-            serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            serverPrivateKeyByteArray = serverPrivateKeyByteArray,
+            padding = padding
         )
 
         return CredentialInfo(
@@ -894,8 +925,18 @@ class CredentialServiceImpl @Autowired constructor(
         return SQLPage(count, result)
     }
 
-    override fun getCredentialItem(projectId: String, credentialId: String, publicKey: String): CredentialItemVo? {
-        return serviceGet(projectId, credentialId, publicKey)?.convertCredentialItem()
+    override fun getCredentialItem(
+        projectId: String,
+        credentialId: String,
+        publicKey: String,
+        padding: Boolean
+    ): CredentialItemVo? {
+        return serviceGet(
+            projectId = projectId,
+            credentialId = credentialId,
+            publicKey = publicKey,
+            padding = padding
+        )?.convertCredentialItem()
     }
 
     private fun getAcrossInfo(

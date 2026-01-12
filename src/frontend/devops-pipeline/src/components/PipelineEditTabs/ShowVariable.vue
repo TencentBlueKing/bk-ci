@@ -21,6 +21,7 @@
                     <div
                         v-for="(panel, index) in panels"
                         class="tab-item"
+                        v-bk-overflow-tips
                         :key="index"
                         :class="{ actived: active === panel.name }"
                         @click="selectTab(panel.name)"
@@ -33,6 +34,7 @@
                 <pipeline-param
                     v-if="active === 'pipeline'"
                     :editable="editable"
+                    :can-edit-param="canEditParam"
                     :params="params"
                     :update-container-params="handleContainerChange"
                 />
@@ -61,9 +63,9 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import PipelineParam from './components/pipeline-param'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import AtomOutputVar from './components/atom-output-var'
+    import PipelineParam from './components/pipeline-param'
     import PipelineVersion from './components/pipeline-version'
     import SystemVar from './components/system-var'
 
@@ -83,6 +85,10 @@
                 type: Boolean,
                 default: true
             },
+            canEditParam: {
+                type: Boolean,
+                default: true
+            },
             isDirectShowVersion: {
                 type: Boolean,
                 default: false
@@ -94,12 +100,6 @@
         },
         data () {
             return {
-                panels: [
-                    { name: 'pipeline', label: this.$t('newui.pipelineVar') },
-                    { name: 'atomOutput', label: this.$t('newui.atomVar') },
-                    { name: 'system', label: this.$t('newui.sysVar') },
-                    { name: 'version', label: this.$t('newui.versions') }
-                ],
                 active: 'pipeline'
             }
         },
@@ -108,6 +108,17 @@
                 'pipelineWithoutTrigger',
                 'showVariable'
             ]),
+            ...mapGetters('atom', [
+                'isTemplate'
+            ]),
+            panels () {
+                return [
+                    { name: 'pipeline', label: this.$t(this.isTemplate ? 'template.templateVar' : 'newui.pipelineVar') },
+                    { name: 'atomOutput', label: this.$t('newui.atomVar') },
+                    { name: 'system', label: this.$t('newui.sysVar') },
+                    { name: 'version', label: this.$t('newui.versions') }
+                ]
+            },
             stages () {
                 return this.pipelineWithoutTrigger?.stages || []
             },

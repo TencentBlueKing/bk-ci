@@ -57,6 +57,8 @@ object ActionAuditContent {
     const val PIPELINE_TEMPLATE_EDIT_SETTING_CONTENT = "update template setting $CONTENT_TEMPLATE " +
         "in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val PIPELINE_TEMPLATE_EDIT_CONTENT = "update template $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_VIEW_CONTENT = "get template info  $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val PIPELINE_TEMPLATE_EXPORT_CONTENT = "export template $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 证书
     const val CERT_CREATE_CONTENT = "create cert $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
@@ -96,6 +98,12 @@ object ActionAuditContent {
     const val ENV_NODE_DELETE_CONTENT = "delete environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_LIST_CONTENT = "list environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val ENV_NODE_USE_CONTENT = "use environment node $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 环境节点标签
+    const val ENV_NODE_TAG_CREATE_CONTENT = "create environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_EDIT_CONTENT = "edit environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_DELETE_CONTENT = "delete environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val ENV_NODE_TAG_UPDATE_CONTENT = "update environment tag $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 
     // 质量红线
     const val RULE_CREATE_CONTENT = "create rule $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"

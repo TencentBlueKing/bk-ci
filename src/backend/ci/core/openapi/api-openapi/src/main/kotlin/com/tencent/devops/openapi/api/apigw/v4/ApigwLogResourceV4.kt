@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -53,6 +55,7 @@ import jakarta.ws.rs.core.Response
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
+@BkApigwApi(version = "v4")
 interface ApigwLogResourceV4 {
     @Operation(summary = "根据构建ID获取初始化所有日志", tags = ["v4_app_log_init", "v4_user_log_init"])
     @GET
@@ -94,6 +97,12 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "对应stepId", required = false)
         @QueryParam("stepId")
         stepId: String?,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

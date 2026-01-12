@@ -2,12 +2,14 @@ import axios from 'axios'
 import { lang, locale } from 'bk-magic-vue'
 import cookies from 'js-cookie'
 import VueI18n from 'vue-i18n'
+import { createI18n } from 'vue-i18n-bridge'
 const DEFAULT_LOCALE = window.INIT_LOCALE || 'zh-CN'
 const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
     'zh-cn': '中文',
+    'ja-JP': '日本語',
     cn: '中文',
     'en-US': 'English',
     'en-us': 'English',
@@ -17,6 +19,8 @@ const localeLabelMap = {
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
+    'ja-JP': 'ja-JP',
+    ja: 'ja-JP',
     zh_CN: 'zh-CN',
     cn: 'zh-CN',
     'en-US': 'en-US',
@@ -65,7 +69,18 @@ function getLsLocale () {
 }
 
 function setLsLocale (locale) {
-    const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
+    let formateLocale = 'zh-cn'
+    switch (localeAliasMap[locale]) {
+        case 'en-US':
+            formateLocale = 'en'
+            break
+        case 'ja-JP':
+            formateLocale = 'ja'
+            break
+        default:
+            formateLocale = 'zh-cn'
+            break
+    }
     if (typeof cookies.set === 'function') {
         const subDomains = getSubDoamin()
         subDomains.forEach(domain => {
@@ -86,13 +101,15 @@ function getLanguageCode (lang) {
     return 'ZH'
 }
 
-export default (r, initSetLocale = false) => {
+export default (r, Vue, initSetLocale = false) => {
     const { messages, localeList } = importAll(r)
     
     const initLocale = getLsLocale()
     const lang = getLanguageCode(initLocale.split('_')[0].toLocaleUpperCase())
-    
-    const i18n = new VueI18n({
+
+    Vue.use(VueI18n, { bridge: true })
+    const i18n = createI18n({
+        legacy: false,
         locale: initLocale,
         fallbackLocale: initLocale,
         messages: localeList.reduce((acc, { key }) => {
@@ -102,7 +119,8 @@ export default (r, initSetLocale = false) => {
             }
             return acc
         }, {})
-    })
+    }, VueI18n)
+    Vue.use(i18n)
     locale.i18n((...args) => i18n.t(...args))
     setLocale(initLocale, initSetLocale)
 

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -17,11 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import * as atom from './atom'
-import * as template from './template'
-import * as Image from './image'
 import { mergeModules } from '@/utils/index'
-import { UPDATE_CURRENT_LIST, UPDATE_MARKET_QUERY, UPDATE_MARKET_DETAIL, CLEAR_MARKET_DETAIL, UPDATE_USER_INFO } from './constants'
+import * as atom from './atom'
+import { CLEAR_MARKET_DETAIL, UPDATE_CURRENT_LIST, UPDATE_MARKET_DETAIL, UPDATE_MARKET_QUERY, UPDATE_USER_INFO } from './constants'
+import * as Image from './image'
+import * as template from './template'
 
 const Vue = window.Vue
 const vue = new Vue()

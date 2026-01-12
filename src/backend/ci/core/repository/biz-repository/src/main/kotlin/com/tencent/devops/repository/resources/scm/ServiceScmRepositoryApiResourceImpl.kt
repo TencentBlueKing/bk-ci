@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 Tencent.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -27,12 +27,18 @@
 
 package com.tencent.devops.repository.resources.scm
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
+import com.tencent.devops.scm.api.pojo.CheckRun
+import com.tencent.devops.scm.api.pojo.CheckRunInput
+import com.tencent.devops.scm.api.pojo.CommentInput
 import com.tencent.devops.scm.api.pojo.Perm
+import com.tencent.devops.scm.api.pojo.Reference
 import com.tencent.devops.scm.api.pojo.repository.ScmServerRepository
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,6 +46,21 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
     private val repositoryApiService: ScmRepositoryApiService
 ) : ServiceScmRepositoryApiResource {
+
+    override fun getServerRepositoryById(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): Result<ScmServerRepository> {
+        return Result(
+            repositoryApiService.findRepository(
+                projectId = projectId,
+                repositoryType = repositoryType,
+                repoHashIdOrName = repoHashIdOrName
+            )
+        )
+    }
+
     override fun getServerRepository(
         projectId: String,
         authRepository: AuthRepository
@@ -60,5 +81,119 @@ class ServiceScmRepositoryApiResourceImpl @Autowired constructor(
                 authRepository = authRepository
             )
         )
+    }
+
+    override fun listBranches(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listBranches(
+                projectId = projectId,
+                authRepository = authRepository,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getBranch(
+        projectId: String,
+        authRepository: AuthRepository,
+        branch: String
+    ): Result<Reference?> {
+        return Result(
+            repositoryApiService.getBranch(
+                projectId = projectId,
+                authRepository = authRepository,
+                branch = branch
+            )
+        )
+    }
+
+    override fun listTags(
+        projectId: String,
+        authRepository: AuthRepository,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<Reference>> {
+        return Result(
+            repositoryApiService.listTags(
+                projectId = projectId,
+                authRepository = authRepository,
+                search = search,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun registerWebhook(
+        projectId: String,
+        eventType: String,
+        repository: Repository
+    ) {
+        repositoryApiService.createHook(
+            projectId = projectId,
+            authRepository = AuthRepository(repository),
+            events = listOf(eventType),
+            secret = null,
+            scmType = repository.getScmType(),
+            scmCode = repository.scmCode
+        )
+    }
+
+    override fun createCheckRun(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun> {
+        return Result(
+            repositoryApiService.createCheckRun(
+                projectId = projectId,
+                repositoryType = repoType,
+                repoId = repoId,
+                checkRunInput = checkRunInput
+            )
+        )
+    }
+
+    override fun updateCheckRun(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        checkRunInput: CheckRunInput
+    ): Result<CheckRun> {
+        return Result(
+            repositoryApiService.updateCheckRun(
+                projectId = projectId,
+                repositoryType = repoType,
+                repoId = repoId,
+                checkRunInput = checkRunInput
+            )
+        )
+    }
+
+    override fun addComment(
+        projectId: String,
+        repoType: RepositoryType,
+        repoId: String,
+        number: Int,
+        input: CommentInput
+    ): Result<Boolean> {
+        repositoryApiService.addComment(
+            projectId = projectId,
+            repositoryType = repoType,
+            repoId = repoId,
+            number = number,
+            input = input
+        )
+        return Result(true)
     }
 }

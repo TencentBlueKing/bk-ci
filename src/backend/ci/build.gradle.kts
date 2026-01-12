@@ -1,9 +1,7 @@
-import java.net.URI
-
 plugins {
-    id("com.tencent.devops.boot") version "1.0.0"
-    detektCheck
-    `task-license-report` // 检查License合规
+    id("com.tencent.devops.boot") version "1.1.0"
+    nexusPublishing
+    licenseReport // 检查License合规
 }
 
 allprojects {
@@ -25,7 +23,8 @@ allprojects {
 
     // 新增maven 仓库
     repositories {
-        add(maven { url = URI("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://repo.jenkins-ci.org/releases") })
+        add(maven { url = uri("https://central.sonatype.com/repository/maven-snapshots/") })
     }
 
     // 版本管理
@@ -33,8 +32,8 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
-            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcpkix-jdk18on:${Versions.BouncyCastle}")
+            dependency("org.bouncycastle:bcprov-jdk18on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
             dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
@@ -132,6 +131,10 @@ allprojects {
                 entry("devops-scm-api")
                 entry("devops-scm-spring-boot-starter")
             }
+            // lettuce 6.4.1 有BUG
+            dependency("io.lettuce:lettuce-core:6.4.2.RELEASE")
+            // spring-amqp 3.2.0 有BUG https://github.com/spring-projects/spring-amqp/issues/2914
+            dependency("org.springframework.amqp:spring-amqp:3.2.8")
         }
     }
 
