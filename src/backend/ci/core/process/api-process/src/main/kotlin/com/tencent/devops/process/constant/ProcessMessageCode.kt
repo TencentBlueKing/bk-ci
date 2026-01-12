@@ -725,8 +725,6 @@ object ProcessMessageCode {
     // 触发事件配置不存在或已下架, 请联系管理员处理
     const val BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC = "bkTriggerEventConfigNotFoundDesc"
 
-    // [条件字段名][条件实际值]和预期[配置值]不匹配
-    const val BK_TRIGGER_EVENT_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
     // 字段不匹配
     const val BK_FIELD_CONDITION_NOT_MATCH = "bkFieldConditionNotMatch"
     // 字段被排除
