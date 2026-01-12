@@ -432,6 +432,7 @@ function handleChangeCenter (id: any) {
 
 function handleChangeProduct (productId: any) {
   const selectedProduct = operationalList.value.find(i => i.ProductId === productId);
+  projectData.value.productName = selectedProduct?.ProductName || '';
   if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
     projectData.value.kpiCode = selectedProduct.icosProductCode || '';
     projectData.value.kpiName = selectedProduct.icosProductName || '';
