@@ -38,7 +38,6 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
         val bathSize = 100L
 
         while (offset < count) {
-
             val storeIds = storeVersionLogDao.selectComponentIds(
                 dslContext = dslContext,
                 offset = offset,
@@ -48,32 +47,48 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
                 break
             }
             offset += bathSize
-            val atomEnvInfos = storeVersionLogDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
-            if (!atomEnvInfos.isNullOrEmpty()) {
-                val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("STORE_ID").toString() }
-                atomEnvInfosMap.forEach { (storeId, records) ->
-                    val storePackageInfoReqs = mutableListOf<StorePackageInfoReq>()
-                    records.forEach {
-                        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
-                            .getFileSize(StoreTypeEnum.DEVX, it.get("PKG_PATH").toString()).data
-                        if (nodeSize != null) {
-                            storePackageInfoReqs.add(
-                                StorePackageInfoReq(
-                                    storeType = StoreTypeEnum.DEVX,
-                                    osName = it.get("OS_NAME").toString(),
-                                    arch = it.get("OS_ARCH").toString(),
-                                    size = nodeSize
-                                )
-                            )
-                        }
-                    }
-                    storeVersionLogDao.updateComponentVersionInfo(
-                        dslContext = dslContext,
-                        storeId,
-                        JsonUtil.toJson(storePackageInfoReqs)
-                    )
-                }
-            }
+            processComponentBatch(storeIds)
+        }
+    }
+
+    private fun processComponentBatch(storeIds: List<String>) {
+        val atomEnvInfos = storeVersionLogDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
+        if (atomEnvInfos.isNullOrEmpty()) {
+            return
+        }
+
+        val atomEnvInfosMap = atomEnvInfos.groupBy { it.get("STORE_ID").toString() }
+        atomEnvInfosMap.forEach { (storeId, records) ->
+            updateStorePackageSize(storeId, records)
+        }
+    }
+
+    private fun updateStorePackageSize(storeId: String, records: List<org.jooq.Record>) {
+        val storePackageInfoReqs = records.mapNotNull { record ->
+            fetchPackageInfo(record)
+        }
+
+        if (storePackageInfoReqs.isNotEmpty()) {
+            storeVersionLogDao.updateComponentVersionInfo(
+                dslContext = dslContext,
+                storeId = storeId,
+                pkgSize = JsonUtil.toJson(storePackageInfoReqs)
+            )
+        }
+    }
+
+    private fun fetchPackageInfo(record: org.jooq.Record): StorePackageInfoReq? {
+        val pkgPath = record.get("PKG_PATH").toString()
+        val nodeSize = client.get(ServiceArchiveComponentPkgResource::class)
+            .getFileSize(StoreTypeEnum.DEVX, pkgPath).data
+
+        return nodeSize?.let {
+            StorePackageInfoReq(
+                storeType = StoreTypeEnum.DEVX,
+                osName = record.get("OS_NAME").toString(),
+                arch = record.get("OS_ARCH").toString(),
+                size = it
+            )
         }
     }
 
