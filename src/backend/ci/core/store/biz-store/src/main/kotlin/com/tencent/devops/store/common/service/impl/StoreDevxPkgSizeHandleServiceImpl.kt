@@ -41,11 +41,11 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         // 获取DEVX类型组件的总数量
         val count = storeVersionLogDao.countComponent(dslContext, StoreTypeEnum.DEVX.type.toByte())
         val batchSize = 100L
-        
+
         // 使用generateSequence生成分页偏移量序列：[0, 100, 200, ...]
         // 只在需要时才计算下一个偏移量
-        generateSequence(0L) { offset -> 
-            (offset + batchSize).takeIf { it < count } 
+        generateSequence(0L) { offset ->
+            (offset + batchSize).takeIf { it < count }
         }.forEach { offset ->
             // 按偏移量分批处理组件数据
             processBatchByOffset(offset = offset, batchSize = batchSize)
@@ -64,13 +64,13 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
             offset = offset,
             batchSize = batchSize
         )
-        
+
         if (storeIds.isNullOrEmpty()) return
         
         // 根据组件ID列表查询组件的环境信息（包含包路径、操作系统、架构等）
         val atomEnvInfos = storeVersionLogDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
         if (atomEnvInfos.isNullOrEmpty()) return
-        
+
         // 按storeId分组，每个组件可能有多个环境配置（不同OS、架构）
         atomEnvInfos.groupBy { it.get("STORE_ID").toString() }
             .forEach { (storeId, records) ->
@@ -90,7 +90,7 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         }
 
         if (storePackageInfoReqs.isEmpty()) return
-        
+
         // 将包信息列表序列化为JSON并更新到数据库
         storeVersionLogDao.updateComponentVersionInfo(
             dslContext = dslContext,
@@ -158,7 +158,6 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                     storeId = storeId,
                     pkgSize = JsonUtil.toJson(mutableList)
                 )
-
             }
         } finally {
             redisLock.unlock()
