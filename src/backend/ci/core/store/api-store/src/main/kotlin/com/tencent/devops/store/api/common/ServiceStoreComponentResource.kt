@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -289,9 +290,6 @@ interface ServiceStoreComponentResource {
         @PathParam("storeId")
         storeId: String,
         @Parameter(description = "组件版本包大小", required = true)
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        @Parameter(description = "组件类型", required = true)
-        @QueryParam("storeType")
-        storeType: StoreTypeEnum,
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean>
 }

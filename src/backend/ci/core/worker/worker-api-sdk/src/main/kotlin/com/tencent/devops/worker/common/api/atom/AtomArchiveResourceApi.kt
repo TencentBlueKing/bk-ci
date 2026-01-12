@@ -44,9 +44,8 @@ import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
@@ -329,16 +328,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
     override fun updateAtomVersionPkgSize(
         atomId: String,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
         val path = "/ms/store/api/service/store/components/storeId/$atomId/version/info/update"
-        val jsonBody = objectMapper.writeValueAsString(
-            mapOf(
-                "storePackageInfoReqs" to storePackageInfoReqs,
-                "storeType" to storeType.name
-            )
-        )
+        val jsonBody = objectMapper.writeValueAsString(storePackageInfoReqs)
         val body = RequestBody.create(
             "application/json; charset=utf-8".toMediaTypeOrNull(),
             jsonBody

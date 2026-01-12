@@ -86,8 +86,7 @@ interface StoreComponentManageService {
      */
     fun updateComponentVersionSize(
         storeId: String,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Boolean
 
     /**

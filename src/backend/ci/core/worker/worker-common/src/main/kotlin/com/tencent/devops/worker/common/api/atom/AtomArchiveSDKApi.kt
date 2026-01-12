@@ -33,9 +33,8 @@ import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.StorePackageInfoReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
+import com.tencent.devops.store.pojo.common.sensitive.SensitiveConfResp
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
@@ -124,7 +123,6 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
      */
     fun updateAtomVersionPkgSize(
         atomId: String,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean>
 }

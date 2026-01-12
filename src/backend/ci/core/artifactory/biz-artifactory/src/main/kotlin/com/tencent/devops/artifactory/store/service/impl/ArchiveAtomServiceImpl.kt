@@ -162,6 +162,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                     sha256Content = packageFile.inputStream().use { ShaUtils.sha256InputStream(it) }
                 )
                 val storePackageInfo = StorePackageInfoReq(
+                    storeType = StoreTypeEnum.ATOM,
                     osName = atomEnvRequest.osName,
                     arch = atomEnvRequest.osArch,
                     size = packageFileInfo.packageFileSize
@@ -391,7 +392,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                         params = arrayOf("$atomCode:$version")
                     )
                 val updateAtomInfoResult = client.get(ServiceStoreComponentResource::class).updateComponentVersionSize(
-                    storeType = StoreTypeEnum.ATOM,
                     storeId = atomId,
                     storePackageInfoReqs = storePackageInfoReqs
                 )

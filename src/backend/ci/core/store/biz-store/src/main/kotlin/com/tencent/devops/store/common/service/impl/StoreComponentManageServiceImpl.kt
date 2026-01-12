@@ -562,9 +562,9 @@ class StoreComponentManageServiceImpl : StoreComponentManageService {
 
     override fun updateComponentVersionSize(
         storeId: String,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Boolean {
+        val storeType = storePackageInfoReqs.first().storeType
         return getStoreComponentPkgSizeHandleService(storeType.name).updateComponentVersionSize(
             storeId = storeId,
             storePackageInfoReqs = storePackageInfoReqs,

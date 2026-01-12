@@ -248,7 +248,7 @@ interface OpStoreComponentResource {
     @Path("/components/size/batch/update")
     fun batchUpdateComponentsVersionSize(
         @Parameter(description = "组件类型", required = true)
-        @QueryParam("sortType")
+        @QueryParam("storeType")
         storeType: StoreTypeEnum,
     ): Result<Boolean>
 }

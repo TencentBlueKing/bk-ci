@@ -59,6 +59,7 @@ class StoreDevxPkgSizeHandleServiceImpl: AbstractStoreComponentPkgSizeHandleServ
                         if (nodeSize != null) {
                             storePackageInfoReqs.add(
                                 StorePackageInfoReq(
+                                    storeType = StoreTypeEnum.DEVX,
                                     osName = it.get("OS_NAME").toString(),
                                     arch = it.get("OS_ARCH").toString(),
                                     size = nodeSize

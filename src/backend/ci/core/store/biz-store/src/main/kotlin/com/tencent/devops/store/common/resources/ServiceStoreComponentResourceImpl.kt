@@ -196,9 +196,8 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
 
     override fun updateComponentVersionSize(
         storeId: String,
-        storePackageInfoReqs: List<StorePackageInfoReq>,
-        storeType: StoreTypeEnum
+        storePackageInfoReqs: List<StorePackageInfoReq>
     ): Result<Boolean> {
-        return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs, storeType))
+        return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs))
     }
 }

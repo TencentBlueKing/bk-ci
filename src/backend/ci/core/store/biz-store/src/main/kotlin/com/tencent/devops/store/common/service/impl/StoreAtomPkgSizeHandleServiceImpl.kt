@@ -15,7 +15,6 @@ import com.tencent.devops.store.pojo.common.version.StoreVersionSizeInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 
 @Service("ATOM_PKG_SIZE_HANDLE_SERVICE")
 class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleService() {
@@ -62,6 +61,7 @@ class StoreAtomPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
                         if (nodeSize != null) {
                             storePackageInfoReqs.add(
                                 StorePackageInfoReq(
+                                    storeType = StoreTypeEnum.ATOM,
                                     osName = it.get("OS_NAME").toString(),
                                     arch = it.get("OS_ARCH").toString(),
                                     size = nodeSize
