@@ -372,7 +372,89 @@
         mergeInstancesWithTemplate()
     })
     
-    // 数据合并函数
+    // 合并单个实例与模板的通用函数
+    function mergeInstanceWithTemplate (instance, index) {
+        // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
+        const processedInstance = {
+            ...instance,
+            param: instance.param?.map(p => ({
+                ...p,
+                readOnlyCheck: false
+            }))
+        }
+        
+        // 如果没有模板详情，直接返回处理后的实例
+        if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
+            return processedInstance
+        }
+
+        let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
+           
+        if (curTemplateDetail.value?.param) {
+            instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
+        }
+        if (curTemplateDetail.value?.buildNo) {
+            const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
+            instanceBuildNo = buildNo
+            instanceBuildNoParams = buildNoParam
+        }
+        if (curTemplateDetail.value?.triggerConfigs?.length) {
+            instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
+        }
+           
+        // 返回合并后的实例
+        if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
+            const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
+            
+            // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
+            const mergedCurrentParams = [
+                ...(instanceParams ?? processedInstance.param ?? []),
+                ...(instanceBuildNoParams ?? [])
+            ]
+            
+            const needResetBuildNo = instance?.buildNo && shouldResetBuildNo({
+                currentParams: instanceBuildNoParams,
+                initialParams: instance?.param,
+                currentBuildNo: instanceBuildNo?.buildNo,
+                initialBuildNo: instance?.buildNo?.buildNo
+            })
+            return {
+                ...processedInstance,
+                param: mergedCurrentParams,
+                buildNo: curTemplateDetail.value?.buildNo ? {
+                    ...instanceBuildNo,
+                    currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo?.currentBuildNo
+                } : undefined,
+                triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
+                resetBuildNo: needResetBuildNo,
+                buildNoChanged
+            }
+        }
+        return processedInstance
+    }
+    
+    // 更新实例的 overrideTemplateField.paramIds
+    function updateInstanceOverrideParamIds (mergedInstance, index) {
+        const newOverrideParamIds = mergedInstance.param?.filter(p => !p.constant && p.required && !p.isFollowTemplate).map(p => p.id) || []
+        const originalParamIds = mergedInstance?.overrideTemplateField?.paramIds || []
+        if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
+            newOverrideParamIds.push('BK_CI_BUILD_NO')
+        }
+        proxy.$nextTick(() => {
+            proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
+                index,
+                value: {
+                    ...mergedInstance,
+                    overrideTemplateField: {
+                        ...mergedInstance?.overrideTemplateField,
+                        paramIds: [...newOverrideParamIds]
+                    }
+                }
+            })
+        })
+    }
+
+    // 数据合并函数 - 合并所有实例
     function mergeInstancesWithTemplate () {
         if (!initialInstanceList.value?.length || !curTemplateVersion.value) {
             return
@@ -381,64 +463,7 @@
         try {
             isLoading.value = true
             const mergedInstances = initialInstanceList.value.map((instance, index) => {
-                // 设置 readOnlyCheck 为 false (readOnly只读属性在执行时才是禁用，在更新实例新建实例可以进行修改)
-                const processedInstance = {
-                    ...instance,
-                    param: instance.param?.map(p => ({
-                           ...p,
-                           readOnlyCheck: false
-                       }))
-                }
-                // 如果没有模板详情，直接返回处理后的实例
-                if (!curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
-                    return processedInstance
-                }
-
-                let instanceParams, instanceBuildNoParams, instanceBuildNo, instanceTriggerConfigs
-                   
-                if (curTemplateDetail.value?.param) {
-                    instanceParams = compareParams(processedInstance, curTemplateDetail.value, index)
-                }
-                if (curTemplateDetail.value?.buildNo) {
-                    const { buildNo, buildNoParam } = compareBuild(processedInstance, curTemplateDetail.value)
-                    instanceBuildNo = buildNo
-                    instanceBuildNoParams = buildNoParam
-                }
-                if (curTemplateDetail.value?.triggerConfigs?.length) {
-                    instanceTriggerConfigs = compareTriggerConfigs(processedInstance?.triggerConfigs, curTemplateDetail.value.triggerConfigs)
-                }
-                   
-                // 返回合并后的实例
-                if (instanceParams || instanceBuildNo || instanceTriggerConfigs) {
-                    // 获取初始实例的参数
-                    const initialInstance = initialInstanceList.value?.[index]
-                    const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
-                    
-                    // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
-                    const mergedCurrentParams = [
-                        ...(instanceParams ?? processedInstance.param ?? []),
-                        ...(instanceBuildNoParams ?? [])
-                    ]
-                    
-                    const needResetBuildNo = initialInstance?.buildNo && shouldResetBuildNo({
-                        currentParams: instanceBuildNoParams,
-                        initialParams: initialInstance?.param,
-                        currentBuildNo: instanceBuildNo?.buildNo,
-                        initialBuildNo: initialInstance?.buildNo?.buildNo
-                    })
-                    return {
-                        ...processedInstance,
-                        param: mergedCurrentParams,
-                        buildNo: curTemplateDetail.value?.buildNo ? {
-                            ...instanceBuildNo,
-                            currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo.currentBuildNo,
-                        } : undefined,
-                        triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
-                        resetBuildNo: needResetBuildNo,
-                        buildNoChanged
-                    }
-                }
-                return processedInstance
+                return mergeInstanceWithTemplate(instance, index)
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
                 list: mergedInstances,
@@ -449,24 +474,7 @@
         } finally {
             // 收集需要添加到 overrideTemplateField.paramIds 的新参数 id
             instanceList.value?.forEach((item, index) => {
-                const newOverrideParamIds = item.param?.filter(p => !p.constant && p.required && !p.isFollowTemplate).map(p => p.id) || []
-                // 如果原始的 overrideTemplateField.paramIds 包含 BK_CI_BUILD_NO，则需要添加回去
-                const originalParamIds = item?.overrideTemplateField?.paramIds || []
-                if (originalParamIds.includes('BK_CI_BUILD_NO') && !newOverrideParamIds.includes('BK_CI_BUILD_NO')) {
-                    newOverrideParamIds.push('BK_CI_BUILD_NO')
-                }
-                proxy.$nextTick(() => {
-                    proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
-                        index: index,
-                        value: {
-                            ...item,
-                            overrideTemplateField: {
-                                ...item?.overrideTemplateField,
-                                paramIds: [...newOverrideParamIds]
-                            }
-                        }
-                    })
-                })
+                updateInstanceOverrideParamIds(item, index)
             })
             isLoading.value = false
         }
@@ -1028,11 +1036,17 @@
 
     function handleResetInstance () {
         const instanceIndex = activeIndex.value - 1
-        curInstance.value = initialInstanceList.value[instanceIndex]
+        const instance = initialInstanceList.value[instanceIndex]
+        
+        // 先恢复为初始实例数据，再与模板版本配置进行合并
+        const mergedInstance = mergeInstanceWithTemplate(instance, instanceIndex)
+        
+        // 更新实例并处理 overrideTemplateField.paramIds
         proxy.$store.commit(`templates/${UPDATE_INSTANCE_LIST}`, {
             index: instanceIndex,
-            value: initialInstanceList.value[instanceIndex]
+            value: mergedInstance
         })
+        updateInstanceOverrideParamIds(mergedInstance, instanceIndex)
     }
 
     function handleBuildNoChange (name, value) {

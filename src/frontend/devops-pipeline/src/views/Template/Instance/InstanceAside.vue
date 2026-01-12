@@ -19,7 +19,7 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <!-- <div
+            <div
                 v-if="renderInstanceList.length"
                 class="batch-edit-btn"
                 @click="handleBatchEdit"
@@ -32,7 +32,7 @@
                 <span>
                     {{ $t('template.batchEditParams') }}
                 </span>
-            </div> -->
+            </div>
         </div>
         <ul class="instance-list">
             <li
@@ -295,10 +295,15 @@
                 }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: e.message || e
+            })
             console.error(e)
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
     function handleShowInstanceCreate () {
@@ -360,7 +365,7 @@
                 })
                 return
             }
-            await fetchPipelinesDetails()
+            // await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })
