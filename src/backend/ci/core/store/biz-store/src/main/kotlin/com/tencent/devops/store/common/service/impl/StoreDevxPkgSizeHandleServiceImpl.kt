@@ -66,7 +66,6 @@ class StoreDevxPkgSizeHandleServiceImpl : AbstractStoreComponentPkgSizeHandleSer
         )
 
         if (storeIds.isNullOrEmpty()) return
-        
         // 根据组件ID列表查询组件的环境信息（包含包路径、操作系统、架构等）
         val atomEnvInfos = storeVersionLogDao.selectComponentEnvInfoByStoreIds(dslContext, storeIds)
         if (atomEnvInfos.isNullOrEmpty()) return
