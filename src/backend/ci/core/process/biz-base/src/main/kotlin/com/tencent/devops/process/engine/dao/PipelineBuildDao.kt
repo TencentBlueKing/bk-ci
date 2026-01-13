@@ -61,7 +61,6 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import jakarta.ws.rs.core.Response
 import java.sql.Timestamp
 import java.time.LocalDateTime
-import jdk.jfr.internal.Utils.formatDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -2193,6 +2192,7 @@ class PipelineBuildDao {
         >,
         LightBuildHistory
     > {
+        
         override fun map(
             record: Record15<
                 String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
@@ -2207,8 +2207,8 @@ class PipelineBuildDao {
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
                         status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
-                    startTime = formatDateTime(t[tTPipelineBuildHistory.START_TIME]),
-                    endTime = formatDateTime(t[tTPipelineBuildHistory.END_TIME]),
+                    startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]),
+                    endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]),
                     errorInfoList = try {
                         if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {
                             JsonUtil.getObjectMapper()
@@ -2245,24 +2245,6 @@ class PipelineBuildDao {
         } catch (e: Exception) {
             logger.warn("parseTimeString failed", e)
             null
-        }
-    }
-
-    /**
-     * 将 LocalDateTime 转换为格式化的时间字符串
-     * @param localDateTime LocalDateTime 对象
-     * @return 格式化的时间字符串，格式为 yyyy-MM-dd HH:mm:ss，如果为null返回空字符串
-     */
-    private fun formatDateTime(localDateTime: LocalDateTime?): String {
-        if (localDateTime == null) {
-            return ""
-        }
-        return try {
-            val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            localDateTime.format(formatter)
-        } catch (e: Exception) {
-            logger.warn("formatDateTime failed", e)
-            ""
         }
     }
 }
