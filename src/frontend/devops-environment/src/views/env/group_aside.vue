@@ -215,6 +215,7 @@
         padding: 16px;
         height: 100%;
         background-color: #FFFFFF;
+        border-top: 1px solid #DCDEE5;
         .add-env-btn {
             width: 100%;
             &:hover {

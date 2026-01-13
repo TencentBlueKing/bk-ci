@@ -476,5 +476,7 @@
     "nodeUsage": "节点用途",
     "buildAgent": "构建 Agent",
     "refresh": "刷新",
-    "filterNodeBy": " 按 {0} 等筛选"
+    "filterNodeBy": " 按 {0} 等筛选",
+    "creativeResource": "创作流资源",
+    "pipelineResource": "流水线资源"
 }

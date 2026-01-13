@@ -11,6 +11,7 @@
         @after-resize="afterResize"
     >
         <template #aside>
+            <ResourceTypeSelector />
             <slot name="aside" />
         </template>
 
@@ -28,6 +29,7 @@
 <script setup>
     import { defineProps, toRef } from 'vue'
     import { useResizeLayout } from '@/hooks/useResizeLayout'
+    import ResourceTypeSelector from './ResourceTypeSelector.vue'
     
     const props = defineProps({
         containerWidth: {
