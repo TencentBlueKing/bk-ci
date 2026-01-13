@@ -148,12 +148,14 @@ class PipelineDraftSaveReqConverter(
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 repoHashId = pipelineYamlInfo?.repoHashId
             )
-            if (pipelineId != null && context.templateInstanceBasicInfo != null) {
-                assertModel(
+            if (context.templateInstanceBasicInfo != null) {
+                val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params
+                val instanceParams = context.templateInstanceBasicInfo.instanceModel.getTriggerContainer().params
+                TemplateInstanceUtil.assertParams(
                     projectId = projectId,
-                    pipelineId = pipelineId,
-                    inputModel = request.modelAndSetting!!.model,
-                    instanceModel = context.templateInstanceBasicInfo.instanceModel
+                    pipelineId = newPipelineId,
+                    inputParams = inputParams,
+                    instanceParams = instanceParams
                 )
             }
             return context
@@ -259,79 +261,6 @@ class PipelineDraftSaveReqConverter(
                 triggerConfigs = triggerConfigs,
                 recommendedVersion = recommendedVersion,
                 overrideTemplateField = overrideTemplateField
-            )
-        }
-    }
-
-    /**
-     * 验证实例化的model与前端传入的model正确性
-     *
-     * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
-     */
-    private fun assertModel(
-        projectId: String,
-        pipelineId: String,
-        inputModel: Model,
-        instanceModel: Model
-    ) {
-        val inputTriggerContainer = inputModel.getTriggerContainer()
-        val instanceTriggerContainer = instanceModel.getTriggerContainer()
-        val inputParams = inputTriggerContainer.params
-        val instanceParams = instanceTriggerContainer.params
-        if (inputParams.size != instanceParams.size) {
-            logger.warn(
-                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
-                        "${inputParams.size}|${instanceParams.size}"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
-            )
-        }
-        val requiredExceptions = mutableListOf<String>()
-        val constantExceptions = mutableListOf<String>()
-        val defaultValueExceptions = mutableListOf<String>()
-        instanceParams.forEach { instanceParam ->
-            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
-                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
-                )
-            }
-            if (inputParam.required != instanceParam.required) {
-                requiredExceptions.add(instanceParam.id)
-            }
-            if (inputParam.constant != instanceParam.constant) {
-                constantExceptions.add(instanceParam.id)
-            }
-            if (inputParam.defaultValue != instanceParam.defaultValue) {
-                defaultValueExceptions.add(instanceParam.id)
-            }
-        }
-        if (requiredExceptions.isNotEmpty()) {
-            logger.warn(
-                "required exceptions|$projectId|$pipelineId|$requiredExceptions"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
-                params = arrayOf(requiredExceptions.joinToString(","), "required")
-            )
-        }
-        if (constantExceptions.isNotEmpty()) {
-            logger.warn(
-                "constant exceptions|$projectId|$pipelineId|$constantExceptions"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
-                params = arrayOf(constantExceptions.joinToString(","), "constant")
-            )
-        }
-        if (defaultValueExceptions.isNotEmpty()) {
-            logger.warn(
-                "default value exceptions|$projectId|$pipelineId|$defaultValueExceptions"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
-                params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
             )
         }
     }

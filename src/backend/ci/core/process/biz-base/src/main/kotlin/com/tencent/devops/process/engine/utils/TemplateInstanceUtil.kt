@@ -623,6 +623,75 @@ object TemplateInstanceUtil {
         return result
     }
 
+    /**
+     * 验证实例化的model与前端传入的model正确性
+     *
+     * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
+     */
+    fun assertParams(
+        projectId: String,
+        pipelineId: String,
+        inputParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>
+    ) {
+        if (inputParams.size != instanceParams.size) {
+            logger.warn(
+                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
+                        "${inputParams.size}|${instanceParams.size}"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
+            )
+        }
+        val requiredExceptions = mutableListOf<String>()
+        val constantExceptions = mutableListOf<String>()
+        val defaultValueExceptions = mutableListOf<String>()
+        instanceParams.forEach { instanceParam ->
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
+                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
+                )
+            }
+            if (inputParam.required != instanceParam.required) {
+                requiredExceptions.add(instanceParam.id)
+            }
+            if (inputParam.constant != instanceParam.constant) {
+                constantExceptions.add(instanceParam.id)
+            }
+            if (inputParam.defaultValue != instanceParam.defaultValue) {
+                defaultValueExceptions.add(instanceParam.id)
+            }
+        }
+        if (requiredExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [required] exceptions|$projectId|$pipelineId|$requiredExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(requiredExceptions.joinToString(","), "required")
+            )
+        }
+        if (constantExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [constant] exceptions|$projectId|$pipelineId|$constantExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(constantExceptions.joinToString(","), "constant")
+            )
+        }
+        if (defaultValueExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [default value] exceptions|$projectId|$pipelineId|$defaultValueExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
+            )
+        }
+    }
+
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)
     private val VERSION_PARAMS = listOf(MAJORVERSION, MINORVERSION, FIXVERSION)
 }

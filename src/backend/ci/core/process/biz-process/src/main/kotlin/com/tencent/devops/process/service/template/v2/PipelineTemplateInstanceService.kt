@@ -604,6 +604,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
             projectId = projectId,
             pipelineIds = pipelineIds
         ).associate { it.pipelineId to it.buildNo }
+        val pipelineId2TemplateRelated = pipelineTemplateRelatedService.listByPipelineIds(
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).associateBy { it.pipelineId }
         // 获取流水线yaml信息
         val pipelineYamlInfoList = pipelineYamlService.listByPipelineIds(
             projectId = projectId,
@@ -661,9 +665,22 @@ class PipelineTemplateInstanceService @Autowired constructor(
                         overrideTemplateField = model.overrideTemplateField
                     )
                 } else {
-                    val overrideTemplateField = model.overrideTemplateField ?: run {
-                        TemplateInstanceField.initFromTrigger(model = model)
+                    val pipelineTemplateRelated = pipelineId2TemplateRelated[pipelineId]!!
+                    val templateCacheKey = "${pipelineTemplateRelated.templateId}_${pipelineTemplateRelated.version}"
+                    val oldTemplateResource = templateResourceCache.getOrPut(templateCacheKey) {
+                        pipelineTemplateResourceService.get(
+                            projectId = projectId,
+                            templateId = pipelineTemplateRelated.templateId,
+                            version = pipelineTemplateRelated.version
+                        )
                     }
+                    val oldTemplateModel = oldTemplateResource.model
+                    if (oldTemplateModel !is Model) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+                        )
+                    }
+                    val overrideTemplateField = TemplateInstanceField.initFromTrigger(model = oldTemplateModel)
                     val instanceTriggerContainer = model.getTriggerContainer()
                     val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
                         templateParams = templateParams,
