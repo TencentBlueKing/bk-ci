@@ -658,7 +658,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                         pipelineId = pipelineId,
                         pipelineName = pipelineId2Name[pipelineId] ?: "",
                         buildNo = instanceBuildNoObj,
-                        param = instanceParams,
+                        param = instanceParams.onEach { p -> p.name = p.name ?: p.id },
                         repoHashId = yamlPipelineMap[pipelineId]?.repoHashId,
                         filePath = yamlPipelineMap[pipelineId]?.filePath,
                         triggerElements = model.getTriggerContainer().elements,
@@ -696,6 +696,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                             currentBuildNo = pipelineCurrentBuildNos[pipelineId]
                         )
                     }
+                    logger.info("instanceParams: ${instanceParams.onEach { p -> p.name = p.name ?: p.id }}")
                     pipelineId to TemplateInstanceParams(
                         pipelineId = pipelineId,
                         pipelineName = pipelineId2Name[pipelineId] ?: "",
