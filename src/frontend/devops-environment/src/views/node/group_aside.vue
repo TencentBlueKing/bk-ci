@@ -243,7 +243,7 @@
 <script>
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
 
     export default {
         name: 'NodeGroupTree',
@@ -253,6 +253,7 @@
                 NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
+                SERVICE_RESOURCE_TYPE,
                 expandedGroupIds: [],
                 isAdd: false,
                 isShowTagChange: false,
@@ -284,8 +285,10 @@
                         type: 'node_type',
                         groups: [
                             { id: 'allNode', name: this.$t('environment.allNodes'), nodeCount: totalCount },
-                            { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
-                            { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
+                            ...(this.currentResType === SERVICE_RESOURCE_TYPE.PIPELINE ? [
+                                { id: 'THIRDPARTY', name: this.$t('environment.selfHostedNodes'), nodeCount: THIRDPARTY },
+                                { id: 'CMDB', name: this.$t('environment.deploymentNode'), nodeCount: CMDB }
+                            ] : [])
                         ]
                     },
                     {
@@ -307,6 +310,9 @@
                     return stored
                 }
                 return stored
+            },
+            currentResType () {
+                return this.$route.params.resType
             }
         },
         watch: {
@@ -631,8 +637,8 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 16px;
-    right: 16px;
+    left: 0;
+    right: 0;
     height: 1px;
     border-top: 1px solid #DCDEE5;
   }
@@ -657,7 +663,8 @@
   }
 
   .node-list {
-    margin-bottom: 28px;
+    margin-bottom: 16px;
+    border-top: 1px solid #DCDEE5;
     color: #313238;
   }
 

@@ -23,7 +23,7 @@ export const ALLNODE = 'allNode'
 export const RESIZE_LAYOUT_CONFIG_STORAGE_KEY = 'bk_devops_resize_layout_config' // ResizeLayout组件的配置存储key，存储不同页面的配置
 export const SERVICE_RESOURCE_TYPE = {
     PIPELINE: 'pipeline',
-    FLOW: 'flow'
+    CREATE: 'creative'
 }
 export const ENV_TYPE_MAP = {
     ALL: 'ALL',

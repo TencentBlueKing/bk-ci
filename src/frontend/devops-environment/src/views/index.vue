@@ -182,7 +182,7 @@
             initResType () {
                 // 1. 从URL参数获取
                 const urlResType = this.$route.params.resType
-                if (urlResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.FLOW].includes(urlResType)) {
+                if (urlResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(urlResType)) {
                     this.currentResType = urlResType
                     return
                 }
@@ -197,7 +197,7 @@
                         if (recentVisitServiceList.length > 1) {
                             const resType = recentVisitServiceList[1]?.key
                             console.log(resType, 'resTyperesType')
-                            if ([SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.FLOW].includes(resType)) {
+                            if ([SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(resType)) {
                                 this.handleResTypeChange(resType)
                                 this.currentResType = resType
                                 return
@@ -210,7 +210,7 @@
 
                 // 3. 从localStorage缓存获取
                 const cachedResType = localStorage.getItem(RES_TYPE_STORAGE_KEY)
-                if (cachedResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.FLOW].includes(cachedResType)) {
+                if (cachedResType && [SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(cachedResType)) {
                     this.handleResTypeChange(cachedResType)
                     this.currentResType = cachedResType
                     return
