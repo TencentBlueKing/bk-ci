@@ -91,8 +91,12 @@
                         </li>
                         <li
                             :class="['dropdown-item', {
-                                'disabled': loading || isCurPipelineLocked
+                                'disabled': loading || isCurPipelineLocked || !canReplay
                             }]"
+                            v-bk-tooltips="{
+                                content: this.$t('history.canNotReplayTips'),
+                                disabled: canReplay
+                            }"
                             v-perm="{
                                 hasPermission: canExecute,
                                 disablePermissionApi: true,
@@ -108,6 +112,7 @@
                             {{ $t("history.rePlay") }}
                             <bk-popover
                                 :z-index="3000"
+                                :disabled="!canReplay"
                             >
                                 <i class="bk-icon icon-info-circle" />
                                 <template slot="content">
@@ -132,6 +137,7 @@
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
+                :disabled="loading"
                 key="edit"
                 @click="goEdit"
             >
@@ -145,7 +151,7 @@
             >
                 <bk-button
                     :loading="executeStatus"
-                    :disabled="!canManualStartup"
+                    :disabled="!canManualStartup || loading"
                     v-perm="{
                         hasPermission: canExecute,
                         disablePermissionApi: true,
@@ -185,7 +191,12 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
-
+    const PIPELINE_REPLAY_STATUS = {
+        REPLAYING: 'REPLAYING',
+        REPLAY_SUCCESS: 'REPLAY_SUCCESS',
+        CANNOT_REPLAY: 'CANNOT_REPLAY',
+        CAN_REPLAY: 'CAN_REPLAY'
+    }
     export default {
         components: {
             PipelineBreadCrumb,
@@ -193,7 +204,9 @@
         },
         data () {
             return {
-                loading: false
+                loading: false,
+                timesNum: 1,
+                canReplay: true
             }
         },
         computed: {
@@ -251,8 +264,20 @@
                 }
             }
         },
+        mounted () {
+            this.fetchPipelineRePlayStatus()
+        },
         methods: {
-            ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline', 'requestRePlayPipeline']),
+            ...mapActions(
+                'pipelines',
+                [
+                    'requestRetryPipeline',
+                    'requestTerminatePipeline',
+                    'requestRePlayPipeline',
+                    'requestPipelineRePlayStatus',
+                    'requestRePlayEventDetail'
+                ]
+            ),
             async handleCancel () {
                 try {
                     this.loading = true
@@ -267,6 +292,10 @@
                 }
             },
             async handleClick (type = 'reBuild') {
+                // 如果是rePlay且canReplay为false，不进行后续逻辑
+                if (type === 'rePlay' && !this.canReplay) {
+                    return
+                }
                 const h = this.$createElement
                 const title = type === 'reBuild' ? this.$t('history.reBuildConfirmTips') : this.$t('history.rePlayConfirmTips')
                 this.$bkInfo({
@@ -293,7 +322,6 @@
                         try {
                             this.loading = true
                             await this.retry(type, this.execDetail?.id)
-                            return true
                         } catch (err) {
                             this.handleError(err, {
                                 projectId: this.$route.params.projectId,
@@ -314,7 +342,7 @@
                     buildId,
                     forceTrigger
                 })
-                if (res && res.id) {
+                if (res?.id) {
                     this.$router.replace({
                         name: 'pipelinesDetail',
                         params: {
@@ -331,7 +359,11 @@
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'
                     })
-                } else if (res.code === 2101272) {
+                } else if (res?.eventId && res.status === PIPELINE_REPLAY_STATUS.REPLAYING) {
+                    // 等待轮询完成
+                    const pollingResult = await this.fetchRePlayEventDetail(res.eventId)
+                    return pollingResult
+                } else if (res?.code === 2101272) {
                     this.loading = false
                     this.$bkInfo({
                         title: this.$t('history.rePlay'),
@@ -341,8 +373,8 @@
                         confirmFn: async () => {
                             try {
                                 this.loading = true
-                                await this.retry('rePlay', buildId, true)
-                                return true
+                                const result = await this.retry('rePlay', buildId, true)
+                                return result
                             } catch (err) {
                                 this.handleError(err, {
                                     projectId: this.$route.params.projectId,
@@ -392,6 +424,65 @@
                 this.$router.push({
                     name: 'pipelinesEdit'
                 })
+            },
+
+            async fetchPipelineRePlayStatus () {
+                try {
+                    const res = await this.requestPipelineRePlayStatus({
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        buildId: this.$route.params.buildNo
+                    })
+                    this.canReplay = res.status === PIPELINE_REPLAY_STATUS.CAN_REPLAY
+                } catch (err) {
+                    console.error(err)
+                }
+            },
+            
+            async fetchRePlayEventDetail (eventId) {
+                try {
+                    this.loading = true
+                    const res = await this.requestRePlayEventDetail({
+                        projectId: this.projectId,
+                        eventId
+                    })
+                    if (!res.records.length) {
+                        // 用于webhook触发的构建任务轮询获取构建状态（超3次返回为空时，则直接报错重放失败提示）
+                        if (this.timesNum > 3) {
+                            this.timesNum = 1
+                            this.loading = false
+                            this.$showTips({
+                                message: this.$t('history.rePlayFailed'),
+                                theme: 'error'
+                            })
+                            return true
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 5000))
+                        this.timesNum++
+                        return await this.fetchRePlayEventDetail(eventId)
+                    } else {
+                        const successStatus = res.records[0].status === 'SUCCEED'
+                        if (successStatus) {
+                            this.$router.replace({
+                                name: 'pipelinesDetail',
+                                params: {
+                                    ...this.$route.params,
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    buildNo: res?.records[0]?.buildId,
+                                    type: 'executeDetail'
+                                }
+                            })
+                        }
+                        this.loading = false
+                        this.$showTips({
+                            message: res.records[0].reason,
+                            theme: successStatus ? 'success': 'error'
+                        })
+                    }
+                } catch (err) {
+                    console.error(err)
+                }
             }
         }
     }

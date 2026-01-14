@@ -22,7 +22,7 @@ data class TemplateInstanceField(
             triggerContainer: TriggerContainer
         ): TemplateInstanceField {
             val paramIds = triggerContainer.params.filter {
-                it.constant != true
+                it.constant != true && it.required
             }.map { it.id }.toMutableList()
             if (triggerContainer.buildNo != null) {
                 paramIds.add(BK_CI_BUILD_NO)
@@ -41,7 +41,7 @@ data class TemplateInstanceField(
     /**
      * 是否覆盖推荐版本,推荐版本号也放在参数中传递
      */
-    fun overrideRecommendedVersion(): Boolean {
+    fun overrideBuildNo(): Boolean {
         return overrideParam(BK_CI_BUILD_NO)
     }
 

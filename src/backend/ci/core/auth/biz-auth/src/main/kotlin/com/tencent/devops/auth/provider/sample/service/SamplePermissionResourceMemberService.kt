@@ -111,4 +111,9 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     override fun addDepartedFlagToMembers(
         records: List<ResourceMemberInfo>
     ): List<ResourceMemberInfo> = emptyList()
+
+    override fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> = emptyList()
 }

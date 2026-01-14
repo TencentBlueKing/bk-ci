@@ -42,7 +42,7 @@ class OpPipelineTemplateResourceImpl(
     }
 
     override fun migrateProjectTemplates(projectId: String): Result<Boolean> {
-        pipelineTemplateMigrateService.migratePublicTemplates()
+        pipelineTemplateMigrateService.migrateTemplates(projectId)
         return Result(true)
     }
 
