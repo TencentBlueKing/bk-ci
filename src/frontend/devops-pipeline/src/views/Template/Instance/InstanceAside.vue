@@ -19,7 +19,7 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <div
+            <!-- <div
                 v-if="renderInstanceList.length"
                 class="batch-edit-btn"
                 @click="handleBatchEdit"
@@ -32,7 +32,7 @@
                 <span>
                     {{ $t('template.batchEditParams') }}
                 </span>
-            </div>
+            </div> -->
         </div>
         <ul class="instance-list">
             <li
@@ -247,7 +247,7 @@
             })
             const list = renderInstanceList.value.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
-                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? []
+                const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {
                     ...i,
                     ...res[i.pipelineId],
@@ -289,8 +289,9 @@
                     proxy.$set(item?.buildNo, 'isFollowTemplate', !overrideTemplateField?.paramIds?.includes('BK_CI_BUILD_NO'))
                 }
             })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
+            proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
             console.error(e)
         }
@@ -304,8 +305,23 @@
     }
     function handleAddInstance (name) {
         const instanceParams = deepClone(curTemplateDetail.value)
+        // 处理新增实例时参数的 isRequiredParam 属性
+        // 只有当 asInstanceInput 为 true , 才设置为入参
+        if (instanceParams?.param?.length) {
+            instanceParams.param = instanceParams.param.map(p => ({
+                ...p,
+                readOnlyCheck: false,
+                isRequiredParam: p.required && p.asInstanceInput
+            }))
+        }
         const newInstance = {
             ...instanceParams,
+            ...(instanceParams?.buildNo ? {
+                buildNo: {
+                    ...instanceParams.buildNo,
+                    isRequiredParam: instanceParams.buildNo.required && instanceParams.buildNo.asInstanceInput
+                }
+            } : {}),
             pipelineName: name ?? pipelineName.value ?? ''
         }
         proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list: [...instanceList.value, newInstance] })

@@ -93,7 +93,10 @@ export default function useTemplateConstraint () {
                 vm.proxy.$store.dispatch('atom/updateContainer', {
                     container: currentTriggerContainer,
                     newParam: {
-                        buildNo,
+                        buildNo: {
+                            ...buildNo,
+                            required: currentTriggerContainer?.buildNo?.required
+                        },
                         params: [
                             ...otherParams,
                             ...allVersionParams
@@ -161,6 +164,8 @@ export default function useTemplateConstraint () {
                 fieldAlias
             ]
         } else {
+            // 等待下一个 tick，确保之前的 store 更新完成
+            await vm.proxy.$nextTick()
             constraintList = [
                 ...constraintList.slice(0, pos),
                 ...constraintList.slice(pos + 1)

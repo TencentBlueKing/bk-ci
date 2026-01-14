@@ -512,6 +512,20 @@ class PipelineTriggerEventDao {
         return record?.let { convertDetail(it) }
     }
 
+    fun getTriggerDetail(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = with(T_PIPELINE_TRIGGER_DETAIL) {
+        dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchOne()
+                ?.let { convertDetail(it) }
+    }
+
     private fun buildDetailCondition(
         t2: TPipelineTriggerDetail,
         eventId: Long? = null,

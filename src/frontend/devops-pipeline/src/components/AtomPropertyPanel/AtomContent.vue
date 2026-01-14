@@ -186,6 +186,7 @@
                         :set-parent-validate="setAtomValidate"
                         :disabled="!editable"
                         :is-instance-template="isInstanceTemplate"
+                        :pipeline-dialect="pipelineDialect"
                         class="atom-content"
                     >
                     </div>
@@ -204,6 +205,7 @@
                             :element="element"
                             :container="container"
                             :set-parent-validate="setAtomValidate"
+                            :pipeline-dialect="pipelineDialect"
                             :disabled="!editable"
                         />
                     </div>
@@ -385,6 +387,7 @@
                 'atomVersionList',
                 'isPropertyPanelVisible',
                 'showPanelType',
+                'pipelineSetting',
                 'editingElementPos'
             ]),
             projectId () {
@@ -415,6 +418,14 @@
                 const { container, elementIndex, getElement } = this
                 const element = getElement(container, elementIndex)
                 return element
+            },
+            pipelineDialect () {
+                if (this.pipelineSetting?.pipelineAsCodeSettings) {
+                    const { inheritedDialect, pipelineDialect, projectDialect } = this.pipelineSetting?.pipelineAsCodeSettings
+                    return inheritedDialect ? projectDialect : pipelineDialect
+                } else {
+                    return 'CLASSIC'
+                }
             },
             allStepId () {
                 const stepIdList = []
@@ -524,13 +535,9 @@
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
-                    const atomMap = {
-                        codeTGitWebHookTrigger: CodeWebHookTrigger,
-                        codeP4WebHookTrigger: CodeWebHookTrigger,
-                        codeScmGitWebHookTrigger: CodeWebHookTrigger,
-                        codeScmSvnWebHookTrigger: CodeWebHookTrigger
-                    }
-                    return atomMap[this.atomCode] || NormalAtomV2
+                    // 使用正则匹配所有 webhook 插件：以 code 开头且以 WebHookTrigger 结尾
+                    const isWebHookAtom = /^code.*WebHookTrigger$/i.test(this.atomCode)
+                    return isWebHookAtom ? CodeWebHookTrigger : NormalAtomV2
                 }
                 const atomMap = {
                     timerTrigger: TimerTrigger,

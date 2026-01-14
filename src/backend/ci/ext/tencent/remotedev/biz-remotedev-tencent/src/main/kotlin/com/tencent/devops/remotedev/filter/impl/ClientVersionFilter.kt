@@ -44,7 +44,7 @@ class ClientVersionFilter constructor(
         private const val BK_CI_CLIENT_VERSION = "BK-CI-CLIENT-VERSION"
         private const val HEADER_IP = "x-client-ip"
         private const val HEADER_MAC_ADDRESS = "BK-CI-CLIENT-MAC"
-        private const val HEADER_MAC_OS = "BK-CI-CLIENT-OS"
+        private const val HEADER_CLIENT_OS = "BK-CI-CLIENT-OS"
         private const val BK_CI_CLIENT_START_VERSION = "BK-CI-CLIENT-START-VERSION"
 
         private fun String.format(): String {
@@ -107,6 +107,7 @@ class ClientVersionFilter constructor(
             return false
         }
         val user = requestContext.headers[AUTH_HEADER_USER_ID]?.get(0).toString()
+        val os = requestContext.headers[HEADER_CLIENT_OS]?.get(0) ?: ""
         kotlin.runCatching {
             recordClientVersion(
                 ip = requestContext.headers[HEADER_IP]?.get(0).toString(),
@@ -114,10 +115,24 @@ class ClientVersionFilter constructor(
                 version = version,
                 macAddress = requestContext.headers[HEADER_MAC_ADDRESS]?.get(0).toString(),
                 startVersion = requestContext.headers[BK_CI_CLIENT_START_VERSION]?.get(0) ?: "",
-                os = requestContext.headers[HEADER_MAC_OS]?.get(0) ?: ""
+                os = os
             )
         }.onFailure { logger.warn("recordClientVersion error ${it.message}", it) }
 
+        // Android 客户端跳过版本校验逻辑
+        // Android 客户端使用特殊的版本号格式（如 andr-9386），无法通过标准的数字版本格式校验
+        try {
+            if (ClientOS.parse(os) == ClientOS.ANDR) {
+                logger.info(
+                    "Skip Android version verification | user=$user | path=$path | os=$os | version=$version"
+                )
+                // Android 客户端直接返回 true，跳过版本校验
+                return true
+            }
+        } catch (e: Exception) {
+            logger.warn("Android client detection error, continue with normal verification | user=$user | os=$os", e)
+        }
+        
         if (checkClientVersionWarning(split = split)) {
             notifyControl.notify4User(
                 userIds = mutableSetOf(user),

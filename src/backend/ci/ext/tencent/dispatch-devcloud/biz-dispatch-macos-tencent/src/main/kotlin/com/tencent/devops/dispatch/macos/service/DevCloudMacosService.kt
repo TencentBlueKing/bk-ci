@@ -8,13 +8,17 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.TaskResponse
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelRsp
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmModelRequest
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmModelResponse
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -36,6 +40,7 @@ class DevCloudMacosService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudMacosService::class.java)
         private const val XCODE_VERSION = "devops_xcodeVersion"
+        private const val DEFAULT_HW_TYPE = "VMware"
     }
 
     @Value("\${macos.devCloud.appId:}")
@@ -56,10 +61,11 @@ class DevCloudMacosService @Autowired constructor(
         val buildId = dispatchMessage.event.buildId
 
         var taskId = ""
+        val realUrl = toIdcUrl("$devCloudUrl/api/mac/vm/create")
         val body = ObjectMapper().writeValueAsString(buildCreateBody(dispatchMessage))
-        logger.info("$buildId DevCloud creatVM request body: $body")
+        logger.info("$buildId DevCloud creatVM request realUrl: $realUrl body: $body")
         val request = Request.Builder()
-            .url(toIdcUrl("$devCloudUrl/api/mac/vm/create"))
+            .url(realUrl)
             .headers(
                 SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.event.userId)
                     .toHeaders()
@@ -115,14 +121,25 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
-        var (systemVersion, xcodeVersion) = dispatchMessage.event.dispatchType.value.split(":")
+
+        val dispatchType = dispatchMessage.event.dispatchType as MacOSDispatchType
+        logger.info("dispatchType: ${dispatchType.macOSEvn}")
+/*        var (macOSHwSpec, systemVersion, xcodeVersion) = dispatchType.macOSEvn.split(":")
             .let { macOSEnv ->
                 when (macOSEnv.size) {
-                    0 -> Pair(null, null)
-                    1 -> Pair(macOSEnv[0], null)
-                    else -> Pair(macOSEnv[0], macOSEnv[1])
+                    0 -> Triple(null, null, null)
+                    1 -> Triple(null, macOSEnv[0], null)
+                    2 -> Triple(null, macOSEnv[0], macOSEnv[1])
+                    else -> Triple(macOSEnv[0], macOSEnv[1], macOSEnv[2])
                 }
-            }
+            }*/
+        var macOSHwSpec = dispatchType.macOSHwSpec
+        if (macOSHwSpec.isNullOrBlank()) {
+            macOSHwSpec = DEFAULT_HW_TYPE
+        }
+        var systemVersion = dispatchType.systemVersion
+        var xcodeVersion = dispatchType.xcodeVersion
+        logger.info("macOSHwSpec: $macOSHwSpec, systemVersion: $systemVersion, xcodeVersion: $xcodeVersion")
 
         val isStreamProject = dispatchMessage.event.projectId.startsWith("git_")
 
@@ -149,7 +166,8 @@ class DevCloudMacosService @Autowired constructor(
                     DockerConstants.ENV_KEY_AGENT_ID to dispatchMessage.id,
                     DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
                     DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
-                    XCODE_VERSION to (xcodeVersion ?: "")
+                    XCODE_VERSION to (xcodeVersion ?: ""),
+                    DockerConstants.ENV_KEY_DEVCLOUD_MODEL to macOSHwSpec
                 )
             )
         }
@@ -285,6 +303,73 @@ class DevCloudMacosService @Autowired constructor(
         }
 
         return vmInfoList
+    }
+
+    fun getVmModel(
+        request: DevCloudMacosVmModelRequest,
+        creator: String
+    ): DevCloudMacosVmModelResponse? {
+        val url = "$devCloudUrl/api/mac/vm/model"
+        val body = ObjectMapper().writeValueAsString(request)
+        logger.info("DevCloud getVmModel request body: $body")
+        
+        val httpRequest = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .post(body.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(httpRequest).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("DevCloud getVmModel http code is ${response.code}, response: $responseContent")
+                
+                if (!response.isSuccessful) {
+                    logger.error(
+                        "Failed to request DevCloud getVmModel, http response code: ${response.code}, " +
+                            "msg: $responseContent"
+                    )
+                    return null
+                }
+                
+                return JsonUtil.to(responseContent, DevCloudMacosVmModelResponse::class.java)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to get VM model from DevCloud, url: $url", e)
+            return null
+        }
+    }
+
+    fun getAllVmModels(
+        creator: String
+    ): DMAllVmModelRsp? {
+        val url = "$devCloudUrl/api/mac/vm/model/all"
+
+        val httpRequest = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .get()
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(httpRequest).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("DevCloud getAllVmModel http code is ${response.code}, response: $responseContent")
+
+                if (!response.isSuccessful) {
+                    logger.error(
+                        "Failed to request DevCloud getAllVmModel, http response code: ${response.code}, " +
+                                "msg: $responseContent"
+                    )
+                    return null
+                }
+
+                return JsonUtil.to(responseContent, DMAllVmModelRsp::class.java)
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to getAllVmModes from DevCloud, url: $url", e)
+            return null
+        }
     }
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
