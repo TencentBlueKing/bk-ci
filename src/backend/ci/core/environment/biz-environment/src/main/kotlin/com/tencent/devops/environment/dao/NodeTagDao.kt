@@ -3,6 +3,8 @@ package com.tencent.devops.environment.dao
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagValue
+import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TNodeTagInternalKey
 import com.tencent.devops.model.environment.tables.TNodeTagInternalValues
 import com.tencent.devops.model.environment.tables.TNodeTagKey
@@ -334,9 +336,25 @@ class NodeTagDao {
         return resM.values.associateBy { it.tagKeyName }
     }
 
-    fun fetchNodeTag(dslContext: DSLContext, projectId: String): List<TNodeTagsRecord> {
+    fun fetchNodeTag(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeTypeList: List<String>?
+    ): List<TNodeTagsRecord> {
         with(TNodeTags.T_NODE_TAGS) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).fetch()
+            val dsl = dslContext.select().from(this)
+            if (!nodeTypeList.isNullOrEmpty()) {
+                dsl.leftJoin(TNode.T_NODE).on(NODE_ID.eq(TNode.T_NODE.NODE_ID))
+                    .and(TNode.T_NODE.NODE_TYPE.`in`(nodeTypeList))
+            }
+            return dsl.where(PROJECT_ID.eq(projectId)).fetch().map {
+                TNodeTagsRecord(
+                    it[NODE_ID],
+                    it[TAG_VALUE_ID],
+                    it[TAG_KEY_ID],
+                    it[PROJECT_ID]
+                )
+            }
         }
     }
 

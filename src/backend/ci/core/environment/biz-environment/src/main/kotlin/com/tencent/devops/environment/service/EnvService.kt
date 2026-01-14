@@ -93,7 +93,6 @@ import com.tencent.devops.environment.pojo.EnvWithNode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
-import com.tencent.devops.environment.pojo.MyCreateEnv
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeTagAndEnvItem
 import com.tencent.devops.environment.pojo.NodeWithPermission
@@ -145,9 +144,6 @@ class EnvService @Autowired constructor(
             throw ErrorCodeException(errorCode = ERROR_NODE_NAME_INVALID_CHARACTER, params = arrayOf(envName))
         }
         if (envDao.isNameExist(dslContext, projectId, envId, envName)) {
-            throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(envName))
-        }
-        if (envName == MyCreateEnv.name() || envName == AllCreateNodeEnv.name()) {
             throw ErrorCodeException(errorCode = ERROR_NODE_NAME_DUPLICATE, params = arrayOf(envName))
         }
     }
@@ -279,18 +275,6 @@ class EnvService @Autowired constructor(
         val result = mutableListOf<EnvWithPermission>()
         if (envType == EnvType.CREATE) {
             val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
-            val myWorkspaces = createEnvService.fetchUserWorkspaceId(projectId, userId)
-            val myNodesCount = createNodes.filter { myWorkspaces.contains(it.createWorkspaceName) }.size
-            result.add(
-                EnvWithPermission(
-                    envHashId = MyCreateEnv.hashId(),
-                    name = MyCreateEnv.name(),
-                    envType = EnvType.CREATE,
-                    envNodeType = EnvNodeType.NODE,
-                    nodeCount = myNodesCount,
-                    userId = userId, now = LocalDateTime.now().timestamp()
-                )
-            )
             if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 result.add(
                     EnvWithPermission(
@@ -821,7 +805,8 @@ class EnvService @Autowired constructor(
                 } else {
                     HashUtil.encodeLongId(thirdPartyAgent.id)
                 },
-                agentId = thirdPartyAgent?.id
+                agentId = thirdPartyAgent?.id,
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
     }
@@ -845,9 +830,6 @@ class EnvService @Autowired constructor(
                     listOf(rEnvId)
                 } else {
                     val res = mutableListOf<Long>()
-                    if (envName == MyCreateEnv.name()) {
-                        res.add(MyCreateEnv.ENV_ID)
-                    }
                     if (envName == AllCreateNodeEnv.name()) {
                         res.add(AllCreateNodeEnv.ENV_ID)
                     }
@@ -859,7 +841,6 @@ class EnvService @Autowired constructor(
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }.toMutableList()
         // 去掉内置环境
-        invalidEnvIds.remove(MyCreateEnv.ENV_ID)
         invalidEnvIds.remove(AllCreateNodeEnv.ENV_ID)
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
@@ -942,6 +923,7 @@ class EnvService @Autowired constructor(
                 },
                 agentId = thirdPartyAgent?.id,
                 lastModifyTime = it.lastModifyTime?.timestamp(),
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
         val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIdMaps.keys).toLong()
@@ -1632,15 +1614,7 @@ class EnvService @Autowired constructor(
         if (rEnvIds.remove(AllCreateNodeEnv.ENV_ID)) {
             val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
             createNodes.forEach {
-                result.add(EnvNode(MyCreateEnv.ENV_ID, it.nodeId, true))
-            }
-            // 所有的肯定包括自己的
-            rEnvIds.remove(MyCreateEnv.ENV_ID)
-        } else if (rEnvIds.remove(MyCreateEnv.ENV_ID) && userId != null) {
-            val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
-            val myWorkspaces = createEnvService.fetchUserWorkspaceId(projectId, userId)
-            createNodes.filter { myWorkspaces.contains(it.createWorkspaceName) }.forEach {
-                result.add(EnvNode(MyCreateEnv.ENV_ID, it.nodeId, true))
+                result.add(EnvNode(AllCreateNodeEnv.ENV_ID, it.nodeId, true))
             }
         }
         val envs = envDao.list(dslContext, projectId, envIds = rEnvIds)
@@ -1678,7 +1652,6 @@ class EnvService @Autowired constructor(
         val tagEnvList = envTagDao.fetchTagEnvByNodeId(dslContext, projectId, agent.nodeId)
         val result = mutableListOf<EnvData>()
         // 校验管理员权限看能否用所有构建节点
-        result.add(EnvData(MyCreateEnv.ENV_ID, MyCreateEnv.name(), agentHashId))
         if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
             result.add(EnvData(AllCreateNodeEnv.ENV_ID, AllCreateNodeEnv.name(), agentHashId))
         }

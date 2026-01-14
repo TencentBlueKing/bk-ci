@@ -358,9 +358,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(agentService.updateAgentInfo(userId, projectId, data))
     }
 
-    override fun fetchTag(userId: String, projectId: String): Result<List<NodeTag>> {
+    override fun fetchTag(userId: String, projectId: String, createMode: Boolean?): Result<List<NodeTag>> {
         return Result(
-            nodeTagService.fetchTagAndNodeCount(projectId)
+            nodeTagService.fetchTagAndNodeCount(projectId, createMode)
         )
     }
 }
