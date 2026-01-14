@@ -325,6 +325,7 @@
                     this.isLoading = true
                     await this.requestPipeline({
                         ...this.$route.params,
+                        editMode: true,
                         version: this.pipelineVersion
                     })
                     this.isLoading = false

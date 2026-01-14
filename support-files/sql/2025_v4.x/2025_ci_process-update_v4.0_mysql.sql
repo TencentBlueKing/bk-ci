@@ -138,6 +138,16 @@ BEGIN
             COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
+    -- 为 T_PIPELINE_BUILD_VAR 表添加 SENSITIVE 字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'SENSITIVE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD COLUMN `SENSITIVE` bit(1) DEFAULT NULL COMMENT '是否敏感';
+    END IF;
+
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db

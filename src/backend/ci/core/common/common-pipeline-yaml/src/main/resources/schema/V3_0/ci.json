@@ -1694,6 +1694,9 @@
               "value-not-empty" : {
                 "type" : "boolean"
               },
+              "sensitive" : {
+                "type" : "boolean"
+              },
               "props" : {
                 "type" : "object",
                 "additionalProperties" : false,
@@ -1862,6 +1865,9 @@
               "type" : "boolean"
             },
             "value-not-empty" : {
+              "type" : "boolean"
+            },
+            "sensitive" : {
               "type" : "boolean"
             },
             "props" : {
