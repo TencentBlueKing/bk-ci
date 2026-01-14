@@ -93,7 +93,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 size = 0,
                 createdTime = 0,
                 modifiedTime = 0,
-                checksums = FileChecksums(sha256 = "", sha1 = "", md5 = ""),
+                checksums = FileChecksums(sha256 = "", sha1 = "", md5 = "", crc64ecma = ""),
                 meta = emptyMap()
             )
         } else {
@@ -111,7 +111,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
                 checksums = FileChecksums(
                     sha256 = FileDigestUtils.fileSha256(inputFiles) ?: "",
                     sha1 = FileDigestUtils.fileSha1(inputFiles) ?: "",
-                    md5 = FileDigestUtils.fileMD5(inputFiles) ?: ""
+                    md5 = FileDigestUtils.fileMD5(inputFiles) ?: "",
+                    crc64ecma = ""
                 ),
                 meta = fileDao.getFileMeta(dslContext, infoRecord.id)
             )
