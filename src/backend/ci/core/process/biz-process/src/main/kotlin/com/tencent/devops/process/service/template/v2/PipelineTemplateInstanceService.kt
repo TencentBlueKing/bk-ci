@@ -696,7 +696,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
                             currentBuildNo = pipelineCurrentBuildNos[pipelineId]
                         )
                     }
-                    logger.info("instanceParams: ${instanceParams.onEach { p -> p.name = p.name ?: p.id }}")
                     pipelineId to TemplateInstanceParams(
                         pipelineId = pipelineId,
                         pipelineName = pipelineId2Name[pipelineId] ?: "",

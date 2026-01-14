@@ -614,7 +614,12 @@ object TemplateInstanceUtil {
         templateParams.forEach outside@{ template ->
             pipelineParams.forEach { pipeline ->
                 if (pipeline.id == template.id) {
-                    result.add(pipeline.copy(options = template.options))
+                    result.add(
+                        pipeline.copy(
+                            options = template.options,
+                            cascadeProps = template.cascadeProps
+                        )
+                    )
                     return@outside
                 }
             }
