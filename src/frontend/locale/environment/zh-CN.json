@@ -403,6 +403,8 @@
     "sharedSettings": "共享设置",
     "removeSuccess": "移除成功",
     "editVariable": "编辑变量",
+    "envName": "环境名称",
+    "confirmDeleteEnv": "确定删除构建环境？",
     "confirmDeleteEnvParams": "确认删除该变量？",
     "pleaseInputVariableName": "请输入变量名",
     "pleaseInputVariableValue": "请输入变量值",

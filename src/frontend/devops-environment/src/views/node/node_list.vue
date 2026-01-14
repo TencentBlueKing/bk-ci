@@ -682,8 +682,25 @@
                     this.syncCurrentTags()
                 }
             },
-            '$route.params.nodeType' (newVal) {
-                if (newVal) {
+            '$route.params.nodeType' (newVal, oldVal) {
+                // 只有当 nodeType 真正发生变化时才处理
+                if (newVal !== oldVal) {
+                    this.handleNodeTypeChange()
+                }
+            },
+            // 监听整个路由变化，确保从其他页面跳转回来时刷新数据
+            '$route' (to, from) {
+                // 如果是从 setNodeTag 页面跳转回来，或者 nodeType 参数发生变化
+                if (from.name === 'setNodeTag' && to.name === 'nodeList') {
+                    // 延迟执行，确保组件已经完全加载
+                    this.$nextTick(async () => {
+                        await this.requestList()
+                        // 同时刷新计数数据
+                        await this.requestGetCounts(this.projectId)
+                    })
+                } else if (to.name === 'nodeList' && from.name === 'nodeList'
+                    // 如果是相同路由但参数不同，也需要刷新
+                    && to.params.nodeType !== from.params.nodeType) {
                     this.handleNodeTypeChange()
                 }
             },
@@ -952,8 +969,23 @@
                 this.requestList(this.requestParams)
             },
             async handleNodeTypeChange () {
+                // 清除搜索和标签条件
+                this.searchValue = []
                 this.tagSearchValue = []
+                this.requestParams = {}
+                
+                // 重置分页到第一页
+                this.paginationData.current = 1
+                this.updatePagination(1, this.paginationData.limit)
+                
+                // 同步当前标签和节点类型
                 await this.syncCurrentTags()
+                
+                // 更新 URL 参数
+                this.updateSearchValue([])
+                this.updateTagSearchValue([])
+                
+                // 重新请求数据
                 await this.requestList()
             },
 
