@@ -408,6 +408,8 @@
     "sharedSettings": "Shared Settings",
     "removeSuccess": "Removal successful",
     "editVariable": "Edit Variable",
+    "envName": "Environment Name",
+    "confirmDeleteEnv": "Confirm to delete environment?",
     "confirmDeleteEnvParams": "Confirm deletion of this variable?",
     "pleaseInputVariableName": "Please enter the variable name",
     "pleaseInputVariableValue": "Please enter the variable value",

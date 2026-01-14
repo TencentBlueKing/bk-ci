@@ -403,6 +403,8 @@
     "sharedSettings": "共有設定",
     "removeSuccess": "削除成功",
     "editVariable": "変数を編集",
+    "envName": "環境名",
+    "confirmDeleteEnv": "環境を削除してもよろしいですか？",
     "confirmDeleteEnvParams": "この変数を削除してもよろしいですか？",
     "pleaseInputVariableName": "変数名を入力してください",
     "pleaseInputVariableValue": "変数値を入力してください",
