@@ -651,6 +651,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     )
 
                     val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+                        projectId = projectId,
                         templateParams = templateParams,
                         pipelineParams = instanceTriggerContainer.params
                     )
@@ -683,6 +684,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     val overrideTemplateField = TemplateInstanceField.initFromTrigger(model = oldTemplateModel)
                     val instanceTriggerContainer = model.getTriggerContainer()
                     val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
+                        projectId = projectId,
                         templateParams = templateParams,
                         pipelineParams = instanceTriggerContainer.params
                     )
@@ -716,7 +718,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         }
     }
 
-    fun getTemplateInstanceParamsById(
+    fun getTemplateParamsById(
         userId: String,
         projectId: String,
         templateId: String,
@@ -761,7 +763,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         )
     }
 
-    fun getTemplateInstanceParamsByRef(
+    fun getTemplateParamsByRef(
         userId: String,
         projectId: String,
         templateId: String,
@@ -785,7 +787,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             filePath = pipelineYamlInfo.filePath,
             ref = ref
         )
-        return getTemplateInstanceParamsById(
+        return getTemplateParamsById(
             userId = userId,
             projectId = projectId,
             templateId = templateId,

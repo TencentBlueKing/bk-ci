@@ -13,6 +13,7 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -201,9 +202,10 @@ object TemplateInstanceUtil {
 
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         val mergedParams = templateParams.map { templateParam ->
+            val pipelineParam = pipelineParamMap[templateParam.id]
             mergeSingleParam(
                 templateParam = templateParam,
-                pipelineParamMap = pipelineParamMap,
+                pipelineParam = pipelineParam,
                 overrideTemplateField = overrideTemplateField
             )
         }
@@ -275,12 +277,14 @@ object TemplateInstanceUtil {
      */
     private fun mergeSingleParam(
         templateParam: BuildFormProperty,
-        pipelineParamMap: Map<String, BuildFormProperty>,
+        pipelineParam: BuildFormProperty?,
         overrideTemplateField: TemplateInstanceField?
     ): BuildFormProperty {
-        val pipelineParam = pipelineParamMap[templateParam.id] ?: return templateParam
-
         // 如果没有对应的流水线参数，直接返回模板参数
+        if (pipelineParam == null) {
+            return templateParam
+        }
+
         val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
         val overrideBuildNo = overrideTemplateField?.overrideBuildNo() == true
 
@@ -291,7 +295,10 @@ object TemplateInstanceUtil {
             overrideBuildNo = overrideBuildNo
         )
 
-        return pipelineParam.copy(defaultValue = defaultValue)
+        return templateParam.copy(
+            defaultValue = defaultValue,
+            required = pipelineParam.required
+        )
     }
 
     private fun mergeSingeParam(
@@ -601,31 +608,33 @@ object TemplateInstanceUtil {
     /**
      * 合并模版的options到流水线的options
      *
-     * 如果模版的options改了,则实例化时应该使用模版的
+     * 获取实例化的参数时,options应该从模版中获取,不然在实例化页面,无法选中新的值
      */
     fun mergeTemplateOptions(
+        projectId: String,
         templateParams: List<BuildFormProperty>,
         pipelineParams: List<BuildFormProperty>
     ): List<BuildFormProperty> {
         if (templateParams.isEmpty()) {
             return emptyList()
         }
-        val result = ArrayList<BuildFormProperty>()
-        templateParams.forEach outside@{ template ->
-            pipelineParams.forEach { pipeline ->
-                if (pipeline.id == template.id) {
-                    result.add(
-                        pipeline.copy(
-                            options = template.options,
-                            cascadeProps = template.cascadeProps
-                        )
-                    )
-                    return@outside
-                }
+        val templateParamMap = templateParams.associateBy { it.id }
+
+        return pipelineParams.map { pipeline ->
+            // 处理REPO_REF类型的参数
+            if (pipeline.type == BuildFormPropertyType.REPO_REF) {
+                pipeline.cascadeProps = RepoRefCascadeParam().getProps(
+                    projectId = projectId,
+                    prop = pipeline
+                )
             }
-            result.add(template)
+
+            // 查找对应的模板参数并合并options
+            templateParamMap[pipeline.id]?.let { template ->
+                pipeline.options = template.options
+            }
+            pipeline
         }
-        return result
     }
 
     /**
