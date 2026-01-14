@@ -159,21 +159,21 @@
                     name: proxy.$t('environment.envInfo.BUILDEnvType'),
                     count: envCountData.value[ENV_TYPE_MAP.BUILD] ?? 0
                 },
-                // {
-                //     id: ENV_TYPE_MAP.PROD,
-                //     name: proxy.$t('environment.envInfo.PRODEnvType'),
-                //     count: envCountData.value[ENV_TYPE_MAP.PROD] ?? 0
-                // },
-                // {
-                //     id: ENV_TYPE_MAP.DEV,
-                //     name: proxy.$t('environment.envInfo.DEVEnvType'),
-                //     count: envCountData.value[ENV_TYPE_MAP.DEV] ?? 0
-                // },
-                // {
-                //     id: ENV_TYPE_MAP.DEVX,
-                //     name: proxy.$t('environment.envInfo.DEVXEnvType'),
-                //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
-                // }
+                {
+                    id: ENV_TYPE_MAP.PROD,
+                    name: proxy.$t('environment.envInfo.PRODEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.PROD] ?? 0
+                },
+                {
+                    id: ENV_TYPE_MAP.DEV,
+                    name: proxy.$t('environment.envInfo.DEVEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.DEV] ?? 0
+                },
+                {
+                    id: ENV_TYPE_MAP.DEVX,
+                    name: proxy.$t('environment.envInfo.DEVXEnvType'),
+                    count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
+                }
             ]))
             const handleCreateEnvSuccess = (envId) => {
                 fetchEnvList()
