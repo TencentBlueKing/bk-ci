@@ -108,6 +108,11 @@
             if (this.atomPropsModel.archiveFile !== undefined) {
                 this.atomPropsModel.archiveFile.hidden = !this.element.enableArchiveFile
             }
+            Object.assign(this.element, {
+                ...getAtomDefaultValue(this.atomPropsModel),
+                ...this.element
+            })
+            
         },
         methods: {
             ...mapActions('pipelines', [

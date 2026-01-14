@@ -38,6 +38,7 @@ const argv = yargs.alias({
 const { dist, env, lsVersion, scope, head = 'HEAD', base = 'master', effect } = argv
 console.log(env, head, base)
 
+const entryDir = path.join(__dirname, dist, 'entries')
 const svgSpriteConfig = {
     mode: {
         symbol: true
@@ -119,7 +120,12 @@ function getScopeStr (scope) {
 }
 
 task('clean', () => {
+    // mkdir -p path.join(__dirname, dist) after del dist
     return del(dist)
+})
+
+task('create-entries', () => {
+    return fs.promises.mkdir(path.join(__dirname, dist, 'entries'), { recursive: true })
 })
 
 task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSvgJs('devops')]))
@@ -131,10 +137,10 @@ task('build', async () => {
 })
 
 task('generate-assets-json', () => {
-    const entryDir = path.join(__dirname, dist, "entry's")
+    
     const assetsBundlesName = path.join(__dirname, dist, BUNDLE_NAME)
     const prevAssets = JSON.parse(fs.readFileSync(assetsBundlesName, 'utf-8'))
-    // 读取path.join(__dirname, dist, 'entry's', '*.json')所有Json合并成一个
+    // 读取path.join(__dirname, dist, 'entries', '*.json')所有Json合并成一个
     const entryJsons = globSync(path.join(entryDir, '*.json'))
     console.log('entry jsons: ', entryJsons)
     const finalAssets = entryJsons.reduce((acc, file) => {
@@ -223,4 +229,4 @@ async function execAsync () {
     })
 }
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')
+exports.default = series('clean', 'create-entries', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')
