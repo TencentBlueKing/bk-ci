@@ -37,7 +37,8 @@ else
 end
 
 local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
-if tag == 'rbac-gray' or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-gray到容器环境
+local test_project = (ngx.var.project_id == 'alltest') or (ngx.var.project_id == 'bkdevops') or (ngx.var.project_id == 'bk-repo')
+if test_project or tag == 'dev-rbac' or tag == 'test-rbac' then -- 临时逻辑, 临时灰度rbac-gray到容器环境
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "true"
 else
     ngx.header["X-USE-FRONTEND-CONTAINER"] = "false"
