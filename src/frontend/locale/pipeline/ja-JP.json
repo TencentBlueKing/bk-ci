@@ -1145,6 +1145,11 @@
     "required": "必須かどうか",
     "showOnExec": "入力パラメータかどうか",
     "readOnlyOnRun": "実行時に読み取り専用",
+    "sensitive": "センシティブかどうか",
+    "sensitiveTips1": "選択すると、以下のインターフェースでは平文値が表示されません：",
+    "sensitiveTips2": "1. パイプライン表示ページ、変数パネル",
+    "sensitiveTips3": "2. パイプライン構築詳細ページ、起動変数リスト",
+    "sensitiveTips4": "3. パイプライン構築詳細ページ、プラグインログ",
     "defaultValue": "デフォルト値",
     "fileDefaultValueLabel": "カスタムリポジトリパス",
     "customFileLabelTips": "カスタムリポジトリパス＋ファイル名",
@@ -2056,5 +2061,12 @@
   "currentRef": "現在のバージョン/現在のコミット",
   "noVariablesAvailable": "利用可能な変数がありません",
   "showStageProgress": "ステージの進捗を表示",
-  "showBuildInfo": "ビルド情報を表示"
+  "showBuildInfo": "ビルド情報を表示",
+  "switchToVarMode": "クリックして変数入力モードに切り替え",
+  "closeVarMode": "クリックして変数入力モードを閉じる",
+  "placeholderConstraintVar": "変数を入力してください、例: ${'{{'}var{'}}'}",
+  "placeholderVar": "変数を入力してください、例: ${'{{'}var{'}}'} または ${'{'}var{'}'}",
+  "selectTips": "選択してください",
+  "rollbackToVersion": "バージョン {0} にロールバック",
+  "constraintPipelineEditTips": "このパイプラインは制約モードです。ここで入力パラメータのデフォルト値、通知などの設定を変更できます。編成をアップグレードするには、テンプレートのインスタンス化インターフェースで操作してください。"
 }
