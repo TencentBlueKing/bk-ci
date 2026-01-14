@@ -585,8 +585,8 @@
         }, {})
         
         // 需更新为模板对应参数值的字段名
-        // 其中required字段为特殊处理，如果模板变量为入参，可以修改默认值，isRequiredParam才是实例的真实入参值， 其余字段均需变更为模板对应的值
-        const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly']
+        // 其中required字段为特殊处理，如果模板变量为入参，可修改默认值(对于模板都是入参)，isRequiredParam才是实例的真实入参值，其余字段均需变更为模板对应的值
+        const needUpdatedField = ['id', 'name', 'desc', 'required', 'type', 'valueNotEmpty', 'category', 'readOnly', 'repoHashId', 'relativePath', 'glob']
         instanceParams?.forEach(i => {
             const templateParam = templateParamsMap.get(i.id)
             const initialInstanceParam = initialInstanceParams[i.id]
@@ -827,7 +827,10 @@
             isRequiredParam: proxy.$t('template.propertyUpdate.required'),
             valueNotEmpty: proxy.$t('template.propertyUpdate.valueNotEmpty'),
             readOnly: proxy.$t('template.propertyUpdate.readOnly'),
-            category: proxy.$t('template.propertyUpdate.category')
+            category: proxy.$t('template.propertyUpdate.category'),
+            repoHashId: proxy.$t('template.propertyUpdate.repo'),
+            relativePath: proxy.$t('template.propertyUpdate.relativePath'),
+            glob: proxy.$t('template.propertyUpdate.glob'),
         }
         
         // 检查各个属性是否有变更

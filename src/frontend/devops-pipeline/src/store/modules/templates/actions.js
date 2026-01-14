@@ -168,14 +168,15 @@ const actions = {
     },
     // 根据模板ID，版本号获取模板配置参数
     fetchTemplateParamsById ({ commit }, { projectId, templateId, version }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsById?version=${version}`).then(res => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/templateParamsById?version=${version}`).then(res => {
             return res.data
         })
     },
     
+ 
     // 根据引用获取模板配置参数
     fetchTemplateParamsByRef ({ commit }, { projectId, templateId, ref }) {
-        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/instanceParamsByRef?ref=${ref}`).then(res => {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/template/instances/v2/projects/${projectId}/templates/${templateId}/templateParamsByRef?ref=${ref}`).then(res => {
             return res.data
         })
     },
