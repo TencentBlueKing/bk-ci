@@ -113,9 +113,9 @@
 
             const envTypeEnums = computed(() => ([
                 ENV_TYPE_MAP.BUILD,
-                // ENV_TYPE_MAP.PROD,
-                // ENV_TYPE_MAP.DEV,
-                // ENV_TYPE_MAP.DEVX
+                ENV_TYPE_MAP.PROD,
+                ENV_TYPE_MAP.DEV,
+                ENV_TYPE_MAP.DEVX
             ]))
             const formRules = computed(() => ({
                 name: [
