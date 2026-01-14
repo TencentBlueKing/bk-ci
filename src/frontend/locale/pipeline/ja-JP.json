@@ -707,7 +707,10 @@
       "required": "入力パラメータかどうか",
       "valueNotEmpty": "必須かどうか",
       "readOnly": "実行時読み取り専用",
-      "category": "グループラベル"
+      "category": "グループラベル",
+      "repo": "コードリポジトリ",
+      "relativePath": "コード庫相対ディレクトリ",
+      "glob": "フィルタルール"
     },
     "propertyUpdated": "更新",
     "toInstance": "実例化"
