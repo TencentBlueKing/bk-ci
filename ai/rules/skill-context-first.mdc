@@ -1,9 +1,9 @@
 ---
-description: 
+description:
 alwaysApply: true
 enabled: true
 updatedAt: 2025-12-11T04:00:12.840Z
-provider: 
+provider:
 ---
 
 # Skill 上下文优先规则
@@ -98,9 +98,62 @@ provider:
 3. 再进行插件开发
 ```
 
+## 强制执行检查点
+
+**在执行以下操作之前，必须先检查并加载相关 Skill：**
+
+| 操作 | 强制检查 |
+|------|----------|
+| 启动 `code-explorer` 子代理 | ✅ 必须先检查 Skill |
+| 使用 `task` 工具搜索代码 | ✅ 必须先检查 Skill |
+| 修改任何 `.kt`/`.java`/`.go`/`.vue`/`.ts` 文件 | ✅ 必须先检查 Skill |
+| 搜索代码库 (`search_content`/`search_file`) | ⚠️ 建议先检查 Skill |
+
+### 强制检查流程
+
+```
+收到用户请求
+    ↓
+【第一步】识别任务涉及的模块/领域
+    ↓
+【第二步】查找上方"Skill 与模块对应关系"表
+    ↓
+【第三步】如有匹配 → use_skill() 加载 Skill
+    ↓
+【第四步】再执行 code-explorer / 搜索 / 代码修改
+```
+
+### 关键词触发表
+
+当用户请求中包含以下关键词时，**必须**先加载对应 Skill：
+
+| 关键词 | 对应 Skill |
+|--------|------------|
+| 流水线变量、变量扩展、PAC 变量、YAML 变量 | `26-pipeline-variable-extension` |
+| 流水线模型、Pipeline Model、Stage、Job、Task | `28-pipeline-model-architecture` |
+| 构建引擎、状态机、调度 | `29-3-process-engine-control` |
+| 插件开发、研发商店 | `33-store-module-architecture` |
+| Agent、构建机 | `43-agent-module-architecture` |
+| Worker、执行器 | `42-worker-module-architecture` |
+| 权限、IAM、RBAC | `30-auth-module-architecture` |
+| 数据库、DDL、表结构 | `06-database-script-management` |
+
+### 违规示例
+
+```
+❌ 错误：用户要求补全 PAC 变量逻辑
+   → 直接启动 code-explorer 搜索代码
+
+✅ 正确：用户要求补全 PAC 变量逻辑
+   → 识别涉及"流水线变量"
+   → use_skill("26-pipeline-variable-extension")
+   → 按 Skill 指南执行
+```
+
 ## 注意事项
 
 - **跨模块变更必须先读 `00-bkci-global-architecture`** 了解模块间协作关系
 - 如果涉及多个模块，需阅读所有相关 skill
 - 如果 skill 内容与实际代码有出入，以实际代码为准并提醒更新 skill
 - 复杂变更建议先阅读 skill 后再制定变更计划
+- **禁止跳过 Skill 检查直接启动 code-explorer 或修改代码**
