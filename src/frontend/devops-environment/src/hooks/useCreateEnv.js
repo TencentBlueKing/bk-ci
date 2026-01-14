@@ -18,9 +18,10 @@ const isLoading = ref(false)
 export default function useCreateEnv (onSuccess, onError) {
     const { proxy } = useInstance()
     
-    const showCreateEnvDialog = (envType) => {
+    const showCreateEnvDialog = (envType = 'BUILD') => {
         isShow.value = true
-        envParams.value = defaultCreateEnvParam(envType)
+        const validEnvType = (typeof envType === 'string') ? envType : 'BUILD'
+        envParams.value = defaultCreateEnvParam(validEnvType)
     }
     
     const closeCreateEnvDialog = () => {

@@ -7,11 +7,11 @@ import {
 } from '@/store/constants'
 
 const envList = ref([])
+const envCountData = ref({})
 export default function useEnvAside () {
     const { proxy } = useInstance()
     const isLoading = ref(false)
     const envName = ref('')
-    const envCountData = ref({})
     const {
         setEnvDetailLoaded,
     } = useEnvDetail()
@@ -109,6 +109,24 @@ export default function useEnvAside () {
             return null
         }
     }
+
+    // 删除环境
+    const deleteEnv = async (envHashId) => {
+        try {
+            await proxy.$store.dispatch('environment/toDeleteEnv', {
+                projectId: projectId.value,
+                envHashId
+            })
+            
+            // 刷新环境列表和计数
+            await fetchEnvList()
+            await fetchEnvCountAsType()
+            
+            return true
+        } catch (error) {
+            throw error
+        }
+    }
     
     return {
         // data
@@ -122,6 +140,7 @@ export default function useEnvAside () {
         // function
         initData,
         fetchEnvList,
-        fetchEnvCountAsType
+        fetchEnvCountAsType,
+        deleteEnv
     }
 }

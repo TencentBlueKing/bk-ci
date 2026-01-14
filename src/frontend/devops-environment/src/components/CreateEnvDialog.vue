@@ -96,6 +96,7 @@
     import { computed } from 'vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useInstance from '@/hooks/useInstance'
+    import { ENV_TYPE_MAP } from '@/store/constants'
     
     export default {
         name: 'CreateEnvDialog',
@@ -110,7 +111,12 @@
                 closeCreateEnvDialog
             } = useCreateEnv(onSuccess, onError)
 
-            const envTypeEnums = computed(() => (['BUILD', 'DEV', 'PROD', 'DEVX']))
+            const envTypeEnums = computed(() => ([
+                ENV_TYPE_MAP.BUILD,
+                // ENV_TYPE_MAP.PROD,
+                // ENV_TYPE_MAP.DEV,
+                // ENV_TYPE_MAP.DEVX
+            ]))
             const formRules = computed(() => ({
                 name: [
                     {
