@@ -507,7 +507,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
-                tags = tagMaps[it.nodeId]
+                tags = tagMaps[it.nodeId],
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
     }
@@ -625,7 +626,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
     }
@@ -682,7 +684,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                createWorkspaceId = null
             )
         }
     }
@@ -1017,7 +1020,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                createWorkspaceId = null
             )
         }
     }

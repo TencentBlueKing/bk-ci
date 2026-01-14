@@ -35,9 +35,10 @@ class UserNodeTagResourceImpl @Autowired constructor(
 
     override fun fetchTag(
         userId: String,
-        projectId: String
+        projectId: String,
+        createMode: Boolean?
     ): Result<List<NodeTag>> {
-        return Result(nodeTagService.fetchTagAndNodeCount(projectId))
+        return Result(nodeTagService.fetchTagAndNodeCount(projectId, createMode))
     }
 
     override fun editTag(

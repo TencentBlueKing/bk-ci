@@ -70,5 +70,7 @@ data class NodeBaseInfo(
     @get:Schema(title = "第三方机器 HashId", required = true)
     val agentHashId: String?,
     @get:Schema(title = "第三方机器 Id", required = true)
-    val agentId: Long?
+    val agentId: Long?,
+    @get:Schema(title = "创作环境，工作空间id", required = false)
+    val createWorkspaceId: String?
 )

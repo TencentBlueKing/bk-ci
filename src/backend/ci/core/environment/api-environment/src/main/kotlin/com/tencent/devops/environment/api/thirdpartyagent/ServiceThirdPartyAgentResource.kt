@@ -510,6 +510,9 @@ interface ServiceThirdPartyAgentResource {
         userId: String,
         @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<NodeTag>>
 }

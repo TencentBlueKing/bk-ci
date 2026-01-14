@@ -98,13 +98,20 @@ class NodeTagService @Autowired constructor(
     }
 
     fun fetchTagAndNodeCount(
-        projectId: String
+        projectId: String,
+        createMod: Boolean?
     ): List<NodeTag> {
         val tags = mutableListOf<NodeTag>().apply {
             addAll(nodeTagDao.fetchTagAndNode(dslContext, projectId))
             addAll(nodeTagDao.fetchInternalTag(dslContext).values)
         }
-        val nodeTags = nodeTagDao.fetchNodeTag(dslContext, projectId)
+        val nodeTags = nodeTagDao.fetchNodeTag(
+            dslContext, projectId, if (createMod == true) {
+                listOf(NodeType.CREATE.name)
+            } else {
+                NodeType.coreTypesName()
+            }
+        )
         val nodeTagsCountMap = mutableMapOf<Long, MutableMap<Long, Int>>()
         nodeTags.forEach {
             val m = nodeTagsCountMap.putIfAbsent(it.tagKeyId, mutableMapOf(it.tagValueId to 1)) ?: return@forEach
