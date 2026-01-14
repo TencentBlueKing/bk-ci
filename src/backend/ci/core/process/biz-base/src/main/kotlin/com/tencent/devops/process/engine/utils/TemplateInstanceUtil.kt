@@ -654,7 +654,7 @@ object TemplateInstanceUtil {
                         "${inputParams.size}|${instanceParams.size}"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_COUNT_EXCEPTION
             )
         }
         val requiredExceptions = mutableListOf<String>()
@@ -664,7 +664,7 @@ object TemplateInstanceUtil {
             val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
                 logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION
+                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION
                 )
             }
             if (inputParam.required != instanceParam.required) {
@@ -682,7 +682,7 @@ object TemplateInstanceUtil {
                 "instance params field [required] exceptions|$projectId|$pipelineId|$requiredExceptions"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
                 params = arrayOf(requiredExceptions.joinToString(","), "required")
             )
         }
@@ -691,7 +691,7 @@ object TemplateInstanceUtil {
                 "instance params field [constant] exceptions|$projectId|$pipelineId|$constantExceptions"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
                 params = arrayOf(constantExceptions.joinToString(","), "constant")
             )
         }
@@ -700,7 +700,7 @@ object TemplateInstanceUtil {
                 "instance params field [default value] exceptions|$projectId|$pipelineId|$defaultValueExceptions"
             )
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_EXCEPTION,
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
                 params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
             )
         }
