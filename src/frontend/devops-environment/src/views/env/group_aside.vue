@@ -15,7 +15,7 @@
                 }
             }"
             :key="projectId"
-            @click="showCreateEnvDialog"
+            @click="() => showCreateEnvDialog()"
         >
             {{ $t('environment.createEnvrionment') }}
         </bk-button>
@@ -59,22 +59,49 @@
                         'env-item': true,
                         'active': envId === env.envHashId
                     }"
-                    @click="handleChangeEnv(env.envHashId)"
                 >
                     <span
-                        class="env-name"
-                        v-bk-overflow-tips
+                        class="env-content"
+                        @click="handleChangeEnv(env.envHashId)"
                     >
-                        {{ env.name }}
+                        <span
+                            class="env-name"
+                            v-bk-overflow-tips
+                        >
+                            {{ env.name }}
+                        </span>
+                        <span
+                            :class="{
+                                'count-tag': true,
+                                'active': envId === env.envHashId
+                            }"
+                        >
+                            {{ env.nodeCount ?? 0 }}
+                        </span>
                     </span>
-                    <span
-                        :class="{
-                            'count-tag': true,
-                            'active': envId === env.envHashId
-                        }"
+                    <bk-dropdown-menu
+                        trigger="click"
+                        ext-cls="env-operation-dropdown"
+                        @show="handleDropdownShow(env.envHashId)"
+                        @hide="handleDropdownHide"
                     >
-                        {{ env.nodeCount ?? 0 }}
-                    </span>
+                        <i
+                            slot="dropdown-trigger"
+                            class="bk-icon icon-more env-operation-btn"
+                        ></i>
+                        <ul
+                            class="bk-dropdown-list"
+                            slot="dropdown-content"
+                        >
+                            <li>
+                                <span
+                                    @click="handleDeleteEnv(env)"
+                                >
+                                    {{ $t('environment.delete') }}
+                                </span>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
                 </span>
             </div>
         </div>
@@ -116,7 +143,8 @@
                 envCountData,
                 totalEnvCount,
                 initData,
-                fetchEnvList
+                fetchEnvList,
+                deleteEnv
             } = useEnvAside()
             const projectId = computed(() => proxy.$route.params.projectId)
             const envId = computed(() => proxy.$route.params?.envId)
@@ -131,21 +159,21 @@
                     name: proxy.$t('environment.envInfo.BUILDEnvType'),
                     count: envCountData.value[ENV_TYPE_MAP.BUILD] ?? 0
                 },
-                {
-                    id: ENV_TYPE_MAP.PROD,
-                    name: proxy.$t('environment.envInfo.PRODEnvType'),
-                    count: envCountData.value[ENV_TYPE_MAP.PROD] ?? 0
-                },
-                {
-                    id: ENV_TYPE_MAP.DEV,
-                    name: proxy.$t('environment.envInfo.DEVEnvType'),
-                    count: envCountData.value[ENV_TYPE_MAP.DEV] ?? 0
-                },
-                {
-                    id: ENV_TYPE_MAP.DEVX,
-                    name: proxy.$t('environment.envInfo.DEVXEnvType'),
-                    count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
-                }
+                // {
+                //     id: ENV_TYPE_MAP.PROD,
+                //     name: proxy.$t('environment.envInfo.PRODEnvType'),
+                //     count: envCountData.value[ENV_TYPE_MAP.PROD] ?? 0
+                // },
+                // {
+                //     id: ENV_TYPE_MAP.DEV,
+                //     name: proxy.$t('environment.envInfo.DEVEnvType'),
+                //     count: envCountData.value[ENV_TYPE_MAP.DEV] ?? 0
+                // },
+                // {
+                //     id: ENV_TYPE_MAP.DEVX,
+                //     name: proxy.$t('environment.envInfo.DEVXEnvType'),
+                //     count: envCountData.value[ENV_TYPE_MAP.DEVX] ?? 0
+                // }
             ]))
             const handleCreateEnvSuccess = (envId) => {
                 fetchEnvList()
@@ -176,6 +204,55 @@
                 })
             }
 
+            // 处理删除环境
+            const handleDeleteEnv = async (env) => {
+                proxy.$bkInfo({
+                    title: proxy.$t('environment.confirmDeleteEnv'),
+                    subTitle: `${proxy.$t('environment.envName')}: ${env.name}`,
+                    confirmLoading: true,
+                    okText: proxy.$t('environment.delete'),
+                    theme: 'danger',
+                    confirmFn: async () => {
+                        try {
+                            await deleteEnv(env.envHashId)
+                            
+                            proxy.$bkMessage({
+                                message: proxy.$t('environment.successfullyDeleted'),
+                                theme: 'success'
+                            })
+                            
+                            // 如果删除的是当前选中的环境，需要重定向到第一个环境
+                            if (envId.value === env.envHashId) {
+                                const firstEnv = envList.value.find(e => e.envHashId !== env.envHashId)
+                                if (firstEnv) {
+                                    proxy.$router.replace({
+                                        name: 'envDetail',
+                                        params: {
+                                            ...proxy.$route.params,
+                                            envId: firstEnv.envHashId
+                                        }
+                                    })
+                                } else {
+                                    // 如果没有其他环境了，跳转到环境类型页面
+                                    proxy.$router.replace({
+                                        name: 'envDetail',
+                                        params: {
+                                            ...proxy.$route.params,
+                                            envId: undefined
+                                        }
+                                    })
+                                }
+                            }
+                        } catch (error) {
+                            proxy.$bkMessage({
+                                message: error.message || error,
+                                theme: 'error'
+                            })
+                        }
+                    }
+                })
+            }
+
             watch(() => projectId.value, async (newProjectId) => {
                 if (newProjectId) {
                     await initData()
@@ -202,13 +279,14 @@
 
                 handleChangeEnv,
                 handleChangeEnvType,
-                handleCreateEnvSuccess
+                handleCreateEnvSuccess,
+                handleDeleteEnv
             }
         }
     }
 </script>
 
-<style lang="scss" >
+<style lang="scss">
     .env-group-aside {
         display: flex;
         flex-direction: column;
@@ -291,26 +369,56 @@
             align-items: center;
             height: 32px;
             line-height: 32px;
-            padding: 8px 32px;
+            padding: 8px 16px;
             cursor: pointer;
             border-radius: 2px;
             transition: all 0.3s;
+            position: relative;
+            
             &:hover {
                 background: #f5f7fa;
+                .env-operation-btn {
+                    opacity: 1;
+                }
             }
+            
             &.active {
                 background: #E1ECFF;
                 color: #3a84ff;
                 &::after {
-                content: '';
-                display: block;
-                position: absolute;
-                right: 0;
-                width: 2px;
-                height: 32px;
-                background: #3A84FF;
+                    content: '';
+                    display: block;
+                    position: absolute;
+                    right: 0;
+                    width: 2px;
+                    height: 32px;
+                    background: #3A84FF;
+                }
             }
+        }
+        
+        .env-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            margin-right: 8px;
+        }
+        
+        .env-operation-btn {
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            color: #979BA5;
+            background: #EAEBF0;
+            &:hover {
+                background: #E1ECFF;
+                color: #3A84FF;
             }
+        }
         }
         .env-name {
             flex: 1;
@@ -329,9 +437,26 @@
             font-size: 12px;
             text-align: center;
             color: #979BA5;
+            background: #EAEBF0;
             &.active {
                 color: #3A84FF;
                 background: #FFFFFF;
+            }
+        }
+    
+    // 环境操作下拉菜单样式
+    .env-operation-dropdown {
+        .bk-dropdown-list {
+            li {
+                span {
+                    display: inline-block;
+                    min-width: 68px;
+                    padding: 0 16px;
+                    color: #63656E;
+                    &:hover {
+                        background: #F5F7FA;
+                    }
+                }
             }
         }
     }
