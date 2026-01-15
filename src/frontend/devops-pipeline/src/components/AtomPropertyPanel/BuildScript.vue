@@ -56,6 +56,7 @@
 </template>
 
 <script>
+    import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import validMixins from '../validMixins'
     import atomMixin from './atomMixin'
