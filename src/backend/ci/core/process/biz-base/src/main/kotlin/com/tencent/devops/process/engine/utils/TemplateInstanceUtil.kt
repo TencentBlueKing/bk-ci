@@ -8,11 +8,13 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
 import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -620,21 +622,58 @@ object TemplateInstanceUtil {
         }
         val templateParamMap = templateParams.associateBy { it.id }
 
-        return pipelineParams.map { pipeline ->
+        return pipelineParams.map { pipelineParam ->
             // 处理REPO_REF类型的参数
-            if (pipeline.type == BuildFormPropertyType.REPO_REF) {
-                pipeline.cascadeProps = RepoRefCascadeParam().getProps(
+            if (pipelineParam.type == BuildFormPropertyType.REPO_REF) {
+                pipelineParam.cascadeProps = RepoRefCascadeParam().getProps(
                     projectId = projectId,
-                    prop = pipeline
+                    prop = pipelineParam
                 )
             }
 
             // 查找对应的模板参数并合并options
-            templateParamMap[pipeline.id]?.let { template ->
-                pipeline.options = template.options
+            templateParamMap[pipelineParam.id]?.let { templateParam ->
+                pipelineParam.cascadeProps = mergeCascadeProps(
+                    pipelineProps = pipelineParam.cascadeProps,
+                    templateProps = templateParam.cascadeProps
+                )
+                pipelineParam.options = templateParam.options
             }
-            pipeline
+            pipelineParam
         }
+    }
+
+    /**
+     * 合并模版的级联默认值到流水线的级联默认值中,不然前端在实例化页面,设置默认值或者跟随模版值时无法选中值
+     */
+    private fun mergeCascadeProps(
+        pipelineProps: BuildCascadeProps?,
+        templateProps: BuildCascadeProps?
+    ): BuildCascadeProps? {
+        if (pipelineProps == null) {
+            return null
+        }
+        if (templateProps == null) {
+            return pipelineProps
+        }
+        // 合并当前级别的options
+        val mergedOptions = mutableSetOf<BuildFormValue>()
+        mergedOptions.addAll(pipelineProps.options)
+        mergedOptions.addAll(templateProps.options)
+        // 递归合并children
+        val mergedChildren = when {
+            pipelineProps.children == null && templateProps.children == null -> null
+            pipelineProps.children == null -> templateProps.children
+            templateProps.children == null -> pipelineProps.children
+            else -> mergeCascadeProps(pipelineProps.children!!, templateProps.children!!)
+        }
+        return BuildCascadeProps(
+            id = pipelineProps.id,
+            options = mergedOptions.toList(),
+            searchUrl = pipelineProps.searchUrl,
+            replaceKey = pipelineProps.replaceKey,
+            children = mergedChildren
+        )
     }
 
     /**
