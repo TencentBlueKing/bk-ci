@@ -2173,7 +2173,6 @@ class PipelineBuildDao {
         >,
         LightBuildHistory
     > {
-        
         override fun map(
             record: Record15<
                 String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
