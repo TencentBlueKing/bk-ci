@@ -26,8 +26,8 @@ abstract class AbsProjectExtServiceImpl : ProjectExtService {
         oldProperties: ProjectProperties?,
         newProperties: ProjectProperties?
     ) {
+        val newEnabled = newProperties?.enableShareArtifact ?: return
         val oldEnabled = oldProperties?.enableShareArtifact ?: true
-        val newEnabled = newProperties?.enableShareArtifact ?: true
         if (oldEnabled != newEnabled) {
             updateShareArtifact(userId, projectId, newEnabled)
         }
