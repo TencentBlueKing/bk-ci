@@ -180,6 +180,19 @@ class BkRepoClient constructor(
         return true
     }
 
+    fun updateProjectShareEnabled(userId: String, projectId: String, enabled: Boolean): Boolean {
+        logger.info("updateProjectShareEnabled, userId: $userId, projectId: $projectId, enabled: $enabled")
+        val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/project/$projectId/share/enabled" +
+            "?enabled=$enabled"
+        val request = Request.Builder()
+            .url(url)
+            .headers(getCommonHeaders(userId, projectId).toHeaders())
+            .put("".toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+        return true
+    }
+
     private fun createGenericRepo(
         userId: String,
         projectId: String,

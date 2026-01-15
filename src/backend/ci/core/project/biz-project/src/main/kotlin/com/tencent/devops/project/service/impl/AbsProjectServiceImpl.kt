@@ -625,6 +625,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             )
                         }
                     }
+                    // 同步共享制品开关变更到 BkRepo
+                    projectExtService.syncShareArtifactIfChanged(
+                        userId = userId,
+                        projectId = englishName,
+                        oldProperties = properties,
+                        newProperties = projectUpdateInfo.properties
+                    )
                 }
                 // 记录项目更新记录
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
