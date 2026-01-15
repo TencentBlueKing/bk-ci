@@ -1966,7 +1966,6 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            
             // 获取 channelCode 并处理 maxPipelineResNum 为空的情况
             val pipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = transactionContext,
@@ -1974,7 +1973,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = setting.pipelineId,
                 channelCode = null
             )
-            val channelCode = pipelineInfo?.channel?.let { 
+            val channelCode = pipelineInfo?.channel?.let {
                 try {
                     ChannelCode.valueOf(it)
                 } catch (e: IllegalArgumentException) {
@@ -1983,7 +1982,6 @@ class PipelineRepositoryService constructor(
                 }
             } ?: ChannelCode.BS
             val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
-            
             if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,
                 projectId = processedSetting.projectId,
