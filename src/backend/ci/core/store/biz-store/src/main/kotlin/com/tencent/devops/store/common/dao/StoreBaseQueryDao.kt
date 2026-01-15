@@ -34,7 +34,7 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.QueryComponentsParam
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
@@ -520,6 +520,25 @@ class StoreBaseQueryDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
+    fun getComponentStatusInfo(
+        dslContext: DSLContext,
+        storeCode: String,
+        version: String,
+        storeType: StoreTypeEnum
+    ): Record1<String>? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            dslContext.select(STATUS).from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
         }
     }
 }

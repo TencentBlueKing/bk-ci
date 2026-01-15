@@ -173,6 +173,11 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             val pipelineTemplateSetting = pTemplateSettingWithoutVersion.copy(
                 version = resourceOnlyVersion.settingVersion
             )
+            postProcessBeforeVersionCreate(
+                context = context,
+                pipelineTemplateResource = pipelineTemplateResource,
+                pipelineTemplateSetting = pipelineTemplateSetting
+            )
             operationLogType = OperationLogType.RELEASE_MASTER_VERSION
             operationLogParams = resourceOnlyVersion.versionName!!
 

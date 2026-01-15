@@ -89,7 +89,7 @@ import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -842,12 +842,26 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf(TASK_JSON_NAME, "${ignored.message}")
             )
         }
-        if ((null == taskJsonStr) || !JsonSchemaUtil.validateJson(taskJsonStr)) {
+        if (null == taskJsonStr) {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
                 params = arrayOf(branch ?: MASTER, TASK_JSON_NAME)
             )
         }
+
+        // 校验task.json配置文件格式合法性
+        try {
+            JsonSchemaUtil.jsonNodeFromString(taskJsonStr)
+        } catch (ignored: Exception) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                params = arrayOf(
+                    TASK_JSON_NAME, ignored.message ?: ("Maybe missing parentheses commas," +
+                            " quotation marks, or containing illegal characters.")
+                )
+            )
+        }
+
         return marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
             projectCode = projectCode,

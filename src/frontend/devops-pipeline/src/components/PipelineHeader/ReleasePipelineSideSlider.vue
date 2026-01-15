@@ -69,6 +69,23 @@
                     v-bkloading="{ isLoading: isLoading || releasing }"
                     class="release-pipeline-pac-form"
                 >
+                    <!-- 构建号重置提醒 -->
+                    <bk-alert
+                        v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
+                        type="warning"
+                        closable
+                    >
+                        <div slot="title">
+                            <i18n path="template.resetBuildNoConfirmMessage">
+                                <strong
+                                    style="color: #FF9C01;"
+                                >
+                                    {{ resetBuildNoInstanceCount }}
+                                </strong>
+                            </i18n>
+                        </div>
+                    </bk-alert>
+                    
                     <div
                         v-if="showPacSwitcherConfig"
                         class="release-pipeline-pac-conf"
@@ -674,8 +691,18 @@
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
             },
+            resetBuildNoInstanceCount () {
+                // 统计勾选了"发布正式版本后立即重置为基线值"且推荐版本号是必填的实例数量
+                return this.instanceList.filter(i => i.resetBuildNo && i.buildNo?.required).length
+            },
             isCommitToMaster () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
+            },
+            releaseType () {
+                return this.$route.query?.type
+            },
+            versionName () {
+                return this.$route.query?.versionName
             }
         },
         watch: {
@@ -779,6 +806,14 @@
                 handler: function () {
                     this.customVersionName = ''
                 }
+            },
+            releaseType: {
+                handler: function (val) {
+                    if (val && this.versionName) {
+                        this.releaseParams.description = this.$t('rollbackToVersion', [this.versionName])
+                    }
+                },
+                immediate: true
             }
         },
         mounted () {
@@ -1015,6 +1050,10 @@
                         } else {
                             await this.requestPipelineSummary(this.$route.params)
                         }
+                        
+                        const { storeFlag, publishStrategy } = this.pipelineInfo
+                        const isManual = publishStrategy && publishStrategy === 'MANUAL'
+
                         this.customVersionName = ''
                         const tipsI18nKey = this.releaseParams.enablePac
                             ? 'pacPipelineReleaseTips'
@@ -1055,15 +1094,12 @@
                                     attrs: {
                                         class: 'release-info-title'
                                     }
-                                }, this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc')),
+                                }, this.$t(isPacMR ? 'pacMRRelaseTips' :  storeFlag ? 'template.versionReleaseSuc' :'releaseSuc', [versionName])),
                                 h('h3', {
                                     class: 'release-info-text',
-                                    domProps: {
-                                        innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                            versionName
-                                        ])
-                                    }
-                                }),
+                                }, this.$t(isPacMR?  'pacMRRelaseSuc' : storeFlag ? isManual  ? 'template.manualUpdate' : 'template.autoUpdate'  : 'relaseSucTips', [
+                                    versionName
+                                ])),
                                 updateBuildNo && !tipsArrayLength
                                     ? h('div', { class: 'warning-box' }, [
                                         h(Logo, { size: 14, name: 'warning-circle-fill' }),
@@ -1172,6 +1208,20 @@
                                                     this.$t(!updateBuildNo ? 'goExec' : 'buildNoBaseline.goReset')
                                                 )
                                                 : null,
+                                        storeFlag && isManual && !isPacMR
+                                            ? h('bk-button', {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        if (!this.pipelineInfo.permissions.canEdit) return
+                                                        const href = `${WEB_URL_PREFIX}/store/editTemplate/${this.pipelineInfo.id}?hasSourceInfo=true`
+                                                        window.open(href, '_blank')
+                                                    }
+                                                },
+                                            }, this.$t('template.toStoreUpdate')) : null,
                                         h(
                                             'bk-button',
                                             {
@@ -1190,7 +1240,29 @@
                                                 }
                                             },
                                             this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
-                                        )
+                                        ),
+                                        this.isTemplate ? h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        this.$router.push({
+                                                            name: 'TemplateOverview',
+                                                            params: {
+                                                                ...this.$route.params,
+                                                                version: this.pipelineInfo?.releaseVersion,
+                                                                type: 'instanceList'
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            },
+                                            this.$t('template.toInstance')
+                                        ) : null
 
                                     ]
                                 )

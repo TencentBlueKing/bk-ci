@@ -236,6 +236,13 @@ export const actions = {
         return vue.$ajax.put(`${prefix}/user/market/desk/template/v2/offline/templateCodes/${templateCode}/versions`, params)
     },
 
+    /**
+     * 流水线模板管理员校验
+     */
+    templateUserValidate (_, { templateCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/desk/store/member/codes/${templateCode}/user/validate?storeType=TEMPLATE`)
+    },
+
     updateCurrentaTemplate ({ commit }, { res }) {
         commit(UPDATE_CURRENT_TEMPLATE, res)
     },

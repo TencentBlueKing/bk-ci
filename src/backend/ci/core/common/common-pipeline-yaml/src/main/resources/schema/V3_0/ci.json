@@ -271,6 +271,103 @@
                 }
               } ]
             },
+            "mr-merged" : {
+              "anyOf" : [ {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "id" : {
+                    "type" : "string"
+                  },
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
+                  "target-branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "target-branches-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "source-branches-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "source-branches" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "paths-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "users-ignore" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  },
+                  "report-commit-check" : {
+                    "type" : "boolean"
+                  },
+                  "webhook-queue" : {
+                    "type" : "boolean"
+                  },
+                  "path-filter-type" : {
+                    "type" : "string",
+                    "uniqueItems" : true,
+                    "items" : {
+                      "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                    }
+                  },
+                  "custom-filter" : {
+                    "type" : "object",
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "credentials" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "skip-wip" : {
+                    "type" : "boolean"
+                  }
+                }
+              } ]
+            },
             "schedules" : {
               "oneOf" : [ {
                 "type" : "array",
@@ -985,6 +1082,103 @@
               }
             } ]
           },
+          "mr-merged" : {
+            "anyOf" : [ {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "id" : {
+                  "type" : "string"
+                },
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
+                "target-branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "target-branches-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "source-branches-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "source-branches" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "paths-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "users-ignore" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "report-commit-check" : {
+                  "type" : "boolean"
+                },
+                "webhook-queue" : {
+                  "type" : "boolean"
+                },
+                "path-filter-type" : {
+                  "type" : "string",
+                  "uniqueItems" : true,
+                  "items" : {
+                    "enum" : [ "NamePrefixFilter", "RegexBasedFilter" ]
+                  }
+                },
+                "custom-filter" : {
+                  "type" : "object",
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "credentials" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "skip-wip" : {
+                  "type" : "boolean"
+                }
+              }
+            } ]
+          },
           "schedules" : {
             "oneOf" : [ {
               "type" : "array",
@@ -1492,6 +1686,9 @@
                 "type" : "boolean"
               },
               "allow-modify-at-startup" : {
+                "type" : "boolean"
+              },
+              "as-instance-input" : {
                 "type" : "boolean"
               },
               "value-not-empty" : {
@@ -2142,7 +2339,7 @@
                             "type" : "string"
                           },
                           "privileged" : {
-                            "type" : "string"
+                            "type" : "boolean"
                           }
                         }
                       },
@@ -2345,6 +2542,9 @@
     },
     "syntax-dialect" : {
       "enum" : [ "INHERIT", "CLASSIC", "CONSTRAINT" ]
+    },
+    "cancel-policy" : {
+      "type" : "string"
     }
   },
   "definitions" : {
@@ -2589,7 +2789,7 @@
                             "type" : "string"
                           },
                           "privileged" : {
-                            "type" : "string"
+                            "type" : "boolean"
                           }
                         }
                       },
@@ -2758,6 +2958,9 @@
               "pattern" : "^.*@.*$"
             },
             "name" : {
+              "type" : "string"
+            },
+            "namespace" : {
               "type" : "string"
             },
             "id" : {

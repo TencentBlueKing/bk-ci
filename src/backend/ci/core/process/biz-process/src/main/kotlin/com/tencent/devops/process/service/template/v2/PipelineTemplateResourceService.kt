@@ -177,6 +177,19 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
+    fun getOrNull(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): PipelineTemplateResource? {
+        return pipelineTemplateResourceDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+    }
+
     fun get(
         projectId: String,
         templateId: String,
@@ -194,6 +207,14 @@ class PipelineTemplateResourceService @Autowired constructor(
         return pipelineTemplateResourceDao.count(
             commonCondition = commonCondition,
             dslContext = dslContext
+        )
+    }
+
+    fun countVersions(projectId: String, templateId: String): Int {
+        return pipelineTemplateResourceDao.countVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
         )
     }
 

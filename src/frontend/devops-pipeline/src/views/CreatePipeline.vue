@@ -17,7 +17,7 @@
                             <bk-input
                                 ref="pipelineName"
                                 :placeholder="$t('pipelineNameInputTips')"
-                                maxlength="40"
+                                maxlength="128"
                                 name="newPipelineName"
                                 v-model.trim="newPipelineName"
                                 v-validate.initial="'required'"

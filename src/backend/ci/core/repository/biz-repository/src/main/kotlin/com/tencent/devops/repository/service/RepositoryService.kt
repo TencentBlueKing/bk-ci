@@ -47,7 +47,6 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.audit.ActionAuditContent
@@ -817,7 +816,7 @@ class RepositoryService @Autowired constructor(
                 repoDetailInfoMap.putAll(codeGitRepositoryService.getRepoDetailMap(repositoryIds))
             }
         }
-        val repoLogoMap = repositoryScmConfigDao.list(dslContext, limit = PageUtil.DEFAULT_PAGE_SIZE, offset = 0)
+        val repoLogoMap = repositoryScmConfigDao.list(dslContext, limit = DEFAULT_QUERY_SCM_CONFIG_LIMIT, offset = 0)
                 .associate { it.scmCode to it.logoUrl }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
@@ -894,7 +893,8 @@ class RepositoryService @Autowired constructor(
                 aliasName = it.aliasName,
                 url = it.url,
                 type = ScmType.valueOf(it.type),
-                updatedTime = it.updatedTime.timestamp()
+                updatedTime = it.updatedTime.timestamp(),
+                scmCode = it.scmCode
             )
         }
         return SQLPage(count, repositoryList)
@@ -1671,7 +1671,8 @@ class RepositoryService @Autowired constructor(
         // 仅有新接入的仓库需要手动加入白名单
         val needAddWhitelist = !ScmType.values().any { it.name == scmCode } && listOf(
             ScmProviderCodes.TSVN.name,
-            ScmProviderCodes.GITEE.name
+            ScmProviderCodes.GITEE.name,
+            ScmProviderCodes.BKCODE.name
         ).contains(scmConfig.providerCode)
         if (needAddWhitelist) {
             addGrayRepoWhite(
@@ -1716,5 +1717,6 @@ class RepositoryService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
         const val MAX_ALIAS_LENGTH = 255
+        const val DEFAULT_QUERY_SCM_CONFIG_LIMIT = 20
     }
 }

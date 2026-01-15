@@ -11,12 +11,15 @@ import {
     UPDATE_INSTANCE_PAGE_LOADING,
     UPDATE_TEMPLATE_REF,
     UPDATE_TEMPLATE_REF_TYPE,
-    UPDATE_USE_TEMPLATE_SETTING
+    UPDATE_USE_TEMPLATE_SETTING,
+    TRIGGER_MERGE_INSTANCES
 } from './constants'
 export default {
-    [SET_INSTANCE_LIST]: (state, list) => {
+    [SET_INSTANCE_LIST]: (state, { list, init = true }) => {
         Vue.set(state, 'instanceList', list)
-        Vue.set(state, 'initialInstanceList', deepClone(list))
+        if (init) {
+            Vue.set(state, 'initialInstanceList', deepClone(list))
+        }
     },
     [UPDATE_INSTANCE_LIST]: (state, { index, value }) => {
         const newList = state.instanceList.map(i => JSON.parse(JSON.stringify(i)))
@@ -50,5 +53,8 @@ export default {
     },
     [UPDATE_INSTANCE_PAGE_LOADING]: (state, value) => {
         Vue.set(state, 'instancePageLoading', value)
+    },
+    [TRIGGER_MERGE_INSTANCES]: (state, value) => {
+        Vue.set(state, 'shouldMergeInstances', value)
     }
 }

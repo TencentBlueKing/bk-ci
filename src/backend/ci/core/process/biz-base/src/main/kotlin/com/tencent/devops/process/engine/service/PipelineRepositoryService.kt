@@ -395,6 +395,9 @@ class PipelineRepositoryService constructor(
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
+        val randomSeed = AtomicInteger(1)
+        val jobIdSet = mutableSetOf<String>()
         model.projectId = projectId
         model.pipelineId = pipelineId
         model.stages.forEachIndexed { index, s ->
@@ -431,11 +434,12 @@ class PipelineRepositoryService constructor(
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
                     yamlInfo = yamlInfo,
-                    stageIndex = index
+                    stageIndex = index,
+                    randomSeed = randomSeed,
+                    jobIdSet = jobIdSet
                 )
             }
         }
-
         return modelTasks
     }
 
@@ -530,7 +534,9 @@ class PipelineRepositoryService constructor(
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         yamlInfo: PipelineYamlVo?,
-        stageIndex: Int
+        stageIndex: Int,
+        randomSeed: AtomicInteger,
+        jobIdSet: MutableSet<String>
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -540,8 +546,6 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        var randomSeed = 1
-        val jobIdSet = mutableSetOf<String>()
         stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
@@ -564,7 +568,7 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
-            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed.getAndIncrement(), jobIdSet)
             c.jobId?.let { jobIdSet.add(it) }
             try {
                 when {

@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
@@ -70,7 +71,6 @@ import com.tencent.devops.process.yaml.v3.models.IfField
 import com.tencent.devops.process.yaml.v3.models.PreExtends
 import com.tencent.devops.process.yaml.v3.models.PreRepositoryHook
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
-import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import com.tencent.devops.process.yaml.v3.models.YamlTransferData
 import com.tencent.devops.process.yaml.v3.models.YmlName
@@ -403,11 +403,11 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun getRecommendedVersion(recommendedVersion: Any?): RecommendedVersion? {
+    private fun getRecommendedVersion(recommendedVersion: Any?): ExtendsRecommendedVersion? {
         if (recommendedVersion == null) {
             return null
         }
-        return JsonUtil.anyTo(recommendedVersion, object : TypeReference<RecommendedVersion>() {})
+        return JsonUtil.anyTo(recommendedVersion, object : TypeReference<ExtendsRecommendedVersion>() {})
     }
 
     private fun getExtendsTemplateVariables(variables: Any?): Map<String, PreTemplateVariable>? {
@@ -619,6 +619,7 @@ object ScriptYmlUtils {
             ifField = formatIfField(preStep.ifField),
             ifModify = preStep.ifModify,
             uses = preStep.uses,
+            namespace = preStep.namespace,
             with = preStep.with,
             timeoutMinutes = preStep.timeoutMinutes,
             continueOnError = preStep.continueOnError?.toString(),
@@ -789,7 +790,8 @@ object ScriptYmlUtils {
         val res = TriggerOn(
             push = pushRule(preTriggerOn),
             tag = tagRule(preTriggerOn),
-            mr = mrRule(preTriggerOn),
+            mr = mrRule(preTriggerOn.mr),
+            mrMerged = mrRule(preTriggerOn.mrMerged),
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
@@ -1036,10 +1038,9 @@ object ScriptYmlUtils {
     }
 
     private fun mrRule(
-        preTriggerOn: IPreTriggerOn
+        mr: Any?
     ): MrRule? {
-        if (preTriggerOn.mr != null) {
-            val mr = preTriggerOn.mr!!
+        if (mr != null) {
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),

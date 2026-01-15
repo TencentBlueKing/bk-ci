@@ -417,7 +417,8 @@ class TemplateDao {
                 VERSION_NAME,
                 CREATED_TIME,
                 UPDATE_TIME,
-                CREATOR
+                CREATOR,
+                DESC
             )
                 .from(this)
                 .where(ID.eq(templateId))
@@ -460,6 +461,21 @@ class TemplateDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(STORE_FLAG.eq(true))
                 .fetch(SRC_TEMPLATE_ID, String::class.java)
+        }
+    }
+
+    /**
+     * 获取项目下所有模板ID列表
+     */
+    fun listTemplateIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectDistinct(ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetch(ID, String::class.java)
         }
     }
 

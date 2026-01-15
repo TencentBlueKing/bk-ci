@@ -98,7 +98,7 @@
                     <atom-checkbox
                         name="required"
                         :text="$t('editPage.showOnExec')"
-                        :desc="$t('newui.pipelineParam.buildParamTips')"
+                        :desc="requiredTips"
                         :disabled="disabled"
                         :value="param.required"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
@@ -110,6 +110,17 @@
                         :disabled="disabled"
                         :text="$t('editPage.required')"
                         :value="param.valueNotEmpty"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
+                    <atom-checkbox
+                        v-if="!!templateId"
+                        name="asInstanceInput"
+                        class="ml10"
+                        v-show="param.required"
+                        :disabled="disabled"
+                        :desc="$t('editPage.instanceRequiredTips')"
+                        :text="$t('editPage.instanceRequired')"
+                        :value="param.asInstanceInput"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
@@ -264,7 +275,7 @@
                         ...item,
                         key: item.id
                     }))
-                    
+
                 }
             },
             displayConditionSetting () {
@@ -276,6 +287,14 @@
                         }))
                     }
                 }
+            },
+            templateId () {
+                return this.$route.params.templateId
+            },
+            requiredTips () {
+                return this.templateId
+                    ? this.$t('editPage.templateBuildParamTips')
+                    : this.$t('newui.pipelineParam.buildParamTips')
             }
         },
         created () {
@@ -305,8 +324,14 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
-                // 新增跟编辑时，list不一样
-                return this.globalParams.map(p => p[field]).filter(item => item !== this.initParamItem[field]).join(',')
+                return this.globalParams
+                    .filter((item) => item[field] !== this.initParamItem[field])
+                    .map((p) =>
+                        typeof p[field] === 'string'
+                            ? encodeURIComponent(p[field])
+                            : p[field]
+                    )
+                    .join(',')
             },
             isParamChanged () {
                 return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
@@ -328,8 +353,8 @@
         line-height: 20px;
     }
     .neccessary-checkbox {
-        margin-left: 24px;
+        margin-left: 15px;
         border-left: 1px solid #D8D8D8;
-        padding-left: 24px;
+        padding-left: 15px;
     }
 </style>

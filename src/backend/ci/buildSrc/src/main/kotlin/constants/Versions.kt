@@ -21,7 +21,7 @@ object Versions {
     const val DockerJava = "3.3.6"
     const val DdPlist = "1.28"
     const val ApkParser = "2.6.10"
-    const val TencentBkRepo = "2.5.0-rc.6-RELEASE"
+    const val TencentBkRepo = "3.1.0-rc.2-RELEASE"
     const val Ant = "1.10.14"
     const val Cglib = "2.2.2"
     const val Sigar = "1.6.4"
@@ -53,5 +53,6 @@ object Versions {
     const val Winp = "1.28"
     const val Jna = "5.14.0"
     const val JenkinsVersionNumber = "1.1"
-    const val devopsScm = "1.1.5"
+    const val devopsScm = "1.1.7"
+    const val lettuce = "6.4.2.RELEASE"
 }

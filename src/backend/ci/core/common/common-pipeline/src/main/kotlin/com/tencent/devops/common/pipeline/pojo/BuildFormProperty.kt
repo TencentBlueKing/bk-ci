@@ -103,6 +103,11 @@ data class BuildFormProperty(
     val payload: Any? = null,
     @get:Schema(title = "级联选择器属性", required = false)
     var cascadeProps: BuildCascadeProps? = null,
+    @get:Schema(
+        title = "在新增实例、以及新增变量时作用，控制实例化页面「实例入参」按钮, 当required:true时,值才生效",
+        required = false
+    )
+    var asInstanceInput: Boolean? = null,
     @get:Schema(title = "所属公共变量组名称", required = false)
     var varGroupName: String? = null,
     @get:Schema(title = "所属公共变量组版本", required = false)

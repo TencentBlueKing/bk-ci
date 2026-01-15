@@ -89,12 +89,16 @@ Vue.prototype.$bkMessage = function (config) {
     bkMagic.bkMessage(config)
 }
 /* eslint-disable */
-// 扩展字符串，判断是否为蓝盾变量格式
+// 扩展字符串，判断是否为蓝盾变量格式（传统模式变量格式）
 String.prototype.isBkVar = function () {
     return (
         /\$\{\{([\w_.-]+)\}\}/.test(this) || 
         /\$\{([\w_.-]+)\}/.test(this)
       )
+}
+// 制约模式下的变量格式
+String.prototype.isBKConstraintVar = function () {
+    return /\$\{\{([\w_.-]+)\}\}/.test(this)
 }
 // 提取蓝盾变量名
 String.prototype.extractBkVar = function () {

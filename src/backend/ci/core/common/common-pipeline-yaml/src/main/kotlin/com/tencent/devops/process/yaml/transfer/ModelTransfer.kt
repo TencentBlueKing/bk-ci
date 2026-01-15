@@ -41,10 +41,12 @@ import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
@@ -123,7 +125,8 @@ class ModelTransfer @Autowired constructor(
                 projectId = yamlInput.projectCode,
                 notices = yaml.notices?.filter { it.checkNotifyForFail() }
             ),
-            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false)
+            failIfVariableInvalid = yaml.failIfVariableInvalid.nullIfDefault(false),
+            buildCancelPolicy = BuildCancelPolicy.codeParse(yaml.cancelPolicy)
         )
     }
 
@@ -138,7 +141,6 @@ class ModelTransfer @Autowired constructor(
     private fun yamlSyntaxDialect2Setting(syntaxDialectType: String?): PipelineAsCodeSettings? {
         if (syntaxDialectType.isNullOrBlank()) return null
         return when (syntaxDialectType) {
-            SyntaxDialectType.INHERIT.name -> PipelineAsCodeSettings(inheritedDialect = true)
             SyntaxDialectType.CLASSIC.name -> PipelineAsCodeSettings(
                 inheritedDialect = false,
                 pipelineDialect = PipelineDialectType.CLASSIC.name
@@ -149,7 +151,7 @@ class ModelTransfer @Autowired constructor(
                 pipelineDialect = PipelineDialectType.CONSTRAINED.name
             )
 
-            else -> null
+            else -> PipelineAsCodeSettings(inheritedDialect = true)
         }
     }
 
@@ -230,20 +232,20 @@ class ModelTransfer @Autowired constructor(
                         stepId = it.key,
                         disabled = it.value.disabled,
                         cron = it.value.cron?.let { c -> listOf(c) },
-                        variables = it.value.variables
+                        variables = it.value.variables?.map { v ->
+                            TemplateVariable(key = v.key, value = v.value)
+                        }
                     )
                 },
                 recommendedVersion = template.recommendedVersion?.let {
                     TemplateInstanceRecommendedVersion(
-                        enabled = it.enabled,
+                        allowModifyAtStartup = it.allowModifyAtStartup,
                         major = it.major,
                         minor = it.minor,
                         fix = it.fix,
-                        buildNo = BuildNo(
-                            it.buildNo.initialValue,
-                            RecommendedVersion.Strategy.parse(it.buildNo.strategy).toBuildNoType(),
-                            required = it.allowModifyAtStartup
-                        )
+                        buildNo = it.buildNo?.let { buildNo ->
+                            TemplateInstanceRecommendedVersion.BuildNo(buildNo.initialValue)
+                        }
                     )
                 }
             )
@@ -345,6 +347,8 @@ class ModelTransfer @Autowired constructor(
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK ||
             modelInput.pipelineInfo?.locked == true).nullIfDefault(false)
         yaml.failIfVariableInvalid = modelInput.setting.failIfVariableInvalid.nullIfDefault(false)
+        yaml.cancelPolicy =
+            modelInput.setting.buildCancelPolicy.nullIfDefault(BuildCancelPolicy.EXECUTE_PERMISSION)?.yamlCode()
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)
         return yaml
     }
@@ -404,20 +408,22 @@ class ModelTransfer @Autowired constructor(
                             ExtendsTriggerConfig(
                                 disabled = it.disabled,
                                 cron = it.cron?.firstOrNull(),
-                                variables = it.variables
+                                variables = it.variables?.filter { v -> v.value != null }
+                                    ?.associateBy({ v -> v.key }, { v -> v.value!! })
                             )
                         }
                     )?.ifEmpty { null },
                     recommendedVersion = recommendedVersion?.let {
-                        RecommendedVersion(
-                            enabled = it.enabled,
+                        ExtendsRecommendedVersion(
+                            allowModifyAtStartup = it.allowModifyAtStartup,
                             major = it.major,
                             minor = it.minor,
                             fix = it.fix,
-                            buildNo = RecommendedVersion.BuildNo(
-                                it.buildNo.buildNo,
-                                RecommendedVersion.Strategy.parse(it.buildNo.buildNoType).alis
-                            )
+                            buildNo = it.buildNo?.let { buildNo ->
+                                ExtendsRecommendedVersion.BuildNo(
+                                    initialValue = buildNo.buildNo,
+                                )
+                            }
                         )
                     }
                 )

@@ -61,6 +61,7 @@ interface PreScriptBuildYamlIParser : YamlVersionParser {
     val customBuildNum: String?
     val syntaxDialect: String?
     val failIfVariableInvalid: Boolean?
+    val cancelPolicy: String?
 }
 
 /**
@@ -90,7 +91,8 @@ data class PreScriptBuildYamlParser(
     override val recommendedVersion: RecommendedVersion? = null,
     override val customBuildNum: String? = null,
     override val syntaxDialect: String?,
-    override val failIfVariableInvalid: Boolean? = null
+    override val failIfVariableInvalid: Boolean? = null,
+    override val cancelPolicy: String? = null
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V2_0
 

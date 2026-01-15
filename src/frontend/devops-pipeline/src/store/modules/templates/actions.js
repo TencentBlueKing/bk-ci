@@ -124,10 +124,14 @@ const actions = {
             stepId: i.stepId ?? '',
             disabled: Object.hasOwnProperty.call(i?.additionalOptions ?? {}, 'enable') ? !i?.additionalOptions?.enable : false,
             cron: i.advanceExpression,
-            variables: i.startParams,
             name: i.name,
             version: i.version,
-            isFollowTemplate: true
+            isFollowTemplate: true,
+            ...(
+                i.startParams ? {
+                    variables: JSON.parse(i.startParams)
+                } : {}
+            )
         }))
         commit(SET_TEMPLATE_DETAIL, {
             templateDetail: {
@@ -181,7 +185,7 @@ const actions = {
     getTagsListByProjectId ({ commit }, { projectId, searchKey, repoHashId }) {
         return ajax.post(`${REPOSITORY_API_URL_PREFIX}/user/scm/repository/api/${projectId}/listTags?repositoryType=ID&repoHashIdOrName=${repoHashId}&page=1&pageSize=200&search=${searchKey}`)
     },
-    updateInstancePageLoading ({ commit} , value) {
+    updateInstancePageLoading ({ commit }, value) {
         commit(UPDATE_INSTANCE_PAGE_LOADING, value)
     },
     requestTemplatePreviewByVersion (_, { projectId, templateId, ...params }) {
@@ -191,6 +195,11 @@ const actions = {
             return response.data
         })
     },
+    checkTemplatePipelineRollback ({ commit }, { projectId, pipelineId, version }) {
+        return ajax.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/canRollback?version=${version}`).then(response => {
+            return response
+        })
+    }
 }
 
 export default actions

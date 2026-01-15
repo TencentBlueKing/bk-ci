@@ -1,14 +1,11 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ELEMENT_NAMESPACE_NOT_SUPPORT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.job.Job
@@ -36,11 +33,36 @@ object PipelineTransferAspectLoader {
         return instance
     }
 
+    fun yaml2ModelAspects(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        checkLockResourceJob(aspects)
+        checkJobId(aspects)
+    }
+
+    private fun checkJobId(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ) {
+        val jobsCheck = mutableSetOf<String/*job_id*/>()
+        aspects.add(
+            object : IPipelineTransferAspectJob {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    val job = jp.modelJob()
+                    if (job?.jobId != null && !jobsCheck.add(job.jobId!!)) {
+                        throw ErrorCodeException(
+                            errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
+                            params = arrayOf(job.name, job.jobId!!)
+                        )
+                    }
+                }
+            })
+    }
+
     /*
     * feat：第三方构建机 Job 间复用构建环境支持 Code 配置 #10254
     * 支持检查值的有效性
     * */
-    fun checkLockResourceJob(
+    private fun checkLockResourceJob(
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ) {
         val jobsCheck = mutableListOf<String/*job_id*/>()
@@ -173,44 +195,7 @@ object PipelineTransferAspectLoader {
         defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
-        // val repoName = lazy { defaultRepo() }
-        /*aspects.add(
-            object : IPipelineTransferAspectTrigger {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
-                        jp.yamlTriggerOn()!!.repoName = repoName.value
-                    }
-                    return null
-                }
-            }
-        )*/
-        /*checkout 新增 self类型，此处暂时去掉转换 */
-//        aspects.add(
-//            object : IPipelineTransferAspectElement {
-//                override fun before(jp: PipelineTransferJoinPoint): Any? {
-//                    if (jp.yamlStep() != null && jp.yamlStep()!!.checkout == "self") {
-//                        jp.yamlStep()!!.checkout = repoName.value
-//                    }
-//                    return null
-//                }
-//            }
-//        )
-        /*aspects.add(
-            // 一个触发器时，如果为默认仓库则忽略repoName和type
-            object : IPipelineTransferAspectModel {
-                override fun after(jp: PipelineTransferJoinPoint) {
-                    if (jp.yaml() is PreTemplateScriptBuildYamlV3 &&
-                        (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn is PreTriggerOnV3
-                    ) {
-                        val triggerOn = (jp.yaml() as PreTemplateScriptBuildYamlV3).triggerOn as PreTriggerOnV3
-                        if (triggerOn.repoName == repoName.value) {
-                            triggerOn.repoName = null
-                            triggerOn.type = null
-                        }
-                    }
-                }
-            }
-        )*/
+        // 可以在此添加公共策略
         return aspects
     }
 
@@ -226,29 +211,6 @@ object PipelineTransferAspectLoader {
                     if (jp.yamlPreStep() == null) {
                         invalidElement.add("${jp.modelElement()?.getClassType()}(${jp.modelElement()?.name})")
                     }
-                }
-            }
-        )
-
-        // feat: PAC Code 检测流水线是否使用了命名空间 #11879
-        aspects.add(
-            object : IPipelineTransferAspectElement {
-                override fun before(jp: PipelineTransferJoinPoint): Any? {
-                    if (jp.modelElement() != null &&
-                        jp.modelElement() is MarketBuildAtomElement
-                    ) {
-                        val element = jp.modelElement() as MarketBuildAtomElement
-                        val namespace = element.data["namespace"] as String? ?: return null
-                        if (namespace.isNotBlank()) {
-                            invalidNameSpaceElement.add(
-                                I18nUtil.getCodeLanMessage(
-                                    BK_ELEMENT_NAMESPACE_NOT_SUPPORT,
-                                    params = arrayOf("${element.name}[${element.stepId}]")
-                                )
-                            )
-                        }
-                    }
-                    return null
                 }
             }
         )

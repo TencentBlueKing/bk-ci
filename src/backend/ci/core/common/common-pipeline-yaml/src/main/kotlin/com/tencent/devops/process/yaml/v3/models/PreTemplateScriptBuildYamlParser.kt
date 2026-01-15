@@ -66,6 +66,7 @@ interface IPreTemplateScriptBuildYamlParser : YamlVersionParser {
     var customBuildNum: String?
     var syntaxDialect: String?
     var failIfVariableInvalid: Boolean?
+    var cancelPolicy: String?
 
     fun replaceTemplate(f: (param: ITemplateFilter) -> PreScriptBuildYamlIParser)
 
@@ -147,7 +148,9 @@ data class PreTemplateScriptBuildYamlParser(
     @JsonProperty("syntax-dialect")
     override var syntaxDialect: String? = null,
     @JsonProperty("fail-if-variable-invalid")
-    override var failIfVariableInvalid: Boolean? = null
+    override var failIfVariableInvalid: Boolean? = null,
+    @JsonProperty("cancel-policy")
+    override var cancelPolicy: String? = null
 ) : IPreTemplateScriptBuildYamlParser, ITemplateFilter {
 
     init {

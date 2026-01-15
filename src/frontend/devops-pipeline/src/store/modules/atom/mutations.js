@@ -381,7 +381,9 @@ export default {
         containers.push(newContainer)
     },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
-        Object.assign(container, newParam)
+        Object.keys(newParam).forEach(key => {
+            Vue.set(container, key, newParam[key])
+        })
     },
     [INSERT_ATOM]: (state, { elements, insertIndex }) => {
         elements.splice(insertIndex, 0, {
@@ -407,6 +409,10 @@ export default {
     [SET_PIPELINE_EXEC_DETAIL]: (state, execDetail = null) => {
         if (execDetail?.model?.stages) {
             execDetail.model.stages = execDetail.model.stages.slice(1)
+        }
+        // Ensure cancelBuildPerm exists
+        if (execDetail && !Object.prototype.hasOwnProperty.call(execDetail, 'cancelBuildPerm')) {
+            execDetail.cancelBuildPerm = state.execDetail?.cancelBuildPerm ?? true
         }
         Object.assign(state, {
             execDetail

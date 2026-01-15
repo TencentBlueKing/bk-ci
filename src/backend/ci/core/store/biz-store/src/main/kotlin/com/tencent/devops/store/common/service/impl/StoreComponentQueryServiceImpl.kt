@@ -100,6 +100,7 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -189,6 +190,7 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     companion object {
         private val executor = Executors.newFixedThreadPool(30)
+        private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
     }
 
     private val storeBusNumCache = Caffeine.newBuilder()
@@ -846,6 +848,24 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
             // 其他情况不需要升级
             else -> null
         }
+    }
+
+    override fun getStoreUpgradeStatusInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String
+    ): Result<String?> {
+        val record = storeBaseQueryDao.getComponentStatusInfo(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = StoreTypeEnum.valueOf(storeType)
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        return Result(record.value1())
     }
 
     private fun isUpdateRequired(

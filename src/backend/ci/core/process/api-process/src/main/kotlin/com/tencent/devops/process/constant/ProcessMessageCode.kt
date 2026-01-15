@@ -442,7 +442,14 @@ object ProcessMessageCode {
 
     const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
+    const val ERROR_JOB_ID_DUPLICATE = "2101337" // Job ID在流水线下需全局唯一，存在重复ID[$0]的Job，保存失败!
+    const val ERROR_STEP_ID_DUPLICATE = "2101338" // Step ID在Job下需全局唯一，Job[$0]下存在重复ID[$1]的Step，保存失败!
+    // 存量的实例化版本，不支持一键回滚
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK = "2101339"
+    const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
 
+    // 触发事件缓存过期已清理。若需重放，请到代码库操作。
+    const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
     const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101341" // 流水线公共变量组({0})已存在
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101342" // 流水线公共变量组中变量名称格式错误
     // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
@@ -656,6 +663,8 @@ object ProcessMessageCode {
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+
+    const val BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC = "bkTemplateVersionRefactorSuffixDesc"
 
     // 没有子流水线执行权限错误标题
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"

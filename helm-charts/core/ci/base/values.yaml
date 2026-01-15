@@ -1143,19 +1143,18 @@ turbo:
     targetCPU: 80
     targetMemory: 80
 
-# gateway Deployment
-gateway:
+# frontend Deployment
+frontend:
   enabled: true
-  type: ClusterIP
   replicas: 1
   podLabels: {}
   resources:
     requests:
       cpu: 100m
-      memory: 500Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 800Mi
+      memory: 1024Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1182,21 +1181,19 @@ gateway:
     targetCPU: 80
     targetMemory: 80
 
-# stream Deployment
-stream:
-  enabled: false
+# gateway Deployment
+gateway:
+  enabled: true
+  type: ClusterIP
   replicas: 1
   podLabels: {}
   resources:
     requests:
       cpu: 100m
-      memory: 2000Mi
+      memory: 500Mi
     limits:
       cpu: 500m
-      memory: 3000Mi
-  jvm:
-    heapPct: "70.0"
-    initSecs: 50
+      memory: 800Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
