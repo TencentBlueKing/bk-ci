@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_COMMIT_LIST
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_COMMIT_LIST_MAX_LENGTH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
@@ -159,12 +160,15 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[PIPELINE_GIT_REPO_NAME] = name
         startParams[PIPELINE_GIT_REPO_GROUP] = group
         startParams[PIPELINE_GIT_SHA] = matcher.getRevision()
-        startParams[BK_REPO_WEBHOOK_COMMIT_LIST] = matcher.getWebhookCommitList(
+        // 获取并缓存hook提交信息，后续上报构建任务关联提交信息
+        val webhookCommitList = matcher.getWebhookCommitList(
             projectId = repo.projectId ?: "",
             repository = repo,
             page = 1,
-            size = 50
+            size = BK_REPO_WEBHOOK_COMMIT_LIST_MAX_LENGTH
         )
+        // 记录前50条提交信息用于触发材料展示
+        startParams[BK_REPO_WEBHOOK_COMMIT_LIST] = webhookCommitList.subList(0, 50)
         return startParams
     }
 
