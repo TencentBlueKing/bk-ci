@@ -1,4 +1,4 @@
-package com.tencent.devops.common.redis.split
+package com.tencent.devops.common.redis.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
