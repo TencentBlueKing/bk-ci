@@ -122,7 +122,8 @@ enum class PoolType {
 
                         else -> null
                     },
-                    hwSpec = dispatcher.performanceConfigId
+                    // 优先使用performanceUid，如果为空则使用performanceConfigId
+                    hwSpec = dispatcher.performanceUid?.takeIf { it.isNotBlank() } ?: dispatcher.performanceConfigId
                 )
             }
             return null

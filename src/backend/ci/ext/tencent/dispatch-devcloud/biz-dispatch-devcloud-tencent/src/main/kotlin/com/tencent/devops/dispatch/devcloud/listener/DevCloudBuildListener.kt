@@ -14,7 +14,6 @@ import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerCon
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -105,7 +104,8 @@ class DevCloudBuildListener @Autowired constructor(
                     customBuildEnv = dispatchMessage.customBuildEnv,
                     containerHashId = containerHashId,
                     jobId = jobId,
-                    persistence = (dispatchType as PublicDevCloudDispathcType).persistence ?: false
+                    persistence = (dispatchType as? PublicDevCloudDispathcType)?.persistence ?: false,
+                    channelCode = channelCode
                 )
             )
         }
@@ -121,9 +121,5 @@ class DevCloudBuildListener @Autowired constructor(
             executeCount = dispatchMessage.event.executeCount,
             jobId = dispatchMessage.event.jobId
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(DevCloudBuildListener::class.java)
     }
 }
