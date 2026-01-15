@@ -692,6 +692,7 @@
     "setTimeCron": "设置定时规则",
     "templatePipelineRollbackNotAllowedTips": "存量版本，不支持一键回滚",
     "resetBuildNoConfirmMessage": "共 {0} 条流水线的 [构建号] 字段在发布正式后将自动重置为基线值，请关注！若无需重置，请取消 [发布正式版本后立即重置为基线值] 的勾选状态。",
+    "draftPublished": "待发布版本的基线版本为 {0}， {1} 当前最新版本 {2}，请谨慎操作！",
     "propertyUpdate": {
       "constName": "常量名",
       "constAlias": "常量别名",

@@ -24,6 +24,17 @@
                     :save="saveTemplateDraft"
                 />
                 <aside class="template-edit-right-aside">
+                    <DraftManager
+                        v-model="isConflictDraft"
+                        :draft-list="draftList"
+                        :laster-draft-info="lasterDraftInfo"
+                        :current-edit-yaml="currentEditYaml"
+                        :draft-yaml="draftYaml"
+                        @diff="handleDiff"
+                        @rollback="handleRollback"
+                        @continue-save-draft="continueSaveDraft"
+                        @go-pipeline-model="goPipelineModel"
+                    />
                     <bk-button
                         theme="primary"
                         @click="saveTemplateDraft"
@@ -66,6 +77,7 @@
     } from '@/utils/util'
     import Edit from '@/views/subpages/edit'
     import { mapActions, mapGetters, mapState } from 'vuex'
+    import DraftManager from '@/components/DraftManager'
 
     export default {
         components: {
@@ -73,12 +85,18 @@
             ReleaseButton,
             ModeSwitch,
             Edit,
+            DraftManager,
             PipelineEditMoreAction
         },
         data () {
             return {
                 isLoading: true,
-                confirmMsg: this.$t('editPage.confirmMsg')
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                draftList: [],
+                lasterDraftInfo: null,
+                isConflictDraft: false,
+                currentEditYaml: '', // 当前编辑的 YAML 内容
+                draftYaml: '' // 选中的草稿的 YAML 内容
             }
         },
         computed: {
@@ -148,6 +166,7 @@
         mounted () {
             this.requestQualityAtom()
             this.requestMatchTemplateRules()
+            this.getDraftList()
         },
         beforeDestroy () {
             this.setPipeline(null)
@@ -165,8 +184,13 @@
                 'setAtomEditing',
                 'requestTemplateSummary',
                 'requestPipeline',
+                'transfer',
+                'fetchPipelineByVersion',
                 'updateContainer'
             ]),
+            ...mapActions({
+                getDraftVersion: 'common/getDraftVersion',
+            }),
             requestTemplateByVersion (version = this.currentVersionId) {
                 try {
                     this.requestPipeline({
@@ -180,6 +204,73 @@
                         message: err.message || err
                     })
                 }
+            },
+            async getDraftList () {
+                try {
+                    // TODO: 使用模板对应的接口
+                    // const res = await this.getDraftVersion({
+                    //     projectId: this.projectId,
+                    //     pipelineId: this.pipelineId,
+                    //     version: this.pipelineInfo?.version
+                    // })
+                    // this.draftList = res
+                    // this.lasterDraftInfo = this.draftList?.[0]
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
+            async handleDiff (draftVersion) {
+                try {
+                    const [newDraftInfo, draftInfo] = await Promise.all([
+                        // 获取当前编辑的yaml数据
+                        this.transfer({
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            actionType: 'FULL_MODEL2YAML',
+                            templateSetting: this.pipelineSetting
+                        }),
+                        // 获取选中草稿的yaml数据
+                        this.fetchPipelineByVersion({
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            version: this.pipelineInfo?.version,
+                            draftVersion
+                        })
+                    ])
+                    
+                    this.currentEditYaml = newDraftInfo.newYaml
+                    this.draftYaml = draftInfo?.yamlPreview?.yaml
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
+            handleRollback (item) {
+                this.$bkInfo({
+                    maskClose: false,
+                    title: this.$t('confirmRollbackToThisHistory'),
+                    subTitle: this.$t('historyRollback', [item.updater, item.updateTime]),
+                    confirmFn: () => {
+                        // TODO 调用回滚接口
+                    }
+                })
+            },
+            goPipelineModel () {
+                // TODO: 跳到模板对应的编排页
+                this.$router.push({
+                    name: 'pipelinesHistory',
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion,
+                        type: 'pipeline'
+                    },
+                    query: this.$route.query
+                })
             },
             async saveTemplateDraft () {
                 const pipeline = Object.assign({}, this.pipeline, {

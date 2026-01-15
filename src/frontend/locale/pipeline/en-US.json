@@ -692,6 +692,7 @@
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
     "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "draftPublished": "The baseline version of the draft to be published is {0}, {1} the current latest version {2}, please proceed with caution!",
     "propertyUpdate": {
       "constName": "Constant Name",
       "constAlias": "Constant Alias",
