@@ -28,7 +28,10 @@
             @enter="fetchEnvList"
             @clear="fetchEnvList"
         />
-        <div class="filer-type-menu">
+        <div
+            v-if="!isCreateResType"
+            class="filer-type-menu"
+        >
             <p class="title">{{ $t('environment.typeFilter') }}</p>
             <div class="type-list">
                 <span
@@ -49,7 +52,9 @@
                 </span>
             </div>
         </div>
-        <div class="env-list-menu">
+        <div
+            :class="['env-list-menu', { 'mt10': isCreateResType }]"
+        >
             <p class="title">{{ $t('environment.environmentList') }}</p>
             <div class="env-list">
                 <span
@@ -124,6 +129,7 @@
     import CreateEnvDialog from '@/components/CreateEnvDialog.vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useEnvAside from '@/hooks/useEnvAside'
+    import useEnvDetail from '@/hooks/useEnvDetail'
 
     export default {
         name: 'GroupAside',
@@ -144,8 +150,12 @@
                 totalEnvCount,
                 initData,
                 fetchEnvList,
-                deleteEnv
+                deleteEnv,
+                isCreateResType
             } = useEnvAside()
+            const {
+                setEnvDetailLoaded
+            } = useEnvDetail()
             const projectId = computed(() => proxy.$route.params.projectId)
             const envId = computed(() => proxy.$route.params?.envId)
             const envTypList = computed(() => ([
@@ -253,8 +263,25 @@
                 })
             }
 
+            const resType = computed(() => proxy.$route.params.resType)
+
             watch(() => projectId.value, async (newProjectId) => {
                 if (newProjectId) {
+                    await initData()
+                }
+            })
+
+            watch(() => resType.value, async (newResType, oldResType) => {
+                if (newResType && newResType !== oldResType) {
+                    await proxy.$router.replace({
+                        name: 'envDetail',
+                        params: {
+                            ...proxy.$route.params,
+                            envId: undefined,
+                            tabName: 'node'
+                        }
+                    })
+                    setEnvDetailLoaded(false)
                     await initData()
                 }
             })
@@ -274,6 +301,7 @@
                 initData,
                 fetchEnvList,
                 showCreateEnvDialog,
+                isCreateResType,
                 ENV_RESOURCE_ACTION,
                 ENV_RESOURCE_TYPE,
 

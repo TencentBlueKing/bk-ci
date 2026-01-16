@@ -482,5 +482,9 @@
     "offlineDuration": "Offline duration",
     "nodeUsage": "Node Usage",
     "buildAgent": "Build Agent",
-    "filterNodeBy": "Filter by {0}, etc."
+    "filterNodeBy": "Filter by {0}, etc.",
+    "creativeResource": "Creative Flow Resources",
+    "pipelineResource": "Pipeline Resource",
+    "relatedCreativeFlow": "Related Creative Flow",
+    "workspace": "Workspace"
 }

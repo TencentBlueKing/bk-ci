@@ -477,5 +477,9 @@
     "offlineDuration": "オフライン時間",
     "nodeUsage": "ノード用途",
     "buildAgent": "ビルドAgent",
-    "filterNodeBy": "{0}などでフィルタリングします"
+    "filterNodeBy": "{0}などでフィルタリングします",
+    "creativeResource": "クリエイティブフローリソース",
+    "pipelineResource": "パイプラインリソース",
+    "relatedCreativeFlow": "関連クリエイティブフロー",
+    "workspace": "ワークスペース"
 }

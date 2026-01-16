@@ -72,7 +72,6 @@ const routes = [
                                     collapsePageName: 'nodeList',
                                 }
                             },
-
                         ],
                         meta: {
                             title: 'nodeList',
