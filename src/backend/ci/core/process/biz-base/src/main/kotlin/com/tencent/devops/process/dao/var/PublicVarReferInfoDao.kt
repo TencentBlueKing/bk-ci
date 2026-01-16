@@ -37,11 +37,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarReferInfoDao {
 
-    companion object {
-        // 默认版本标识（动态版本）
-        private const val DYNAMIC_VERSION = -1
-    }
-
     /**
      * 批量保存变量引用信息
      * @param dslContext 数据库上下文
@@ -604,6 +599,42 @@ class PublicVarReferInfoDao {
                 .and(VERSION.eq(version))
                 .and(VAR_NAME.eq(varName))
                 .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    /**
+     * 批量统计多个变量的引用数量（按 referId 去重）
+     * 用于查询变量列表时显示实际引用该变量的资源数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 变量组版本
+     * @param varNames 变量名列表
+     * @return Map<String, Int> 变量名到引用数量的映射
+     */
+    fun batchCountDistinctReferIdsByVars(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varNames: List<String>
+    ): Map<String, Int> {
+        if (varNames.isEmpty()) {
+            return emptyMap()
+        }
+
+        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
+            return dslContext.select(VAR_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.`in`(varNames))
+                .groupBy(VAR_NAME)
+                .fetch()
+                .associate { record ->
+                    record.getValue(VAR_NAME) to (record.getValue(1, Int::class.java) ?: 0)
+                }
         }
     }
 }

@@ -30,8 +30,8 @@ package com.tencent.devops.common.pipeline.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
@@ -49,7 +49,7 @@ interface ServiceModelHandleResource {
 
     @Operation(summary = "更新模型参数")
     @POST
-    @Path("update/params")
+    @Path("/update/params")
     fun handlePipelineModelParams(
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)

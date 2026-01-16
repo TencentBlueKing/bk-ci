@@ -156,7 +156,7 @@ class PipelineOverviewDao {
     }
 
     /**
-     * 批量查询多个流水线近一月内执行次数
+     * 批量查询多个流水线区间内执行次数
      */
     fun queryPipelineMonthlyExecCounts(
         dslContext: DSLContext,

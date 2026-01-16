@@ -37,7 +37,6 @@ import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionServi
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
@@ -54,7 +53,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun addGroup(
         userId: String,
         projectId: String,
-        operateType: OperateTypeEnum,
         publicVarGroup: PublicVarGroupVO
     ): Result<String> {
         // 校验创建权限
@@ -68,8 +66,7 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
                 PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
-                    publicVarGroup = publicVarGroup,
-                    operateType = operateType
+                    publicVarGroup = publicVarGroup
                 )
             )
         )
@@ -120,7 +117,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     override fun importGroup(
         userId: String,
         projectId: String,
-        operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
     ): Result<String> {
         // 校验创建权限
@@ -132,7 +128,6 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         return Result(publicVarGroupService.importGroup(
             userId = userId,
             projectId = projectId,
-            operateType = operateType,
             yaml = yaml
         ))
     }

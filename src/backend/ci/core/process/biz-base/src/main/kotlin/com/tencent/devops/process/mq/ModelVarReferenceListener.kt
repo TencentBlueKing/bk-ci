@@ -29,6 +29,7 @@ package com.tencent.devops.process.mq
 
 import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.pipeline.ModelHandleService
+import com.tencent.devops.common.pipeline.ModelVarReferenceHandleContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,10 +54,12 @@ class ModelVarReferenceListener @Autowired constructor(
             // 调用 handleModelVarReferences 方法处理变量引用
             modelHandleService.handleModelVarReferences(
                 userId = event.userId,
-                projectId = event.projectId,
-                resourceId = event.resourceId,
-                resourceType = event.resourceType,
-                resourceVersion = event.resourceVersion
+                context = ModelVarReferenceHandleContext(
+                    projectId = event.projectId,
+                    resourceId = event.resourceId,
+                    resourceType = event.resourceType,
+                    resourceVersion = event.resourceVersion
+                )
             )
 
             logger.info(

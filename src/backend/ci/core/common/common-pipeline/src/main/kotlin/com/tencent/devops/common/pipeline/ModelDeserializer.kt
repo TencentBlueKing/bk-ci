@@ -104,7 +104,11 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         model: Model,
         modelHandleService: ModelHandleService?
     ) {
-        val projectId = model.projectId!!
+        val projectId = model.projectId
+        if (projectId.isNullOrBlank()) {
+            logger.warn("No valid project ID found for TriggerContainer")
+            return
+        }
         val pipelineId = model.pipelineId
         val templateId = model.templateId
         

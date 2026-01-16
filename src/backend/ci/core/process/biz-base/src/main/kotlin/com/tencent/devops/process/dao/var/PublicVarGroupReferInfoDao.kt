@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo
 import com.tencent.devops.model.process.tables.records.TResourcePublicVarGroupReferInfoRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.VarGroupReferInfoUpdatePO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -42,8 +44,8 @@ import org.springframework.stereotype.Repository
 class PublicVarGroupReferInfoDao {
 
     companion object {
-        // 默认版本标识（动态版本）
-        private const val DYNAMIC_VERSION = -1
+        // 窗口函数行号字段
+        private val ROW_NUMBER_FIELD = DSL.field("rn", Int::class.java)
     }
 
     /**
@@ -128,24 +130,30 @@ class PublicVarGroupReferInfoDao {
                 conditions.add(VERSION.eq(version))
             }
 
-            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val t2 = this.`as`("t2")
-            return dslContext.selectFrom(this)
+            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val rowNumberField = DSL.rowNumber().over(
+                DSL.partitionBy(REFER_ID)
+                    .orderBy(CREATE_TIME.desc())
+            ).`as`(ROW_NUMBER_FIELD)
+
+            val subquery = dslContext.select(
+                DSL.asterisk(),
+                rowNumberField
+            ).from(this)
                 .where(conditions)
-                .and(DSL.notExists(
-                    dslContext.selectOne()
-                        .from(t2)
-                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
-                        .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
-                        .and(t2.REFER_ID.eq(this.REFER_ID))
-                        .and(if (version != null) t2.VERSION.eq(version) else DSL.trueCondition())
-                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
-                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
-                ))
-                .orderBy(UPDATE_TIME.desc())
+                .asTable("ranked_records")
+
+            // 直接使用原表字段引用，类型安全
+            val updateTimeField = subquery.field(UPDATE_TIME)
+            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
+
+            return dslContext.select(subquery.asterisk())
+                .from(subquery)
+                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
+                .orderBy(updateTimeField?.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
-                .fetch()
+                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
                 .map { convertResourcePublicVarGroupReferPO(it) }
         }
     }
@@ -180,24 +188,30 @@ class PublicVarGroupReferInfoDao {
             conditions.add(VERSION.`in`(versions))
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
 
-            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val t2 = this.`as`("t2")
-            return dslContext.selectFrom(this)
+            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val rowNumberField = DSL.rowNumber().over(
+                DSL.partitionBy(REFER_ID)
+                    .orderBy(CREATE_TIME.desc())
+            ).`as`(ROW_NUMBER_FIELD)
+
+            val subquery = dslContext.select(
+                DSL.asterisk(),
+                rowNumberField
+            ).from(this)
                 .where(conditions)
-                .and(DSL.notExists(
-                    dslContext.selectOne()
-                        .from(t2)
-                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
-                        .and(t2.GROUP_NAME.eq(this.GROUP_NAME))
-                        .and(t2.REFER_ID.eq(this.REFER_ID))
-                        .and(t2.VERSION.`in`(versions))
-                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
-                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
-                ))
-                .orderBy(UPDATE_TIME.desc())
+                .asTable("ranked_records")
+
+            // 直接使用原表字段引用，类型安全
+            val updateTimeField = subquery.field(UPDATE_TIME)
+            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
+
+            return dslContext.select(subquery.asterisk())
+                .from(subquery)
+                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
+                .orderBy(updateTimeField?.desc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
-                .fetch()
+                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
                 .map { convertResourcePublicVarGroupReferPO(it) }
         }
     }
@@ -231,22 +245,30 @@ class PublicVarGroupReferInfoDao {
             )
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
 
-            // 查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val t2 = this.`as`("t2")
-            return dslContext.selectFrom(this)
+            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
+            val rowNumberField = DSL.rowNumber().over(
+                DSL.partitionBy(REFER_ID)
+                    .orderBy(CREATE_TIME.desc())
+            ).`as`(ROW_NUMBER_FIELD)
+
+            val subquery = dslContext.select(
+                DSL.asterisk(),
+                rowNumberField
+            ).from(this)
                 .where(conditions)
-                .and(DSL.notExists(
-                    dslContext.selectOne()
-                        .from(t2)
-                        .where(t2.PROJECT_ID.eq(this.PROJECT_ID))
-                        .and(t2.REFER_ID.eq(this.REFER_ID))
-                        .and(referType?.let { t2.REFER_TYPE.eq(it.name) } ?: DSL.trueCondition())
-                        .and(t2.CREATE_TIME.gt(this.CREATE_TIME))
-                ))
-                .orderBy(REFER_ID.asc())
+                .asTable("ranked_records")
+
+            // 直接使用原表字段引用，类型安全
+            val referIdField = subquery.field(REFER_ID)
+            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
+
+            return dslContext.select(subquery.asterisk())
+                .from(subquery)
+                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
+                .orderBy(referIdField?.asc())
                 .limit(pageSize)
                 .offset((page - 1) * pageSize)
-                .fetch()
+                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
                 .map { convertResourcePublicVarGroupReferPO(it) }
         }
     }
@@ -674,32 +696,24 @@ class PublicVarGroupReferInfoDao {
      */
     fun updateVarGroupReferInfo(
         dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        groupName: String,
-        referVersionName: String?,
-        version: Int?,
-        positionInfo: String?,
-        modifier: String,
-        updateTime: java.time.LocalDateTime
+        updatePO: VarGroupReferInfoUpdatePO
     ): Int {
         with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
             val conditions = buildReferConditions(
                 table = this,
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                referVersionName = referVersionName
+                projectId = updatePO.projectId,
+                referId = updatePO.referId,
+                referType = updatePO.referType,
+                referVersionName = updatePO.referVersionName
             ).apply {
-                add(GROUP_NAME.eq(groupName))
+                add(GROUP_NAME.eq(updatePO.groupName))
             }
 
             return dslContext.update(this)
-                .set(VERSION, version)
-                .set(POSITION_INFO, positionInfo)
-                .set(MODIFIER, modifier)
-                .set(UPDATE_TIME, updateTime)
+                .set(VERSION, updatePO.version)
+                .set(POSITION_INFO, updatePO.positionInfo)
+                .set(MODIFIER, updatePO.modifier)
+                .set(UPDATE_TIME, updatePO.updateTime)
                 .where(conditions)
                 .execute()
         }

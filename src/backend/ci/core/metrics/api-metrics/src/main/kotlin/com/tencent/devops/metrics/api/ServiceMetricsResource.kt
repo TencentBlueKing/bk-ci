@@ -124,7 +124,7 @@ interface ServiceMetricsResource {
     ): Result<MaxJobConcurrencyVO?>
 
     @Operation(summary = "批量查询流水线最近一月执行次数(列表参数)")
-    @Path("/summary_pipeline/monthly/batch/list")
+    @Path("/pipelines/monthlyExecutionCount/batch")
     @POST
     fun queryPipelineMonthlyExecCountByList(
         @Parameter(description = "项目ID", required = true)

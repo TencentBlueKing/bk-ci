@@ -449,8 +449,7 @@ object ProcessMessageCode {
     const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
 
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
-    const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
-    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101341" // 流水线公共变量组({0})已存在
+    const val ERROR_TRIGGER_EVENT_EXPIRED = "2101341"
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101342" // 流水线公共变量组中变量名称格式错误
     // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101343"
@@ -469,8 +468,11 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101355" // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线
     const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101356" // 公共变量组YAML包含未知字段: {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101357" // 公共变量组YAML格式不正确，请检查字段类型
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101358" // 公共变量组YAML缺少必填字段
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101358" // 公共变量组YAML缺少必填字段 {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101359" // 公共变量组YAML格式错误
+    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101360" // 流水线公共变量组({0})已存在
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101361" // 变量组引用计数更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101362" // 变量组引用信息查询失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -735,4 +737,12 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    const val DYNAMIC_VERSION = -1
+
+    // 公共变量组锁相关常量
+    const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
+    const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
+    const val PUBLIC_VAR_GROUP_REFER_COUNT_LOCK_KEY = "PUBLIC_VAR_GROUP_REFER_COUNT_LOCK"
+    const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
 }

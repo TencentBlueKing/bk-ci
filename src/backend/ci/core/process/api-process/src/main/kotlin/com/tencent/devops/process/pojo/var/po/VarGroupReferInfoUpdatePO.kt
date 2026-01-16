@@ -25,20 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.pojo.`var`.po
 
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "变量引用信息")
-data class VarReferenceInfo(
-    @get:Schema(title = "变量名称", required = true)
-    val varName: String,
-    @get:Schema(title = "步骤ID", required = true)
-    val stageId: String,
-    @get:Schema(title = "构建容器ID", required = true)
-    val containerId: String? = null,
-    @get:Schema(title = "任务ID", required = false)
-    val taskId: String? = null,
-    @get:Schema(title = "引用变量的参数路径（如：stages[1].containers[0].elements[0].script）", required = true)
-    val positionPath: String
+@Schema(title = "变量组引用信息更新参数")
+data class VarGroupReferInfoUpdatePO(
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "关联ID")
+    val referId: String,
+    @get:Schema(title = "关联类型")
+    val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "引用的版本名称")
+    val referVersionName: String? = null,
+    @get:Schema(title = "版本号")
+    val version: Int? = null,
+    @get:Schema(title = "变量位置信息")
+    val positionInfo: String? = null,
+    @get:Schema(title = "修改者")
+    val modifier: String,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
 )

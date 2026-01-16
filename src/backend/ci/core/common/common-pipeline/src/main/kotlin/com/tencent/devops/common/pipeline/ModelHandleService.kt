@@ -20,18 +20,11 @@ interface ModelHandleService {
 
     /**
      * 处理模型中所有变量的引用
-     * @param projectId 项目ID
-     * @param model 模型对象
-     * @param resourceId 资源ID
-     * @param resourceType 资源类型
-     * @param resourceVersion 资源版本
+     * @param userId 用户ID
+     * @param context Model变量引用处理上下文
      */
     fun handleModelVarReferences(
         userId: String,
-        projectId: String,
-        resourceId: String,
-        resourceType: String,
-        model: Model? = null,
-        resourceVersion: Int
+        context: ModelVarReferenceHandleContext
     )
 }

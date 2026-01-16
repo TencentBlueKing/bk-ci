@@ -44,8 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.PublicVarGroupVariable
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_IS_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD
@@ -66,7 +66,6 @@ import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
@@ -105,11 +104,6 @@ class PublicVarGroupService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
         
-        // 锁相关常量
-        private const val PUBLIC_VER_GROUP_ADD_LOCK_KEY = "PUBLIC_VER_GROUP_ADD_LOCK"
-        private const val PUBLIC_VER_GROUP_DELETE_LOCK_KEY = "PUBLIC_VER_GROUP_DELETE_LOCK"
-        private const val LOCK_EXPIRED_TIME_IN_SECONDS = 5L
-        
         // 正则表达式常量
         private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
         private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -121,20 +115,15 @@ class PublicVarGroupService @Autowired constructor(
         val groupName = publicVarGroupDTO.publicVarGroup.groupName
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${PUBLIC_VER_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_ADD_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
             publicVarService.checkGroupPublicVar(publicVarGroupDTO.publicVarGroup.publicVars)
             val version = publicVarGroupDao.getLatestVersionByGroupName(dslContext, projectId, groupName) ?: 0
-            val operateType = publicVarGroupDTO.operateType
-            if (operateType == OperateTypeEnum.CREATE && version > 0) {
-                throw ErrorCodeException(
-                    errorCode = ERROR_PUBLIC_VAR_GROUP_IS_EXIST,
-                    params = arrayOf(groupName)
-                )
-            }
+            // 通过数据库查询判断操作类型：version为0表示新增，否则为升级版本
+            val isCreate = (version == 0)
             val newVersion = version + 1
             // 计算新版本的初始引用计数（只统计动态版本引用）
             val newVersionReferCount = if (version != 0) {
@@ -172,7 +161,7 @@ class PublicVarGroupService @Autowired constructor(
                     projectId = projectId,
                     groupName = groupName,
                     version = version,
-                    latestFlag = false
+                    redisLock = redisLock
                 )
             }
 
@@ -202,19 +191,18 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             // 提交后再更新新版本的引用计数
-            // 新版本使用 latestFlag = true，统计所有动态引用（version=-1）和固定版本引用
             if (newVersionReferCount > 0) {
                 publicVarGroupReferInfoService.updateSingleGroupReferCount(
                     context = dslContext,
                     projectId = projectId,
                     groupName = groupName,
                     version = newVersion,
-                    latestFlag = true
+                    redisLock = redisLock
                 )
             }
 
             // 如果是新建变量组（首次创建），注册到权限中心
-            if (operateType == OperateTypeEnum.CREATE) {
+            if (isCreate) {
                 publicVarGroupPermissionService.createResource(
                     userId = userId,
                     projectId = projectId,
@@ -332,11 +320,32 @@ class PublicVarGroupService @Autowired constructor(
             emptyMap()
         }
 
-        // 直接使用表中的REFER_COUNT字段
+        // 批量查询所有版本的引用数量（按 referId 去重）
+        val referCountMap = if (groupNameList.isNotEmpty()) {
+            groupNameList.associateWith { groupName ->
+                // 查询该变量组的所有引用记录（所有版本）
+                val allReferRecords = with(com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+                    dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId))
+                        .and(GROUP_NAME.eq(groupName))
+                        .fetch()
+                }
+                
+                // 提取所有 referId 并去重，得到实际引用数量
+                allReferRecords
+                    .map { it.referId }
+                    .toSet()
+                    .size
+            }
+        } else {
+            emptyMap()
+        }
+        
         val records = groupPOs.map { po ->
+            val actualReferCount = referCountMap[po.groupName] ?: 0
             PublicVarGroupDO(
                 groupName = po.groupName,
-                referCount = po.referCount,
+                referCount = actualReferCount,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,
@@ -366,7 +375,6 @@ class PublicVarGroupService @Autowired constructor(
     fun importGroup(
         userId: String,
         projectId: String,
-        operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
     ): String {
         val publicVarGroupVO = parseYamlToPublicVarGroupVO(yaml)
@@ -375,8 +383,7 @@ class PublicVarGroupService @Autowired constructor(
             PublicVarGroupDTO(
                 projectId = projectId,
                 userId = userId,
-                publicVarGroup = publicVarGroupVO,
-                operateType = operateType
+                publicVarGroup = publicVarGroupVO
             )
         )
     }
@@ -428,8 +435,8 @@ class PublicVarGroupService @Autowired constructor(
     fun deleteGroup(userId: String, projectId: String, groupName: String): Boolean {
         val redisLock = RedisLock(
             redisOperation = redisOperation,
-            lockKey = "${PUBLIC_VER_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
-            expiredTimeInSeconds = LOCK_EXPIRED_TIME_IN_SECONDS
+            lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_DELETE_LOCK_KEY}_${projectId}_$groupName",
+            expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
         )
         redisLock.lock()
         try {
@@ -665,7 +672,29 @@ class PublicVarGroupService @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
                 }
                 ignore.message?.contains("missing") == true -> {
-                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                    // 尝试提取缺失的字段名
+                    // Jackson 的错误消息格式通常为: "Missing required creator property 'xxx'"
+                    val missingField = ignore.message?.let { msg ->
+                        when {
+                            msg.contains("Missing required creator property") -> {
+                                msg.substringAfter("Missing required creator property '")
+                                    .substringBefore("'")
+                            }
+                            msg.contains("missing property") -> {
+                                msg.substringAfter("missing property '")
+                                    .substringBefore("'")
+                            }
+                            else -> null
+                        }
+                    }
+                    if (missingField != null) {
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD,
+                            params = arrayOf(missingField)
+                        )
+                    } else {
+                        I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                    }
                 }
                 else -> ignore.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
             }

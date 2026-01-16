@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST
@@ -45,6 +46,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedSer
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
@@ -68,6 +70,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
 
     ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
@@ -143,6 +146,14 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             projectId = projectId,
             templateId = templateId,
             version = version
+        )
+
+        publicVarGroupReferInfoService.deletePublicGroupRefer(
+            userId = userId,
+            projectId = projectId,
+            referId = templateId,
+            referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+            referVersion = version.toInt()
         )
     }
 

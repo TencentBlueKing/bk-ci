@@ -38,6 +38,7 @@ import com.tencent.devops.process.yaml.pojo.YamlVersionParser
 import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import org.slf4j.LoggerFactory
 
 /**
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
@@ -96,31 +97,71 @@ data class PreScriptBuildYamlParser(
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V2_0
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(PreScriptBuildYamlParser::class.java)
+    }
+
     @JsonSetter("variables")
     private fun setVariables(raw: Any?) {
         when (raw) {
+            null -> {
+                // 显式处理 null 情况，清空变量
+                this.variables = null
+                this.variableTemplates = null
+            }
             is Map<*, *> -> {
                 // 提取template数据
-                this.variableTemplates = (raw["template"] as? List<Map<String, String>>)
+                val templateList = raw["template"] as? List<Map<String, String>>
+                if (raw["template"] != null && templateList == null) {
+                    logger.warn(
+                        "variables.template 字段类型转换失败，" +
+                            "期望 List<Map<String, String>>，实际类型: ${raw["template"]?.javaClass?.name}"
+                    )
+                }
+                this.variableTemplates = templateList
                     ?.filter { !it["name"].isNullOrBlank() }?.map {
-                        VariableTemplate(it["name"]!!, it["version"])
+                        VariableTemplate(name = it["name"]!!, version = it["version"])
                     }
-                val regularVariables = raw.filterKeys { it != "template" }
-                    .mapKeys { it.key.toString() }
+                // 过滤掉 template 字段和 null key，并转换为 String key
+                val regularVariables = raw.filterKeys { key ->
+                    if (key == null) {
+                        logger.warn("variables 中存在 null key，已忽略")
+                        false
+                    } else {
+                        key != "template"
+                    }
+                }.mapKeys { entry ->
+                    entry.key.toString()
+                }
+                
                 if (regularVariables.isNotEmpty()) {
-                    this.variables = regularVariables.mapValues { parseVariableValue(it.value) }
+                    this.variables = regularVariables.mapValues { parseVariableValue(value = it.value) }
                 } else {
                     this.variables = null
                 }
+            }
+            else -> {
+                // 处理非预期类型
+                logger.warn(
+                    "variables 字段类型不支持，期望 Map<String, Any>，" +
+                        "实际类型: ${raw.javaClass.name}，值: $raw"
+                )
+                this.variables = null
+                this.variableTemplates = null
             }
         }
     }
 
     private fun parseVariableValue(value: Any?): Variable {
         return when (value) {
+            null -> {
+                // 显式处理 null 值
+                logger.warn("变量值为 null，将创建空值变量")
+                Variable(value = null)
+            }
             // 处理对象格式
-            is Map<*, *> -> parseVariable(value)
-            // 处理简单值格式
+            is Map<*, *> -> parseVariable(map = value)
+            // 处理简单值格式（字符串、数字、布尔等）
             else -> Variable(value = value)
         }
     }

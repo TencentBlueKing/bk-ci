@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
 import io.swagger.v3.oas.annotations.Operation
@@ -69,9 +68,6 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "操作类型", required = true)
-        @QueryParam("operateType")
-        operateType: OperateTypeEnum,
         @Parameter(description = "公共变量组请求报文", required = true)
         publicVarGroup: PublicVarGroupVO
     ): Result<String>
@@ -132,9 +128,6 @@ interface UserPublicVarGroupResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "操作类型", required = true)
-        @QueryParam("operateType")
-        operateType: OperateTypeEnum,
         @Parameter(description = "YAML文件", required = true)
         yaml: PublicVarGroupYamlStringVO
     ): Result<String>

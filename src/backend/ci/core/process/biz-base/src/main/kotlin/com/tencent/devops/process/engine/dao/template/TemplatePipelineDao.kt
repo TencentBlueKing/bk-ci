@@ -206,7 +206,12 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Result<Record3<String, String, Long>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = templateIds,
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
             return dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 TEMPLATE_ID.`as`(KEY_TEMPLATE_ID),
@@ -242,7 +247,12 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = templateIds,
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
             return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
@@ -258,7 +268,12 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = getQueryTemplatePipelineCondition(projectId, listOf(templateId), instanceType, deleteFlag)
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = listOf(templateId),
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
             conditions.add(VERSION.eq(version))
             return dslContext.selectCount().from(this)
                 .where(conditions)

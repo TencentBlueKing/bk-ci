@@ -186,8 +186,12 @@ class YamlTemplate<T>(
                     else -> emptyList()
                 }
                 if (templateList.isNotEmpty()) {
-                    preYamlObject.variableTemplates = templateList.filter { it["name"] != null }.map {
-                        VariableTemplate(it["name"]!!, it["version"])
+                    preYamlObject.variableTemplates = templateList.mapNotNull { template ->
+                        val name = template["name"]
+                        if (name == null) {
+                            return@mapNotNull null
+                        }
+                        VariableTemplate(name = name, version = template["version"])
                     }
                 }
                 return@forEach

@@ -37,11 +37,6 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupDao {
 
-    companion object {
-        // 默认版本标识
-        private const val DYNAMIC_VERSION = -1
-    }
-
     /**
      * 将数据库记录转换为PublicVarGroupPO对象的公共方法
      * @param record 数据库记录

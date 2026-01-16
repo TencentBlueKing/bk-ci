@@ -291,11 +291,18 @@ data class Model(
         }
         publicVarGroups = triggerParams
             .asSequence() // 转换为序列进行惰性操作
-            .filter { !it.varGroupName.isNullOrBlank() } // 过滤出有 varGroupName 的参数
-            .map { param ->
+            .mapNotNull { param ->
+                val varGroupName = param.varGroupName
+                if (varGroupName.isNullOrBlank()) {
+                    return@mapNotNull null
+                }
                 val varGroupVersion = param.varGroupVersion
                 val versionName = varGroupVersion?.let { "v$it" }
-                PublicVarGroupRef(param.varGroupName!!, varGroupVersion, versionName)
+                PublicVarGroupRef(
+                    groupName = varGroupName,
+                    version = varGroupVersion,
+                    versionName = versionName
+                )
             }
             .distinctBy { it.groupName } // 根据 groupName 去重
             .toList() // 将序列转换回 List

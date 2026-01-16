@@ -53,7 +53,7 @@ interface PipelineOverviewManageService {
     ): List<PipelineTrendInfoDO>
 
     /**
-     * 批量查询多个流水线最近一月执行次数
+     * 批量查询多个流水线区间内执行次数
      * @param projectId 项目ID
      * @param pipelineIds 流水线ID列表
      * @param startDate 开始时间

@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,9 +58,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarReferInfoService::class.java)
-        
-        // 版本相关常量
-        private const val DYNAMIC_VERSION = -1 // 动态版本标识
     }
 
     /**
@@ -172,9 +170,12 @@ class PublicVarReferInfoService @Autowired constructor(
         // 计算需要新增的变量引用记录
         val referRecordsToAdd = calculateVarsToAdd(context)
 
-        // 执行批量插入
+        // 执行批量插入（在事务内）
         if (referRecordsToAdd.isNotEmpty()) {
-            publicVarReferInfoDao.batchSave(dslContext, referRecordsToAdd)
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                publicVarReferInfoDao.batchSave(dslContext = transactionContext, pipelinePublicVarReferPOs = referRecordsToAdd)
+            }
         }
 
         // 计算需要更新引用计数的变量
@@ -507,7 +508,6 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 更新指定变量组中指定变量的引用计数
      * 计数原则：referId + varName 的唯一组合计数为1，跨版本去重
-     *
      * @param projectId 项目ID
      * @param groupName 变量组名称
      * @param varNames 变量名列表
@@ -538,36 +538,14 @@ class PublicVarReferInfoService @Autowired constructor(
 
         // 对每个变量查询实际引用数并更新
         varNames.forEach { varName ->
-            // 如果 version 为空，需要统计最新版本和 -1 版本的引用数
-            val actualReferCount = if (version == null) {
-                // 查询最新版本的引用数
-                val latestVersionCount = publicVarReferInfoDao.countDistinctReferIdsByVar(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = actualVersion,
-                    varName = varName
-                )
-                // 查询 -1 版本（动态版本）的引用数
-                val dynamicVersionCount = publicVarReferInfoDao.countDistinctReferIdsByVar(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = -1,
-                    varName = varName
-                )
-                // 两个数据相加
-                latestVersionCount + dynamicVersionCount
-            } else {
-                // 指定了版本，直接查询该版本的引用数
-                publicVarReferInfoDao.countDistinctReferIdsByVar(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = version,
-                    varName = varName
-                )
-            }
+            // 只统计明确指定该版本号的引用
+            val actualReferCount = publicVarReferInfoDao.countDistinctReferIdsByVar(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = actualVersion,
+                varName = varName
+            )
 
             // 直接更新为实际引用数
             publicVarDao.updateReferCountDirectly(

@@ -39,6 +39,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COM
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
@@ -51,6 +52,7 @@ import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -62,6 +64,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
+    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarReferInfoService: PublicVarReferInfoService
 ) {
@@ -122,29 +125,33 @@ class PublicVarService @Autowired constructor(
             groupName = groupName,
             version = publicVarDTO.version - 1
         )
-        publicVarDao.batchSave(dslContext, publicVarPOs)
-        publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
-            PublicVarGroupReleaseDTO(
+        
+        // 批量保存和发布记录
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            
+            publicVarDao.batchSave(dslContext = transactionContext, publicVarGroupPOs = publicVarPOs)
+            
+            publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
+                PublicVarGroupReleaseDTO(
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = publicVarDTO.version,
+                    versionDesc = publicVarDTO.versionDesc,
+                    userId = userId,
+                    newVarPOs = publicVarPOs,
+                    oldVarPOs = oldVarPOs
+                )
+            )
+            // 统计所有版本的变量引用进行赋值
+            val varNames = publicVarPOs.map { it.varName }
+            publicVarReferInfoService.updateVarReferCount(
                 projectId = projectId,
                 groupName = groupName,
-                version = publicVarDTO.version,
-                versionDesc = publicVarDTO.versionDesc,
-                userId = userId,
-                newVarPOs = publicVarPOs,
-                oldVarPOs = oldVarPOs
+                varNames = varNames,
+                version = null
             )
-        )
-
-        // 重新计算动态引用的referCount
-        // 统计所有版本的变量引用进行赋值，同名只算1
-        val varNames = publicVarPOs.map { it.varName }
-        publicVarReferInfoService.updateVarReferCount(
-            projectId = projectId,
-            groupName = groupName,
-            varNames = varNames,
-            version = null // 传null以统计最新版本和-1版本的引用数
-        )
-
+        }
         return true
     }
 
@@ -187,14 +194,31 @@ class PublicVarService @Autowired constructor(
             groupName = groupName
         ) ?: throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(groupName))
 
-        return publicVarDao.listVarByGroupName(
+        val publicVarPOs = publicVarDao.listVarByGroupName(
             dslContext = dslContext,
             projectId = projectId,
             groupName = groupName,
             version = targetVersion
-        ).map { publicVarPO ->
+        )
+
+        // 批量查询所有变量的引用数量（按 referId 去重）
+        val varNames = publicVarPOs.map { it.varName }
+        val referCountMap = if (varNames.isNotEmpty()) {
+            publicVarReferInfoDao.batchCountDistinctReferIdsByVars(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = targetVersion,
+                varNames = varNames
+            )
+        } else {
+            emptyMap()
+        }
+
+        return publicVarPOs.map { publicVarPO ->
             val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
             buildFormProperty.varGroupVersion = version
+            val actualReferCount = referCountMap[publicVarPO.varName] ?: 0
             PublicVarDO(
                 varName = publicVarPO.varName,
                 alias = publicVarPO.alias,
@@ -202,7 +226,7 @@ class PublicVarService @Autowired constructor(
                 valueType = publicVarPO.valueType,
                 defaultValue = publicVarPO.defaultValue,
                 desc = publicVarPO.desc,
-                referCount = publicVarPO.referCount,
+                referCount = actualReferCount,
                 buildFormProperty = buildFormProperty
             )
         }

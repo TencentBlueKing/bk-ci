@@ -40,8 +40,6 @@ class PublicVarDao {
 
     /**
      * 批量保存公共变量
-     * @param dslContext 数据库上下文
-     * @param publicVarGroupPOs 公共变量PO列表
      */
     fun batchSave(
         dslContext: DSLContext,
@@ -49,7 +47,8 @@ class PublicVarDao {
     ) {
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             if (publicVarGroupPOs.isEmpty()) return
-            val batchInsert = dslContext.insertInto(
+            
+            dslContext.insertInto(
                 this,
                 ID,
                 PROJECT_ID,
@@ -67,28 +66,37 @@ class PublicVarDao {
                 MODIFIER,
                 CREATE_TIME,
                 UPDATE_TIME
-            )
-            publicVarGroupPOs.forEach {
-                batchInsert.values(
-                    it.id,
-                    it.projectId,
-                    it.varName,
-                    it.alias,
-                    it.type.name,
-                    it.valueType.name,
-                    it.defaultValue?.toString(),
-                    it.desc,
-                    it.referCount,
-                    it.groupName,
-                    it.version,
-                    it.buildFormProperty,
-                    it.creator,
-                    it.modifier,
-                    it.createTime,
-                    it.updateTime
-                )
-            }
-            batchInsert.execute()
+            ).also { insert ->
+                publicVarGroupPOs.forEach { record ->
+                    insert.values(
+                        record.id,
+                        record.projectId,
+                        record.varName,
+                        record.alias,
+                        record.type.name,
+                        record.valueType.name,
+                        record.defaultValue?.toString(),
+                        record.desc,
+                        record.referCount,
+                        record.groupName,
+                        record.version,
+                        record.buildFormProperty,
+                        record.creator,
+                        record.modifier,
+                        record.createTime,
+                        record.updateTime
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(ALIAS, org.jooq.util.mysql.MySQLDSL.values(ALIAS))
+                .set(TYPE, org.jooq.util.mysql.MySQLDSL.values(TYPE))
+                .set(VALUE_TYPE, org.jooq.util.mysql.MySQLDSL.values(VALUE_TYPE))
+                .set(DEFAULT_VALUE, org.jooq.util.mysql.MySQLDSL.values(DEFAULT_VALUE))
+                .set(DESC, org.jooq.util.mysql.MySQLDSL.values(DESC))
+                .set(BUILD_FORM_PROPERTY, org.jooq.util.mysql.MySQLDSL.values(BUILD_FORM_PROPERTY))
+                .set(MODIFIER, org.jooq.util.mysql.MySQLDSL.values(MODIFIER))
+                .set(UPDATE_TIME, org.jooq.util.mysql.MySQLDSL.values(UPDATE_TIME))
+                .execute()
         }
     }
 
