@@ -28,7 +28,6 @@
 package com.tencent.devops.process.pojo.app
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
@@ -294,6 +293,11 @@ data class StartBuildContext(
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
+            val commitList = pipelineParamMap[BK_REPO_WEBHOOK_COMMIT_LIST]?.value?.let {
+                val list = JsonUtil.anyToOrNull(it, object : TypeReference<List<WebhookCommit>>() {})
+                pipelineParamMap.remove(BK_REPO_WEBHOOK_COMMIT_LIST) // 提交记录无需保存变量
+                list
+            }
             val buildParam = genOriginStartParamsList(realStartParamKeys, pipelineParamMap)
             val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
             // 解析出定义的流水线变量
@@ -342,7 +346,7 @@ data class StartBuildContext(
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                 skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
                 currentBuildNo = currentBuildNo,
-                webhookInfo = getWebhookInfo(params),
+                webhookInfo = getWebhookInfo(params, commitList),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
                 buildParameters = buildParam,
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
@@ -369,7 +373,7 @@ data class StartBuildContext(
             )
         }
 
-        private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
+        private fun getWebhookInfo(params: Map<String, String>, commitList: List<WebhookCommit>?): WebhookInfo? {
             // 支持webhookInfo的启动类型
             val startTypes = listOf(
                 StartType.WEB_HOOK.name,
@@ -424,13 +428,7 @@ data class StartBuildContext(
                 },
                 materialId = params[BK_CI_MATERIAL_ID],
                 materialName = params[BK_CI_MATERIAL_NAME],
-                commitList = params[BK_REPO_WEBHOOK_COMMIT_LIST]?.let {
-                    if (it.isBlank()) {
-                        null
-                    } else {
-                        JsonUtil.anyToOrNull(it, object : TypeReference<List<WebhookCommit>>() {})
-                    }
-                }
+                commitList = commitList
             )
         }
 
