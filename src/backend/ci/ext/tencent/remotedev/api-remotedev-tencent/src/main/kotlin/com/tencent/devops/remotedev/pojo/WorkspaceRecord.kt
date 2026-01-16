@@ -168,5 +168,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "节点id")
     val nodeHashId: String?,
     @get:Schema(title = "resourceId")
-    val resourceId: String?
+    val resourceId: String?,
+    @get:Schema(title = "enableRecord")
+    val enableRecord: Boolean? = false
 ) : WorkspaceRecordInf
