@@ -692,6 +692,72 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
+     * 查询某项目某变量组的所有引用记录（所有版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @return 引用记录列表
+     */
+    fun listAllReferRecordsByGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): List<TResourcePublicVarGroupReferInfoRecord> {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .fetch()
+        }
+    }
+
+    /**
+     * 查询某项目某变量组的实际引用数量（按 referId 去重）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @return 去重后的引用数量
+     */
+    fun countDistinctReferIdByGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String
+    ): Int {
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext.select(DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    /**
+     * 批量查询多个变量组的实际引用数量（按 referId 去重）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupNames 变量组名列表
+     * @return Map<groupName, distinctReferIdCount>
+     */
+    fun batchCountDistinctReferIdByGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        groupNames: List<String>
+    ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
+
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            return dslContext
+                .select(GROUP_NAME, DSL.countDistinct(REFER_ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.`in`(groupNames))
+                .groupBy(GROUP_NAME)
+                .fetchMap(GROUP_NAME, Int::class.java)
+        }
+    }
+
+    /**
      * 更新变量组引用信息
      */
     fun updateVarGroupReferInfo(

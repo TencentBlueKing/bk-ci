@@ -174,7 +174,10 @@ class PublicVarReferInfoService @Autowired constructor(
         if (referRecordsToAdd.isNotEmpty()) {
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                publicVarReferInfoDao.batchSave(dslContext = transactionContext, pipelinePublicVarReferPOs = referRecordsToAdd)
+                publicVarReferInfoDao.batchSave(
+                    dslContext = transactionContext,
+                    pipelinePublicVarReferPOs = referRecordsToAdd
+                )
             }
         }
 

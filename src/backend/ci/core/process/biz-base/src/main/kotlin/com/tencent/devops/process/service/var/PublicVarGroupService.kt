@@ -289,21 +289,11 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询所有版本的引用数量（按 referId 去重）
         val referCountMap = if (groupNameList.isNotEmpty()) {
-            groupNameList.associateWith { groupName ->
-                // 查询该变量组的所有引用记录（所有版本）
-                val allReferRecords = with(com.tencent.devops.model.process.tables.TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-                    dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId))
-                        .and(GROUP_NAME.eq(groupName))
-                        .fetch()
-                }
-                
-                // 提取所有 referId 并去重，得到实际引用数量
-                allReferRecords
-                    .map { it.referId }
-                    .toSet()
-                    .size
-            }
+            publicVarGroupReferInfoDao.batchCountDistinctReferIdByGroup(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupNames = groupNameList
+            )
         } else {
             emptyMap()
         }
@@ -415,6 +405,20 @@ class PublicVarGroupService @Autowired constructor(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf(groupName)
             )
+
+            // 检查变量组是否被引用
+            val referCount = publicVarGroupReferInfoDao.countDistinctReferIdByGroup(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName
+            )
+
+            if (referCount > 0) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_REFERENCED,
+                    params = arrayOf(groupName)
+                )
+            }
 
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -619,59 +623,76 @@ class PublicVarGroupService @Autowired constructor(
      * 解析YAML字符串并转换为PublicVarGroupVO对象
      */
     private fun parseYamlToPublicVarGroupVO(yaml: PublicVarGroupYamlStringVO): PublicVarGroupVO {
-        val parserVO = try {
+        val parserVO = parseYamlToParserVO(yaml)
+        return convertParserVOToPublicVarGroupVO(parserVO)
+    }
+
+    /**
+     * 将YAML解析为PublicVarGroupYamlParser，并处理异常包装
+     */
+    private fun parseYamlToParserVO(yaml: PublicVarGroupYamlStringVO): PublicVarGroupYamlParser {
+        return try {
             TransferMapper.getObjectMapper().readValue(
                 yaml.yaml,
                 object : TypeReference<PublicVarGroupYamlParser>() {}
             )
-        } catch (ignore: Throwable) {
-            logger.warn("Failed to parse YAML for public variable group", ignore)
-            val errorMsg = when {
-                ignore.message?.contains("Unrecognized field") == true -> {
-                    val fieldName =
-                        ignore.message?.substringAfter("Unrecognized field \"")?.substringBefore("\"")
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD,
-                        params = arrayOf(fieldName ?: "")
-                    )
-                }
-                ignore.message?.contains("Cannot deserialize") == true -> {
-                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
-                }
-                ignore.message?.contains("missing") == true -> {
-                    // 尝试提取缺失的字段名
-                    // Jackson 的错误消息格式通常为: "Missing required creator property 'xxx'"
-                    val missingField = ignore.message?.let { msg ->
-                        when {
-                            msg.contains("Missing required creator property") -> {
-                                msg.substringAfter("Missing required creator property '")
-                                    .substringBefore("'")
-                            }
-                            msg.contains("missing property") -> {
-                                msg.substringAfter("missing property '")
-                                    .substringBefore("'")
-                            }
-                            else -> null
-                        }
-                    }
-                    if (missingField != null) {
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD,
-                            params = arrayOf(missingField)
-                        )
-                    } else {
-                        I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
-                    }
-                }
-                else -> ignore.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
-            }
+        } catch (e: Throwable) {
+            logger.warn("Failed to parse YAML for public variable group", e)
+            val errorMsg = buildErrorMsg(e)
             throw ErrorCodeException(
                 errorCode = ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED,
                 params = arrayOf(errorMsg)
             )
         }
-        
-        // 调用格式检查方法
+    }
+
+    /**
+     * 根据异常构建用户友好的错误消息
+     */
+    private fun buildErrorMsg(e: Throwable): String {
+        return when {
+            e.message?.contains("Unrecognized field") == true -> {
+                val fieldName = e.message!!.substringAfter("Unrecognized field \"").substringBefore("\"")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD,
+                    params = arrayOf(fieldName)
+                )
+            }
+
+            e.message?.contains("Cannot deserialize") == true -> {
+                I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR)
+            }
+
+            e.message?.contains("missing") == true -> {
+                val missingField = e.message!!.let { msg ->
+                    when {
+                        msg.contains("Missing required creator property") ->
+                            msg.substringAfter("Missing required creator property '")
+                                .substringBefore("\'")
+                        msg.contains("missing property") ->
+                            msg.substringAfter("missing property '")
+                                .substringBefore("\'")
+                        else -> null
+                    }
+                }
+                if (missingField != null) {
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD,
+                        params = arrayOf(missingField)
+                    )
+                } else {
+                    I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD)
+                }
+            }
+
+            else -> e.message ?: I18nUtil.getCodeLanMessage(ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR)
+        }
+    }
+
+    /**
+     * 将PublicVarGroupYamlParser转换为PublicVarGroupVO，并完成变量格式处理
+     */
+    private fun convertParserVOToPublicVarGroupVO(parserVO: PublicVarGroupYamlParser): PublicVarGroupVO {
         validateYamlFormat(parserVO)
 
         parserVO.variables.forEach { variable ->
@@ -680,7 +701,6 @@ class PublicVarGroupService @Autowired constructor(
                 variable.value.allowModifyAtStartup = null
             }
         }
-        // 将variables转换为List<BuildFormProperty>
         val buildFormProperties = variableTransfer.makeVariableFromYaml(parserVO.variables)
         val publicVars = buildFormProperties.map { property ->
             PublicVarVO(
