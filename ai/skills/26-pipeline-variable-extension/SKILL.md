@@ -31,6 +31,12 @@ BK-CI 中流水线变量存在两种数据模型的双向转换：
   - `makeVariableFromModel()` - Model → YAML
   - `makeVariableFromYaml()` - YAML → Model
 
+### YAML 模板解析器（YamlObjects）
+- 位置：`common-pipeline-yaml/src/main/kotlin/.../yaml/v3/parsers/template/YamlObjects.kt`
+- 职责：从原始 YAML Map 解析构建 `Variable` 对象（模板引用场景）
+- 核心方法：`getVariable()` - 解析 YAML 变量定义
+- **重要**：此文件与 `VariableTransfer` 是两条独立的解析路径，新增字段时**必须同时修改**
+
 ---
 
 ## 改动清单（按顺序执行）
@@ -183,36 +189,83 @@ fun makeVariableFromYaml(variables: Map<String, Variable>?): List<BuildFormPrope
                 id = key,
                 // ... 其他字段
                 
-                // 新增字段赋值（可能需要计算逻辑）
-                newFieldName = if (/* 条件 */) {
-                    variable.newFieldName ?: defaultValue
-                } else null
+                // 新增字段赋值（必须提供默认值处理 null 情况）
+                newFieldName = variable.newFieldName ?: defaultValue
             )
         )
     }
 }
 ```
 
-**实际案例（#12471）**：
+**实际案例（#11738 sensitive 字段）**：
 ```kotlin
-val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
 buildFormProperties.add(
     BuildFormProperty(
         id = key,
-        required = allowModifyAtStartup,
         // ...
-        // 仅在 allowModifyAtStartup=true 时赋值，否则为 null
-        asInstanceInput = if (allowModifyAtStartup) {
-            variable.asInstanceInput ?: true
-        } else null
+        // ⚠️ 必须使用 ?: 提供默认值，避免 null 传递到 Model
+        sensitive = variable.sensitive ?: false
     )
 )
 ```
 
 **注意事项**：
 - 考虑字段间的依赖关系（如 `asInstanceInput` 依赖 `required`）
-- 提供合理的默认值（`?: defaultValue`）
+- **必须提供合理的默认值**（`?: defaultValue`），避免 null 传递导致下游问题
 - 保持与前端约定的语义一致
+
+---
+
+### 4.1 更新 YamlObjects 模板解析器（易遗漏！）
+
+**文件**：`src/backend/ci/core/common/common-pipeline-yaml/src/main/kotlin/com/tencent/devops/process/yaml/v3/parsers/template/YamlObjects.kt`
+
+**方法**：`getVariable(fromPath: String, variable: Map<String, Any>): Variable`
+
+**操作**：在构建 `Variable` 对象时，添加新字段的解析
+
+**为什么需要修改这个文件**：
+- `VariableTransfer` 处理的是已经反序列化好的 `Variable` 对象
+- `YamlObjects.getVariable()` 处理的是原始 YAML Map（模板引用场景）
+- **两条路径独立，必须同时修改**
+
+**规范**：
+```kotlin
+fun getVariable(fromPath: String, variable: Map<String, Any>): Variable {
+    return Variable(
+        value = ...,
+        readonly = getNullValue("readonly", variable)?.toBoolean(),
+        // ... 其他字段
+        
+        // 新增字段解析
+        newFieldName = getNullValue("new-field-name", variable)?.toBoolean()
+    )
+}
+```
+
+**实际案例（#11738 sensitive 字段）**：
+```kotlin
+return Variable(
+    value = ...,
+    const = getNullValue("const", variable)?.toBoolean(),
+    allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
+    props = props,
+    ifCondition = transNullValue<Map<String, String>>(fromPath, "if", "if", variable),
+    // 新增 sensitive 和 asInstanceInput 字段解析
+    sensitive = getNullValue("sensitive", variable)?.toBoolean(),
+    asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean()
+)
+```
+
+**常见错误**：
+```kotlin
+// ❌ 错误：只修改了 VariableTransfer，遗漏了 YamlObjects
+// 导致模板引用场景下新字段丢失
+
+// ✅ 正确：两个文件都要修改
+// 1. VariableTransfer.kt - 处理 API 请求的 Variable 对象
+// 2. YamlObjects.kt - 处理模板引用的原始 YAML Map
+```
 
 ---
 
@@ -430,6 +483,25 @@ fun `test new field default value`() {
    - 会导致 IDE 自动补全失效
    - YAML 验证可能不准确
 
+5. **遗漏 YamlObjects.kt（最常见错误！）**
+   ```kotlin
+   // ❌ 错误：只修改了 VariableTransfer
+   // 模板引用场景下新字段会丢失
+   
+   // ✅ 正确：同时修改两个文件
+   // - VariableTransfer.kt
+   // - YamlObjects.kt
+   ```
+
+6. **YAML → Model 转换时未提供默认值**
+   ```kotlin
+   // ❌ 错误：直接传递可能为 null 的值
+   sensitive = variable.sensitive
+   
+   // ✅ 正确：使用 ?: 提供默认值
+   sensitive = variable.sensitive ?: false
+   ```
+
 ---
 
 ## 常见问题
@@ -465,6 +537,30 @@ asInstanceInput = if (allowModifyAtStartup) {
 - ✅ 需要：字段在业务逻辑中使用（如实例化、执行时参数校验）
 - ❌ 不需要：纯粹的存储字段（如 UI 配置）
 
+### Q4: 为什么修改了 VariableTransfer 还是有问题？
+
+**常见原因**：遗漏了 `YamlObjects.kt` 文件
+
+**背景**：YAML 变量解析有两条独立路径：
+1. **API 请求路径**：JSON → Jackson 反序列化 → `Variable` 对象 → `VariableTransfer`
+2. **模板引用路径**：YAML Map → `YamlObjects.getVariable()` → `Variable` 对象
+
+**症状**：
+- 直接定义的 YAML 变量字段正常
+- 模板引用（`template: xxx.yml`）的变量字段丢失
+
+**解决方案**：同时修改 `YamlObjects.kt` 中的 `getVariable()` 方法
+
+```kotlin
+// YamlObjects.kt
+fun getVariable(fromPath: String, variable: Map<String, Any>): Variable {
+    return Variable(
+        // ... 其他字段
+        newFieldName = getNullValue("new-field-name", variable)?.toBoolean()
+    )
+}
+```
+
 ---
 
 ## 检查清单
@@ -474,7 +570,8 @@ asInstanceInput = if (allowModifyAtStartup) {
 - [ ] Variable.kt 新增字段（含 @JsonProperty、@Schema）
 - [ ] BuildFormProperty.kt 新增字段（含 @Schema）
 - [ ] VariableTransfer.makeVariableFromModel() 添加转换逻辑
-- [ ] VariableTransfer.makeVariableFromYaml() 添加转换逻辑
+- [ ] VariableTransfer.makeVariableFromYaml() 添加转换逻辑（**注意提供默认值**）
+- [ ] **YamlObjects.getVariable() 添加字段解析（易遗漏！）**
 - [ ] ci.json JSON Schema 更新
 - [ ] ParamFacadeService.kt 字段传递（如需要）
 - [ ] 国际化文件添加翻译（如需要）
@@ -486,6 +583,31 @@ asInstanceInput = if (allowModifyAtStartup) {
 
 ## 参考案例
 
+### 完整实现：sensitive 字段（#11738）
+
+**需求**：流水线变量支持「是否敏感」属性，敏感变量在日志中脱敏
+
+**改动文件**：
+1. `Variable.kt` - 添加 `sensitive` 字段
+2. `BuildFormProperty.kt` - 添加 `sensitive` 字段
+3. `VariableTransfer.kt` - 实现双向转换（共 2 处）
+4. **`YamlObjects.kt` - 添加模板解析支持（易遗漏！）**
+5. `ci.json` - 添加 Schema 定义
+6. `ParamFacadeService.kt` - 传递字段
+
+**核心逻辑**：
+```kotlin
+// Model → YAML (VariableTransfer.makeVariableFromModel)
+sensitive = it.sensitive.nullIfDefault(false)
+
+// YAML → Model (VariableTransfer.makeVariableFromYaml)
+// ⚠️ 必须提供默认值
+sensitive = variable.sensitive ?: false
+
+// 模板解析 (YamlObjects.getVariable) - 易遗漏！
+sensitive = getNullValue("sensitive", variable)?.toBoolean()
+```
+
 ### 完整实现：asInstanceInput 字段（#12471）
 
 **需求**：模板实例化时控制变量是否作为实例入参
@@ -494,8 +616,9 @@ asInstanceInput = if (allowModifyAtStartup) {
 1. `Variable.kt` - 添加 `asInstanceInput` 字段
 2. `BuildFormProperty.kt` - 添加 `asInstanceInput` 字段
 3. `VariableTransfer.kt` - 实现双向转换（共 2 处）
-4. `ci.json` - 添加 Schema 定义
-5. `ParamFacadeService.kt` - 传递字段
+4. **`YamlObjects.kt` - 添加模板解析支持**
+5. `ci.json` - 添加 Schema 定义
+6. `ParamFacadeService.kt` - 传递字段
 
 **核心逻辑**：
 ```kotlin
@@ -508,6 +631,9 @@ asInstanceInput = if (const != true && it.required) {
 asInstanceInput = if (allowModifyAtStartup) {
     variable.asInstanceInput ?: true
 } else null
+
+// 模板解析 (YamlObjects.getVariable)
+asInstanceInput = getNullValue("asInstanceInput", variable)?.toBoolean()
 ```
 
 ---
@@ -520,6 +646,8 @@ asInstanceInput = if (allowModifyAtStartup) {
 数据模型定义（2个文件）
     ↓
 转换逻辑实现（1个文件，2个方法）
+    ↓
+模板解析器更新（YamlObjects.kt - 易遗漏！）
     ↓
 Schema 更新（1个文件）
     ↓
@@ -537,4 +665,6 @@ Schema 更新（1个文件）
 - `Variable.kt`: `src/backend/ci/core/common/common-pipeline-yaml/src/main/kotlin/com/tencent/devops/process/yaml/v3/models/Variable.kt`
 - `BuildFormProperty.kt`: `src/backend/ci/core/common/common-pipeline/src/main/kotlin/com/tencent/devops/common/pipeline/pojo/BuildFormProperty.kt`
 - `VariableTransfer.kt`: `src/backend/ci/core/common/common-pipeline-yaml/src/main/kotlin/com/tencent/devops/process/yaml/transfer/VariableTransfer.kt`
+- **`YamlObjects.kt`**: `src/backend/ci/core/common/common-pipeline-yaml/src/main/kotlin/com/tencent/devops/process/yaml/v3/parsers/template/YamlObjects.kt`
 - `ci.json`: `src/backend/ci/core/common/common-pipeline-yaml/src/main/resources/schema/V3_0/ci.json`
+- `ParamFacadeService.kt`: `src/backend/ci/core/process/biz-process/src/main/kotlin/com/tencent/devops/process/service/ParamFacadeService.kt`

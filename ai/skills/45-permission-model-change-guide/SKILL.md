@@ -1,5 +1,5 @@
 ---
-name: 45-权限模型变更指南
+name: 45-permission-model-change-guide
 description: IAM RBAC 权限模型变更规则，涵盖资源类型定义、操作权限配置、权限迁移脚本、IAM 回调实现。当用户修改权限模型、添加新资源类型、配置操作权限或编写权限迁移脚本时使用。
 ---
 
@@ -447,7 +447,9 @@ WHERE ID = 2;  -- developer 组
 
 ```bash
 # 在 AUTHORIZATION_SCOPES 数组末尾新增一个完整的权限块
-curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/appendActions?resourceType=creative_stream" \
+curl -X PUT \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/appendActions\
+?resourceType=creative_stream" \
   -H "Content-Type: application/json" \
   -d '["creative_stream_create", "creative_stream_list"]'
 ```
@@ -458,7 +460,9 @@ curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfi
 
 ```bash
 # 在已有的 project 权限块的 actions 数组中追加 creative_stream_create
-curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/appendActionsToExistingScope?targetResourceType=project" \
+curl -X PUT \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/\
+appendActionsToExistingScope?targetResourceType=project" \
   -H "Content-Type: application/json" \
   -d '["creative_stream_create"]'
 ```
@@ -475,7 +479,9 @@ curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfi
 // 修改后（追加了 creative_stream_create）
 {
   "system": "#system#",
-  "actions": [{"id": "project_visit"}, {"id": "project_edit"}, {"id": "creative_stream_create"}],
+  "actions": [
+    {"id": "project_visit"}, {"id": "project_edit"}, {"id": "creative_stream_create"}
+  ],
   "resources": [{"type": "project", ...}]
 }
 ```
@@ -488,7 +494,9 @@ curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfi
 
 ```bash
 # 智能追加：系统自动判断是追加到已有块还是新建块
-curl -X PUT "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/smartAppendActions?resourceType=project" \
+curl -X PUT \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/1/\
+smartAppendActions?resourceType=project" \
   -H "Content-Type: application/json" \
   -d '["creative_stream_create"]'
 ```
@@ -547,7 +555,8 @@ curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/actions/b
 #### 5.3.3 批量创建资源级用户组
 
 ```bash
-curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/batch" \
+curl -X POST \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/batch" \
   -H "Content-Type: application/json" \
   -d '[
     {
@@ -557,7 +566,11 @@ curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConf
       "description": "创作流拥有者，可以管理当前创作流的权限",
       "createMode": false,
       "groupType": 0,
-      "actions": ["creative_stream_view", "creative_stream_edit", "creative_stream_delete", "creative_stream_execute", "creative_stream_download", "creative_stream_share", "creative_stream_manage", "creative_stream_archive"],
+      "actions": [
+        "creative_stream_view", "creative_stream_edit", "creative_stream_delete",
+        "creative_stream_execute", "creative_stream_download", "creative_stream_share",
+        "creative_stream_manage", "creative_stream_archive"
+      ],
       "authorizationScopes": "[授权范围JSON]"
     },
     {
@@ -567,7 +580,10 @@ curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConf
       "description": "创作流编辑者",
       "createMode": false,
       "groupType": 0,
-      "actions": ["creative_stream_view", "creative_stream_edit", "creative_stream_execute", "creative_stream_download", "creative_stream_share"],
+      "actions": [
+        "creative_stream_view", "creative_stream_edit", "creative_stream_execute",
+        "creative_stream_download", "creative_stream_share"
+      ],
       "authorizationScopes": "[授权范围JSON]"
     }
   ]'
@@ -577,7 +593,8 @@ curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConf
 
 ```bash
 # 使用 batchSmartAppendActions：自动判断追加方式
-curl -X POST "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/batchSmartAppendActions" \
+curl -X POST \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs/batchSmartAppendActions" \
   -H "Content-Type: application/json" \
   -d '[
     {
@@ -774,7 +791,8 @@ curl "http://devops.example.com/api/op/auth/resourceTypeConfig/resourceTypes/cre
 curl "http://devops.example.com/api/op/auth/resourceTypeConfig/actions?resourceType=creative_stream"
 
 # 验证用户组配置
-curl "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs?resourceType=creative_stream"
+curl \
+  "http://devops.example.com/api/op/auth/resourceTypeConfig/groupConfigs?resourceType=creative_stream"
 ```
 
 ---

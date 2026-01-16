@@ -1,0 +1,166 @@
+# BK-CI 故障排查配置文件
+# 定义各类问题的诊断规则和解决方案
+
+version: "1.0"
+
+# 日志配置
+logging:
+  # 日志级别阈值
+  levels:
+    - ERROR
+    - WARN
+  
+  # 日志路径模式
+  paths:
+    gateway: "/data/bkci/logs/gateway/*.log"
+    backend: "/data/bkci/logs/ci/*.log"
+    agent: "/data/bkci/logs/agent/*.log"
+    worker: "/data/bkci/logs/worker/*.log"
+  
+  # 关键错误模式
+  error_patterns:
+    - pattern: "OutOfMemoryError"
+      severity: critical
+      category: memory
+      action: "检查 JVM 堆内存配置，考虑增加 -Xmx"
+    
+    - pattern: "Connection refused"
+      severity: high
+      category: network
+      action: "检查目标服务是否运行，网络是否可达"
+    
+    - pattern: "Too many connections"
+      severity: high
+      category: database
+      action: "检查数据库连接池配置，增加 max_connections"
+    
+    - pattern: "Timeout"
+      severity: medium
+      category: performance
+      action: "检查服务响应时间，网络延迟"
+    
+    - pattern: "Permission denied"
+      severity: medium
+      category: permission
+      action: "检查文件权限和用户权限"
+
+# 健康检查配置
+health_check:
+  # 检查间隔（秒）
+  interval: 30
+  
+  # 超时时间（秒）
+  timeout: 10
+  
+  # 服务端点
+  endpoints:
+    gateway:
+      url: "http://localhost:80/status"
+      expected_status: 200
+    
+    project:
+      url: "http://localhost:21912/api/health"
+      expected_status: 200
+    
+    process:
+      url: "http://localhost:21921/api/health"
+      expected_status: 200
+    
+    repository:
+      url: "http://localhost:21914/api/health"
+      expected_status: 200
+    
+    dispatch:
+      url: "http://localhost:21922/api/health"
+      expected_status: 200
+    
+    store:
+      url: "http://localhost:21918/api/health"
+      expected_status: 200
+
+# 问题分类
+problem_categories:
+  build_failure:
+    name: "构建失败"
+    keywords:
+      - "build failed"
+      - "构建失败"
+      - "编译错误"
+    related_modules:
+      - process
+      - dispatch
+      - worker
+    
+  agent_issue:
+    name: "Agent 问题"
+    keywords:
+      - "agent offline"
+      - "agent 离线"
+      - "无可用构建机"
+    related_modules:
+      - dispatch
+      - environment
+      - agent
+    
+  permission_issue:
+    name: "权限问题"
+    keywords:
+      - "permission denied"
+      - "无权限"
+      - "403"
+    related_modules:
+      - auth
+      - project
+
+# 诊断流程
+diagnostic_flows:
+  build_failure:
+    steps:
+      - name: "检查构建日志"
+        action: "查看 /data/bkci/logs/ci/process/process-devops.log"
+      - name: "检查任务状态"
+        action: "查询 T_PIPELINE_BUILD_TASK 表"
+      - name: "检查 Agent 状态"
+        action: "确认构建机在线且资源充足"
+      - name: "检查插件执行"
+        action: "查看 Worker 日志"
+    
+  agent_offline:
+    steps:
+      - name: "检查 Agent 进程"
+        action: "ps aux | grep devopsAgent"
+      - name: "检查网络连接"
+        action: "curl -v http://gateway/ms/environment"
+      - name: "检查心跳日志"
+        action: "tail -f /data/bkci/logs/agent/agent.log"
+      - name: "检查系统资源"
+        action: "top, df -h, free -m"
+
+# 告警阈值
+alert_thresholds:
+  cpu_usage: 80
+  memory_usage: 85
+  disk_usage: 90
+  connection_pool_usage: 80
+  queue_length: 1000
+  response_time_ms: 5000
+
+# 自动修复配置
+auto_remediation:
+  enabled: false
+  actions:
+    restart_service:
+      enabled: false
+      max_retries: 3
+      cooldown_seconds: 300
+    
+    clear_cache:
+      enabled: true
+      targets:
+        - redis
+        - local
+    
+    cleanup_logs:
+      enabled: true
+      retention_days: 7
+      max_size_gb: 50

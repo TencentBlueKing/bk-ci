@@ -2,7 +2,7 @@
   "pipelines": [
     {
       "name": "部署开发环境服务",
-      "url": "https://xxx/console/pipeline/xxx/p-xxx"
+      "url": "https://devops.woa.com/console/pipeline/bkdevops/p-fb912765e0574aa09771b00747127c7e"
     }
   ]
 }
