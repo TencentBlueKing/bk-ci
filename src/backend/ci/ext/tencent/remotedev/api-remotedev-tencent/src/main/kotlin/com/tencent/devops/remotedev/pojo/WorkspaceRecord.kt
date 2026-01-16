@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
-import org.tmatesoft.sqljet.core.internal.lang.SqlParser
 import java.time.LocalDateTime
 
 interface WorkspaceRecordInf {
