@@ -273,14 +273,13 @@
     background: #f5f7fa;
 }
 .env-info-header {
-    display: flex;
-    align-items: center;
     height: 54px;
     line-height: 54px;
     background: #FAFBFD;
     padding: 0 24px;
     .env-name {
         font-weight: 700;
+        flex: 0 1 auto;
         font-size: 14px;
         max-width: 300px;
         overflow: hidden;
