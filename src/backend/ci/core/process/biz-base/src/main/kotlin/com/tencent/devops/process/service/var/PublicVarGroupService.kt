@@ -125,18 +125,6 @@ class PublicVarGroupService @Autowired constructor(
             // 通过数据库查询判断操作类型：version为0表示新增，否则为升级版本
             val isCreate = (version == 0)
             val newVersion = version + 1
-            // 计算新版本的初始引用计数（只统计动态版本引用）
-            val newVersionReferCount = if (version != 0) {
-                publicVarGroupReferInfoDao.countByGroupName(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    referType = null,
-                    version = -1 // 只统计动态版本引用
-                )
-            } else {
-                0
-            }
 
             val publicVarGroupPO = PublicVarGroupPO(
                 id = client.get(ServiceAllocIdResource::class)
@@ -147,23 +135,13 @@ class PublicVarGroupService @Autowired constructor(
                 versionName = "v$newVersion",
                 latestFlag = true,
                 varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                referCount = newVersionReferCount,
+                referCount = 0,
                 desc = publicVarGroupDTO.publicVarGroup.desc,
                 creator = userId,
                 modifier = userId,
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-
-            if (version != 0) {
-                publicVarGroupReferInfoService.updateSingleGroupReferCount(
-                    context = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = version,
-                    redisLock = redisLock
-                )
-            }
 
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -187,17 +165,6 @@ class PublicVarGroupService @Autowired constructor(
                         versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
-                )
-            }
-
-            // 提交后再更新新版本的引用计数
-            if (newVersionReferCount > 0) {
-                publicVarGroupReferInfoService.updateSingleGroupReferCount(
-                    context = dslContext,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = newVersion,
-                    redisLock = redisLock
                 )
             }
 
