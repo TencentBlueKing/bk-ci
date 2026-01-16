@@ -662,5 +662,7 @@
     "refresh": "刷新",
     "filterNodeBy": " 按 {0} 等筛选",
     "creativeResource": "创作流资源",
-    "pipelineResource": "流水线资源"
+    "pipelineResource": "流水线资源",
+    "relatedCreativeFlow": "关联的创作流",
+    "workspace": "工作空间"
 }

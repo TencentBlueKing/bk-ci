@@ -30,6 +30,7 @@
                 </bk-input>
             </bk-form-item>
             <bk-form-item
+                v-if="!isCreateResType"
                 :label="$t('environment.envInfo.envType')"
                 class="env-type-item"
                 required
@@ -93,10 +94,10 @@
 </template>
 
 <script>
-    import { computed } from 'vue'
+    import { computed, watch } from 'vue'
     import useCreateEnv from '@/hooks/useCreateEnv'
     import useInstance from '@/hooks/useInstance'
-    import { ENV_TYPE_MAP } from '@/store/constants'
+    import { ENV_TYPE_MAP, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
     export default {
         name: 'CreateEnvDialog',
@@ -111,6 +112,7 @@
                 closeCreateEnvDialog
             } = useCreateEnv(onSuccess, onError)
 
+            const isCreateResType = computed(() => proxy.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE)
             const envTypeEnums = computed(() => ([
                 ENV_TYPE_MAP.BUILD,
                 ENV_TYPE_MAP.PROD,
@@ -154,12 +156,19 @@
                 })
                 proxy.$emit('success')
             }
+            
+            watch(isShow, (val) => {
+                if (val && isCreateResType.value) {
+                    envParams.value.envType = ENV_TYPE_MAP.CREATE
+                }
+            })
             return {
                 isShow,
                 isLoading,
                 envParams,
                 formRules,
                 envTypeEnums,
+                isCreateResType,
 
                 // function
                 onError,

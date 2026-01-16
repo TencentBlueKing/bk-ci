@@ -3,7 +3,8 @@ import useInstance from './useInstance'
 import useEnvDetail from './useEnvDetail'
 
 import {
-    ENV_TYPE_MAP
+    ENV_TYPE_MAP,
+    SERVICE_RESOURCE_TYPE
 } from '@/store/constants'
 
 const envList = ref([])
@@ -38,10 +39,11 @@ export default function useEnvAside () {
         await fetchEnvList()
         await fetchEnvCountAsType()
     }
-
     const envType = computed(() => proxy.$route.params?.envType)
     const envId = computed(() => proxy.$route.params.envId)
     const projectId = computed(() => proxy.$route.params.projectId)
+    const resType = computed(() => proxy.$route.params.resType)
+    const isCreateResType = computed(() => resType.value === SERVICE_RESOURCE_TYPE.CREATE)
     
     // 计算环境总数
     const totalEnvCount = computed(() => {
@@ -93,11 +95,12 @@ export default function useEnvAside () {
         }
     }
 
-    const fetchEnvCountAsType = async (createEnv = false) => {
+    const fetchEnvCountAsType = async (createEnv) => {
+        console.log(isCreateResType, 'isCreateResType')
         try {
             const res = await proxy.$store.dispatch('environment/requestEnvCount', {
                 projectId: projectId.value,
-                createEnv
+                createEnv: isCreateResType.value
             })
             envCountData.value = res
             return res
@@ -136,6 +139,8 @@ export default function useEnvAside () {
         envList,
         envCountData,
         totalEnvCount,
+        resType,
+        isCreateResType,
 
         // function
         initData,

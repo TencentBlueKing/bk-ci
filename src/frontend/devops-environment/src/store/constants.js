@@ -30,5 +30,6 @@ export const ENV_TYPE_MAP = {
     BUILD: 'BUILD',
     PROD: 'PROD',
     DEV: 'DEV',
-    DEVX: 'DEVX'
+    DEVX: 'DEVX',
+    CREATE: 'CREATE'
 }
