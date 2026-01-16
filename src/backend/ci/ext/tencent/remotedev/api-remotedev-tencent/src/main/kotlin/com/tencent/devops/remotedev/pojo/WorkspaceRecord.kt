@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
+import org.tmatesoft.sqljet.core.internal.lang.SqlParser
 import java.time.LocalDateTime
 
 interface WorkspaceRecordInf {
@@ -168,5 +169,7 @@ data class WorkspaceRecordWithWindows(
     @get:Schema(title = "节点id")
     val nodeHashId: String?,
     @get:Schema(title = "resourceId")
-    val resourceId: String?
+    val resourceId: String?,
+    @get:Schema(title = "enableRecord")
+    val enableRecord: Boolean? = false
 ) : WorkspaceRecordInf
