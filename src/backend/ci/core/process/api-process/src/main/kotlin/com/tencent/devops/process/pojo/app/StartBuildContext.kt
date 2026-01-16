@@ -294,7 +294,7 @@ data class StartBuildContext(
             currentBuildNo: Int? = null
         ): StartBuildContext {
             val commitList = pipelineParamMap[BK_REPO_WEBHOOK_COMMIT_LIST]?.value?.let {
-                val list = JsonUtil.anyToOrNull(it, object : TypeReference<List<WebhookCommit>>() {})
+                val list = JsonUtil.toOrNull(it.toString(), object : TypeReference<List<WebhookCommit>>() {})
                 pipelineParamMap.remove(BK_REPO_WEBHOOK_COMMIT_LIST) // 提交记录无需保存变量
                 list
             }
