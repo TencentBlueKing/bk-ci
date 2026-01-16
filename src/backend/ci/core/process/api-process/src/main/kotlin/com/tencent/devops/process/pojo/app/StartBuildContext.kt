@@ -27,8 +27,11 @@
 
 package com.tencent.devops.process.pojo.app
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
@@ -422,7 +425,11 @@ data class StartBuildContext(
                 materialId = params[BK_CI_MATERIAL_ID],
                 materialName = params[BK_CI_MATERIAL_NAME],
                 commitList = params[BK_REPO_WEBHOOK_COMMIT_LIST]?.let {
-                    it as? List<WebhookCommit>
+                    if (it.isBlank()) {
+                        null
+                    } else {
+                        JsonUtil.anyToOrNull(it, object : TypeReference<List<WebhookCommit>>() {})
+                    }
                 }
             )
         }

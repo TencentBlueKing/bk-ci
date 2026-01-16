@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CODE_BASE_TRIGGERING
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
@@ -168,7 +169,9 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
             size = BK_REPO_WEBHOOK_COMMIT_LIST_MAX_LENGTH
         )
         // 记录前50条提交信息用于触发材料展示
-        startParams[BK_REPO_WEBHOOK_COMMIT_LIST] = webhookCommitList.take(BK_REPO_WEBHOOK_COMMIT_MATERIAL_MAX_LENGTH)
+        startParams[BK_REPO_WEBHOOK_COMMIT_LIST] = webhookCommitList
+                .take(BK_REPO_WEBHOOK_COMMIT_MATERIAL_MAX_LENGTH)
+                .let { JsonUtil.toJson(it, false) }
         return startParams
     }
 
