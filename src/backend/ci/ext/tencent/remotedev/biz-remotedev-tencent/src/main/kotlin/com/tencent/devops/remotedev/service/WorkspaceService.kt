@@ -1466,7 +1466,8 @@ class WorkspaceService @Autowired constructor(
             cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
             cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
-            winConfig = allConfig[workspace.winConfigId?.toLong()]
+            winConfig = allConfig[workspace.winConfigId?.toLong()],
+            enableRecord = workspace.enableRecord
         )
     }
 
