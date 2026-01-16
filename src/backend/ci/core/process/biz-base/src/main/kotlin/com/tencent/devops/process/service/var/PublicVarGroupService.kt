@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
@@ -98,7 +97,6 @@ class PublicVarGroupService @Autowired constructor(
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
-    private val tokenService: ClientTokenService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) {
     companion object {
@@ -577,7 +575,7 @@ class PublicVarGroupService @Autowired constructor(
     ): Int {
         var index = currentIndex
         varPOs.forEach { po ->
-            val varName = (po as? PublicVarPO)?.varName ?: return@forEach
+            val varName = po.varName
 
             if (processedVarNames.contains(varName)) {
                 throw ErrorCodeException(

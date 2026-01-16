@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
+import com.tencent.devops.process.pojo.`var`.VarGroupReferInfoQueryResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
@@ -301,7 +302,9 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     fun listVarReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
 
-        val (totalCount, varGroupReferInfo) = queryVarGroupReferInfo(queryReq)
+        val queryResult = queryVarGroupReferInfo(queryReq)
+        val totalCount = queryResult.totalCount
+        val varGroupReferInfo = queryResult.referInfos
 
         logger.info("listVarReferInfo queryReq:{$queryReq }totalCount: $totalCount ${varGroupReferInfo.size}")
         if (totalCount == 0) {
@@ -471,7 +474,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
      */
     private fun queryVarGroupReferInfo(
         queryReq: PublicVarGroupInfoQueryReqDTO
-    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
+    ): VarGroupReferInfoQueryResult {
         val projectId = queryReq.projectId
         val groupName = queryReq.groupName!!
         val varName = queryReq.varName
@@ -485,7 +488,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             )
 
             if (varGroupRecord == null) {
-                return Pair(0, emptyList())
+                return VarGroupReferInfoQueryResult(0, emptyList())
             }
 
             // 如果指定了 varName，则查询引用了该变量的资源列表
@@ -516,7 +519,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 pageSize = queryReq.pageSize
             )
 
-            return Pair(totalCount, varGroupReferInfo)
+            return VarGroupReferInfoQueryResult(totalCount, varGroupReferInfo)
         } catch (e: Throwable) {
             logger.warn("Failed to query var group refer info for group: $groupName in project: $projectId", e)
             throw ErrorCodeException(
@@ -532,7 +535,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
         queryReq: PublicVarGroupInfoQueryReqDTO,
         groupName: String,
         varName: String
-    ): Pair<Int, List<ResourcePublicVarGroupReferPO>> {
+    ): VarGroupReferInfoQueryResult {
         val projectId = queryReq.projectId
 
         try {
@@ -546,7 +549,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             )
 
             if (referIds.isEmpty()) {
-                return Pair(0, emptyList())
+                return VarGroupReferInfoQueryResult(0, emptyList())
             }
 
             // 统计总数
@@ -567,7 +570,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 pageSize = queryReq.pageSize
             )
 
-            return Pair(totalCount, varGroupReferInfo)
+            return VarGroupReferInfoQueryResult(totalCount, varGroupReferInfo)
         } catch (e: Throwable) {
             logger.warn(
                 "Failed to query var group refer info by varName: $varName (all versions) in project: $projectId",

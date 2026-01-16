@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
@@ -54,6 +55,16 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val client: Client
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PublicVarGroupReleaseRecordService::class.java)
+        const val OLD_VALUE = "oldValue"
+        const val NEW_VALUE = "newValue"
+        const val OPERATE = "operate"
+        const val TYPE = "type"
+        const val CHANGES = "changes"
+        const val SHOW_INFO = "showInfo"
+    }
 
     fun batchAddPublicVarGroupReleaseRecord(publicVarGroupReleaseDTO: PublicVarGroupReleaseDTO) {
         val userId = publicVarGroupReleaseDTO.userId
@@ -81,7 +92,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         } else {
             emptyList()
         }
-        if (releaseRecords.isNotEmpty() && segmentIds.isNullOrEmpty()) {
+        val listSize = segmentIds?.size ?: 0
+        if (segmentIds.isNullOrEmpty() || listSize != releaseRecords.size) {
             logger.warn("Failed to generate segment IDs for release records, size: ${releaseRecords.size}")
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
@@ -91,7 +103,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         var index = 0
         val records = releaseRecords.map { releaseRecord ->
             ResourcePublicVarGroupReleaseRecordPO(
-                id = segmentIds?.get(index++) ?: 0,
+                id = segmentIds.get(index++) ?: 0,
                 projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.firstOrNull()?.projectId
                     ?: throw ErrorCodeException(
                         errorCode = ERROR_INVALID_PARAM_,
@@ -158,7 +170,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             )
 
             // 取第一条记录的基本信息
-            val firstRecord = versionRecords.first()
+            val firstRecord = versionRecords.firstOrNull()
+            if (firstRecord == null) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
+                    params = arrayOf(groupName)
+                )
+            }
 
             // 解析并组合所有记录的 content
             val combinedContent = combineReleaseContents(versionRecords)
@@ -213,9 +231,9 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     ) {
         try {
             val contentMap = JsonUtil.toMap(record.content)
-            val operate = contentMap["operate"]?.toString() ?: return
-            val varName = contentMap["varName"]?.toString() ?: return
-            val type = contentMap["type"]?.toString() ?: PublicVarTypeEnum.VARIABLE.name
+            val operate = contentMap[OPERATE]?.toString() ?: return
+            val varName = contentMap[PublicVarDO::varName.name]?.toString() ?: return
+            val type = contentMap[TYPE]?.toString() ?: PublicVarTypeEnum.VARIABLE.name
 
             val key = "${operate}_${type}"
             varMap.getOrPut(key) { mutableListOf() }.add(varName)
@@ -279,25 +297,26 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     ): List<PublicVarReleaseDO> {
         val releaseRecords = mutableListOf<PublicVarReleaseDO>()
 
+        val newVarNameSet = newVars.map { it.varName }.toSet()
+        val oldVarNameSet = oldVars.map { it.varName }.toSet()
+
         // 处理删除的变量
-        val deletedVars = oldVars.filter { oldVar ->
-            newVars.none { it.varName == oldVar.varName }
-        }
+        val deletedVars = oldVars.filter { it.varName !in newVarNameSet }
         deletedVars.forEach { oldVar ->
             val showInfo = mapOf(
-                "alias" to oldVar.alias,
-                "desc" to oldVar.desc,
-                "defaultValue" to oldVar.defaultValue,
-                "readOnly" to oldVar.buildFormProperty.readOnly,
-                "required" to oldVar.buildFormProperty.required,
-                "valueNotEmpty" to oldVar.buildFormProperty.valueNotEmpty
+                PublicVarDO::alias.name to oldVar.alias,
+                PublicVarDO::desc.name to oldVar.desc,
+                PublicVarDO::defaultValue.name to oldVar.defaultValue,
+                BuildFormProperty::readOnly.name to oldVar.buildFormProperty.readOnly,
+                BuildFormProperty::required.name to oldVar.buildFormProperty.required,
+                BuildFormProperty::valueNotEmpty.name to oldVar.buildFormProperty.valueNotEmpty
             )
             val content = JsonUtil.toJson(
                 mapOf(
-                    "operate" to OperateTypeEnum.DELETE,
-                    "varName" to oldVar.varName,
-                    "type" to oldVar.type.name,
-                    "showInfo" to showInfo
+                    OPERATE to OperateTypeEnum.DELETE,
+                    PublicVarDO::varName.name to oldVar.varName,
+                    TYPE to oldVar.type.name,
+                    SHOW_INFO to showInfo
                 )
             )
 
@@ -314,24 +333,22 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         }
 
         // 处理新增的变量
-        val addedVars = newVars.filter { newVar ->
-            newVar.varName !in oldVars.map { it.varName }
-        }
+        val addedVars = newVars.filter { it.varName !in oldVarNameSet }
         addedVars.forEach { newVar ->
             val showInfo = mapOf(
-                "alias" to newVar.alias,
-                "desc" to newVar.desc,
-                "defaultValue" to newVar.defaultValue,
-                "required" to newVar.buildFormProperty.required,
-                "readOnly" to newVar.buildFormProperty.readOnly,
-                "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
+                PublicVarDO::alias.name to newVar.alias,
+                PublicVarDO::desc.name to newVar.desc,
+                PublicVarDO::defaultValue.name to newVar.defaultValue,
+                BuildFormProperty::required.name to newVar.buildFormProperty.required,
+                BuildFormProperty::readOnly.name to newVar.buildFormProperty.readOnly,
+                BuildFormProperty::valueNotEmpty.name to newVar.buildFormProperty.valueNotEmpty
             )
             val content = JsonUtil.toJson(
                 mapOf(
-                    "operate" to OperateTypeEnum.CREATE,
-                    "varName" to newVar.varName,
-                    "type" to newVar.type.name,
-                    "showInfo" to showInfo
+                    OPERATE to OperateTypeEnum.CREATE,
+                    PublicVarDO::varName.name to newVar.varName,
+                    TYPE to newVar.type.name,
+                    SHOW_INFO to showInfo
                 )
             )
 
@@ -349,15 +366,15 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
         // 处理修改的变量
         val modifiedVars = newVars.filter { newVar ->
-            oldVars.any { oldVar ->
-                oldVar.varName == newVar.varName &&
-                        (oldVar.alias != newVar.alias ||
-                                oldVar.desc != newVar.desc ||
-                                oldVar.defaultValue != newVar.defaultValue ||
-                                !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty))
-            }
+            newVar.varName in oldVarNameSet &&
+                    oldVars.any { oldVar ->
+                        oldVar.varName == newVar.varName &&
+                                (oldVar.alias != newVar.alias ||
+                                        oldVar.desc != newVar.desc ||
+                                        oldVar.defaultValue != newVar.defaultValue ||
+                                        !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty))
+                    }
         }
-
         modifiedVars.forEach { newVar ->
             val oldVar = oldVars.first { it.varName == newVar.varName }
 
@@ -365,13 +382,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             val changes = mutableMapOf<String, Map<String, Any?>>()
 
             if (oldVar.alias != newVar.alias) {
-                changes["alias"] = mapOf("oldValue" to oldVar.alias, "newValue" to newVar.alias)
+                changes[PublicVarDO::alias.name] = mapOf(OLD_VALUE to oldVar.alias, NEW_VALUE to newVar.alias)
             }
             if (oldVar.desc != newVar.desc) {
-                changes["desc"] = mapOf("oldValue" to oldVar.desc, "newValue" to newVar.desc)
+                changes[PublicVarDO::desc.name] = mapOf(OLD_VALUE to oldVar.desc, NEW_VALUE to newVar.desc)
             }
             if (oldVar.defaultValue != newVar.defaultValue) {
-                changes["defaultValue"] = mapOf("oldValue" to oldVar.defaultValue, "newValue" to newVar.defaultValue)
+                changes[PublicVarDO::defaultValue.name] = mapOf(OLD_VALUE to oldVar.defaultValue, NEW_VALUE to newVar.defaultValue)
             }
 
             // 直接比较BuildFormProperty对象的属性
@@ -379,36 +396,36 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             val newBuildFormProperty = newVar.buildFormProperty
 
             if (oldBuildFormProperty.required != newBuildFormProperty.required) {
-                changes["required"] =
-                    mapOf("oldValue" to oldBuildFormProperty.required, "newValue" to newBuildFormProperty.required)
+                changes[BuildFormProperty::required.name] =
+                    mapOf(OLD_VALUE to oldBuildFormProperty.required, NEW_VALUE to newBuildFormProperty.required)
             }
             if (oldBuildFormProperty.readOnly != newBuildFormProperty.readOnly) {
-                changes["readOnly"] =
-                    mapOf("oldValue" to oldBuildFormProperty.readOnly, "newValue" to newBuildFormProperty.readOnly)
+                changes[BuildFormProperty::readOnly.name] =
+                    mapOf(OLD_VALUE to oldBuildFormProperty.readOnly, NEW_VALUE to newBuildFormProperty.readOnly)
             }
             if (oldBuildFormProperty.valueNotEmpty != newBuildFormProperty.valueNotEmpty) {
-                changes["valueNotEmpty"] = mapOf(
-                    "oldValue" to oldBuildFormProperty.valueNotEmpty,
-                    "newValue" to newBuildFormProperty.valueNotEmpty
+                changes[BuildFormProperty::valueNotEmpty.name] = mapOf(
+                    OLD_VALUE to oldBuildFormProperty.valueNotEmpty,
+                    NEW_VALUE to newBuildFormProperty.valueNotEmpty
                 )
             }
 
             if (changes.isNotEmpty()) {
                 val showInfo = mapOf(
-                    "alias" to newVar.alias,
-                    "desc" to newVar.desc,
-                    "required" to newVar.buildFormProperty.required,
-                    "readOnly" to newVar.buildFormProperty.readOnly,
-                    "defaultValue" to newVar.defaultValue,
-                    "valueNotEmpty" to newVar.buildFormProperty.valueNotEmpty
+                    PublicVarDO::alias.name to newVar.alias,
+                    PublicVarDO::desc.name to newVar.desc,
+                    BuildFormProperty::required.name to newVar.buildFormProperty.required,
+                    BuildFormProperty::readOnly.name to newVar.buildFormProperty.readOnly,
+                    PublicVarDO::defaultValue.name to newVar.defaultValue,
+                    BuildFormProperty::valueNotEmpty.name to newVar.buildFormProperty.valueNotEmpty
                 )
                 val content = JsonUtil.toJson(
                     mapOf(
-                        "operate" to OperateTypeEnum.UPDATE,
-                        "varName" to newVar.varName,
-                        "changes" to changes,
-                        "type" to newVar.type.name,
-                        "showInfo" to showInfo
+                        OPERATE to OperateTypeEnum.UPDATE,
+                        PublicVarDO::varName.name to newVar.varName,
+                        CHANGES to changes,
+                        TYPE to newVar.type.name,
+                        SHOW_INFO to showInfo
                     )
                 )
 
@@ -460,9 +477,5 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
             )
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PublicVarGroupReleaseRecordService::class.java)
     }
 }
