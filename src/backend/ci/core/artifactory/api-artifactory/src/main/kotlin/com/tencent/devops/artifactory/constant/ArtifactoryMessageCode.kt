@@ -68,7 +68,7 @@ object ArtifactoryMessageCode {
     const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102026" // 更新插件执行环境信息失败
     const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102027" // 获取插件敏感信息失败
     const val ARCHIVE_PLUGIN_FILE_FAILED = "2102028" // 归档插件文件失败
-    const val GRANT_DOWNLOAD_PERMISSION = "2102029" // 请联系流水线负责人授予下载构件权限
+    const val GRANT_DOWNLOAD_PERMISSION = "2102029" // 请联系项目负责人：{0} 授予项目访问权限
     const val GRANT_PIPELINE_PERMISSION = "2102030" // 访问件构请联系流水线负责人：\n{0} 授予流水线权限。
     const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" // 元数据({0})不存在，请通过共享下载文件
     const val NO_EXPERIENCE_PERMISSION = "2102032" // 您没有该体验的权限
