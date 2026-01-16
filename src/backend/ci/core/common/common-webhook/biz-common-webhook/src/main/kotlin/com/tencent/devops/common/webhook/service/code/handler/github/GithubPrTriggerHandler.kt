@@ -27,9 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.github
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -99,7 +97,6 @@ import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.Date
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")

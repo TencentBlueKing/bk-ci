@@ -99,7 +99,6 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -381,8 +380,6 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.source_branch
         }
-        // 记录本次MR的变更记录
-
         // 有覆盖风险的上下文做二次确认
         startParams.putIfEmpty(GIT_MR_NUMBER, event.object_attributes.iid.toString())
         startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
