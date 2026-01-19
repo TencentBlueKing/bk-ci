@@ -1227,7 +1227,7 @@ abstract class ImageReleaseService {
             )
         }
         val targetImageStatus = ImageStatusEnum.getImageStatus(
-            ImageStatusEnum.getImageStatus(image.imageStatus.toInt())
+            ImageStatusEnum.getImageStatus(imageStatus.toInt())
         )
         marketImageDao.updateImageStatusInfoById(
             dslContext = context,
