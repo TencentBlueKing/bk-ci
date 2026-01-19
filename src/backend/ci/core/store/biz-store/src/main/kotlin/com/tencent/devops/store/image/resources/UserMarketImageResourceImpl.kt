@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.UserMarketImageResource
+import com.tencent.devops.store.image.service.ImageService
 import com.tencent.devops.store.pojo.common.version.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
@@ -40,7 +41,6 @@ import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import com.tencent.devops.store.image.service.ImageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,6 +49,10 @@ class UserMarketImageResourceImpl @Autowired constructor(
 ) : UserMarketImageResource {
     override fun getPipelineImageVersions(projectCode: String, imageCode: String): Result<List<VersionInfo>> {
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
+    }
+
+    override fun getLatestImageIdByCode(userId: String, imageCode: String): Result<String?> {
+        return imageService.getLatestImageIdByCode(userId = userId, imageCode = imageCode)
     }
 
     override fun delete(userId: String, imageCode: String): Result<Boolean> {

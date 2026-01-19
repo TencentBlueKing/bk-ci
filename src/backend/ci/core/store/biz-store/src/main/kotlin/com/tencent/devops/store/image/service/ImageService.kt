@@ -115,6 +115,9 @@ import com.tencent.devops.store.pojo.image.response.MarketImageItem
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
+import java.time.LocalDateTime
+import java.util.Date
+import kotlin.math.ceil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -123,9 +126,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
-import java.time.LocalDateTime
-import java.util.Date
-import kotlin.math.ceil
 
 @Suppress("ALL")
 @RefreshScope
@@ -1192,6 +1192,25 @@ abstract class ImageService @Autowired constructor() {
             versionList.add(VersionInfo("$versionName(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
         }
         return versionList
+    }
+
+    /**
+     * 根据镜像代码获取对应的最新版本镜像ID
+     */
+    fun getLatestImageIdByCode(userId: String, imageCode: String): Result<String?> {
+        // 判断当前用户是否是该镜像的成员
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = imageCode,
+                storeType = StoreTypeEnum.IMAGE.type.toByte()
+        )) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(imageCode)
+            )
+        }
+        return Result(imageDao.getLatestImageIdByCode(dslContext, imageCode))
     }
 
     fun updateImageBaseInfo(

@@ -39,9 +39,9 @@ import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -213,4 +213,16 @@ interface UserMarketImageResource {
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<VersionInfo>>
+
+    @Operation(summary = "根据镜像代码获取对应的latest版本ID")
+    @GET
+    @Path("/imageCodes/{imageCode}/version/latest")
+    fun getLatestImageIdByCode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "镜像代码", required = true)
+        @PathParam("imageCode")
+        imageCode: String
+    ): Result<String?>
 }
