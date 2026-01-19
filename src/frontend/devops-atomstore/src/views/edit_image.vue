@@ -527,7 +527,28 @@
                     this.requestReleaseImage(this.form).then((imageId) => {
                         this.$bkMessage({ message: this.$t('store.提交成功'), theme: 'success' })
                         this.$router.push({ name: 'imageProgress', params: { imageId } })
-                    }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                    }).catch((err) => {
+                        if (err.httpStatus === 200 && err.code === 2120302) {
+                            const h = this.$createElement
+                            const subHeader = h('p', {
+                                style: {
+                                    textDecoration: 'none',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'normal',
+                                    textAlign: 'left',
+                                    lineHeight: '24px'
+                                }
+                            }, err.message || err)
+                            this.$bkInfo({
+                                type: 'error',
+                                title: this.$t('store.提交失败'),
+                                showFooter: false,
+                                subHeader
+                            })
+                        } else {
+                            this.$bkMessage({ message: err.message || err, theme: 'error' })
+                        }
+                    }).finally(() => {
                         this.isLoading = false
                     })
                 }).catch((validate) => {
