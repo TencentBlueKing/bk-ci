@@ -70,7 +70,7 @@ data class ProjectProperties(
     @get:Schema(title = "是否启用观察员模式", required = false)
     val remotedevObserver: Boolean? = null,
     @get:Schema(title = "是否允许共享制品", required = false)
-    val enableShareArtifact: Boolean? = true
+    var enableShareArtifact: Boolean? = true
 ) {
     /**
      * 接受前端请求时,只复制前端展示修改的值,由op控制的值不能修改
