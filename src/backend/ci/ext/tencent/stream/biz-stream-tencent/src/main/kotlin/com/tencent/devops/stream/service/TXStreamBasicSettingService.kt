@@ -49,13 +49,12 @@ import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.util.GitCommonUtils
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
-import org.springframework.core.task.TaskExecutor
 import org.springframework.stereotype.Service
 
 @Primary
@@ -68,9 +67,7 @@ class TXStreamBasicSettingService @Autowired constructor(
     private val streamGitTransferService: StreamGitTransferService,
     private val tokenService: StreamGitTokenService,
     private val streamScmService: StreamScmService,
-    private val streamGitConfig: StreamGitConfig,
-    @Qualifier("streamSettingExecutor")
-    private val streamSettingExecutor: TaskExecutor
+    private val streamGitConfig: StreamGitConfig
 ) : StreamBasicSettingService(
     dslContext = dslContext,
     client = client,
@@ -441,29 +438,34 @@ class TXStreamBasicSettingService @Autowired constructor(
     }
 
     fun refreshAllStreamProjectDepartedUsers(userId: String): Boolean {
-        streamSettingExecutor.execute {
-            val startTime = System.currentTimeMillis()
-            var page = PageUtil.DEFAULT_PAGE
-            val pageSize = PageUtil.MAX_PAGE_SIZE
-            var continueFlag = true
-            while (continueFlag) {
-                logger.info(
-                    "refresh all stream project departed users page: $page, pageSize: $pageSize"
-                )
-                val gitProjectIds = client.get(TxServiceAtomReleaseResource::class)
-                    .getAtomRepositoryId(
-                        userId = userId,
-                        page = page,
-                        pageSize = pageSize
-                    ).data?.mapNotNull { it.toLongOrNull() }
-                if (gitProjectIds.isNullOrEmpty()) {
-                    continueFlag = false
-                    continue
+        val executor = Executors.newSingleThreadExecutor()
+        executor.execute {
+            try {
+                val startTime = System.currentTimeMillis()
+                var page = PageUtil.DEFAULT_PAGE
+                val pageSize = PageUtil.MAX_PAGE_SIZE
+                var continueFlag = true
+                while (continueFlag) {
+                    logger.info("refresh all stream project departed users page: $page, pageSize: $pageSize")
+                    val gitProjectIds = client.get(TxServiceAtomReleaseResource::class)
+                        .getAtomRepositoryId(
+                            userId = userId,
+                            page = page,
+                            pageSize = pageSize
+                        ).data?.mapNotNull { it.toLongOrNull() }
+                    if (gitProjectIds.isNullOrEmpty()) {
+                        continueFlag = false
+                        continue
+                    }
+                    checkAndUpdateDepartedUsers(gitProjectIds)
+                    page++
                 }
-                checkAndUpdateDepartedUsers(gitProjectIds)
-                page++
+                logger.info("Refresh all stream project departed users ${System.currentTimeMillis() - startTime}ms")
+            } catch (e: Throwable) {
+                logger.warn("refreshAllStreamProjectDepartedUsers|execute failed|msg=${e.message}")
+            } finally {
+                executor.shutdown()
             }
-            logger.info("Refresh all stream project departed users ${System.currentTimeMillis() - startTime}ms")
         }
         return true
     }

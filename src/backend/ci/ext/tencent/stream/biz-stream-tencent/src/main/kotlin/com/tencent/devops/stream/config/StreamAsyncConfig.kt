@@ -45,13 +45,4 @@ class StreamAsyncConfig {
         executor.setQueueCapacity(1) // 任务队列容量
         return executor
     }
-
-    @Bean
-    fun streamSettingExecutor(): TaskExecutor {
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 1
-        executor.maxPoolSize = 1
-        executor.setQueueCapacity(1)
-        return executor
-    }
 }
