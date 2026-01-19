@@ -704,7 +704,10 @@
       "required": "Set as input variable",
       "valueNotEmpty": "Required",
       "readOnly": "ReadOnly when executing",
-      "category": "Group labels"
+      "category": "Group labels",
+      "repo": "Repository",
+      "relativePath": "Relative path to code repository",
+      "glob": "Filter rules"
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate"

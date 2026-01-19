@@ -705,7 +705,10 @@
       "required": "是否入参",
       "valueNotEmpty": "是否必填",
       "readOnly": "运行时只读",
-      "category": "分组标签"
+      "category": "分组标签",
+      "repo": "代码库",
+      "relativePath": "代码库相对目录",
+      "glob": "过滤规则"
     },
     "propertyUpdated": "更新",
     "toInstance": "去实例化"
