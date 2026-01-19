@@ -18,6 +18,9 @@ data class TemplateInstanceField(
         // 推荐版本号
         const val BK_CI_BUILD_NO = "BK_CI_BUILD_NO"
 
+        /**
+         * model应该传模版的,不要传流水线的
+         */
         fun initFromTrigger(
             model: Model
         ): TemplateInstanceField {
