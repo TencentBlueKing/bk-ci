@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -471,6 +472,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
     ): Result<Page<LightBuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
+        val offset = PageUtil.convertPageSizeToSQLLimit(page, pageSize).offset
         val query = PipelineBuildQuery(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -479,7 +481,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             startTimeTo = startTimeTo,
             endTimeFrom = endTimeFrom,
             endTimeTo = endTimeTo,
-            offset = 0,
+            offset = offset,
             limit = pageSize,
             buildNoStart = buildNoStart,
             buildNoEnd = buildNoEnd
