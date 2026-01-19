@@ -149,8 +149,8 @@ class MetricsQueryService @Autowired constructor(
     fun validateNoMaliciousPatterns(promql: String) {
         // 危险模式列表
         val dangerousPatterns = listOf(
-            // 防止逻辑运算符绕过
-            Regex("""\s+or\s+""", RegexOption.IGNORE_CASE),
+            // 防止逻辑运算符绕过（排除合法的 or vector(0) 用法）
+            Regex("""\s+or\s+(?!vector\s*\(\s*0\s*\))""", RegexOption.IGNORE_CASE),
             Regex("""\s+and\s+""", RegexOption.IGNORE_CASE),
 //            Regex("""\s+unless\s+""", RegexOption.IGNORE_CASE),
             // 防止注释注入
