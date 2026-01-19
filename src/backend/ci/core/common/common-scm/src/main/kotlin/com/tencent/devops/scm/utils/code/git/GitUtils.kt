@@ -201,4 +201,28 @@ object GitUtils {
 
         return matchesPrefix || containsKeyword
     }
+
+    /**
+     * 获取仓库commit 详情链接
+     */
+    fun getRepoCommitUrl(repoUrl: String, commitId: String, scmType: ScmType): String {
+        if (repoUrl.isEmpty() || commitId.isEmpty()) {
+            return ""
+        }
+        val (domain, repoName) = getDomainAndRepoName(repoUrl)
+        return when (scmType) {
+            ScmType.CODE_GIT, ScmType.CODE_TGIT -> {
+                "https://$domain/$repoName/commit/$commitId"
+            }
+
+            ScmType.GITHUB ->
+                "https://github.com/$repoName/commit/$commitId"
+
+            ScmType.CODE_GITLAB -> {
+                "https://$domain/$repoName/-/commit/$commitId"
+            }
+
+            else -> ""
+        }
+    }
 }

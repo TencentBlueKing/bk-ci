@@ -20,6 +20,7 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.pojo.WebhookCommit
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -224,6 +225,7 @@ class EventCacheService @Autowired constructor(
         size: Int
     ): List<WebhookCommit> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        val (domain, repoName) = GitUtils.getDomainAndRepoName(repo.url)
         return eventCache?.webhookCommitList ?: run {
             try {
                 val scmType = repo.getScmType()
@@ -247,7 +249,8 @@ class EventCacheService @Autowired constructor(
                                 commitTime = commitTime,
                                 eventType = CodeEventType.MERGE_REQUEST.name,
                                 mrId = mrId.toString(),
-                                action = null
+                                action = null,
+                                url = GitUtils.getRepoCommitUrl(repo.url, commitId = it.id, scmType = repo.getScmType())
                             )
                         }
                     }
@@ -271,7 +274,8 @@ class EventCacheService @Autowired constructor(
                                 commitTime = commitTime,
                                 eventType = CodeEventType.PULL_REQUEST.name,
                                 mrId = mrId.toString(),
-                                action = null
+                                action = null,
+                                url = GitUtils.getRepoCommitUrl(repo.url, commitId = it.sha, scmType = ScmType.GITHUB)
                             )
                         }
                     }

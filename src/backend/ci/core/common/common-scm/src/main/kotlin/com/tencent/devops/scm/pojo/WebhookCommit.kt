@@ -10,5 +10,6 @@ data class WebhookCommit(
     val commitTime: LocalDateTime,
     var mrId: String?,
     var eventType: String,
-    val action: String?
+    val action: String?,
+    val url: String? = ""
 )
