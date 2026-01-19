@@ -2229,5 +2229,4 @@ class PipelineBuildDao {
             }
         }
     }
-
 }
