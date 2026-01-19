@@ -127,7 +127,10 @@ interface UserEnvironmentResource {
         envType: EnvType?,
         @Parameter(description = "节点", required = true)
         @QueryParam("nodeHashId")
-        nodeHashId: String?
+        nodeHashId: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<List<EnvWithPermission>>
 
     @Operation(summary = "根据类型获取环境列表")

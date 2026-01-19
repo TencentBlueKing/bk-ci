@@ -256,7 +256,8 @@ class EnvService @Autowired constructor(
         projectId: String,
         envName: String?,
         envType: EnvType?,
-        nodeHashId: String?
+        nodeHashId: String?,
+        createMode: Boolean?
     ): List<EnvWithPermission> {
         val envIds = nodeHashId?.let {
             envNodeDao.listNodeIds(
@@ -269,11 +270,17 @@ class EnvService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             envName = envName,
-            envType = envType,
+            envTypeList = if (createMode == true) {
+                listOf(EnvType.CREATE)
+            } else if (envType != null) {
+                listOf(envType)
+            } else {
+                EnvType.noCreateMode()
+            },
             envIds = envIds
         )
         val result = mutableListOf<EnvWithPermission>()
-        if (envType == EnvType.CREATE) {
+        if (envType == EnvType.CREATE || createMode == true) {
             val createNodes = thirdPartyAgentDao.fetchCreateAgent(dslContext, projectId)
             if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 result.add(
@@ -1678,7 +1685,7 @@ class EnvService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             envName = null,
-            envType = EnvType.CREATE,
+            envTypeList = listOf(EnvType.CREATE),
             envIds = envIds
         ).map {
             EnvData(
