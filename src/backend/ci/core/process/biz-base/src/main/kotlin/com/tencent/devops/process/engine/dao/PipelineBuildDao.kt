@@ -2209,7 +2209,7 @@ class PipelineBuildDao {
                     status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
                     startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]),
-                    endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]),
+                    endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]).ifBlank { null },
                     errorInfoList = try {
                         if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {
                             JsonUtil.getObjectMapper()
