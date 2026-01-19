@@ -1226,12 +1226,15 @@ abstract class ImageReleaseService {
                 weight = weight
             )
         }
+        val targetImageStatus = ImageStatusEnum.getImageStatus(
+            ImageStatusEnum.getImageStatus(image.imageStatus.toInt())
+        )
         marketImageDao.updateImageStatusInfoById(
             dslContext = context,
             imageId = image.id,
             userId = userId,
             imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                imageStatus = ImageStatusEnum.values().find { it.status == imageStatus.toInt() },
+                imageStatus = targetImageStatus,
                 imageStatusMsg = imageStatusMsg,
                 latestFlag = latestFlag,
                 pubTime = pubTime
