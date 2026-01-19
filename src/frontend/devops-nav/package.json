@@ -97,7 +97,7 @@
       "public:master": {
         "outputs": [
           "{workspaceRoot}/frontend/console",
-          "{workspaceRoot}/frontend/entry's/main.json"
+          "{workspaceRoot}/frontend/entries/main.json"
         ]
       }
     }

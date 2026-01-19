@@ -104,7 +104,7 @@
                 ],
                 "outputs": [
                     "{workspaceRoot}/frontend/pipeline",
-                    "{workspaceRoot}/frontend/entry's/pipeline.json"
+                    "{workspaceRoot}/frontend/entries/pipeline.json"
                 ]
             }
         }

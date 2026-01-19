@@ -56,6 +56,7 @@
 </template>
 
 <script>
+    import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import validMixins from '../validMixins'
     import atomMixin from './atomMixin'
@@ -108,6 +109,11 @@
             if (this.atomPropsModel.archiveFile !== undefined) {
                 this.atomPropsModel.archiveFile.hidden = !this.element.enableArchiveFile
             }
+            Object.assign(this.element, {
+                ...getAtomDefaultValue(this.atomPropsModel),
+                ...this.element
+            })
+            
         },
         methods: {
             ...mapActions('pipelines', [
