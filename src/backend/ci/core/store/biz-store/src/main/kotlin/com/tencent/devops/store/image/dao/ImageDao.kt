@@ -41,7 +41,6 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageRecord
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
@@ -75,6 +74,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -87,7 +88,6 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -644,9 +644,9 @@ class ImageDao {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
-        val t =
-            dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))
-                .from(tImage).groupBy(tImage.IMAGE_CODE) // 查找每组atomCode最新的记录
+//        val t =
+//            dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))
+//                .from(tImage).groupBy(tImage.IMAGE_CODE)
         val query = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -666,19 +666,19 @@ class ImageDao {
         ).from(tImage)
             .join(tImageFeature)
             .on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
-            .join(t)
-            .on(
-                tImage.IMAGE_CODE.eq(
-                    t.field(
-                        KEY_IMAGE_CODE,
-                        String::class.java
-                    )
-                ).and(tImage.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-            )
+//            .join(t)
+//            .on(
+//                tImage.IMAGE_CODE.eq(
+//                    t.field(
+//                        KEY_IMAGE_CODE,
+//                        String::class.java
+//                    )
+//                ).and(tImage.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
+//            )
             .join(tStoreMember)
             .on(tImage.IMAGE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
-            .groupBy(tImage.IMAGE_CODE)
+            .groupBy(tImage.ID)
             .orderBy(tImage.UPDATE_TIME.desc())
         return if (pageSize != null && pageSize > 0 && page != null && page > 0) {
             query.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
@@ -700,6 +700,7 @@ class ImageDao {
             conditions.add(a.IMAGE_NAME.contains(imageName))
         }
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的镜像
+        conditions.add(a.LATEST_FLAG.eq(true))
         return conditions
     }
 
