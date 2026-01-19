@@ -1,5 +1,8 @@
 <template>
-    <div class="node-group-tree">
+    <div
+        class="node-group-tree"
+        v-bkloading="{ isLoading }"
+    >
         <div
             v-for="group in nodeGroup"
             :key="group.type"
@@ -266,7 +269,8 @@
                         canUpdate: 'TRUE',
                         tagValueName: ''
                     }]
-                }
+                },
+                isLoading: false
             }
         },
         computed: {
@@ -278,8 +282,8 @@
                 return window.innerHeight * 0.8 - 184
             },
             nodeGroup () {
-                const { CMDB = 0, THIRDPARTY = 0 } = this.nodeCount || {}
-                const totalCount = CMDB + THIRDPARTY
+                const { CMDB = 0, THIRDPARTY = 0, CREATE = 0 } = this.nodeCount || {}
+                const totalCount = this.isCreateResType ? CREATE : CMDB + THIRDPARTY
                 return [
                     {
                         type: 'node_type',
@@ -313,6 +317,9 @@
             },
             currentResType () {
                 return this.$route.params.resType
+            },
+            isCreateResType () {
+                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
             }
         },
         watch: {
@@ -336,15 +343,30 @@
                         this.refreshSidebarData()
                     }
                 }
+            },
+            isCreateResType: {
+                handler () {
+                    this.$router.replace({
+                        name: 'nodeList',
+                        params: {
+                            ...this.$route.params,
+                            nodeType: ALLNODE
+                        }
+                    })
+                    this.init()
+                }
             }
         },
-        async mounted () {
-            this.getNodeTypeCount()
-            await this.getTagTypeList()
-            this.setDefaultExpandedGroup()
+        mounted () {
+            this.init()
         },
         methods: {
             ...mapActions('environment', ['requestNodeTagList', 'requestGetCounts']),
+            async init () {
+                this.getNodeTypeCount()
+                await this.getTagTypeList()
+                this.setDefaultExpandedGroup()
+            },
             refreshSidebarData () {
                 this.getTagTypeList()
             },
@@ -392,7 +414,12 @@
                 ) || []
             },
             async getTagTypeList () {
-                await this.requestNodeTagList(this.projectId)
+                this.isLoading = true
+                await this.requestNodeTagList({
+                    projectId: this.projectId,
+                    createMode: this.isCreateResType
+                })
+                this.isLoading = false
                 const nodeType = this.$route.params.nodeType
                 const validNodeTypes = ['allNode', 'THIRDPARTY', 'CMDB']
                 const isValidNodeType = validNodeTypes.includes(nodeType) || this.getTagValues().includes(nodeType)

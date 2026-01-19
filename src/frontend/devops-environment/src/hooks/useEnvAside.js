@@ -55,12 +55,17 @@ export default function useEnvAside () {
         try {
             const params = {
                 ...(envType.value !== ENV_TYPE_MAP.ALL ? { envType: envType.value } : {}),
-                ...(envName.value ? { envName: envName.value } : {})
+                ...(envName.value ? { envName: envName.value } : {}),
+                ...(isCreateResType.value ? { createMode: true } : {})
             }
-            const res = await proxy.$store.dispatch('environment/requestEnvList', {
+            let res = await proxy.$store.dispatch('environment/requestEnvList', {
                 projectId: projectId.value,
                 params
             })
+            // 如果是 CREATE 类型，过滤掉第一个数据
+            if (isCreateResType.value && res.length > 0) {
+                res = res.slice(1)
+            }
             envList.value = res
             proxy.$store.commit('environment/setEnvList', res)
             

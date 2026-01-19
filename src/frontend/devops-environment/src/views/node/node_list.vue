@@ -70,7 +70,7 @@
                             </bk-dropdown-menu>
                         </template>
                         <bk-button
-                            v-else
+                            v-if="!isExtendTx && !isCreateResType"
                             :key="projectId"
                             v-perm="{
                                 permissionData: {
@@ -407,7 +407,7 @@
     import { mapActions, mapState } from 'vuex'
     import ListTable from './list_table.vue'
     const ENV_NODE_TABLE_LIMIT_CACHE = 'env_node_table_limit_cache'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import CollapseLayout from '@/components/CollapseLayout'
     import useCollapseLayout from '@/hooks/useCollapseLayout'
     import useUrlQuery from '@/hooks/useUrlQuery'
@@ -483,6 +483,7 @@
                 allNodeList: [],
                 gatewayList: [], // 网关列表
                 tableLoading: false,
+                isNodeTypeChanging: false, // 节点类型切换标志位，防止重复请求
                 // 页面loading
                 loading: {
                     isLoading: false,
@@ -775,6 +776,9 @@
                     prop: sortType,
                     order: orderMap[collation] || 'ascending'
                 }
+            },
+            isCreateResType () {
+                return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
             }
         },
         watch: {
@@ -811,10 +815,6 @@
                         // 同时刷新计数数据
                         await this.requestGetCounts(this.projectId)
                     })
-                } else if (to.name === 'nodeList' && from.name === 'nodeList'
-                    // 如果是相同路由但参数不同，也需要刷新
-                    && to.params.nodeType !== from.params.nodeType) {
-                    this.handleNodeTypeChange()
                 }
             },
             // 监听 queryParams 分页参数变化，同步到 paginationData
@@ -868,6 +868,9 @@
                 }
             },
             searchValue (val) {
+                // 如果是 handleNodeTypeChange 触发的清空，跳过请求
+                if (this.isNodeTypeChanging) return
+                
                 if (val.length) {
                     val.forEach(i => {
                         if (i.values) {
@@ -884,6 +887,11 @@
                 // 同步到 URL
                 this.updateSearchValue(val)
                 this.requestList(this.requestParams)
+            },
+            isCreateResType: {
+                handler (val) {
+                    this.init()
+                }
             }
         },
         created () {
@@ -1085,6 +1093,9 @@
                 this.requestList(this.requestParams)
             },
             async handleNodeTypeChange () {
+                // 设置标志位，避免 searchValue watcher 触发额外请求
+                this.isNodeTypeChanging = true
+                
                 // 清除搜索和标签条件
                 this.searchValue = []
                 this.tagSearchValue = []
@@ -1103,6 +1114,9 @@
                 
                 // 重新请求数据
                 await this.requestList()
+                
+                // 重置标志位
+                this.isNodeTypeChanging = false
             },
 
             handleClearTagSearch () {
@@ -1160,7 +1174,10 @@
                             ...params,
                             ...(this.currentNodeType ? { nodeType: this.currentNodeType } : {}),
                             page: this.paginationData.current,
-                            pageSize: this.paginationData.limit
+                            pageSize: this.paginationData.limit,
+                            ...(this.isCreateResType ? {
+                                nodeType: 'CREATE'
+                            }: {})
                         },
                         ...(tagParams.length ? { tags: tagParams } : this.currentTags.length ? { tags: this.currentTags } : {})
                     })
