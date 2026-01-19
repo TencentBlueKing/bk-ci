@@ -686,7 +686,7 @@ class PublicVarGroupReferInfoDao {
                 .groupBy(GROUP_NAME)
                 .fetch()
                 .associate { record ->
-                    record.getValue(GROUP_NAME) to (record.getValue(1, Int::class.java) ?: 0)
+                    record.value1() to (record.value2() ?: 0)
                 }
         }
     }
@@ -753,7 +753,10 @@ class PublicVarGroupReferInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.`in`(groupNames))
                 .groupBy(GROUP_NAME)
-                .fetchMap(GROUP_NAME, Int::class.java)
+                .fetch()
+                .associate { record ->
+                    record.value1() to (record.value2() ?: 0)
+                }
         }
     }
 
