@@ -326,6 +326,7 @@ class ParamFacadeService @Autowired constructor(
     ): BuildFormProperty {
         return BuildFormProperty(
             id = property.id,
+            name = property.name,
             required = property.required,
             type = property.type,
             defaultValue = property.defaultValue,
