@@ -152,7 +152,10 @@ interface UserNodeResource {
         sortType: String?,
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
-        collation: String?
+        collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?
     ): Result<Page<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点列表")
@@ -213,6 +216,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
 
@@ -273,6 +279,9 @@ interface UserNodeResource {
         @Parameter(description = "正序ASC/倒序DESC (默认倒序)", required = false)
         @QueryParam("collation")
         collation: String?,
+        @Parameter(description = "是否是创作流模式", required = false)
+        @QueryParam("createMode")
+        createMode: Boolean?,
         data: NodeFetchReq?,
         @Context
         response: HttpServletResponse

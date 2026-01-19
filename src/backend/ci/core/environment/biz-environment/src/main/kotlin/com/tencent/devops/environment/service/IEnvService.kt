@@ -49,7 +49,8 @@ interface IEnvService {
         projectId: String,
         envName: String? = null,
         envType: EnvType? = null,
-        nodeHashId: String? = null
+        nodeHashId: String? = null,
+        createMode: Boolean? = null
     ): List<EnvWithPermission>
 
     fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission>

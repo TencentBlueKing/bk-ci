@@ -211,6 +211,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?
     ): Page<NodeWithPermission> {
         val tagValues = if (data?.tags.isNullOrEmpty()) {
@@ -235,7 +236,11 @@ class NodeService @Autowired constructor(
                     createdUser = createdUser,
                     lastModifiedUser = lastModifiedUser,
                     keywords = keywords,
-                    nodeType = nodeType,
+                    nodeType = if (createMode == true) {
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    },
                     nodeStatus = nodeStatus,
                     agentVersion = agentVersion,
                     osName = osName,
@@ -247,7 +252,13 @@ class NodeService @Autowired constructor(
                     tagValueIds = tagValues
                 )
             } else {
-                nodeDao.listNodes(dslContext = dslContext, projectId = projectId, nodeType = nodeType)
+                nodeDao.listNodes(
+                    dslContext = dslContext, projectId = projectId, nodeType = if (createMode == true) {
+                        NodeType.CREATE
+                    } else {
+                        nodeType
+                    }
+                )
             }
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
@@ -260,7 +271,11 @@ class NodeService @Autowired constructor(
             createdUser = createdUser,
             lastModifiedUser = lastModifiedUser,
             keywords = keywords,
-            nodeType = nodeType,
+            nodeType = if (createMode == true) {
+                NodeType.CREATE
+            } else {
+                nodeType
+            },
             nodeStatus = nodeStatus,
             agentVersion = agentVersion,
             osName = osName,
@@ -330,6 +345,7 @@ class NodeService @Autowired constructor(
         latestBuildTimeEnd: Long?,
         sortType: String?,
         collation: String?,
+        createMode: Boolean?,
         data: NodeFetchReq?,
         response: HttpServletResponse
     ) {
@@ -357,6 +373,7 @@ class NodeService @Autowired constructor(
                 latestBuildTimeEnd = latestBuildTimeEnd,
                 sortType = sortType,
                 collation = collation,
+                createMode = createMode,
                 data = data
             )
             count = res.count

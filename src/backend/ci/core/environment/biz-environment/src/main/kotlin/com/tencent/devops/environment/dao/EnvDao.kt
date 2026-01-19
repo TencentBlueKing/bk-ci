@@ -145,7 +145,7 @@ class EnvDao {
         dslContext: DSLContext,
         projectId: String,
         envName: String? = null,
-        envType: EnvType? = null,
+        envTypeList: List<EnvType>? = null,
         envIds: Collection<Long>? = null
     ): List<TEnvRecord> {
         with(TEnv.T_ENV) {
@@ -153,7 +153,7 @@ class EnvDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .let { if (envName != null) it.and(ENV_NAME.like("%$envName%")) else it }
-                .let { if (envType != null) it.and(ENV_TYPE.eq(envType.name)) else it }
+                .let { if (!envTypeList.isNullOrEmpty()) it.and(ENV_TYPE.`in`(envTypeList)) else it }
                 .let { if (envIds != null) it.and(ENV_ID.`in`(envIds)) else it }
                 .orderBy(ENV_ID.desc())
                 .fetch()
@@ -349,7 +349,7 @@ class EnvDao {
             val dsl = dslContext.select(ENV_TYPE, DSL.count(ENV_ID)).from(this).where(PROJECT_ID.eq(projectId))
             if (createEnv) {
                 dsl.and(ENV_TYPE.eq(EnvType.CREATE.name))
-            }else{
+            } else {
                 dsl.and(ENV_TYPE.ne(EnvType.CREATE.name))
             }
             return dsl.groupBy(ENV_TYPE).fetch().associate {

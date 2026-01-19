@@ -32,7 +32,11 @@ enum class EnvType {
     TEST,
     PROD,
     BUILD,
-    CREATE
+    CREATE;
+
+    companion object {
+        fun noCreateMode(): List<EnvType> = listOf(DEV, TEST, PROD, BUILD)
+    }
 }
 
 enum class EnvNodeType {

@@ -108,7 +108,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envName: String?,
         envType: EnvType?,
-        nodeHashId: String?
+        nodeHashId: String?,
+        createMode: Boolean?
     ): Result<List<EnvWithPermission>> {
         return Result(
             envService.listEnvironment(
@@ -116,7 +117,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 projectId = projectId,
                 envName = envName,
                 envType = envType,
-                nodeHashId = nodeHashId
+                nodeHashId = nodeHashId,
+                createMode = createMode
             )
         )
     }
