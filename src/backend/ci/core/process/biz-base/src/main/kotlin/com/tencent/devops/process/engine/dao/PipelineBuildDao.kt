@@ -2187,7 +2187,7 @@ class PipelineBuildDao {
         }
     }
 
-    class PipelineBuildLightInfoJooqMapper : RecordMapper<
+class PipelineBuildLightInfoJooqMapper : RecordMapper<
         Record15<
             String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
             String, String, String, String, String, String, String
@@ -2208,7 +2208,7 @@ class PipelineBuildDao {
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
                     status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
-                    startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]),
+                    startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]).ifBlank { null },
                     endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]).ifBlank { null },
                     errorInfoList = try {
                         if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {

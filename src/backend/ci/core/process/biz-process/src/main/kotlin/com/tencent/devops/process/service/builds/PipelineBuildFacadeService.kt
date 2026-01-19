@@ -2216,20 +2216,17 @@ class PipelineBuildFacadeService(
             permission = AuthPermission.VIEW
         )
 
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val paginatedQuery = query.copy(offset = sqlLimit.offset, limit = sqlLimit.limit)
-
         // 查询总数
-        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query = paginatedQuery)
+        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query)
 
         // 查询构建历史记录
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
             userId = userId,
-            query = paginatedQuery
+            query = query
         )
         return Page(
             page = page,
-            pageSize = sqlLimit.limit,
+            pageSize = query.limit,
             count = newTotalCount.toLong(),
             records = newHistoryBuilds
         )
