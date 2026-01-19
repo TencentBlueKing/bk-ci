@@ -644,9 +644,6 @@ class ImageDao {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE
         val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
-//        val t =
-//            dslContext.select(tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE), DSL.max(tImage.CREATE_TIME).`as`(KEY_CREATE_TIME))
-//                .from(tImage).groupBy(tImage.IMAGE_CODE)
         val query = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
@@ -666,15 +663,6 @@ class ImageDao {
         ).from(tImage)
             .join(tImageFeature)
             .on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
-//            .join(t)
-//            .on(
-//                tImage.IMAGE_CODE.eq(
-//                    t.field(
-//                        KEY_IMAGE_CODE,
-//                        String::class.java
-//                    )
-//                ).and(tImage.CREATE_TIME.eq(t.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
-//            )
             .join(tStoreMember)
             .on(tImage.IMAGE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
