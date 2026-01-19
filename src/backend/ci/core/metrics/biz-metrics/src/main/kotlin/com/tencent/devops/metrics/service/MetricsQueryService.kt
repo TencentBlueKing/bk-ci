@@ -33,6 +33,9 @@ class MetricsQueryService @Autowired constructor(
     @Value("\${metrics.monitor.tableAgent:}")
     val monitorTableAgent: String = ""
 
+    @Value("\${metrics.monitor.tableBkrepo:}")
+    val monitorTableBkrepo: String = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(MetricsQueryService::class.java)
     }
@@ -52,9 +55,9 @@ class MetricsQueryService @Autowired constructor(
         val promql = requestParams["promql"] as? String
             ?: throw IllegalArgumentException("promql参数不能为空")
 
-        // 安全校验：检测promql必须包含{{table}}或{{table_agent}}占位符
-        if (!promql.contains("{{table}}") && !promql.contains("{{table_agent}}")) {
-            throw IllegalArgumentException("promql必须包含{{table}}或{{table_agent}}占位符")
+        // 安全校验：检测promql必须包含{{table}}、{{table_agent}}或{{bkrepo_table}}占位符
+        if (!promql.contains("{{table}}") && !promql.contains("{{table_agent}}") && !promql.contains("{{bkrepo_table}}")) {
+            throw IllegalArgumentException("promql必须包含{{table}}、{{table_agent}}或{{bkrepo_table}}占位符")
         }
 
         // 安全校验：检测是否包含危险字符和模式
@@ -128,6 +131,9 @@ class MetricsQueryService @Autowired constructor(
         // 替换{{table_agent}}占位符
         result = result.replace("{{table_agent}}", monitorTableAgent)
 
+        // 替换{{bkrepo_table}}占位符
+        result = result.replace("{{bkrepo_table}}", monitorTableBkrepo)
+
         // 替换{{projectId}}占位符
         result = result.replace("{{projectId}}", projectId)
 
@@ -164,15 +170,15 @@ class MetricsQueryService @Autowired constructor(
         }
 
         // 防止访问其他表（不通过占位符）：使用正则检测第一个冒号前必须紧跟table占位符
-        // 匹配模式：查找第一个冒号，检查其前面是否紧跟{{table}}或{{table_agent}}
-        val tableAccessPattern = Regex("""^[^:]*\{\{(table|table_agent)\}\}:""")
+        // 匹配模式：查找第一个冒号，检查其前面是否紧跟{{table}}、{{table_agent}}或{{bkrepo_table}}
+        val tableAccessPattern = Regex("""^[^:]*\{\{(table|table_agent|bkrepo_table)\}\}:""")
         if (promql.contains(':') && !tableAccessPattern.containsMatchIn(promql)) {
             logger.warn("检测到非法表名访问，第一个冒号前未紧跟table占位符: promql=$promql")
-            throw IllegalArgumentException("promql必须通过{{table}}:或{{table_agent}}:格式访问表")
+            throw IllegalArgumentException("promql必须通过{{table}}:、{{table_agent}}:或{{bkrepo_table}}:格式访问表")
         }
 
         // 检查是否只包含允许的占位符
-        val allowedPlaceholders = setOf("{{table}}", "{{table_agent}}", "{{projectId}}")
+        val allowedPlaceholders = setOf("{{table}}", "{{table_agent}}", "{{bkrepo_table}}", "{{projectId}}")
         val placeholderPattern = Regex("""\{\{[^}]+\}\}""")
         val foundPlaceholders = placeholderPattern.findAll(promql).map { it.value }.toSet()
         val invalidPlaceholders = foundPlaceholders - allowedPlaceholders
@@ -190,10 +196,10 @@ class MetricsQueryService @Autowired constructor(
      */
     fun validateReplacedPromql(replacedPromql: String, projectId: String) {
         // 确保替换后的promql包含配置的表名（至少包含一个）
-        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent)) {
+        if (!replacedPromql.contains(monitorTable) && !replacedPromql.contains(monitorTableAgent) && !replacedPromql.contains(monitorTableBkrepo)) {
             logger.error(
                 "替换后的promql不包含配置的表名: table=${monitorTable}, tableAgent=${monitorTableAgent}, " +
-                    "promql=$replacedPromql"
+                    "tableBkrepo=${monitorTableBkrepo}, promql=$replacedPromql"
             )
             throw IllegalArgumentException("promql替换失败")
         }
