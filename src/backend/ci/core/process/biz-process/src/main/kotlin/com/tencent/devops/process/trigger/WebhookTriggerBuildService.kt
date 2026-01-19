@@ -172,7 +172,7 @@ class WebhookTriggerBuildService(
         val buildId = pipelineBuildService.startPipeline(
             userId = userId,
             pipeline = pipelineInfo,
-            startType = StartType.WEB_HOOK,
+            startType = context.startType,
             pipelineParamMap = convertBuildParameters(
                 userId = userId,
                 projectId = projectId,
