@@ -400,5 +400,12 @@
     "制品库设置": "Artifact Library Settings",
     "选择项目": "Select Project",
     "同步中": "Synching",
-    "请选择组织/用户": "Please select organization/user"
+    "请选择组织/用户": "Please select organization/user",
+    "请选择运营产品和KPI代码": "Please select an operational product and KPI code",
+    "项目成本归属": "Project Cost Attribution",
+    "用于货币化结算场景，可在 tea.woa.com 查看业务信息。": "Used for monetization and settlement scenarios, business information can be viewed at tea.woa.com.",
+    "运营产品": "Operational Product",
+    "KPI 代码": "KPI Code",
+    "所属的 KPI 业务代码": "Affiliated KPI Business Code",
+    "请输入/修改关键字重新搜索数据": "Please enter/modify keywords to search data again"
 }

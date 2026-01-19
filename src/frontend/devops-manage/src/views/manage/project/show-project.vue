@@ -79,11 +79,11 @@ const projectList: any[] = [];
 const getInitKpiData = () => {
   // 如果kpiCode和kpiName为空，那么默认为选中的产品
   if (!projectData.value.kpiName && !projectData.value.kpiCode) {
-    const selectedProduct = operationalList.value.find(i => i.ProductId === projectData.value.productId);
+    const selectedProduct = operationalList.value.find((i: any) => i?.ProductId === projectData.value.productId);
 
     if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
-      projectData.value.kpiCode = selectedProduct.icosProductCode || '';
-      projectData.value.kpiName = selectedProduct.icosProductName || '';
+      projectData.value.kpiCode = selectedProduct.icosProductCode ?? '';
+      projectData.value.kpiName = selectedProduct.icosProductName ?? '';
     }
   }
 }

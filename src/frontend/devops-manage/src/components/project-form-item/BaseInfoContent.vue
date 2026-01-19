@@ -148,8 +148,8 @@
             enable-virtual-render
             :list="KPIList"
             :loading="deptLoading.kpiCode"
-            searchPlaceholder="请输入/修改关键字重新搜索数据"
-            noDataText="请输入/修改关键字重新搜索数据"
+            :searchPlaceholder="t('请输入/修改关键字重新搜索数据')"
+            :noDataText="t('请输入/修改关键字重新搜索数据')"
             searchable
             :remoteMethod="handleKpiCodeSearch"
             @change="handleChangeKpiCode"
@@ -503,12 +503,15 @@ async function fetchApilist(kpiName) {
   try {
     deptLoading.value.kpiCode = true;
     const res = await http.getKpiCodeList(kpiName)
-    KPIList.value = res.map(i => ({
-      value: i.product_code,
-      label: i.product_name,
+    KPIList.value = (res || []).map(i => ({
+      value: i?.product_code,
+      label: i?.product_name,
     }));
-  } catch (error) {
-    console.log(error);
+  } catch (err: any) {
+    Message({
+      theme: 'danger',
+      message: err.message || err,
+    });
   } finally {
     deptLoading.value.kpiCode = false;
   }
