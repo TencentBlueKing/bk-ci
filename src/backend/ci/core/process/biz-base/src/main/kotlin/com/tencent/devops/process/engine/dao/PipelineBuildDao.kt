@@ -1253,30 +1253,32 @@ class PipelineBuildDao {
     ) {
         where.and(PROJECT_ID.eq(query.projectId))
         where.and(PIPELINE_ID.eq(query.pipelineId))
-        if (!query.status.isNullOrEmpty()) {
-            where.and(STATUS.`in`(query.status!!.map { it.ordinal }))
+        query.status?.let { statusList ->
+            if (statusList.isNotEmpty()) {
+                where.and(STATUS.`in`(statusList.map { it.ordinal }))
+            }
         }
-        val startTimeFromTimestamp = parseTimeString(query.startTimeFrom)
-        if (startTimeFromTimestamp != null && startTimeFromTimestamp > 0) {
-            where.and(START_TIME.ge(Timestamp(startTimeFromTimestamp).toLocalDateTime()))
+        query.startTimeFrom?.let { startTimeFrom ->
+            where.and(START_TIME.ge(DateTimeUtil.stringToLocalDateTime(startTimeFrom)))
         }
-        val startTimeToTimestamp = parseTimeString(query.startTimeTo)
-        if (startTimeToTimestamp != null && startTimeToTimestamp > 0) {
-            where.and(START_TIME.le(Timestamp(startTimeToTimestamp).toLocalDateTime()))
+        query.startTimeTo?.let { startTimeTo ->
+            where.and(START_TIME.le(DateTimeUtil.stringToLocalDateTime(startTimeTo)))
         }
-        val endTimeFromTimestamp = parseTimeString(query.endTimeFrom)
-        if (endTimeFromTimestamp != null && endTimeFromTimestamp > 0) {
-            where.and(END_TIME.ge(Timestamp(endTimeFromTimestamp).toLocalDateTime()))
+        query.endTimeFrom?.let { endTimeFrom ->
+            where.and(END_TIME.ge(DateTimeUtil.stringToLocalDateTime(endTimeFrom)))
         }
-        val endTimeToTimestamp = parseTimeString(query.endTimeTo)
-        if (endTimeToTimestamp != null && endTimeToTimestamp > 0) {
-            where.and(END_TIME.le(Timestamp(endTimeToTimestamp).toLocalDateTime()))
+        query.endTimeTo?.let { endTimeTo ->
+            where.and(END_TIME.le(DateTimeUtil.stringToLocalDateTime(endTimeTo)))
         }
-        if (query.buildNoStart != null && query.buildNoStart!! > 0) {
-            where.and(BUILD_NUM.ge(query.buildNoStart))
+        query.buildNoStart?.let { buildNoStart ->
+            if (buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
         }
-        if (query.buildNoEnd != null && query.buildNoEnd!! > 0) {
-            where.and(BUILD_NUM.le(query.buildNoEnd))
+        query.buildNoEnd?.let { buildNoEnd ->
+            if (buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
         }
     }
 
@@ -2204,7 +2206,7 @@ class PipelineBuildDao {
                     id = t[tTPipelineBuildHistory.BUILD_ID],
                     buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
-                        status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
+                    status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
                     startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]),
                     endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]),
@@ -2228,22 +2230,4 @@ class PipelineBuildDao {
         }
     }
 
-    /**
-     * 将时间字符串转换为时间戳（毫秒）
-     * @param timeString 时间字符串，格式为 yyyy-MM-dd HH:mm:ss
-     * @return 时间戳（毫秒），如果转换失败返回null
-     */
-    private fun parseTimeString(timeString: String?): Long? {
-        if (timeString.isNullOrBlank()) {
-            return null
-        }
-        return try {
-            val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val localDateTime = java.time.LocalDateTime.parse(timeString, formatter)
-            localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-        } catch (e: Exception) {
-            logger.warn("parseTimeString failed", e)
-            null
-        }
-    }
 }

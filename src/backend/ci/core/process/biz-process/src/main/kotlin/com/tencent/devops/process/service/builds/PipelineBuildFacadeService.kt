@@ -131,9 +131,9 @@ import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.BuildVersionDiff
 import com.tencent.devops.process.pojo.LightBuildHistory
-import com.tencent.devops.process.pojo.BuildReplayResult
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
@@ -2202,36 +2202,34 @@ class PipelineBuildFacadeService(
      * - 查询条件轻量化
      */
     fun getLightHistoryBuild(
-        userId: String?,
+        userId: String,
         page: Int,
         pageSize: Int,
         query: PipelineBuildQuery
     ): Page<LightBuildHistory> {
-        val sqlLimit =
-            if (pageSize != -1) PageUtil.convertPageSizeToSQLLimit(page, pageSize) else null
-        val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 1000
         UserPipelinePermissionCheckContext(
             SpringContextUtil.getBean(UserNormalPipelinePermissionCheckStrategy::class.java)
         ).checkUserPipelinePermission(
-            userId = userId!!,
+            userId = userId,
             projectId = query.projectId,
             pipelineId = query.pipelineId,
             permission = AuthPermission.VIEW
         )
+        
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val paginatedQuery = query.copy(offset = sqlLimit.offset, limit = sqlLimit.limit)
+        
         // 查询总数
-        val countQuery = query.copy(offset = offset, limit = limit)
-        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query = countQuery)
+        val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query = paginatedQuery)
 
         // 查询构建历史记录
-        val listQuery = query.copy(offset = offset, limit = limit)
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
             userId = userId,
-            query = listQuery
+            query = paginatedQuery
         )
         return Page(
             page = page,
-            pageSize = limit,
+            pageSize = sqlLimit.limit,
             count = newTotalCount.toLong(),
             records = newHistoryBuilds
         )
