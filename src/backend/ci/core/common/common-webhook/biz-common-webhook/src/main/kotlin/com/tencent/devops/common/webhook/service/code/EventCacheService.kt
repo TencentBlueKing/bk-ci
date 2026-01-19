@@ -225,7 +225,6 @@ class EventCacheService @Autowired constructor(
         size: Int
     ): List<WebhookCommit> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
-        val (domain, repoName) = GitUtils.getDomainAndRepoName(repo.url)
         return eventCache?.webhookCommitList ?: run {
             try {
                 val scmType = repo.getScmType()
