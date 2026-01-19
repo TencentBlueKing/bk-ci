@@ -102,9 +102,9 @@ const actions = {
     /**
      * 节点标签列表
      */
-    async requestNodeTagList ({ commit }, projectId) {
+    async requestNodeTagList ({ commit }, { projectId, createMode }) {
         try {
-            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}`)
+            const res = await vue.$ajax.get(`${prefix}/user/nodetag/fetchTag?projectId=${projectId}&createMode=${createMode}`)
             commit('setNodeTagList', res || [])
             return res
         } catch (err) {

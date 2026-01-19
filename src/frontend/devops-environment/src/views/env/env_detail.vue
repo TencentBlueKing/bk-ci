@@ -162,12 +162,12 @@
                     name: 'basicInfo',
                     label: proxy.$t('environment.basicInfo')
                 },
-                ...(currentEnv.value?.envType === ENV_TYPE_MAP.CREATE && isCreateResType.value ? [
-                    {
-                        name: 'settings',
-                        label: proxy.$t('environment.settings')
-                    }
-                ] : []),
+                // ...(currentEnv.value?.envType === ENV_TYPE_MAP.CREATE && isCreateResType.value ? [
+                //     {
+                //         name: 'settings',
+                //         label: proxy.$t('environment.settings')
+                //     }
+                // ] : []),
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD || isCreateResType.value ? [
                     {
                         name: 'buildTask',

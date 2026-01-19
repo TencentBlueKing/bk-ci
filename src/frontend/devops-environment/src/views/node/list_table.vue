@@ -688,6 +688,12 @@
             },
             queryNodeHashId () {
                 return this.$route.query.nodeHashId
+            },
+            currentResType () {
+                return this.$route.params.resType
+            },
+            isCreateResType () {
+                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
             }
         },
         watch: {
@@ -967,7 +973,10 @@
                                 theme: 'success'
                             })
                             this.$emit('refresh')
-                            await this.requestNodeTagList(this.projectId)
+                            await this.requestNodeTagList({
+                                projectId: this.projectId,
+                                createMode: this.isCreateResType
+                            })
                         }
                     }
                 } catch (err) {
