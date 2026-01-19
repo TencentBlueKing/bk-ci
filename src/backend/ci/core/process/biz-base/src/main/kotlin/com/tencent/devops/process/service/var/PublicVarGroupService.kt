@@ -177,7 +177,10 @@ class PublicVarGroupService @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("Failed to add variable group $groupName", t)
-            throw t
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_ADD_FAILED,
+                params = arrayOf(groupName)
+            )
         } finally {
             redisLock.unlock()
         }
@@ -434,7 +437,10 @@ class PublicVarGroupService @Autowired constructor(
             return true
         } catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
-            throw t
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED,
+                params = arrayOf(groupName)
+            )
         } finally {
             redisLock.unlock()
         }
@@ -447,22 +453,28 @@ class PublicVarGroupService @Autowired constructor(
     ): List<PublicVarReleaseDO> {
         val groupName = publicVarGroup.groupName
 
-        // 获取数据库中最新版本的变量组信息
-        val latestGroupRecord = publicVarGroupDao.getRecordByGroupName(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName
-        ) ?: throw ErrorCodeException(
-            errorCode = ERROR_INVALID_PARAM_,
-            params = arrayOf(groupName)
-        )
+        val (latestGroupRecord, latestVarPOs) = dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
+            
+            // 获取数据库中最新版本的变量组信息
+            val groupRecord = publicVarGroupDao.getRecordByGroupName(
+                dslContext = context,
+                projectId = projectId,
+                groupName = groupName
+            ) ?: throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf(groupName)
+            )
 
-        // 获取最新版本的变量列表
-        val latestVarPOs = publicVarService.getGroupPublicVar(
-            projectId = projectId,
-            groupName = groupName,
-            version = latestGroupRecord.version
-        )
+            // 获取最新版本的变量列表
+            val varPOs = publicVarService.getGroupPublicVar(
+                projectId = projectId,
+                groupName = groupName,
+                version = groupRecord.version
+            )
+            
+            Pair(groupRecord, varPOs)
+        }
 
         val latestVarDOs = publicVarGroupReleaseRecordService.convertPOToDO(latestVarPOs)
 
@@ -556,9 +568,12 @@ class PublicVarGroupService @Autowired constructor(
                 processedVarNames = processedVarNames,
                 currentIndex = currentIndex
             )
-        } catch (ignore: Throwable) {
-            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", ignore)
-            throw ignore
+        } catch (t: Throwable) {
+            logger.warn("Failed to get variables from group ${varGroupRef.groupName}", t)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED,
+                params = arrayOf(varGroupRef.groupName)
+            )
         }
     }
 
@@ -761,9 +776,12 @@ class PublicVarGroupService @Autowired constructor(
             }.filterNotNull()
 
             return Result(pipelineVarGroups)
-        } catch (ignore: Throwable) {
-            logger.warn("[$projectId|$referId] Failed to get pipeline variables", ignore)
-            return Result(emptyList())
+        } catch (t: Throwable) {
+            logger.warn("[$projectId|$referId] Failed to get pipeline variables", t)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED,
+                params = arrayOf(projectId, referId)
+            )
         }
     }
 
@@ -793,9 +811,12 @@ class PublicVarGroupService @Autowired constructor(
             }
 
             return Result(pipelineVarGroups)
-        } catch (ignore: Throwable) {
-            logger.warn("[$projectId] Failed to get project variable groups info", ignore)
-            return Result(emptyList())
+        } catch (t: Throwable) {
+            logger.warn("[$projectId] Failed to get project variable groups info", t)
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED,
+                params = arrayOf(projectId)
+            )
         }
     }
 

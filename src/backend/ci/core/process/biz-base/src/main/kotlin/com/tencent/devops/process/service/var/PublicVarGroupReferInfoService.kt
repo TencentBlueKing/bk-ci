@@ -577,8 +577,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
                 e
             )
             throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED,
-                defaultMessage = "查询变量组引用信息失败"
+                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
             )
         }
     }

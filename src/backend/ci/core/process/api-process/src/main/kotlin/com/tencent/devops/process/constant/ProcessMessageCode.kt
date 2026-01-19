@@ -473,6 +473,11 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101360" // 流水线公共变量组({0})已存在
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101361" // 变量组引用计数更新失败
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101362" // 变量组引用信息查询失败
+    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101363" // 添加公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101364" // 删除公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101365" // 获取公共变量组({0})的变量失败
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101366" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101367" // 获取项目({0})的公共变量组信息失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

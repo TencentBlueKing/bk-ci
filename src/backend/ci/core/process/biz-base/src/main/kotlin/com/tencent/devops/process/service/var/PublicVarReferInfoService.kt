@@ -66,13 +66,8 @@ class PublicVarReferInfoService @Autowired constructor(
      * 1. 根据Model中的publicVarGroups和varRefDetails，同步T_RESOURCE_PUBLIC_VAR_REFER_INFO表的引用记录
      * 2. 更新T_RESOURCE_PUBLIC_VAR表的REFER_COUNT字段
      * 3. 处理变量组的新增、删除和更新操作
-     *
      * @param userId 用户ID
-     * @param projectId 项目ID
      * @param model 流水线模型
-     * @param resourceId 资源ID（如流水线ID）
-     * @param resourceType 资源类型
-     * @param resourceVersion 资源版本
      * @param varRefDetails 变量引用详情列表
      */
     fun handlePublicVarGroupReferences(
