@@ -2215,10 +2215,10 @@ class PipelineBuildFacadeService(
             pipelineId = query.pipelineId,
             permission = AuthPermission.VIEW
         )
-        
+
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val paginatedQuery = query.copy(offset = sqlLimit.offset, limit = sqlLimit.limit)
-        
+
         // 查询总数
         val newTotalCount = pipelineRuntimeService.getLightPipelineBuildHistoryCount(query = paginatedQuery)
 
