@@ -147,6 +147,10 @@ export const downloadArtifactsUrl =(projectId, from, to)=>{
     return `spaceUid=bkci__${projectId}&dashName=BKCI-制品趋势&viewPanel=35&from=${from}&to=${to}`
 }
 
+export const goMonitorBoard = (projectId, from, to) => {
+    return `spaceUid=bkci__${projectId}&dashName=BKCI-运行中的任务&from=${from}&to=${to}`
+}
+
 export const urlMap = {
 
     runningPipelines: runningPipelinesUrl,
@@ -184,5 +188,7 @@ export const urlMap = {
     uploadArtifacts: uploadArtifactsUrl,
 
     downloadArtifacts: downloadArtifactsUrl,
+
+    goMonitorBoard: goMonitorBoard,
 
 }

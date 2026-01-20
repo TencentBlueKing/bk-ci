@@ -6,7 +6,10 @@
                 :timezone.sync="timezone"
                 @update:modelValue="handleValueChange"
             />
-            <div class="time-select-right">
+            <div
+                class="time-select-right"
+                @click="handleClickJump('goMonitorBoard')"
+            >
                 <Logo
                     style="margin-right: 2px;"
                     size="12"
@@ -48,7 +51,8 @@
 </template>
 
 <script>
-    import { defineComponent, ref,onMounted } from 'vue'
+    import { defineComponent, ref } from 'vue'
+    import Logo from '@/components/Logo'
     import useInstance from '@/hook/useInstance'
     import CurrentPipelineStatus from './components/CurrentPipelineStatus.vue'
     import ExecutionStatistics from './components/ExecutionStatistics.vue'
@@ -69,7 +73,8 @@
             ResourceUsage,
             ArtifactRepository,
             DatePicker,
-            AlertsSection
+            AlertsSection,
+            Logo
         },
         setup () {
             const { proxy } = useInstance()
