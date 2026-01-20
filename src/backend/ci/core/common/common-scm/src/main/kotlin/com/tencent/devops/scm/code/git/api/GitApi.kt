@@ -142,6 +142,17 @@ open class GitApi {
         secret: String? = null
     ) {
         logger.info("[$host|$projectName|$hookUrl|$event] Start add the web hook")
+        if (event == CodeGitWebhookEvent.PROJECT_EVENTS.value) {
+            addGroupWebhook(
+                host = host,
+                token = token,
+                projectName = projectName,
+                hookUrl = hookUrl,
+                event = event,
+                secret = secret
+            )
+            return
+        }
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
@@ -192,6 +203,80 @@ open class GitApi {
 
         // Add the wed hook
         addHook(host, token, projectName, hookUrl, event, secret)
+    }
+
+    fun addGroupWebhook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String?,
+        secret: String? = null
+    ) {
+        val existHooks = getGroupWebhook(
+            host = host,
+            token = token,
+            projectName = projectName
+        )
+        existHooks.forEach {
+            if (it.url.contains(hookUrl)) {
+                logger.info("The web hook url($hookUrl) and event($event) is already exist($it)")
+                return
+            }
+        }
+        addGroupHook(
+            host = host,
+            token = token,
+            projectName = projectName,
+            hookUrl = hookUrl,
+            event = event,
+            secret = secret
+        )
+    }
+
+    fun getGroupWebhook(
+        host: String,
+        token: String,
+        projectName: String,
+        page: Int = 1,
+        pageSize: Int = MAX_PAGE_SIZE
+    ): List<GitHook> {
+        try {
+            val pageQueryStr = "page=$page&per_page=$pageSize"
+            val request = get(host, token, "groups/${urlEncode(projectName)}/hooks", pageQueryStr)
+            val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
+                getBody(getMessageByLocale(CommonMessageCode.OPERATION_LIST_WEBHOOK), request)
+            )
+            return result.sortedBy { it.createdAt }.reversed()
+        } catch (t: GitApiException) {
+            if (t.code == HTTP_403) {
+                throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.WEBHOOK_ADD_FAIL, arrayOf("master")))
+            }
+            throw t
+        }
+    }
+
+    private fun addGroupHook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String? = null,
+        secret: String? = null
+    ): GitHook {
+        val body = webhookBody(hookUrl, event, secret)
+        val request = post(host, token, "groups/${urlEncode(projectName)}/hooks", body)
+        try {
+            return callMethod(getMessageByLocale(CommonMessageCode.OPERATION_ADD_WEBHOOK), request, GitHook::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == HTTP_403) {
+                throw GitApiException(
+                    t.code,
+                    getMessageByLocale(CommonMessageCode.WEBHOOK_ADD_FAIL, arrayOf("Developer"))
+                )
+            }
+            throw t
+        }
     }
 
     fun addCommitCheck(
@@ -596,14 +681,16 @@ open class GitApi {
         page: Int,
         pageSize: Int,
         owned: Boolean?,
-        minAccessLevel: GitAccessLevelEnum?
+        minAccessLevel: GitAccessLevelEnum?,
+        search: String?
     ): List<GitCodeGroup> {
         val url = "api/v3/groups"
         val queryParam = "page=$page&per_page=$pageSize"
             .addParams(
                 mapOf(
                     "owned" to owned,
-                    "min_access_level" to minAccessLevel?.level
+                    "min_access_level" to minAccessLevel?.level,
+                    "search" to search
                 )
             )
         val request = get(host, token, url, queryParam)

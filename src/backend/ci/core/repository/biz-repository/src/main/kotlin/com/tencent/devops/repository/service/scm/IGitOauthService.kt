@@ -62,4 +62,12 @@ interface IGitOauthService {
     fun deleteToken(userId: String): Int
 
     fun getOauthUrl(userId: String, redirectUrl: String): String
+
+    fun getProjectGroup(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        search: String? = null,
+        username: String? = null
+    ): AuthorizeResult
 }

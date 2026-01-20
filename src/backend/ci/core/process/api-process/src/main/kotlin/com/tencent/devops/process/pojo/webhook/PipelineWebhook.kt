@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线http回调模型")
@@ -58,5 +59,7 @@ data class PipelineWebhook(
     @get:Schema(title = "代码库平台ID", required = false)
     var externalId: String? = null,
     @get:Schema(title = "代码库平台仓库名", required = false)
-    var externalName: String? = null
+    var externalName: String? = null,
+    @get:Schema(title = "代码库资源类型", required = false)
+    var repoResourceType: RepoResourceType? = null
 )

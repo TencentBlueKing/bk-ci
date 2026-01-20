@@ -169,6 +169,15 @@ BEGIN
             ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
             ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY'
+                    AND COLUMN_NAME = 'REPO_RESOURCE_TYPE') THEN
+    ALTER TABLE T_REPOSITORY
+        ADD COLUMN `REPO_RESOURCE_TYPE` varchar(32) DEFAULT NULL COMMENT '代码库资源类型';
+    END IF;
 COMMIT;
 
 END <CI_UBF>

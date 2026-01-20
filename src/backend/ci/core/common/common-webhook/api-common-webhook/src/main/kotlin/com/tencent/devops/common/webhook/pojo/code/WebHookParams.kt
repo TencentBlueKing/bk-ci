@@ -83,5 +83,11 @@ data class WebHookParams(
     // 包含的label
     var includeLabels: String? = null,
     // 排查的label
-    var excludeLabels: String? = null
+    var excludeLabels: String? = null,
+    // 监听的代码库名称
+    var includeRepoNames: String? = "",
+    // 忽略的代码库名称
+    var excludeRepoNames: String? = "",
+    // 监听的代码库组action
+    var includeRepoGroupAction: String? = null
 )

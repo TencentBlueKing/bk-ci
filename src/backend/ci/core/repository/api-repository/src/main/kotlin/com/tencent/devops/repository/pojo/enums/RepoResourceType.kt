@@ -25,26 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.git
+package com.tencent.devops.repository.pojo.enums
 
-enum class CodeGitWebhookEvent(val value: String) {
-    PUSH_EVENTS("push_events"),
-    TAG_PUSH_EVENTS("tag_push_events"),
-    ISSUES_EVENTS("issues_events"),
-    MERGE_REQUESTS_EVENTS("merge_requests_events"),
-    NOTE_EVENTS("note_events"),
-    ENABLE_SSL_VERIFICATION("enable_ssl_verification"),
-    REVIEW_EVENTS("review_events"),
-    PROJECT_EVENTS("project_events");
+enum class RepoResourceType{
+    // 单个仓库
+    REPOSITORY,
+    // 仓库组（包含多个仓库）
+    REPOSITORY_GROUP;
 
     companion object {
-        fun find(event: String): CodeGitWebhookEvent? {
-            CodeGitWebhookEvent.values().forEach {
-                if (it.value == event) {
-                    return it
-                }
-            }
-            return null
-        }
+        fun parse(resourceType: String?) = values().find { it.name == resourceType } ?: REPOSITORY
     }
 }

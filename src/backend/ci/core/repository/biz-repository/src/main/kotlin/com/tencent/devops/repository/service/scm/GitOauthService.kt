@@ -45,6 +45,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -349,5 +350,56 @@ class GitOauthService @Autowired constructor(
                 "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
             )
         )
+    }
+
+    override fun getProjectGroup(
+        userId: String,
+        projectId: String,
+        repoHashId: String?,
+        search: String?,
+        username: String?
+    ): AuthorizeResult {
+        logger.info("start to get project group: userId:$userId|username:$username|search:$search")
+        // 1. 获取accessToken，没有就返回403
+        val authParams = mapOf(
+            "projectId" to projectId,
+            "userId" to userId,
+            "repoId" to if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId).toString() else "",
+            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+        )
+        val accessToken = getAccessToken(
+            userId = if (username.isNullOrBlank()) {
+                userId
+            } else {
+                username
+            }
+        ) ?: return AuthorizeResult(403, getAuthUrl(authParams))
+        val authResult = AuthorizeResult(200, "")
+        return try {
+            authResult.project.addAll(
+                gitService.getProjectGroupList(
+                    accessToken = accessToken.accessToken,
+                    page = 1,
+                    pageSize = 100,
+                    search = search,
+                    minAccessLevel = null,
+                    owned = null,
+                    tokenType = TokenTypeEnum.OAUTH
+                ).map {
+                    Project(
+                        id = it.id.toString(),
+                        name = it.name,
+                        nameWithNameSpace = it.fullName ?: "",
+                        sshUrl = "",
+                        httpUrl = it.webUrl ?: "",
+                        lastActivity = 0
+                    )
+                }
+            )
+            authResult
+        } catch (e: Exception) {
+            logger.info("get oauth project group fail: ${e.message}")
+            AuthorizeResult(403, getAuthUrl(authParams))
+        }
     }
 }

@@ -53,6 +53,7 @@ import com.tencent.devops.repository.pojo.RepositoryPage
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryPermissionService
@@ -149,7 +150,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         projectId: String,
         repositoryType: ScmType?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        resourceType: RepoResourceType?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -166,7 +168,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             repositoryType = repositoryType,
             aliasName = null,
             offset = limit.offset,
-            limit = limit.limit
+            limit = limit.limit,
+            resourceType = resourceType
         )
         return Result(
             RepositoryPage(
@@ -189,7 +192,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         aliasName: String?,
         enablePac: Boolean?,
-        scmCode: String?
+        scmCode: String?,
+        resourceType: RepoResourceType?
     ): Result<Page<RepositoryInfo>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -217,7 +221,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             limit = limit.limit,
             aliasName = aliasName,
             enablePac = enablePac,
-            scmCode = scmCode
+            scmCode = scmCode,
+            resourceType = resourceType
         )
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
@@ -250,7 +255,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         sortBy: String?,
-        sortType: String?
+        sortType: String?,
+        resourceType: RepoResourceType?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -269,7 +275,8 @@ class UserRepositoryResourceImpl @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit,
             sortBy = sortBy,
-            sortType = sortType
+            sortType = sortType,
+            resourceType = resourceType
         )
         return Result(
             RepositoryPage(

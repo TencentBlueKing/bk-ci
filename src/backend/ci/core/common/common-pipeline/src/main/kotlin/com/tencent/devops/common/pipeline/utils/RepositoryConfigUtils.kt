@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -242,6 +243,16 @@ object RepositoryConfigUtils {
                     selfRepoHashId = null
                 )
                 Triple(ScmType.SCM_SVN, element.data.input.eventType, repositoryConfig)
+            }
+
+            is CodeGitGroupWebHookTriggerElement -> {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = element.input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(element.input.repositoryName, variables),
+                    triggerRepositoryType = element.input.repositoryType,
+                    selfRepoHashId = null
+                )
+                Triple(ScmType.CODE_GIT, CodeEventType.GROUP, repositoryConfig)
             }
 
             else ->

@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -259,7 +260,8 @@ interface IGitService {
         pageSize: Int?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        search: String?
     ): List<GitCodeGroup>
 
     fun getMembers(

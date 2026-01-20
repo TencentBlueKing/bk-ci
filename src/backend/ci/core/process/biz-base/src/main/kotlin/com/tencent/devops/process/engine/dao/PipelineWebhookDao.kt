@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -59,7 +60,8 @@ class PipelineWebhookDao {
                     EVENT_TYPE,
                     REPOSITORY_HASH_ID,
                     EXTERNAL_ID,
-                    EXTERNAL_NAME
+                    EXTERNAL_NAME,
+                    REPO_RESOURCE_TYPE
                 )
                     .values(
                         projectId,
@@ -73,7 +75,8 @@ class PipelineWebhookDao {
                         eventType,
                         repositoryHashId,
                         externalId,
-                        externalName
+                        externalName,
+                        repoResourceType?.name ?: RepoResourceType.REPOSITORY.name
                     )
                     .onDuplicateKeyUpdate()
                     .set(REPO_TYPE, repoType?.name)
@@ -155,7 +158,10 @@ class PipelineWebhookDao {
                 id = id,
                 projectName = projectName,
                 taskId = taskId,
-                repositoryHashId = repositoryHashId
+                repositoryHashId = repositoryHashId,
+                repoResourceType = repoResourceType?.let{
+                    RepoResourceType.valueOf(it)
+                }
             )
         }
     }
@@ -164,7 +170,8 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         projectNames: Set<String>,
         repositoryType: String,
-        yamlPipelineIds: List<String>?
+        yamlPipelineIds: List<String>?,
+        repoResourceType: RepoResourceType?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
@@ -177,6 +184,10 @@ class PipelineWebhookDao {
                     } else {
                         it.and(PIPELINE_ID.notIn(yamlPipelineIds))
                     }
+                    if (repoResourceType != null) {
+                        it.and(REPO_RESOURCE_TYPE.eq(repoResourceType.name))
+                    }
+                    it
                 }
                 .groupBy(PROJECT_ID, PIPELINE_ID)
                 .fetch().map {
@@ -210,7 +221,8 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         projectId: String,
         repositoryHashId: String,
-        eventType: String
+        eventType: String,
+        repoResourceType: RepoResourceType
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
@@ -218,6 +230,7 @@ class PipelineWebhookDao {
                 .and(REPOSITORY_HASH_ID.eq(repositoryHashId))
                 .and(EVENT_TYPE.eq(eventType))
                 .and(DELETE.eq(false))
+                .and(REPO_RESOURCE_TYPE.eq(repoResourceType.name))
                 .groupBy(PROJECT_ID, PIPELINE_ID)
                 .fetch().map {
                     WebhookTriggerPipeline(

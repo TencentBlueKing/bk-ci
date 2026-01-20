@@ -57,6 +57,7 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.RepoCredentialType
+import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.RepoCredentialService
 import com.tencent.devops.repository.service.permission.RepositoryAuthorizationService
@@ -118,7 +119,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 type = ScmType.CODE_GIT,
                 atom = repository.atom,
                 enablePac = repository.enablePac,
-                scmCode = ScmType.CODE_GIT.name
+                scmCode = ScmType.CODE_GIT.name,
+                resourceType = repository.repoResourceType ?: RepoResourceType.REPOSITORY
             )
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
