@@ -199,8 +199,8 @@ class LogESAutoConfiguration {
         val socketTimeout = e1socketTimeout ?: 30000 // 等待连接响应超时
         val connectTimeout = e1ConnectTimeout ?: 1000 // 请求连接超时
         val connectionRequestTimeout = e1ConnectionRequestTimeout ?: 30000 // 获取连接的超时时间
-        val maxConnectNum = e1MaxConnectNum ?: 200 // 最大连接数
-        val maxConnectPerRoute = e1MaxConnectPerRoute ?: 100 // 最大路由连接数
+        val maxConnectNum = e1MaxConnectNum ?: 1000 // 最大连接数
+        val maxConnectPerRoute = e1MaxConnectPerRoute ?: 300 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
@@ -267,8 +267,8 @@ class LogESAutoConfiguration {
         val socketTimeout = e2socketTimeout ?: 30000 // 等待连接响应超时
         val connectTimeout = e2ConnectTimeout ?: 1000 // 请求连接超时
         val connectionRequestTimeout = e2ConnectionRequestTimeout ?: 30000 // 获取连接的超时时间
-        val maxConnectNum = e2MaxConnectNum ?: 200 // 最大连接数
-        val maxConnectPerRoute = e2MaxConnectPerRoute ?: 100 // 最大路由连接数
+        val maxConnectNum = e2MaxConnectNum ?: 1000 // 最大连接数
+        val maxConnectPerRoute = e2MaxConnectPerRoute ?: 300 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
