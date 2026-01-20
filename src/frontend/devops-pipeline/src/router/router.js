@@ -72,6 +72,9 @@ const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'.
 const ImportPipelineEdit = () => import(/* webpackChunkName: "importPipeline" */'../views/ImportEdit.vue')
 const PipelineDataBoard = () => import(/* webpackChunkName: "pipelineDataBoard" */'../views/PipelineList/EplusBoard.vue')
 
+// 支持流水线实时监控 - 概览界面
+const pipelineRealTimeMonitorEntry = () => import(/* webpackChunkName: "pipelineRealTimeMonitorEntry" */'../views/pipelineRealTimeMonitor/entryLayout.vue')
+
 const routes = [
     {
         path: '/pipeline/:projectId',
@@ -81,6 +84,7 @@ const routes = [
             name: 'PipelineManageList'
         },
         children: [
+
             {
                 path: 'create',
                 component: CreatePipeline,
@@ -119,6 +123,11 @@ const routes = [
                         path: 'metrics',
                         name: 'PipelineDataBoard',
                         component: PipelineDataBoard
+                    },
+                    {
+                        path: 'realTimeMonitor',
+                        component: pipelineRealTimeMonitorEntry,
+                        name: 'realTimeMonitor',
                     },
                     {
                         path: ':viewId?/:type?',
