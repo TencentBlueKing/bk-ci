@@ -227,11 +227,18 @@ class PipelineDraftSaveReqConverter(
             ) {
                 return model
             }
-            val templateResource = pipelineTemplateResourceService.get(
+            // 历史模版,如果保存为相同的模版名称,会把旧的给删除,导致查不到模版信息,如果查不到,则直接保留老的模型
+            val templateResource = pipelineTemplateResourceService.getOrNull(
                 projectId = projectId,
                 templateId = pipelineTemplateRelated.templateId,
                 version = pipelineTemplateRelated.version
-            )
+            ) ?: run {
+                logger.info(
+                    "template resource not found|$projectId|${pipelineTemplateRelated.templateId}|" +
+                            "${pipelineTemplateRelated.version}"
+                )
+                return model
+            }
             val templateModel = templateResource.model
             if (templateModel !is Model) {
                 throw ErrorCodeException(

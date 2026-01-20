@@ -20,6 +20,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
@@ -41,9 +42,11 @@ import com.tencent.devops.process.engine.dao.PipelineOperationLogDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.template.CloneTemplateSettingExist
@@ -1054,25 +1057,14 @@ class PipelineTemplateFacadeService @Autowired constructor(
         )
 
         val templateDescriptor = pipelineResource.model.template
-        val templateResource = templateDescriptor?.let {
-            pipelineModelParser.parseTemplateDescriptor(
-                projectId = projectId,
-                descriptor = it,
-                pipelineId = pipelineId
-            )
-        } ?: run {
-            // 如果没有template字段,说明是历史实例化流水线,如果是最新版本,则需要填充数据
-            if (pipelineInfo.version == pipelineVersion) {
-                pipelineTemplateResourceService.get(
-                    projectId = projectId,
-                    templateId = pipelineTemplateRelated.templateId,
-                    version = pipelineTemplateRelated.version
-                )
-            } else {
-                logger.warn("legacy version, cannot view related template|$projectId|$pipelineId|$pipelineVersion")
-                return null
-            }
-        }
+        val templateResource = getRelatedTemplateResource(
+            templateDescriptor = templateDescriptor,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineInfo = pipelineInfo,
+            pipelineVersion = pipelineVersion,
+            pipelineTemplateRelated = pipelineTemplateRelated
+        ) ?: return null
 
         val templateId = pipelineTemplateRelated.templateId
         val templateInfo = pipelineTemplateInfoService.get(templateId)
@@ -1662,6 +1654,47 @@ class PipelineTemplateFacadeService @Autowired constructor(
     private val templateDetailRedirectUri = "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s"
     private val pipelineUpgradeRedirectUri =
         "${config.devopsHostGateway}/console/pipeline/%s/template/%s/%s/instance/upgrade?pipelineId=%s&pipelineName=%s"
+
+    /**
+     * 获取关联的模板资源
+     */
+    private fun getRelatedTemplateResource(
+        templateDescriptor: TemplateDescriptor?,
+        projectId: String,
+        pipelineId: String,
+        pipelineInfo: PipelineInfo,
+        pipelineVersion: Int,
+        pipelineTemplateRelated: PipelineTemplateRelated
+    ): PipelineTemplateResource? {
+        // 1. 如果有template字段，直接解析
+        templateDescriptor?.let {
+            return pipelineModelParser.parseTemplateDescriptor(
+                projectId = projectId,
+                descriptor = it,
+                pipelineId = pipelineId
+            )
+        }
+
+        // 2. 如果没有template字段，说明是历史实例化流水线
+        // 只有当前版本是最新版本时，才需要填充数据
+        if (pipelineInfo.version == pipelineVersion) {
+            val templateResource = pipelineTemplateResourceService.getOrNull(
+                projectId = projectId,
+                templateId = pipelineTemplateRelated.templateId,
+                version = pipelineTemplateRelated.version
+            )
+            if (templateResource != null) {
+                return templateResource
+            }
+        }
+
+        // 3. 找不到模板资源，记录日志并返回null
+        logger.info(
+            "template resource not found|$projectId|$pipelineId|$pipelineVersion|" +
+                    "${pipelineTemplateRelated.version}"
+        )
+        return null
+    }
 
 
     companion object {
