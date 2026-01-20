@@ -343,8 +343,8 @@
                         createTime: dayjs(res.draft?.createTime).format('YYYY-MM-DD HH:mm:ss'),
                         draftVersionName: res.draft?.baseVersionName,
                         draftVersion: res.draft?.version,
-                        releaseVersionName: res.release?.versionName,
-                        releaseVersion: res.release?.version,
+                        releaseVersionName: res.release?.versionName || this.pipelineInfo?.releaseVersionName,
+                        releaseVersion: res.release?.version || this.releaseVersion,
                     }
                 } catch (error) {
                     this.$bkMessage({
