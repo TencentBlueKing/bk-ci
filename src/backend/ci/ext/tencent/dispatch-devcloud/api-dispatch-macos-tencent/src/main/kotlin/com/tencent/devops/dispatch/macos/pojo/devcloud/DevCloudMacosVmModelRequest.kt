@@ -15,5 +15,5 @@ data class DevCloudMacosVmModelRequest(
     val t1: String,
     @get:Schema(title = "t2参数")
     @JsonProperty("pipelineId")
-    val t2: String
+    val t2: String? = ""
 )

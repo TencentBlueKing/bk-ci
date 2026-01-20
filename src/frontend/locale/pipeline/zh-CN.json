@@ -487,7 +487,7 @@
     "desc": "简介",
     "type": "模板类型",
     "searchPlaceholder": "模板名称/模板描述/来源/更新人",
-    "lastedVersion": "最新版本",
+    "latestVersion": "最新版本",
     "debugPipelineCount": "调试流水线",
     "instancePipelineCount": "实例",
     "shelfStore": "上架研发商店",
@@ -707,7 +707,10 @@
       "required": "是否入参",
       "valueNotEmpty": "是否必填",
       "readOnly": "运行时只读",
-      "category": "分组标签"
+      "category": "分组标签",
+      "repo": "代码库",
+      "relativePath": "代码库相对目录",
+      "glob": "过滤规则"
     },
     "propertyUpdated": "更新",
     "toInstance": "去实例化"
@@ -738,7 +741,6 @@
     "saveAsTempSuc": "另存为模板成功",
     "saveAsTempFail": "另存为模板失败",
     "filterEmptyDesc": "找不到满足当前过滤条件的流水线，请重新设置过滤条件",
-    "coloectEmptyTitle": "您尚未添加任何流水线至收藏夹",
     "collectEmptyDesc": "将鼠标悬浮到更多ICON上点击收藏",
     "myEmptyTitle": "创建自己的第一条流水线",
     "myEmptyDesc": "你还没有拥有任务流水线，可以点击下方 “创建流水线” 按钮，进行创建",
@@ -803,7 +805,7 @@
     "skipFail": "跳过失败",
     "rebuildSuc": "rebuild成功",
     "rebuildFail": "rebuild失败",
-    "stopSuc": "终止构建请求发送成功，请稍后...",
+    "stopSuc": "终止构建请求发送成功，请稍候...",
     "stopFail": "终止失败",
     "loadPipelineVersionSuccess": "加载版本 {version} 成功，请确认版本内容"
   },
@@ -880,7 +882,9 @@
     "rePlayInfo1": "1. 重放时，以相同的触发参数、最新的流水线编排启动一次新的构建",
     "rePlayInfo2": "2. 重放时，跳过触发器检测，有可能不满足最新版本的触发条件",
     "reBuildInfo1": "1. 重新构建，是在之前的构建基础上重新执行",
-    "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致"
+    "reBuildInfo2": "2. 流水线编排版本、BK_CI_BUILD_ID和首次触发时一致",
+    "rePlayFailed": "重放事件失败，请重试",
+    "canNotReplayTips": "触发事件缓存过期已清理。若需重放，请到代码库操作。"
   },
   "preview": {
     "build": "构建",
@@ -1161,6 +1165,11 @@
     "required": "是否必填",
     "showOnExec": "是否为入参",
     "readOnlyOnRun": "运行时只读",
+    "sensitive": "是否敏感",
+    "sensitiveTips1": "勾选后，在如下界面不展示明文值：",
+    "sensitiveTips2": "1. 流水线查看页，变量面板",
+    "sensitiveTips3": "2. 流水线构建详情页，启动变量列表",
+    "sensitiveTips4": "3.流水线构建详情页，插件日志",
     "defaultValue": "默认值",
     "fileDefaultValueLabel": "自定义仓库路径",
     "customFileLabelTips": "自定义仓库路径+文件名",
@@ -1581,7 +1590,7 @@
   "exitPatch": "退出管理",
   "patchSearchInputPlaceholder": "流水线名称/创建人/流水线组/标签",
   "labelGroupNameSuc": "标签组名称保存成功",
-  "labelGroupNameErr": "标签组名称保存成功",
+  "labelGroupNameErr": "标签组名称保存失败",
   "labelDeleteConfirm": "确认删除该标签",
   "labelGroupDeleteConfirm": "确认删除该标签组",
   "labelDeleteSuc": "删除标签组成功。",

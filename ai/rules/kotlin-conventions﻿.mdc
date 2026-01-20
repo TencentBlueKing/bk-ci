@@ -1,0 +1,418 @@
+---
+# 注意不要修改本文头文件，如修改，CodeBuddy（内网版）将按照默认逻辑设置
+type: always
+---
+# BK-CI 项目 Kotlin 编码规范 v3.0
+
+## 概述
+本规范旨在为 BK-CI 项目提供统一的 Kotlin 编码标准，确保代码的一致性、可读性、可维护性和高质量。遵循本规范有助于团队成员更高效地协作，降低项目风险。
+
+### 核心原则
+- **Google Kotlin Style Guide 优先**：除非本规范有明确说明，否则遵循 Google Kotlin Style Guide
+- **清晰简洁**：代码应易于理解，避免不必要的复杂性
+- **一致性**：整个项目中的编码风格应保持统一
+- **安全性**：充分利用 Kotlin 的空安全和类型系统特性
+- **可测试性**：代码设计应便于进行单元测试和集成测试
+
+## 规范等级定义
+- **【必须】(Mandatory)**：强制性要求，必须严格遵守
+- **【推荐】(Preferable)**：强烈建议遵守，但在特定且有充分理由的情况下，可以考虑不遵守
+
+## 源文件规范
+
+### 3.1 文件命名与结构
+【必须】文件名
+- 如果源文件只包含一个顶级类，文件名应与该类名完全一致（区分大小写），并以 .kt 结尾
+- 如果源文件包含多个顶级声明，应选择一个能描述文件内容的名称，采用 PascalCase 格式，并以 .kt 结尾
+
+【必须】文件编码：源文件编码格式为 UTF-8
+【必须】文件级注解：具有 file target 的注解必须放在任何版权声明和 package 声明之间
+【推荐】类长度：一个类最大行数不应超过 600 行
+
+### 3.2 包与导入 (Package & Import)
+【必须】package 语句：package 语句必须独立一行，长度不受限制
+【必须】import 语句
+- 不要使用通配符导入（例如 import com.example.*）
+- import 语句必须独立一行，不要换行
+- 不保留未使用的导入
+
+### 3.3 代码清理
+【推荐】垃圾清理：对从来没有用到的或者被注释的方法、变量、类、配置文件等要坚决从系统中清理出去
+
+## 格式规范
+
+### 4.1 空白字符与缩进
+【必须】空白字符：除了行结束时的换行符，空格是源文件中唯一允许出现的空白字符。不允许使用 Tab 字符进行缩进
+【必须】块缩进：每当开始一个新的块，缩进增加 4 个空格
+
+【必须】行内空格：
+- 分隔任何保留字（如 if, for, while）与紧随其后的左括号：`if (`
+- 分隔任何保留字与其前面的右大括号：`} else`
+- 在任何左大括号前：`fun foo() {`
+- 在任何二元或三元运算符的两侧（例如 +, =, ?:）
+  - 例外：不要在 "range to" 操作符（..）左右留空格
+  - 例外：不要在一元运算符（例如 !, ++, --）左右留空格
+- Lambda 表达式中的箭头（->）前后：`{ a, b -> a + b }`
+- 在 : 之后总要留一个空格，特定情况下在 : 前留空格（例如类型声明 `val name: String`）
+- 语句后做注释，在 // 之后留一个空格：`val x = 1 // 注释`
+- 类型和变量之间：`val name: String`
+- 绝不在 (, [ 之后或者 ], ) 之前留空格
+- 绝不在 . 或者 ?. 左右留空格
+- 不要在用于指定类型参数的尖括号前后留空格：`List<String>`
+- 不要在 :: 前后留空格：`Foo::bar`
+- 不要在用于标记可空类型的 ? 前留空格：`String?`
+
+【必须】空行使用
+- 在类的连续成员（属性、构造函数、函数、嵌套类等）之间使用空行
+- 在函数体内，语句的逻辑分组间使用空行
+- 代码逻辑块之间，例如两个 when 分支之间
+
+### 4.2 行长度与断行
+【必须】行长度限制：单行字符数限制不超过 120 个，超出需要换行
+- 例外：package 和 import 语句不受此限制
+
+【必须】长行断行
+- 在运算符或 infix 函数名称处换行时，换行符将在该运算符或 infix 函数名称后面
+  ```kotlin
+  val result = longExpressionA +
+          longExpressionB
+  ```
+- 在点分隔符 (.)、成员引用 (::) 处换行时，换行符将在该符号前面
+  ```kotlin
+  someObject
+      .someMethod()
+      .anotherMethod()
+  ```
+- 方法调用时，多个参数需要换行时，在逗号后进行
+  ```kotlin
+  someFunction(
+      param1,
+      param2,
+      param3
+  )
+  ```
+- Lambda 表达式，在箭头 (->) 后换行
+  ```kotlin
+  list.map { item ->
+      item.toString()
+  }
+  ```
+
+【必须】一行最多一个语句：每个语句后要换行，不能多个语句写在同一行
+
+### 4.3 大括号与代码块
+【必须】大括号使用
+- 单行 if/for/while 语句，可省略大括号
+- when 分支若只有一个语句，也应省略大括号
+- 其他情况，只要有换行，必须使用大括号
+
+【必须】非空块：K&R 风格
+- 左大括号前不换行
+- 左大括号后换行
+- 右大括号前换行
+- 如果右大括号是一个语句、函数体或类的终止，则右大括号后换行；否则不换行
+
+```kotlin
+if (condition) {
+    // ...
+} else {
+    // ...
+}
+```
+
+### 4.4 声明格式化
+【必须】类头格式化
+- 具有少数主构造函数参数的类可以写成一行
+- 具有较长类头的类应该格式化，每个主构造函数参数都在带有缩进（4个空格）的独立行中
+- 右括号应该位于一个新行上
+
+```kotlin
+class User(
+    val id: String,
+    val name: String,
+    val age: Int
+)
+```
+
+【必须】函数调用格式化
+- 如果函数签名不适合单行，须将每个参数单独一行并使用常规缩进（4个空格）
+- 对于由单个表达式构成的函数体，优先使用表达式形式
+
+```kotlin
+// 表达式形式
+fun square(x: Int) = x * x
+
+// 块形式，多行参数
+fun processData(
+    input: List<String>,
+    processor: (String) -> String,
+    output: Appendable
+) { /* ... */ }
+```
+
+【必须】属性格式化
+- 对于有 get 与 set 关键字的属性，总是将 get 与 set 放在不同的行上
+- 对于具有初始化器的属性，如果初始化器很长，在等号后增加一个换行并将初始化器缩进四个空格
+
+```kotlin
+val complexProperty: String =
+    "Long " +
+    "initialization " +
+    "string"
+
+var counter: Int
+    get() = field
+    set(value) { field = value }
+```
+
+### 4.5 其他格式
+【必须】十六进制：应使用大写字母 A-F
+
+【必须】枚举类
+- 枚举常量间用逗号隔开
+- 没有函数和文档的枚举类可以选择性地将其格式设为单行
+
+```kotlin
+enum class Color { RED, GREEN, BLUE }
+
+enum class Status {
+    SUCCESS,
+    FAILURE,
+    PENDING
+}
+```
+
+【必须】注解
+- 注解紧跟在文档块后面，应用于字段、类、方法和构造函数，注解独占一行
+- 单个的注解可以和方法签名的第一行出现在同一行
+
+```kotlin
+@Serializable
+@Deprecated("Use new API")
+class OldData
+
+@Test fun testMethod() { /* ... */ }
+```
+
+【推荐】Lambda 表达式
+- 在简短、非嵌套的 lambda 表达式中建议使用 it 用法而不是显式声明参数
+  ```kotlin
+  list.map { it * 2 }
+  ```
+- 有参数的嵌套 lambda 表达式中，始终应该显式声明参数
+  ```kotlin
+  list.forEach { item ->
+      anotherList.map { nestedItem ->
+          // ...
+      }
+  }
+  ```
+- 避免在 lambda 表达式中使用多个返回到标签
+
+【必须】注释
+- 注释与其周围的代码在同一缩进级别
+- 它们可以是 /**/ 风格，也可以是 // 风格
+- 对于多行的 /**/ 注释，后续行必须从 * 开始，并且与前一行的 * 对齐
+
+```kotlin
+/**
+ * 这是一个多行 KDoc 注释。
+ */
+fun example() {
+    // 这是一个单行注释
+    /*
+     * 这是另一个多行注释。
+     */
+}
+```
+### 4.6 优化Kotlin函以及对象调用方式
+优化Kotlin函数及对象调用方式，要求严格遵循命名参数规范。具体包括：
+1. 函数调用必须明确指定参数名称，例如将hasPermission(a,b)改写为hasPermission(userId = a, projectId = b)
+2. data class实例化必须使用命名参数方式，如ExpandDiskValidateResp(valid = true, message = "a", taskId = "a")
+3. 禁止直接传参方式，必须显式标注每个参数的名称
+4. 该规范适用于所有函数调用和对象实例化场景
+
+实施此规范将带来以下优势：
+- 消除参数顺序错误风险
+- 避免参数个数不匹配问题
+- 显著提升代码可读性
+- 增强代码维护性
+- 使调用意图更加明确
+
+请确保团队所有Kotlin代码都严格遵守此命名参数调用规范。
+
+
+## 命名规范
+
+### 5.1 基本原则
+【必须】命名字符：命名只能允许字符、数字、下划线、美元符号。代码中的命名均不能以下划线或美元符号开始，也不能以下划线或美元符号结束
+- 例外：幕后属性允许使用下划线开头（例如 _name）
+
+### 5.2 包名 (Package Names)
+【必须】包名：全部小写，连续的单词简单连接，不使用下划线
+- `com.tencent.devops.process`
+
+### 5.3 类与接口 (Class & Interface Names)
+【必须】类名：
+- 所有类名都以 UpperCamelCase (PascalCase) 风格编写
+- 类名通常是名词或名词短语，接口名称有时可能是形容词或形容词短语
+- 测试类的命名以它要测试的类的名称开始，以 Test 结束（例如 UserRepositoryTest）
+- 异常类命名使用 Exception 结尾（例如 UserNotFoundException）
+- 继承场景下子类命名不要去掉或者改变 is a 的含义
+- `UserRepository`, `PaymentService`, `User`, `Comparable`
+
+### 5.4 函数与变量 (Function & Variable Names)
+【必须】函数名：
+- 函数、属性与局部变量的名称都以 lowerCamelCase 风格编写
+- 方法名通常是动词或动词短语，并能够准确表达业务语义
+- 例外 1：带有 @Composable 的 Compose 组件，允许以大写开头（遵循 Compose 规范）
+- 例外 2：与返回类型命名相同的工厂方法名，允许大写开头
+- 例外 3：测试代码，允许有空格及下划线混用（遵循测试规范）
+- `getUserById`, `calculateTotal`, `isValid`
+
+【必须】非常量成员变量：非常量字段名以 lowerCamelCase 风格编写
+- `firstName`, `isValidating`
+
+【必须】参数名：
+- 参数名以 lowerCamelCase 风格编写
+- 参数应该避免用单个字符命名，除非是公认的惯例（如循环变量 i）
+- `userId`, `userName`
+
+【必须】局部变量名：
+- 局部变量名以 lowerCamelCase 风格编写
+- 除了临时变量和循环变量，不允许使用单字符命名
+- `result`, `tempValue`
+
+### 5.5 常量 (Constant Names)
+【必须】常量名：
+- 常量命名模式为 CONSTANT_CASE，全部字母大写，用下划线分隔单词
+- 常量指：标为 const 的属性、以 val 声明且所指向的数据不可变的顶级对象或对象属性
+- `MAX_RETRY_COUNT`, `DEFAULT_TIMEOUT`
+
+### 5.6 布尔变量
+【推荐】布尔变量：使用 is、has、can、should 前缀
+- `isLoading`, `hasPermission`, `canDelete`
+
+### 5.7 缩写
+【推荐】使用完整单词：使用完整单词而非缩写，确保拼写正确
+- 标准缩写除外：API、URL、HTTP、JSON 等
+- 常见缩写：id、ctx、req、res
+
+## 函数与类设计
+
+### 6.1 基本设计原则
+【推荐】简短单一目的函数：编写简短且单一目的的函数（建议 ≤ 20 行）
+【推荐】表达式函数：使用表达式函数简化单行返回：`fun square(x: Int) = x * x`
+【推荐】函数名：函数名以动词开头，体现其行为
+【推荐】高阶函数与扩展函数：优先使用高阶函数和扩展函数
+【推荐】命名参数：使用命名参数提高可读性：`createUser(name = "John", age = 25)`
+【推荐】默认参数值：合理使用默认参数值，减少函数重载
+【推荐】早期返回：通过早期返回和提取工具函数避免深层嵌套
+【推荐】单一抽象级别：函数内部的代码应保持在同一抽象级别
+
+### 6.2 类与数据结构
+【推荐】数据类：用于纯数据承载
+【推荐】密封类/接口：用于有限状态表示，替代枚举的复杂场景或更灵活的类型层次
+【推荐】对象类：用于单例模式和工具类
+【推荐】内联类：用于类型安全的原始类型包装
+【推荐】组合而非继承：优先使用组合而非继承
+【推荐】SOLID 原则：遵循 SOLID 原则
+【推荐】职责单一：保持类的职责单一，避免过大的类（建议 ≤ 200 行，≤ 10 个公共方法）
+【推荐】避免滥用原始类型：将相关数据封装在复合类型中
+
+### 6.3 可见性与封装
+【推荐】最小必要可见性：使用最小必要的可见性修饰符
+【推荐】internal 优先：优先使用 internal 而非 public 用于模块内部 API
+【推荐】private 限制实现：使用 private 限制类内部实现细节
+【推荐】protected 继承场景：合理使用 protected 用于继承场景
+
+【推荐】修饰符顺序：类和成员的修饰符如果存在，按 Kotlin 语言规范中推荐的顺序出现：
+`public/protected/private/internal → expect/actual → final/open/abstract/sealed/const → external → override → lateinit → tailrec → vararg → suspend → inner → enum/annotation/fun → companion → inline → infix → operator → data`
+
+### 6.4 泛型与类型系统
+【推荐】泛型约束与变型：合理使用泛型约束和变型（in、out）
+【推荐】reified 参数：使用 reified 参数访问泛型类型信息
+【推荐】类型别名：利用类型别名提高代码可读性：`typealias UserId = String`
+【推荐】内联函数：使用内联函数优化高阶函数性能
+
+### 6.5 禁止直接使用完整类路径引用方法
+禁止直接使用完整类路径引用方法，例如 com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy.parse(this.buildCancelPolicy)。
+要求必须通过import导入包后，使用简洁的类名调用方式：
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy，然后通过BuildCancelPolicy.parse()来调用方法。请确保代码符合这一规范。
+
+## 集合与函数式编程
+
+【推荐】不可变集合：优先使用不可变集合 (`listOf`, `setOf`, `mapOf`)
+【推荐】函数式操作：使用函数式操作：`map`、`filter`、`reduce`、`fold`
+【推荐】序列 (Sequence)：合理使用序列 (Sequence) 处理大数据集或链式操作
+【推荐】作用域函数：使用作用域函数：`let`、`run`、`with`、`apply`、`also`
+【推荐】takeIf/takeUnless：使用 `takeIf`、`takeUnless` 进行条件处理
+【推荐】Lambda 参数：对简单 lambda 使用 `it` 参数，复杂情况使用命名参数
+
+## 空安全与错误处理
+
+【推荐】空安全特性：优先使用类型推断，必要时显式声明类型提高可读性；使用 Kotlin 的空安全特性，避免显式 null 检查
+【推荐】安全调用：使用 `?.` 安全调用操作符
+【推荐】Elvis 操作符：使用 `?:` Elvis 操作符提供默认值
+【推荐】!! 操作符：使用 `!!` 操作符需要有充分理由并添加注释
+【推荐】Result 类型：优先使用 Result 类型处理可能失败的操作
+【推荐】具体异常类型：对于异常情况使用具体的异常类型而非通用异常
+【推荐】避免函数内验证：避免在函数中进行数据验证，使用具有内部验证的类型
+
+【推荐】异常捕获
+- 明确不会产生异常的场景，可以不捕获（例如业务内逻辑，典型的有 JSON 处理）
+- 调用外部提供的可能产生异常的逻辑，需要捕获（例如文件读写、网络访问）
+
+【必须】异常规约
+- 不要在 finally 块中使用 return
+- 异常不要用来做流程控制，条件控制
+- 异常信息应该包括两类信息：案发现场信息和异常堆栈信息
+
+## 性能与资源管理
+
+【推荐】inline 优化：使用 inline 关键字优化高阶函数
+【推荐】lazy 延迟初始化：合理使用 lazy 延迟初始化
+【推荐】内存泄漏：注意避免内存泄漏，特别是在协程和回调中
+【推荐】use 函数：使用 use 函数自动管理资源（例如文件流）
+
+## 测试规范
+
+【推荐】测试方法命名：测试方法使用描述性命名：`should_return_user_when_valid_id_provided`
+【推荐】Arrange-Act-Assert：遵循 Arrange-Act-Assert 模式
+【推荐】清晰命名测试变量：`given...`、`when...`、`then...` 或 `input...`、`expected...`、`actual...`
+【推荐】单元测试：为每个公共函数编写单元测试
+【推荐】测试替身：使用测试替身（Mock、Stub）模拟依赖
+【推荐】集成测试：为每个模块编写集成测试
+【推荐】Given-When-Then：遵循 Given-When-Then 约定编写行为测试
+
+## 代码组织与架构
+
+【推荐】按功能组织包结构：按功能而非类型组织包结构
+【推荐】相关类同文件：将相关的类放在同一文件中（如密封类的子类）
+【推荐】扩展函数：合理使用扩展函数增强现有类型
+【推荐】接口定义契约：声明接口定义契约，面向接口编程
+【推荐】依赖注入：使用依赖注入提高代码可测试性
+【推荐】领域驱动设计：遵循领域驱动设计原则
+【推荐】设计模式体现：如果模块、接口、类、方法使用了设计模式，在命名时体现出具体模式
+
+## 与 BK-CI 项目集成
+
+### 项目特定规范
+- 遵循 BK-CI 项目的微服务分层架构：api/biz/boot/model
+- 权限模型变更严格遵循 IAM RBAC 规范顺序
+- API 设计遵循 RESTful 规范
+- 数据库操作使用 JOOQ，遵循表结构变更规范
+
+### 质量门禁
+- 单元测试覆盖率 ≥80%
+- 通过格式化、静态检查、测试与构建门禁
+- 遵循提交规范：feat/fix/refactor/perf/test/docs/format/merge/depend/chore
+
+### 开发流程
+- 小步聚焦、可回滚的提交策略
+- PR 必须包含代码+测试+文档（如适用）
+- 通过代码审查确保功能、性能、安全、可维护性
+
+---
+
+*本规范基于 BK-CI 项目实际需求制定，如有冲突以项目实际实现和团队共识为准，并在本文件中滚动更新。*

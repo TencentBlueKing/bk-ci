@@ -66,7 +66,7 @@
         ],
         "outputs": [
           "{workspaceRoot}/frontend/experience",
-          "{workspaceRoot}/frontend/entry's/experience.json"
+          "{workspaceRoot}/frontend/entries/experience.json"
         ]
       }
     }

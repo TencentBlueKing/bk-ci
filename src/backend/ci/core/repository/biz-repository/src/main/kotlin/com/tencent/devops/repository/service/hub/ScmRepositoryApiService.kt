@@ -67,6 +67,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.ScmConfig
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -158,7 +159,7 @@ class ScmRepositoryApiService @Autowired constructor(
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
         val opts = RepoListOptions(
-            repoName = search,
+            repoName = GitUtils.tryGetRepoName(search),
             page = 1,
             pageSize = 20
         )

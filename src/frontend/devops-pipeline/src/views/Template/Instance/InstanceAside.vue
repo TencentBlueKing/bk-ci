@@ -159,6 +159,10 @@
     const instanceName = computed(() => {
         return renderInstanceList.value[editingIndex.value]?.pipelineName ?? ''
     })
+    watch(() => currentVersion.value,  () => {
+        if (isInstanceCreateType.value) return
+        fetchPipelinesDetails()
+    })
     watch(() => curTemplateDetail.value, (val) => {
         if (instanceList.value.length) return
         if (pipelineName.value && isInstanceCreateType.value) {
@@ -243,6 +247,7 @@
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
+                version: currentVersion.value,
                 templateId: templateId.value
             })
             const list = renderInstanceList.value.map(i => {
@@ -290,10 +295,15 @@
                 }
             })
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
-            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
+            proxy.$bkMessage({
+                theme: 'error',
+                message: e.message || e
+            })
             console.error(e)
+        } finally {
+            proxy.$store.dispatch('templates/updateInstancePageLoading', false)
         }
     }
     function handleShowInstanceCreate () {
@@ -355,7 +365,7 @@
                 })
                 return
             }
-            await fetchPipelinesDetails()
+            // await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })
