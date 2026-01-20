@@ -47,7 +47,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemC
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemUpdate
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -70,7 +70,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
@@ -321,7 +321,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
             version = deployPipelineResult.version
         )
         if (versionResource != null) {
-            publicVarGroupReferInfoService.handleVarGroupReferBus(
+            publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = "system",
                     projectId = projectId,

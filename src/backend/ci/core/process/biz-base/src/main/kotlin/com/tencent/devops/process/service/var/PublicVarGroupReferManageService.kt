@@ -72,7 +72,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class PublicVarGroupReferInfoService @Autowired constructor(
+class PublicVarGroupReferManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client,
@@ -88,7 +88,7 @@ class PublicVarGroupReferInfoService @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PublicVarGroupReferInfoService::class.java)
+        private val logger = LoggerFactory.getLogger(PublicVarGroupReferManageService::class.java)
 
         // 批量操作相关常量
         private const val DEFAULT_BATCH_SIZE = 100
@@ -296,45 +296,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
     }
 
     /**
-     * 查询变量引用信息
-     * @param queryReq 查询请求
-     * @return 分页结果
-     */
-    fun listVarReferInfo(queryReq: PublicVarGroupInfoQueryReqDTO): Page<PublicGroupVarRefDO> {
-
-        val queryResult = queryVarGroupReferInfo(queryReq)
-        val totalCount = queryResult.totalCount
-        val varGroupReferInfo = queryResult.referInfos
-
-        logger.info("listVarReferInfo queryReq:{$queryReq }totalCount: $totalCount ${varGroupReferInfo.size}")
-        if (totalCount == 0) {
-            return Page(
-                count = 0,
-                page = queryReq.page,
-                pageSize = queryReq.pageSize,
-                records = emptyList()
-            )
-        }
-
-        val referInfoByType = varGroupReferInfo.groupBy { it.referType }
-        val records = mutableListOf<PublicGroupVarRefDO>()
-
-        // 处理流水线和模板类型的引用
-        val pipelineReferList = processPipelineReferences(queryReq, referInfoByType)
-        val templateReferList = processTemplateReferences(queryReq, referInfoByType)
-
-        records.addAll(pipelineReferList)
-        records.addAll(templateReferList)
-
-        return Page(
-            count = totalCount.toLong(),
-            page = queryReq.page,
-            pageSize = queryReq.pageSize,
-            records = records
-        )
-    }
-
-    /**
      * 处理流水线类型的引用
      */
     private fun processPipelineReferences(
@@ -463,119 +424,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.warn("Failed to process template references for project: ${queryReq.projectId}", e)
-            throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
-            )
-        }
-    }
-
-    /**
-     * 查询变量组引用信息（查询所有版本的引用）
-     */
-    private fun queryVarGroupReferInfo(
-        queryReq: PublicVarGroupInfoQueryReqDTO
-    ): VarGroupReferInfoQueryResult {
-        val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
-        val varName = queryReq.varName
-
-        try {
-            // 检查变量组是否存在（查询任意版本以确认变量组存在）
-            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName
-            )
-
-            if (varGroupRecord == null) {
-                return VarGroupReferInfoQueryResult(0, emptyList())
-            }
-
-            // 如果指定了 varName，则查询引用了该变量的资源列表
-            if (!varName.isNullOrBlank()) {
-                return queryVarGroupReferInfoByVarNameAllVersions(
-                    queryReq = queryReq,
-                    groupName = groupName,
-                    varName = varName
-                )
-            }
-
-            // 查询所有版本的引用
-            // 统计总数
-            val totalCount = publicVarGroupReferInfoDao.countByGroupName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                referType = queryReq.referType
-            )
-
-            // 查询引用信息
-            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                referType = queryReq.referType,
-                page = queryReq.page,
-                pageSize = queryReq.pageSize
-            )
-
-            return VarGroupReferInfoQueryResult(totalCount, varGroupReferInfo)
-        } catch (e: Throwable) {
-            logger.warn("Failed to query var group refer info for group: $groupName in project: $projectId", e)
-            throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
-            )
-        }
-    }
-
-    /**
-     * 根据变量名查询变量组引用信息（所有版本）
-     */
-    private fun queryVarGroupReferInfoByVarNameAllVersions(
-        queryReq: PublicVarGroupInfoQueryReqDTO,
-        groupName: String,
-        varName: String
-    ): VarGroupReferInfoQueryResult {
-        val projectId = queryReq.projectId
-
-        try {
-            // 查询引用了该变量的 referId 列表（所有版本）
-            val referIds = publicVarReferInfoDao.listReferIdsByVarName(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                referType = queryReq.referType
-            )
-
-            if (referIds.isEmpty()) {
-                return VarGroupReferInfoQueryResult(0, emptyList())
-            }
-
-            // 统计总数
-            val totalCount = publicVarGroupReferInfoDao.countByReferIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                referIds = referIds,
-                referType = queryReq.referType
-            )
-
-            // 查询详细信息
-            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
-                dslContext = dslContext,
-                projectId = projectId,
-                referIds = referIds,
-                referType = queryReq.referType,
-                page = queryReq.page,
-                pageSize = queryReq.pageSize
-            )
-
-            return VarGroupReferInfoQueryResult(totalCount, varGroupReferInfo)
-        } catch (e: Throwable) {
-            logger.warn(
-                "Failed to query var group refer info by varName: $varName (all versions) in project: $projectId",
-                e
-            )
             throw ErrorCodeException(
                 errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
             )
@@ -1165,103 +1013,6 @@ class PublicVarGroupReferInfoService @Autowired constructor(
             buildFormProperty.varGroupName = groupName
             buildFormProperty.varGroupVersion = if (varPO.version != -1) version else null
             params.add(buildFormProperty)
-        }
-    }
-
-    /**
-     * 获取资源关联的变量组变量引用信息
-     * @param projectId 项目ID
-     * @param referId 引用资源ID
-     * @param referType 引用资源类型
-     * @param referVersion 引用版本号
-     * @param groupName 变量组名称
-     * @param version 变量组版本号
-     * @return 变量列表
-     */
-    fun listResourceVarReferInfo(
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int,
-        groupName: String,
-        version: Int?
-    ): List<PublicVarDO> {
-        logger.info("listResourceVarReferInfo for referId: $referId, referType: $referType, " +
-                "referVersion: $referVersion, groupName: $groupName, version: $version")
-
-        try {
-            // 先查询引用信息，获取sourceProjectId
-            val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
-                dslContext = dslContext,
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                referVersion = referVersion,
-                groupName = groupName
-            )
-
-            // 获取sourceProjectId，如果不为空则使用它来查询变量组信息
-            val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
-            logger.info("listResourceVarReferInfo projectId:$projectId|sourceProjectId: $sourceProjectId")
-            // 查询变量组信息，确认变量组存在
-            val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
-                dslContext = dslContext,
-                projectId = sourceProjectId,
-                groupName = groupName,
-                version = version
-            ) ?: throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST,
-                params = arrayOf(groupName)
-            )
-
-            // 先查询变量组中的所有变量详细信息
-            val groupVars = publicVarDao.listVarByGroupName(
-                dslContext = dslContext,
-                projectId = sourceProjectId,
-                groupName = groupName,
-                version = varGroupRecord.version
-            )
-
-            if (groupVars.isEmpty()) {
-                return emptyList()
-            }
-
-            // 查询该资源在该变量组中引用的变量信息
-            val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndGroup(
-                dslContext = dslContext,
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                groupName = groupName,
-                referVersion = referVersion
-            )
-
-            // 统计每个变量的引用次数
-            val varReferCountMap = varReferInfos.groupingBy { it.varName }.eachCount()
-
-            // 返回所有变量，有关联就设置referCount
-            return groupVars.map { varPO ->
-                val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
-                buildFormProperty.varGroupVersion = version
-                PublicVarDO(
-                    varName = varPO.varName,
-                    alias = varPO.alias,
-                    type = varPO.type,
-                    valueType = varPO.valueType,
-                    defaultValue = varPO.defaultValue,
-                    desc = varPO.desc,
-                    referCount = varReferCountMap[varPO.varName] ?: 0,
-                    buildFormProperty = buildFormProperty
-                )
-            }
-        } catch (e: ErrorCodeException) {
-            throw e
-        } catch (e: Throwable) {
-            logger.warn("Failed to list resource var refer info for referId: $referId, groupName: $groupName", e)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP,
-                params = arrayOf(e.message ?: "Unknown error")
-            )
         }
     }
 }

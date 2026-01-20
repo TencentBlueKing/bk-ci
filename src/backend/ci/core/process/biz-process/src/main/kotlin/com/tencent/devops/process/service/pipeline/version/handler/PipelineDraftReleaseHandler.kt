@@ -46,7 +46,7 @@ import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionPersistenceService
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import jakarta.ws.rs.core.Response
@@ -70,7 +70,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
     @Lazy
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineYamlCommonService: PipelineYamlCommonService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateHandler {
     override fun support(context: PipelineVersionCreateContext): Boolean {
         return context.versionAction == PipelineVersionAction.RELEASE_DRAFT
@@ -194,7 +194,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             version = resourceOnlyVersion.version
         )
 
-        publicVarGroupReferInfoService.handleVarGroupReferBus(
+        publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
                 projectId = projectId,

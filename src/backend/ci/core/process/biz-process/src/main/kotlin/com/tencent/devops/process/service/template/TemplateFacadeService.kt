@@ -138,7 +138,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonServ
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -197,7 +197,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -2595,7 +2595,7 @@ class TemplateFacadeService @Autowired constructor(
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
         model.handlePublicVarInfo()
-        publicVarGroupReferInfoService.handleVarGroupReferBus(
+        publicVarGroupReferManageService.handleVarGroupReferBus(
             PublicVarGroupReferDTO(
                 userId = userId,
                 projectId = projectId,

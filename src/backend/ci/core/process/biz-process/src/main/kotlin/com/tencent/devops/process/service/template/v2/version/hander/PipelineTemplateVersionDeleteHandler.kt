@@ -46,7 +46,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedSer
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionDeleteContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionDeletePostProcessor
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
@@ -70,7 +70,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 
     ) {
     fun handle(context: PipelineTemplateVersionDeleteContext) {
@@ -148,7 +148,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
             version = version
         )
 
-        publicVarGroupReferInfoService.deletePublicGroupRefer(
+        publicVarGroupReferManageService.deletePublicGroupRefer(
             userId = userId,
             projectId = projectId,
             referId = templateId,

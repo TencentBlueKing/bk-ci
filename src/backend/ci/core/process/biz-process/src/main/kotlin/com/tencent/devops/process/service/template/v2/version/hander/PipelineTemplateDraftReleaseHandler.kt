@@ -48,7 +48,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenc
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,7 +66,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val redisOperation: RedisOperation,
     @Lazy private val pipelineYamlFacadeService: PipelineYamlFacadeService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
     override fun support(context: PipelineTemplateVersionCreateContext) =
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
@@ -153,7 +153,7 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         // 发布yaml文件
         val yamlFileReleaseResult = releaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
         (pTemplateResourceWithoutVersion.model as? Model)?.let {
-            publicVarGroupReferInfoService.handleVarGroupReferBus(
+            publicVarGroupReferManageService.handleVarGroupReferBus(
                 PublicVarGroupReferDTO(
                     userId = userId,
                     projectId = projectId,

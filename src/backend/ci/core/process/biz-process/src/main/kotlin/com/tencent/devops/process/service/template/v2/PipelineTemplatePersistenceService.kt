@@ -53,7 +53,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdate
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionCreatePostProcessor
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -79,7 +79,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     /**
@@ -320,7 +320,7 @@ class PipelineTemplatePersistenceService @Autowired constructor(
             )
 
             (pTemplateResourceWithoutVersion.model as? Model)?.let {
-                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                publicVarGroupReferManageService.handleVarGroupReferBus(
                     PublicVarGroupReferDTO(
                         userId = userId,
                         projectId = projectId,

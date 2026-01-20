@@ -125,7 +125,7 @@ import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -187,7 +187,7 @@ class PipelineRepositoryService constructor(
     private val subPipelineTaskService: SubPipelineTaskService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineTemplateInfoDao: PipelineTemplateInfoDao,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     companion object {
@@ -868,7 +868,7 @@ class PipelineRepositoryService constructor(
                     } else null,
                     description = description
                 )
-                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                publicVarGroupReferManageService.handleVarGroupReferBus(
                     PublicVarGroupReferDTO(
                         userId = userId,
                         projectId = projectId,
@@ -1255,7 +1255,7 @@ class PipelineRepositoryService constructor(
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")
-                publicVarGroupReferInfoService.handleVarGroupReferBus(
+                publicVarGroupReferManageService.handleVarGroupReferBus(
                     PublicVarGroupReferDTO(
                         userId = userId,
                         projectId = projectId,
@@ -1822,7 +1822,7 @@ class PipelineRepositoryService constructor(
                 }
             }
 
-            publicVarGroupReferInfoService.deletePublicVerGroupRefByReferId(
+            publicVarGroupReferManageService.deletePublicVerGroupRefByReferId(
                 referId = pipelineId,
                 projectId = projectId,
                 referType = PublicVerGroupReferenceTypeEnum.PIPELINE

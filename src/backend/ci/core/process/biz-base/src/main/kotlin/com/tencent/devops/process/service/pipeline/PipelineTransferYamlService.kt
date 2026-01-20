@@ -69,7 +69,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.ElementTransfer
@@ -112,7 +112,7 @@ class PipelineTransferYamlService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: CodeSchemaCheck,
     private val pipelineInfoService: PipelineInfoService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     companion object {
@@ -323,7 +323,7 @@ class PipelineTransferYamlService @Autowired constructor(
         )
         val model = modelTransfer.yaml2Model(input)
         pipelineInfo?.let {
-            publicVarGroupReferInfoService.handleVarGroupReferByVersionName(
+            publicVarGroupReferManageService.handleVarGroupReferByVersionName(
                 PublicVarGroupReferDTO(
                     userId = userId,
                     projectId = projectId,
