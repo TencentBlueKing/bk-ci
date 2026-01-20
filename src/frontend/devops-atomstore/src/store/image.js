@@ -153,6 +153,13 @@ export const actions = {
     },
 
     /**
+     * 升级镜像需获取最大版本的镜像ID
+     */
+    getLargestImageCode ({ commit }, imageCode) {
+        return vue.$ajax.get(`${prefix}/user/market/imageCodes/${imageCode}/version/latest`)
+    },
+
+    /**
      * 关联镜像
      */
     requestRelImage ({ commit }, { imageCode, params }) {
