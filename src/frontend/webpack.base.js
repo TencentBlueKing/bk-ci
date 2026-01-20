@@ -169,7 +169,11 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
             alias: {
                 '@': path.resolve('src'),
                 '@locale': path.resolve(__dirname, 'locale')
-            }
+            },
+            modules: [
+                path.resolve(__dirname, 'node_modules'),
+                'node_modules'
+            ]
         },
         externals: {
             vue: 'Vue',

@@ -29,7 +29,8 @@ module.exports = (env = {}, argv) => {
             'echarts',
             'vue-echarts',
             'js-cookie',
-            'dayjs'
+            'dayjs',
+            '@tencent/bk-magic-vue'
         ],
         output: {
             publicPath: 'auto',
