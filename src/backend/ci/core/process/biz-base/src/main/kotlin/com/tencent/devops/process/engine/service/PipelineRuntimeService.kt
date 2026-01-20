@@ -2308,15 +2308,11 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun listLightPipelineBuildHistory(
-        userId: String? = null,
         query: PipelineBuildQuery
     ): List<LightBuildHistory> {
-        val safeQuery = query.copy(
-            limit = if (query.limit !in 1..100) 100 else query.limit
-        )
         return pipelineBuildDao.listLightPipelineBuildInfo(
             dslContext = dslContext,
-            query = safeQuery
+            query = query
         )
     }
 

@@ -2221,7 +2221,6 @@ class PipelineBuildFacadeService(
 
         // 查询构建历史记录
         val newHistoryBuilds = pipelineRuntimeService.listLightPipelineBuildHistory(
-            userId = userId,
             query = query
         )
         return Page(
