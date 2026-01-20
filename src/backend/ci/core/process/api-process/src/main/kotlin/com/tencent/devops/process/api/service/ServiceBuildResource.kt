@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkApiHandleType
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -551,6 +552,7 @@ interface ServiceBuildResource {
         page: Int,
         @Parameter(description = "每页多少条", required = true, example = "20")
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int,
         @Parameter(description = "状态", required = false)
         @QueryParam("status")
