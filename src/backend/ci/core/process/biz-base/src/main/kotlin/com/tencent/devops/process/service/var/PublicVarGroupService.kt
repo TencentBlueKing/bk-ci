@@ -96,7 +96,6 @@ class PublicVarGroupService @Autowired constructor(
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
-    private val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
     private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) {
     companion object {
@@ -104,7 +103,7 @@ class PublicVarGroupService @Autowired constructor(
         
         // 正则表达式常量
         private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
-        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")
+        private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
     }
 
     fun addGroup(publicVarGroupDTO: PublicVarGroupDTO): String {
@@ -140,7 +139,15 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-
+            // 如果是新建变量组（首次创建），注册到权限中心
+            if (isCreate) {
+                publicVarGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    groupCode = groupName,
+                    name = groupName
+                )
+            }
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
@@ -163,16 +170,6 @@ class PublicVarGroupService @Autowired constructor(
                         versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
-                )
-            }
-
-            // 如果是新建变量组（首次创建），注册到权限中心
-            if (isCreate) {
-                publicVarGroupPermissionService.createResource(
-                    userId = userId,
-                    projectId = projectId,
-                    groupCode = groupName,
-                    name = groupName
                 )
             }
         } catch (t: Throwable) {

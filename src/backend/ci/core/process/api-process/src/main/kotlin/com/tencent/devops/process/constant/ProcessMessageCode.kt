@@ -462,10 +462,10 @@ object ProcessMessageCode {
     const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_EMPTY = "2101349" // 公共变量组YAML中version字段不能为空
     const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_FORMAT = "2101350" // 公共变量组YAML版本格式不正确，应为vX.X格式
     const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_EMPTY = "2101351" // 公共变量组YAML中name字段不能为空
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组名称只能包含字母、数字、下划线和中划线
+const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
     const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLES_EMPTY = "2101353" // 公共变量组YAML中variables字段不能为空
     const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_EMPTY = "2101354" // 变量名不能为空
-    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101355" // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101355" // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线，长度限制为1-64个字符
     const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101356" // 公共变量组YAML包含未知字段: {0}
     const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101357" // 公共变量组YAML格式不正确，请检查字段类型
     const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101358" // 公共变量组YAML缺少必填字段 {0}
