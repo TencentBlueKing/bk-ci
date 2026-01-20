@@ -277,6 +277,7 @@
                         name: 'envDetail',
                         params: {
                             ...proxy.$route.params,
+                            envType: ENV_TYPE_MAP.ALL,
                             envId: undefined,
                             tabName: 'node'
                         }
