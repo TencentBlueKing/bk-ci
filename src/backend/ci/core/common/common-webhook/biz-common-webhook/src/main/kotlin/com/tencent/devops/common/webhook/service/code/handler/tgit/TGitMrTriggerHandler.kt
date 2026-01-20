@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.constants.CodeWebhookConstants.MAX_MR_TITLE_LENGTH
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind.UPDATE
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
@@ -61,8 +62,10 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.GIT_MR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
@@ -92,11 +95,13 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -390,6 +395,19 @@ class TGitMrTriggerHandler(
             startParams.putIfEmpty(PIPELINE_GIT_MR_DESC, event.object_attributes.description!!)
         }
         startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
+        // 事件重放时，基础触发变量需覆盖
+        val mrTitle = startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] as String?
+        val commitMsg = StringUtils.substring(
+            if (mrTitle.isNullOrBlank()) {
+                getMessage(event)
+            } else {
+                mrTitle
+            },
+            0,
+            MAX_MR_TITLE_LENGTH
+        )
+        startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] = commitMsg
+        startParams[PIPELINE_BUILD_MSG] = commitMsg
         return startParams
     }
 

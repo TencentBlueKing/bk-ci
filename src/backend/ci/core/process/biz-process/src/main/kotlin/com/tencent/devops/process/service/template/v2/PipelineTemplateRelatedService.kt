@@ -87,6 +87,19 @@ class PipelineTemplateRelatedService @Autowired constructor(
         )
     }
 
+    fun listByPipelineIds(
+        projectId: String,
+        pipelineIds: Set<String>
+    ): List<PipelineTemplateRelated> {
+        return pipelineTemplateRelatedDao.list(
+            dslContext = dslContext,
+            condition = PipelineTemplateRelatedCommonCondition(
+                projectId = projectId,
+                pipelineIds = pipelineIds.toList()
+            )
+        )
+    }
+
     fun listSimple(
         projectId: String,
         templateId: String,

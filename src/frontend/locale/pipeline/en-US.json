@@ -16,9 +16,9 @@
     "operateTimePlaceholder": "Please select a time range",
     "enterPlaceholder": "Press Enter to search"
   },
-  "err503": "Serve is being deployed, please wait",
+  "err503": "Server is being deployed, please wait",
   "err400": "An error occurred in internal service",
-  "err403": "Permission Deny",
+  "err403": "Permission Denied",
   "nullDataErr": "Nothing returned from back-end port",
   "more": "More",
   "true": "True",
@@ -267,7 +267,6 @@
     "deleteViewTips": "Confirm to delete this parameter value combination ( {0} )?",
     "deleteNoticeTips": "Deletion cannot be undone, please proceed with caution!"
   },
-
   "restore": {
     "recycleBin": "Recycle Bin",
     "restore": "Restore",
@@ -395,7 +394,7 @@
     "voice": "Voice",
     "concurrentMaxConcurrency": "Maximum Concurrency",
     "concurrentTimeout": "Queue Timeout for Exceeding Limit",
-    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200-200之间",
+    "maxConRunningQueueSizeTips": "The range of maximum concurrency is between 1 and 200",
     "maxConcurrencyPlaceholder": "Default to system settings when not specified",
     "whenVariableExceedsLength": "When pipeline variable value exceeds length (>4K)",
     "clearTheValue": "Clear the value and continue running",
@@ -492,7 +491,7 @@
     "desc": "Template description",
     "type": "Template type",
     "searchPlaceholder": "Template name/Template description/Source/Updated by",
-    "lastedVersion": "Latest version",
+    "latestVersion": "Latest version",
     "debugPipelineCount": "Debug pipeline",
     "instancePipelineCount": "Instance",
     "shelfStore": "List on the development store",
@@ -597,7 +596,7 @@
       "partialSuccessTitle": "Merge request created. {0} pipeline submissions succeeded, {1} failed.",
       "partialSuccessTip1": "Please follow the instructions below to complete the respective operations.",
       "partialSuccessTip2": "{0} pipeline submissions failed. Please check the failure reasons and resubmit after corrections:",
-      "failedRetry": "失败重试"
+      "failedRetry": "Failed Retry"
     },
     "releaseSuc": {
       "title": "{0} pipeline instances successfully released",
@@ -705,7 +704,10 @@
       "required": "Set as input variable",
       "valueNotEmpty": "Required",
       "readOnly": "ReadOnly when executing",
-      "category": "Group labels"
+      "category": "Group labels",
+      "repo": "Repository",
+      "relativePath": "Relative path to code repository",
+      "glob": "Filter rules"
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate"
@@ -735,7 +737,6 @@
     "saveAsTempSuc": "Saved as template",
     "saveAsTempFail": "Save as template failed",
     "filterEmptyDesc": "No pipeline found according to the current filters. Please reset and search again",
-    "coloectEmptyTitle": "You haven't add any pipelines to your 'Collection' ",
     "collectEmptyDesc": "Hover your mouse over the 'More' icon to click 'Collect' ",
     "myEmptyTitle": "New your first pipeline",
     "myEmptyDesc": "You haven't owned any pipelines yet. Click the 'New Pipeline' button below to get it started",
@@ -881,8 +882,10 @@
     "rePlayInfo1": "1. When replaying, start a new Play with the same trigger parameters and the latest pipeline version.",
     "rePlayInfo2": "2. When replaying, skip trigger detection, and it may not meet the trigger conditions of the latest version.",
     "reBuildInfo1": "1. Rebuilding is to re-execute on the basis of the previous build.",
-    "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time."
-  },
+    "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time.",
+    "rePlayFailed": "Replay failed, Please try again.",
+    "canNotReplayTips": "The event trigger cache has expired and been cleared. If replay is required, please perform the operation in the code repository."
+  },    
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -1148,6 +1151,11 @@
     "descTips": " Enter a description of parameters, it will display in preview page",
     "showOnExec": "Display when previewing",
     "readOnlyOnRun": "readOnly when executing",
+    "sensitive": "Is Sensitive",
+    "sensitiveTips1": "After selecting, the plain text value will not be displayed in the following interfaces:",
+    "sensitiveTips2": "1. Pipeline viewing page, variable panel",
+    "sensitiveTips3": "2. Pipeline build details page, start variable list",
+    "sensitiveTips4": "3. Pipeline build details page, plugin log",
     "showOnStarting": "Value can be set when manually starting the run",
     "required": "Required",
     "fileDefaultValueLabel": "Custom artifactory path",
@@ -1174,7 +1182,7 @@
     "svnParams": " Please select svn code repository",
     "relativePath": "Relative path to code repository",
     "relativePathTips": "Please fill in relative path to code repository. If left empty, the subdirectory under the root path of code repository will be pulled out. ",
-    "gitRepo": " Please select qit code repository",
+    "gitRepo": "Please select git code repository",
     "codelibParams": " Please select the type of code repository ",
     "buildEnv": " Please select building environment",
     "buildResType": " Please select the type of build resources",
@@ -1360,9 +1368,9 @@
     "artifactory": " Artifacts Filter",
     "subPipeline": "Sub-pipeline",
     "custom_file": "File",
-    "stageLimit": "stage数量不能大于",
-    "jobLimit": "单个stage下的job数量不能大于",
-    "atomLimit": "单个job下的插件数量不能大于",
+    "stageLimit": "Number of stages cannot exceed ",
+    "jobLimit": "Number of jobs per stage cannot exceed ",
+    "atomLimit": "Number of plugins per job cannot exceed ",
     "correctPipeline": " Please enter the correct pipeline",
     "PleaseSelectAtom": "Please select the Atom first",
     "oneCodecc": " Only one codecc plugin is allowed added to pipeline",
@@ -1630,9 +1638,9 @@
   "reason": "Reason",
   "applySuccess": "Application succeeded, please wait for approval",
   "fillReason": "Please fill in the application reason",
-  "exitGroupTips": "",
-  "closeManageTitle": "",
-  "closeManageTips": "",
+  "exitGroupTips": "After exiting, you will no longer be able to use the permissions granted by [{0}].",
+  "closeManageTitle": "Are you sure to close the permission management for pipeline [{0}]?",
+  "closeManageTips": "After closing, the permission settings for this pipeline will be disabled, but the data will not be deleted. Project administrators and pipeline group members can still operate this pipeline.",
   "applyJoin": "Apply to join",
   "renewal": "Renewal",
   "exit": "Exit",
@@ -1723,7 +1731,6 @@
   "inSetNoRequiredParamTips": "{0} parameters ({1}) are no longer input parameters, ignored and not filled; ",
   "inSetDeletedParamTips": "{0} parameters ({1}) have been deleted, ignored and not filled.",
   "resetDefault": "Restore Default",
-
   "useLastParams": "Use Last Parameter Values",
   "next": "Next",
   "prev": "Prev",
@@ -2065,10 +2072,9 @@
   "showBuildInfo": "Show Build Information",
   "switchToVarMode": "Click to switch to variable input mode",
   "closeVarMode": "Click to close variable input mode",
-  "placeholderConstraintVar": "Please enter the variable, such as ${{var}}",
-  "placeholderVar": "Please enter the variable, such as ${{var}} or ${var}",
+  "placeholderConstraintVar": "Please enter the variable, such as ${'{{'}var{'}}'}",
+  "placeholderVar": "Please enter the variable, such as ${'{{'}var{'}}'} or ${'{'}var{'}'}",
   "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
 }
-

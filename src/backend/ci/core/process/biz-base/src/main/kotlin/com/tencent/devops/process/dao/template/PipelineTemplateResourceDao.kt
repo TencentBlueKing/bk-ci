@@ -198,6 +198,22 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    /**
+     * 统计模板版本数量
+     */
+    fun countVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): Int {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition

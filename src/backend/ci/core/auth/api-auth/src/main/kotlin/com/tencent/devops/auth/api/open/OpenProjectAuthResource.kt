@@ -227,4 +227,19 @@ interface OpenProjectAuthResource {
         @Parameter(description = "项目Code", required = true)
         projectCode: String
     ): Result<ProjectPermissionInfoVO>
+
+    @GET
+    @Path("/{projectCode}/getMemberGroupsInProject")
+    @Operation(summary = "获取用户在项目下加入的用户组列表")
+    fun getMemberGroupsInProject(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @Parameter(description = "认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @Parameter(description = "项目Code", required = true)
+        projectCode: String,
+        @QueryParam("memberId")
+        @Parameter(description = "用户ID", required = true)
+        memberId: String
+    ): Result<List<Int>>
 }

@@ -190,6 +190,7 @@ class VariableTransfer {
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
                 const = const,
+                sensitive = it.sensitive,
                 props = if (props?.empty() == false) props else null,
                 ifCondition = it.displayCondition?.ifEmpty { null }
             )
@@ -312,7 +313,8 @@ class VariableTransfer {
                     displayCondition = variable.ifCondition ?: emptyMap(),
                     asInstanceInput = if (allowModifyAtStartup) {
                         variable.asInstanceInput ?: true
-                    } else null
+                    } else null,
+                    sensitive = variable.sensitive ?: false
                 )
             )
         }

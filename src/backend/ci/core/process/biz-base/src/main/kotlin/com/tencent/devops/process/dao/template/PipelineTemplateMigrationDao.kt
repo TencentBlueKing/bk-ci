@@ -59,6 +59,35 @@ class PipelineTemplateMigrationDao {
         }
     }
 
+    /**
+     * 更新迁移状态（包含验证结果）
+     * 迁移无报错 + 验证通过 = 成功
+     */
+    @Suppress("LongParameterList")
+    fun updateWithValidation(
+        dslContext: DSLContext,
+        projectId: String,
+        status: MigrationStatus,
+        errorMessage: String? = null,
+        totalTime: Long? = null,
+        beforeTemplateCount: Int? = null,
+        afterTemplateCount: Int? = null,
+        validationDiscrepancies: String? = null
+    ) {
+        with(TPipelineTemplateMigration.T_PIPELINE_TEMPLATE_MIGRATION) {
+            val update = dslContext.update(this)
+                .set(STATUS, status.name)
+                .set(END_TIME, LocalDateTime.now())
+            errorMessage?.let { update.set(ERROR_MESSAGE, errorMessage) }
+            totalTime?.let { update.set(TOTAL_TIME, totalTime) }
+            beforeTemplateCount?.let { update.set(BEFORE_TEMPLATE_COUNT, beforeTemplateCount) }
+            afterTemplateCount?.let { update.set(AFTER_TEMPLATE_COUNT, afterTemplateCount) }
+            // 更新验证差异详情
+            update.set(VALIDATION_DISCREPANCIES, validationDiscrepancies)
+            update.where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectId: String
@@ -67,6 +96,21 @@ class PipelineTemplateMigrationDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .fetchOne()
+        }
+    }
+
+    /**
+     * 获取验证差异详情
+     */
+    fun getValidationDiscrepancies(
+        dslContext: DSLContext,
+        projectId: String
+    ): String? {
+        with(TPipelineTemplateMigration.T_PIPELINE_TEMPLATE_MIGRATION) {
+            return dslContext.select(VALIDATION_DISCREPANCIES)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne()?.get(VALIDATION_DISCREPANCIES)
         }
     }
 }

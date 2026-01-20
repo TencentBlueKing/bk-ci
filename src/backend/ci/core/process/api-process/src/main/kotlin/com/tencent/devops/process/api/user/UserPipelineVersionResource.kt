@@ -162,7 +162,10 @@ interface UserPipelineVersionResource {
         version: Int,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "是否在编辑场景下", required = false)
+        @QueryParam("editMode")
+        editMode: Boolean? = false
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
