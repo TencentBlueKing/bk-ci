@@ -1634,4 +1634,34 @@ CREATE TABLE IF NOT EXISTS `T_VAR_REF_DETAIL` (
    KEY `IDX_TVRD_VAR_RESOURCE` (`PROJECT_ID`,`VAR_NAME`,`RESOURCE_TYPE`,`RESOURCE_ID`,`REFER_VERSION`)
    ) ENGINE=InnoDB AUTO_INCREMENT=513 DEFAULT CHARSET=utf8mb4 COMMENT='变量引用详情表';
 
+CREATE TABLE IF NOT EXISTS `t_resource_public_var_group_version_summary` (
+   `id` bigint(32) NOT NULL COMMENT '主键ID',
+   `project_id` varchar(64) NOT NULL COMMENT '项目ID',
+   `group_name` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
+   `version` int(11) NOT NULL DEFAULT '1' COMMENT '版本号（动态版本为-1）',
+   `refer_count` int(20) DEFAULT 0 COMMENT '关联流水线/模板总数',
+   `creator` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+   `modifier` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+   `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
+   `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uni_inx_tppvgs_group_project_name_version` (`project_id`, `group_name`, `version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线公共变量组版本基本概要信息表';
+
+CREATE TABLE IF NOT EXISTS `t_pipeline_public_var_version_summary` (
+   `id` bigint(32) NOT NULL COMMENT '主键ID',
+   `project_id` varchar(64) NOT NULL COMMENT '项目ID',
+   `group_name` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
+   `version` int(11) NOT NULL DEFAULT '1' COMMENT '版本号（动态版本为-1）',
+   `var_name` varchar(64) NOT NULL DEFAULT '' COMMENT '变量名称',
+   `refer_count` int(20) DEFAULT NULL COMMENT '关联流水线/模板总数',
+   `creator` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
+   `modifier` varchar(50) NOT NULL DEFAULT 'system' COMMENT '修改者',
+   `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
+   `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+   PRIMARY KEY (`id`),
+   KEY `inx_tppvs_var_project_name` (`project_id`, `var_name`),
+   UNIQUE KEY `uni_inx_tppvs_var_group_project_name_version` (`project_id`, `group_name`, `version`, `var_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线公共变量版本基本概要信息表';
+
 SET FOREIGN_KEY_CHECKS = 1;
