@@ -507,7 +507,8 @@ class MarketAtomDao : AtomBaseDao() {
         classType: String,
         props: String,
         atomRecord: TAtomRecord,
-        atomRequest: MarketAtomUpdateRequest
+        atomRequest: MarketAtomUpdateRequest,
+        tenantId: String?
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID)
@@ -552,7 +553,8 @@ class MarketAtomDao : AtomBaseDao() {
                 WEIGHT,
                 CREATOR,
                 MODIFIER,
-                BRANCH_TEST_FLAG
+                BRANCH_TEST_FLAG,
+                TENANT_ID
             )
                 .values(
                     id,
@@ -587,7 +589,8 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRecord.weight,
                     userId,
                     userId,
-                    atomRequest.isBranchTestVersion
+                    atomRequest.isBranchTestVersion,
+                    tenantId
                 )
                 .execute()
         }

@@ -925,7 +925,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         classType: String,
         props: String,
         atomEnvRequests: List<AtomEnvRequest>,
-        atomRecord: TAtomRecord
+        atomRecord: TAtomRecord,
+        tenantId: String?
     ) {
         marketAtomDao.upgradeMarketAtom(
             dslContext = context,
@@ -935,7 +936,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             classType = classType,
             props = props,
             atomRecord = atomRecord,
-            atomRequest = marketAtomUpdateRequest
+            atomRequest = marketAtomUpdateRequest,
+            tenantId = tenantId
         )
         val atomPackageSourceType = getAtomPackageSourceType(atomRecord.repositoryHashId)
         if (atomPackageSourceType != PackageSourceTypeEnum.UPLOAD) {
@@ -1517,7 +1519,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     classType = classType,
                     props = props,
                     atomEnvRequests = atomEnvRequests,
-                    atomRecord = atomRecord
+                    atomRecord = atomRecord,
+                    tenantId = tenantId
                 )
             }
             if (!convertUpdateRequest.isBranchTestVersion && atomStatus == AtomStatusEnum.TESTING) {
