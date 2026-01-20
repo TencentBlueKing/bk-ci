@@ -650,13 +650,14 @@ object TemplateInstanceUtil {
         pipelineProps: BuildCascadeProps?,
         templateProps: BuildCascadeProps?
     ): BuildCascadeProps? {
-        if (pipelineProps == null) {
+        if (templateProps == null) {
             return null
         }
-        if (templateProps == null) {
-            return pipelineProps
+        // 模版把参数从其他类型改成了级联,则前端渲染时,用模版的值
+        if (pipelineProps == null) {
+            return templateProps
         }
-        // 合并当前级别的options
+        // 模版和流水线都有级联,合并当前级别的options
         val mergedOptions = mutableSetOf<BuildFormValue>()
         mergedOptions.addAll(pipelineProps.options)
         mergedOptions.addAll(templateProps.options)
