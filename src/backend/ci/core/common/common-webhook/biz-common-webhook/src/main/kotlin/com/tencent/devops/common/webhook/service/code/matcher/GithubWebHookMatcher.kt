@@ -33,6 +33,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -60,6 +61,21 @@ class GithubWebHookMatcher(
             pipelineId = pipelineId,
             repository = repository,
             webHookParams = webHookParams
+        )
+    }
+
+    override fun getWebhookCommitList(
+        projectId: String,
+        repository: Repository,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        return eventHandler.getWebhookCommitList(
+            event = event,
+            projectId = projectId,
+            repository = repository,
+            page = page,
+            size = size
         )
     }
 
