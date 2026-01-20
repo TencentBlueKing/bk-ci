@@ -221,7 +221,11 @@ class LogESAutoConfiguration {
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
-        logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
+        logger.info(
+            "Init the log es1 transport client with host" +
+                "($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), " +
+                "credential($e1Username|$e1Password)"
+        )
         return ESClient(
             clusterName = e1Name!!,
             restClient = RestHighLevelClient(builder),
@@ -289,7 +293,11 @@ class LogESAutoConfiguration {
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
-        logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
+        logger.info(
+            "Init the log es2 transport client with host" +
+                "($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), " +
+                "credential($e2Username|$e2Password)"
+        )
         return ESClient(
             clusterName = e2Name!!,
             restClient = RestHighLevelClient(builder),
