@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY_DEBUG
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
@@ -52,20 +53,24 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.LightBuildHistory
+import com.tencent.devops.process.pojo.LightBuildParameter
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import jakarta.ws.rs.core.Response
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.Record15
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -74,7 +79,9 @@ class PipelineBuildDao {
     companion object {
         private val mapper = PipelineBuildInfoJooqMapper()
         private val debugMapper = PipelineDebugBuildInfoJooqMapper()
+        private val lightMapper = PipelineBuildLightInfoJooqMapper()
         private const val DEFAULT_PAGE_SIZE = 50
+        private val logger = LoggerFactory.getLogger(PipelineBuildDao::class.java)
     }
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
@@ -1213,6 +1220,79 @@ class PipelineBuildDao {
         }
     }
 
+    fun listLightPipelineBuildInfo(
+        dslContext: DSLContext,
+        query: PipelineBuildQuery
+    ): List<LightBuildHistory> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.select(
+                BUILD_ID,
+                BUILD_NUM,
+                START_TIME,
+                END_TIME,
+                STATUS,
+                REMARK,
+                EXECUTE_TIME,
+                EXECUTE_COUNT,
+                CHANNEL,
+                TRIGGER,
+                ERROR_INFO,
+                STAGE_STATUS,
+                BUILD_PARAMETERS,
+                TRIGGER_USER,
+                START_USER
+            ).from(this).where(DSL.trueCondition())
+            makeQueryConditions(query = query, where = where)
+            where.limit(query.offset, query.limit).fetch(lightMapper)
+        }
+    }
+
+    private fun TPipelineBuildHistory.makeQueryConditions(
+        query: PipelineBuildQuery,
+        where: SelectConditionStep<*>
+    ) {
+        where.and(PROJECT_ID.eq(query.projectId))
+        where.and(PIPELINE_ID.eq(query.pipelineId))
+        query.status?.let { statusList ->
+            if (statusList.isNotEmpty()) {
+                where.and(STATUS.`in`(statusList.map { it.ordinal }))
+            }
+        }
+        query.startTimeFrom?.let { startTimeFrom ->
+            where.and(START_TIME.ge(DateTimeUtil.stringToLocalDateTime(startTimeFrom)))
+        }
+        query.startTimeTo?.let { startTimeTo ->
+            where.and(START_TIME.le(DateTimeUtil.stringToLocalDateTime(startTimeTo)))
+        }
+        query.endTimeFrom?.let { endTimeFrom ->
+            where.and(END_TIME.ge(DateTimeUtil.stringToLocalDateTime(endTimeFrom)))
+        }
+        query.endTimeTo?.let { endTimeTo ->
+            where.and(END_TIME.le(DateTimeUtil.stringToLocalDateTime(endTimeTo)))
+        }
+        query.buildNoStart?.let { buildNoStart ->
+            if (buildNoStart > 0) {
+                where.and(BUILD_NUM.ge(buildNoStart))
+            }
+        }
+        query.buildNoEnd?.let { buildNoEnd ->
+            if (buildNoEnd > 0) {
+                where.and(BUILD_NUM.le(buildNoEnd))
+            }
+        }
+    }
+
+    fun lightPipelineBuildHistoryCount(
+        dslContext: DSLContext,
+        query: PipelineBuildQuery
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.selectCount().from(this).where(DSL.trueCondition())
+            makeQueryConditions(query = query, where = where)
+            where.fetchOne(0, Int::class.java)!!
+        }
+    }
+
     private fun TPipelineBuildHistory.makeCondition(
         where: SelectConditionStep<*>,
         materialAlias: List<String>?,
@@ -2102,6 +2182,49 @@ class PipelineBuildDao {
                     remark = t.remark,
                     debug = true, // #8164 原历史表中查出的记录均为非调试的记录
                     versionChange = t.versionChange
+                )
+            }
+        }
+    }
+
+class PipelineBuildLightInfoJooqMapper : RecordMapper<
+        Record15<
+            String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
+            String, String, String, String, String, String, String
+        >,
+        LightBuildHistory
+    > {
+        override fun map(
+            record: Record15<
+                String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
+                String, String, String, String, String, String, String
+            >?
+        ): LightBuildHistory? {
+            val tTPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
+            return record?.let { t ->
+                LightBuildHistory(
+                    id = t[tTPipelineBuildHistory.BUILD_ID],
+                    buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
+                    trigger = t[tTPipelineBuildHistory.TRIGGER],
+                    status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
+                    userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
+                    startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]).ifBlank { null },
+                    endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]).ifBlank { null },
+                    errorInfoList = try {
+                        if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {
+                            JsonUtil.getObjectMapper()
+                                .readValue(t[tTPipelineBuildHistory.ERROR_INFO]) as List<ErrorInfo>
+                        } else null
+                    } catch (ignored: Exception) {
+                        logger.warn("PipelineBuildLightInfoJooqMapper parse error info failed", ignored)
+                        null
+                    },
+                    buildParameters = t[tTPipelineBuildHistory.BUILD_PARAMETERS]?.let { self ->
+                        JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
+                    },
+                    remark = t[tTPipelineBuildHistory.REMARK],
+                    executeTime = t[tTPipelineBuildHistory.EXECUTE_TIME] ?: 0,
+                    retry = t[tTPipelineBuildHistory.EXECUTE_COUNT]?.let { it > 1 } == true
                 )
             }
         }
