@@ -58,6 +58,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_RUN_AS_USER
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.service.context.DcStartupHandlerContext
 import com.tencent.devops.process.engine.common.VMUtils
@@ -120,7 +121,9 @@ abstract class StartupContainerHandler @Autowired constructor(
                     ENV_DEVCLOUD_MEM to memory,
                     ENV_DEVCLOUD_DISK to disk,
                     ENV_CONTAINER_IMAGE to "$host/$name:$tag",
-                    ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE to maxAtomFileCacheSize
+                    ENV_PUBLIC_HOST_MAX_ATOM_FILE_CACHE_SIZE to maxAtomFileCacheSize,
+                    ENV_RUN_AS_USER to "0"
+
                 )
             )
 
