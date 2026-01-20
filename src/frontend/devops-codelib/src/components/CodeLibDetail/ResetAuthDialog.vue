@@ -501,7 +501,9 @@
             'newRepoInfo.credentialType': {
                 handler (val, oldVal) {
                     const authType = this.providerConfig.credentialTypeList?.find(i => i.credentialType === val)?.authType
-                    this.newRepoInfo.authType = authType
+                    if (authType) {
+                        this.newRepoInfo.authType = authType
+                    }
                     if (this.isScmGit) {
                         if ((val.includes('OAUTH') || val.includes('USERNAME_PASSWORD')) && oldVal?.includes('SSH')) {
                             const { url } = this.newRepoInfo

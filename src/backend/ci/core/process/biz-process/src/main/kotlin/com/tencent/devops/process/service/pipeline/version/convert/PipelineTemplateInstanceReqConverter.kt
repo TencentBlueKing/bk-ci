@@ -300,6 +300,15 @@ class PipelineTemplateInstanceReqConverter(
                 refType = templateRefType
             )
 
+            // 对实例化参数进行校验
+            val instanceParams = instanceModel.getTriggerContainer().params
+            TemplateInstanceUtil.assertParams(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                inputParams = params ?: emptyList(),
+                instanceParams = instanceParams
+            )
+
             return PipelineVersionCreateContext(
                 userId = userId,
                 projectId = projectId,

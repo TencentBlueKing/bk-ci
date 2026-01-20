@@ -98,6 +98,7 @@ import org.springframework.stereotype.Service
  * 流水线模版门面类
  */
 @Service
+@Suppress("LongParameterList")
 class PipelineTemplateFacadeService @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
@@ -1199,6 +1200,12 @@ class PipelineTemplateFacadeService @Autowired constructor(
             if (it.srcTemplateProjectId == null || it.srcTemplateId == null) {
                 throw IllegalArgumentException("srcTemplateProjectId or srcTemplateId is null")
             }
+            // 查询父模板的数据是否迁移。
+            pipelineTemplateInfoService.getOrNull(
+                projectId = it.srcTemplateProjectId!!,
+                templateId = it.srcTemplateId!!
+            ) ?: return@let null
+
             val recentlyInstalledVersion = client.get(ServiceTemplateResource::class).getRecentlyInstalledVersion(
                 templateCode = templateId
             ).data ?: throw ErrorCodeException(
@@ -1221,7 +1228,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             val marketTemplateDetails = client.get(ServiceTemplateResource::class).getTemplateDetailByCode(
                 userId = userId,
                 templateCode = it.srcTemplateId!!
-            ).data ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS)
+            ).data ?: throw ErrorCodeException(errorCode = ERROR_SOURCE_TEMPLATE_NOT_EXISTS)
             PipelineTemplateMarketRelatedInfo(
                 srcMarketProjectId = srcMarketTemplateInfo.projectId,
                 srcMarketTemplateId = srcMarketTemplateInfo.id,

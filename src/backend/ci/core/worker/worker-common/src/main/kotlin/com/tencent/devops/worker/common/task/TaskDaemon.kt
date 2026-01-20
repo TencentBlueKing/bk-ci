@@ -99,6 +99,10 @@ class TaskDaemon(
         return task.getMonitorData()
     }
 
+    private fun getSensitiveKeys(): Set<String> {
+        return task.getSensitiveKeys()
+    }
+
     fun getBuildResult(
         isSuccess: Boolean = true,
         errorMessage: String? = null,
@@ -108,6 +112,7 @@ class TaskDaemon(
 
         val allEnv = getAllEnv()
         val buildResult = mutableMapOf<String, String>()
+        val sensitiveKeys = getSensitiveKeys().toMutableSet()
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
@@ -153,7 +158,8 @@ class TaskDaemon(
             errorCode = errorCode,
             platformCode = task.getPlatformCode(),
             platformErrorCode = task.getPlatformErrorCode(),
-            monitorData = getMonitorData()
+            monitorData = getMonitorData(),
+            sensitiveKeys = sensitiveKeys.takeIf { it.isNotEmpty() }
         )
     }
 

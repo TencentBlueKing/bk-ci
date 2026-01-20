@@ -57,8 +57,10 @@ data class MatrixStatusElement(
     @get:Schema(title = "原插件的内置标识")
     val originTaskAtom: String?,
     // 当状态插件为质量红线插件是需要专门保存
-    @get:Schema(title = "审核人", required = true)
+    @get:Schema(title = "审核人", required = false)
     var reviewUsers: MutableList<String>? = null,
+    @get:Schema(title = "实际审核人", required = false)
+    var actualReviewUsers: MutableList<String>? = null,
     @get:Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
     @get:Schema(title = "拦截原子名称", required = false)

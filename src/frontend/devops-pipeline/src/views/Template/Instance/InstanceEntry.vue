@@ -239,7 +239,7 @@
                             required: item.buildNo?.isRequiredParam
                         }
                     } : undefined),
-                    param: item.param.map(i => ({
+                    param: item.param?.filter(i => !i?.isDelete).map(i => ({
                         ...i,
                         required: i.isRequiredParam
                     })),

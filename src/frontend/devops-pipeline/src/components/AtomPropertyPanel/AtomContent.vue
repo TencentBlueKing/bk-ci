@@ -501,13 +501,9 @@
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
-                    const atomMap = {
-                        codeTGitWebHookTrigger: CodeWebHookTrigger,
-                        codeP4WebHookTrigger: CodeWebHookTrigger,
-                        codeScmGitWebHookTrigger: CodeWebHookTrigger,
-                        codeScmSvnWebHookTrigger: CodeWebHookTrigger
-                    }
-                    return atomMap[this.atomCode] || NormalAtomV2
+                    // 使用正则匹配所有 webhook 插件：以 code 开头且以 WebHookTrigger 结尾
+                    const isWebHookAtom = /^code.*WebHookTrigger$/i.test(this.atomCode)
+                    return isWebHookAtom ? CodeWebHookTrigger : NormalAtomV2
                 }
                 const atomMap = {
                     timerTrigger: TimerTrigger,

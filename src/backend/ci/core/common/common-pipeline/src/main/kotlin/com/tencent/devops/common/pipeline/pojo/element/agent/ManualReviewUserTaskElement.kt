@@ -45,6 +45,8 @@ data class ManualReviewUserTaskElement(
     override var status: String? = null,
     @get:Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String> = mutableListOf(),
+    @get:Schema(title = "实际审核人", required = false)
+    var actualReviewUsers: MutableList<String>? = null,
     @get:Schema(title = "描述", required = false)
     var desc: String? = "",
     @get:Schema(title = "审核意见", required = false)
