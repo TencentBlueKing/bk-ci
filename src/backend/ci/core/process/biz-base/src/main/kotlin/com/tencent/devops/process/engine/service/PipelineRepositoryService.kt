@@ -193,7 +193,8 @@ class PipelineRepositoryService constructor(
 
         @Suppress("ALL")
         fun PipelineSetting.checkParam() {
-            if (maxPipelineResNum < 1) {
+            val maxResNum = maxPipelineResNum
+            if (maxResNum != null && maxResNum < 1) {
                 throw InvalidParamException(
                     message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
                     params = arrayOf("maxPipelineResNum")
@@ -658,6 +659,18 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 根据 channelCode 计算 maxPipelineResNum
+     * 如果 channelCode 在特定渠道列表中，返回特定渠道的最大保留数，否则返回默认最大保留数
+     */
+    private fun calculateMaxPipelineResNum(channelCode: ChannelCode): Int {
+        return if (channelCode.name in versionConfigure.specChannels.split(",")) {
+            versionConfigure.specChannelMaxKeepNum
+        } else {
+            versionConfigure.maxKeepNum
+        }
+    }
+
+    /**
      * 初始化默认的流水线setting
      */
     fun createDefaultSetting(
@@ -667,13 +680,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): PipelineSetting {
         // 空白流水线设置初始化
-        val maxPipelineResNum = if (
-            channelCode.name in versionConfigure.specChannels.split(",")
-        ) {
-            versionConfigure.specChannelMaxKeepNum
-        } else {
-            versionConfigure.maxKeepNum
-        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
         val notifyTypes = if (channelCode == ChannelCode.BS) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
@@ -1923,6 +1930,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    /**
+     * 处理 maxPipelineResNum 为空的情况
+     * 如果 maxPipelineResNum 为空，根据 channelCode 和 versionConfigure 计算默认值
+     */
+    private fun processMaxPipelineResNumIfNull(
+        setting: PipelineSetting,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        if (setting.maxPipelineResNum != null) {
+            return setting
+        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+        return setting.copy(maxPipelineResNum = maxPipelineResNum)
+    }
+
     private fun transactionSaveSetting(
         context: DSLContext?,
         setting: PipelineSetting,
@@ -1944,30 +1966,47 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+            // 获取 channelCode 并处理 maxPipelineResNum 为空的情况
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
+                channelCode = null
+            )
+            val channelCode = pipelineInfo?.channel?.let {
+                try {
+                    ChannelCode.valueOf(it)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Invalid channel code: $it, using default ChannelCode.BS")
+                    ChannelCode.BS
+                }
+            } ?: ChannelCode.BS
+            val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+                dslContext = transactionContext,
+                projectId = processedSetting.projectId,
+                pipelineId = processedSetting.pipelineId,
                 userId = userId,
-                pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc,
+                pipelineName = processedSetting.pipelineName,
+                pipelineDesc = processedSetting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
                 latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
-                if (old?.maxPipelineResNum != null) {
+                val oldMaxPipelineResNum = old?.maxPipelineResNum
+                if (oldMaxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
+                        projectId = processedSetting.projectId,
+                        pipelineId = processedSetting.pipelineId,
                         currentVersion = version,
-                        maxPipelineResNum = old.maxPipelineResNum
+                        maxPipelineResNum = oldMaxPipelineResNum
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
                     dslContext = transactionContext,
-                    setting = setting,
+                    setting = processedSetting,
                     version = version,
                     isTemplate = isTemplate,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
@@ -1977,7 +2016,7 @@ class PipelineRepositoryService constructor(
             }
             if (versionStatus.isReleasing()) {
                 pipelineSettingDao.saveSetting(
-                    transactionContext, setting, isTemplate
+                    transactionContext, processedSetting, isTemplate
                 )
             }
         }

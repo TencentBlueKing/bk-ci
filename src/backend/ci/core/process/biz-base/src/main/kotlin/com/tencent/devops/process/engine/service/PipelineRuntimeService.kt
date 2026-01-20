@@ -89,6 +89,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -179,6 +180,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
@@ -192,7 +194,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
-    private val pipelineArtifactQualityService: PipelineArtifactQualityService
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1053,8 +1056,6 @@ class PipelineRuntimeService @Autowired constructor(
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
-        val modelJson = JsonUtil.toJson(fullModel, formatted = false)
-
         val retryInfo = if (buildInfo != null) {
             context.buildNum = buildInfo.buildNum
             BuildRetryInfo(
@@ -1107,6 +1108,16 @@ class PipelineRuntimeService @Autowired constructor(
                 context.watcher.stop()
                 // 创建构建记录
                 pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
+                if (!context.debug) {
+                    // 更新版本引用标识（草稿版本会是最新的版本，不会被清理，故无需处理草稿版本）
+                    pipelineResourceVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = transactionContext,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        versions = listOf(context.resourceVersion),
+                        referFlag = true
+                    )
+                }
             }
 
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
