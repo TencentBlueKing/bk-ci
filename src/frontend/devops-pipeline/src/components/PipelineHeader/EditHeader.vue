@@ -230,7 +230,6 @@
                         version: this.pipelineInfo?.version
                     })
                     this.draftList = res
-                    this.lasterDraftInfo = this.draftList?.[0]
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
@@ -299,6 +298,7 @@
                 })
             },
             goPipelineModel () {
+                this.isConflictDraft = false
                 this.$router.push({
                     name: 'pipelinesHistory',
                     params: {
@@ -395,6 +395,7 @@
                     this.handleSaveDraftError(e)
                     return false
                 } finally {
+                    this.isConflictDraft = false
                     this.setSaveStatus(false)
                 }
             },
@@ -403,7 +404,7 @@
                 try {
                     const draftStatus = await this.getDraftStatus({
                         projectId: this.projectId,
-                        pipelineId: this.uniqueId,
+                        pipelineId: this.pipelineId,
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus

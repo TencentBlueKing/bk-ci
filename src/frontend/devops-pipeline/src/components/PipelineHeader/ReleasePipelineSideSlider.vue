@@ -75,7 +75,7 @@
                     >
                         <template slot="title">
                             <i18n path="template.draftPublished">
-                                <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                <span>{{ draftStatus?.draft?.baseVersionName || draftStatus?.draft?.baseVersion }}</span>
                                 <span class="red-tip">{{ $t('Earlier') }}</span>
                                 <span>{{ draftStatus?.release?.versionName }}</span>
                             </i18n>
@@ -852,14 +852,16 @@
             ...mapActions('templates', [
                 'fetchTemplateReleasePreFetch'
             ]),
-            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList', 'getDraftStatus']),
+            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList', 'getDraftStatus', 'getTemplateDraftStatus']),
             async getLastDraftStatus () {
                 try {
-                    const res = await this.getDraftStatus({
-                        projectId: this.projectId,
-                        pipelineId: this.uniqueId,
-                        actionType: 'RELEASE'
-                    })
+                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        actionType: 'RELEASE',
+                        ...(this.isTemplate ? { templateId: this.$route.params.templateId } : { pipelineId: this.$route.params.pipelineId })
+                    }
+                    const res = await request(params)
                     this.draftStatus = res
                 } catch (e) {
                     this.$bkMessage({

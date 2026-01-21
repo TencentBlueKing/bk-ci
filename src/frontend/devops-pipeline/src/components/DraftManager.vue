@@ -10,7 +10,7 @@
                 @click="handleShowDraftList"
             >
                 <span>{{ $t("lastSaveTime") }}：</span>
-                {{ lasterDraftInfo?.updater }} {{ formatTime(lasterDraftInfo?.updateTime) }}
+                {{ draftList[0]?.updater }} {{ formatTime(draftList[0]?.updateTime) }}
                 <i :class="['bk-icon', `icon-angle-${isShowDraftList ? 'up' : 'down'}`]" />
             </p>
 
@@ -25,10 +25,10 @@
                 <li
                     v-for="(item, index) in draftList"
                     :key="item.draftVersion"
-                    :class="['draft-item', item.draftVersion === lasterDraftInfo?.draftVersion ? 'draft-item-active' : '']"
+                    :class="['draft-item', item.draftVersion === draftList[0]?.draftVersion ? 'draft-item-active' : '']"
                 >
                     <p>
-                        <span class="version-name">{{ $t('basedOn', item.baseVersion) }}</span>
+                        <span class="version-name">{{ $t('basedOn', [item.baseVersion]) }}</span>
                         <span class="update-info">{{ item.updater }} {{ formatTime(item.updateTime) }}</span>
                     </p>
                     <span
@@ -73,6 +73,7 @@
             :width="480"
             :mask-close="false"
             footer-position="center"
+            ext-cls="draft-manager-dialog"
         >
             <header
                 class="draft-hint-title"
@@ -89,7 +90,7 @@
                     <span class="label">{{ $t('conflictingDraft') }}: </span>
                     <span>{{ conflictDraftInfo?.updater }} </span>
                     <span class="label"> {{ $t('savedAt') }}: </span>
-                    <span>{{ conflictDraftInfo?.updateTime }}</span>
+                    <span>{{ formatTime(conflictDraftInfo?.updateTime) }}</span>
 
                     <VersionDiffEntry
                         style="cursor: pointer;"
@@ -110,7 +111,7 @@
                     <span class="label">{{ $t('publisher') }}: </span>
                     <span>{{ publishedInfo?.updater }} </span>
                     <span class="label"> {{ $t('publishTime') }}: </span>
-                    <span>{{ publishedInfo?.updateTime }}</span>
+                    <span>{{ formatTime(publishedInfo?.updateTime) }}</span>
                 </div>
 
                 <p class="conflict-draft-tips">
@@ -356,42 +357,46 @@
             }
         }
     }
+}
+</style>
 
+<style lang="scss">
+.draft-manager-dialog {
     .draft-hint-title {
-		color: #313238;
-		font-size: 20px;
-		display: flex;
-		flex-direction: column;
-		grid-gap: 24px;
-		align-items: center;
-		> i {
-			border-radius: 50%;
-			background-color: #ffe8c3;
-			color: #ff9c01;
-			border-radius: 50%;
-			font-size: 24px;
-			height: 42px;
-			line-height: 42px;
-			width: 42px;
-		}
-	}
-	.conflict-draft {
-		font-size: 14px;
-		color: #313238;
-		.label {
-			color: #b4b4b7;
-		}
-		.diff-button {
-			margin-left: 16px;
-		}
-	}
-	.conflict-draft-tips {
-		padding: 12px 16px;
-		margin-top: 16px;
-		background: #F5F6FA;
-		border-radius: 2px;
-		color: #4d4f56;
-		font-size: 14px;
-	}
+        color: #313238;
+        font-size: 20px;
+        display: flex;
+        flex-direction: column;
+        grid-gap: 24px;
+        align-items: center;
+        > i {
+            border-radius: 50%;
+            background-color: #ffe8c3;
+            color: #ff9c01;
+            border-radius: 50%;
+            font-size: 24px;
+            height: 42px;
+            line-height: 42px;
+            width: 42px;
+        }
+    }
+    .conflict-draft {
+        font-size: 14px;
+        color: #313238;
+        .label {
+            color: #b4b4b7;
+        }
+        .diff-button {
+            margin-left: 16px;
+        }
+    }
+    .conflict-draft-tips {
+        padding: 12px 16px;
+        margin-top: 16px;
+        background: #F5F6FA;
+        border-radius: 2px;
+        color: #4d4f56;
+        font-size: 14px;
+    }
 }
 </style>

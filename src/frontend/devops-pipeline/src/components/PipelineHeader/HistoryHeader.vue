@@ -328,15 +328,19 @@
                 'setShowVariable'
             ]),
             ...mapActions('common', [
-                'getDraftStatus'
+                'getDraftStatus',
+                'getTemplateDraftStatus',
             ]),
             async getPipelineDraftStatus () {
                 try {
-                    const res = await this.getDraftStatus({
+                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                    const dynamicKey = this.isTemplate ? 'templateId' : 'pipelineId'
+                    const params = {
                         projectId: this.projectId,
-                        pipelineId: this.uniqueId,
-                        actionType: 'EDIT'
-                    })
+                        actionType: 'EDIT',
+                        [dynamicKey]: this.uniqueId,
+                    }
+                    const res = await request(params)
                     this.draftStatus = res.status
                     this.draftSaveInfo = {
                         creator: res.draft?.creator,

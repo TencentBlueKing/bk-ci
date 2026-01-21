@@ -185,11 +185,12 @@
                 'requestTemplateSummary',
                 'requestPipeline',
                 'transfer',
-                'fetchPipelineByVersion',
+                'fetchTemplateByVersion',
                 'updateContainer'
             ]),
             ...mapActions({
-                getDraftVersion: 'common/getDraftVersion',
+                getTemplateDraftVersion: 'common/getTemplateDraftVersion',
+                getTemplateDraftStatus: 'common/getTemplateDraftStatus'
             }),
             requestTemplateByVersion (version = this.currentVersionId) {
                 try {
@@ -207,14 +208,12 @@
             },
             async getDraftList () {
                 try {
-                    // TODO: 使用模板对应的接口
-                    // const res = await this.getDraftVersion({
-                    //     projectId: this.projectId,
-                    //     pipelineId: this.pipelineId,
-                    //     version: this.pipelineInfo?.version
-                    // })
-                    // this.draftList = res
-                    // this.lasterDraftInfo = this.draftList?.[0]
+                    const res = await this.getTemplateDraftVersion({
+                        projectId: this.projectId,
+                        templateId : this.templateId,
+                        version: this.pipelineInfo?.version
+                    })
+                    this.draftList = res
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
@@ -222,20 +221,35 @@
                     })
                 }
             },
+            // 构建 model 对象
+            buildModel () {
+                return Object.assign({}, this.pipeline, {
+                    name: this.pipelineSetting.pipelineName,
+                    stages: [
+                        this.pipeline.stages[0],
+                        ...this.pipelineWithoutTrigger.stages
+                    ]
+                })
+            },
             async handleDiff (draftVersion) {
                 try {
+                    const pipeline = this.buildModel()
+                    
                     const [newDraftInfo, draftInfo] = await Promise.all([
                         // 获取当前编辑的yaml数据
                         this.transfer({
                             projectId: this.projectId,
-                            pipelineId: this.pipelineId,
+                            pipelineId: this.templateId,
                             actionType: 'FULL_MODEL2YAML',
-                            templateSetting: this.pipelineSetting
+                            modelAndSetting: {
+                                model: pipeline,
+                                setting: this.pipelineSetting
+                            }
                         }),
                         // 获取选中草稿的yaml数据
-                        this.fetchPipelineByVersion({
+                        this.fetchTemplateByVersion({
                             projectId: this.projectId,
-                            pipelineId: this.pipelineId,
+                            templateId: this.templateId,
                             version: this.pipelineInfo?.version,
                             draftVersion
                         })
@@ -261,9 +275,9 @@
                 })
             },
             goPipelineModel () {
-                // TODO: 跳到模板对应的编排页
+                this.isConflictDraft = false
                 this.$router.push({
-                    name: 'pipelinesHistory',
+                    name: 'TemplateOverview',
                     params: {
                         ...this.$route.params,
                         version: this.pipelineInfo?.releaseVersion,
@@ -272,14 +286,20 @@
                     query: this.$route.query
                 })
             },
-            async saveTemplateDraft () {
-                const pipeline = Object.assign({}, this.pipeline, {
-                    name: this.pipelineSetting.pipelineName,
-                    stages: [
-                        this.pipeline.stages[0],
-                        ...this.pipelineWithoutTrigger.stages
-                    ]
-                })
+            // 处理保存草稿时的错误
+            handleSaveDraftError (e) {
+                if (e.code === 2101244) {
+                    showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
+                } else {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }
+            },
+            // 执行草稿保存的核心逻辑
+            async executeSaveDraft () {
+                const pipeline = this.buildModel()
                 const { inValid, message } = this.checkPipelineInvalid(pipeline.stages, this.pipelineSetting)
              
                 if (inValid) {
@@ -336,20 +356,43 @@
                         })
                     }
                 } catch (err) {
-                    if (err.code === 2101244) {
-                        showPipelineCheckMsg(this.$bkMessage, err.message, this.$createElement)
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleSaveDraftError(err)
 
                     result = false
                 } finally {
                     this.saveStatus = false
                 }
                 return result
+            },
+
+            async continueSaveDraft () {
+                try {
+                    return await this.executeSaveDraft()
+                } catch (e) {
+                    this.handleSaveDraftError(e)
+                    return false
+                } finally {
+                    this.saveStatus = false
+                    this.isConflictDraft = false
+                }
+            },
+
+            async saveTemplateDraft () {
+                const draftStatus = await this.getTemplateDraftStatus({
+                    projectId: this.projectId,
+                    templateId: this.templateId,
+                    actionType: 'SAVE'
+                })
+                this.lasterDraftInfo = {
+                    ...draftStatus,
+                    status: "PUBLISHED"
+                }
+                if (this.lasterDraftInfo.status === 'NORMAL') {
+                    return await this.executeSaveDraft()
+                } else if (this.lasterDraftInfo.status === 'CONFLICT' || this.lasterDraftInfo.status === 'PUBLISHED') {
+                    this.isConflictDraft = true
+                    return false
+                }
             },
 
             requestQualityAtom () {
