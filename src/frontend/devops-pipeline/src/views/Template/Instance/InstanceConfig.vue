@@ -901,7 +901,7 @@
             let newValue = currentParam[key]
             
             // 处理 REPO_REF 类型，defaultValue 是对象需要转为字符串
-            if (key === 'defaultValue') {
+            if (key === 'defaultValue' && currentParam.type === 'REPO_REF') {
                 if (isObject(oldValue)) {
                     oldValue = JSON.stringify(oldValue)
                 }
@@ -1390,58 +1390,43 @@
                                 const initialParam = initialInstanceParams?.find(ip => ip.id === id)
                                 
                                 // 如果跟随模板，使用模板的默认值；否则使用原始实例的值
-                                let newDefaultValue = newIsFollowTemplate
-                                    ? temDefaultValue
-                                    : initialParam?.defaultValue
-                                
-                                // REPO_REF 类型的 defaultValue 是对象，需要转为字符串
-                                if (isObject(newDefaultValue)) {
-                                    newDefaultValue = JSON.stringify(newDefaultValue)
+                                let newDefaultValue = ''
+                                if (p.type === 'REPO_REF') {
+                                    newDefaultValue = newIsFollowTemplate
+                                        ? temDefaultValue
+                                        : {
+                                            'repo-name': '',
+                                            branch: ''
+                                        }
+                                } else {
+                                    newDefaultValue = newIsFollowTemplate
+                                       ? isObject(temDefaultValue) ? JSON.stringify(temDefaultValue) : temDefaultValue
+                                       : isObject(initialParam?.defaultValue) ? JSON.stringify(initialParam?.defaultValue) : initialParam?.defaultValue
                                 }
-                                
                                 // 计算 isChange：对比新值与初始实例值
                                 let isChange = false
                                 if (!p.isNew) {
-                                    let initialDefaultValue = allVersionKeyList.includes(id)
+                                    const initialDefaultValue = allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue)
                                         : initialParam?.defaultValue
-                                    let currentValue = allVersionKeyList.includes(id)
+                                    const currentValue = allVersionKeyList.includes(id)
                                         ? Number(newDefaultValue)
                                         : newDefaultValue
                                     
-                                    // 处理对象类型比较
-                                    if (isObject(initialDefaultValue)) {
-                                        initialDefaultValue = JSON.stringify(initialDefaultValue)
-                                    }
-                                    if (isObject(currentValue)) {
-                                        currentValue = JSON.stringify(currentValue)
-                                    }
-                                    
-                                    isChange = currentValue !== initialDefaultValue
+                                    isChange = isObject(currentValue)
+                                        ? !isShallowEqual(currentValue, initialDefaultValue)
+                                        : currentValue !== initialDefaultValue
                                 }
                                 
                                 // 计算 hasChange：当前实例的值与模板默认值不同
                                 // 如果跟随模板，新值就是模板值，所以 hasChange 为 false
                                 // 如果不跟随模板，对比原始实例值与模板值
-                                let hasChange = false
-                                if (!newIsFollowTemplate) {
-                                    let initialValue = initialParam?.defaultValue
-                                    let templateValue = temDefaultValue
-                                    
-                                    if (allVersionKeyList.includes(id)) {
-                                        hasChange = Number(initialValue) !== Number(templateValue)
-                                    } else {
-                                        // 处理对象类型比较
-                                        if (isObject(initialValue)) {
-                                            initialValue = JSON.stringify(initialValue)
-                                        }
-                                        if (isObject(templateValue)) {
-                                            templateValue = JSON.stringify(templateValue)
-                                        }
-                                        hasChange = initialValue !== templateValue
-                                    }
-                                }
-
+                                const hasChange = newIsFollowTemplate
+                                    ? false
+                                    : (allVersionKeyList.includes(id)
+                                        ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
+                                        : initialParam?.defaultValue !== temDefaultValue)
+                                console.log(newDefaultValue, 'newDefaultValue')
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
                                     defaultValue: newDefaultValue

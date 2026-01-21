@@ -2066,5 +2066,6 @@
   "showStageProgress": "展示 Stage 进度",
   "showBuildInfo": "展示构建信息",
   "rollbackToVersion": "回滚至版本{0}",
-  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。"
+  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。",
+  "toggleConstraintFailedTips": "历史原因导致当前约束流水线无法确定对应的模版版本，不能切换至跟随模版。升级实例后可恢复正常。"
 }

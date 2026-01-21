@@ -2067,5 +2067,6 @@
   "showStageProgress": "Show Stage Progress",
   "showBuildInfo": "Show Build Information",
   "rollbackToVersion": "Rollback to version {0}",
-  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface."
+  "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface.",
+  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation."
 }
