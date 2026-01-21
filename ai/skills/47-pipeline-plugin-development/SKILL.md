@@ -1072,11 +1072,4 @@ A: string 类型输出不能超过 4KB。
 
 ---
 
-**参考文档**:
-- [插件配置规范](https://iwiki.woa.com/p/15009001)
-- [插件开发规范](https://iwiki.woa.com/p/15009003)
-- [插件输出规范](https://iwiki.woa.com/p/15009061)
-- [插件错误码规范](https://iwiki.woa.com/p/352300688)
-- [插件调试指引](https://iwiki.woa.com/p/17512739)
-
 **版本**: 1.0.0 | **更新日期**: 2025-12-26
