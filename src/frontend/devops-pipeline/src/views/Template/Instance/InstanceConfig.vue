@@ -320,10 +320,8 @@
         UPDATE_INSTANCE_LIST
     } from '@/store/modules/templates/constants'
     import { allVersionKeyList } from '@/utils/pipelineConst'
-    import { getParamsValuesMap } from '@/utils/util'
+    import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
-    import { isObject, isShallowEqual } from '@/utils/util'
-    import { ENUM, GIT_REF, MULTIPLE } from '../../../store/modules/atom/paramsConfig'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
