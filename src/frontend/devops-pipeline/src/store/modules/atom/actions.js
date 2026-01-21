@@ -76,6 +76,7 @@ import {
     SET_SHOW_VARIABLE,
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
+    SET_TEMP_PARAM_SET,
     SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
@@ -1161,6 +1162,9 @@ export default {
             ...state.paramSets.slice(0, index),
             ...state.paramSets.slice(index + 1)
         ])
+    },
+    setTempParamSet ({ commit }, tempParamSet) {
+        commit(SET_TEMP_PARAM_SET, tempParamSet)
     },
     async saveParamSet ({ commit, state }, { projectId, pipelineId, paramSet }) {
         try {

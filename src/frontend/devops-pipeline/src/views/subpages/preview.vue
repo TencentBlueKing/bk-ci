@@ -365,7 +365,8 @@
                 'pacEnabled'
             ]),
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'tempParamSet'
             ]),
             execVersionSelectorDisableTips () {
                 return {
@@ -444,12 +445,17 @@
             setTimeout(() => {
                 this.resetExecuteConfig(this.pipelineId)
             }, 0)
+            // Clear temp paramSet when leaving preview page
+            if (this.tempParamSet) {
+                this.setTempParamSet(null)
+            }
         },
         methods: {
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'setTempParamSet'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',

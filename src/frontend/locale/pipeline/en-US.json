@@ -885,7 +885,7 @@
     "reBuildInfo2": "2. Pipeline version, BK_CI_BUILD_ID are consistent with those when it is triggered for the first time.",
     "rePlayFailed": "Replay failed, Please try again.",
     "canNotReplayTips": "The event trigger cache has expired and been cleared. If replay is required, please perform the operation in the code repository."
-  },    
+  },
   "preview": {
     "build": "Build",
     "introVersion": "Recommended Version",
@@ -2032,6 +2032,9 @@
   "noArchivedPipelines": "No archived pipelines for now, no action needed",
   "notParamsTip": "This parameter is no longer an input parameter or has been deleted and cannot be passed during execution. You can manually delete it, or it will be automatically removed from the parameter list after saving.",
   "saveAsParamSet": "Save Current Parameter Set",
+  "reuseParamsExecute": "Reuse Parameters",
+  "reuseParamsExecuteTips": "Execute pipeline with current build's startup parameters",
+  "reuseParamsExecuteFailed": "Failed to reuse parameters execute",
   "oneKeyFill": "One-Click Fill",
   "manageParamSets": "Manage Parameter Sets",
   "totalParamSets": "Total {0} sets",
