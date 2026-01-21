@@ -6,7 +6,7 @@
 
 | IDE | 官网 | 配置目录 |
 |-----|------|----------|
-| CodeBuddy | https://example.copilot.tencent.com/ide/ | `.codebuddy/` |
+| CodeBuddy | https://copilot.tencent.com/ide/ | `.codebuddy/` |
 | Cursor | https://cursor.sh/ | `.cursor/` |
 | Claude Code | https://claude.com/download | `.claude/` |
 
