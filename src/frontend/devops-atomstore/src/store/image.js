@@ -277,6 +277,9 @@ export const actions = {
     // 获取适用机器
     fetchAgentTypes ({ commit }) {
         return vue.$ajax.get(`${prefix}/user/market/image/agentType/list`)
+    },
+    getImageVersionInfo ({ commit }, imageCode) {
+        return vue.$ajax.get(`${prefix}/user/market/image/comment/images/${imageCode}/showVersionInfo`)
     }
 }
 

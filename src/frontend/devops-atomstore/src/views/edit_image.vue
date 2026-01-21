@@ -432,6 +432,7 @@
                     category: '',
                     agentTypeScope: []
                 },
+                showVersionList: [],
                 docsLink: this.BKCI_DOCS.IMAGE_GUIDE_DOC,
                 ticketList: [],
                 classifys: [],
@@ -469,25 +470,7 @@
         watch: {
             'form.releaseType': {
                 handler (val) {
-                    switch (val) {
-                        case 'NEW':
-                            this.form.version = '1.0.0'
-                            break
-                        case 'INCOMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${+b + 1}.0.0`))
-                            break
-                        case 'COMPATIBILITY_UPGRADE':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${+c + 1}.0`))
-                            break
-                        case 'COMPATIBILITY_FIX':
-                            this.form.version = this.originVersion.replace(/(.+)\.(.+)\.(.+)/, (a, b, c, d) => (`${b}.${c}.${+d + 1}`))
-                            break
-                        case 'HIS_VERSION_UPGRADE':
-                            this.form.version = ''
-                            break
-                        default:
-                            break
-                    }
+                    this.setVersionByReleaseType(val)
                 },
                 immediate: true
             }
@@ -507,8 +490,21 @@
                 'requestImageTagList',
                 'requestTicketList',
                 'requestReleaseImage',
+                'getImageVersionInfo',
                 'fetchAgentTypes'
             ]),
+
+            // 根据 releaseType 设置对应的版本号
+            setVersionByReleaseType (releaseType) {
+                if (!releaseType) return
+                
+                const versionItem = this.showVersionList?.find(item => item.releaseType === releaseType)
+                if (versionItem) {
+                    this.form.version = versionItem.version
+                } else {
+                    this.form.version = ''
+                }
+            },
 
             changeShowAgentType (option) {
                 const settings = option.settings || {}
@@ -601,6 +597,11 @@
                             this.form.releaseType = 'COMPATIBILITY_FIX'
                             break
                     }
+                    
+                    this.getImageVersionInfo(this.form.imageCode).then(versionInfo => {
+                        this.showVersionList = versionInfo?.showVersionList || []
+                        this.setVersionByReleaseType(this.form.releaseType)
+                    }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
 
                     return Promise.all([
                         this.requestImageClassifys(),
