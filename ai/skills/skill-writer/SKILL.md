@@ -1,11 +1,11 @@
 ﻿---
 name: skill-writer
-description: 指导用户为 CodeBuddy 创建 Agent Skills。当用户想要创建、编写、设计新的 Skill，或需要帮助编写 SKILL.md 文件、frontmatter、skill 结构时使用。
+description: 指导用户创建 Agent Skills（支持 CodeBuddy、Cursor 等 IDE）。当用户想要创建、编写、设计新的 Skill，或需要帮助编写 SKILL.md 文件、frontmatter、skill 结构时使用。
 ---
 
 # Skill Writer
 
-本 Skill 帮助你为 CodeBuddy 创建结构良好、符合最佳实践和验证要求的 Agent Skills。
+本 Skill 帮助你创建结构良好、符合最佳实践和验证要求的 Agent Skills，适用于 CodeBuddy、Cursor 等支持 Skill 系统的 IDE。
 
 ## 触发条件
 
@@ -36,27 +36,38 @@ description: 指导用户为 CodeBuddy 创建 Agent Skills。当用户想要创�
 
 确定在哪里创建 Skill：
 
-**项目级 Skills**（`.codebuddy/skills/`）：
+**项目级 Skills**（`.codebuddy/skills/` 或 `.cursor/skills/`）：
 - 团队工作流和约定
 - 项目特定的专业知识
 - 共享工具（提交到 git）
 - **推荐用于团队协作项目**
 
-**用户级 Skills**（`~/.codebuddy/skills/`）：
+**用户级 Skills**（`~/.codebuddy/skills/` 或 `~/.cursor/skills/`）：
 - 个人工作流和偏好
 - 实验性 Skills
 - 个人生产力工具
+
+> **注意**: 不同 IDE 使用不同的目录名：
+> - **CodeBuddy**: `.codebuddy/` 或 `~/.codebuddy/`
+> - **Cursor**: `.cursor/` 或 `~/.cursor/`
+> - 其他 IDE 可能使用不同的目录结构
 
 ### 第三步：创建 Skill 结构
 
 创建目录和文件：
 
 ```bash
-# 项目级（推荐）
+# 项目级（推荐）- CodeBuddy
 mkdir -p .codebuddy/skills/skill-name
 
-# 用户级
+# 项目级（推荐）- Cursor
+mkdir -p .cursor/skills/skill-name
+
+# 用户级 - CodeBuddy
 mkdir -p ~/.codebuddy/skills/skill-name
+
+# 用户级 - Cursor
+mkdir -p ~/.cursor/skills/skill-name
 ```
 
 **基本结构**：
@@ -99,7 +110,7 @@ description: 简要描述这个 Skill 做什么以及何时使用它
 
 ### 第五步：编写有效的描述
 
-描述对于 CodeBuddy 发现你的 Skill 至关重要。
+描述对于 AI 助手发现你的 Skill 至关重要。
 
 **公式**：`[做什么] + [何时使用] + [关键触发词]`
 
@@ -204,7 +215,7 @@ python scripts/helper.py input.txt
 - [ ] `description` 具体且少于 1024 字符
 
 ✅ **内容质量**：
-- [ ] 为 CodeBuddy 提供清晰的指令
+- [ ] 为 AI 助手提供清晰的指令
 - [ ] 提供具体示例
 - [ ] 处理边缘情况
 - [ ] 列出依赖项（如有）
@@ -216,20 +227,20 @@ python scripts/helper.py input.txt
 
 ### 第九步：测试 Skill
 
-1. **重启 CodeBuddy**（如正在运行）以加载 Skill
+1. **重启 IDE**（如正在运行）以加载 Skill
 
 2. **提出相关问题**，匹配描述：
    ```
    帮我管理流水线构建
    ```
 
-3. **验证激活**：CodeBuddy 应自动使用该 Skill
+3. **验证激活**：AI 助手应自动使用该 Skill
 
-4. **检查行为**：确认 CodeBuddy 正确遵循指令
+4. **检查行为**：确认 AI 助手正确遵循指令
 
 ### 第十步：调试（如需要）
 
-如果 CodeBuddy 没有使用 Skill：
+如果 AI 助手没有使用 Skill：
 
 1. **使描述更具体**：
    - 添加触发词
@@ -238,8 +249,13 @@ python scripts/helper.py input.txt
 
 2. **检查文件位置**：
    ```bash
+   # CodeBuddy
    ls .codebuddy/skills/skill-name/SKILL.md
    ls ~/.codebuddy/skills/skill-name/SKILL.md
+   
+   # Cursor
+   ls .cursor/skills/skill-name/SKILL.md
+   ls ~/.cursor/skills/skill-name/SKILL.md
    ```
 
 3. **验证 YAML**：
@@ -333,7 +349,7 @@ description: 设计 REST API，遵循最佳实践。当用户创建 API 端点�
 
 1. **一个 Skill，一个目的**：不要创建超大 Skill
 2. **具体的描述**：包含用户会说的触发词
-3. **清晰的指令**：为 CodeBuddy 编写，而非人类
+3. **清晰的指令**：为 AI 助手编写，而非人类
 4. **具体的示例**：展示真实代码，而非伪代码
 5. **列出依赖**：在描述中提及所需包
 6. **与团队测试**：验证激活和清晰度
@@ -353,7 +369,7 @@ description: 设计 REST API，遵循最佳实践。当用户创建 API 端点�
 - [ ] 依赖项已记录
 - [ ] 文件路径使用正斜杠
 - [ ] Skill 在相关查询时激活
-- [ ] CodeBuddy 正确遵循指令
+- [ ] AI 助手正确遵循指令
 
 ## 故障排除
 
