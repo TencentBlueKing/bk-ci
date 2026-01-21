@@ -26,15 +26,15 @@ your-project/
 
 ### Cursor
 
-将 `rules/` 复制到项目根目录的 `.cursor/` 下：
+将 `rules/` 和 `skills/` 复制到项目根目录的 `.cursor/` 下：
 
 ```
 your-project/
 ├── .cursor/
-│   └── rules/           # 编码规范规则 (.mdc 文件)
+│   ├── rules/           # 编码规范规则 (.mdc 文件)
+│   └── skills/          # 项目技能文档（按需加载）
 ├── .cursorrules         # 项目全局规则文件（自动加载）
 ```
-> 注：Cursor暂不支持skill功能。
 
 
 ### Claude Code
@@ -57,7 +57,7 @@ your-project/
 |----------|-----------|--------|--------------------------|
 | 编码规则     | `.codebuddy/rules/*.mdc` | `.cursor/rules/*.mdc` | `CLAUDE.md` 或 `.claude/rules` |
 | 项目级全局配置  | `CODEBUDDY.md` | `.cursorrules` | `CLAUDE.md`              |
-| 自定义技能 | `.codebuddy/skills/` | - | `.claude/skills/`      |
+| 自定义技能 | `.codebuddy/skills/` | `.cursor/skills/` | `.claude/skills/`      |
 | 个人本地覆盖配置     | - | - | `CLAUDE.local.md`        |
 
 ## 目录说明
