@@ -1,4 +1,4 @@
----
+﻿---
 name: 00-bkci-global-architecture
 description: BK-CI 全局架构指南，以流水线为核心的模块协作全景图，涵盖完整执行流程、模块依赖关系、数据流向、核心概念。当用户需要理解系统架构、进行跨模块开发、了解模块间协作或规划架构设计时优先阅读。
 # 结构化元数据（支持智能压缩和渐进式加载）
@@ -9,11 +9,11 @@ core_modules:
   - Store (研发商店)
   - Dispatch (构建调度)
 related_skills:
-  - 29-process-module-architecture
-  - 30-auth-module-architecture
-  - 35-dispatch-module-architecture
-  - 42-worker-module-architecture
-  - 43-agent-module-architecture
+  - process-module-architecture
+  - auth-module-architecture
+  - dispatch-module-architecture
+  - worker-module-architecture
+  - agent-module-architecture
 token_estimate: 45000
 ---
 
@@ -35,12 +35,12 @@ token_estimate: 45000
 
 | 模块 | 职责 | 深入阅读 |
 |------|------|----------|
-| **Process** | 流水线编排与执行（核心） | `29-process-module-architecture` |
-| **Auth** | 权限认证 RBAC | `30-auth-module-architecture` |
-| **Dispatch** | 构建机分配调度 | `35-dispatch-module-architecture` |
-| **Store** | 研发商店/插件管理 | `33-store-module-architecture` |
-| **Worker** | 任务执行器 | `42-worker-module-architecture` |
-| **Agent** | 构建机代理 (Go) | `43-agent-module-architecture` |
+| **Process** | 流水线编排与执行（核心） | `process-module-architecture` |
+| **Auth** | 权限认证 RBAC | `auth-module-architecture` |
+| **Dispatch** | 构建机分配调度 | `dispatch-module-architecture` |
+| **Store** | 研发商店/插件管理 | `store-module-architecture` |
+| **Worker** | 任务执行器 | `worker-module-architecture` |
+| **Agent** | 构建机代理 (Go) | `agent-module-architecture` |
 
 ### 流水线执行核心流程
 
@@ -71,8 +71,8 @@ token_estimate: 45000
 
 - 只修改单个模块内部逻辑（直接阅读对应模块 Skill）
 - 简单的 Bug 修复（不涉及跨模块调用）
-- 前端 UI 调整（阅读 `04-frontend-vue-development`）
-- 数据库表变更（阅读 `06-database-script-management`）
+- 前端 UI 调整（阅读 `frontend-vue-development`）
+- 数据库表变更（阅读 `database-script-management`）
 
 ---
 
@@ -445,28 +445,28 @@ T_PROJECT
 
 | 模块 | Skill |
 |------|-------|
-| 全局架构 | 00 (本文档) |
-| 后端开发 | 01 |
-| API 设计 | 02 |
-| 单元测试 | 03 |
-| 前端开发 | 04 |
-| Agent 开发 | 05, 43 |
-| 数据库 | 06, 44 |
-| Process 模块 | 28, 29 系列 |
-| Auth 模块 | 30 |
-| Store 模块 | 33 |
-| Dispatch 模块 | 35 |
-| Worker 模块 | 42 |
+| 全局架构 | 00-bkci-global-architecture (本文档) |
+| 后端开发 | backend-microservice-development |
+| API 设计 | api-interface-design |
+| 单元测试 | unit-testing |
+| 前端开发 | frontend-vue-development |
+| Agent 开发 | go-agent-development, agent-module-architecture |
+| 数据库 | database-script-management, database-design |
+| Process 模块 | pipeline-model-architecture, process-module-architecture 系列 |
+| Auth 模块 | auth-module-architecture |
+| Store 模块 | store-module-architecture |
+| Dispatch 模块 | dispatch-module-architecture |
+| Worker 模块 | worker-module-architecture |
 
 ### 按场景查找
 
 | 场景 | 涉及 Skill |
 |------|------------|
-| 新增流水线功能 | 28, 29 系列, 08 |
-| 开发新插件 | 33, 42 |
-| 修改权限逻辑 | 30 |
-| 优化构建调度 | 35, 36, 43 |
-| 数据库表变更 | 06, 44 |
+| 新增流水线功能 | pipeline-model-architecture, process-module-architecture 系列, event-driven-architecture |
+| 开发新插件 | store-module-architecture, worker-module-architecture |
+| 修改权限逻辑 | auth-module-architecture |
+| 优化构建调度 | dispatch-module-architecture, environment-module-architecture, agent-module-architecture |
+| 数据库表变更 | database-script-management, database-design |
 
 ---
 
@@ -480,7 +480,7 @@ T_PROJECT
 
 - [ ] **已理解流水线执行流程**：触发 → 调度 → 执行 → 回传
 - [ ] **已确定涉及的模块**：Process? Dispatch? Store?
-- [ ] **已阅读相关模块 Skill**：如 `29-process-module-architecture`
+- [ ] **已阅读相关模块 Skill**：如 `process-module-architecture`
 - [ ] **已了解事件驱动机制**：通过 RabbitMQ 异步通信
 - [ ] **已确认数据流向**：哪些表会被读写？
 

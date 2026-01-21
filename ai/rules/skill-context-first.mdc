@@ -1,4 +1,4 @@
----
+﻿---
 description:
 alwaysApply: true
 enabled: true
@@ -33,68 +33,68 @@ provider:
 | 模块/领域 | 对应 Skill |
 |-----------|------------|
 | **全局架构** | `00-bkci-global-architecture` |
-| 后端微服务开发 | `01-backend-microservice-development` |
-| API 接口设计 | `02-api-interface-design` |
-| 单元测试 | `03-unit-testing` |
-| 前端 Vue 开发 | `04-frontend-vue-development` |
-| Go Agent 开发 | `05-go-agent-development` |
-| 数据库脚本 | `06-database-script-management`, `44-database-design` |
-| Git 提交 | `07-git-commit-specification` |
-| 事件驱动 | `08-event-driven-architecture` |
-| 责任链模式 | `09-chain-of-responsibility-pattern` |
-| 分布式锁 | `10-distributed-lock` |
-| 服务间调用 | `11-service-communication` |
-| 性能监控 | `12-performance-monitoring` |
-| 重试机制 | `13-retry-mechanism` |
-| 国际化/日志 | `14-i18n-and-logging` |
-| 参数校验 | `15-parameter-validation` |
-| 定时任务 | `16-scheduled-tasks` |
-| AOP 切面 | `17-aop-aspect-programming` |
-| 条件配置 | `18-conditional-configuration` |
-| JWT 安全 | `19-jwt-security` |
-| 审计日志 | `20-audit-logging` |
-| 表达式解析 | `21-expression-parser` |
-| 数据库分片 | `23-database-sharding` |
-| OAuth2 认证 | `24-oauth2-authentication` |
-| 流水线变量 | `26-pipeline-variable-extension` |
-| 设计模式 | `27-design-patterns` |
-| 流水线模型 | `28-pipeline-model-architecture` |
-| Process 模块 | `29-process-module-architecture` 系列 |
-| Auth 模块 | `30-auth-module-architecture` |
-| Project 模块 | `31-project-module-architecture` |
-| Repository 模块 | `32-repository-module-architecture` |
-| Store 模块 | `33-store-module-architecture` |
-| Artifactory 模块 | `34-artifactory-module-architecture` |
-| Dispatch 模块 | `35-dispatch-module-architecture` |
-| Environment 模块 | `36-environment-module-architecture` |
-| Ticket 模块 | `37-ticket-module-architecture` |
-| Notify 模块 | `39-notify-module-architecture` |
-| OpenAPI 模块 | `41-openapi-module-architecture` |
-| Worker 模块 | `42-worker-module-architecture` |
-| Agent 模块 | `43-agent-module-architecture` |
-| 数据库设计 | `44-database-design` |
+| 后端微服务开发 | `backend-microservice-development` |
+| API 接口设计 | `api-interface-design` |
+| 单元测试 | `unit-testing` |
+| 前端 Vue 开发 | `frontend-vue-development` |
+| Go Agent 开发 | `go-agent-development` |
+| 数据库脚本 | `database-script-management`, `database-design` |
+| Git 提交 | `git-commit-specification` |
+| 事件驱动 | `event-driven-architecture` |
+| 责任链模式 | `chain-of-responsibility-pattern` |
+| 分布式锁 | `distributed-lock` |
+| 服务间调用 | `service-communication` |
+| 性能监控 | `performance-monitoring` |
+| 重试机制 | `retry-mechanism` |
+| 国际化/日志 | `i18n-and-logging` |
+| 参数校验 | `parameter-validation` |
+| 定时任务 | `scheduled-tasks` |
+| AOP 切面 | `aop-aspect-programming` |
+| 条件配置 | `conditional-configuration` |
+| JWT 安全 | `jwt-security` |
+| 审计日志 | `audit-logging` |
+| 表达式解析 | `expression-parser` |
+| 数据库分片 | `database-sharding` |
+| OAuth2 认证 | `oauth2-authentication` |
+| 流水线变量 | `pipeline-variable-extension` |
+| 设计模式 | `design-patterns` |
+| 流水线模型 | `pipeline-model-architecture` |
+| Process 模块 | `process-module-architecture` 系列 |
+| Auth 模块 | `auth-module-architecture` |
+| Project 模块 | `project-module-architecture` |
+| Repository 模块 | `repository-module-architecture` |
+| Store 模块 | `store-module-architecture` |
+| Artifactory 模块 | `artifactory-module-architecture` |
+| Dispatch 模块 | `dispatch-module-architecture` |
+| Environment 模块 | `environment-module-architecture` |
+| Ticket 模块 | `ticket-module-architecture` |
+| Notify 模块 | `notify-module-architecture` |
+| OpenAPI 模块 | `openapi-module-architecture` |
+| Worker 模块 | `worker-module-architecture` |
+| Agent 模块 | `agent-module-architecture` |
+| 数据库设计 | `database-design` |
 
 ## 示例场景
 
 ### 场景1：修改流水线调度逻辑
 ```
-1. 先阅读 `29-process-module-architecture` 了解 Process 模块架构
-2. 阅读 `29-3-process-engine-control` 了解引擎控制层
-3. 阅读 `08-event-driven-architecture` 了解事件驱动机制
+1. 先阅读 `process-module-architecture` 了解 Process 模块架构
+2. 阅读 `3-process-engine-control` 了解引擎控制层
+3. 阅读 `event-driven-architecture` 了解事件驱动机制
 4. 再进行代码修改
 ```
 
 ### 场景2：新增数据库表
 ```
-1. 先阅读 `44-database-design` 了解表设计规范
-2. 阅读 `06-database-script-management` 了解脚本管理规范
+1. 先阅读 `database-design` 了解表设计规范
+2. 阅读 `database-script-management` 了解脚本管理规范
 3. 再编写 DDL 脚本
 ```
 
 ### 场景3：开发新插件
 ```
-1. 先阅读 `33-store-module-architecture` 了解研发商店架构
-2. 阅读 `42-worker-module-architecture` 了解插件执行机制
+1. 先阅读 `store-module-architecture` 了解研发商店架构
+2. 阅读 `worker-module-architecture` 了解插件执行机制
 3. 再进行插件开发
 ```
 
@@ -129,14 +129,14 @@ provider:
 
 | 关键词 | 对应 Skill |
 |--------|------------|
-| 流水线变量、变量扩展、PAC 变量、YAML 变量 | `26-pipeline-variable-extension` |
-| 流水线模型、Pipeline Model、Stage、Job、Task | `28-pipeline-model-architecture` |
-| 构建引擎、状态机、调度 | `29-3-process-engine-control` |
-| 插件开发、研发商店 | `33-store-module-architecture` |
-| Agent、构建机 | `43-agent-module-architecture` |
-| Worker、执行器 | `42-worker-module-architecture` |
-| 权限、IAM、RBAC | `30-auth-module-architecture` |
-| 数据库、DDL、表结构 | `06-database-script-management` |
+| 流水线变量、变量扩展、PAC 变量、YAML 变量 | `pipeline-variable-extension` |
+| 流水线模型、Pipeline Model、Stage、Job、Task | `pipeline-model-architecture` |
+| 构建引擎、状态机、调度 | `3-process-engine-control` |
+| 插件开发、研发商店 | `store-module-architecture` |
+| Agent、构建机 | `agent-module-architecture` |
+| Worker、执行器 | `worker-module-architecture` |
+| 权限、IAM、RBAC | `auth-module-architecture` |
+| 数据库、DDL、表结构 | `database-script-management` |
 
 ### 违规示例
 
@@ -146,7 +146,7 @@ provider:
 
 ✅ 正确：用户要求补全 PAC 变量逻辑
    → 识别涉及"流水线变量"
-   → use_skill("26-pipeline-variable-extension")
+   → use_skill("pipeline-variable-extension")
    → 按 Skill 指南执行
 ```
 

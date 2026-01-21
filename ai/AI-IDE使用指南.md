@@ -1,4 +1,4 @@
-# AI IDE 使用指南
+﻿# AI IDE 使用指南
 
 本项目提供了 AI 编码助手的配置文件，支持主流 AI IDE 工具。
 
@@ -6,7 +6,7 @@
 
 | IDE | 官网 | 配置目录 |
 |-----|------|----------|
-| CodeBuddy | https://copilot.tencent.com/ide/ | `.codebuddy/` |
+| CodeBuddy | https://example.copilot.tencent.com/ide/ | `.codebuddy/` |
 | Cursor | https://cursor.sh/ | `.cursor/` |
 | Claude Code | https://claude.com/download | `.claude/` |
 
