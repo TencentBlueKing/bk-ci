@@ -11,10 +11,10 @@
                 @click="handleClickJump('goMonitorBoard')"
             >
                 <Logo
-                    style="margin-right: 2px;"
+                    style="margin-right: 6px;font-size: 12px;margin-top: 2px;"
                     size="12"
                     name="go-monitor-board"
-                />{{ $t('realTimeMonitor.gotoMonitorDashboard') }}
+                /><span style="font-size: 14px;">{{ $t('realTimeMonitor.gotoMonitorDashboard') }}</span>
             </div>
         </div>
 
@@ -154,7 +154,6 @@
     display: flex;
     align-items: center;
     color: #3a84ff;
-    font-size: 14px;
     cursor: pointer;
 }
 </style>
