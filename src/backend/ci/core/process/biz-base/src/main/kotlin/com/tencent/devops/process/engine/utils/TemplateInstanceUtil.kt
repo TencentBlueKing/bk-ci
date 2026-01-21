@@ -678,7 +678,7 @@ object TemplateInstanceUtil {
     }
 
     /**
-     * 验证实例化的model与前端传入的model正确性
+     * 验证实例化的model与前端传入的model准确性
      *
      * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
      */

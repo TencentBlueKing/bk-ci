@@ -240,6 +240,21 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    fun getBySrcTemplateVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource? {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
+                .fetchOne()?.convert()
+        }
+    }
+
     fun getVersions(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition

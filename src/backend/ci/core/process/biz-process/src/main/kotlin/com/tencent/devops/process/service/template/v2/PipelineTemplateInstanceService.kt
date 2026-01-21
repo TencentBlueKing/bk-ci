@@ -572,7 +572,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         version: Long,
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
-        pipelineTemplateInfoService.get(
+        val pipelineTemplateInfo = pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
@@ -668,12 +668,21 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 } else {
                     val pipelineTemplateRelated = pipelineId2TemplateRelated[pipelineId]!!
                     val templateCacheKey = "${pipelineTemplateRelated.templateId}_${pipelineTemplateRelated.version}"
+                    // 历史原因,如果是研发商店安装的模版,T_TEMPLATE_PIPELINE中的version存储的是原模版的version
                     val oldTemplateResource = templateResourceCache.getOrPut(templateCacheKey) {
-                        pipelineTemplateResourceService.get(
-                            projectId = projectId,
-                            templateId = pipelineTemplateRelated.templateId,
-                            version = pipelineTemplateRelated.version
-                        )
+                        if (pipelineTemplateInfo.mode == TemplateType.CONSTRAINT) {
+                            pipelineTemplateResourceService.getBySrcTemplateVersion(
+                                projectId = projectId,
+                                templateId = pipelineTemplateRelated.templateId,
+                                srcTemplateVersion = pipelineTemplateRelated.version
+                            )
+                        } else {
+                            pipelineTemplateResourceService.get(
+                                projectId = projectId,
+                                templateId = pipelineTemplateRelated.templateId,
+                                version = pipelineTemplateRelated.version
+                            )
+                        }
                     }
                     val oldTemplateModel = oldTemplateResource.model
                     if (oldTemplateModel !is Model) {
