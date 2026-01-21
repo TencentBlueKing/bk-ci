@@ -269,6 +269,14 @@ class PipelineTemplateResourceDao {
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
+                .let {
+                    if (commonCondition.page != null && commonCondition.pageSize != null) {
+                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
+                            .limit(commonCondition.pageSize)
+                    } else {
+                        it
+                    }
+                }
                 .fetch()
                 .map {
                     PipelineTemplateVersionSimple(
