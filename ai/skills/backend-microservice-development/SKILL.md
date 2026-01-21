@@ -8,7 +8,7 @@ core_files:
 related_skills:
   - 02-api-interface-design
   - 03-unit-testing
-  - 11-service-communication
+  - microservice-infrastructure
 token_estimate: 3500
 ---
 
@@ -54,7 +54,7 @@ class UserPipelineResourceImpl @Autowired constructor(
 
 - 前端 Vue 开发 → 使用 `04-frontend-vue-development`
 - Agent Go 开发 → 使用 `05-go-agent-development`
-- 数据库 DDL 编写 → 使用 `06-database-script-management`
+- 数据库 DDL 编写 → 使用 `database-design`
 
 ---
 

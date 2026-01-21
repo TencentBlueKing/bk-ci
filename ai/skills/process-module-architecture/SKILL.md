@@ -7,15 +7,19 @@ description: Process 流水线核心模块架构总览，涵盖流水线 CRUD、
 
 > **模块定位**: Process 是 BK-CI 的核心模块，负责流水线的编排、调度与执行。
 
-## 相关 Skill 索引
+## 详细文档导航
 
-| Skill | 内容 |
-|-------|------|
-| `29-1-process-api-layer` | API 接口层详细分析 |
-| `29-2-process-service-layer` | Service 业务层详细分析 |
-| `29-3-process-engine-control` | 构建引擎 Control 层分析 |
-| `29-4-process-dao-database` | DAO 层与数据库表结构 |
-| `29-5-process-event-driven` | 事件驱动机制详解 |
+本 Skill 提供 Process 模块的架构总览。如需深入了解各层实现细节，请查阅以下参考文档：
+
+| 文档 | 内容 |
+|------|------|
+| [1-api-layer.md](reference/1-api-layer.md) | API 接口层详细分析（708 行） |
+| [2-service-layer.md](reference/2-service-layer.md) | Service 业务层详细分析（872 行） |
+| [3-engine-control.md](reference/3-engine-control.md) | 构建引擎 Control 层分析（790 行） |
+| [4-dao-database.md](reference/4-dao-database.md) | DAO 层与数据库表结构（901 行） |
+| [5-event-driven.md](reference/5-event-driven.md) | 事件驱动机制详解（759 行） |
+
+> **使用建议**: 先阅读本文档了解整体架构，再根据具体开发需求深入对应的参考文档。
 
 ## 一、模块整体结构
 

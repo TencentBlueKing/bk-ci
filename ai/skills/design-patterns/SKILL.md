@@ -1180,8 +1180,8 @@ class StoreCreateService(
 
 ## 扩展阅读
 
-- [09-责任链模式](../chain-of-responsibility-pattern/SKILL.md) - 责任链模式详细指南
-- [08-事件驱动架构](../event-driven-architecture/SKILL.md) - 事件驱动架构（观察者模式的应用）
+- [utility-components (责任链模式)](../utility-components/reference/4-chain-responsibility.md) - 责任链模式详细指南
+- [microservice-infrastructure (事件驱动)](../microservice-infrastructure/reference/2-event-driven.md) - 事件驱动架构（观察者模式的应用）
 - [01-后端微服务开发](../backend-microservice-development/SKILL.md) - 微服务开发规范
 
 ---

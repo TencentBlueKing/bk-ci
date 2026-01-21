@@ -20,6 +20,120 @@ token_estimate: 45000
 # BK-CI 全局架构指南
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
+     📚 Skill 导航索引（放在最前面 - 快速定位相关 Skill）
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+## 📚 Skill 导航索引
+
+> **说明**: 本文档是全局架构总览，按需深入阅读具体模块的 Skill。
+
+### 🗂️ 按类别查找 (31 个 Skill)
+
+#### 1️⃣ 全局架构 (1)
+- **`00-bkci-global-architecture`** (本文档) - 系统全局架构、模块协作、执行流程
+
+#### 2️⃣ 通用技术实践 (3)
+- **`common-technical-practices`** - 框架级实践：AOP、分布式锁、重试、监控、定时任务、审计日志
+- **`microservice-infrastructure`** - 微服务基础：条件配置、事件驱动、服务调用、国际化、日志
+- **`utility-components`** - 工具级组件：JWT、表达式解析、线程池、责任链
+
+#### 3️⃣ 后端开发 (3)
+- **`backend-microservice-development`** - 后端微服务开发规范、Controller/Service/Dao 模式
+- **`api-interface-design`** - RESTful API 设计、接口规范
+- **`unit-testing`** - 单元测试编写规范
+
+#### 4️⃣ 前端开发 (1)
+- **`frontend-vue-development`** - Vue 前端开发规范、组件设计
+
+#### 5️⃣ 数据库 (1)
+- **`database-design`** - 数据库表设计、字段规范、索引优化、DDL 脚本管理
+
+#### 6️⃣ Pipeline 流水线系列 (4)
+- **`pipeline-model-architecture`** - Pipeline 模型架构：Stage/Container/Element 结构
+- **`pipeline-variable-management`** - 流水线变量管理：变量生命周期、字段扩展
+- **`pipeline-template-module`** - 流水线模板模块：模板定义、实例化、版本管理
+- **`pipeline-plugin-development`** - 流水线插件开发：插件规范、任务执行
+
+#### 7️⃣ 核心模块架构 (9)
+- **`process-module-architecture`** - Process 流水线模块（核心）：API/Service/Engine/Dao 四层架构
+- **`auth-module-architecture`** - Auth 权限认证模块：RBAC、权限校验
+- **`project-module-architecture`** - Project 项目管理模块：项目创建、配置、成员管理
+- **`repository-module-architecture`** - Repository 代码库模块：Git/SVN 集成、Webhook
+- **`store-module-architecture`** - Store 研发商店模块：插件/模板上架、版本管理
+- **`artifactory-module-architecture`** - Artifactory 制品库模块：制品存储、版本管理
+- **`dispatch-module-architecture`** - Dispatch 构建调度模块：构建机分配、调度策略
+- **`worker-module-architecture`** - Worker 任务执行器模块：任务领取、插件执行
+- **`agent-module-architecture`** - Agent 构建机代理模块 (Go)：进程管理、日志上报
+
+#### 8️⃣ 支撑模块架构 (1)
+- **`supporting-modules-architecture`** - 支撑模块总览：
+  - Ticket (凭证管理)
+  - Environment (构建机环境)
+  - Notify (通知服务)
+  - Log (构建日志)
+  - Quality (质量红线)
+  - OpenAPI (开放接口)
+
+#### 9️⃣ 设计模式 (1)
+- **`design-patterns`** - 设计模式实践：工厂、策略、观察者、责任链等
+
+#### 🔟 其他工具与规范 (7)
+- **`git-commit-specification`** - Git 提交规范：Commit Message 格式
+- **`managing-devops-pipeline`** - 蓝盾流水线管理：MCP 工具使用指南
+- **`business-knowledge-workflow`** - 业务知识获取流程：如何获取领域知识
+- **`permission-model-change-guide`** - 权限模型变更指南：v3 → v4 迁移
+- **`go-agent-development`** - Go Agent 开发规范：Go 编码规范、构建机开发
+- **`yaml-pipeline-transfer`** - YAML 流水线转换：v2.0 → v3.0 迁移
+- **`skill-writer`** - Skill 编写指南：如何编写高质量 Skill
+
+---
+
+### 🎯 按场景快速查找
+
+| 场景 | 涉及 Skill (按优先级排序) |
+|------|---------------------------|
+| **新增流水线功能** | `pipeline-model-architecture`, `process-module-architecture`, `pipeline-variable-management`, `microservice-infrastructure` |
+| **开发新插件** | `store-module-architecture`, `worker-module-architecture`, `pipeline-plugin-development` |
+| **修改权限逻辑** | `auth-module-architecture`, `common-technical-practices` |
+| **优化构建调度** | `dispatch-module-architecture`, `agent-module-architecture`, `supporting-modules-architecture` |
+| **数据库表变更** | `database-design` |
+| **添加 API 接口** | `api-interface-design`, `backend-microservice-development` |
+| **前端页面开发** | `frontend-vue-development` |
+| **流水线变量扩展** | `pipeline-variable-management`, `utility-components` (表达式解析) |
+| **实现分布式锁** | `common-technical-practices` |
+| **添加通知功能** | `supporting-modules-architecture` (Notify 模块) |
+| **凭证管理** | `supporting-modules-architecture` (Ticket 模块) |
+| **质量红线** | `supporting-modules-architecture` (Quality 模块) |
+| **日志查询** | `supporting-modules-architecture` (Log 模块) |
+| **OAuth2 认证** | `auth-module-architecture`, `utility-components` (JWT) |
+
+---
+
+### 🧭 学习路径推荐
+
+#### 新手入门路径
+```
+1. 00-bkci-global-architecture (本文档) - 建立全局视图
+   ↓
+2. pipeline-model-architecture - 理解流水线模型
+   ↓
+3. process-module-architecture - 深入核心模块
+   ↓
+4. backend-microservice-development - 掌握开发规范
+```
+
+#### 进阶开发路径
+```
+根据开发任务选择：
+- 插件开发 → store + worker + pipeline-plugin-development
+- 权限功能 → auth + common-technical-practices
+- 调度优化 → dispatch + agent + supporting-modules-architecture
+- 变量扩展 → pipeline-variable-management + utility-components
+```
+
+---
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
      🚀 快速参考区（放在最前面 - 解决 Lost-in-Middle 问题）
      ═══════════════════════════════════════════════════════════════════════════ -->
 
@@ -72,7 +186,7 @@ token_estimate: 45000
 - 只修改单个模块内部逻辑（直接阅读对应模块 Skill）
 - 简单的 Bug 修复（不涉及跨模块调用）
 - 前端 UI 调整（阅读 `frontend-vue-development`）
-- 数据库表变更（阅读 `database-script-management`）
+- 数据库表变更（阅读 `database-design`）
 
 ---
 
@@ -436,37 +550,6 @@ T_PROJECT
 | **前端** | Vue 2.7, Vuex, bk-magic-vue |
 | **Agent** | Go 1.19+ |
 | **Worker** | Kotlin (JVM) |
-
----
-
-## 九、Skill 导航索引
-
-### 按模块查找
-
-| 模块 | Skill |
-|------|-------|
-| 全局架构 | 00-bkci-global-architecture (本文档) |
-| 后端开发 | backend-microservice-development |
-| API 设计 | api-interface-design |
-| 单元测试 | unit-testing |
-| 前端开发 | frontend-vue-development |
-| Agent 开发 | go-agent-development, agent-module-architecture |
-| 数据库 | database-script-management, database-design |
-| Process 模块 | pipeline-model-architecture, process-module-architecture 系列 |
-| Auth 模块 | auth-module-architecture |
-| Store 模块 | store-module-architecture |
-| Dispatch 模块 | dispatch-module-architecture |
-| Worker 模块 | worker-module-architecture |
-
-### 按场景查找
-
-| 场景 | 涉及 Skill |
-|------|------------|
-| 新增流水线功能 | pipeline-model-architecture, process-module-architecture 系列, event-driven-architecture |
-| 开发新插件 | store-module-architecture, worker-module-architecture |
-| 修改权限逻辑 | auth-module-architecture |
-| 优化构建调度 | dispatch-module-architecture, environment-module-architecture, agent-module-architecture |
-| 数据库表变更 | database-script-management, database-design |
 
 ---
 

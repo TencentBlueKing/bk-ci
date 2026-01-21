@@ -1616,5 +1616,5 @@ src/backend/ci/core/openapi/api-openapi/src/main/kotlin/com/tencent/devops/opena
 | `process-module-architecture` | Process 模块架构，理解模板所在模块 |
 | `auth-module-architecture` | 权限模块架构，理解模板权限控制 |
 | `store-module-architecture` | 研发商店架构，理解模板商店集成 |
-| `event-driven-architecture` | 事件驱动架构，理解异步实例化机制 |
-| `distributed-lock` | 分布式锁，理解模板并发控制 |
+| `microservice-infrastructure` | 微服务基础设施（事件驱动），理解异步实例化机制 |
+| `common-technical-practices` | 通用技术实践（分布式锁），理解模板并发控制 |

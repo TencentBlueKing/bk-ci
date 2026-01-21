@@ -1,127 +1,127 @@
-ï»¿---
+---
 name: database-design
-description: BK-CI æ•°æ®åº“è®¾è®¡è§„èŒƒä¸Žè¡¨ç»“æž„æŒ‡å—ï¼Œæ¶µç›–å‘½åè§„èŒƒã€å­—æ®µç±»åž‹é€‰æ‹©ã€ç´¢å¼•è®¾è®¡ã€åˆ†è¡¨ç­–ç•¥ã€æ•°æ®å½’æ¡£ã€‚å½“ç”¨æˆ·è®¾è®¡æ•°æ®åº“è¡¨ã€ä¼˜åŒ–ç´¢å¼•ã€è§„åˆ’åˆ†è¡¨ç­–ç•¥æˆ–è¿›è¡Œæ•°æ®åº“æž¶æž„è®¾è®¡æ—¶ä½¿ç”¨ã€‚
+description: BK-CI Êý¾Ý¿âÉè¼Æ¹æ·¶Óë±í½á¹¹Ö¸ÄÏ£¬º­¸ÇÃüÃû¹æ·¶¡¢×Ö¶ÎÀàÐÍÑ¡Ôñ¡¢Ë÷ÒýÉè¼Æ¡¢·Ö±í²ßÂÔ¡¢Êý¾Ý¹éµµ¡£µ±ÓÃ»§Éè¼ÆÊý¾Ý¿â±í¡¢ÓÅ»¯Ë÷Òý¡¢¹æ»®·Ö±í²ßÂÔ»ò½øÐÐÊý¾Ý¿â¼Ü¹¹Éè¼ÆÊ±Ê¹ÓÃ¡£
 ---
 
-# BK-CI æ•°æ®åº“è®¾è®¡è§„èŒƒä¸Žè¡¨ç»“æž„æŒ‡å—
+# BK-CI Êý¾Ý¿âÉè¼Æ¹æ·¶Óë±í½á¹¹Ö¸ÄÏ
 
-## ä¸€ã€æ•°æ®åº“æž¶æž„æ¦‚è¿°
+## Ò»¡¢Êý¾Ý¿â¼Ü¹¹¸ÅÊö
 
-### 1.1 æ•°æ®åº“åˆ†å¸ƒ
+### 1.1 Êý¾Ý¿â·Ö²¼
 
-BK-CI é‡‡ç”¨å¾®æœåŠ¡æž¶æž„ï¼Œæ¯ä¸ªæœåŠ¡æ‹¥æœ‰ç‹¬ç«‹çš„æ•°æ®åº“ï¼š
+BK-CI ²ÉÓÃÎ¢·þÎñ¼Ü¹¹£¬Ã¿¸ö·þÎñÓµÓÐ¶ÀÁ¢µÄÊý¾Ý¿â£º
 
-| æ•°æ®åº“å | æ‰€å±žæœåŠ¡ | è¯´æ˜Ž |
+| Êý¾Ý¿âÃû | ËùÊô·þÎñ | ËµÃ÷ |
 |----------|----------|------|
-| `devops_ci_process` | Process | æµæ°´çº¿æ ¸å¿ƒæ•°æ®ï¼Œè¡¨æœ€å¤šï¼ˆ89KB DDLï¼‰ |
-| `devops_ci_store` | Store | ç ”å‘å•†åº—æ•°æ®ï¼ˆ87KB DDLï¼‰ |
-| `devops_ci_auth` | Auth | æƒé™è®¤è¯æ•°æ®ï¼ˆ33KB DDLï¼‰ |
-| `devops_ci_project` | Project | é¡¹ç›®ç®¡ç†æ•°æ®ï¼ˆ25KB DDLï¼‰ |
-| `devops_ci_quality` | Quality | è´¨é‡çº¢çº¿æ•°æ®ï¼ˆ25KB DDLï¼‰ |
-| `devops_ci_dispatch` | Dispatch | æž„å»ºè°ƒåº¦æ•°æ®ï¼ˆ24KB DDLï¼‰ |
-| `devops_ci_repository` | Repository | ä»£ç åº“æ•°æ®ï¼ˆ19KB DDLï¼‰ |
-| `devops_ci_metrics` | Metrics | åº¦é‡æ•°æ®ï¼ˆ20KB DDLï¼‰ |
-| `devops_ci_environment` | Environment | æž„å»ºæœºçŽ¯å¢ƒæ•°æ®ï¼ˆ14KB DDLï¼‰ |
-| `devops_ci_notify` | Notify | é€šçŸ¥æœåŠ¡æ•°æ®ï¼ˆ14KB DDLï¼‰ |
-| `devops_ci_ticket` | Ticket | å‡­è¯ç®¡ç†æ•°æ®ï¼ˆ5KB DDLï¼‰ |
-| `devops_ci_artifactory` | Artifactory | åˆ¶å“åº“æ•°æ®ï¼ˆ4KB DDLï¼‰ |
-| `devops_ci_openapi` | OpenAPI | å¼€æ”¾æŽ¥å£æ•°æ®ï¼ˆ3KB DDLï¼‰ |
-| `devops_ci_log` | Log | æ—¥å¿—æœåŠ¡æ•°æ®ï¼ˆ2KB DDLï¼‰ |
+| `devops_ci_process` | Process | Á÷Ë®ÏßºËÐÄÊý¾Ý£¬±í×î¶à£¨89KB DDL£© |
+| `devops_ci_store` | Store | ÑÐ·¢ÉÌµêÊý¾Ý£¨87KB DDL£© |
+| `devops_ci_auth` | Auth | È¨ÏÞÈÏÖ¤Êý¾Ý£¨33KB DDL£© |
+| `devops_ci_project` | Project | ÏîÄ¿¹ÜÀíÊý¾Ý£¨25KB DDL£© |
+| `devops_ci_quality` | Quality | ÖÊÁ¿ºìÏßÊý¾Ý£¨25KB DDL£© |
+| `devops_ci_dispatch` | Dispatch | ¹¹½¨µ÷¶ÈÊý¾Ý£¨24KB DDL£© |
+| `devops_ci_repository` | Repository | ´úÂë¿âÊý¾Ý£¨19KB DDL£© |
+| `devops_ci_metrics` | Metrics | ¶ÈÁ¿Êý¾Ý£¨20KB DDL£© |
+| `devops_ci_environment` | Environment | ¹¹½¨»ú»·¾³Êý¾Ý£¨14KB DDL£© |
+| `devops_ci_notify` | Notify | Í¨Öª·þÎñÊý¾Ý£¨14KB DDL£© |
+| `devops_ci_ticket` | Ticket | Æ¾Ö¤¹ÜÀíÊý¾Ý£¨5KB DDL£© |
+| `devops_ci_artifactory` | Artifactory | ÖÆÆ·¿âÊý¾Ý£¨4KB DDL£© |
+| `devops_ci_openapi` | OpenAPI | ¿ª·Å½Ó¿ÚÊý¾Ý£¨3KB DDL£© |
+| `devops_ci_log` | Log | ÈÕÖ¾·þÎñÊý¾Ý£¨2KB DDL£© |
 
-### 1.2 SQL è„šæœ¬ç»„ç»‡è§„èŒƒ
+### 1.2 SQL ½Å±¾×éÖ¯¹æ·¶
 
 ```
 support-files/sql/
-â”œâ”€â”€ 0001_ci_create-database_mysql.sql      # åˆ›å»ºæ‰€æœ‰æ•°æ®åº“
-â”œâ”€â”€ 1001_ci_*_ddl_mysql.sql                # å„æ¨¡å—å®Œæ•´ DDL
-â”œâ”€â”€ 2001_v0.x/                             # v0.x ç‰ˆæœ¬å¢žé‡æ›´æ–°
-â”œâ”€â”€ 2002_v1.x/                             # v1.x ç‰ˆæœ¬å¢žé‡æ›´æ–°
-â”œâ”€â”€ 2003_v2.x/                             # v2.x ç‰ˆæœ¬å¢žé‡æ›´æ–°
-â”œâ”€â”€ 2004_v3.x/                             # v3.x ç‰ˆæœ¬å¢žé‡æ›´æ–°
-â”œâ”€â”€ 2025_v4.x/                             # v4.x ç‰ˆæœ¬å¢žé‡æ›´æ–°
-â””â”€â”€ 5001_init_dml/                         # åˆå§‹åŒ–æ•°æ®
+©À©¤©¤ 0001_ci_create-database_mysql.sql      # ´´½¨ËùÓÐÊý¾Ý¿â
+©À©¤©¤ 1001_ci_*_ddl_mysql.sql                # ¸÷Ä£¿éÍêÕû DDL
+©À©¤©¤ 2001_v0.x/                             # v0.x °æ±¾ÔöÁ¿¸üÐÂ
+©À©¤©¤ 2002_v1.x/                             # v1.x °æ±¾ÔöÁ¿¸üÐÂ
+©À©¤©¤ 2003_v2.x/                             # v2.x °æ±¾ÔöÁ¿¸üÐÂ
+©À©¤©¤ 2004_v3.x/                             # v3.x °æ±¾ÔöÁ¿¸üÐÂ
+©À©¤©¤ 2025_v4.x/                             # v4.x °æ±¾ÔöÁ¿¸üÐÂ
+©¸©¤©¤ 5001_init_dml/                         # ³õÊ¼»¯Êý¾Ý
 ```
 
-**å‘½åè§„èŒƒ**ï¼š
-- åˆ›å»ºæ•°æ®åº“ï¼š`0001_{ç³»ç»Ÿ}_create-database_{dbç±»åž‹}.sql`
-- å®Œæ•´ DDLï¼š`1xxx_{ç³»ç»Ÿ}_{æ¨¡å—}_ddl_{dbç±»åž‹}.sql`
-- å¢žé‡æ›´æ–°ï¼š`2xxx_{ç³»ç»Ÿ}_{æ¨¡å—}_update_{ç‰ˆæœ¬å·}_{dbç±»åž‹}.sql`
-- åˆå§‹åŒ–æ•°æ®ï¼š`5001_{ç³»ç»Ÿ}_{æ¨¡å—}_dml_{dbç±»åž‹}.sql`
+**ÃüÃû¹æ·¶**£º
+- ´´½¨Êý¾Ý¿â£º`0001_{ÏµÍ³}_create-database_{dbÀàÐÍ}.sql`
+- ÍêÕû DDL£º`1xxx_{ÏµÍ³}_{Ä£¿é}_ddl_{dbÀàÐÍ}.sql`
+- ÔöÁ¿¸üÐÂ£º`2xxx_{ÏµÍ³}_{Ä£¿é}_update_{°æ±¾ºÅ}_{dbÀàÐÍ}.sql`
+- ³õÊ¼»¯Êý¾Ý£º`5001_{ÏµÍ³}_{Ä£¿é}_dml_{dbÀàÐÍ}.sql`
 
-## äºŒã€æ ¸å¿ƒè¡¨ç»“æž„è¯¦è§£
+## ¶þ¡¢ºËÐÄ±í½á¹¹Ïê½â
 
-### 2.1 Process æ¨¡å—ï¼ˆæµæ°´çº¿æ ¸å¿ƒï¼‰
+### 2.1 Process Ä£¿é£¨Á÷Ë®ÏßºËÐÄ£©
 
-#### æµæ°´çº¿ä¿¡æ¯è¡¨
+#### Á÷Ë®ÏßÐÅÏ¢±í
 
 ```sql
--- T_PIPELINE_INFOï¼šæµæ°´çº¿åŸºæœ¬ä¿¡æ¯
+-- T_PIPELINE_INFO£ºÁ÷Ë®Ïß»ù±¾ÐÅÏ¢
 CREATE TABLE T_PIPELINE_INFO (
-  PIPELINE_ID varchar(34) PRIMARY KEY,        -- æµæ°´çº¿IDï¼ˆP-32ä½UUIDï¼‰
-  PROJECT_ID varchar(64) NOT NULL,            -- é¡¹ç›®ID
-  PIPELINE_NAME varchar(255) NOT NULL,        -- æµæ°´çº¿åç§°
-  VERSION int(11) DEFAULT 1,                  -- ç‰ˆæœ¬å·
-  CHANNEL varchar(32),                        -- æ¸ é“ï¼ˆBS/CODECC/AMç­‰ï¼‰
-  CREATOR varchar(64) NOT NULL,               -- åˆ›å»ºè€…
-  CREATE_TIME timestamp NOT NULL,             -- åˆ›å»ºæ—¶é—´
-  LAST_MODIFY_USER varchar(64) NOT NULL,      -- æœ€è¿‘ä¿®æ”¹è€…
-  UPDATE_TIME timestamp,                      -- æ›´æ–°æ—¶é—´
-  `DELETE` bit(1) DEFAULT b'0',               -- è½¯åˆ é™¤æ ‡è®°
-  LOCKED bit(1) DEFAULT b'0',                 -- é”å®šæ ‡è®°ï¼ˆPACï¼‰
+  PIPELINE_ID varchar(34) PRIMARY KEY,        -- Á÷Ë®ÏßID£¨P-32Î»UUID£©
+  PROJECT_ID varchar(64) NOT NULL,            -- ÏîÄ¿ID
+  PIPELINE_NAME varchar(255) NOT NULL,        -- Á÷Ë®ÏßÃû³Æ
+  VERSION int(11) DEFAULT 1,                  -- °æ±¾ºÅ
+  CHANNEL varchar(32),                        -- ÇþµÀ£¨BS/CODECC/AMµÈ£©
+  CREATOR varchar(64) NOT NULL,               -- ´´½¨Õß
+  CREATE_TIME timestamp NOT NULL,             -- ´´½¨Ê±¼ä
+  LAST_MODIFY_USER varchar(64) NOT NULL,      -- ×î½üÐÞ¸ÄÕß
+  UPDATE_TIME timestamp,                      -- ¸üÐÂÊ±¼ä
+  `DELETE` bit(1) DEFAULT b'0',               -- ÈíÉ¾³ý±ê¼Ç
+  LOCKED bit(1) DEFAULT b'0',                 -- Ëø¶¨±ê¼Ç£¨PAC£©
   UNIQUE KEY (PROJECT_ID, PIPELINE_NAME)
 );
 
--- T_PIPELINE_RESOURCEï¼šæµæ°´çº¿ç¼–æŽ’èµ„æº
+-- T_PIPELINE_RESOURCE£ºÁ÷Ë®Ïß±àÅÅ×ÊÔ´
 CREATE TABLE T_PIPELINE_RESOURCE (
   PROJECT_ID varchar(64) NOT NULL,
   PIPELINE_ID varchar(34) NOT NULL,
-  VERSION int(11) NOT NULL DEFAULT 1,         -- ç‰ˆæœ¬å·
-  MODEL mediumtext,                           -- æµæ°´çº¿æ¨¡åž‹ï¼ˆJSONï¼‰
-  YAML mediumtext,                            -- YAML ç¼–æŽ’
+  VERSION int(11) NOT NULL DEFAULT 1,         -- °æ±¾ºÅ
+  MODEL mediumtext,                           -- Á÷Ë®ÏßÄ£ÐÍ£¨JSON£©
+  YAML mediumtext,                            -- YAML ±àÅÅ
   CREATOR varchar(64),
   CREATE_TIME timestamp NOT NULL,
   PRIMARY KEY (PIPELINE_ID, VERSION)
 );
 
--- T_PIPELINE_SETTINGï¼šæµæ°´çº¿é…ç½®
+-- T_PIPELINE_SETTING£ºÁ÷Ë®ÏßÅäÖÃ
 CREATE TABLE T_PIPELINE_SETTING (
   PIPELINE_ID varchar(34) PRIMARY KEY,
   PROJECT_ID varchar(64),
   NAME varchar(255),
-  RUN_LOCK_TYPE int(11) DEFAULT 1,            -- è¿è¡Œé”ç±»åž‹
-  WAIT_QUEUE_TIME_SECOND int(11) DEFAULT 7200,-- æœ€å¤§æŽ’é˜Ÿæ—¶é•¿
-  MAX_QUEUE_SIZE int(11) DEFAULT 10,          -- æœ€å¤§æŽ’é˜Ÿæ•°é‡
-  CONCURRENCY_GROUP varchar(255),             -- å¹¶å‘ç»„
-  BUILD_NUM_RULE varchar(512),                -- æž„å»ºå·è§„åˆ™
-  SUCCESS_SUBSCRIPTION text,                  -- æˆåŠŸè®¢é˜…
-  FAILURE_SUBSCRIPTION text                   -- å¤±è´¥è®¢é˜…
+  RUN_LOCK_TYPE int(11) DEFAULT 1,            -- ÔËÐÐËøÀàÐÍ
+  WAIT_QUEUE_TIME_SECOND int(11) DEFAULT 7200,-- ×î´óÅÅ¶ÓÊ±³¤
+  MAX_QUEUE_SIZE int(11) DEFAULT 10,          -- ×î´óÅÅ¶ÓÊýÁ¿
+  CONCURRENCY_GROUP varchar(255),             -- ²¢·¢×é
+  BUILD_NUM_RULE varchar(512),                -- ¹¹½¨ºÅ¹æÔò
+  SUCCESS_SUBSCRIPTION text,                  -- ³É¹¦¶©ÔÄ
+  FAILURE_SUBSCRIPTION text                   -- Ê§°Ü¶©ÔÄ
 );
 ```
 
-#### æž„å»ºåŽ†å²è¡¨
+#### ¹¹½¨ÀúÊ·±í
 
 ```sql
--- T_PIPELINE_BUILD_HISTORYï¼šæž„å»ºåŽ†å²ï¼ˆæ ¸å¿ƒè¡¨ï¼‰
+-- T_PIPELINE_BUILD_HISTORY£º¹¹½¨ÀúÊ·£¨ºËÐÄ±í£©
 CREATE TABLE T_PIPELINE_BUILD_HISTORY (
-  BUILD_ID varchar(34) PRIMARY KEY,           -- æž„å»ºIDï¼ˆb-32ä½UUIDï¼‰
+  BUILD_ID varchar(34) PRIMARY KEY,           -- ¹¹½¨ID£¨b-32Î»UUID£©
   PROJECT_ID varchar(64) NOT NULL,
   PIPELINE_ID varchar(34) NOT NULL,
-  BUILD_NUM int(20) DEFAULT 0,                -- æž„å»ºå·
-  VERSION int(11),                            -- ç¼–æŽ’ç‰ˆæœ¬å·
-  STATUS int(11),                             -- æž„å»ºçŠ¶æ€
-  START_USER varchar(64),                     -- å¯åŠ¨è€…
-  TRIGGER varchar(32) NOT NULL,               -- è§¦å‘æ–¹å¼
-  TRIGGER_USER varchar(64),                   -- è§¦å‘è€…
-  START_TIME timestamp,                       -- å¼€å§‹æ—¶é—´
-  END_TIME timestamp,                         -- ç»“æŸæ—¶é—´
-  EXECUTE_TIME bigint(20),                    -- æ‰§è¡Œæ—¶é•¿
-  MATERIAL mediumtext,                        -- ä»£ç ææ–™
-  BUILD_PARAMETERS mediumtext,                -- æž„å»ºå‚æ•°
-  ERROR_TYPE int(11),                         -- é”™è¯¯ç±»åž‹
-  ERROR_CODE int(11),                         -- é”™è¯¯ç 
-  ERROR_MSG text,                             -- é”™è¯¯ä¿¡æ¯
+  BUILD_NUM int(20) DEFAULT 0,                -- ¹¹½¨ºÅ
+  VERSION int(11),                            -- ±àÅÅ°æ±¾ºÅ
+  STATUS int(11),                             -- ¹¹½¨×´Ì¬
+  START_USER varchar(64),                     -- Æô¶¯Õß
+  TRIGGER varchar(32) NOT NULL,               -- ´¥·¢·½Ê½
+  TRIGGER_USER varchar(64),                   -- ´¥·¢Õß
+  START_TIME timestamp,                       -- ¿ªÊ¼Ê±¼ä
+  END_TIME timestamp,                         -- ½áÊøÊ±¼ä
+  EXECUTE_TIME bigint(20),                    -- Ö´ÐÐÊ±³¤
+  MATERIAL mediumtext,                        -- ´úÂë²ÄÁÏ
+  BUILD_PARAMETERS mediumtext,                -- ¹¹½¨²ÎÊý
+  ERROR_TYPE int(11),                         -- ´íÎóÀàÐÍ
+  ERROR_CODE int(11),                         -- ´íÎóÂë
+  ERROR_MSG text,                             -- ´íÎóÐÅÏ¢
   
-  -- ç´¢å¼•è®¾è®¡
+  -- Ë÷ÒýÉè¼Æ
   KEY STATUS_KEY (PROJECT_ID, PIPELINE_ID, STATUS),
   KEY INX_PROJECT_PIPELINE_NUM (PROJECT_ID, PIPELINE_ID, BUILD_NUM),
   KEY INX_PROJECT_PIPELINE_START_TIME (PROJECT_ID, PIPELINE_ID, START_TIME),
@@ -129,25 +129,25 @@ CREATE TABLE T_PIPELINE_BUILD_HISTORY (
   KEY inx_start_time (START_TIME)
 );
 
--- T_PIPELINE_BUILD_SUMMARYï¼šæž„å»ºæ‘˜è¦ï¼ˆèšåˆè¡¨ï¼‰
+-- T_PIPELINE_BUILD_SUMMARY£º¹¹½¨ÕªÒª£¨¾ÛºÏ±í£©
 CREATE TABLE T_PIPELINE_BUILD_SUMMARY (
   PIPELINE_ID varchar(34) PRIMARY KEY,
   PROJECT_ID varchar(64) NOT NULL,
-  BUILD_NUM int(11) DEFAULT 0,                -- å½“å‰æž„å»ºå·
-  FINISH_COUNT int(11) DEFAULT 0,             -- å®Œæˆæ¬¡æ•°
-  RUNNING_COUNT int(11) DEFAULT 0,            -- è¿è¡Œä¸­æ¬¡æ•°
-  QUEUE_COUNT int(11) DEFAULT 0,              -- æŽ’é˜Ÿæ¬¡æ•°
-  LATEST_BUILD_ID varchar(34),                -- æœ€è¿‘æž„å»ºID
-  LATEST_STATUS int(11),                      -- æœ€è¿‘çŠ¶æ€
-  LATEST_START_TIME timestamp,                -- æœ€è¿‘å¼€å§‹æ—¶é—´
-  LATEST_END_TIME timestamp                   -- æœ€è¿‘ç»“æŸæ—¶é—´
+  BUILD_NUM int(11) DEFAULT 0,                -- µ±Ç°¹¹½¨ºÅ
+  FINISH_COUNT int(11) DEFAULT 0,             -- Íê³É´ÎÊý
+  RUNNING_COUNT int(11) DEFAULT 0,            -- ÔËÐÐÖÐ´ÎÊý
+  QUEUE_COUNT int(11) DEFAULT 0,              -- ÅÅ¶Ó´ÎÊý
+  LATEST_BUILD_ID varchar(34),                -- ×î½ü¹¹½¨ID
+  LATEST_STATUS int(11),                      -- ×î½ü×´Ì¬
+  LATEST_START_TIME timestamp,                -- ×î½ü¿ªÊ¼Ê±¼ä
+  LATEST_END_TIME timestamp                   -- ×î½ü½áÊøÊ±¼ä
 );
 ```
 
-#### æž„å»ºä»»åŠ¡è¡¨
+#### ¹¹½¨ÈÎÎñ±í
 
 ```sql
--- T_PIPELINE_BUILD_TASKï¼šæž„å»ºä»»åŠ¡è¯¦æƒ…
+-- T_PIPELINE_BUILD_TASK£º¹¹½¨ÈÎÎñÏêÇé
 CREATE TABLE T_PIPELINE_BUILD_TASK (
   BUILD_ID varchar(34) NOT NULL,
   TASK_ID varchar(34) NOT NULL,
@@ -156,94 +156,94 @@ CREATE TABLE T_PIPELINE_BUILD_TASK (
   STAGE_ID varchar(34) NOT NULL,
   CONTAINER_ID varchar(34) NOT NULL,
   TASK_NAME varchar(128),
-  TASK_TYPE varchar(64) NOT NULL,             -- ä»»åŠ¡ç±»åž‹
-  TASK_ATOM varchar(128),                     -- æ’ä»¶æ ‡è¯†
-  ATOM_CODE varchar(128),                     -- æ’ä»¶ä»£ç 
-  STATUS int(11),                             -- ä»»åŠ¡çŠ¶æ€
+  TASK_TYPE varchar(64) NOT NULL,             -- ÈÎÎñÀàÐÍ
+  TASK_ATOM varchar(128),                     -- ²å¼þ±êÊ¶
+  ATOM_CODE varchar(128),                     -- ²å¼þ´úÂë
+  STATUS int(11),                             -- ÈÎÎñ×´Ì¬
   START_TIME timestamp,
   END_TIME timestamp,
-  EXECUTE_COUNT int(11) DEFAULT 0,            -- æ‰§è¡Œæ¬¡æ•°
+  EXECUTE_COUNT int(11) DEFAULT 0,            -- Ö´ÐÐ´ÎÊý
   ERROR_TYPE int(11),
   ERROR_CODE int(11),
   ERROR_MSG text,
-  TASK_PARAMS mediumtext,                     -- ä»»åŠ¡å‚æ•°ï¼ˆJSONï¼‰
+  TASK_PARAMS mediumtext,                     -- ÈÎÎñ²ÎÊý£¨JSON£©
   
   PRIMARY KEY (BUILD_ID, TASK_ID),
   KEY PROJECT_PIPELINE (PROJECT_ID, PIPELINE_ID)
 );
 
--- T_PIPELINE_BUILD_STAGEï¼šæž„å»ºé˜¶æ®µ
+-- T_PIPELINE_BUILD_STAGE£º¹¹½¨½×¶Î
 CREATE TABLE T_PIPELINE_BUILD_STAGE (
   BUILD_ID varchar(64) NOT NULL,
   STAGE_ID varchar(64) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
   PIPELINE_ID varchar(64) NOT NULL,
-  SEQ int(11) NOT NULL,                       -- é˜¶æ®µåºå·
+  SEQ int(11) NOT NULL,                       -- ½×¶ÎÐòºÅ
   STATUS int(11),
   START_TIME timestamp,
   END_TIME timestamp,
-  CHECK_IN mediumtext,                        -- å‡†å…¥æ£€æŸ¥
-  CHECK_OUT mediumtext,                       -- å‡†å‡ºæ£€æŸ¥
+  CHECK_IN mediumtext,                        -- ×¼Èë¼ì²é
+  CHECK_OUT mediumtext,                       -- ×¼³ö¼ì²é
   PRIMARY KEY (BUILD_ID, STAGE_ID)
 );
 
--- T_PIPELINE_BUILD_CONTAINERï¼šæž„å»ºå®¹å™¨
+-- T_PIPELINE_BUILD_CONTAINER£º¹¹½¨ÈÝÆ÷
 CREATE TABLE T_PIPELINE_BUILD_CONTAINER (
   BUILD_ID varchar(64) NOT NULL,
   STAGE_ID varchar(64) NOT NULL,
   CONTAINER_ID varchar(64) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
   PIPELINE_ID varchar(64) NOT NULL,
-  CONTAINER_TYPE varchar(45),                 -- å®¹å™¨ç±»åž‹
+  CONTAINER_TYPE varchar(45),                 -- ÈÝÆ÷ÀàÐÍ
   SEQ int(11) NOT NULL,
   STATUS int(11),
-  MATRIX_GROUP_FLAG BIT(1),                   -- æ˜¯å¦çŸ©é˜µæž„å»º
-  MATRIX_GROUP_ID varchar(64),                -- çŸ©é˜µç»„ID
+  MATRIX_GROUP_FLAG BIT(1),                   -- ÊÇ·ñ¾ØÕó¹¹½¨
+  MATRIX_GROUP_ID varchar(64),                -- ¾ØÕó×éID
   JOB_ID varchar(128),
   PRIMARY KEY (BUILD_ID, STAGE_ID, CONTAINER_ID)
 );
 
--- T_PIPELINE_BUILD_VARï¼šæž„å»ºå˜é‡
+-- T_PIPELINE_BUILD_VAR£º¹¹½¨±äÁ¿
 CREATE TABLE T_PIPELINE_BUILD_VAR (
   BUILD_ID varchar(34) NOT NULL,
-  `KEY` varchar(255) NOT NULL,                -- å˜é‡å
-  `VALUE` varchar(4000),                      -- å˜é‡å€¼
+  `KEY` varchar(255) NOT NULL,                -- ±äÁ¿Ãû
+  `VALUE` varchar(4000),                      -- ±äÁ¿Öµ
   PROJECT_ID varchar(64),
   PIPELINE_ID varchar(64),
-  VAR_TYPE VARCHAR(64),                       -- å˜é‡ç±»åž‹
-  READ_ONLY bit(1),                           -- æ˜¯å¦åªè¯»
+  VAR_TYPE VARCHAR(64),                       -- ±äÁ¿ÀàÐÍ
+  READ_ONLY bit(1),                           -- ÊÇ·ñÖ»¶Á
   PRIMARY KEY (BUILD_ID, `KEY`)
 );
 ```
 
-#### æž„å»ºæ‰§è¡Œè®°å½•è¡¨ï¼ˆRECORD ç³»åˆ—ï¼‰
+#### ¹¹½¨Ö´ÐÐ¼ÇÂ¼±í£¨RECORD ÏµÁÐ£©
 
-> **é‡è¦**: BK-CI æœ‰ä¸¤å¥—æž„å»ºè®°å½•è¡¨ï¼ŒBUILD ç³»åˆ—ç”¨äºŽå¼•æ“Žæ‰§è¡Œè°ƒåº¦ï¼ŒRECORD ç³»åˆ—ç”¨äºŽå‰ç«¯å±•ç¤ºå’ŒåŽ†å²æŸ¥è¯¢ã€‚
-> RECORD ç³»åˆ—é€šè¿‡ `EXECUTE_COUNT` å­—æ®µæ”¯æŒåŒä¸€æž„å»ºçš„å¤šæ¬¡é‡è¯•è®°å½•ã€‚
+> **ÖØÒª**: BK-CI ÓÐÁ½Ì×¹¹½¨¼ÇÂ¼±í£¬BUILD ÏµÁÐÓÃÓÚÒýÇæÖ´ÐÐµ÷¶È£¬RECORD ÏµÁÐÓÃÓÚÇ°¶ËÕ¹Ê¾ºÍÀúÊ·²éÑ¯¡£
+> RECORD ÏµÁÐÍ¨¹ý `EXECUTE_COUNT` ×Ö¶ÎÖ§³ÖÍ¬Ò»¹¹½¨µÄ¶à´ÎÖØÊÔ¼ÇÂ¼¡£
 
 ```sql
--- T_PIPELINE_BUILD_RECORD_MODELï¼šæž„å»ºæ¨¡åž‹è®°å½•ï¼ˆæ”¯æŒå¤šæ¬¡æ‰§è¡Œï¼‰
+-- T_PIPELINE_BUILD_RECORD_MODEL£º¹¹½¨Ä£ÐÍ¼ÇÂ¼£¨Ö§³Ö¶à´ÎÖ´ÐÐ£©
 CREATE TABLE T_PIPELINE_BUILD_RECORD_MODEL (
   BUILD_ID varchar(34) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
   PIPELINE_ID varchar(34) NOT NULL,
-  RESOURCE_VERSION int(11) NOT NULL,          -- ç¼–æŽ’ç‰ˆæœ¬
-  BUILD_NUM int(20) NOT NULL,                 -- æž„å»ºæ¬¡æ•°
-  EXECUTE_COUNT int(11) NOT NULL,             -- æ‰§è¡Œæ¬¡æ•°ï¼ˆé‡è¯•æ—¶é€’å¢žï¼‰
+  RESOURCE_VERSION int(11) NOT NULL,          -- ±àÅÅ°æ±¾
+  BUILD_NUM int(20) NOT NULL,                 -- ¹¹½¨´ÎÊý
+  EXECUTE_COUNT int(11) NOT NULL,             -- Ö´ÐÐ´ÎÊý£¨ÖØÊÔÊ±µÝÔö£©
   START_USER varchar(32) NOT NULL,
-  MODEL_VAR mediumtext NOT NULL,              -- æ¨¡åž‹çº§åˆ«å˜é‡ï¼ˆJSONï¼‰
-  START_TYPE varchar(32) NOT NULL,            -- è§¦å‘æ–¹å¼
+  MODEL_VAR mediumtext NOT NULL,              -- Ä£ÐÍ¼¶±ð±äÁ¿£¨JSON£©
+  START_TYPE varchar(32) NOT NULL,            -- ´¥·¢·½Ê½
   QUEUE_TIME datetime(3) NOT NULL,
   START_TIME datetime(3) NULL,
   END_TIME datetime(3) NULL,
   STATUS varchar(32),
-  ERROR_INFO text,                            -- é”™è¯¯ä¿¡æ¯
+  ERROR_INFO text,                            -- ´íÎóÐÅÏ¢
   CANCEL_USER varchar(32),
-  TIMESTAMPS text,                            -- æ—¶é—´æˆ³é›†åˆ
+  TIMESTAMPS text,                            -- Ê±¼ä´Á¼¯ºÏ
   PRIMARY KEY (BUILD_ID, EXECUTE_COUNT)
 );
 
--- T_PIPELINE_BUILD_RECORD_STAGEï¼šé˜¶æ®µè®°å½•
+-- T_PIPELINE_BUILD_RECORD_STAGE£º½×¶Î¼ÇÂ¼
 CREATE TABLE T_PIPELINE_BUILD_RECORD_STAGE (
   BUILD_ID varchar(64) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
@@ -251,7 +251,7 @@ CREATE TABLE T_PIPELINE_BUILD_RECORD_STAGE (
   RESOURCE_VERSION int(11),
   STAGE_ID varchar(64) NOT NULL,
   SEQ int(11) NOT NULL,
-  STAGE_VAR text NOT NULL,                    -- é˜¶æ®µçº§åˆ«å˜é‡
+  STAGE_VAR text NOT NULL,                    -- ½×¶Î¼¶±ð±äÁ¿
   STATUS varchar(32),
   EXECUTE_COUNT int(11) NOT NULL DEFAULT 1,
   START_TIME datetime(3) NULL,
@@ -260,7 +260,7 @@ CREATE TABLE T_PIPELINE_BUILD_RECORD_STAGE (
   PRIMARY KEY (BUILD_ID, STAGE_ID, EXECUTE_COUNT)
 );
 
--- T_PIPELINE_BUILD_RECORD_CONTAINERï¼šå®¹å™¨è®°å½•
+-- T_PIPELINE_BUILD_RECORD_CONTAINER£ºÈÝÆ÷¼ÇÂ¼
 CREATE TABLE T_PIPELINE_BUILD_RECORD_CONTAINER (
   BUILD_ID varchar(64) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
@@ -270,10 +270,10 @@ CREATE TABLE T_PIPELINE_BUILD_RECORD_CONTAINER (
   CONTAINER_ID varchar(64) NOT NULL,
   EXECUTE_COUNT int(11) NOT NULL DEFAULT 1,
   STATUS varchar(32),
-  CONTAINER_VAR mediumtext NOT NULL,          -- å®¹å™¨çº§åˆ«å˜é‡
+  CONTAINER_VAR mediumtext NOT NULL,          -- ÈÝÆ÷¼¶±ð±äÁ¿
   CONTAINER_TYPE varchar(45),
-  CONTAIN_POST_TASK bit(1),                   -- åŒ…å«POSTæ’ä»¶æ ‡è¯†
-  MATRIX_GROUP_FLAG bit(1),                   -- çŸ©é˜µæ ‡è¯†
+  CONTAIN_POST_TASK bit(1),                   -- °üº¬POST²å¼þ±êÊ¶
+  MATRIX_GROUP_FLAG bit(1),                   -- ¾ØÕó±êÊ¶
   MATRIX_GROUP_ID varchar(64),
   START_TIME datetime(3) NULL,
   END_TIME datetime(3) NULL,
@@ -281,7 +281,7 @@ CREATE TABLE T_PIPELINE_BUILD_RECORD_CONTAINER (
   PRIMARY KEY (BUILD_ID, CONTAINER_ID, EXECUTE_COUNT)
 );
 
--- T_PIPELINE_BUILD_RECORD_TASKï¼šä»»åŠ¡è®°å½•
+-- T_PIPELINE_BUILD_RECORD_TASK£ºÈÎÎñ¼ÇÂ¼
 CREATE TABLE T_PIPELINE_BUILD_RECORD_TASK (
   BUILD_ID varchar(34) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
@@ -293,81 +293,81 @@ CREATE TABLE T_PIPELINE_BUILD_RECORD_TASK (
   TASK_SEQ int(11) NOT NULL DEFAULT 1,
   EXECUTE_COUNT int(11) NOT NULL DEFAULT 1,
   STATUS varchar(32),
-  TASK_VAR mediumtext NOT NULL,               -- ä»»åŠ¡çº§åˆ«å˜é‡
-  POST_INFO text,                             -- POSTæ’ä»¶å…³è”ä¿¡æ¯
+  TASK_VAR mediumtext NOT NULL,               -- ÈÎÎñ¼¶±ð±äÁ¿
+  POST_INFO text,                             -- POST²å¼þ¹ØÁªÐÅÏ¢
   CLASS_TYPE varchar(64) NOT NULL,
   ATOM_CODE varchar(128) NOT NULL,
   ORIGIN_CLASS_TYPE varchar(64),
   START_TIME datetime(3) NULL,
   END_TIME datetime(3) NULL,
   TIMESTAMPS text,
-  ASYNC_STATUS varchar(32),                   -- å¼‚æ­¥æ‰§è¡ŒçŠ¶æ€
+  ASYNC_STATUS varchar(32),                   -- Òì²½Ö´ÐÐ×´Ì¬
   PRIMARY KEY (BUILD_ID, TASK_ID, EXECUTE_COUNT)
 );
 ```
 
-**BUILD vs RECORD è¡¨ä½¿ç”¨åœºæ™¯**:
+**BUILD vs RECORD ±íÊ¹ÓÃ³¡¾°**:
 
-| åœºæ™¯ | BUILD è¡¨ | RECORD è¡¨ |
+| ³¡¾° | BUILD ±í | RECORD ±í |
 |------|---------|-----------|
-| å¼•æ“Žè°ƒåº¦æ‰§è¡Œ | âœ… | âŒ |
-| Worker æ‹‰å–ä»»åŠ¡ | âœ… | âŒ |
-| å‰ç«¯æž„å»ºè¯¦æƒ…é¡µ | âŒ | âœ… |
-| æŸ¥çœ‹åŽ†å²æ‰§è¡Œè®°å½• | âŒ | âœ… |
-| é‡è¯•æ—¶ä¿ç•™åŽ†å² | âŒ è¦†ç›– | âœ… æ–°å¢ž |
+| ÒýÇæµ÷¶ÈÖ´ÐÐ | ? | ? |
+| Worker À­È¡ÈÎÎñ | ? | ? |
+| Ç°¶Ë¹¹½¨ÏêÇéÒ³ | ? | ? |
+| ²é¿´ÀúÊ·Ö´ÐÐ¼ÇÂ¼ | ? | ? |
+| ÖØÊÔÊ±±£ÁôÀúÊ· | ? ¸²¸Ç | ? ÐÂÔö |
 
-#### æ¨¡æ¿ç›¸å…³è¡¨
+#### Ä£°åÏà¹Ø±í
 
 ```sql
--- T_TEMPLATEï¼šæµæ°´çº¿æ¨¡æ¿
+-- T_TEMPLATE£ºÁ÷Ë®ÏßÄ£°å
 CREATE TABLE T_TEMPLATE (
-  VERSION bigint(20) AUTO_INCREMENT,          -- æ¨¡æ¿ç‰ˆæœ¬
-  ID varchar(32) NOT NULL,                    -- æ¨¡æ¿ID
+  VERSION bigint(20) AUTO_INCREMENT,          -- Ä£°å°æ±¾
+  ID varchar(32) NOT NULL,                    -- Ä£°åID
   TEMPLATE_NAME varchar(64) NOT NULL,
   PROJECT_ID varchar(34) NOT NULL,
   VERSION_NAME varchar(64) NOT NULL,
-  TEMPLATE mediumtext,                        -- æ¨¡æ¿å†…å®¹ï¼ˆJSONï¼‰
-  TYPE varchar(32) DEFAULT 'CUSTOMIZE',       -- ç±»åž‹
-  STORE_FLAG bit(1) DEFAULT b'0',             -- æ˜¯å¦å…³è”å•†åº—
+  TEMPLATE mediumtext,                        -- Ä£°åÄÚÈÝ£¨JSON£©
+  TYPE varchar(32) DEFAULT 'CUSTOMIZE',       -- ÀàÐÍ
+  STORE_FLAG bit(1) DEFAULT b'0',             -- ÊÇ·ñ¹ØÁªÉÌµê
   PRIMARY KEY (VERSION),
   KEY ID (ID)
 );
 
--- T_TEMPLATE_PIPELINEï¼šæ¨¡æ¿å®žä¾‹å…³è”
+-- T_TEMPLATE_PIPELINE£ºÄ£°åÊµÀý¹ØÁª
 CREATE TABLE T_TEMPLATE_PIPELINE (
   PIPELINE_ID varchar(34) PRIMARY KEY,
   PROJECT_ID varchar(64) NOT NULL,
   TEMPLATE_ID varchar(32) NOT NULL,
   VERSION bigint(20) NOT NULL,
   INSTANCE_TYPE VARCHAR(32) DEFAULT 'CONSTRAINT', -- FREEDOM/CONSTRAINT
-  PARAM mediumtext,                           -- å®žä¾‹å‚æ•°
+  PARAM mediumtext,                           -- ÊµÀý²ÎÊý
   STATUS varchar(32) DEFAULT 'UPDATED'
 );
 ```
 
-### 2.2 Project æ¨¡å—ï¼ˆé¡¹ç›®ç®¡ç†ï¼‰
+### 2.2 Project Ä£¿é£¨ÏîÄ¿¹ÜÀí£©
 
 ```sql
--- T_PROJECTï¼šé¡¹ç›®ä¿¡æ¯ï¼ˆæ ¸å¿ƒè¡¨ï¼‰
+-- T_PROJECT£ºÏîÄ¿ÐÅÏ¢£¨ºËÐÄ±í£©
 CREATE TABLE T_PROJECT (
   ID bigint(20) AUTO_INCREMENT,
-  PROJECT_ID varchar(32) NOT NULL,            -- é¡¹ç›®IDï¼ˆè‹±æ–‡åï¼‰
-  project_name varchar(64) NOT NULL,          -- é¡¹ç›®åç§°
-  english_name varchar(64) NOT NULL,          -- è‹±æ–‡åç§°
-  creator varchar(32),                        -- åˆ›å»ºè€…
-  description text,                           -- æè¿°
-  is_offlined bit(1) DEFAULT b'0',            -- æ˜¯å¦åœç”¨
-  bg_id bigint(20),                           -- äº‹ä¸šç¾¤ID
-  bg_name varchar(255),                       -- äº‹ä¸šç¾¤åç§°
-  dept_id bigint(20),                         -- éƒ¨é—¨ID
-  dept_name varchar(255),                     -- éƒ¨é—¨åç§°
-  center_id bigint(20),                       -- ä¸­å¿ƒID
-  center_name varchar(255),                   -- ä¸­å¿ƒåç§°
-  approval_status int(10) DEFAULT 1,          -- å®¡æ ¸çŠ¶æ€
-  CHANNEL varchar(32) DEFAULT 'BS',           -- æ¸ é“
-  pipeline_limit int(10) DEFAULT 500,         -- æµæ°´çº¿æ•°é‡ä¸Šé™
-  router_tag varchar(32),                     -- è·¯ç”±æ ‡ç­¾
-  properties text,                            -- å…¶ä»–é…ç½®
+  PROJECT_ID varchar(32) NOT NULL,            -- ÏîÄ¿ID£¨Ó¢ÎÄÃû£©
+  project_name varchar(64) NOT NULL,          -- ÏîÄ¿Ãû³Æ
+  english_name varchar(64) NOT NULL,          -- Ó¢ÎÄÃû³Æ
+  creator varchar(32),                        -- ´´½¨Õß
+  description text,                           -- ÃèÊö
+  is_offlined bit(1) DEFAULT b'0',            -- ÊÇ·ñÍ£ÓÃ
+  bg_id bigint(20),                           -- ÊÂÒµÈºID
+  bg_name varchar(255),                       -- ÊÂÒµÈºÃû³Æ
+  dept_id bigint(20),                         -- ²¿ÃÅID
+  dept_name varchar(255),                     -- ²¿ÃÅÃû³Æ
+  center_id bigint(20),                       -- ÖÐÐÄID
+  center_name varchar(255),                   -- ÖÐÐÄÃû³Æ
+  approval_status int(10) DEFAULT 1,          -- ÉóºË×´Ì¬
+  CHANNEL varchar(32) DEFAULT 'BS',           -- ÇþµÀ
+  pipeline_limit int(10) DEFAULT 500,         -- Á÷Ë®ÏßÊýÁ¿ÉÏÏÞ
+  router_tag varchar(32),                     -- Â·ÓÉ±êÇ©
+  properties text,                            -- ÆäËûÅäÖÃ
   
   PRIMARY KEY (ID),
   UNIQUE KEY project_name (project_name),
@@ -375,61 +375,61 @@ CREATE TABLE T_PROJECT (
   UNIQUE KEY english_name (english_name)
 );
 
--- T_SERVICEï¼šæœåŠ¡ä¿¡æ¯
+-- T_SERVICE£º·þÎñÐÅÏ¢
 CREATE TABLE T_SERVICE (
   id bigint(20) AUTO_INCREMENT PRIMARY KEY,
-  name varchar(64),                           -- æœåŠ¡åç§°
-  english_name varchar(64),                   -- è‹±æ–‡åç§°
-  service_type_id bigint(20),                 -- æœåŠ¡ç±»åž‹
-  link varchar(255),                          -- è·³è½¬é“¾æŽ¥
-  status varchar(64),                         -- çŠ¶æ€
+  name varchar(64),                           -- ·þÎñÃû³Æ
+  english_name varchar(64),                   -- Ó¢ÎÄÃû³Æ
+  service_type_id bigint(20),                 -- ·þÎñÀàÐÍ
+  link varchar(255),                          -- Ìø×ªÁ´½Ó
+  status varchar(64),                         -- ×´Ì¬
   UNIQUE KEY service_name (name)
 );
 
--- T_SHARDING_ROUTING_RULEï¼šåˆ†ç‰‡è·¯ç”±è§„åˆ™
+-- T_SHARDING_ROUTING_RULE£º·ÖÆ¬Â·ÓÉ¹æÔò
 CREATE TABLE T_SHARDING_ROUTING_RULE (
   ID varchar(32) PRIMARY KEY,
-  ROUTING_NAME varchar(128) NOT NULL,         -- è·¯ç”±åç§°
-  ROUTING_RULE varchar(256) NOT NULL,         -- è·¯ç”±è§„åˆ™
-  CLUSTER_NAME varchar(64) DEFAULT 'prod',    -- é›†ç¾¤åç§°
-  MODULE_CODE varchar(64) DEFAULT 'PROCESS',  -- æ¨¡å—æ ‡è¯†
-  TYPE varchar(32) DEFAULT 'DB',              -- è·¯ç”±ç±»åž‹
-  DATA_SOURCE_NAME varchar(128) DEFAULT 'ds_0'-- æ•°æ®æºåç§°
+  ROUTING_NAME varchar(128) NOT NULL,         -- Â·ÓÉÃû³Æ
+  ROUTING_RULE varchar(256) NOT NULL,         -- Â·ÓÉ¹æÔò
+  CLUSTER_NAME varchar(64) DEFAULT 'prod',    -- ¼¯ÈºÃû³Æ
+  MODULE_CODE varchar(64) DEFAULT 'PROCESS',  -- Ä£¿é±êÊ¶
+  TYPE varchar(32) DEFAULT 'DB',              -- Â·ÓÉÀàÐÍ
+  DATA_SOURCE_NAME varchar(128) DEFAULT 'ds_0'-- Êý¾ÝÔ´Ãû³Æ
 );
 ```
 
-### 2.3 Auth æ¨¡å—ï¼ˆæƒé™è®¤è¯ï¼‰
+### 2.3 Auth Ä£¿é£¨È¨ÏÞÈÏÖ¤£©
 
 ```sql
--- T_AUTH_RESOURCEï¼šèµ„æºè¡¨
+-- T_AUTH_RESOURCE£º×ÊÔ´±í
 CREATE TABLE T_AUTH_RESOURCE (
   ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_CODE varchar(32) NOT NULL,
-  RESOURCE_TYPE varchar(32) NOT NULL,         -- èµ„æºç±»åž‹
-  RESOURCE_CODE varchar(255) NOT NULL,        -- èµ„æºID
-  RESOURCE_NAME varchar(255) NOT NULL,        -- èµ„æºå
-  IAM_RESOURCE_CODE varchar(32) NOT NULL,     -- IAMèµ„æºID
-  ENABLE bit(1) DEFAULT b'0',                 -- æ˜¯å¦å¯ç”¨æƒé™ç®¡ç†
-  RELATION_ID varchar(32) NOT NULL,           -- IAMåˆ†çº§ç®¡ç†å‘˜ID
+  RESOURCE_TYPE varchar(32) NOT NULL,         -- ×ÊÔ´ÀàÐÍ
+  RESOURCE_CODE varchar(255) NOT NULL,        -- ×ÊÔ´ID
+  RESOURCE_NAME varchar(255) NOT NULL,        -- ×ÊÔ´Ãû
+  IAM_RESOURCE_CODE varchar(32) NOT NULL,     -- IAM×ÊÔ´ID
+  ENABLE bit(1) DEFAULT b'0',                 -- ÊÇ·ñÆôÓÃÈ¨ÏÞ¹ÜÀí
+  RELATION_ID varchar(32) NOT NULL,           -- IAM·Ö¼¶¹ÜÀíÔ±ID
   
   UNIQUE KEY IDX_PROJECT_RESOURCE (PROJECT_CODE, RESOURCE_TYPE, RESOURCE_CODE)
 );
 
--- T_AUTH_RESOURCE_GROUPï¼šèµ„æºç”¨æˆ·ç»„
+-- T_AUTH_RESOURCE_GROUP£º×ÊÔ´ÓÃ»§×é
 CREATE TABLE T_AUTH_RESOURCE_GROUP (
   ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_CODE varchar(32) NOT NULL,
   RESOURCE_TYPE varchar(32) NOT NULL,
   RESOURCE_CODE varchar(255) NOT NULL,
-  GROUP_CODE varchar(32) NOT NULL,            -- ç”¨æˆ·ç»„æ ‡è¯†
-  GROUP_NAME varchar(255) NOT NULL,           -- ç”¨æˆ·ç»„åç§°
-  DEFAULT_GROUP bit(1) DEFAULT b'1',          -- æ˜¯å¦é»˜è®¤ç»„
-  RELATION_ID varchar(32) NOT NULL,           -- IAMç»„ID
+  GROUP_CODE varchar(32) NOT NULL,            -- ÓÃ»§×é±êÊ¶
+  GROUP_NAME varchar(255) NOT NULL,           -- ÓÃ»§×éÃû³Æ
+  DEFAULT_GROUP bit(1) DEFAULT b'1',          -- ÊÇ·ñÄ¬ÈÏ×é
+  RELATION_ID varchar(32) NOT NULL,           -- IAM×éID
   
   UNIQUE KEY (PROJECT_CODE, RESOURCE_TYPE, RESOURCE_CODE, GROUP_NAME)
 );
 
--- T_AUTH_RESOURCE_GROUP_MEMBERï¼šç”¨æˆ·ç»„æˆå‘˜
+-- T_AUTH_RESOURCE_GROUP_MEMBER£ºÓÃ»§×é³ÉÔ±
 CREATE TABLE T_AUTH_RESOURCE_GROUP_MEMBER (
   ID bigint AUTO_INCREMENT PRIMARY KEY,
   PROJECT_CODE varchar(64) NOT NULL,
@@ -437,362 +437,362 @@ CREATE TABLE T_AUTH_RESOURCE_GROUP_MEMBER (
   RESOURCE_CODE varchar(255) NOT NULL,
   GROUP_CODE varchar(32) NOT NULL,
   IAM_GROUP_ID int(20) NOT NULL,
-  MEMBER_ID varchar(64) NOT NULL,             -- æˆå‘˜ID
-  MEMBER_NAME varchar(512) NOT NULL,          -- æˆå‘˜å
-  MEMBER_TYPE varchar(32) NOT NULL,           -- æˆå‘˜ç±»åž‹
-  EXPIRED_TIME datetime NOT NULL,             -- è¿‡æœŸæ—¶é—´
+  MEMBER_ID varchar(64) NOT NULL,             -- ³ÉÔ±ID
+  MEMBER_NAME varchar(512) NOT NULL,          -- ³ÉÔ±Ãû
+  MEMBER_TYPE varchar(32) NOT NULL,           -- ³ÉÔ±ÀàÐÍ
+  EXPIRED_TIME datetime NOT NULL,             -- ¹ýÆÚÊ±¼ä
   
   UNIQUE KEY (PROJECT_CODE, IAM_GROUP_ID, MEMBER_ID)
 );
 
--- T_AUTH_ACTIONï¼šæƒé™æ“ä½œè¡¨
+-- T_AUTH_ACTION£ºÈ¨ÏÞ²Ù×÷±í
 CREATE TABLE T_AUTH_ACTION (
-  ACTION varchar(64) PRIMARY KEY,             -- æ“ä½œID
-  RESOURCE_TYPE varchar(64) NOT NULL,         -- å…³è”èµ„æºç±»åž‹
-  ACTION_NAME varchar(64) NOT NULL,           -- æ“ä½œåç§°
-  ACTION_TYPE varchar(32)                     -- æ“ä½œç±»åž‹
+  ACTION varchar(64) PRIMARY KEY,             -- ²Ù×÷ID
+  RESOURCE_TYPE varchar(64) NOT NULL,         -- ¹ØÁª×ÊÔ´ÀàÐÍ
+  ACTION_NAME varchar(64) NOT NULL,           -- ²Ù×÷Ãû³Æ
+  ACTION_TYPE varchar(32)                     -- ²Ù×÷ÀàÐÍ
 );
 ```
 
-### 2.4 Store æ¨¡å—ï¼ˆç ”å‘å•†åº—ï¼‰
+### 2.4 Store Ä£¿é£¨ÑÐ·¢ÉÌµê£©
 
 ```sql
--- T_ATOMï¼šæ’ä»¶ä¿¡æ¯
+-- T_ATOM£º²å¼þÐÅÏ¢
 CREATE TABLE T_ATOM (
   ID varchar(32) PRIMARY KEY,
-  NAME varchar(64) NOT NULL,                  -- æ’ä»¶åç§°
-  ATOM_CODE varchar(64) NOT NULL,             -- æ’ä»¶å”¯ä¸€æ ‡è¯†
-  CLASS_TYPE varchar(64) NOT NULL,            -- æ’ä»¶å¤§ç±»
-  VERSION varchar(30) NOT NULL,               -- ç‰ˆæœ¬å·
-  ATOM_STATUS tinyint(4) NOT NULL,            -- æ’ä»¶çŠ¶æ€
-  ATOM_TYPE tinyint(4) DEFAULT 1,             -- æ’ä»¶ç±»åž‹
-  OS varchar(100) NOT NULL,                   -- æ”¯æŒçš„æ“ä½œç³»ç»Ÿ
-  CLASSIFY_ID varchar(32) NOT NULL,           -- åˆ†ç±»ID
-  LATEST_FLAG bit(1) NOT NULL,                -- æ˜¯å¦æœ€æ–°ç‰ˆæœ¬
-  DEFAULT_FLAG bit(1) DEFAULT b'0',           -- æ˜¯å¦é»˜è®¤æ’ä»¶
-  PUBLISHER varchar(50) DEFAULT 'system',     -- å‘å¸ƒè€…
-  PROPS text,                                 -- æ’ä»¶å±žæ€§ï¼ˆJSONï¼‰
+  NAME varchar(64) NOT NULL,                  -- ²å¼þÃû³Æ
+  ATOM_CODE varchar(64) NOT NULL,             -- ²å¼þÎ¨Ò»±êÊ¶
+  CLASS_TYPE varchar(64) NOT NULL,            -- ²å¼þ´óÀà
+  VERSION varchar(30) NOT NULL,               -- °æ±¾ºÅ
+  ATOM_STATUS tinyint(4) NOT NULL,            -- ²å¼þ×´Ì¬
+  ATOM_TYPE tinyint(4) DEFAULT 1,             -- ²å¼þÀàÐÍ
+  OS varchar(100) NOT NULL,                   -- Ö§³ÖµÄ²Ù×÷ÏµÍ³
+  CLASSIFY_ID varchar(32) NOT NULL,           -- ·ÖÀàID
+  LATEST_FLAG bit(1) NOT NULL,                -- ÊÇ·ñ×îÐÂ°æ±¾
+  DEFAULT_FLAG bit(1) DEFAULT b'0',           -- ÊÇ·ñÄ¬ÈÏ²å¼þ
+  PUBLISHER varchar(50) DEFAULT 'system',     -- ·¢²¼Õß
+  PROPS text,                                 -- ²å¼þÊôÐÔ£¨JSON£©
   
   UNIQUE KEY (ATOM_CODE, VERSION),
   KEY inx_atom_status (ATOM_STATUS),
   KEY inx_latest_flag (LATEST_FLAG)
 );
 
--- T_ATOM_ENV_INFOï¼šæ’ä»¶æ‰§è¡ŒçŽ¯å¢ƒ
+-- T_ATOM_ENV_INFO£º²å¼þÖ´ÐÐ»·¾³
 CREATE TABLE T_ATOM_ENV_INFO (
   ID varchar(32) PRIMARY KEY,
   ATOM_ID varchar(32) NOT NULL,
-  PKG_PATH varchar(1024) NOT NULL,            -- å®‰è£…åŒ…è·¯å¾„
-  LANGUAGE varchar(64),                       -- å¼€å‘è¯­è¨€
-  TARGET varchar(256) NOT NULL,               -- æ‰§è¡Œå…¥å£
-  OS_NAME varchar(128),                       -- æ“ä½œç³»ç»Ÿ
-  OS_ARCH varchar(128),                       -- ç³»ç»Ÿæž¶æž„
-  RUNTIME_VERSION varchar(128),               -- è¿è¡Œæ—¶ç‰ˆæœ¬
-  DEFAULT_FLAG bit(1) DEFAULT b'1',           -- æ˜¯å¦é»˜è®¤çŽ¯å¢ƒ
+  PKG_PATH varchar(1024) NOT NULL,            -- °²×°°üÂ·¾¶
+  LANGUAGE varchar(64),                       -- ¿ª·¢ÓïÑÔ
+  TARGET varchar(256) NOT NULL,               -- Ö´ÐÐÈë¿Ú
+  OS_NAME varchar(128),                       -- ²Ù×÷ÏµÍ³
+  OS_ARCH varchar(128),                       -- ÏµÍ³¼Ü¹¹
+  RUNTIME_VERSION varchar(128),               -- ÔËÐÐÊ±°æ±¾
+  DEFAULT_FLAG bit(1) DEFAULT b'1',           -- ÊÇ·ñÄ¬ÈÏ»·¾³
   
   UNIQUE KEY (ATOM_ID, OS_NAME, OS_ARCH)
 );
 
--- T_STORE_PROJECT_RELï¼šå•†åº—ç»„ä»¶ä¸Žé¡¹ç›®å…³è”
+-- T_STORE_PROJECT_REL£ºÉÌµê×é¼þÓëÏîÄ¿¹ØÁª
 CREATE TABLE T_STORE_PROJECT_REL (
   ID varchar(32) PRIMARY KEY,
-  STORE_CODE varchar(64) NOT NULL,            -- ç»„ä»¶ç¼–ç 
-  PROJECT_CODE varchar(64) NOT NULL,          -- é¡¹ç›®ID
-  TYPE tinyint(4) NOT NULL,                   -- å…³è”ç±»åž‹
-  STORE_TYPE tinyint(4) DEFAULT 0,            -- ç»„ä»¶ç±»åž‹
+  STORE_CODE varchar(64) NOT NULL,            -- ×é¼þ±àÂë
+  PROJECT_CODE varchar(64) NOT NULL,          -- ÏîÄ¿ID
+  TYPE tinyint(4) NOT NULL,                   -- ¹ØÁªÀàÐÍ
+  STORE_TYPE tinyint(4) DEFAULT 0,            -- ×é¼þÀàÐÍ
   
   UNIQUE KEY (STORE_CODE, STORE_TYPE, PROJECT_CODE, TYPE, INSTANCE_ID, CREATOR)
 );
 
--- T_STORE_STATISTICS_TOTALï¼šç»Ÿè®¡ä¿¡æ¯
+-- T_STORE_STATISTICS_TOTAL£ºÍ³¼ÆÐÅÏ¢
 CREATE TABLE T_STORE_STATISTICS_TOTAL (
   ID varchar(32) PRIMARY KEY,
   STORE_CODE varchar(64) NOT NULL,
   STORE_TYPE tinyint(4) DEFAULT 0,
-  DOWNLOADS int(11) DEFAULT 0,                -- ä¸‹è½½é‡
-  COMMITS int(11) DEFAULT 0,                  -- è¯„è®ºæ•°
-  SCORE int(11) DEFAULT 0,                    -- è¯„åˆ†
-  SCORE_AVERAGE decimal(3,1) DEFAULT 0.0,     -- å¹³å‡åˆ†
-  PIPELINE_NUM INT(11) DEFAULT 0,             -- æµæ°´çº¿æ•°
+  DOWNLOADS int(11) DEFAULT 0,                -- ÏÂÔØÁ¿
+  COMMITS int(11) DEFAULT 0,                  -- ÆÀÂÛÊý
+  SCORE int(11) DEFAULT 0,                    -- ÆÀ·Ö
+  SCORE_AVERAGE decimal(3,1) DEFAULT 0.0,     -- Æ½¾ù·Ö
+  PIPELINE_NUM INT(11) DEFAULT 0,             -- Á÷Ë®ÏßÊý
   
   UNIQUE KEY (STORE_CODE, STORE_TYPE)
 );
 ```
 
-### 2.5 Repository æ¨¡å—ï¼ˆä»£ç åº“ï¼‰
+### 2.5 Repository Ä£¿é£¨´úÂë¿â£©
 
 ```sql
--- T_REPOSITORYï¼šä»£ç åº“ä¿¡æ¯
+-- T_REPOSITORY£º´úÂë¿âÐÅÏ¢
 CREATE TABLE T_REPOSITORY (
   REPOSITORY_ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_ID varchar(32) NOT NULL,
   USER_ID varchar(64) NOT NULL,
-  ALIAS_NAME varchar(255) NOT NULL,           -- åˆ«å
-  URL varchar(255) NOT NULL,                  -- ä»“åº“URL
-  TYPE varchar(20) NOT NULL,                  -- ç±»åž‹ï¼ˆSVN/GIT/GITHUBç­‰ï¼‰
-  REPOSITORY_HASH_ID varchar(64),             -- å“ˆå¸ŒID
-  IS_DELETED bit(1) NOT NULL,                 -- æ˜¯å¦åˆ é™¤
-  ENABLE_PAC bit(1) DEFAULT false,            -- æ˜¯å¦å¼€å¯PAC
+  ALIAS_NAME varchar(255) NOT NULL,           -- ±ðÃû
+  URL varchar(255) NOT NULL,                  -- ²Ö¿âURL
+  TYPE varchar(20) NOT NULL,                  -- ÀàÐÍ£¨SVN/GIT/GITHUBµÈ£©
+  REPOSITORY_HASH_ID varchar(64),             -- ¹þÏ£ID
+  IS_DELETED bit(1) NOT NULL,                 -- ÊÇ·ñÉ¾³ý
+  ENABLE_PAC bit(1) DEFAULT false,            -- ÊÇ·ñ¿ªÆôPAC
   
   KEY PROJECT_ID (PROJECT_ID),
   KEY inx_alias_name (ALIAS_NAME)
 );
 
--- T_REPOSITORY_CODE_GITï¼šGitä»£ç åº“è¯¦æƒ…
+-- T_REPOSITORY_CODE_GIT£ºGit´úÂë¿âÏêÇé
 CREATE TABLE T_REPOSITORY_CODE_GIT (
   REPOSITORY_ID bigint(20) PRIMARY KEY,
-  PROJECT_NAME varchar(255) NOT NULL,         -- é¡¹ç›®åç§°
-  USER_NAME varchar(64) NOT NULL,             -- ç”¨æˆ·å
-  CREDENTIAL_ID varchar(64) NOT NULL,         -- å‡­æ®ID
-  AUTH_TYPE varchar(8),                       -- è®¤è¯æ–¹å¼
-  GIT_PROJECT_ID bigint(20) DEFAULT 0         -- Gité¡¹ç›®ID
+  PROJECT_NAME varchar(255) NOT NULL,         -- ÏîÄ¿Ãû³Æ
+  USER_NAME varchar(64) NOT NULL,             -- ÓÃ»§Ãû
+  CREDENTIAL_ID varchar(64) NOT NULL,         -- Æ¾¾ÝID
+  AUTH_TYPE varchar(8),                       -- ÈÏÖ¤·½Ê½
+  GIT_PROJECT_ID bigint(20) DEFAULT 0         -- GitÏîÄ¿ID
 );
 
--- T_REPOSITORY_COMMITï¼šæäº¤è®°å½•
+-- T_REPOSITORY_COMMIT£ºÌá½»¼ÇÂ¼
 CREATE TABLE T_REPOSITORY_COMMIT (
   ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   BUILD_ID varchar(34),
   PIPELINE_ID varchar(34),
   REPO_ID bigint(20),
   TYPE smallint(6),                           -- 1-svn, 2-git, 3-gitlab
-  COMMIT varchar(64),                         -- æäº¤ID
-  COMMITTER varchar(32),                      -- æäº¤è€…
-  COMMIT_TIME datetime,                       -- æäº¤æ—¶é—´
-  COMMENT longtext,                           -- æäº¤ä¿¡æ¯
+  COMMIT varchar(64),                         -- Ìá½»ID
+  COMMITTER varchar(32),                      -- Ìá½»Õß
+  COMMIT_TIME datetime,                       -- Ìá½»Ê±¼ä
+  COMMENT longtext,                           -- Ìá½»ÐÅÏ¢
   
   KEY IDX_BUILD_ID_TIME (BUILD_ID, COMMIT_TIME)
 );
 ```
 
-### 2.6 Dispatch æ¨¡å—ï¼ˆæž„å»ºè°ƒåº¦ï¼‰
+### 2.6 Dispatch Ä£¿é£¨¹¹½¨µ÷¶È£©
 
 ```sql
--- T_DISPATCH_THIRDPARTY_AGENT_BUILDï¼šç¬¬ä¸‰æ–¹æž„å»ºæœºä»»åŠ¡
+-- T_DISPATCH_THIRDPARTY_AGENT_BUILD£ºµÚÈý·½¹¹½¨»úÈÎÎñ
 CREATE TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD (
   ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_ID varchar(64) NOT NULL,
-  AGENT_ID varchar(32) NOT NULL,              -- æž„å»ºæœºID
+  AGENT_ID varchar(32) NOT NULL,              -- ¹¹½¨»úID
   PIPELINE_ID varchar(34) NOT NULL,
   BUILD_ID varchar(34) NOT NULL,
-  VM_SEQ_ID varchar(34) NOT NULL,             -- æž„å»ºåºåˆ—å·
-  STATUS int(11) NOT NULL,                    -- çŠ¶æ€
-  WORKSPACE varchar(4096),                    -- å·¥ä½œç©ºé—´
-  NODE_ID bigint(20) DEFAULT 0,               -- èŠ‚ç‚¹ID
-  DOCKER_INFO json,                           -- Dockeræž„å»ºä¿¡æ¯
+  VM_SEQ_ID varchar(34) NOT NULL,             -- ¹¹½¨ÐòÁÐºÅ
+  STATUS int(11) NOT NULL,                    -- ×´Ì¬
+  WORKSPACE varchar(4096),                    -- ¹¤×÷¿Õ¼ä
+  NODE_ID bigint(20) DEFAULT 0,               -- ½ÚµãID
+  DOCKER_INFO json,                           -- Docker¹¹½¨ÐÅÏ¢
   
   UNIQUE KEY (BUILD_ID, VM_SEQ_ID),
   KEY idx_agent_id (AGENT_ID),
   KEY idx_status (STATUS)
 );
 
--- T_DISPATCH_RUNNING_JOBSï¼šè¿è¡Œä¸­çš„ä»»åŠ¡
+-- T_DISPATCH_RUNNING_JOBS£ºÔËÐÐÖÐµÄÈÎÎñ
 CREATE TABLE T_DISPATCH_RUNNING_JOBS (
   ID int(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_ID varchar(128) NOT NULL,
-  VM_TYPE varchar(128) NOT NULL,              -- æž„å»ºæœºç±»åž‹
-  CHANNEL_CODE varchar(128) DEFAULT 'BS',     -- æž„å»ºæ¥æº
+  VM_TYPE varchar(128) NOT NULL,              -- ¹¹½¨»úÀàÐÍ
+  CHANNEL_CODE varchar(128) DEFAULT 'BS',     -- ¹¹½¨À´Ô´
   BUILD_ID varchar(128) NOT NULL,
   VM_SEQ_ID varchar(128) NOT NULL,
-  EXECUTE_COUNT int(11) NOT NULL,             -- æ‰§è¡Œæ¬¡æ•°
+  EXECUTE_COUNT int(11) NOT NULL,             -- Ö´ÐÐ´ÎÊý
   CREATED_TIME datetime NOT NULL,
-  AGENT_START_TIME datetime,                  -- æž„å»ºæœºå¯åŠ¨æ—¶é—´
+  AGENT_START_TIME datetime,                  -- ¹¹½¨»úÆô¶¯Ê±¼ä
   
   KEY inx_project_id (PROJECT_ID, VM_TYPE, CHANNEL_CODE),
   KEY inx_build_id (BUILD_ID)
 );
 
--- T_DISPATCH_QUOTA_PROJECTï¼šé¡¹ç›®é…é¢
+-- T_DISPATCH_QUOTA_PROJECT£ºÏîÄ¿Åä¶î
 CREATE TABLE T_DISPATCH_QUOTA_PROJECT (
   PROJECT_ID varchar(128) NOT NULL,
   VM_TYPE varchar(128) NOT NULL,
   CHANNEL_CODE varchar(128) DEFAULT 'BS',
-  RUNNING_JOBS_MAX int(10) NOT NULL,          -- æœ€å¤§å¹¶å‘JOBæ•°
-  RUNNING_TIME_JOB_MAX int(10) NOT NULL,      -- å•JOBæœ€å¤§æ‰§è¡Œæ—¶é—´
-  RUNNING_TIME_PROJECT_MAX int(10) NOT NULL,  -- é¡¹ç›®æœ€å¤§æ‰§è¡Œæ—¶é—´
+  RUNNING_JOBS_MAX int(10) NOT NULL,          -- ×î´ó²¢·¢JOBÊý
+  RUNNING_TIME_JOB_MAX int(10) NOT NULL,      -- µ¥JOB×î´óÖ´ÐÐÊ±¼ä
+  RUNNING_TIME_PROJECT_MAX int(10) NOT NULL,  -- ÏîÄ¿×î´óÖ´ÐÐÊ±¼ä
   
   PRIMARY KEY (PROJECT_ID, VM_TYPE, CHANNEL_CODE)
 );
 ```
 
-### 2.7 Environment æ¨¡å—ï¼ˆæž„å»ºæœºçŽ¯å¢ƒï¼‰
+### 2.7 Environment Ä£¿é£¨¹¹½¨»ú»·¾³£©
 
 ```sql
--- T_NODEï¼šèŠ‚ç‚¹ä¿¡æ¯
+-- T_NODE£º½ÚµãÐÅÏ¢
 CREATE TABLE T_NODE (
   NODE_ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_ID varchar(64) NOT NULL,
-  NODE_IP varchar(64) NOT NULL,               -- èŠ‚ç‚¹IP
-  NODE_NAME varchar(64) NOT NULL,             -- èŠ‚ç‚¹åç§°
-  NODE_STATUS varchar(64) NOT NULL,           -- èŠ‚ç‚¹çŠ¶æ€
-  NODE_TYPE varchar(64) NOT NULL,             -- èŠ‚ç‚¹ç±»åž‹
-  OS_NAME varchar(128),                       -- æ“ä½œç³»ç»Ÿ
-  DISPLAY_NAME varchar(128) DEFAULT '',       -- åˆ«å
-  PIPELINE_REF_COUNT int(11) DEFAULT 0,       -- æµæ°´çº¿å¼•ç”¨æ•°
-  LAST_BUILD_TIME datetime,                   -- æœ€è¿‘æž„å»ºæ—¶é—´
+  NODE_IP varchar(64) NOT NULL,               -- ½ÚµãIP
+  NODE_NAME varchar(64) NOT NULL,             -- ½ÚµãÃû³Æ
+  NODE_STATUS varchar(64) NOT NULL,           -- ½Úµã×´Ì¬
+  NODE_TYPE varchar(64) NOT NULL,             -- ½ÚµãÀàÐÍ
+  OS_NAME varchar(128),                       -- ²Ù×÷ÏµÍ³
+  DISPLAY_NAME varchar(128) DEFAULT '',       -- ±ðÃû
+  PIPELINE_REF_COUNT int(11) DEFAULT 0,       -- Á÷Ë®ÏßÒýÓÃÊý
+  LAST_BUILD_TIME datetime,                   -- ×î½ü¹¹½¨Ê±¼ä
   
   KEY PROJECT_ID (PROJECT_ID),
   KEY NODE_IP (NODE_IP)
 );
 
--- T_ENVIRONMENT_THIRDPARTY_AGENTï¼šç¬¬ä¸‰æ–¹æž„å»ºæœº
+-- T_ENVIRONMENT_THIRDPARTY_AGENT£ºµÚÈý·½¹¹½¨»ú
 CREATE TABLE T_ENVIRONMENT_THIRDPARTY_AGENT (
   ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
-  NODE_ID bigint(20),                         -- èŠ‚ç‚¹ID
+  NODE_ID bigint(20),                         -- ½ÚµãID
   PROJECT_ID varchar(64) NOT NULL,
-  HOSTNAME varchar(128) DEFAULT '',           -- ä¸»æœºå
-  IP varchar(64) DEFAULT '',                  -- IPåœ°å€
-  OS varchar(16) NOT NULL,                    -- æ“ä½œç³»ç»Ÿ
-  STATUS int(11) NOT NULL,                    -- çŠ¶æ€
-  SECRET_KEY varchar(256) NOT NULL,           -- å¯†é’¥
-  VERSION varchar(128),                       -- Agentç‰ˆæœ¬
-  PARALLEL_TASK_COUNT int(11),                -- å¹¶è¡Œä»»åŠ¡æ•°
-  DOCKER_PARALLEL_TASK_COUNT int(11),         -- Dockerå¹¶è¡Œä»»åŠ¡æ•°
+  HOSTNAME varchar(128) DEFAULT '',           -- Ö÷»úÃû
+  IP varchar(64) DEFAULT '',                  -- IPµØÖ·
+  OS varchar(16) NOT NULL,                    -- ²Ù×÷ÏµÍ³
+  STATUS int(11) NOT NULL,                    -- ×´Ì¬
+  SECRET_KEY varchar(256) NOT NULL,           -- ÃÜÔ¿
+  VERSION varchar(128),                       -- Agent°æ±¾
+  PARALLEL_TASK_COUNT int(11),                -- ²¢ÐÐÈÎÎñÊý
+  DOCKER_PARALLEL_TASK_COUNT int(11),         -- Docker²¢ÐÐÈÎÎñÊý
   
   KEY idx_agent_node (NODE_ID),
   KEY idx_agent_project (PROJECT_ID)
 );
 
--- T_ENVï¼šçŽ¯å¢ƒä¿¡æ¯
+-- T_ENV£º»·¾³ÐÅÏ¢
 CREATE TABLE T_ENV (
   ENV_ID bigint(20) AUTO_INCREMENT PRIMARY KEY,
   PROJECT_ID varchar(64) NOT NULL,
-  ENV_NAME varchar(128) NOT NULL,             -- çŽ¯å¢ƒåç§°
-  ENV_TYPE varchar(128) NOT NULL,             -- çŽ¯å¢ƒç±»åž‹ï¼ˆDEV/TEST/BUILDï¼‰
-  ENV_VARS text NOT NULL,                     -- çŽ¯å¢ƒå˜é‡
+  ENV_NAME varchar(128) NOT NULL,             -- »·¾³Ãû³Æ
+  ENV_TYPE varchar(128) NOT NULL,             -- »·¾³ÀàÐÍ£¨DEV/TEST/BUILD£©
+  ENV_VARS text NOT NULL,                     -- »·¾³±äÁ¿
   IS_DELETED bit(1) NOT NULL,
   
   KEY PROJECT_ID (PROJECT_ID)
 );
 
--- T_ENV_NODEï¼šçŽ¯å¢ƒ-èŠ‚ç‚¹å…³è”
+-- T_ENV_NODE£º»·¾³-½Úµã¹ØÁª
 CREATE TABLE T_ENV_NODE (
   ENV_ID bigint(20) NOT NULL,
   NODE_ID bigint(20) NOT NULL,
   PROJECT_ID varchar(64) NOT NULL,
-  ENABLE_NODE bit(1) DEFAULT 1,               -- æ˜¯å¦å¯ç”¨
+  ENABLE_NODE bit(1) DEFAULT 1,               -- ÊÇ·ñÆôÓÃ
   
   PRIMARY KEY (ENV_ID, NODE_ID)
 );
 ```
 
-## ä¸‰ã€è¡¨è®¾è®¡è§„èŒƒ
+## Èý¡¢±íÉè¼Æ¹æ·¶
 
-### 3.1 å‘½åè§„èŒƒ
+### 3.1 ÃüÃû¹æ·¶
 
-| ç±»åž‹ | è§„èŒƒ | ç¤ºä¾‹ |
+| ÀàÐÍ | ¹æ·¶ | Ê¾Àý |
 |------|------|------|
-| è¡¨å | `T_` å‰ç¼€ + å¤§å†™ä¸‹åˆ’çº¿ | `T_PIPELINE_BUILD_HISTORY` |
-| ä¸»é”® | `ID` æˆ– `{è¡¨å}_ID` | `PIPELINE_ID`, `BUILD_ID` |
-| å¤–é”® | `{å…³è”è¡¨}_ID` | `PROJECT_ID`, `NODE_ID` |
-| ç´¢å¼• | `idx_` æˆ– `inx_` å‰ç¼€ | `idx_project_id`, `inx_status` |
-| å”¯ä¸€ç´¢å¼• | `uni_inx_` æˆ– `UNI_` å‰ç¼€ | `uni_inx_code_version` |
-| æ—¶é—´å­—æ®µ | `*_TIME` åŽç¼€ | `CREATE_TIME`, `UPDATE_TIME` |
-| æ ‡è®°å­—æ®µ | `*_FLAG` åŽç¼€ | `LATEST_FLAG`, `DELETE_FLAG` |
+| ±íÃû | `T_` Ç°×º + ´óÐ´ÏÂ»®Ïß | `T_PIPELINE_BUILD_HISTORY` |
+| Ö÷¼ü | `ID` »ò `{±íÃû}_ID` | `PIPELINE_ID`, `BUILD_ID` |
+| Íâ¼ü | `{¹ØÁª±í}_ID` | `PROJECT_ID`, `NODE_ID` |
+| Ë÷Òý | `idx_` »ò `inx_` Ç°×º | `idx_project_id`, `inx_status` |
+| Î¨Ò»Ë÷Òý | `uni_inx_` »ò `UNI_` Ç°×º | `uni_inx_code_version` |
+| Ê±¼ä×Ö¶Î | `*_TIME` ºó×º | `CREATE_TIME`, `UPDATE_TIME` |
+| ±ê¼Ç×Ö¶Î | `*_FLAG` ºó×º | `LATEST_FLAG`, `DELETE_FLAG` |
 
-### 3.2 ID è®¾è®¡è§„èŒƒ
+### 3.2 ID Éè¼Æ¹æ·¶
 
 ```
-é¡¹ç›®IDï¼š    è‹±æ–‡åç§°ï¼ˆå¦‚ demo_projectï¼‰
-æµæ°´çº¿IDï¼š  p-{32ä½UUID} = 34ä½
-æž„å»ºIDï¼š    b-{32ä½UUID} = 34ä½
-ä»»åŠ¡IDï¼š    t-{32ä½UUID} = 34ä½
-é˜¶æ®µIDï¼š    s-{32ä½UUID} = 34ä½
-å®¹å™¨IDï¼š    c-{32ä½UUID} = 34ä½
-æ’ä»¶IDï¼š    32ä½UUID
-ç”¨æˆ·ç»„IDï¼š  32ä½UUID
+ÏîÄ¿ID£º    Ó¢ÎÄÃû³Æ£¨Èç demo_project£©
+Á÷Ë®ÏßID£º  p-{32Î»UUID} = 34Î»
+¹¹½¨ID£º    b-{32Î»UUID} = 34Î»
+ÈÎÎñID£º    t-{32Î»UUID} = 34Î»
+½×¶ÎID£º    s-{32Î»UUID} = 34Î»
+ÈÝÆ÷ID£º    c-{32Î»UUID} = 34Î»
+²å¼þID£º    32Î»UUID
+ÓÃ»§×éID£º  32Î»UUID
 ```
 
-### 3.3 çŠ¶æ€å­—æ®µè®¾è®¡
+### 3.3 ×´Ì¬×Ö¶ÎÉè¼Æ
 
 ```sql
--- æž„å»ºçŠ¶æ€ï¼ˆint ç±»åž‹ï¼‰
--- å‚è€ƒ BuildStatus æžšä¸¾
-0: QUEUE           -- æŽ’é˜Ÿä¸­
-1: RUNNING         -- è¿è¡Œä¸­
-2: SUCCEED         -- æˆåŠŸ
-3: FAILED          -- å¤±è´¥
-4: CANCELED        -- å–æ¶ˆ
-5: TERMINATE       -- ç»ˆæ­¢
+-- ¹¹½¨×´Ì¬£¨int ÀàÐÍ£©
+-- ²Î¿¼ BuildStatus Ã¶¾Ù
+0: QUEUE           -- ÅÅ¶ÓÖÐ
+1: RUNNING         -- ÔËÐÐÖÐ
+2: SUCCEED         -- ³É¹¦
+3: FAILED          -- Ê§°Ü
+4: CANCELED        -- È¡Ïû
+5: TERMINATE       -- ÖÕÖ¹
 ...
 
--- æ’ä»¶çŠ¶æ€ï¼ˆtinyint ç±»åž‹ï¼‰
-0: åˆå§‹åŒ–
-1: æäº¤ä¸­
-2: éªŒè¯ä¸­
-3: éªŒè¯å¤±è´¥
-4: æµ‹è¯•ä¸­
-5: å®¡æ ¸ä¸­
-6: å®¡æ ¸é©³å›ž
-7: å·²å‘å¸ƒ
-8: ä¸Šæž¶ä¸­æ­¢
-9: ä¸‹æž¶ä¸­
-10: å·²ä¸‹æž¶
+-- ²å¼þ×´Ì¬£¨tinyint ÀàÐÍ£©
+0: ³õÊ¼»¯
+1: Ìá½»ÖÐ
+2: ÑéÖ¤ÖÐ
+3: ÑéÖ¤Ê§°Ü
+4: ²âÊÔÖÐ
+5: ÉóºËÖÐ
+6: ÉóºË²µ»Ø
+7: ÒÑ·¢²¼
+8: ÉÏ¼ÜÖÐÖ¹
+9: ÏÂ¼ÜÖÐ
+10: ÒÑÏÂ¼Ü
 ```
 
-### 3.4 å­—æ®µç±»åž‹è§„èŒƒ
+### 3.4 ×Ö¶ÎÀàÐÍ¹æ·¶
 
-| åœºæ™¯ | ç±»åž‹ | è¯´æ˜Ž |
+| ³¡¾° | ÀàÐÍ | ËµÃ÷ |
 |------|------|------|
-| ä¸»é”®ID | `varchar(32)` æˆ– `bigint(20)` | UUID ç”¨ varcharï¼Œè‡ªå¢žç”¨ bigint |
-| é¡¹ç›®/æµæ°´çº¿ID | `varchar(64)` | é¢„ç•™è¶³å¤Ÿé•¿åº¦ |
-| åç§° | `varchar(64)` ~ `varchar(255)` | æ ¹æ®ä¸šåŠ¡éœ€æ±‚ |
-| æè¿° | `varchar(1024)` æˆ– `text` | çŸ­æè¿°ç”¨ varchar |
-| JSON æ•°æ® | `mediumtext` æˆ– `json` | å¤§ JSON ç”¨ mediumtext |
-| æ—¶é—´ | `datetime` æˆ– `timestamp` | éœ€è¦è‡ªåŠ¨æ›´æ–°ç”¨ timestamp |
-| å¸ƒå°” | `bit(1)` | é»˜è®¤ `b'0'` |
-| çŠ¶æ€ | `int(11)` æˆ– `tinyint(4)` | æžšä¸¾å€¼ç”¨ tinyint |
+| Ö÷¼üID | `varchar(32)` »ò `bigint(20)` | UUID ÓÃ varchar£¬×ÔÔöÓÃ bigint |
+| ÏîÄ¿/Á÷Ë®ÏßID | `varchar(64)` | Ô¤Áô×ã¹»³¤¶È |
+| Ãû³Æ | `varchar(64)` ~ `varchar(255)` | ¸ù¾ÝÒµÎñÐèÇó |
+| ÃèÊö | `varchar(1024)` »ò `text` | ¶ÌÃèÊöÓÃ varchar |
+| JSON Êý¾Ý | `mediumtext` »ò `json` | ´ó JSON ÓÃ mediumtext |
+| Ê±¼ä | `datetime` »ò `timestamp` | ÐèÒª×Ô¶¯¸üÐÂÓÃ timestamp |
+| ²¼¶û | `bit(1)` | Ä¬ÈÏ `b'0'` |
+| ×´Ì¬ | `int(11)` »ò `tinyint(4)` | Ã¶¾ÙÖµÓÃ tinyint |
 
-### 3.5 ç´¢å¼•è®¾è®¡è§„èŒƒ
+### 3.5 Ë÷ÒýÉè¼Æ¹æ·¶
 
 ```sql
--- 1. ä¸»é”®ç´¢å¼•
+-- 1. Ö÷¼üË÷Òý
 PRIMARY KEY (`ID`)
 
--- 2. å”¯ä¸€ç´¢å¼•ï¼ˆä¸šåŠ¡å”¯ä¸€çº¦æŸï¼‰
+-- 2. Î¨Ò»Ë÷Òý£¨ÒµÎñÎ¨Ò»Ô¼Êø£©
 UNIQUE KEY `uni_inx_code_version` (`ATOM_CODE`, `VERSION`)
 
--- 3. æ™®é€šç´¢å¼•ï¼ˆæŸ¥è¯¢ä¼˜åŒ–ï¼‰
+-- 3. ÆÕÍ¨Ë÷Òý£¨²éÑ¯ÓÅ»¯£©
 KEY `idx_project_pipeline` (`PROJECT_ID`, `PIPELINE_ID`)
 
--- 4. å¤åˆç´¢å¼•ï¼ˆéµå¾ªæœ€å·¦å‰ç¼€åŽŸåˆ™ï¼‰
+-- 4. ¸´ºÏË÷Òý£¨×ñÑ­×î×óÇ°×ºÔ­Ôò£©
 KEY `STATUS_KEY` (`PROJECT_ID`, `PIPELINE_ID`, `STATUS`)
 
--- 5. æ—¶é—´ç´¢å¼•ï¼ˆèŒƒå›´æŸ¥è¯¢ï¼‰
+-- 5. Ê±¼äË÷Òý£¨·¶Î§²éÑ¯£©
 KEY `inx_start_time` (`START_TIME`)
 KEY `inx_create_time` (`CREATE_TIME`)
 ```
 
-## å››ã€SQL è„šæœ¬ç¼–å†™è§„èŒƒ
+## ËÄ¡¢SQL ½Å±¾±àÐ´¹æ·¶
 
-### 4.1 å¹‚ç­‰æ€§è¦æ±‚
+### 4.1 ÃÝµÈÐÔÒªÇó
 
 ```sql
--- 1. å»ºè¡¨å¿…é¡»ä½¿ç”¨ IF NOT EXISTS
+-- 1. ½¨±í±ØÐëÊ¹ÓÃ IF NOT EXISTS
 CREATE TABLE IF NOT EXISTS `T_EXAMPLE` (...);
 
--- 2. æ’å…¥æ•°æ®ä½¿ç”¨ INSERT IGNORE é˜²æ­¢è¦†ç›–
+-- 2. ²åÈëÊý¾ÝÊ¹ÓÃ INSERT IGNORE ·ÀÖ¹¸²¸Ç
 INSERT IGNORE INTO T_EXAMPLE (ID, NAME) VALUES (1, 'test');
 
--- 3. éœ€è¦å¼ºåˆ¶åˆ·æ–°çš„ç³»ç»Ÿæ•°æ®ä½¿ç”¨ ON DUPLICATE KEY UPDATE
+-- 3. ÐèÒªÇ¿ÖÆË¢ÐÂµÄÏµÍ³Êý¾ÝÊ¹ÓÃ ON DUPLICATE KEY UPDATE
 INSERT INTO T_EXAMPLE (ID, NAME) VALUES (1, 'test')
 ON DUPLICATE KEY UPDATE NAME = 'test';
 
--- 4. ç¦æ­¢ç›´æŽ¥åˆ é™¤è¡¨åŽé‡å»º
--- é”™è¯¯ï¼šDROP TABLE IF EXISTS T_EXAMPLE; CREATE TABLE T_EXAMPLE...
--- æ­£ç¡®ï¼šCREATE TABLE IF NOT EXISTS T_EXAMPLE...
+-- 4. ½ûÖ¹Ö±½ÓÉ¾³ý±íºóÖØ½¨
+-- ´íÎó£ºDROP TABLE IF EXISTS T_EXAMPLE; CREATE TABLE T_EXAMPLE...
+-- ÕýÈ·£ºCREATE TABLE IF NOT EXISTS T_EXAMPLE...
 ```
 
-### 4.2 å­—æ®µå˜æ›´è§„èŒƒ
+### 4.2 ×Ö¶Î±ä¸ü¹æ·¶
 
 ```sql
--- 1. æ–°å¢žå­—æ®µå¿…é¡»æœ‰é»˜è®¤å€¼æˆ–å…è®¸ NULL
+-- 1. ÐÂÔö×Ö¶Î±ØÐëÓÐÄ¬ÈÏÖµ»òÔÊÐí NULL
 ALTER TABLE T_EXAMPLE ADD COLUMN NEW_FIELD varchar(64) DEFAULT '';
 ALTER TABLE T_EXAMPLE ADD COLUMN NEW_FIELD varchar(64) NULL;
 
--- 2. ç¦æ­¢æ”¹åå­—æ®µï¼ˆä¼šå¯¼è‡´æ•°æ®ä¸¢å¤±ï¼‰
--- é”™è¯¯ï¼šALTER TABLE T_EXAMPLE CHANGE OLD_NAME NEW_NAME varchar(64);
+-- 2. ½ûÖ¹¸ÄÃû×Ö¶Î£¨»áµ¼ÖÂÊý¾Ý¶ªÊ§£©
+-- ´íÎó£ºALTER TABLE T_EXAMPLE CHANGE OLD_NAME NEW_NAME varchar(64);
 
--- 3. ä½¿ç”¨å­˜å‚¨è¿‡ç¨‹åˆ¤æ–­å­—æ®µæ˜¯å¦å­˜åœ¨
+-- 3. Ê¹ÓÃ´æ´¢¹ý³ÌÅÐ¶Ï×Ö¶ÎÊÇ·ñ´æÔÚ
 DELIMITER $$
 CREATE PROCEDURE IF NOT EXISTS add_column_if_not_exists()
 BEGIN
@@ -810,10 +810,10 @@ CALL add_column_if_not_exists();
 DROP PROCEDURE IF EXISTS add_column_if_not_exists;
 ```
 
-### 4.3 ç´¢å¼•å˜æ›´è§„èŒƒ
+### 4.3 Ë÷Òý±ä¸ü¹æ·¶
 
 ```sql
--- æ·»åŠ ç´¢å¼•ï¼ˆä½¿ç”¨å­˜å‚¨è¿‡ç¨‹åˆ¤æ–­ï¼‰
+-- Ìí¼ÓË÷Òý£¨Ê¹ÓÃ´æ´¢¹ý³ÌÅÐ¶Ï£©
 DELIMITER $$
 CREATE PROCEDURE IF NOT EXISTS add_index_if_not_exists()
 BEGIN
@@ -831,117 +831,142 @@ CALL add_index_if_not_exists();
 DROP PROCEDURE IF EXISTS add_index_if_not_exists;
 ```
 
-## äº”ã€åˆ†åº“åˆ†è¡¨è®¾è®¡
+## Îå¡¢·Ö¿â·Ö±íÉè¼Æ
 
-### 5.1 åˆ†ç‰‡ç­–ç•¥
+### 5.1 ·ÖÆ¬²ßÂÔ
 
-BK-CI æ”¯æŒæ•°æ®åº“åˆ†ç‰‡ï¼Œé€šè¿‡ `T_SHARDING_ROUTING_RULE` è¡¨é…ç½®è·¯ç”±è§„åˆ™ï¼š
+BK-CI Ö§³ÖÊý¾Ý¿â·ÖÆ¬£¬Í¨¹ý `T_SHARDING_ROUTING_RULE` ±íÅäÖÃÂ·ÓÉ¹æÔò£º
 
 ```sql
--- åˆ†ç‰‡è·¯ç”±è§„åˆ™
+-- ·ÖÆ¬Â·ÓÉ¹æÔò
 CREATE TABLE T_SHARDING_ROUTING_RULE (
   ID varchar(32) PRIMARY KEY,
-  ROUTING_NAME varchar(128) NOT NULL,         -- è·¯ç”±åç§°ï¼ˆé¡¹ç›®IDï¼‰
-  ROUTING_RULE varchar(256) NOT NULL,         -- è·¯ç”±è§„åˆ™
-  CLUSTER_NAME varchar(64) DEFAULT 'prod',    -- é›†ç¾¤åç§°
-  MODULE_CODE varchar(64) DEFAULT 'PROCESS',  -- æ¨¡å—æ ‡è¯†
-  TYPE varchar(32) DEFAULT 'DB',              -- è·¯ç”±ç±»åž‹ï¼ˆDB/TABLEï¼‰
-  DATA_SOURCE_NAME varchar(128) DEFAULT 'ds_0'-- æ•°æ®æºåç§°
+  ROUTING_NAME varchar(128) NOT NULL,         -- Â·ÓÉÃû³Æ£¨ÏîÄ¿ID£©
+  ROUTING_RULE varchar(256) NOT NULL,         -- Â·ÓÉ¹æÔò
+  CLUSTER_NAME varchar(64) DEFAULT 'prod',    -- ¼¯ÈºÃû³Æ
+  MODULE_CODE varchar(64) DEFAULT 'PROCESS',  -- Ä£¿é±êÊ¶
+  TYPE varchar(32) DEFAULT 'DB',              -- Â·ÓÉÀàÐÍ£¨DB/TABLE£©
+  DATA_SOURCE_NAME varchar(128) DEFAULT 'ds_0'-- Êý¾ÝÔ´Ãû³Æ
 );
 ```
 
-### 5.2 æ•°æ®æºé…ç½®
+### 5.2 Êý¾ÝÔ´ÅäÖÃ
 
 ```sql
--- æ•°æ®æºé…ç½®
+-- Êý¾ÝÔ´ÅäÖÃ
 CREATE TABLE T_DATA_SOURCE (
   ID varchar(32) PRIMARY KEY,
   CLUSTER_NAME varchar(64) NOT NULL,
   MODULE_CODE varchar(64) NOT NULL,
   DATA_SOURCE_NAME varchar(128) NOT NULL,
-  FULL_FLAG bit(1) DEFAULT b'0',              -- å®¹é‡æ˜¯å¦æ»¡
-  DS_URL varchar(1024),                       -- æ•°æ®æºURL
-  TAG varchar(128),                           -- æ•°æ®æºæ ‡ç­¾
+  FULL_FLAG bit(1) DEFAULT b'0',              -- ÈÝÁ¿ÊÇ·ñÂú
+  DS_URL varchar(1024),                       -- Êý¾ÝÔ´URL
+  TAG varchar(128),                           -- Êý¾ÝÔ´±êÇ©
   TYPE varchar(32) DEFAULT 'DB'               -- DB/ARCHIVE_DB
 );
 ```
 
-## å…­ã€å¸¸ç”¨æŸ¥è¯¢æ¨¡å¼
+## Áù¡¢³£ÓÃ²éÑ¯Ä£Ê½
 
-### 6.1 æµæ°´çº¿æŸ¥è¯¢
+### 6.1 Á÷Ë®Ïß²éÑ¯
 
 ```sql
--- æŸ¥è¯¢é¡¹ç›®ä¸‹çš„æµæ°´çº¿åˆ—è¡¨
+-- ²éÑ¯ÏîÄ¿ÏÂµÄÁ÷Ë®ÏßÁÐ±í
 SELECT * FROM T_PIPELINE_INFO 
 WHERE PROJECT_ID = ? AND `DELETE` = 0
 ORDER BY CREATE_TIME DESC;
 
--- æŸ¥è¯¢æµæ°´çº¿æœ€æ–°ç‰ˆæœ¬ç¼–æŽ’
+-- ²éÑ¯Á÷Ë®Ïß×îÐÂ°æ±¾±àÅÅ
 SELECT * FROM T_PIPELINE_RESOURCE 
 WHERE PIPELINE_ID = ? 
 ORDER BY VERSION DESC LIMIT 1;
 
--- æŸ¥è¯¢æµæ°´çº¿æž„å»ºåŽ†å²
+-- ²éÑ¯Á÷Ë®Ïß¹¹½¨ÀúÊ·
 SELECT * FROM T_PIPELINE_BUILD_HISTORY 
 WHERE PROJECT_ID = ? AND PIPELINE_ID = ?
 ORDER BY BUILD_NUM DESC
 LIMIT ?, ?;
 ```
 
-### 6.2 æž„å»ºæŸ¥è¯¢
+### 6.2 ¹¹½¨²éÑ¯
 
 ```sql
--- æŸ¥è¯¢æž„å»ºè¯¦æƒ…
+-- ²éÑ¯¹¹½¨ÏêÇé
 SELECT h.*, d.MODEL 
 FROM T_PIPELINE_BUILD_HISTORY h
 LEFT JOIN T_PIPELINE_BUILD_DETAIL d ON h.BUILD_ID = d.BUILD_ID
 WHERE h.BUILD_ID = ?;
 
--- æŸ¥è¯¢æž„å»ºä»»åŠ¡åˆ—è¡¨
+-- ²éÑ¯¹¹½¨ÈÎÎñÁÐ±í
 SELECT * FROM T_PIPELINE_BUILD_TASK 
 WHERE BUILD_ID = ?
 ORDER BY STAGE_ID, CONTAINER_ID, TASK_SEQ;
 
--- æŸ¥è¯¢æž„å»ºå˜é‡
+-- ²éÑ¯¹¹½¨±äÁ¿
 SELECT * FROM T_PIPELINE_BUILD_VAR 
 WHERE BUILD_ID = ?;
 ```
 
-### 6.3 ç»Ÿè®¡æŸ¥è¯¢
+### 6.3 Í³¼Æ²éÑ¯
 
 ```sql
--- é¡¹ç›®æµæ°´çº¿æ•°é‡ç»Ÿè®¡
+-- ÏîÄ¿Á÷Ë®ÏßÊýÁ¿Í³¼Æ
 SELECT PROJECT_ID, COUNT(*) as count 
 FROM T_PIPELINE_INFO 
 WHERE `DELETE` = 0
 GROUP BY PROJECT_ID;
 
--- æž„å»ºçŠ¶æ€ç»Ÿè®¡
+-- ¹¹½¨×´Ì¬Í³¼Æ
 SELECT STATUS, COUNT(*) as count 
 FROM T_PIPELINE_BUILD_HISTORY 
 WHERE PROJECT_ID = ? AND PIPELINE_ID = ?
 GROUP BY STATUS;
 ```
 
-## ä¸ƒã€æ€§èƒ½ä¼˜åŒ–å»ºè®®
+## Æß¡¢ÐÔÄÜÓÅ»¯½¨Òé
 
-### 7.1 ç´¢å¼•ä¼˜åŒ–
+### 7.1 Ë÷ÒýÓÅ»¯
 
-1. **å¤åˆç´¢å¼•éµå¾ªæœ€å·¦å‰ç¼€åŽŸåˆ™**
-2. **é«˜é¢‘æŸ¥è¯¢å­—æ®µå»ºç«‹ç´¢å¼•**
-3. **é¿å…åœ¨ç´¢å¼•åˆ—ä¸Šä½¿ç”¨å‡½æ•°**
-4. **å®šæœŸåˆ†æžæ…¢æŸ¥è¯¢æ—¥å¿—**
+1. **¸´ºÏË÷Òý×ñÑ­×î×óÇ°×ºÔ­Ôò**
+2. **¸ßÆµ²éÑ¯×Ö¶Î½¨Á¢Ë÷Òý**
+3. **±ÜÃâÔÚË÷ÒýÁÐÉÏÊ¹ÓÃº¯Êý**
+4. **¶¨ÆÚ·ÖÎöÂý²éÑ¯ÈÕÖ¾**
 
-### 7.2 æŸ¥è¯¢ä¼˜åŒ–
+### 7.2 ²éÑ¯ÓÅ»¯
 
-1. **ä½¿ç”¨ LIMIT é™åˆ¶è¿”å›žè¡Œæ•°**
-2. **é¿å… SELECT ***
-3. **ä½¿ç”¨è¦†ç›–ç´¢å¼•**
-4. **å¤§è¡¨åˆ†é¡µä½¿ç”¨æ¸¸æ ‡åˆ†é¡µ**
+1. **Ê¹ÓÃ LIMIT ÏÞÖÆ·µ»ØÐÐÊý**
+2. **±ÜÃâ SELECT ***
+3. **Ê¹ÓÃ¸²¸ÇË÷Òý**
+4. **´ó±í·ÖÒ³Ê¹ÓÃÓÎ±ê·ÖÒ³**
 
-### 7.3 è¡¨è®¾è®¡ä¼˜åŒ–
+### 7.3 ±íÉè¼ÆÓÅ»¯
 
-1. **å¤§å­—æ®µï¼ˆTEXT/BLOBï¼‰æ‹†åˆ†åˆ°ç‹¬ç«‹è¡¨**
-2. **åŽ†å²æ•°æ®å®šæœŸå½’æ¡£**
-3. **çƒ­ç‚¹æ•°æ®ä½¿ç”¨ç¼“å­˜**
-4. **è€ƒè™‘è¯»å†™åˆ†ç¦»**
+1. **´ó×Ö¶Î£¨TEXT/BLOB£©²ð·Öµ½¶ÀÁ¢±í**
+2. **ÀúÊ·Êý¾Ý¶¨ÆÚ¹éµµ**
+3. **ÈÈµãÊý¾ÝÊ¹ÓÃ»º´æ**
+4. **¿¼ÂÇ¶ÁÐ´·ÖÀë**
+
+
+---
+
+## Ê®¶þ¡¢À©Õ¹Ö÷Ìâ
+
+### 12.1 Êý¾Ý¿â½Å±¾¹ÜÀí
+
+Ïê¼û [reference/1-script-management.md](./reference/1-script-management.md)
+
+**ºËÐÄÄÚÈÝ**:
+- SQL ½Å±¾ÃüÃû¹æ·¶
+- ÔöÁ¿¸üÐÂ½Å±¾±àÐ´
+- ½Å±¾Ö´ÐÐË³Ðò¹ÜÀí
+- »Ø¹ö½Å±¾Éè¼Æ
+
+### 12.2 Êý¾Ý¿â·ÖÆ¬
+
+Ïê¼û [reference/2-sharding.md](./reference/2-sharding.md)
+
+**ºËÐÄÄÚÈÝ**:
+- ·ÖÆ¬²ßÂÔÑ¡Ôñ
+- ·ÖÆ¬¼üÉè¼Æ
+- ¿ç·ÖÆ¬²éÑ¯´¦Àí
+- Êý¾ÝÇ¨ÒÆ·½°¸

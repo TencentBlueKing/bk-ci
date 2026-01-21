@@ -6,7 +6,7 @@ core_files:
   - "src/backend/ci/core/common/common-api/src/main/kotlin/com/tencent/devops/common/api/pojo/Page.kt"
 related_skills:
   - 01-backend-microservice-development
-  - 15-parameter-validation
+  - common-technical-practices
 token_estimate: 2500
 ---
 
@@ -55,7 +55,7 @@ interface UserPipelineResource {
 ## When NOT to Use
 
 - 实现业务逻辑 → 使用 `01-backend-microservice-development`
-- 参数校验规则 → 使用 `15-parameter-validation`
+- 参数校验规则 → 使用 `common-technical-practices` (reference/4-parameter-validation.md)
 
 ---
 

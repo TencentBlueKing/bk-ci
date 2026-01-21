@@ -493,7 +493,7 @@ class TriggerTransfer {
 
 **职责**：YAML Variable ↔ Model BuildFormProperty 转换
 
-详见 **[Skill 26: 流水线变量字段扩展指南](../26-pipeline-variable-extension/SKILL.md)**
+详见 **[流水线变量管理指南 - 变量字段扩展](../pipeline-variable-management/reference/2-extension.md)**
 
 ---
 
@@ -1506,7 +1506,7 @@ logger.info("YAML Index: $index")
 
 ## 相关 Skills
 
-- [26-流水线变量字段扩展](../26-pipeline-variable-extension/SKILL.md) - 变量转换逻辑
+- [流水线变量管理](../pipeline-variable-management/SKILL.md) - 变量转换逻辑（参考 reference/2-extension.md）
 - [01-后端微服务开发](../01-backend-microservice-development/SKILL.md) - 微服务架构
 - [27-设计模式](../27-design-patterns/SKILL.md) - 工厂模式、策略模式
 
