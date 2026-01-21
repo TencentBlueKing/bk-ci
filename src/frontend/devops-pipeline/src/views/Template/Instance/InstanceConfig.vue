@@ -323,6 +323,7 @@
     import { getParamsValuesMap } from '@/utils/util'
     import { computed, defineProps, ref, watch } from 'vue'
     import { isObject, isShallowEqual } from '@/utils/util'
+    import { ENUM, GIT_REF, MULTIPLE } from '../../../store/modules/atom/paramsConfig'
     const props = defineProps({
         isInstanceCreateType: Boolean
     })
@@ -363,14 +364,56 @@
     // 监听合并触发标记,当流水线数据请求完成后执行数据合并
     watch(() => shouldMerge.value, (val) => {
         if (val && curTemplateDetail.value) {
-            mergeInstancesWithTemplate()
+            mergeAllInstancesWithTemplate()
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', false)
         }
     })
 
     watch(() => curTemplateVersion.value, () => {
-        mergeInstancesWithTemplate()
+        if (props.isInstanceCreateType) {
+            replaceInstancesWithTemplate()
+        } else {
+            mergeAllInstancesWithTemplate()
+        }
     })
+    
+    // 新建实例时，将所有实例替换为模板配置
+    function replaceInstancesWithTemplate () {
+        if (!instanceList.value?.length || !curTemplateDetail.value || Object.keys(curTemplateDetail.value).length === 0) {
+            return
+        }
+        
+        try {
+            isLoading.value = true
+            const replacedInstances = instanceList.value.map((instance) => {
+                // 保留实例的基本信息，但使用模板的配置
+                return {
+                    ...instance,
+                    param: curTemplateDetail.value.param?.map(p => ({
+                        ...p,
+                        readOnlyCheck: false,
+                        isRequiredParam: p.required && p.asInstanceInput,
+                        propertyUpdates: []
+                    })) ?? [],
+                    buildNo: curTemplateDetail.value.buildNo ? {
+                        ...curTemplateDetail.value.buildNo,
+                        isRequiredParam: curTemplateDetail.value.buildNo.required && curTemplateDetail.value.buildNo.asInstanceInput
+                    } : undefined,
+                    triggerConfigs: curTemplateDetail.value.triggerConfigs ?? [],
+                    resetBuildNo: false,
+                    buildNoChanged: false
+                }
+            })
+            proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, {
+                list: replacedInstances,
+                init: true
+            })
+        } catch (e) {
+            throw e
+        } finally {
+            isLoading.value = false
+        }
+    }
     
     // 合并单个实例与模板的通用函数
     function mergeInstanceWithTemplate (instance, index) {
@@ -455,7 +498,7 @@
     }
 
     // 数据合并函数 - 合并所有实例
-    function mergeInstancesWithTemplate () {
+    function mergeAllInstancesWithTemplate () {
         if (!initialInstanceList.value?.length || !curTemplateVersion.value) {
             return
         }
@@ -618,6 +661,11 @@
                 } else {
                     // 入参参数处理
                     i.isRequiredParam = templateParam.required && i.required
+                    if (i.type === 'REPO_REF' && i.type !== templateParam.type) {
+                        // 针对变量类型为 【代码库和分支】的特殊处理
+                        // REPO_REF变量的值为对象，转为字符串类型
+                        i.defaultValue = JSON.stringify(i.defaultValue)
+                    }
                     if (i.isFollowTemplate) {
                         i.defaultValue = templateParam.defaultValue
                     }
@@ -806,6 +854,22 @@
         return versionParamsChanged || buildNoChanged
     }
     
+
+    const paramsTypeName = computed(() => ({
+        STRING: proxy.$t('storeMap.string'),
+        BOOLEAN: proxy.$t('storeMap.boolean'),
+        TEXTAREA: proxy.$t('storeMap.textarea'),
+        ENUM: proxy.$t('storeMap.enum'),
+        MULTIPLE: proxy.$t('storeMap.multiple'),
+        REPO_REF: proxy.$t('storeMap.reporef'),
+        SVN_TAG: proxy.$t('storeMap.svntag'),
+        GIT_REF: proxy.$t('storeMap.gitref'),
+        CODE_LIB: proxy.$t('storeMap.codelib'),
+        SUB_PIPELINE: proxy.$t('storeMap.subPipeline'),
+        CONTAINER_TYPE: proxy.$t('storeMap.buildResource'),
+        ARTIFACTORY: proxy.$t('storeMap.artifactory'),
+        CUSTOM_FILE: proxy.$t('storeMap.custom_file')
+    }))
     /**
      * 收集参数属性更新信息
      * @param {Object} templateParam - 模板参数（新值）
@@ -837,6 +901,21 @@
         Object.keys(propertyMap).forEach(key => {
             let oldValue = initialParam[key]
             let newValue = currentParam[key]
+            
+            // 处理 REPO_REF 类型，defaultValue 是对象需要转为字符串
+            if (key === 'defaultValue') {
+                if (isObject(oldValue)) {
+                    oldValue = JSON.stringify(oldValue)
+                }
+                if (isObject(newValue)) {
+                    newValue = JSON.stringify(newValue)
+                }
+            }
+
+            if (key === 'type') {
+                oldValue = paramsTypeName.value[oldValue]
+                newValue = paramsTypeName.value[newValue]
+            }
             
             // 处理布尔值显示
             const booleanField = ['isRequiredParam', 'valueNotEmpty', 'readOnly']
@@ -1313,33 +1392,57 @@
                                 const initialParam = initialInstanceParams?.find(ip => ip.id === id)
                                 
                                 // 如果跟随模板，使用模板的默认值；否则使用原始实例的值
-                                const newDefaultValue = newIsFollowTemplate
+                                let newDefaultValue = newIsFollowTemplate
                                     ? temDefaultValue
                                     : initialParam?.defaultValue
+                                
+                                // REPO_REF 类型的 defaultValue 是对象，需要转为字符串
+                                if (isObject(newDefaultValue)) {
+                                    newDefaultValue = JSON.stringify(newDefaultValue)
+                                }
                                 
                                 // 计算 isChange：对比新值与初始实例值
                                 let isChange = false
                                 if (!p.isNew) {
-                                    const initialDefaultValue = allVersionKeyList.includes(id)
+                                    let initialDefaultValue = allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue)
                                         : initialParam?.defaultValue
-                                    const currentValue = allVersionKeyList.includes(id)
+                                    let currentValue = allVersionKeyList.includes(id)
                                         ? Number(newDefaultValue)
                                         : newDefaultValue
                                     
-                                    isChange = isObject(currentValue)
-                                        ? !isShallowEqual(currentValue, initialDefaultValue)
-                                        : currentValue !== initialDefaultValue
+                                    // 处理对象类型比较
+                                    if (isObject(initialDefaultValue)) {
+                                        initialDefaultValue = JSON.stringify(initialDefaultValue)
+                                    }
+                                    if (isObject(currentValue)) {
+                                        currentValue = JSON.stringify(currentValue)
+                                    }
+                                    
+                                    isChange = currentValue !== initialDefaultValue
                                 }
                                 
                                 // 计算 hasChange：当前实例的值与模板默认值不同
                                 // 如果跟随模板，新值就是模板值，所以 hasChange 为 false
                                 // 如果不跟随模板，对比原始实例值与模板值
-                                const hasChange = newIsFollowTemplate
-                                    ? false
-                                    : (allVersionKeyList.includes(id)
-                                        ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
-                                        : initialParam?.defaultValue !== temDefaultValue)
+                                let hasChange = false
+                                if (!newIsFollowTemplate) {
+                                    let initialValue = initialParam?.defaultValue
+                                    let templateValue = temDefaultValue
+                                    
+                                    if (allVersionKeyList.includes(id)) {
+                                        hasChange = Number(initialValue) !== Number(templateValue)
+                                    } else {
+                                        // 处理对象类型比较
+                                        if (isObject(initialValue)) {
+                                            initialValue = JSON.stringify(initialValue)
+                                        }
+                                        if (isObject(templateValue)) {
+                                            templateValue = JSON.stringify(templateValue)
+                                        }
+                                        hasChange = initialValue !== templateValue
+                                    }
+                                }
 
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
