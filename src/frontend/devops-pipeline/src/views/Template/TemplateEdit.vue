@@ -383,10 +383,7 @@
                     templateId: this.templateId,
                     actionType: 'SAVE'
                 })
-                this.lasterDraftInfo = {
-                    ...draftStatus,
-                    status: "PUBLISHED"
-                }
+                this.lasterDraftInfo = draftStatus
                 if (this.lasterDraftInfo.status === 'NORMAL') {
                     return await this.executeSaveDraft()
                 } else if (this.lasterDraftInfo.status === 'CONFLICT' || this.lasterDraftInfo.status === 'PUBLISHED') {
