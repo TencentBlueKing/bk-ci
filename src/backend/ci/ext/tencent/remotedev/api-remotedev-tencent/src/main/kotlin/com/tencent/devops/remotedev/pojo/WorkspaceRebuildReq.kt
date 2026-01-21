@@ -35,6 +35,8 @@ data class WorkspaceRebuildReq(
     val imageCosFile: String,
     @get:Schema(title = "格式化数据盘")
     val formatDataDisk: Boolean? = false,
+    @get:Schema(title = "重置数据盘")
+    val resetDataDisk: Boolean? = false,
     @get:Schema(title = "重装完成后，清空拥有者")
     val removeOwner: Boolean? = false
 )

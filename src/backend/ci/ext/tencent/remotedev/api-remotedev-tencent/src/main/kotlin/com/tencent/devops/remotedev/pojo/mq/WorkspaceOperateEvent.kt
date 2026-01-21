@@ -48,6 +48,7 @@ data class WorkspaceOperateEvent(
     val machineType: String? = null,
     val projectId: String? = null,
     val formatDataDisk: Boolean? = null,
+    val resetDataDisk: Boolean? = null,
     val live: Boolean? = null,
     val rebuildRemoveOwner: Boolean? = null,
     val specifyTaints: String? = null,

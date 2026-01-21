@@ -180,7 +180,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         userId: String,
         workspaceName: String,
         imageCosFile: String,
-        formatDataDisk: Boolean?
+        formatDataDisk: Boolean?,
+        resetDataDisk: Boolean?
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -189,7 +190,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
                 image = imageCosFile,
-                formatDataDisk = formatDataDisk
+                formatDataDisk = formatDataDisk,
+                resetDataDisk = resetDataDisk
             )
         )
 
