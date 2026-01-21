@@ -666,11 +666,11 @@ my-golang-atom/
 #### 3.4.3 go.mod
 
 ```go
-module git.woa.com/bkdevops/myGolangAtom
+module xxx/bkdevops/myGolangAtom
 
 go 1.14
 
-require git.woa.com/bkdevops/golang-atom-sdk v1.1.9
+require xxx/bkdevops/golang-atom-sdk v1.1.9
 ```
 
 #### 3.4.4 main.go
@@ -680,7 +680,7 @@ package main
 
 import (
     "fmt"
-    sdk "git.woa.com/bkdevops/golang-atom-sdk"
+    sdk "xxx/bkdevops/golang-atom-sdk"
 )
 
 func main() {
@@ -949,7 +949,7 @@ func main() {
     "projectId": "test-project",
     "agentId": "1",
     "secretKey": "test-secret",
-    "gateway": "apigw.devops.oa.com",
+    "gateway": "xxx.xxx.xxx.xxx",
     "buildId": "test-build-id",
     "vmSeqId": "1"
 }
