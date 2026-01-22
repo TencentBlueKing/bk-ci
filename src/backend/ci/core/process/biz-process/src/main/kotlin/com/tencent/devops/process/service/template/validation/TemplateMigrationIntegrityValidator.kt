@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.template.validation
 
-import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.migration.TemplateMigrationDiscrepancy
@@ -136,8 +135,7 @@ class TemplateMigrationIntegrityValidator(
                 PipelineTemplateResourceCommonCondition(
                     projectId = projectId,
                     templateId = templateId,
-                    includeDeleted = true,
-                    excludeBranchAction = BranchVersionAction.INACTIVE
+                    includeDeleted = true
                 )
             )
             // 约束模式模板：V2 版本数应该等于父模板的 V1 版本数

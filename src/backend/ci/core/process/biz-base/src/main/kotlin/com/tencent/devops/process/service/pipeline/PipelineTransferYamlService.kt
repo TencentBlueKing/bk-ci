@@ -473,7 +473,8 @@ class PipelineTransferYamlService @Autowired constructor(
         resource: PipelineResourceVersion,
         editPermission: Boolean? = null,
         archiveFlag: Boolean? = false,
-        force: Boolean = false
+        force: Boolean = false,
+        isEncryptParamsValue: Boolean? = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
             userId = userId,
@@ -491,7 +492,7 @@ class PipelineTransferYamlService @Autowired constructor(
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        val yaml = if (force || editPermission == false || resource.yaml.isNullOrBlank()) {
+        val yaml = if (force || editPermission == false || resource.yaml.isNullOrBlank() || isEncryptParamsValue == true) {
             transfer(
                 userId = userId,
                 projectId = projectId,

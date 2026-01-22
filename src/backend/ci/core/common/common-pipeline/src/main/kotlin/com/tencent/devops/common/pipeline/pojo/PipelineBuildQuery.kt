@@ -27,25 +27,34 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "构建模型-构建参数")
-data class BuildParameters(
-    @get:Schema(title = "元素值ID-标识符", required = true)
-    var key: String,
-    @get:Schema(title = "元素值名称-显示用", required = true)
-    var value: Any,
-    @get:Schema(title = "元素值类型", required = false)
-    val valueType: BuildFormPropertyType? = null,
-    @get:Schema(title = "是否只读", required = false)
-    val readOnly: Boolean? = false,
-    @get:Schema(title = "描述", required = false)
-    var desc: String? = null,
-    @get:Schema(title = "默认值", required = false)
-    var defaultValue: Any? = null,
-    @get:Schema(title = "目录随机字符串（仅供CUSTOM_FILE类型）", required = false)
-    var latestRandomStringInPath: String? = null,
-    @get:Schema(title = "是否敏感字段", required = false)
-    var sensitive: Boolean? = null
+/**
+ * 流水线构建查询条件
+ */
+@Schema(title = "流水线构建查询条件")
+data class PipelineBuildQuery(
+    @get:Schema(title = "项目ID", required = true)
+    val projectId: String,
+    @get:Schema(title = "流水线ID", required = true)
+    val pipelineId: String,
+    @get:Schema(title = "构建状态列表", required = false)
+    val status: List<BuildStatus>? = null,
+    @get:Schema(title = "开始时间起始", required = false)
+    val startTimeFrom: String? = null,
+    @get:Schema(title = "开始时间截止", required = false)
+    val startTimeTo: String? = null,
+    @get:Schema(title = "结束时间起始", required = false)
+    val endTimeFrom: String? = null,
+    @get:Schema(title = "结束时间截止", required = false)
+    val endTimeTo: String? = null,
+    @get:Schema(title = "偏移量", required = true)
+    val offset: Int,
+    @get:Schema(title = "每页数量", required = true)
+    val limit: Int,
+    @get:Schema(title = "构建号起始", required = false)
+    val buildNoStart: Int? = null,
+    @get:Schema(title = "构建号截止", required = false)
+    val buildNoEnd: Int? = null
 )

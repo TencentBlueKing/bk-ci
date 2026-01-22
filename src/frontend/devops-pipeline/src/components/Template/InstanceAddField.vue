@@ -170,7 +170,9 @@
         ...p,
         isChange: false,
         isNew: false,
-        isDelete: false
+        isDelete: false,
+        propertyUpdates: [],
+        defaultValue: ''
     })) ?? [])
     const buildNo = ref(curInstance.value?.buildNo ?? {})
     const isVisibleVersion = computed(() => {

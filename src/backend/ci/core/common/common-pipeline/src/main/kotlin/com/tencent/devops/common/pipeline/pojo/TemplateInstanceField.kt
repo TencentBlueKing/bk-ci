@@ -1,6 +1,6 @@
 package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSettingGroupType
 
 /**
@@ -18,9 +18,13 @@ data class TemplateInstanceField(
         // 推荐版本号
         const val BK_CI_BUILD_NO = "BK_CI_BUILD_NO"
 
+        /**
+         * model应该传模版的,不要传流水线的
+         */
         fun initFromTrigger(
-            triggerContainer: TriggerContainer
+            model: Model
         ): TemplateInstanceField {
+            val triggerContainer = model.getTriggerContainer()
             val paramIds = triggerContainer.params.filter {
                 it.constant != true && it.required
             }.map { it.id }.toMutableList()

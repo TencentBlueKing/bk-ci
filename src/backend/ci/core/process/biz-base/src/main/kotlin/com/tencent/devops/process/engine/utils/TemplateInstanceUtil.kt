@@ -8,11 +8,14 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceRecommendedVersion
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceTriggerConfig
 import com.tencent.devops.common.pipeline.pojo.TemplateVariable
+import com.tencent.devops.common.pipeline.pojo.cascade.BuildCascadeProps
+import com.tencent.devops.common.pipeline.pojo.cascade.RepoRefCascadeParam
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
@@ -202,9 +205,10 @@ object TemplateInstanceUtil {
 
         val pipelineParamMap = pipelineParams.associateBy { it.id }
         val mergedParams = templateParams.map { templateParam ->
+            val pipelineParam = pipelineParamMap[templateParam.id]
             mergeSingleParam(
                 templateParam = templateParam,
-                pipelineParamMap = pipelineParamMap,
+                pipelineParam = pipelineParam,
                 overrideTemplateField = overrideTemplateField
             )
         }
@@ -276,12 +280,14 @@ object TemplateInstanceUtil {
      */
     private fun mergeSingleParam(
         templateParam: BuildFormProperty,
-        pipelineParamMap: Map<String, BuildFormProperty>,
+        pipelineParam: BuildFormProperty?,
         overrideTemplateField: TemplateInstanceField?
     ): BuildFormProperty {
-        val pipelineParam = pipelineParamMap[templateParam.id] ?: return templateParam
-
         // 如果没有对应的流水线参数，直接返回模板参数
+        if (pipelineParam == null) {
+            return templateParam
+        }
+
         val overrideParam = overrideTemplateField?.overrideParam(templateParam.id) == true
         val overrideBuildNo = overrideTemplateField?.overrideBuildNo() == true
 
@@ -292,7 +298,10 @@ object TemplateInstanceUtil {
             overrideBuildNo = overrideBuildNo
         )
 
-        return pipelineParam.copy(defaultValue = defaultValue)
+        return templateParam.copy(
+            defaultValue = defaultValue,
+            required = pipelineParam.required
+        )
     }
 
     private fun mergeSingeParam(
@@ -352,9 +361,6 @@ object TemplateInstanceUtil {
         templateParam: BuildFormProperty,
         templateVariable: TemplateVariable
     ): Any {
-        logger.info(
-            "template instance default value|$templateParam|$templateVariable|${templateVariable.value?.javaClass}"
-        )
         return when {
             // 如果实例没有声明默认值,则使用模版的值
             templateVariable.value == null -> templateParam.defaultValue
@@ -600,6 +606,144 @@ object TemplateInstanceUtil {
         return elements.filter { element ->
             element.stepId != null && overrideTemplateField?.overrideTrigger(element.stepId!!) ?: false
         }.map { TemplateInstanceTriggerConfig(it) }
+    }
+
+    /**
+     * 合并模版的options到流水线的options
+     *
+     * 获取实例化的参数时,options应该从模版中获取,不然在实例化页面,无法选中新的值
+     */
+    fun mergeTemplateOptions(
+        projectId: String,
+        templateParams: List<BuildFormProperty>,
+        pipelineParams: List<BuildFormProperty>
+    ): List<BuildFormProperty> {
+        if (templateParams.isEmpty()) {
+            return emptyList()
+        }
+        val templateParamMap = templateParams.associateBy { it.id }
+
+        return pipelineParams.map { pipelineParam ->
+            // 处理REPO_REF类型的参数
+            if (pipelineParam.type == BuildFormPropertyType.REPO_REF) {
+                pipelineParam.cascadeProps = RepoRefCascadeParam().getProps(
+                    projectId = projectId,
+                    prop = pipelineParam
+                )
+            }
+
+            // 查找对应的模板参数并合并options
+            templateParamMap[pipelineParam.id]?.let { templateParam ->
+                pipelineParam.cascadeProps = mergeCascadeProps(
+                    pipelineProps = pipelineParam.cascadeProps,
+                    templateProps = templateParam.cascadeProps
+                )
+                pipelineParam.options = templateParam.options
+            }
+            pipelineParam
+        }
+    }
+
+    /**
+     * 合并模版的级联默认值到流水线的级联默认值中,不然前端在实例化页面,设置默认值或者跟随模版值时无法选中值
+     */
+    private fun mergeCascadeProps(
+        pipelineProps: BuildCascadeProps?,
+        templateProps: BuildCascadeProps?
+    ): BuildCascadeProps? {
+        if (pipelineProps == null) {
+            return null
+        }
+        if (templateProps == null) {
+            return pipelineProps
+        }
+        // 合并当前级别的options
+        val mergedOptions = mutableSetOf<BuildFormValue>()
+        mergedOptions.addAll(pipelineProps.options)
+        mergedOptions.addAll(templateProps.options)
+        // 递归合并children
+        val mergedChildren = when {
+            pipelineProps.children == null && templateProps.children == null -> null
+            pipelineProps.children == null -> templateProps.children
+            templateProps.children == null -> pipelineProps.children
+            else -> mergeCascadeProps(pipelineProps.children!!, templateProps.children!!)
+        }
+        return BuildCascadeProps(
+            id = pipelineProps.id,
+            options = mergedOptions.toList(),
+            searchUrl = pipelineProps.searchUrl,
+            replaceKey = pipelineProps.replaceKey,
+            children = mergedChildren
+        )
+    }
+
+    /**
+     * 验证实例化的model与前端传入的model正确性
+     *
+     * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
+     */
+    fun assertParams(
+        projectId: String,
+        pipelineId: String,
+        inputParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>
+    ) {
+        if (inputParams.size != instanceParams.size) {
+            logger.warn(
+                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
+                        "${inputParams.size}|${instanceParams.size}"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_COUNT_EXCEPTION
+            )
+        }
+        val requiredExceptions = mutableListOf<String>()
+        val constantExceptions = mutableListOf<String>()
+        val defaultValueExceptions = mutableListOf<String>()
+        instanceParams.forEach { instanceParam ->
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
+                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION
+                )
+            }
+            if (inputParam.required != instanceParam.required) {
+                requiredExceptions.add(instanceParam.id)
+            }
+            if (inputParam.constant != instanceParam.constant) {
+                constantExceptions.add(instanceParam.id)
+            }
+            if (inputParam.defaultValue != instanceParam.defaultValue) {
+                defaultValueExceptions.add(instanceParam.id)
+            }
+        }
+        if (requiredExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [required] exceptions|$projectId|$pipelineId|$requiredExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
+                params = arrayOf(requiredExceptions.joinToString(","), "required")
+            )
+        }
+        if (constantExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [constant] exceptions|$projectId|$pipelineId|$constantExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
+                params = arrayOf(constantExceptions.joinToString(","), "constant")
+            )
+        }
+        if (defaultValueExceptions.isNotEmpty()) {
+            logger.warn(
+                "instance params field [default value] exceptions|$projectId|$pipelineId|$defaultValueExceptions"
+            )
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION,
+                params = arrayOf(defaultValueExceptions.joinToString(","), "default value")
+            )
+        }
     }
 
     private val logger = LoggerFactory.getLogger(TemplateInstanceUtil::class.java)

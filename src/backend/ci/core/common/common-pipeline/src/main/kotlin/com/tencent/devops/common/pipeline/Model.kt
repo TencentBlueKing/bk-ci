@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -242,6 +243,15 @@ data class Model(
 
     @JsonIgnore
     fun getTriggerContainer() = stages[0].containers[0] as TriggerContainer
+
+    fun encryptParamsValue() {
+        (stages[0].containers[0] as TriggerContainer).params.forEach {
+            if (it.sensitive == true) {
+                it.value = HIDDEN_SYMBOL
+                it.defaultValue = HIDDEN_SYMBOL
+            }
+        }
+    }
 
     companion object {
         const val classType = "model"

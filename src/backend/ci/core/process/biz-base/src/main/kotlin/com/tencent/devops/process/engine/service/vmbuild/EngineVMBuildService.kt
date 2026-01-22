@@ -202,7 +202,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
+        val variablesWithType = buildVariableService.getAllVariableWithType(
+            projectId = projectId,
+            buildId = buildId
+        ).toMutableList()
         val model = containerBuildRecordService.getRecordModel(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -876,7 +879,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             try {
                 buildVariableService.batchUpdateVariable(
                     projectId = projectId,
-                    pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult,
+                    sensitiveKeys = result.sensitiveKeys
                 )
                 LOG.info("ENGINE|$buildId|BCT_ADD_VAR_DONE|$projectId")
                 writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId, buildInfo.startUser)

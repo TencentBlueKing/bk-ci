@@ -45,7 +45,8 @@
                     replaceKey: cascadeProps.children.replaceKey,
                     disabled: disabled || (readOnly && readOnlyCheck),
                     placeholder: placeholder,
-                    handleChange: (name, value) => handleUpdateChildrenValue(name, value)
+                    handleChange: (name, value) => handleUpdateChildrenValue(name, value),
+                    key: cascadeProps.children.options.length
                 }
             )"
         />
