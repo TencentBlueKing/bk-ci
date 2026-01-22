@@ -454,7 +454,7 @@ object ProcessMessageCode {
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
 
-    const val BUILD_MSG_TRIGGER_EVENT = "2101364" // 通用事件触发
+    const val BUILD_MSG_TRIGGER_EVENT = "2101368" // 通用事件触发
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
