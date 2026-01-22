@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
@@ -305,4 +306,16 @@ interface ServiceStoreComponentResource {
         @QueryParam("status")
         status: StoreStatusEnum? = null
     ): Result<StoreDetailInfo?>
+
+    @Operation(summary = "根据组件code和版本号获取组件详情")
+    @POST
+    @Path("/types/{storeType}/codes/base/info")
+    fun getComponentBaseInfoByCodes(
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @Parameter(description = "组件CODE集合", required = true)
+        storeCodes: Set<String>
+    ): Result<List<StoreBaseInfo>>
 }

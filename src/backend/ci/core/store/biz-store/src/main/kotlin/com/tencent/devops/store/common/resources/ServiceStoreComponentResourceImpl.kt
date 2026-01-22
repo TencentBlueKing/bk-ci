@@ -37,6 +37,7 @@ import com.tencent.devops.store.common.service.StoreComponentQueryService
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -207,6 +208,18 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
                 storeCode = storeCode,
                 version = version,
                 status = status
+            )
+        )
+    }
+
+    override fun getComponentBaseInfoByCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: Set<String>
+    ): Result<List<StoreBaseInfo>> {
+        return Result(
+            storeComponentQueryService.getComponentBaseInfoList(
+                storeType = storeType,
+                storeCodes = storeCodes
             )
         )
     }

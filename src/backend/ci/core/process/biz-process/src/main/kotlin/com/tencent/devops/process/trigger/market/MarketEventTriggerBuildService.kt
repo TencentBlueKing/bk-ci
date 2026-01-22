@@ -7,7 +7,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
@@ -49,7 +49,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                     requestTime = requestTime,
                     extStartParam = mapOf(
                         "BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to agentHashId,
-                        PIPELINE_WEBHOOK_TYPE to eventCode // 记录事件标识，后续构建历史页面需根据事件标识过滤构建任务
+                        PIPELINE_TRIGGER_EVENT_TYPE to eventCode // 记录事件标识，后续构建历史页面需根据事件标识过滤构建任务
                     )
                 )
             )

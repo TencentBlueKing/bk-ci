@@ -60,6 +60,6 @@ data class StoreBaseCreateRequest(
     @get:Schema(title = "logoUrl", required = false)
     val logoUrl: String? = null,
     @get:Schema(title = "简介", required = false)
-    @field:BkField(maxLength = 256)
+    @field:BkField(maxLength = 256, required = false)
     val summary: String? = null
 )

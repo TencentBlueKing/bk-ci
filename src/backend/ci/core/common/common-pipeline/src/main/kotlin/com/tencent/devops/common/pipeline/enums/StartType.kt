@@ -70,6 +70,7 @@ enum class StartType {
                     }
                 }
                 StartType.PIPELINE.name -> PIPELINE.name
+                StartType.TRIGGER_EVENT.name -> TRIGGER_EVENT.name
                 "" -> ""
                 else -> type
             }
