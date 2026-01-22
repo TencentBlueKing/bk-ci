@@ -192,9 +192,8 @@ class PublicVarReferInfoService @Autowired constructor(
         varRefDetails: List<VarRefDetail>
     ): VarReferenceUpdateResult {
         logger.info("Start handling resource var references for resource: $resourceId|$resourceVersion")
-
-        // 1. 处理资源维度的引用记录
-        // 删除旧的引用记录
+        
+        // 删除历史引用记录
         varRefDetailDao.deleteByResourceId(
             dslContext = context,
             projectId = projectId,
@@ -210,17 +209,7 @@ class PublicVarReferInfoService @Autowired constructor(
             )
         }
 
-        // 2. 处理变量组引用关系
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
-
-        // 查询已存在的引用记录
-        val existingGroupKeys = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
-            dslContext = context,
-            projectId = projectId,
-            referId = resourceId,
-            referType = referType,
-            referVersion = resourceVersion
-        )
 
         // 获取Model中的变量组列表
         val modelVarGroups = model.publicVarGroups ?: emptyList()
@@ -239,6 +228,15 @@ class PublicVarReferInfoService @Autowired constructor(
                 varsNeedRecalculate = emptySet()
             )
         }
+        
+        // 查询已存在的引用记录
+        val existingGroupKeys = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
+            dslContext = context,
+            projectId = projectId,
+            referId = resourceId,
+            referType = referType,
+            referVersion = resourceVersion
+        )
 
         // 获取流水线变量名集合(用于排除与公共变量重名的情况)
         val pipelineVarNames = model.getTriggerContainer().params
@@ -591,51 +589,6 @@ class PublicVarReferInfoService @Autowired constructor(
     }
 
     /**
-     * 计算需要更新引用计数的变量
-     * @param context 变量组处理上下文
-     * @return 需要更新计数的变量映射 Map<PublicGroupKey, Set<varName>>
-     */
-    private fun calculateVarsNeedUpdateCount(
-        context: VarGroupProcessContext
-    ): Map<PublicGroupKey, MutableSet<String>> {
-        val varsNeedUpdateCount = mutableMapOf<PublicGroupKey, MutableSet<String>>()
-
-        context.modelVarGroups.forEach { varGroup ->
-            val group = varGroup
-            val groupKey = PublicGroupKey(group.groupName, group.version)
-            val groupName = groupKey.groupName
-
-            // 获取该变量组被引用的变量
-            val referencedVarNameSet = getReferencedVarsForGroup(
-                groupName = groupName,
-                publicVarMap = context.publicVarMap,
-                referencedVarNames = context.referencedVarNames,
-                pipelineVarNames = context.pipelineVarNames
-            )
-
-            if (referencedVarNameSet.isEmpty()) {
-                return@forEach
-            }
-
-            // 获取已存在的变量名
-            val existingVarNames = context.allExistingVarNames[groupKey] ?: emptySet()
-
-            val diffResult = calculateVarGroupDiff(
-                referencedVars = referencedVarNameSet,
-                existingVars = existingVarNames
-            )
-
-            // 收集需要更新计数的变量（包括删除和新增的）
-            val varsChanged = diffResult.varsToRemove + diffResult.varsToAdd
-            if (varsChanged.isNotEmpty()) {
-                varsNeedUpdateCount.getOrPut(groupKey) { mutableSetOf() }.addAll(varsChanged)
-            }
-        }
-
-        return varsNeedUpdateCount
-    }
-
-    /**
      * 计算变量组的差异
      * @param referencedVars 当前被引用的变量集合
      * @param existingVars 已存在的变量集合
@@ -689,8 +642,7 @@ class PublicVarReferInfoService @Autowired constructor(
         groupsToCleanup: Set<PublicGroupKey>?
     ) {
         // 收集需要重新计算引用计数的变量信息
-        // Map<(sourceProjectId, groupName), Set<varName>>
-        val varsNeedRecalculate = mutableMapOf<Pair<String, String>, MutableSet<String>>()
+        val varsNeedRecalculate = mutableSetOf<VarCountUpdateInfo>()
 
         if (groupsToCleanup == null) {
             // 清理该资源的所有变量引用
@@ -707,11 +659,17 @@ class PublicVarReferInfoService @Autowired constructor(
 
             if (allReferRecords.isEmpty()) return
 
-            // 按 (sourceProjectId, groupName) 分组，收集所有涉及的变量名
+            // 收集所有涉及的变量信息
             allReferRecords.forEach { record ->
                 val actualProjectId = record.sourceProjectId ?: projectId
-                val key = Pair(actualProjectId, record.groupName)
-                varsNeedRecalculate.getOrPut(key) { mutableSetOf() }.add(record.varName)
+                varsNeedRecalculate.add(
+                    VarCountUpdateInfo(
+                        projectId = actualProjectId,
+                        groupName = record.groupName,
+                        varName = record.varName,
+                        version = record.version ?: -1
+                    )
+                )
             }
 
             // 删除所有引用记录（在当前事务中完成）
@@ -727,92 +685,74 @@ class PublicVarReferInfoService @Autowired constructor(
             groupsToCleanup.forEach { groupKey ->
                 val groupName = groupKey.groupName
                 val version = groupKey.getVersionForDb()
-
-                // 查询该变量组版本的引用记录，收集变量名和 sourceProjectId
+                
+                // 查询需要删除的引用记录，用于收集需要重算的变量信息
                 val records = publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
                     dslContext = context,
                     projectId = projectId,
                     referId = resourceId,
                     referType = referType,
-                    referVersion = resourceVersion
-                ).filter { it.groupName == groupName && it.version == version }
+                    referVersion = resourceVersion,
+                    groupName = groupName,
+                    version = version
+                )
 
                 if (records.isNotEmpty()) {
                     // 收集需要重算的变量
                     val actualProjectId = records.first().sourceProjectId ?: projectId
-                    val key = Pair(actualProjectId, groupName)
-                    varsNeedRecalculate.getOrPut(key) { mutableSetOf() }
-                        .addAll(records.map { it.varName })
-                }
+                    records.forEach { record ->
+                        varsNeedRecalculate.add(
+                            VarCountUpdateInfo(
+                                projectId = actualProjectId,
+                                groupName = record.groupName,
+                                varName = record.varName,
+                                version = record.version ?: -1
+                            )
+                        )
+                    }
 
-                // 删除引用记录（在当前事务中完成）
-                publicVarReferInfoDao.deleteByReferIdAndGroup(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = resourceId,
-                    referType = referType,
-                    groupName = groupName,
-                    referVersion = resourceVersion
-                )
+                    // 删除引用记录
+                    publicVarReferInfoDao.deleteByReferIdAndGroup(
+                        dslContext = context,
+                        projectId = projectId,
+                        referId = resourceId,
+                        referType = referType,
+                        groupName = groupName,
+                        referVersion = resourceVersion
+                    )
+                }
             }
         }
         
         if (varsNeedRecalculate.isNotEmpty()) {
-            batchRecalculateReferCount(
-                varsNeedRecalculate = varsNeedRecalculate
-            )
+            batchRecalculateReferCount(varsNeedRecalculate)
         }
     }
 
     /**
      * 批量重新计算引用计数
-     * 为每个变量独立获取锁和事务，避免长时间持锁
-     * 
-     * @param varsNeedRecalculate Map<(sourceProjectId, groupName), Set<varName>>
+     * @param varsNeedRecalculate 需要重新计算引用计数的变量信息集合
      */
     private fun batchRecalculateReferCount(
-        varsNeedRecalculate: Map<Pair<String, String>, Set<String>>
+        varsNeedRecalculate: Set<VarCountUpdateInfo>
     ) {
-        varsNeedRecalculate.forEach { (key, varNames) ->
-            val (sourceProjectId, groupName) = key
-            
-            // 确定实际版本号
-            val actualVersion = try {
-                publicVarGroupDao.getLatestVersionByGroupName(
-                    dslContext = dslContext,
-                    projectId = sourceProjectId,
-                    groupName = groupName
+        // 为每个变量独立重算计数
+        varsNeedRecalculate.forEach { varInfo ->
+            try {
+                // 直接使用 varInfo 中的 version 字段进行重算
+                publicVarReferCountService.recalculateReferCount(
+                    projectId = varInfo.projectId,
+                    groupName = varInfo.groupName,
+                    varName = varInfo.varName,
+                    version = varInfo.version
                 )
             } catch (e: Throwable) {
+                // 单个变量重算失败不影响其他变量
                 logger.warn(
-                    "Failed to get version for group: $groupName in project: $sourceProjectId",
+                    "Failed to recalculate refer count for var: ${varInfo.varName}, " +
+                    "group: ${varInfo.groupName}, project: ${varInfo.projectId}, version: ${varInfo.version}",
                     e
                 )
-                null
-            }
-
-            if (actualVersion == null) {
-                logger.warn("Cannot find version for group: $groupName in project: $sourceProjectId")
-                return@forEach
-            }
-
-            // 为每个变量独立重算计数
-            varNames.forEach { varName ->
-                try {
-                    publicVarReferCountService.recalculateReferCount(
-                        projectId = sourceProjectId,
-                        groupName = groupName,
-                        varName = varName,
-                        version = actualVersion
-                    )
-                } catch (e: Throwable) {
-                    // 单个变量重算失败不影响其他变量
-                    logger.warn(
-                        "Failed to recalculate refer count for var: $varName, " +
-                        "group: $groupName, project: $sourceProjectId",
-                        e
-                    )
-                }
             }
         }
     }

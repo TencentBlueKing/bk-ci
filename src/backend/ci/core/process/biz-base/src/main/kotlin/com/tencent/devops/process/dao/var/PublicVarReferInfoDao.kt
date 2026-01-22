@@ -393,12 +393,14 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据引用ID、引用类型和引用版本查询所有变量引用记录
+     * 根据引用ID、引用类型和引用版本查询变量引用信息
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param referId 引用ID
      * @param referType 引用类型
      * @param referVersion 引用版本
+     * @param groupName 变量组名（可选）
+     * @param version 版本号（可选）
      * @return 变量引用信息列表
      */
     fun listVarReferInfoByReferIdAndVersion(
@@ -406,15 +408,28 @@ class PublicVarReferInfoDao {
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int
+        referVersion: Int,
+        groupName: String? = null,
+        version: Int? = null
     ): List<ResourcePublicVarReferPO> {
         with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            return dslContext.selectFrom(this)
+            var conditions = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(REFER_VERSION.eq(referVersion))
-                .fetch()
+            
+            // 添加可选的 groupName 条件
+            if (groupName != null) {
+                conditions = conditions.and(GROUP_NAME.eq(groupName))
+            }
+            
+            // 添加可选的 version 条件
+            if (version != null) {
+                conditions = conditions.and(VERSION.eq(version))
+            }
+            
+            return conditions.fetch()
                 .map {
                     ResourcePublicVarReferPO(
                         id = it.id,
@@ -426,6 +441,7 @@ class PublicVarReferInfoDao {
                         referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
                         referVersion = it.referVersion,
                         referVersionName = it.referVersionName,
+                        sourceProjectId = it.sourceProjectId,
                         creator = it.creator,
                         modifier = it.modifier,
                         createTime = it.createTime,

@@ -113,10 +113,6 @@ class TemplateService @Autowired constructor(
         return true
     }
 
-    fun getTemplateLatestVersion(templateId: String): Long? {
-        return templateDao.getLatestTemplateVersion(dslContext, templateId)
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateService::class.java)
     }

@@ -76,8 +76,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarReferInfoService: PublicVarReferInfoService,
-    private val publicVarReferCountService: PublicVarReferCountService,
-    private val varRefDetailDao: VarRefDetailDao
+    private val publicVarReferCountService: PublicVarReferCountService
 ) {
 
     companion object {
@@ -538,7 +537,7 @@ class PublicVarService @Autowired constructor(
      * 统一处理资源的变量引用
      * 该方法是变量引用处理的统一入口，按顺序执行以下操作：
      * 1. 使用资源级锁处理资源维度的所有操作（在同一事务中）：
-     *    - 处理资源维度的引用记录（varRefDetailDao 业务）
+     *    - 处理资源维度的引用记录（varRefDetail 业务）
      *    - 处理变量组引用关系（publicVarReferInfoService 业务）
      * 2. 使用变量级锁更新变量维度的引用计数
      * 

@@ -249,12 +249,6 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 重新计算引用计数
-     *
-     * 原因：重算操作需要扫描整个变量的所有引用记录，确保在重算期间没有其他操作
-     * 修改该变量的任何引用，以保证计数的准确性。
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @param varName 变量名称
      * @param version 版本号（null表示重新计算所有版本）
      */
     fun recalculateReferCount(
@@ -263,8 +257,6 @@ class PublicVarReferCountService @Autowired constructor(
         varName: String,
         version: Int? = null
     ) {
-        // 使用粗粒度锁，不传入referId、referType、referVersion参数
-        // 确保在重算期间锁定整个变量，防止并发修改导致计数不准确
         executeWithLockAndTransaction(
             projectId = projectId,
             groupName = groupName,
@@ -357,8 +349,6 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 更新变量维度的引用计数
-     * 使用变量级分布式锁保护，提高不同变量的并发更新性能
-     * 
      * @param referRecordsToAdd 需要新增的引用记录列表
      * @param varsNeedRecalculate 需要重新计算计数的变量信息集合
      */
@@ -381,21 +371,12 @@ class PublicVarReferCountService @Autowired constructor(
             )
 
             sortedVars.forEach { varInfo ->
-                try {
-                    recalculateReferCount(
-                        projectId = varInfo.projectId,
-                        groupName = varInfo.groupName,
-                        varName = varInfo.varName,
-                        version = varInfo.version
-                    )
-                } catch (e: Throwable) {
-                    // 单个变量计数更新失败不影响其他变量
-                    logger.warn(
-                        "Failed to recalculate refer count for var: ${varInfo.varName}, " +
-                        "group: ${varInfo.groupName}, project: ${varInfo.projectId}",
-                        e
-                    )
-                }
+                recalculateReferCount(
+                    projectId = varInfo.projectId,
+                    groupName = varInfo.groupName,
+                    varName = varInfo.varName,
+                    version = varInfo.version
+                )
             }
         }
     }

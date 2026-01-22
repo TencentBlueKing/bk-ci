@@ -726,21 +726,6 @@ class TemplateDao {
         }
     }
 
-    fun getLatestTemplateVersion(
-        dslContext: DSLContext,
-        templateId: String
-    ): Long {
-        with(TTemplate.T_TEMPLATE) {
-            return dslContext.select(VERSION).from(this)
-                .where(ID.eq(templateId))
-                .orderBy(CREATED_TIME.desc(), VERSION.desc())
-                .limit(1)
-                .fetchOne(0, Long::class.java) ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
-            )
-        }
-    }
-
     /**
      * 判断是否有关联的模版
      */
