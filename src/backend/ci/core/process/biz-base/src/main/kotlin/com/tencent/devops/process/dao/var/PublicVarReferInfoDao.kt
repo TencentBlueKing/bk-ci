@@ -441,7 +441,6 @@ class PublicVarReferInfoDao {
                         referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
                         referVersion = it.referVersion,
                         referVersionName = it.referVersionName,
-                        sourceProjectId = it.sourceProjectId,
                         creator = it.creator,
                         modifier = it.modifier,
                         createTime = it.createTime,

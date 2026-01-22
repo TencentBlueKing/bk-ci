@@ -203,6 +203,38 @@ class PublicVarVersionSummaryDao {
     }
 
     /**
+     * 根据变量名和版本批量获取引用计数
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param version 版本号
+     * @param varNames 变量名列表
+     * @return varName -> referCount 的映射，不存在的变量返回0
+     */
+    fun batchGetReferCountByVarNames(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        version: Int,
+        varNames: List<String>
+    ): Map<String, Int> {
+        if (varNames.isEmpty()) return emptyMap()
+
+        with(TPipelinePublicVarVersionSummary.T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY) {
+            return dslContext.select(VAR_NAME, REFER_COUNT)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.eq(version))
+                .and(VAR_NAME.`in`(varNames))
+                .fetch()
+                .associate { record ->
+                    record.value1() to (record.value2()?.toInt() ?: 0)
+                }
+        }
+    }
+
+    /**
      * 删除变量的所有版本概要信息
      */
     fun deleteByVarName(

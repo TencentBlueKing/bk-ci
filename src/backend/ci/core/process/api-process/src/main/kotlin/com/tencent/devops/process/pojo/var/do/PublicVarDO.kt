@@ -46,6 +46,8 @@ data class PublicVarDO(
     var valueType: BuildFormPropertyType,
     @get:Schema(title = "默认值")
     val defaultValue: Any? = null,
+    @get:Schema(title = "关联流水线/模板总数")
+    val referCount: Int = 0,
     @get:Schema(title = "构建模型")
     val buildFormProperty: BuildFormProperty
 )

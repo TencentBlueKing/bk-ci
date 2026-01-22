@@ -45,6 +45,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
 import com.tencent.devops.process.pojo.`var`.VarReferenceUpdateResult
@@ -74,6 +75,7 @@ class PublicVarService @Autowired constructor(
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
     private val publicVarReferInfoService: PublicVarReferInfoService,
     private val publicVarReferCountService: PublicVarReferCountService
@@ -218,10 +220,10 @@ class PublicVarService @Autowired constructor(
             version = targetVersion
         )
 
-        // 批量查询所有变量的引用数量（按 referId 去重）
+        // 批量查询所有变量的引用数量（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
         val varNames = publicVarPOs.map { it.varName }
         val referCountMap = if (varNames.isNotEmpty()) {
-            publicVarReferInfoDao.batchCountDistinctReferIdsByVars(
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
@@ -243,7 +245,8 @@ class PublicVarService @Autowired constructor(
                 valueType = publicVarPO.valueType,
                 defaultValue = publicVarPO.defaultValue,
                 desc = publicVarPO.desc,
-                buildFormProperty = buildFormProperty
+                buildFormProperty = buildFormProperty,
+                referCount = actualReferCount
             )
         }
     }

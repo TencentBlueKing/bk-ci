@@ -518,9 +518,29 @@ class PublicVarGroupService @Autowired constructor(
             Pair(groupRecord, varPOs)
         }
 
-        val latestVarDOs = publicVarGroupReleaseRecordService.convertPOToDO(latestVarPOs)
+        val latestVarDOs = publicVarGroupReleaseRecordService.convertPOToDO(
+            varPOs = latestVarPOs,
+            projectId = projectId,
+            groupName = groupName,
+            version = latestGroupRecord.version
+        )
+
+        // 批量查询新变量的引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+        val newVarNames = publicVarGroup.publicVars.map { it.varName }
+        val newVarReferCountMap = if (newVarNames.isNotEmpty()) {
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = latestGroupRecord.version,
+                varNames = newVarNames
+            )
+        } else {
+            emptyMap()
+        }
 
         val newVarDOs = publicVarGroup.publicVars.map { vo ->
+            val actualReferCount = newVarReferCountMap[vo.varName] ?: 0
             PublicVarDO(
                 varName = vo.varName,
                 alias = vo.alias,
@@ -528,7 +548,8 @@ class PublicVarGroupService @Autowired constructor(
                 type = vo.type,
                 valueType = vo.valueType,
                 defaultValue = vo.defaultValue,
-                buildFormProperty = vo.buildFormProperty
+                buildFormProperty = vo.buildFormProperty,
+                referCount = actualReferCount
             )
         }
 

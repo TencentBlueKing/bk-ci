@@ -44,6 +44,7 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.`var`.VarGroupReferInfoQueryResult
@@ -72,7 +73,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val templateDao: TemplateDao,
-    private val publicVarDao: PublicVarDao
+    private val publicVarDao: PublicVarDao,
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao
 ) {
 
     companion object {
@@ -497,13 +499,21 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 referVersion = referVersion
             )
 
-            // 统计每个变量的引用次数
-            val varReferCountMap = varReferInfos.groupingBy { it.varName }.eachCount()
+            // 批量查询变量的引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+            val varNames = groupVars.map { it.varName }
+            val referCountMap = publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = sourceProjectId,
+                groupName = groupName,
+                version = varGroupRecord.version,
+                varNames = varNames
+            )
 
-            // 返回所有变量，有关联就设置referCount
+            // 返回所有变量，设置referCount
             return groupVars.map { varPO ->
                 val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
                 buildFormProperty.varGroupVersion = version
+                val actualReferCount = referCountMap[varPO.varName] ?: 0
                 PublicVarDO(
                     varName = varPO.varName,
                     alias = varPO.alias,
@@ -511,7 +521,8 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                     valueType = varPO.valueType,
                     defaultValue = varPO.defaultValue,
                     desc = varPO.desc,
-                    buildFormProperty = buildFormProperty
+                    buildFormProperty = buildFormProperty,
+                    referCount = actualReferCount
                 )
             }
         } catch (e: ErrorCodeException) {

@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
+import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
@@ -53,6 +54,7 @@ import org.springframework.stereotype.Service
 class PublicVarGroupReleaseRecordService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
     private val client: Client
 ) {
 
@@ -73,16 +75,35 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
-        val oldVarDOs = convertPOToDO(oldVarPOs)
-        val newVarDOs = convertPOToDO(newVarPOs)
+        val projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.firstOrNull()?.projectId
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("projectId")
+            )
+        val groupName = oldVarPOs.firstOrNull()?.groupName ?: newVarPOs.firstOrNull()?.groupName
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("groupName")
+            )
+        val oldVersion = oldVarPOs.firstOrNull()?.version
+        val newVersion = newVarPOs.firstOrNull()?.version
+        
+        val oldVarDOs = convertPOToDO(
+            varPOs = oldVarPOs,
+            projectId = projectId,
+            groupName = groupName,
+            version = oldVersion
+        )
+        val newVarDOs = convertPOToDO(
+            varPOs = newVarPOs,
+            projectId = projectId,
+            groupName = groupName,
+            version = newVersion
+        )
         val releaseRecords = generateVarChangeRecords(
             oldVars = oldVarDOs,
             newVars = newVarDOs,
-            groupName = oldVarPOs.firstOrNull()?.groupName ?: newVarPOs.firstOrNull()?.groupName
-                ?: throw ErrorCodeException(
-                    errorCode = ERROR_INVALID_PARAM_,
-                    params = arrayOf("groupName")
-                ),
+            groupName = groupName,
             version = publicVarGroupReleaseDTO.version,
             userId = userId,
             pubTime = LocalDateTime.now(),
@@ -107,11 +128,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val records = releaseRecords.map { releaseRecord ->
             ResourcePublicVarGroupReleaseRecordPO(
                 id = segmentIds.get(index++) ?: 0,
-                projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.firstOrNull()?.projectId
-                    ?: throw ErrorCodeException(
-                        errorCode = ERROR_INVALID_PARAM_,
-                        params = arrayOf("projectId")
-                    ),
+                projectId = projectId,
                 groupName = releaseRecord.groupName,
                 version = releaseRecord.version,
                 publisher = releaseRecord.publisher,
@@ -465,10 +482,35 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
      * 将PublicVarPO转换为PublicVarDO
      * 将数据库实体对象转换为业务对象，包括解析buildFormProperty JSON字符串
      * @param varPOs 数据库实体对象列表
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param version 版本号（可为null）
      * @return 业务对象列表
      */
-    fun convertPOToDO(varPOs: List<PublicVarPO>): List<PublicVarDO> {
+    fun convertPOToDO(
+        varPOs: List<PublicVarPO>,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): List<PublicVarDO> {
+        if (varPOs.isEmpty()) return emptyList()
+        
+        // 批量查询引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+        val varNames = varPOs.map { it.varName }
+        val referCountMap = if (version != null && varNames.isNotEmpty()) {
+            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupName = groupName,
+                version = version,
+                varNames = varNames
+            )
+        } else {
+            emptyMap()
+        }
+        
         return varPOs.map { po ->
+            val actualReferCount = referCountMap[po.varName] ?: 0
             PublicVarDO(
                 varName = po.varName,
                 alias = po.alias,
@@ -476,7 +518,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 type = po.type,
                 valueType = po.valueType,
                 defaultValue = po.defaultValue,
-                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java),
+                referCount = actualReferCount
             )
         }
     }
