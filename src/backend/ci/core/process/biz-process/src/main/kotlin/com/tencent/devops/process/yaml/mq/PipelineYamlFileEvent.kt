@@ -113,21 +113,8 @@ data class PipelineYamlFileEvent(
     val targetRepoUrl: String? = null,
     @get:Schema(title = "目标仓库全名", required = false)
     val targetFullName: String? = null,
-    @get:Schema(
-        title = "依赖的文件路径,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
-        required = false
-    )
-    val dependentFilePath: String? = null,
-    @get:Schema(
-        title = "依赖的分支,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
-        required = false
-    )
-    val dependentRef: String? = null,
-    @get:Schema(
-        title = "依赖的文件blobId,当action为DEPENDENCY_UPGRADE和DEPENDENCY_UPGRADE_AND_TRIGGER有值",
-        required = false
-    )
-    val dependentBlobId: String? = null
+    @get:Schema(title = "webhook请求时间")
+    val eventTime: LocalDateTime? = null
 ) : IEvent() {
     @JsonIgnore
     val repoHashId = repository.repoHashId!!
@@ -137,7 +124,8 @@ data class PipelineYamlFileEvent(
 
     constructor(
         repository: Repository,
-        yamlDiff: PipelineYamlDiff
+        yamlDiff: PipelineYamlDiff,
+        eventTime: LocalDateTime?
     ): this(
         userId = yamlDiff.triggerUser,
         authUser = repository.userName,
@@ -187,9 +175,7 @@ data class PipelineYamlFileEvent(
         sourceFullName = yamlDiff.sourceFullName,
         targetRepoUrl = yamlDiff.targetRepoUrl,
         targetFullName = yamlDiff.targetFullName,
-        dependentFilePath = yamlDiff.dependentFilePath,
-        dependentRef = yamlDiff.dependentRef,
-        dependentBlobId = yamlDiff.dependentBlobId
+        eventTime = eventTime
     )
 }
 
