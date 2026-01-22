@@ -792,6 +792,291 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         }
     }
 
+    @Test
+    @DisplayName("postProcessor: postProcessInTransactionVersionCreate 约束模板存量升级时跳过双写")
+    fun testPostProcessorInTransactionSkipConstraintTemplateDualWrite() {
+        val projectId = "p"
+        val templateId = "tpl"
+        val userId = "u"
+        val v1VersionName = "v1"
+
+        val resourceService: PipelineTemplateResourceService = mockk()
+        val v1Dao: TemplateDao = mockk()
+        val v1SettingDao: PipelineSettingDao = mockk()
+        val dsl: DSLContext = DSL.using(dslContext.configuration())
+
+        // v1 已有版本记录（count > 0），存量升级场景
+        every { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) } returns 1
+
+        val post = PTemplateCompatibilityVersionPostProcessor(
+            v2TemplateResourceService = resourceService,
+            v1TemplateDao = v1Dao,
+            v1TemplateSettingService = v1SettingDao,
+            dslContext = dsl
+        )
+
+        // 约束模板
+        val info = buildTemplateInfo(projectId, templateId, "name", userId).copy(
+            mode = TemplateType.CONSTRAINT
+        )
+        val model = Model.defaultModel("name", userId)
+        val without = PTemplateResourceWithoutVersion(
+            projectId = projectId,
+            templateId = templateId,
+            type = PipelineTemplateType.PIPELINE,
+            model = model,
+            yaml = null,
+            status = VersionStatus.RELEASED,
+            creator = userId
+        )
+        val only = PTemplateResourceOnlyVersion(
+            version = 200L,
+            number = 1,
+            versionName = "v1",
+            versionNum = 1,
+            pipelineVersion = 1,
+            triggerVersion = 1,
+            settingVersion = 1,
+            settingVersionNum = 1
+        )
+        val res = PipelineTemplateResource(
+            pTemplateResourceWithoutVersion = without,
+            pTemplateResourceOnlyVersion = only
+        )
+        val setting = PipelineSetting(
+            projectId = projectId,
+            pipelineId = templateId,
+            pipelineName = "name",
+            desc = "",
+            pipelineAsCodeSettings = null,
+            creator = userId,
+            updater = userId
+        )
+        val ctx = PipelineTemplateVersionCreateContext(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            v1VersionName = v1VersionName,
+            customVersionName = "v1",
+            versionAction = PipelineVersionAction.CREATE_RELEASE,
+            pipelineTemplateInfo = info,
+            pTemplateResourceWithoutVersion = without,
+            pTemplateSettingWithoutVersion = setting
+        )
+
+        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+
+        // 验证：约束模板存量升级时，跳过双写到 v1
+        verify(exactly = 1) { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) }
+        verify(exactly = 0) {
+            v1Dao.createTemplate(
+                any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any()
+            )
+        }
+        verify(exactly = 0) { v1SettingDao.saveSetting(any(), any(), any()) }
+    }
+
+    @Test
+    @DisplayName("postProcessor: postProcessInTransactionVersionCreate 约束模板首次创建时正常双写")
+    fun testPostProcessorInTransactionConstraintTemplateFirstCreateDualWrite() {
+        val projectId = "p"
+        val templateId = "tpl"
+        val userId = "u"
+        val v1VersionName = "v1"
+
+        val resourceService: PipelineTemplateResourceService = mockk()
+        val v1Dao: TemplateDao = mockk()
+        val v1SettingDao: PipelineSettingDao = mockk()
+        val dsl: DSLContext = DSL.using(dslContext.configuration())
+
+        // v1 没有版本记录（count = 0），首次创建场景
+        every { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) } returns 0
+        stubV1CreateTemplate(v1Dao)
+        every { v1SettingDao.saveSetting(dsl, any(), true) } returns 1
+
+        val post = PTemplateCompatibilityVersionPostProcessor(
+            v2TemplateResourceService = resourceService,
+            v1TemplateDao = v1Dao,
+            v1TemplateSettingService = v1SettingDao,
+            dslContext = dsl
+        )
+
+        // 约束模板
+        val info = buildTemplateInfo(projectId, templateId, "name", userId).copy(
+            mode = TemplateType.CONSTRAINT
+        )
+        val model = Model.defaultModel("name", userId)
+        val without = PTemplateResourceWithoutVersion(
+            projectId = projectId,
+            templateId = templateId,
+            type = PipelineTemplateType.PIPELINE,
+            model = model,
+            yaml = null,
+            status = VersionStatus.RELEASED,
+            creator = userId
+        )
+        val only = PTemplateResourceOnlyVersion(
+            version = 200L,
+            number = 1,
+            versionName = "v1",
+            versionNum = 1,
+            pipelineVersion = 1,
+            triggerVersion = 1,
+            settingVersion = 1,
+            settingVersionNum = 1
+        )
+        val res = PipelineTemplateResource(
+            pTemplateResourceWithoutVersion = without,
+            pTemplateResourceOnlyVersion = only
+        )
+        val setting = PipelineSetting(
+            projectId = projectId,
+            pipelineId = templateId,
+            pipelineName = "name",
+            desc = "",
+            pipelineAsCodeSettings = null,
+            creator = userId,
+            updater = userId
+        )
+        val ctx = PipelineTemplateVersionCreateContext(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            v1VersionName = v1VersionName,
+            customVersionName = "v1",
+            versionAction = PipelineVersionAction.CREATE_RELEASE,
+            pipelineTemplateInfo = info,
+            pTemplateResourceWithoutVersion = without,
+            pTemplateSettingWithoutVersion = setting
+        )
+
+        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+
+        // 验证：约束模板首次创建时，正常双写到 v1
+        verify(exactly = 1) { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) }
+        verify(exactly = 1) {
+            v1Dao.createTemplate(
+                dslContext = dsl,
+                projectId = projectId,
+                templateId = templateId,
+                templateName = "name",
+                versionName = v1VersionName,
+                userId = userId,
+                template = any(),
+                type = TemplateType.CONSTRAINT.name,
+                category = any(),
+                logoUrl = any(),
+                srcTemplateId = any(),
+                storeFlag = any(),
+                weight = 0,
+                version = 200L,
+                desc = any()
+            )
+        }
+        verify(exactly = 1) { v1SettingDao.saveSetting(dsl, setting, true) }
+    }
+
+    @Test
+    @DisplayName("postProcessor: postProcessInTransactionVersionCreate 自定义模板始终正常双写")
+    fun testPostProcessorInTransactionCustomizeTemplateAlwaysDualWrite() {
+        val projectId = "p"
+        val templateId = "tpl"
+        val userId = "u"
+        val v1VersionName = "v1"
+
+        val resourceService: PipelineTemplateResourceService = mockk()
+        val v1Dao: TemplateDao = mockk()
+        val v1SettingDao: PipelineSettingDao = mockk()
+        val dsl: DSLContext = DSL.using(dslContext.configuration())
+
+        // v1 已有版本记录，但自定义模板仍需双写
+        every { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) } returns 1
+        stubV1CreateTemplate(v1Dao)
+        every { v1SettingDao.saveSetting(dsl, any(), true) } returns 1
+
+        val post = PTemplateCompatibilityVersionPostProcessor(
+            v2TemplateResourceService = resourceService,
+            v1TemplateDao = v1Dao,
+            v1TemplateSettingService = v1SettingDao,
+            dslContext = dsl
+        )
+
+        // 自定义模板
+        val info = buildTemplateInfo(projectId, templateId, "name", userId).copy(
+            mode = TemplateType.CUSTOMIZE
+        )
+        val model = Model.defaultModel("name", userId)
+        val without = PTemplateResourceWithoutVersion(
+            projectId = projectId,
+            templateId = templateId,
+            type = PipelineTemplateType.PIPELINE,
+            model = model,
+            yaml = null,
+            status = VersionStatus.RELEASED,
+            creator = userId
+        )
+        val only = PTemplateResourceOnlyVersion(
+            version = 200L,
+            number = 1,
+            versionName = "v1",
+            versionNum = 1,
+            pipelineVersion = 1,
+            triggerVersion = 1,
+            settingVersion = 1,
+            settingVersionNum = 1
+        )
+        val res = PipelineTemplateResource(
+            pTemplateResourceWithoutVersion = without,
+            pTemplateResourceOnlyVersion = only
+        )
+        val setting = PipelineSetting(
+            projectId = projectId,
+            pipelineId = templateId,
+            pipelineName = "name",
+            desc = "",
+            pipelineAsCodeSettings = null,
+            creator = userId,
+            updater = userId
+        )
+        val ctx = PipelineTemplateVersionCreateContext(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            v1VersionName = v1VersionName,
+            customVersionName = "v1",
+            versionAction = PipelineVersionAction.CREATE_RELEASE,
+            pipelineTemplateInfo = info,
+            pTemplateResourceWithoutVersion = without,
+            pTemplateSettingWithoutVersion = setting
+        )
+
+        post.postProcessInTransactionVersionCreate(dsl, ctx, res, setting)
+
+        // 验证：自定义模板即使已有 v1 版本，也继续双写（不受约束模板限制）
+        verify(exactly = 1) { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) }
+        verify(exactly = 1) {
+            v1Dao.createTemplate(
+                dslContext = dsl,
+                projectId = projectId,
+                templateId = templateId,
+                templateName = "name",
+                versionName = v1VersionName,
+                userId = userId,
+                template = any(),
+                type = TemplateType.CUSTOMIZE.name,
+                category = any(),
+                logoUrl = any(),
+                srcTemplateId = any(),
+                storeFlag = any(),
+                weight = 0,
+                version = 200L,
+                desc = any()
+            )
+        }
+        verify(exactly = 1) { v1SettingDao.saveSetting(dsl, setting, true) }
+    }
+
     private fun buildTemplateInfo(
         projectId: String,
         templateId: String,
