@@ -313,52 +313,6 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据引用ID和变量组查询变量引用信息列表
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param groupName 变量组名
-     * @param referVersion 引用版本
-     * @return 变量引用信息列表
-     */
-    fun listVarReferInfoByReferIdAndGroup(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        groupName: String,
-        referVersion: Int
-    ): List<ResourcePublicVarReferPO> {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .and(GROUP_NAME.eq(groupName))
-                .and(REFER_VERSION.eq(referVersion))
-                .fetch()
-                .map {
-                    ResourcePublicVarReferPO(
-                        id = it.id,
-                        projectId = it.projectId,
-                        groupName = it.groupName,
-                        varName = it.varName,
-                        version = it.version,
-                        referId = it.referId,
-                        referType = PublicVerGroupReferenceTypeEnum.valueOf(it.referType),
-                        referVersion = it.referVersion,
-                        referVersionName = it.referVersionName,
-                        creator = it.creator,
-                        modifier = it.modifier,
-                        createTime = it.createTime,
-                        updateTime = it.updateTime
-                    )
-                }
-        }
-    }
-
-    /**
      * 根据引用ID、变量组和变量名列表删除引用记录
      * @param dslContext 数据库上下文
      * @param projectId 项目ID

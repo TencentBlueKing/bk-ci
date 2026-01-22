@@ -489,23 +489,12 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 return emptyList()
             }
 
-            // 查询该资源在该变量组中引用的变量信息
-            val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndGroup(
-                dslContext = dslContext,
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                groupName = groupName,
-                referVersion = referVersion
-            )
-
-            // 批量查询变量的引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+            // 批量查询变量的引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
             val varNames = groupVars.map { it.varName }
-            val referCountMap = publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+            val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = sourceProjectId,
                 groupName = groupName,
-                version = varGroupRecord.version,
                 varNames = varNames
             )
 

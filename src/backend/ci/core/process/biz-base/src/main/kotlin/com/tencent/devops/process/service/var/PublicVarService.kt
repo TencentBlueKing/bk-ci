@@ -220,14 +220,13 @@ class PublicVarService @Autowired constructor(
             version = targetVersion
         )
 
-        // 批量查询所有变量的引用数量（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+        // 批量查询所有变量的引用数量（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
         val varNames = publicVarPOs.map { it.varName }
         val referCountMap = if (varNames.isNotEmpty()) {
-            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+            publicVarVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                version = targetVersion,
                 varNames = varNames
             )
         } else {
