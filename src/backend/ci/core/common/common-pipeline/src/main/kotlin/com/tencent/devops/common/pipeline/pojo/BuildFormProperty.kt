@@ -56,6 +56,8 @@ data class BuildFormProperty(
     val category: String? = null,
     @get:Schema(title = "展示条件", required = false)
     var displayCondition: Map<String, String>? = null,
+    @get:Schema(title = "是否为敏感字段", required = false)
+    var sensitive: Boolean? = null,
 
     // 针对 SVN_TAG 新增字段
     @get:Schema(title = "repoHashId", required = false)
@@ -102,7 +104,12 @@ data class BuildFormProperty(
     @get:Schema(title = "页面所需内容，后台仅保存，不做处理", required = false)
     val payload: Any? = null,
     @get:Schema(title = "级联选择器属性", required = false)
-    var cascadeProps: BuildCascadeProps? = null
+    var cascadeProps: BuildCascadeProps? = null,
+    @get:Schema(
+        title = "在新增实例、以及新增变量时作用，控制实例化页面「实例入参」按钮, 当required:true时,值才生效",
+        required = false
+    )
+    var asInstanceInput: Boolean? = null
 )
 
 @Schema(title = "构建模型-自定义路径拆分的版本控制信息")

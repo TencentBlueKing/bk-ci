@@ -36,10 +36,10 @@
                         :key="item.projectCode"
                         :id="item.projectCode"
                         :name="item.projectName"
-                        :disabled="!item.pipelineTemplateInstallPerm"
+                        :disabled="type === 'template' && !item.pipelineTemplateInstallPerm"
                         v-bk-tooltips="{
                             content: $t('store.无该项目的模板安装权限'),
-                            disabled: item.pipelineTemplateInstallPerm
+                            disabled: type !== 'template' || item.pipelineTemplateInstallPerm
                         }"
                     >
                     </bk-option>

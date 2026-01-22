@@ -210,6 +210,14 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
+    fun countVersions(projectId: String, templateId: String): Int {
+        return pipelineTemplateResourceDao.countVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
+    }
+
     fun delete(
         transactionContext: DSLContext? = null,
         commonCondition: PipelineTemplateResourceCommonCondition

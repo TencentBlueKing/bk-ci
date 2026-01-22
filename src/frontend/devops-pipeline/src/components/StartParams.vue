@@ -9,7 +9,7 @@
             is-start-up
             :is-visible-version="isVisibleVersion"
             :build-num="execDetail?.buildNum"
-            :all-params="allParams"
+            :all-params="buildParamProperities"
         />
         <div class="startup-parameter-wrapper">
             <div
@@ -102,18 +102,6 @@
             }),
             archiveFlag () {
                 return this.$route.query.archiveFlag
-            },
-            allParams () {
-                const valueMap = this.params.reduce((acc, item) => {
-                    acc[item.key] = item.value
-                    return acc
-                }, {})
-                return this.buildParamProperities.map(item => {
-                    return {
-                        ...item,
-                        value: valueMap[item.id]
-                    }
-                })
             }
             
         },

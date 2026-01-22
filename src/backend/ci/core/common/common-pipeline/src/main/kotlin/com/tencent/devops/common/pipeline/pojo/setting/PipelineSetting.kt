@@ -92,7 +92,7 @@ data class PipelineSetting(
 
     // 平台系统控制相关配置 —— 不作为生成版本的配置
     @get:Schema(title = "保存流水线编排的最大个数", required = false)
-    val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
+    val maxPipelineResNum: Int? = null, // 保存流水线编排的最大个数
     @get:Schema(title = "重试时清理引擎变量表", required = false)
     val cleanVariablesWhenRetry: Boolean? = false,
     @get:Schema(title = "YAML流水线特殊配置", required = false)
