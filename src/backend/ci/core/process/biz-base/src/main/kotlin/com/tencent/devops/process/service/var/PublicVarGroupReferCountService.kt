@@ -70,7 +70,6 @@ class PublicVarGroupReferCountService @Autowired constructor(
      * 锁粒度策略：
      * - 使用变量组级别的锁（项目+变量组级别）
      *   锁key格式：prefix:projectId:groupName
-     * 
      * @param projectId 项目ID（必需）
      * @param groupName 变量组名称（必需）
      * @return RedisLock实例
