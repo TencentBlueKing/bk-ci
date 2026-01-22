@@ -138,7 +138,7 @@ class PTemplateCompatibilityVersionPostProcessor(
                     templateName = pipelineTemplateSetting.pipelineName,
                     versionName = v1VersionName ?: v2VersionName!!,
                     userId = userId,
-                    template = JsonUtil.toJson(pipelineTemplateResource.model),
+                    template = JsonUtil.toJson(pipelineTemplateResource.model, false),
                     type = v2TemplateInfo.mode.name,
                     category = v2TemplateInfo.category,
                     logoUrl = v2TemplateInfo.logoUrl,

@@ -299,7 +299,8 @@ object TemplateInstanceUtil {
 
         return templateParam.copy(
             defaultValue = defaultValue,
-            required = pipelineParam.required
+            required = pipelineParam.required,
+            asInstanceInput = null
         )
     }
 
@@ -328,7 +329,8 @@ object TemplateInstanceUtil {
         // 用templateVariable覆盖模板的默认值
         return templateParam.copy(
             defaultValue = defaultValue,
-            required = templateVariable.allowModifyAtStartup ?: templateParam.required
+            required = templateVariable.allowModifyAtStartup ?: templateParam.required,
+            asInstanceInput = null
         )
     }
 
