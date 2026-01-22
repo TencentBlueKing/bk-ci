@@ -36,6 +36,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_L
 import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_REFER_LOCK_KEY_PREFIX
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
+import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.po.PublicVarVersionSummaryPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -351,6 +352,51 @@ class PublicVarReferCountService @Autowired constructor(
                 dslContext = context,
                 po = summaryPO
             )
+        }
+    }
+
+    /**
+     * 更新变量维度的引用计数
+     * 使用变量级分布式锁保护，提高不同变量的并发更新性能
+     * 
+     * @param referRecordsToAdd 需要新增的引用记录列表
+     * @param varsNeedRecalculate 需要重新计算计数的变量信息集合
+     */
+    fun updateVarReferCounts(
+        referRecordsToAdd: List<ResourcePublicVarReferPO>,
+        varsNeedRecalculate: Set<VarCountUpdateInfo>
+    ) {
+        // 处理新增引用
+        if (referRecordsToAdd.isNotEmpty()) {
+            batchAddReferWithCount(referRecordsToAdd)
+        }
+
+        // 处理需要重新计算计数的变量
+        if (varsNeedRecalculate.isNotEmpty()) {
+            // 按固定顺序排序，避免死锁
+            val sortedVars = varsNeedRecalculate.sortedWith(
+                compareBy<VarCountUpdateInfo> { it.projectId }
+                    .thenBy { it.groupName }
+                    .thenBy { it.varName }
+            )
+
+            sortedVars.forEach { varInfo ->
+                try {
+                    recalculateReferCount(
+                        projectId = varInfo.projectId,
+                        groupName = varInfo.groupName,
+                        varName = varInfo.varName,
+                        version = varInfo.version
+                    )
+                } catch (e: Throwable) {
+                    // 单个变量计数更新失败不影响其他变量
+                    logger.warn(
+                        "Failed to recalculate refer count for var: ${varInfo.varName}, " +
+                        "group: ${varInfo.groupName}, project: ${varInfo.projectId}",
+                        e
+                    )
+                }
+            }
         }
     }
 }

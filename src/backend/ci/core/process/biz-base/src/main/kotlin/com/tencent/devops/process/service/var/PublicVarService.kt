@@ -31,16 +31,23 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.VarRefDetail
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
+import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
+import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
+import com.tencent.devops.process.pojo.`var`.VarReferenceUpdateResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
@@ -48,6 +55,7 @@ import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
@@ -61,12 +69,15 @@ import org.springframework.stereotype.Service
 class PublicVarService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val redisOperation: RedisOperation,
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
-    private val publicVarReferInfoService: PublicVarReferInfoService
+    private val publicVarReferInfoService: PublicVarReferInfoService,
+    private val publicVarReferCountService: PublicVarReferCountService,
+    private val varRefDetailDao: VarRefDetailDao
 ) {
 
     companion object {
@@ -520,6 +531,112 @@ class PublicVarService @Autowired constructor(
 //                    varGroupVersion = null // 清除版本信息
 //                }
             }
+        }
+    }
+
+    /**
+     * 统一处理资源的变量引用
+     * 该方法是变量引用处理的统一入口，按顺序执行以下操作：
+     * 1. 使用资源级锁处理资源维度的所有操作（在同一事务中）：
+     *    - 处理资源维度的引用记录（varRefDetailDao 业务）
+     *    - 处理变量组引用关系（publicVarReferInfoService 业务）
+     * 2. 使用变量级锁更新变量维度的引用计数
+     * 
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param resourceId 资源ID（流水线ID或模板ID）
+     * @param resourceType 资源类型（PIPELINE或TEMPLATE）
+     * @param resourceVersion 资源版本号
+     * @param model 流水线模型对象
+     * @param varRefDetails 变量引用详情列表
+     */
+    fun handleResourceVarReferences(
+        userId: String,
+        projectId: String,
+        resourceId: String,
+        resourceType: String,
+        resourceVersion: Int,
+        model: Model,
+        varRefDetails: List<VarRefDetail>
+    ) {
+        logger.info(
+            "Start handling resource var references: " +
+            "resourceId=$resourceId, resourceType=$resourceType, resourceVersion=$resourceVersion"
+        )
+
+        try {
+            // 1. 使用资源级锁处理所有资源维度的操作
+            val referenceUpdateResult = handleResourceGroupVarReferInfo(
+                userId = userId,
+                projectId = projectId,
+                resourceId = resourceId,
+                resourceType = resourceType,
+                resourceVersion = resourceVersion,
+                model = model,
+                varRefDetails = varRefDetails
+            )
+
+            // 2. 更新变量维度的引用计数
+            publicVarReferCountService.updateVarReferCounts(
+                referRecordsToAdd = referenceUpdateResult.referRecordsToAdd,
+                varsNeedRecalculate = referenceUpdateResult.varsNeedRecalculate
+            )
+
+        } catch (e: Throwable) {
+            logger.warn(
+                "Failed to handle resource var references: " +
+                "resourceId=$resourceId, resourceVersion=$resourceVersion",
+                e
+            )
+            throw e
+        }
+    }
+
+    private fun handleResourceGroupVarReferInfo(
+        userId: String,
+        projectId: String,
+        resourceId: String,
+        resourceType: String,
+        resourceVersion: Int,
+        model: Model,
+        varRefDetails: List<VarRefDetail>
+    ): VarReferenceUpdateResult {
+
+        val lockKey = "RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion"
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = lockKey,
+            expiredTimeInSeconds = 10L
+        )
+
+        try {
+            redisLock.lock()
+
+            val result = dslContext.transactionResult { configuration ->
+                val transactionContext = DSL.using(configuration)
+                
+                // 调用 publicVarReferInfoService 统一处理所有引用关系
+                publicVarReferInfoService.handleResourceVarReferences(
+                    context = transactionContext,
+                    userId = userId,
+                    projectId = projectId,
+                    resourceId = resourceId,
+                    resourceType = resourceType,
+                    resourceVersion = resourceVersion,
+                    model = model,
+                    varRefDetails = varRefDetails
+                )
+            }
+            return result
+        } catch (e: Throwable) {
+            logger.warn(
+                "Failed to handle resource-level operations: " +
+                "resourceId=$resourceId, resourceVersion=$resourceVersion",
+                e
+            )
+            throw e
+        } finally {
+            redisLock.unlock()
         }
     }
 }

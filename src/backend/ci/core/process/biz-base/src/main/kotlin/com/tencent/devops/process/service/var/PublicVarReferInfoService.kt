@@ -39,7 +39,9 @@ import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
+import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.VarGroupProcessContext
+import com.tencent.devops.process.pojo.`var`.VarReferenceUpdateResult
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
@@ -56,7 +58,8 @@ class PublicVarReferInfoService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarReferCountService: PublicVarReferCountService,
     private val templateDao: TemplateDao,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val varRefDetailDao: com.tencent.devops.process.dao.VarRefDetailDao
 ) {
 
     companion object {
@@ -176,36 +179,43 @@ class PublicVarReferInfoService @Autowired constructor(
     }
 
     /**
-     * 处理公共变量组引用
-     * 主要功能：
-     * 1. 根据Model中的publicVarGroups和varRefDetails，同步T_RESOURCE_PUBLIC_VAR_REFER_INFO表的引用记录
-     * 2. 处理变量组的新增、删除和更新操作
-     * @param userId 用户ID
-     * @param model 流水线模型
-     * @param varRefDetails 变量引用详情列表
+     * 处理资源的变量引用关系
      */
-    fun handlePublicVarGroupReferences(
+    fun handleResourceVarReferences(
+        context: DSLContext,
         userId: String,
+        projectId: String,
+        resourceId: String,
+        resourceType: String,
+        resourceVersion: Int,
         model: Model,
         varRefDetails: List<VarRefDetail>
-    ) {
-        if (varRefDetails.isEmpty()) {
-            return
-        }
-        
-        val firstDetail = varRefDetails.first()
-        val projectId = firstDetail.projectId
-        val resourceId = firstDetail.resourceId
-        val resourceType = firstDetail.resourceType
-        val resourceVersion = firstDetail.referVersion
-        
-        logger.info("Start handling public var group references for resource: $resourceId|$resourceVersion")
+    ): VarReferenceUpdateResult {
+        logger.info("Start handling resource var references for resource: $resourceId|$resourceVersion")
 
+        // 1. 处理资源维度的引用记录
+        // 删除旧的引用记录
+        varRefDetailDao.deleteByResourceId(
+            dslContext = context,
+            projectId = projectId,
+            resourceId = resourceId,
+            resourceType = resourceType,
+            referVersion = resourceVersion
+        )
+
+        if (varRefDetails.isNotEmpty()) {
+            varRefDetailDao.batchSave(
+                dslContext = context,
+                varRefDetails = varRefDetails
+            )
+        }
+
+        // 2. 处理变量组引用关系
         val referType = PublicVerGroupReferenceTypeEnum.valueOf(resourceType)
 
         // 查询已存在的引用记录
         val existingGroupKeys = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
-            dslContext = dslContext,
+            dslContext = context,
             projectId = projectId,
             referId = resourceId,
             referType = referType,
@@ -217,14 +227,17 @@ class PublicVarReferInfoService @Autowired constructor(
         // 如果Model中没有变量组，清理所有已存在的引用记录
         if (modelVarGroups.isEmpty()) {
             cleanupRemovedVarGroupReferences(
-                context = dslContext,
+                context = context,
                 projectId = projectId,
                 resourceId = resourceId,
                 referType = referType,
                 resourceVersion = resourceVersion,
                 groupsToCleanup = null
             )
-            return
+            return VarReferenceUpdateResult(
+                referRecordsToAdd = emptyList(),
+                varsNeedRecalculate = emptySet()
+            )
         }
 
         // 获取流水线变量名集合(用于排除与公共变量重名的情况)
@@ -239,6 +252,7 @@ class PublicVarReferInfoService @Autowired constructor(
 
         // 清理不在Model中的变量组引用
         cleanupObsoleteGroupReferences(
+            context = context,
             projectId = projectId,
             resourceId = resourceId,
             referType = referType,
@@ -257,6 +271,7 @@ class PublicVarReferInfoService @Autowired constructor(
 
         // 批量查询已存在的变量名
         val allExistingVarNames = queryExistingVarNames(
+            context = context,
             projectId = projectId,
             resourceId = resourceId,
             referType = referType,
@@ -264,7 +279,7 @@ class PublicVarReferInfoService @Autowired constructor(
         )
 
         // 构建处理上下文
-        val context = VarGroupProcessContext(
+        val varGroupContext = VarGroupProcessContext(
             userId = userId,
             projectId = projectId,
             resourceId = resourceId,
@@ -278,16 +293,17 @@ class PublicVarReferInfoService @Autowired constructor(
             pipelineVarNames = pipelineVarNames
         )
 
-        // 计算并执行删除操作
-        calculateAndExecuteDelete(context)
+        // 计算并执行删除操作，收集需要重算计数的变量
+        val varsNeedRecalculate = calculateAndExecuteDelete(context, varGroupContext)
 
         // 计算需要新增的变量引用记录
-        val referRecordsToAdd = calculateVarsToAdd(context)
+        val referRecordsToAdd = calculateVarsToAdd(varGroupContext)
 
-        // 使用新服务批量新增引用并更新引用计数
-        if (referRecordsToAdd.isNotEmpty()) {
-            publicVarReferCountService.batchAddReferWithCount(referRecordsToAdd)
-        }
+        // 返回结果，由外部统一处理计数更新
+        return VarReferenceUpdateResult(
+            referRecordsToAdd = referRecordsToAdd,
+            varsNeedRecalculate = varsNeedRecalculate
+        )
     }
 
     /**
@@ -307,6 +323,7 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 清理不在Model中的变量组引用
      * 对比数据库中的引用记录与Model中的变量组，删除已不存在的引用
+     * @param context 数据库上下文
      * @param projectId 项目ID
      * @param resourceId 资源ID
      * @param referType 引用类型
@@ -315,6 +332,7 @@ class PublicVarReferInfoService @Autowired constructor(
      * @param existingGroupKeys 数据库中已存在的变量组键集合
      */
     private fun cleanupObsoleteGroupReferences(
+        context: DSLContext,
         projectId: String,
         resourceId: String,
         referType: PublicVerGroupReferenceTypeEnum,
@@ -333,7 +351,7 @@ class PublicVarReferInfoService @Autowired constructor(
 
         if (groupsToCleanup.isNotEmpty()) {
             cleanupRemovedVarGroupReferences(
-                context = dslContext,
+                context = context,
                 projectId = projectId,
                 resourceId = resourceId,
                 referType = referType,
@@ -391,16 +409,18 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 批量查询已存在的变量名
+     * @param context 数据库上下文
      * @return Map<PublicGroupKey, Set<varName>>
      */
     private fun queryExistingVarNames(
+        context: DSLContext,
         projectId: String,
         resourceId: String,
         referType: PublicVerGroupReferenceTypeEnum,
         resourceVersion: Int
     ): Map<PublicGroupKey, Set<String>> {
         return publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
-            dslContext = dslContext,
+            dslContext = context,
             projectId = projectId,
             referId = resourceId,
             referType = referType,
@@ -412,15 +432,18 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 计算并执行删除操作
      * 删除引用记录后，收集需要更新计数的变量信息
+     * @param context 数据库上下文
+     * @param varGroupContext 变量组处理上下文
+     * @return 需要重新计算计数的变量信息集合
      */
     private fun calculateAndExecuteDelete(
-        context: VarGroupProcessContext
-    ) {
+        context: DSLContext,
+        varGroupContext: VarGroupProcessContext
+    ): Set<VarCountUpdateInfo> {
         // 收集需要更新引用计数的变量信息
-        // Map<(sourceProjectId, groupName, varName, version), Unit>
         val varsNeedUpdateCount = mutableSetOf<VarCountUpdateInfo>()
 
-        context.modelVarGroups.forEach { varGroup ->
+        varGroupContext.modelVarGroups.forEach { varGroup ->
             val group = varGroup
             val groupKey = PublicGroupKey(group.groupName, group.version)
             val groupName = groupKey.groupName
@@ -428,9 +451,9 @@ class PublicVarReferInfoService @Autowired constructor(
             // 获取该变量组被引用的变量
             val referencedVarNameSet = getReferencedVarsForGroup(
                 groupName = groupName,
-                publicVarMap = context.publicVarMap,
-                referencedVarNames = context.referencedVarNames,
-                pipelineVarNames = context.pipelineVarNames
+                publicVarMap = varGroupContext.publicVarMap,
+                referencedVarNames = varGroupContext.referencedVarNames,
+                pipelineVarNames = varGroupContext.pipelineVarNames
             )
             
             if (referencedVarNameSet.isEmpty()) {
@@ -438,7 +461,7 @@ class PublicVarReferInfoService @Autowired constructor(
             }
 
             // 获取已存在的变量名
-            val existingVarNames = context.allExistingVarNames[groupKey] ?: emptySet()
+            val existingVarNames = varGroupContext.allExistingVarNames[groupKey] ?: emptySet()
 
             val diffResult = calculateVarGroupDiff(
                 referencedVars = referencedVarNameSet,
@@ -449,20 +472,20 @@ class PublicVarReferInfoService @Autowired constructor(
             if (diffResult.varsToRemove.isNotEmpty()) {
                 // 获取源项目ID
                 val sourceProjectId = getSourceProjectIdForVarGroup(
-                    projectId = context.projectId,
+                    projectId = varGroupContext.projectId,
                     groupName = groupName,
-                    referId = context.resourceId,
-                    referType = context.referType
-                ) ?: context.projectId
+                    referId = varGroupContext.resourceId,
+                    referType = varGroupContext.referType
+                ) ?: varGroupContext.projectId
 
                 // 删除引用记录
                 publicVarReferInfoDao.deleteByReferIdAndGroupAndVarNames(
-                    dslContext = dslContext,
-                    projectId = context.projectId,
-                    referId = context.resourceId,
-                    referType = context.referType,
+                    dslContext = context,
+                    projectId = varGroupContext.projectId,
+                    referId = varGroupContext.resourceId,
+                    referType = varGroupContext.referType,
                     groupName = groupName,
-                    referVersion = context.resourceVersion,
+                    referVersion = varGroupContext.resourceVersion,
                     varNames = diffResult.varsToRemove.toList()
                 )
 
@@ -481,47 +504,8 @@ class PublicVarReferInfoService @Autowired constructor(
             }
         }
 
-        // 批量更新引用计数
-        if (varsNeedUpdateCount.isNotEmpty()) {
-            batchUpdateReferCountAfterDelete(varsNeedUpdateCount)
-        }
-    }
-
-    /**
-     * 变量计数更新信息
-     */
-    private data class VarCountUpdateInfo(
-        val projectId: String,
-        val groupName: String,
-        val varName: String,
-        val version: Int
-    )
-
-    /**
-     * 在删除引用记录后批量更新引用计数
-     * @param varsNeedUpdateCount 需要更新计数的变量集合
-     */
-    private fun batchUpdateReferCountAfterDelete(varsNeedUpdateCount: Set<VarCountUpdateInfo>) {
-        varsNeedUpdateCount.forEach { varInfo ->
-            try {
-                // 获取实际版本号（如果是动态版本）
-                val actualVersion = varInfo.version
-                // 重新计算引用计数
-                publicVarReferCountService.recalculateReferCount(
-                    projectId = varInfo.projectId,
-                    groupName = varInfo.groupName,
-                    varName = varInfo.varName,
-                    version = actualVersion
-                )
-            } catch (e: Throwable) {
-                // 单个变量计数更新失败不影响其他变量
-                logger.warn(
-                    "Failed to update refer count for var: ${varInfo.varName}, " +
-                    "group: ${varInfo.groupName}, project: ${varInfo.projectId}",
-                    e
-                )
-            }
-        }
+        // 返回需要重算计数的变量信息，不在此处执行计数更新
+        return varsNeedUpdateCount
     }
 
     /**
@@ -573,7 +557,7 @@ class PublicVarReferInfoService @Autowired constructor(
                 // 批量生成ID
                 val segmentIds = client.get(ServiceAllocIdResource::class)
                     .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", diffResult.varsToAdd.size).data
-                if (segmentIds.isNullOrEmpty()) {
+                if (segmentIds.isNullOrEmpty() || segmentIds.size != diffResult.varsToAdd.size) {
                     throw ErrorCodeException(
                         errorCode = ERROR_INVALID_PARAM_,
                         params = arrayOf("Failed to generate segment IDs for var refer info")
@@ -772,9 +756,7 @@ class PublicVarReferInfoService @Autowired constructor(
                 )
             }
         }
-
-        // 在事务外批量重算引用计数
-        // 注意：这里不在事务中执行，避免事务嵌套和长时间持锁
+        
         if (varsNeedRecalculate.isNotEmpty()) {
             batchRecalculateReferCount(
                 varsNeedRecalculate = varsNeedRecalculate
