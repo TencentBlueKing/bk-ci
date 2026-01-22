@@ -194,19 +194,6 @@ class PipelineDraftReleaseHandler @Autowired constructor(
             version = resourceOnlyVersion.version
         )
 
-        publicVarGroupReferManageService.handleVarGroupReferBus(
-            PublicVarGroupReferDTO(
-                userId = userId,
-                projectId = projectId,
-                model = pipelineResourceWithoutVersion.model,
-                referId = pipelineId,
-                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
-                referName = pipelineBasicInfo.pipelineName,
-                referVersion = resourceOnlyVersion.version,
-                referVersionName = resourceOnlyVersion.versionName
-            )
-        )
-
         return DeployPipelineResult(
             pipelineId = pipelineId,
             pipelineName = pipelineBasicInfo.pipelineName,

@@ -152,20 +152,6 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
 
         // 发布yaml文件
         val yamlFileReleaseResult = releaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
-        (pTemplateResourceWithoutVersion.model as? Model)?.let {
-            publicVarGroupReferManageService.handleVarGroupReferBus(
-                PublicVarGroupReferDTO(
-                    userId = userId,
-                    projectId = projectId,
-                    model = it,
-                    referId = templateId,
-                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
-                    referName = pipelineTemplateInfo.name,
-                    referVersion = resourceOnlyVersion.version.toInt(),
-                    referVersionName = resourceOnlyVersion.versionName ?: ""
-                )
-            )
-        }
         return DeployTemplateResult(
             projectId = projectId,
             userId = userId,
