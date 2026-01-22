@@ -43,16 +43,8 @@ import org.springframework.stereotype.Repository
 @Repository
 class PublicVarGroupReferInfoDao {
 
-    companion object {
-        // 窗口函数行号字段
-        private val ROW_NUMBER_FIELD = DSL.field("rn", Int::class.java)
-    }
-
     /**
      * 构建基础查询条件
-     * @param table 表对象
-     * @param projectId 项目ID
-     * @return 基础条件列表
      */
     private fun buildBaseConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -61,13 +53,6 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 构建引用相关的查询条件
-     * @param table 表对象
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param referVersion 引用版本
-     * @param referVersionName 引用版本名称
-     * @return 条件列表
      */
     private fun buildReferConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -85,11 +70,6 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 构建变量组相关的查询条件
-     * @param table 表对象
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @return 条件列表
      */
     private fun buildGroupConditions(
         table: TResourcePublicVarGroupReferInfo,
@@ -102,16 +82,56 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
-     * 分页查询变量组引用信息
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param referType 引用类型
-     * @param version 版本号（默认-1表示动态版本，null表示查询所有版本）
-     * @param page 页码
-     * @param pageSize 每页大小
-     * @return 变量组引用信息PO列表
+     * 查询变量组引用信息（获取每个REFER_ID的最新记录）
      */
+    private fun listLatestVarGroupReferInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String? = null,
+        referType: PublicVerGroupReferenceTypeEnum? = null,
+        version: Int? = null,
+        versions: List<Int>? = null,
+        referIds: List<String>? = null,
+        page: Int,
+        pageSize: Int,
+        orderByReferId: Boolean = false
+    ): List<ResourcePublicVarGroupReferPO> {
+        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val t2 = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+
+        // 构建主查询条件
+        val conditions = mutableListOf(t.PROJECT_ID.eq(projectId))
+        groupName?.let { conditions.add(t.GROUP_NAME.eq(it)) }
+        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
+        version?.let { conditions.add(t.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.REFER_ID.`in`(it)) }
+
+        // 构建NOT EXISTS子查询条件
+        var notExistsQuery = dslContext.selectOne()
+            .from(t2)
+            .where(t2.PROJECT_ID.eq(t.PROJECT_ID))
+            .and(t2.REFER_ID.eq(t.REFER_ID))
+            .and(t2.CREATE_TIME.gt(t.CREATE_TIME))
+
+        groupName?.let { notExistsQuery = notExistsQuery.and(t2.GROUP_NAME.eq(t.GROUP_NAME)) }
+        referType?.let { notExistsQuery = notExistsQuery.and(t2.REFER_TYPE.eq(it.name)) }
+        version?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.REFER_ID.`in`(it)) }
+
+        val orderField = if (orderByReferId) t.REFER_ID.asc() else t.UPDATE_TIME.desc()
+
+        return dslContext.selectFrom(t)
+            .where(conditions)
+            .and(DSL.notExists(notExistsQuery))
+            .orderBy(orderField)
+            .limit(pageSize)
+            .offset((page - 1) * pageSize)
+            .fetch()
+            .map { convertResourcePublicVarGroupReferPO(it) }
+    }
+
     fun listVarGroupReferInfo(
         dslContext: DSLContext,
         projectId: String,
@@ -120,54 +140,18 @@ class PublicVarGroupReferInfoDao {
         version: Int? = DYNAMIC_VERSION,
         page: Int,
         pageSize: Int
-    ): List<ResourcePublicVarGroupReferPO> {
-        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(GROUP_NAME.eq(groupName))
-            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-            // 当version不为null时才添加版本条件，为null时查询所有版本
-            if (version != null) {
-                conditions.add(VERSION.eq(version))
-            }
-
-            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val rowNumberField = DSL.rowNumber().over(
-                DSL.partitionBy(REFER_ID)
-                    .orderBy(CREATE_TIME.desc())
-            ).`as`(ROW_NUMBER_FIELD)
-
-            val subquery = dslContext.select(
-                DSL.asterisk(),
-                rowNumberField
-            ).from(this)
-                .where(conditions)
-                .asTable("ranked_records")
-
-            // 直接使用原表字段引用，类型安全
-            val updateTimeField = subquery.field(UPDATE_TIME)
-            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
-
-            return dslContext.select(subquery.asterisk())
-                .from(subquery)
-                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
-                .orderBy(updateTimeField?.desc())
-                .limit(pageSize)
-                .offset((page - 1) * pageSize)
-                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        }
-    }
+    ): List<ResourcePublicVarGroupReferPO> = listLatestVarGroupReferInfo(
+        dslContext = dslContext,
+        projectId = projectId,
+        groupName = groupName,
+        referType = referType,
+        version = version,
+        page = page,
+        pageSize = pageSize
+    )
 
     /**
      * 查询变量组引用信息（支持多个版本）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @param referType 引用类型
-     * @param versions 版本列表
-     * @param page 页码
-     * @param pageSize 每页大小
-     * @return 变量组引用信息列表
      */
     fun listVarGroupReferInfoByVersions(
         dslContext: DSLContext,
@@ -178,53 +162,20 @@ class PublicVarGroupReferInfoDao {
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
-        if (versions.isEmpty()) {
-            return emptyList()
-        }
-
-        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(GROUP_NAME.eq(groupName))
-            conditions.add(VERSION.`in`(versions))
-            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-
-            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val rowNumberField = DSL.rowNumber().over(
-                DSL.partitionBy(REFER_ID)
-                    .orderBy(CREATE_TIME.desc())
-            ).`as`(ROW_NUMBER_FIELD)
-
-            val subquery = dslContext.select(
-                DSL.asterisk(),
-                rowNumberField
-            ).from(this)
-                .where(conditions)
-                .asTable("ranked_records")
-
-            // 直接使用原表字段引用，类型安全
-            val updateTimeField = subquery.field(UPDATE_TIME)
-            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
-
-            return dslContext.select(subquery.asterisk())
-                .from(subquery)
-                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
-                .orderBy(updateTimeField?.desc())
-                .limit(pageSize)
-                .offset((page - 1) * pageSize)
-                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        }
+        if (versions.isEmpty()) return emptyList()
+        return listLatestVarGroupReferInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            referType = referType,
+            versions = versions,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     /**
-     * 根据 referId 列表查询变量组引用信息（分页）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referIds 引用ID列表
-     * @param referType 引用类型
-     * @param page 页码
-     * @param pageSize 每页大小
-     * @return 变量组引用信息列表
+     * 根据referId列表查询变量组引用信息（分页）
      */
     fun listVarGroupReferInfoByReferIds(
         dslContext: DSLContext,
@@ -234,43 +185,16 @@ class PublicVarGroupReferInfoDao {
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
-        if (referIds.isEmpty()) {
-            return emptyList()
-        }
-
-        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            val conditions = mutableListOf(
-                PROJECT_ID.eq(projectId),
-                REFER_ID.`in`(referIds)
-            )
-            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-
-            // 使用窗口函数查找每个REFER_ID对应的CREATE_TIME最大的记录
-            val rowNumberField = DSL.rowNumber().over(
-                DSL.partitionBy(REFER_ID)
-                    .orderBy(CREATE_TIME.desc())
-            ).`as`(ROW_NUMBER_FIELD)
-
-            val subquery = dslContext.select(
-                DSL.asterisk(),
-                rowNumberField
-            ).from(this)
-                .where(conditions)
-                .asTable("ranked_records")
-
-            // 直接使用原表字段引用，类型安全
-            val referIdField = subquery.field(REFER_ID)
-            val rowNumField = subquery.field(ROW_NUMBER_FIELD)
-
-            return dslContext.select(subquery.asterisk())
-                .from(subquery)
-                .where(rowNumField?.eq(1) ?: DSL.trueCondition())
-                .orderBy(referIdField?.asc())
-                .limit(pageSize)
-                .offset((page - 1) * pageSize)
-                .fetchInto(TResourcePublicVarGroupReferInfoRecord::class.java)
-                .map { convertResourcePublicVarGroupReferPO(it) }
-        }
+        if (referIds.isEmpty()) return emptyList()
+        return listLatestVarGroupReferInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            referType = referType,
+            referIds = referIds,
+            page = page,
+            pageSize = pageSize,
+            orderByReferId = true
+        )
     }
 
     fun listVarGroupReferInfoByReferId(
@@ -331,11 +255,6 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    /**
-     * 将数据库记录转换为变量组引用PO对象
-     * @param publicVarGroupReferInfoRecord 数据库记录
-     * @return 变量组引用PO对象
-     */
     private fun convertResourcePublicVarGroupReferPO(
         publicVarGroupReferInfoRecord: TResourcePublicVarGroupReferInfoRecord
     ) = ResourcePublicVarGroupReferPO(id = publicVarGroupReferInfoRecord.id,
@@ -359,16 +278,6 @@ class PublicVarGroupReferInfoDao {
             )
         })
 
-    /**
-     * 统计变量组引用数量
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param groupName 变量组名（可选）
-     * @param referVersionName 引用版本名称（可选）
-     * @return 引用数量
-     */
     fun countByPublicVarGroupRef(
         dslContext: DSLContext,
         projectId: String,
@@ -394,15 +303,6 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    /**
-     * 删除引用记录（排除指定的变量组）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param referVersionName 引用版本名称
-     * @param excludedGroupNames 需要排除的变量组名列表
-     */
     fun deleteByReferIdExcludingGroupNames(
         dslContext: DSLContext,
         projectId: String,
@@ -429,13 +329,6 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    /**
-     * 根据引用ID删除所有引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     */
     fun deleteByReferId(
         dslContext: DSLContext,
         projectId: String,
@@ -472,15 +365,6 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    /**
-     * 根据引用ID和变量组删除引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param groupName 变量组名
-     * @param referVersion 引用版本
-     */
     fun deleteByReferIdAndGroup(
         dslContext: DSLContext,
         projectId: String,
@@ -586,15 +470,6 @@ class PublicVarGroupReferInfoDao {
         }
     }
 
-    /**
-     * 统计变量组的引用数量（按referId去重）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param referType 引用类型
-     * @param version 版本号（默认-1表示动态版本，null表示所有版本）
-     * @return 引用数量
-     */
     fun countByGroupName(
         dslContext: DSLContext,
         projectId: String,
