@@ -208,6 +208,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val v1SettingDao: PipelineSettingDao = mockk()
         val dsl: DSLContext = DSL.using(dslContext.configuration())
 
+        // 新增：mock countTemplateVersionNum（自定义模板不受此限制）
+        every { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) } returns 0
         stubV1CreateTemplate(v1Dao)
         every { v1SettingDao.saveSetting(any(), any(), any()) } returns 1
 
@@ -636,6 +638,8 @@ class PipelineTemplateCompatibilityTest : BkCiAbstractTest() {
         val v1SettingDao: PipelineSettingDao = mockk()
         val dsl: DSLContext = DSL.using(dslContext.configuration())
 
+        // 新增：mock countTemplateVersionNum（返回0，允许双写）
+        every { v1Dao.countTemplateVersionNum(dsl, projectId, templateId) } returns 0
         // v1 双写失败
         every {
             v1Dao.createTemplate(
