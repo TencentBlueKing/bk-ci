@@ -121,11 +121,15 @@ class PTemplateCompatibilityVersionPostProcessor(
                 val version = pipelineTemplateResource.version
                 val v2TemplateInfo = context.pipelineTemplateInfo
                 val v2VersionName = pipelineTemplateResource.versionName
-
+                val constraintFlag = v2TemplateInfo.mode == TemplateType.CONSTRAINT
+                val templateVersionCount = v1TemplateDao.countTemplateVersionNum(dslContext, projectId, templateId)
+                if (constraintFlag && templateVersionCount > 0) {
+                    logger.info("v2->v1 constraint template dual write skip|project=$projectId|template=$templateId")
+                    return
+                }
                 // 注意：v2 同名版本的重命名已由 postProcessBeforeVersionCreate 处理
                 // 这里只需要执行 v2 → v1 的双写逻辑
-                val storeFlag = v2TemplateInfo.mode == TemplateType.CONSTRAINT ||
-                    v2TemplateInfo.storeStatus != TemplateStatusEnum.NEVER_PUBLISHED
+                val storeFlag = constraintFlag || v2TemplateInfo.storeStatus != TemplateStatusEnum.NEVER_PUBLISHED
                 splitParamsForV1Compatibility(pipelineTemplateResource.model as Model)
                 v1TemplateDao.createTemplate(
                     dslContext = transactionContext,
