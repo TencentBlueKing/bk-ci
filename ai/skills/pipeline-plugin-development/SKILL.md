@@ -1,4 +1,4 @@
-﻿---
+---
 name: pipeline-plugin-development
 description: 流水线插件开发完整指南，涵盖插件创建、task.json 配置规范、多语言开发示例（Python/Java/NodeJS/Golang）、输入输出规范、错误码规范、发布流程、调试方法。当用户需要开发蓝盾流水线插件、配置 task.json、处理插件输入输出或排查插件错误时使用。
 ---

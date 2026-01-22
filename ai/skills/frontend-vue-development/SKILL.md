@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-vue-development
 description: 前端 Vue 开发规范，涵盖 Vue 2/3 组件开发、Vuex 状态管理、路由配置、组件通信、样式规范、国际化。当用户进行前端开发、编写 Vue 组件、处理状态管理或实现页面交互时使用。
 core_files:

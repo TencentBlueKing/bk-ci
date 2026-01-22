@@ -1,4 +1,4 @@
-﻿---
+---
 name: backend-microservice-development
 description: 后端微服务开发规范，涵盖目录结构、分层架构（API/Service/DAO）、依赖注入、配置管理、Spring Boot 最佳实践。当用户进行后端开发、创建新微服务、编写 Kotlin/Java 代码或设计服务架构时使用。
 core_files:

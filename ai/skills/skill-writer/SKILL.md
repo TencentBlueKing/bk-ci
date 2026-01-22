@@ -1,4 +1,4 @@
-﻿---
+---
 name: skill-writer
 description: 指导用户创建 Agent Skills（支持 CodeBuddy、Cursor 等 IDE）。当用户想要创建、编写、设计新的 Skill，或需要帮助编写 SKILL.md 文件、frontmatter、skill 结构时使用。
 ---
