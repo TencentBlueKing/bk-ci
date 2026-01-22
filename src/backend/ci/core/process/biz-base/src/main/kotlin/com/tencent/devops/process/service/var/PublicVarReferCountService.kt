@@ -63,12 +63,6 @@ class PublicVarReferCountService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarReferCountService::class.java)
-        
-        // 锁等待时间阈值（毫秒），超过此阈值记录警告日志
-        private const val LOCK_WAIT_THRESHOLD_MS = 500L
-        
-        // 锁持有时间阈值（毫秒），超过此阈值记录警告日志
-        private const val LOCK_HOLD_THRESHOLD_MS = 5000L
     }
 
     /**
