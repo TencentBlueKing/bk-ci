@@ -376,8 +376,7 @@ data class StartBuildContext(
                 StartType.WEB_HOOK.name,
                 StartType.PIPELINE.name,
                 StartType.SERVICE.name,
-                StartType.REMOTE.name,
-                StartType.TRIGGER_EVENT.name
+                StartType.REMOTE.name
             )
             val startType = params[PIPELINE_START_TYPE]
             if (!startTypes.contains(startType)) {

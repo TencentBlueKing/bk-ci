@@ -102,6 +102,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         eventConfig: TriggerEventConfig,
         eventVariables: Map<String, Any>,
     ): WebhookMatchResult {
+        val conditionLabels = eventConfig.conditions.groupBy { it.label }
         eventConfig.conditions.forEach { condition ->
             // 触发变量值
             val eventValue = eventVariables[condition.targetField]
@@ -141,12 +142,18 @@ class MarketEventTriggerMatcher @Autowired constructor(
                     ConditionOperatorEnum.NOT_LIKE, ConditionOperatorEnum.NOT_EQ, ConditionOperatorEnum.NOT_IN ->
                         BK_FIELD_CONDITION_EXCLUDE
                 }
+                // 当存在多个同名label时，需添加组名用于区分
+                val label = if (conditionLabels.getOrDefault(condition.label, listOf()).size > 1) {
+                    listOf(condition.group, condition.label).filter { !it.isNullOrBlank() }.joinToString("-")
+                } else {
+                    condition.label
+                }
                 return WebhookMatchResult(
                     isMatch = false,
                     reason = I18Variable(
                         messageCode,
                         params = listOf(
-                            condition.label,
+                            label,
                             eventValue.toString(),
                             if (finalInputValue is List<*>) {
                                 finalInputValue.joinToString(", ")
