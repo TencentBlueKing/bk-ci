@@ -56,6 +56,8 @@ import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReleaseRecordDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
+import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
 import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import com.tencent.devops.process.pojo.`var`.`do`.PipelineRefPublicVarGroupDO
@@ -96,7 +98,9 @@ class PublicVarGroupService @Autowired constructor(
     private val pipelinePublicVarGroupReleaseRecordDao: PublicVarGroupReleaseRecordDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
-    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService,
+    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
@@ -132,7 +136,6 @@ class PublicVarGroupService @Autowired constructor(
                 versionName = "v$newVersion",
                 latestFlag = true,
                 varCount = publicVarGroupDTO.publicVarGroup.publicVars.size,
-                referCount = 0,
                 desc = publicVarGroupDTO.publicVarGroup.desc,
                 creator = userId,
                 modifier = userId,
@@ -287,7 +290,29 @@ class PublicVarGroupService @Autowired constructor(
 
         // 批量查询所有版本的引用数量（按 referId 去重）
         val referCountMap = if (groupNameList.isNotEmpty()) {
-            publicVarGroupReferInfoDao.batchCountDistinctReferIdByGroup(
+            publicVarGroupVersionSummaryDao.batchGetTotalReferCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupNames = groupNameList
+            )
+        } else {
+            emptyMap()
+        }
+
+        // 批量查询动态版本的引用数量
+        val dynamicVersionReferCountMap = if (groupNameList.isNotEmpty()) {
+            publicVarGroupVersionSummaryDao.batchGetDynamicVersionReferCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                groupNames = groupNameList
+            )
+        } else {
+            emptyMap()
+        }
+
+        // 批量查询固定版本的引用数量
+        val fixedVersionReferCountMap = if (groupNameList.isNotEmpty()) {
+            publicVarGroupVersionSummaryDao.batchGetFixedVersionReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupNames = groupNameList
@@ -298,9 +323,13 @@ class PublicVarGroupService @Autowired constructor(
         
         val records = groupPOs.map { po ->
             val actualReferCount = referCountMap[po.groupName] ?: 0
+            val dynamicVersionReferCount = dynamicVersionReferCountMap[po.groupName] ?: 0
+            val fixedVersionReferCount = fixedVersionReferCountMap[po.groupName] ?: 0
             PublicVarGroupDO(
                 groupName = po.groupName,
                 referCount = actualReferCount,
+                dynamicVersionReferCount = dynamicVersionReferCount,
+                fixedVersionReferCount = fixedVersionReferCount,
                 varCount = po.varCount,
                 desc = po.desc,
                 modifier = po.modifier,
@@ -404,8 +433,8 @@ class PublicVarGroupService @Autowired constructor(
                 params = arrayOf(groupName)
             )
 
-            // 检查变量组是否被引用
-            val referCount = publicVarGroupReferInfoDao.countDistinctReferIdByGroup(
+            // 检查变量组是否被引用（从Summary表获取引用总数）
+            val referCount = publicVarGroupVersionSummaryDao.getTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName
@@ -420,9 +449,25 @@ class PublicVarGroupService @Autowired constructor(
 
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                publicVarGroupDao.deleteByGroupName(context, projectId, groupName)
-                pipelinePublicVarGroupReleaseRecordDao.deleteByGroupName(context, projectId, groupName)
-                publicVarDao.deleteByGroupName(context, projectId, groupName)
+                publicVarGroupDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
+                pipelinePublicVarGroupReleaseRecordDao.deleteByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName
+                )
+                publicVarDao.deleteByGroupName(dslContext = context, projectId = projectId, groupName = groupName)
+                // 删除变量组版本概要信息
+                publicVarGroupVersionSummaryDao.deleteByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName
+                )
+                // 删除变量版本概要信息
+                publicVarVersionSummaryDao.deleteByGroupName(
+                    dslContext = context,
+                    projectId = projectId,
+                    groupName = groupName
+                )
             }
 
             // 从权限中心删除变量组资源
@@ -483,7 +528,6 @@ class PublicVarGroupService @Autowired constructor(
                 type = vo.type,
                 valueType = vo.valueType,
                 defaultValue = vo.defaultValue,
-                referCount = 0,
                 buildFormProperty = vo.buildFormProperty
             )
         }

@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.`var`
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
@@ -38,7 +37,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -49,23 +47,23 @@ import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
+import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
-import com.tencent.devops.process.pojo.`var`.VarGroupReferInfoQueryResult
+import com.tencent.devops.process.pojo.`var`.VarGroupVersionChangeInfo
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
+import com.tencent.devops.process.pojo.`var`.po.VarGroupReferUpdateContext
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -84,7 +82,9 @@ class PublicVarGroupReferManageService @Autowired constructor(
     private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
+    private val publicVarGroupReferCountService: PublicVarGroupReferCountService
 ) {
 
     companion object {
@@ -105,145 +105,14 @@ class PublicVarGroupReferManageService @Autowired constructor(
     val templatePath: String = ""
 
     /**
-     * 更新引用计数（批量处理）
-     * 按组名和版本分组去重后，批量更新引用计数
-     * @param context 数据库上下文
-     * @param projectId 项目ID
-     * @param referInfos 引用信息列表
-     */
-    private fun updateReferenceCounts(
-        context: DSLContext,
-        projectId: String,
-        referInfos: List<ResourcePublicVarGroupReferPO>
-    ) {
-        if (referInfos.isEmpty()) {
-            return
-        }
-
-        try {
-            // 按组名和版本分组，去重后更新引用计数
-            val groupsToUpdate = referInfos
-                .map { Pair(it.groupName, it.version) }
-                .distinct()
-
-            logger.info("Updating reference counts for ${groupsToUpdate.size} groups in projectId: $projectId")
-
-            // 批量更新引用计数
-            groupsToUpdate.forEach { (groupName, version) ->
-                updateSingleGroupReferCount(
-                    context = context,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = version,
-                    redisLock = null
-                )
-            }
-        } catch (e: Throwable) {
-            logger.warn("Failed to update reference counts for projectId: $projectId", e)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED
-            )
-        }
-    }
-
-    /**
-     * 更新单个变量组的引用计数
-     * 注意：REFER_COUNT 字段现在表示实际引用该变量组的 referId 数量（去重后）
-     * 只统计明确指定该版本号的引用，不包含动态版本引用
-     * @param context 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param redisLock 可选的Redis锁，如果调用方已经加锁则传null，否则此方法内部会加锁
-     */
-    fun updateSingleGroupReferCount(
-        context: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        redisLock: RedisLock? = null
-    ) {
-        logger.info("updateSingleGroupReferCount for group: $groupName, version: $version")
-        
-        // 如果外部传入了锁，说明外部已经加锁，直接执行
-        if (redisLock != null) {
-            executeUpdateReferCount(
-                context = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version
-            )
-        } else {
-            // 外部没有加锁，内部加锁执行
-            val lock = RedisLock(
-                redisOperation = redisOperation,
-                lockKey = "${ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_COUNT_LOCK_KEY}_${projectId}_${groupName}",
-                expiredTimeInSeconds = ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
-            )
-            
-            try {
-                lock.lock()
-                executeUpdateReferCount(
-                    context = context,
-                    projectId = projectId,
-                    groupName = groupName,
-                    version = version
-                )
-            } finally {
-                lock.unlock()
-            }
-        }
-    }
-    
-    /**
-     * 执行引用计数更新的核心逻辑
-     * 只统计明确指定该版本号的引用，不包含动态版本引用
-     * 动态版本引用在查询时再计算
-     */
-    private fun executeUpdateReferCount(
-        context: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ) {
-        try {
-            // 只统计明确指定该版本号的引用
-            val actualReferCount = publicVarGroupReferInfoDao.countByGroupName(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                referType = null,
-                version = version
-            )
-
-            // 直接更新为实际引用数
-            publicVarGroupDao.updateReferCount(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                referCount = actualReferCount
-            )
-        } catch (e: Throwable) {
-            logger.warn("Failed to update single group refer count for group: $groupName, version: $version", e)
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED
-            )
-        }
-    }
-
-    /**
      * 根据引用ID删除变量组引用
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
+     * 同时删除变量组引用记录和变量引用记录
      */
     fun deletePublicVerGroupRefByReferId(
         projectId: String,
         referId: String,
         referType: PublicVerGroupReferenceTypeEnum
     ) {
-
         try {
             // 查询要删除的引用记录
             val referInfosToDelete = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
@@ -258,37 +127,13 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 return
             }
 
-            logger.info("Found ${referInfosToDelete.size} references to delete for referId: $referId")
-
-            // 在事务中执行删除和更新操作
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-
-                // 删除变量组引用记录
-                publicVarGroupReferInfoDao.deleteByReferId(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = referId,
-                    referType = referType
-                )
-
-                // 删除变量引用记录
-                publicVarReferInfoDao.deleteByReferId(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = referId,
-                    referType = referType
-                )
-
-                // 在同一事务中更新引用计数
-                updateReferenceCounts(
-                    context = context,
-                    projectId = projectId,
-                    referInfos = referInfosToDelete
-                )
-            }
-
-            logger.info("Successfully deleted ${referInfosToDelete.size} references for referId: $referId")
+            // 删除变量组引用和变量引用记录
+            publicVarGroupReferCountService.batchRemoveReferInfo(
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referInfosToDelete = referInfosToDelete
+            )
         } catch (t: Throwable) {
             logger.warn("Failed to delete refer info for referId: $referId", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
@@ -608,9 +453,24 @@ class PublicVarGroupReferManageService @Autowired constructor(
     }
 
     /**
+     * 版本变化类型枚举
+     * 用于标识变量组引用的变化类型
+     */
+    private enum class VersionChangeType {
+        /** 新增变量组引用 */
+        ADD,
+        /** 删除变量组引用 */
+        DELETE,
+        /** 变量组版本切换 */
+        VERSION_SWITCH
+    }
+
+    /**
      * 更新公共变量组引用计数
+     * 使用优化后的数据结构，以(sourceProjectId, groupName)为维度管理变化信息
+     * 
      * @param projectId 项目ID
-     * @param historicalReferInfos 历史引用信息
+     * @param historicalReferInfos 历史引用信息列表
      * @param publicVarGroupNames 当前变量组名称列表
      * @param resourcePublicVarGroupReferPOS 新的引用信息列表，需要批量保存
      */
@@ -620,68 +480,96 @@ class PublicVarGroupReferManageService @Autowired constructor(
         publicVarGroupNames: List<String>,
         resourcePublicVarGroupReferPOS: List<ResourcePublicVarGroupReferPO> = emptyList()
     ) {
-        logger.info("updateReferenceCountsAfterSave historicalReferInfos: $historicalReferInfos" +
-                "publicVarGroupNames: $publicVarGroupNames" +
-                "pipelinePublicVarGroupReferPOs: $resourcePublicVarGroupReferPOS")
+        // 记录输入参数的关键信息
+        logger.info(
+            "updateReferenceCountsAfterSave - historicalReferInfos size: ${historicalReferInfos.size}, " +
+                "publicVarGroupNames: $publicVarGroupNames, " +
+                "resourcePublicVarGroupReferPOS size: ${resourcePublicVarGroupReferPOS.size}"
+        )
+        
         if (publicVarGroupNames.isEmpty() && resourcePublicVarGroupReferPOS.isEmpty()) {
             return
         }
 
         try {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                
-                // 批量保存新的引用信息
-                publicVarGroupReferInfoDao.batchSave(context, resourcePublicVarGroupReferPOS)
-
-                val currentGroupNames = publicVarGroupNames.toSet()
-
-                // 计算需要删除的引用（历史中有，当前中没有）
-                val groupsToDelete = historicalReferInfos.filter { historical ->
-                    !currentGroupNames.contains(historical.groupName)
-                }
-
-                // 处理删除的引用记录
-                if (groupsToDelete.isNotEmpty()) {
-                    groupsToDelete.forEach { groupToDelete ->
-                        publicVarGroupReferInfoDao.deleteByReferIdAndGroup(
-                            dslContext = context,
-                            projectId = projectId,
-                            referId = groupToDelete.referId,
-                            referType = groupToDelete.referType,
-                            groupName = groupToDelete.groupName,
-                            referVersion = groupToDelete.referVersion
-                        )
-
-                        publicVarReferInfoDao.deleteByReferIdAndGroup(
-                            dslContext = context,
-                            projectId = projectId,
-                            referId = groupToDelete.referId,
-                            referType = groupToDelete.referType,
-                            groupName = groupToDelete.groupName,
-                            referVersion = groupToDelete.referVersion
+            // 步骤1：构建变化信息映射，Key为groupName
+            val changeInfoMap = mutableMapOf<String, VarGroupVersionChangeInfo>()
+            
+            // 构建当前变量组名称集合，用于快速查找
+            val currentGroupNames = publicVarGroupNames.toSet()
+            
+            // 构建历史记录的快速查找映射，Key为groupName
+            val historicalGroupMap: Map<String, ResourcePublicVarGroupReferPO> = 
+                historicalReferInfos.associateBy { it.groupName }
+            
+            // 步骤2：处理历史引用记录 - 识别需要删除的引用
+            historicalReferInfos.forEach { historical ->
+                // 场景1：变量组在当前列表中不存在 -> 删除操作
+                if (!currentGroupNames.contains(historical.groupName)) {
+                    val changeInfo = changeInfoMap.getOrPut(historical.groupName) {
+                        VarGroupVersionChangeInfo(
+                            groupName = historical.groupName,
+                            version = historical.version,
+                            sourceProjectId = historical.sourceProjectId ?: projectId,
+                            referId = historical.referId,
+                            referType = historical.referType,
+                            referVersion = historical.referVersion
                         )
                     }
-                }
-
-                // 收集所有需要更新引用计数的变量组
-                val allAffectedGroups = resourcePublicVarGroupReferPOS
-                    .map { Pair(it.groupName, it.version) }
-                    .distinct()
-
-                // 统一更新所有受影响的变量组引用计数
-                allAffectedGroups.forEach { (groupName, version) ->
-                    updateSingleGroupReferCount(
-                        context = dslContext,
-                        projectId = projectId,
-                        groupName = groupName,
-                        version = version,
-                        redisLock = null
-                    )
+                    changeInfo.setDeleteOperation(historical)
                 }
             }
+            
+            // 步骤3：处理当前引用记录 - 识别需要新增或版本切换的引用
+            resourcePublicVarGroupReferPOS.forEach { current ->
+                // 使用groupName查找历史记录
+                val historical = historicalGroupMap[current.groupName]
+                
+                when {
+                    // 场景2：变量组在历史列表中不存在 -> 新增操作
+                    historical == null -> {
+                        val changeInfo = changeInfoMap.getOrPut(current.groupName) {
+                            VarGroupVersionChangeInfo(
+                                groupName = current.groupName,
+                                version = current.version,
+                                sourceProjectId = current.sourceProjectId ?: projectId,
+                                referId = current.referId,
+                                referType = current.referType,
+                                referVersion = current.referVersion
+                            )
+                        }
+                        changeInfo.setAddOperation(current)
+                    }
+                    // 场景3：变量组在历史列表中存在且版本不同 -> 版本切换操作
+                    historical.version != current.version -> {
+                        val changeInfo = changeInfoMap.getOrPut(current.groupName) {
+                            VarGroupVersionChangeInfo(
+                                groupName = current.groupName,
+                                version = current.version,
+                                sourceProjectId = current.sourceProjectId ?: projectId,
+                                referId = current.referId,
+                                referType = current.referType,
+                                referVersion = current.referVersion
+                            )
+                        }
+                        changeInfo.setDeleteOperation(historical)
+                        changeInfo.setAddOperation(current)
+                    }
+                }
+            }
+            
+            // 步骤4：过滤出有实际变化的记录
+            val changeInfos = changeInfoMap.values.filter { it.hasChanges() }
+            
+            // 步骤5：批量更新引用计数
+            if (changeInfos.isNotEmpty()) {
+                publicVarGroupReferCountService.batchUpdateReferWithCount(
+                    projectId = projectId,
+                    changeInfos = changeInfos
+                )
+            }
         } catch (e: Throwable) {
-            logger.warn("Async update reference count failed for projectId: $projectId", e)
+            logger.warn("Failed to update reference count for projectId: $projectId", e)
         }
     }
 
@@ -862,7 +750,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
     }
 
     /**
-     * 删除指定版本的变量组引用
+     * 删除指定版本的变量组引用与变量引用记录
      */
     fun deletePublicGroupRefer(
         userId: String,
@@ -871,51 +759,29 @@ class PublicVarGroupReferManageService @Autowired constructor(
         referType: PublicVerGroupReferenceTypeEnum,
         referVersion: Int
     ) {
-
         try {
             // 查询要删除的引用记录
             val referInfosToDelete = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,
                 projectId = projectId,
                 referId = referId,
-                referType = referType
-            ).filter { it.referVersion == referVersion }
+                referType = referType,
+                referVersion = referVersion
+            )
 
             if (referInfosToDelete.isEmpty()) {
-                logger.info(
-                    "No reference found for referId: $referId with version: $referVersion, skip deletion"
-                )
+                logger.info("No reference found for referId: $referId, referVersion: $referVersion, skip deletion")
                 return
             }
 
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-
-                // 删除指定版本的变量组引用记录
-                publicVarGroupReferInfoDao.deleteByReferId(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = referId,
-                    referType = referType,
-                    referVersion = referVersion
-                )
-
-                // 删除指定版本的变量引用记录
-                publicVarReferInfoDao.deleteByReferIdAndVersion(
-                    dslContext = context,
-                    projectId = projectId,
-                    referId = referId,
-                    referType = referType,
-                    referVersion = referVersion
-                )
-
-                // 在同一事务中更新引用计数
-                updateReferenceCounts(
-                    context = context,
-                    projectId = projectId,
-                    referInfos = referInfosToDelete
-                )
-            }
+            // 删除变量组引用和变量引用记录
+            publicVarGroupReferCountService.batchRemoveReferInfo(
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referInfosToDelete = referInfosToDelete,
+                referVersion = referVersion
+            )
         } catch (t: Throwable) {
             logger.warn("Failed to delete refer info for referId: $referId with version: $referVersion", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)

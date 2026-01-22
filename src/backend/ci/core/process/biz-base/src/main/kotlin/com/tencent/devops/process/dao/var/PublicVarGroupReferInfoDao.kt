@@ -501,6 +501,37 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
+     * 批量删除多个变量组的引用记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referId 引用ID
+     * @param referType 引用类型
+     * @param groupNames 变量组名列表
+     * @param referVersion 引用版本
+     */
+    fun batchDeleteByReferIdAndGroups(
+        dslContext: DSLContext,
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        groupNames: List<String>,
+        referVersion: Int
+    ) {
+        if (groupNames.isEmpty()) {
+            return
+        }
+        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REFER_ID.eq(referId))
+                .and(REFER_TYPE.eq(referType.name))
+                .and(GROUP_NAME.`in`(groupNames))
+                .and(REFER_VERSION.eq(referVersion))
+                .execute()
+        }
+    }
+
+    /**
      * 批量保存变量组引用信息（支持更新）
      * @param dslContext 数据库上下文
      * @param resourcePublicVarGroupReferPOS 变量组引用PO列表

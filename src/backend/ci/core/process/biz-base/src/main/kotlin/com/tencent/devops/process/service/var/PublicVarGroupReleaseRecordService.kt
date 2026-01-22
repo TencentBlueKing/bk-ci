@@ -66,7 +66,10 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         const val SHOW_INFO = "showInfo"
     }
 
-    fun batchAddPublicVarGroupReleaseRecord(publicVarGroupReleaseDTO: PublicVarGroupReleaseDTO) {
+    fun batchAddPublicVarGroupReleaseRecord(
+        dslContext: DSLContext,
+        publicVarGroupReleaseDTO: PublicVarGroupReleaseDTO
+    ) {
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
@@ -473,7 +476,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 type = po.type,
                 valueType = po.valueType,
                 defaultValue = po.defaultValue,
-                referCount = po.referCount,
                 buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
             )
         }

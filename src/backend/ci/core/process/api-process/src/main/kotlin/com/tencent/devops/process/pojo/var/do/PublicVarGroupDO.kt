@@ -35,8 +35,12 @@ import java.time.LocalDateTime
 data class PublicVarGroupDO(
     @get:Schema(title = "变量组名称")
     val groupName: String,
-    @get:Schema(title = "关联流水线/模板总数")
+    @get:Schema(title = "关联流水线/模板总数（动态版本+固定版本）")
     val referCount: Int,
+    @get:Schema(title = "动态版本引用数量")
+    val dynamicVersionReferCount: Int = 0,
+    @get:Schema(title = "固定版本引用数量")
+    val fixedVersionReferCount: Int = 0,
     @get:Schema(title = "变量总数")
     val varCount: Int,
     @get:Schema(title = "变量组描述")

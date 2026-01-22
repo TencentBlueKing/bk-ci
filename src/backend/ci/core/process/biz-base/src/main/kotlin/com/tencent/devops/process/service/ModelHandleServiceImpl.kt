@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelHandleService
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
+import com.tencent.devops.common.pipeline.ModelVarReferenceHandleContext
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.template.ITemplateModel
@@ -51,12 +52,13 @@ class ModelHandleServiceImpl @Autowired constructor(
 
     override fun handleModelVarReferences(
         userId: String,
-        projectId: String,
-        resourceId: String,
-        resourceType: String,
-        model: Model?,
-        resourceVersion: Int
+        context: ModelVarReferenceHandleContext
     ) {
+        val projectId = context.projectId
+        val resourceId = context.resourceId
+        val resourceType = context.resourceType
+        val model = context.model
+        val resourceVersion = context.resourceVersion
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = "$MODEL_VAR_REF_LOCK_KEY:$projectId:$resourceType:$resourceId:$resourceVersion",

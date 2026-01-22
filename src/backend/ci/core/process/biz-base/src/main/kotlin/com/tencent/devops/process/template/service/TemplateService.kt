@@ -114,7 +114,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun getTemplateLatestVersion(templateId: String): Long? {
-        return templateDao.getLatestTemplate(dslContext, templateId).version
+        return templateDao.getLatestTemplateVersion(dslContext, templateId)
     }
 
     companion object {

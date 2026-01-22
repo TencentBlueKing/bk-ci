@@ -51,7 +51,6 @@ class PublicVarGroupDao {
             versionName = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.VERSION_NAME),
             latestFlag = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.LATEST_FLAG),
             desc = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.DESC),
-            referCount = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.REFER_COUNT),
             varCount = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.VAR_COUNT),
             creator = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.CREATOR),
             modifier = record.getValue(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP.MODIFIER),
@@ -78,7 +77,6 @@ class PublicVarGroupDao {
                 .set(VERSION_NAME, publicVarGroupPO.versionName)
                 .set(LATEST_FLAG, publicVarGroupPO.latestFlag)
                 .set(DESC, publicVarGroupPO.desc)
-                .set(REFER_COUNT, publicVarGroupPO.referCount)
                 .set(VAR_COUNT, publicVarGroupPO.varCount)
                 .set(CREATOR, publicVarGroupPO.creator)
                 .set(MODIFIER, publicVarGroupPO.modifier)
@@ -131,6 +129,32 @@ class PublicVarGroupDao {
                 .associate { record ->
                     record.getValue(GROUP_NAME) to record.getValue(VERSION)
                 }
+        }
+    }
+
+    /**
+     * 获取指定版本之前的最大版本号（前一个版本）
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param currentVersion 当前版本号
+     * @return 前一个版本号，如果不存在则返回null
+     */
+    fun getPreviousVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        currentVersion: Int
+    ): Int? {
+        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
+            return dslContext.select(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.lt(currentVersion))
+                .orderBy(VERSION.desc())
+                .limit(1)
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -367,60 +391,6 @@ class PublicVarGroupDao {
     }
 
     /**
-     * 直接设置变量组的引用计数（非增量更新）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param referCount 引用计数值
-     */
-    fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        referCount: Int
-    ) {
-        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .execute()
-        }
-    }
-
-    /**
-     * 原子增量更新引用计数（线程安全）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param countChange 计数变化量（正数表示增加，负数表示减少）
-     * @return 更新的行数
-     */
-    fun incrementReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        countChange: Int
-    ): Int {
-        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
-            return dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
-                .execute()
-        }
-    }
-
-    /**
      * 更新变量组的最新版本标识
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
@@ -440,54 +410,6 @@ class PublicVarGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
                 .and(LATEST_FLAG.eq(true))
-                .execute()
-        }
-    }
-
-    /**
-     * 更新变量组名下所有版本的引用计数（非增量更新）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param referCount 引用计数值
-     */
-    fun updateVarGroupNameReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        referCount: Int
-    ) {
-        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .execute()
-        }
-    }
-
-    /**
-     * 原子增量更新变量组名称的引用计数（线程安全）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param countChange 计数变化量（正数表示增加，负数表示减少）
-     * @return 更新的行数
-     */
-    fun incrementVarGroupNameReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        countChange: Int
-    ): Int {
-        with(TResourcePublicVarGroup.T_RESOURCE_PUBLIC_VAR_GROUP) {
-            return dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(countChange))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(REFER_COUNT.plus(countChange).ge(0)) // 确保不会变成负数
                 .execute()
         }
     }

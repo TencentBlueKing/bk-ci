@@ -511,7 +511,6 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                     valueType = varPO.valueType,
                     defaultValue = varPO.defaultValue,
                     desc = varPO.desc,
-                    referCount = varReferCountMap[varPO.varName] ?: 0,
                     buildFormProperty = buildFormProperty
                 )
             }

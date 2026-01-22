@@ -25,27 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.`do`
+package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "公共变量基本信息")
-data class PublicVarDO(
-    @get:Schema(title = "变量名称")
-    val varName: String,
-    @get:Schema(title = "别名")
-    val alias: String,
-    @get:Schema(title = "变量组描述")
-    val desc: String? = null,
-    @get:Schema(title = "变量组件类型(常量/变量)")
-    val type: PublicVarTypeEnum,
-    @get:Schema(title = "变量值类型", required = true)
-    var valueType: BuildFormPropertyType,
-    @get:Schema(title = "默认值")
-    val defaultValue: Any? = null,
-    @get:Schema(title = "构建模型")
-    val buildFormProperty: BuildFormProperty
+/**
+ * 变量组引用更新上下文
+ * 按 (sourceProjectId, groupName) 分组的操作集合
+ */
+@Schema(title = "变量组引用更新上下文")
+data class VarGroupReferUpdateContext(
+    @get:Schema(title = "当前项目ID，用于删除记录")
+    val projectId: String,
+    @get:Schema(title = "源项目ID，用于更新计数和获取锁")
+    val sourceProjectId: String,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "引用资源ID")
+    val referId: String,
+    @get:Schema(title = "引用资源类型")
+    val referType: PublicVerGroupReferenceTypeEnum,
+    @get:Schema(title = "引用资源版本号")
+    val referVersion: Int,
+    @get:Schema(title = "需要删除的引用记录")
+    val referInfosToDelete: List<ResourcePublicVarGroupReferPO>,
+    @get:Schema(title = "需要新增的引用记录")
+    val referInfosToAdd: List<ResourcePublicVarGroupReferPO>,
+    @get:Schema(title = "版本号到计数变化量的映射（正数增加，负数减少）")
+    val countChanges: Map<Int, Int>
 )

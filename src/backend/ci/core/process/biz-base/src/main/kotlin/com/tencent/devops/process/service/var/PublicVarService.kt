@@ -84,7 +84,7 @@ class PublicVarService @Autowired constructor(
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
-        if (segmentIds.isNullOrEmpty()) {
+        if (segmentIds.isNullOrEmpty()|| segmentIds.size != publicVarDTO.publicVars.size) {
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("Failed to generate segment IDs")
@@ -109,7 +109,6 @@ class PublicVarService @Autowired constructor(
                 valueType = it.valueType,
                 defaultValue = it.defaultValue,
                 desc = it.desc,
-                referCount = 0,
                 groupName = groupName,
                 version = publicVarDTO.version,
                 buildFormProperty = JsonUtil.toJson(it.buildFormProperty),
@@ -119,21 +118,36 @@ class PublicVarService @Autowired constructor(
                 updateTime = LocalDateTime.now()
             )
         }
-        val oldVarPOs = publicVarDao.listVarByGroupName(
-            dslContext = context,
-            projectId = projectId,
-            groupName = groupName,
-            version = publicVarDTO.version - 1
-        )
         
-        // 批量保存和发布记录
+        // 批量保存和发布记录（在事务中执行查询和保存）
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
+            
+            // 获取前一个版本号（处理版本不连续和第一个版本的情况）
+            val previousVersion = publicVarGroupDao.getPreviousVersion(
+                dslContext = transactionContext,
+                projectId = projectId,
+                groupName = groupName,
+                currentVersion = publicVarDTO.version
+            )
+            
+            // 如果存在前一个版本，则查询前一个版本的变量；否则返回空列表
+            val oldVarPOs = if (previousVersion != null) {
+                publicVarDao.listVarByGroupName(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    groupName = groupName,
+                    version = previousVersion
+                )
+            } else {
+                emptyList()
+            }
             
             publicVarDao.batchSave(dslContext = transactionContext, publicVarGroupPOs = publicVarPOs)
             
             publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
-                PublicVarGroupReleaseDTO(
+                dslContext = transactionContext,
+                publicVarGroupReleaseDTO = PublicVarGroupReleaseDTO(
                     projectId = projectId,
                     groupName = groupName,
                     version = publicVarDTO.version,
@@ -143,14 +157,7 @@ class PublicVarService @Autowired constructor(
                     oldVarPOs = oldVarPOs
                 )
             )
-            // 统计所有版本的变量引用进行赋值
-            val varNames = publicVarPOs.map { it.varName }
-            publicVarReferInfoService.updateVarReferCount(
-                projectId = projectId,
-                groupName = groupName,
-                varNames = varNames,
-                version = null
-            )
+
         }
         return true
     }
@@ -226,7 +233,6 @@ class PublicVarService @Autowired constructor(
                 valueType = publicVarPO.valueType,
                 defaultValue = publicVarPO.defaultValue,
                 desc = publicVarPO.desc,
-                referCount = actualReferCount,
                 buildFormProperty = buildFormProperty
             )
         }
@@ -252,22 +258,17 @@ class PublicVarService @Autowired constructor(
         modelPublicVarHandleContext: ModelPublicVarHandleContext
     ): List<BuildFormProperty> {
         val publicVarGroups = modelPublicVarHandleContext.publicVarGroups.toMutableList()
-
+        if (publicVarGroups.isEmpty()) return modelPublicVarHandleContext.params
         // 筛选出需要更新到最新版本的变量组
         val groupsToUpdate = publicVarGroups.filter {
             it.version == null
         }
-        logger.info("handleModelParams modelPublicVarHandleContext.referId: ${groupsToUpdate.map { it.groupName }}")
-        if (publicVarGroups.isNullOrEmpty()) return modelPublicVarHandleContext.params
-
         // 获取sourceProjectId和引用信息
         val referId = modelPublicVarHandleContext.referId
         val referType = modelPublicVarHandleContext.referType
-        val sourceProjectId: String
-        val groupReferInfos: List<ResourcePublicVarGroupReferPO>
 
         // 查询引用信息，获取sourceProjectId
-        groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
+        val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
             referType = referType,
@@ -275,7 +276,7 @@ class PublicVarService @Autowired constructor(
             referVersion = modelPublicVarHandleContext.referVersion
         )
         // 从引用信息中获取源头项目ID，如果没有则使用当前项目ID
-        sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
+        val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
         logger.info("handleModelParams sourceProjectId: $sourceProjectId, projectId: $projectId")
 
         // 批量获取所有非固定版本组的最新版本信息
@@ -399,7 +400,8 @@ class PublicVarService @Autowired constructor(
         val indicesToRemove = varsToRemove
             .mapNotNull { varName ->
                 val pos = positionInfoMap[varName] ?: return@mapNotNull null
-                findVarIndexInParams(varName, pos.index, params)
+                val index = findVarIndexInParams(varName, pos.index, params)
+                if (index >= 0) index else null // 过滤掉未找到的变量
             }
             .sortedDescending() // 降序排序，确保先删除索引大的
 
@@ -513,9 +515,10 @@ class PublicVarService @Autowired constructor(
                 groupName = groupName,
                 version = version
             ).map { publicVarPO ->
-                JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java).apply {
-                    varGroupVersion = null // 清除版本信息
-                }
+                JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+//                    .apply {
+//                    varGroupVersion = null // 清除版本信息
+//                }
             }
         }
     }

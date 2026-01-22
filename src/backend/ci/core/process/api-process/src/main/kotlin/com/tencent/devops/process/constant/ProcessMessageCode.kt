@@ -478,6 +478,7 @@ const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组
     const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101365" // 获取公共变量组({0})的变量失败
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101366" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
     const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101367" // 获取项目({0})的公共变量组信息失败
+    const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101368" // 获取公共变量组引用锁失败，请稍后重试
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -748,6 +749,10 @@ const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组
     // 公共变量组锁相关常量
     const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
     const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
-    const val PUBLIC_VAR_GROUP_REFER_COUNT_LOCK_KEY = "PUBLIC_VAR_GROUP_REFER_COUNT_LOCK"
+    // 引用计数锁：以项目ID和变量组名为粒度，格式为 PUBLIC_VAR_GROUP_REFER_LOCK:${projectId}:${groupName}
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_GROUP_REFER_LOCK"
+    // 变量引用计数锁：以项目ID、变量组名和变量名为粒度，格式为 PUBLIC_VAR_REFER_LOCK:${projectId}:${groupName}:${varName}
+    const val PUBLIC_VAR_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_REFER_LOCK"
     const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_MAX_RETRY_TIMES = 3
 }

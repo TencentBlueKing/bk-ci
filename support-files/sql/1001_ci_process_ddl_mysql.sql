@@ -1521,7 +1521,6 @@ CREATE TABLE IF NOT EXISTS `T_RESOURCE_PUBLIC_VAR` (
     `VALUE_TYPE` varchar(64) NOT NULL COMMENT '变量值类型',
     `DEFAULT_VALUE` text COMMENT '默认值',
     `DESC` varchar(1024) DEFAULT NULL COMMENT '描述',
-    `REFER_COUNT` int(20) DEFAULT NULL COMMENT '关联流水线/模板总数',
     `GROUP_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
     `VERSION` int(11) NOT NULL DEFAULT '1' COMMENT '版本号',
     `BUILD_FORM_PROPERTY` mediumtext NOT NULL COMMENT '变量构建模型',
@@ -1541,7 +1540,6 @@ CREATE TABLE IF NOT EXISTS `T_RESOURCE_PUBLIC_VAR_GROUP` (
     `GROUP_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
     `VERSION` int(11) NOT NULL DEFAULT '1' COMMENT '版本号',
     `DESC` varchar(1024) DEFAULT NULL COMMENT '描述',
-    `REFER_COUNT` int(20) DEFAULT NULL COMMENT '关联流水线/模板总数',
     `VAR_COUNT` int(11) DEFAULT NULL COMMENT '变量个数',
     `LATEST_FLAG` bit(1) NOT NULL COMMENT '是否为最新版本， TRUE：最新 FALSE：非最新',
     `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建者',
@@ -1634,7 +1632,7 @@ CREATE TABLE IF NOT EXISTS `T_VAR_REF_DETAIL` (
    KEY `IDX_TVRD_VAR_RESOURCE` (`PROJECT_ID`,`VAR_NAME`,`RESOURCE_TYPE`,`RESOURCE_ID`,`REFER_VERSION`)
    ) ENGINE=InnoDB AUTO_INCREMENT=513 DEFAULT CHARSET=utf8mb4 COMMENT='变量引用详情表';
 
-CREATE TABLE IF NOT EXISTS `t_resource_public_var_group_version_summary` (
+CREATE TABLE IF NOT EXISTS `T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY` (
    `id` bigint(32) NOT NULL COMMENT '主键ID',
    `project_id` varchar(64) NOT NULL COMMENT '项目ID',
    `group_name` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
@@ -1645,10 +1643,10 @@ CREATE TABLE IF NOT EXISTS `t_resource_public_var_group_version_summary` (
    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
    PRIMARY KEY (`id`),
-   UNIQUE KEY `uni_inx_tppvgs_group_project_name_version` (`project_id`, `group_name`, `version`)
+   UNIQUE KEY `UNI_INX_TPPVGS_GROUP_PROJECT_NAME_VERSION` (`project_id`, `group_name`, `version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线公共变量组版本基本概要信息表';
 
-CREATE TABLE IF NOT EXISTS `t_pipeline_public_var_version_summary` (
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY` (
    `id` bigint(32) NOT NULL COMMENT '主键ID',
    `project_id` varchar(64) NOT NULL COMMENT '项目ID',
    `group_name` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
@@ -1661,7 +1659,7 @@ CREATE TABLE IF NOT EXISTS `t_pipeline_public_var_version_summary` (
    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
    PRIMARY KEY (`id`),
    KEY `inx_tppvs_var_project_name` (`project_id`, `var_name`),
-   UNIQUE KEY `uni_inx_tppvs_var_group_project_name_version` (`project_id`, `group_name`, `version`, `var_name`)
+   UNIQUE KEY `UNI_INX_TPPVS_VAR_GROUP_PROJECT_NAME_VERSION` (`project_id`, `group_name`, `version`, `var_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线公共变量版本基本概要信息表';
 
 SET FOREIGN_KEY_CHECKS = 1;

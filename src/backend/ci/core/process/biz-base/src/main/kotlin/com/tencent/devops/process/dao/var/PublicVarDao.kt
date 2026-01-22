@@ -58,7 +58,6 @@ class PublicVarDao {
                 VALUE_TYPE,
                 DEFAULT_VALUE,
                 DESC,
-                REFER_COUNT,
                 GROUP_NAME,
                 VERSION,
                 BUILD_FORM_PROPERTY,
@@ -77,7 +76,6 @@ class PublicVarDao {
                         record.valueType.name,
                         record.defaultValue?.toString(),
                         record.desc,
-                        record.referCount,
                         record.groupName,
                         record.version,
                         record.buildFormProperty,
@@ -179,7 +177,6 @@ class PublicVarDao {
                     valueType = BuildFormPropertyType.valueOf(it.valueType),
                     defaultValue = it.defaultValue,
                     desc = it.desc,
-                    referCount = it.referCount,
                     groupName = it.groupName,
                     version = it.version,
                     buildFormProperty = it.buildFormProperty,
@@ -230,71 +227,6 @@ class PublicVarDao {
                     .groupBy(VAR_NAME)
                     .fetch().map { it.value1() }
             }
-        }
-    }
-
-    /**
-     * 更新变量引用计数（增量更新）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param varName 变量名
-     * @param change 计数变化量（正数表示增加，负数表示减少）
-     */
-    fun updateReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varName: String,
-        change: Int
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            val updateQuery = dslContext.update(this)
-                .set(REFER_COUNT, REFER_COUNT.plus(change))
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.eq(varName))
-
-            // 减少引用计数时，确保不会变成负数
-            if (change < 0) {
-                updateQuery.and(REFER_COUNT.ge(-change))
-            }
-
-            updateQuery.execute()
-        }
-    }
-
-    /**
-     * 直接设置变量引用计数（非增量更新）
-     * 用于基于实际统计结果直接更新引用计数
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @param varName 变量名
-     * @param referCount 引用计数值
-     */
-    fun updateReferCountDirectly(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varName: String,
-        referCount: Int
-    ) {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            dslContext.update(this)
-                .set(REFER_COUNT, referCount)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.eq(varName))
-                .execute()
         }
     }
 }

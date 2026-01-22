@@ -25,27 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.`var`.`do`
+package com.tencent.devops.process.pojo.`var`.po
 
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-@Schema(title = "公共变量基本信息")
-data class PublicVarDO(
-    @get:Schema(title = "变量名称")
-    val varName: String,
-    @get:Schema(title = "别名")
-    val alias: String,
-    @get:Schema(title = "变量组描述")
-    val desc: String? = null,
-    @get:Schema(title = "变量组件类型(常量/变量)")
-    val type: PublicVarTypeEnum,
-    @get:Schema(title = "变量值类型", required = true)
-    var valueType: BuildFormPropertyType,
-    @get:Schema(title = "默认值")
-    val defaultValue: Any? = null,
-    @get:Schema(title = "构建模型")
-    val buildFormProperty: BuildFormProperty
+/**
+ * 公共变量组版本概要信息PO
+ * 用于按版本维度统计变量组的引用数量
+ * 版本号为-1时表示动态版本引用
+ */
+@Schema(title = "公共变量组版本概要信息")
+data class PublicVarGroupVersionSummaryPO(
+    @get:Schema(title = "主键ID")
+    val id: Long,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号（动态版本为-1）")
+    val version: Int,
+    @get:Schema(title = "关联流水线/模板总数")
+    val referCount: Int = 0,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "修改人")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
 )
