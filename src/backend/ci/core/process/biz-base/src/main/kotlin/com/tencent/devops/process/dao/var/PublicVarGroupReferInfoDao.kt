@@ -175,7 +175,7 @@ class PublicVarGroupReferInfoDao {
     }
 
     /**
-     * 根据referId列表查询变量组引用信息（分页）
+     * 根据referId列表查询变量组引用信息
      */
     fun listVarGroupReferInfoByReferIds(
         dslContext: DSLContext,

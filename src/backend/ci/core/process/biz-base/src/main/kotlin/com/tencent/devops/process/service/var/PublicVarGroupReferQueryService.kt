@@ -277,7 +277,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         queryReq: PublicVarGroupInfoQueryReqDTO
     ): VarGroupReferInfoQueryResult {
         val projectId = queryReq.projectId
-        val groupName = queryReq.groupName!!
+        val groupName = queryReq.groupName ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+            params = arrayOf("groupName")
+        )
         val varName = queryReq.varName
 
         try {

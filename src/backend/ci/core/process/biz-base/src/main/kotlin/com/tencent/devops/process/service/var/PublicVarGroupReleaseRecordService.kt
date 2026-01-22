@@ -494,15 +494,14 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         version: Int?
     ): List<PublicVarDO> {
         if (varPOs.isEmpty()) return emptyList()
-        
-        // 批量查询引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取）
+
+        // 批量查询引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
         val varNames = varPOs.map { it.varName }
-        val referCountMap = if (version != null && varNames.isNotEmpty()) {
-            publicVarVersionSummaryDao.batchGetReferCountByVarNames(
+        val referCountMap = if (varNames.isNotEmpty()) {
+            publicVarVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                version = version,
                 varNames = varNames
             )
         } else {
