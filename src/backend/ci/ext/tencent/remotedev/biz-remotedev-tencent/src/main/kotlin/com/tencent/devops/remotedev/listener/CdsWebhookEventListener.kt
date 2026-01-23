@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.listener
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceMarketEventResource
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -19,10 +20,12 @@ class CdsWebhookEventListener @Autowired constructor(
 ) {
 
     fun execute(event: CdsWebhookEvent) {
-        val workspaceName = dispatchWorkspaceDao.getWorkspaceNameByEnvId(event.envId, dslContext) ?: run {
-            logger.warn("CdsWebhookEventListener|${event}|workspace not found")
-            return
-        }
+        val workspaceName = event.workspaceName
+            ?: dispatchWorkspaceDao.getWorkspaceNameByEnvId(event.envId, dslContext)
+            ?: run {
+                logger.warn("CdsWebhookEventListener|${event}|workspace not found")
+                return
+            }
         val ws = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName) ?: run {
             logger.warn("CdsWebhookEventListener|${event}|windows workspace not found")
             return
@@ -34,7 +37,7 @@ class CdsWebhookEventListener @Autowired constructor(
             cdsIp = ws.hostIp ?: "",
             eventType = event.type.name.lowercase(),
             eventCode = "CDS-${event.type.name}",
-            body = "{}"
+            body = JsonUtil.toJson(event.body, false)
         )
     }
 

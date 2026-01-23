@@ -911,7 +911,7 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun cdsWebhookEvent(userId: String, type: String, envId: String): Result<Boolean> {
-        val eventType = CdsWebhookEvent.Type.fromString(type) ?: return Result(false)
+        val eventType = CdsWebhookEvent.Type.fromWebhook(type) ?: return Result(false)
         dispatcher.dispatch(
             CdsWebhookEvent(
                 userId = userId,

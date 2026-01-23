@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
@@ -54,6 +55,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceWorkspaceDispatchInterface
+import com.tencent.devops.remotedev.listener.event.CdsWebhookEvent
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -95,6 +97,7 @@ import org.springframework.stereotype.Service
 @Suppress("LongMethod")
 class WorkspaceCommon @Autowired constructor(
     private val dslContext: DSLContext,
+    private val dispatcher: SampleEventDispatcher,
     private val workspaceDao: WorkspaceDao,
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
@@ -168,6 +171,7 @@ class WorkspaceCommon @Autowired constructor(
                         errorCode = ErrorCodeEnum.WORKSPACE_CDS_ERROR.errorCode
                     )
                 }
+
                 fix.checkException() -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
@@ -316,10 +320,12 @@ class WorkspaceCommon @Autowired constructor(
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
                 return WorkspaceStatus.EXCEPTION
             }
+
             workspaceInfo.status == EnvStatusEnum.expanding -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXPANDING)
                 return WorkspaceStatus.EXPANDING
             }
+
             workspaceInfo.status == EnvStatusEnum.operating -> {
                 workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.OPERATING)
                 return WorkspaceStatus.OPERATING
@@ -533,6 +539,26 @@ class WorkspaceCommon @Autowired constructor(
                 ).data!!
         } else {
             ""
+        }
+        val owner = assigns.find { it.type == WorkspaceShared.AssignType.OWNER }
+        if (owner != null) {
+            val old = sharedDao.fetchWorkspaceSharedInfo(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ).firstOrNull()
+            dispatcher.dispatch(
+                CdsWebhookEvent(
+                    userId = owner.userId,
+                    type = CdsWebhookEvent.Type.ASSIGN,
+                    envId = "",
+                    workspaceName = workspaceName,
+                    body = mapOf(
+                        "oldOwner" to (old?.sharedUser?.takeIf { old.resourceId.isNotEmpty() } ?: ""),
+                        "newOwner" to owner.userId
+                    )
+                )
+            )
         }
         sharedDao.batchCreate(dslContext, workspaceName, operator, assigns, resourceId)
         if (notify) {
@@ -809,6 +835,7 @@ class WorkspaceCommon @Autowired constructor(
             logger.warn("execute create workspace pipeline error", e)
         }
     }
+
     /**
      * 克隆 bksec 安全策略（异步，不阻塞主流程）
      * @param oldWorkspaceName 旧工作空间名称
