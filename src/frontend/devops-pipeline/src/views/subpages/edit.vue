@@ -319,7 +319,7 @@
                     this.isLoading = true
                     await this.requestPipeline({
                         ...this.$route.params,
-                        editMode: true,
+                        actionType: 'EDIT',
                         version: this.pipelineVersion
                     })
                     this.isLoading = false

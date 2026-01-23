@@ -353,6 +353,7 @@
                         }
                     ]
                 })
+                fetchPipelinesDetails()
             }
 
             if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
@@ -365,7 +366,6 @@
                 })
                 return
             }
-            // await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })

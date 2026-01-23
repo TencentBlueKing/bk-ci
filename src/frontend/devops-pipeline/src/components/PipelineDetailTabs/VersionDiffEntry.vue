@@ -220,7 +220,8 @@
                         ...this.$route.params,
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
-                        archiveFlag: this.archiveFlag
+                        archiveFlag: this.archiveFlag,
+                        actionType: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml
