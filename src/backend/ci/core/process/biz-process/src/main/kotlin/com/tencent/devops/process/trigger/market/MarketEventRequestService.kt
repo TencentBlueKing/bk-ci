@@ -61,7 +61,7 @@ class MarketEventRequestService constructor(
                     eventId = eventId,
                     triggerType = StartType.TRIGGER_EVENT.name,
                     eventSource = envHashId,
-                    eventType = eventType,
+                    eventType = eventCode, // 记录具体事件标识，后续用于【触发事件】过滤
                     triggerUser = userId,
                     eventDesc = eventDesc,
                     requestId = requestId,
