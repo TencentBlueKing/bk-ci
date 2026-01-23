@@ -541,7 +541,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -692,7 +692,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -816,7 +816,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -970,7 +970,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -1469,7 +1469,7 @@ importers:
         version: 5.2.1(eslint@7.32.0)(typescript@3.7.5)(vue-template-compiler@2.7.16)(webpack@5.101.0(webpack-cli@6.0.1))
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -1804,7 +1804,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -2049,7 +2049,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -2390,7 +2390,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -2514,7 +2514,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -2783,7 +2783,7 @@ importers:
         version: 6.2.2(eslint@7.32.0)
       html-webpack-plugin:
         specifier: ^5.3.2
-        version: 5.6.0(webpack@5.101.0)
+        version: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       mini-css-extract-plugin:
         specifier: 2.4.2
         version: 2.4.2(webpack@5.101.0)
@@ -23873,14 +23873,14 @@ snapshots:
   add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.0(webpack@5.101.0))(webpack@5.101.0):
     dependencies:
       globby: 11.1.0
-      html-webpack-plugin: 5.6.0(webpack@5.101.0)
+      html-webpack-plugin: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       micromatch: 4.0.8
       webpack: 5.101.0(webpack-cli@6.0.1)
 
   add-asset-html-webpack-plugin@6.0.0(html-webpack-plugin@5.6.0(webpack@5.101.0(webpack-cli@6.0.1)))(webpack@5.101.0(webpack-cli@6.0.1)):
     dependencies:
       globby: 11.1.0
-      html-webpack-plugin: 5.6.0(webpack@5.101.0)
+      html-webpack-plugin: 5.6.0(webpack@5.101.0(webpack-cli@6.0.1))
       micromatch: 4.0.8
       webpack: 5.101.0(webpack-cli@6.0.1)
 
@@ -28981,7 +28981,7 @@ snapshots:
       util.promisify: 1.0.0
       webpack: 5.101.3(webpack-cli@6.0.1(webpack-bundle-analyzer@4.10.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(webpack-dev-server@5.2.2)(webpack@5.101.0))
 
-  html-webpack-plugin@5.6.0(webpack@5.101.0):
+  html-webpack-plugin@5.6.0(webpack@5.101.0(webpack-cli@6.0.1)):
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0

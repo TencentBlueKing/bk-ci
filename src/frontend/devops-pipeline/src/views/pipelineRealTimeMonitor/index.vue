@@ -99,8 +99,22 @@
              * 处理下钻点击跳转到监控页面
              */
             const handleClickJump = (val) => {
-                const [startTime, endTime] = timeRange.value
-                console.log('点击跳转，时间范围(秒):', { startTime, endTime }, '标签:', val)
+                const [originalStartTime, endTime] = timeRange.value
+                let startTime = originalStartTime
+                
+                // 针对当前流水线状态的项目，进行时间范围限制处理
+                const currentPipelineStatusIds = ['runningPipelines', 'waitingPipelines', 'waitingJob', 'auditPipelines']
+                if (currentPipelineStatusIds.includes(val)) {
+                    // 检查时间差是否大于两天（2天 = 2 * 24 * 60 * 60 秒）
+                    const twoDaysInSeconds = 2 * 24 * 60 * 60
+                    const timeDiff = endTime - startTime
+                    
+                    if (timeDiff > twoDaysInSeconds) {
+                        // 如果时间差大于两天，将startTime调整为endTime往前两天
+                        startTime = endTime - twoDaysInSeconds
+                    }
+                }
+                
                 const projectId = proxy.$route.params.projectId
             
                 // 从urlMap对象中获取对应的URL生成函数

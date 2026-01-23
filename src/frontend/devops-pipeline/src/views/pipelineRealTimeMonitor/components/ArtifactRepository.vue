@@ -86,16 +86,25 @@
              */
             const extractValueWithAutoUnit = (result) => {
                 const value = extractValue(result)
-                if (value === '--' || isNaN(value)) {
+                if (value === '--' || (isNaN(value) && value !== 0)) {
                     return { value: '--', unit: 'B' }
                 }
             
                 const bytes = Number(value)
+                
+                // 特殊处理：如果值为0，直接返回0
+                if (bytes === 0) {
+                    return {
+                        value: 0,
+                        unit: 'B'
+                    }
+                }
+                
                 const units = ['B', 'KB', 'MB', 'GB', 'TB']
             
                 // 从最大单位开始检查，找到合适的单位
                 for (let i = units.length - 1; i >= 0; i--) {
-                    const divisor = Math.pow(1000, i) // 使用1000进制
+                    const divisor = Math.pow(1024, i) // 使用1024进制
                     const convertedValue = bytes / divisor
                 
                     // 如果转换后的值大于等于1，选择该单位
@@ -124,7 +133,6 @@
                 try {
                     const [startTime, endTime] = props.timeRange
                     const timeRangeDiff = endTime - startTime
-                
                     const promqlConfigs = [
                         { id: 'totalArtifacts', promql: totalArtifacts, isStatic: true },
                         { id: 'addedArtifacts', promql: addedArtifacts },
@@ -150,12 +158,23 @@
                     capacityMetrics.value = capacityMetrics.value.map(item => {
                         const configIndex = promqlConfigs.findIndex(config => config.id === item.id)
                         if (configIndex !== -1) {
-                            // 所有制品库相关数据都使用智能单位转换
-                            const extractedData = extractValueWithAutoUnit(results[configIndex])
-                            return {
-                                ...item,
-                                value: extractedData.value,
-                                unit: extractedData.unit
+                            // uploadArtifacts 和 downloadArtifacts 不需要单位转换，直接返回结果，单位是"次"
+                            if (item.id === 'uploadArtifacts' || item.id === 'downloadArtifacts') {
+                                const rawResult = results[configIndex]
+                                const value = extractValue(rawResult)
+                                return {
+                                    ...item,
+                                    value: value, // 保留整数
+                                    unit: '次'
+                                }
+                            } else {
+                                // 其他制品库相关数据都使用智能单位转换
+                                const extractedData = extractValueWithAutoUnit(results[configIndex])
+                                return {
+                                    ...item,
+                                    value: extractedData.value,
+                                    unit: extractedData.unit
+                                }
                             }
                         }
                         return item

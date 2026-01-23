@@ -27,7 +27,7 @@
                 ></Logo>
             </div>
             <div class="capacity-value">
-                {{ value || '--' }} <span class="capacity-unit">{{ unit }}</span>
+                {{ value }} <span class="capacity-unit">{{ unit }}</span>
             </div>
         </div>
         <div

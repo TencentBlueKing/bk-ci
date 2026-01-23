@@ -77,15 +77,22 @@
             
                 loading.value = true
                 try {
-                    const [startTime, endTime] = props.timeRange
-                
+                    const [originalStartTime, endTime] = props.timeRange
+                    let startTime = originalStartTime
+                    // 检查时间差是否大于两天（2天 = 2 * 24 * 60 * 60 秒）
+                    const twoDaysInMs = 2 * 24 * 60 * 60
+                    const timeDiff = endTime - startTime
+                    if (timeDiff > twoDaysInMs) {
+                        // 如果时间差大于两天，将startTime调整为endTime往前两天
+                        startTime = endTime - twoDaysInMs
+                    }
                     const promqlConfigs = [
                         { id: 'runningPipelines', promql: runningPipelines },
                         { id: 'waitingPipelines', promql: waitingPipelines },
                         { id: 'waitingJob', promql: waitingJob },
                         { id: 'auditPipelines', promql: auditPipelines }
                     ]
-
+          
                     const results = await Promise.all(
                         promqlConfigs.map(config =>
                             proxy.$store.dispatch('pipelines/getMetrics', {

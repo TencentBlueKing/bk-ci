@@ -49,7 +49,7 @@
             /**
              * 提取数据的辅助函数
              */
-            const extractValue = (result) => {
+            const extractValue = (result, id = null) => {
                 if (!result?.data?.series || result.data.series.length === 0) {
                     return '--'
                 }
@@ -58,12 +58,17 @@
                     return '--'
                 }
             
-                const numValue = Number(datapoint)
+                let numValue = Number(datapoint)
+                
+                // 如果是 successRate，需要乘以100转换为百分比
+                if (id === 'successRate') {
+                    numValue = numValue * 100
+                }
+                
                 if (!Number.isInteger(numValue) && !isNaN(numValue)) {
                     return numValue.toFixed(2)
                 }
-            
-                return datapoint
+                return numValue
             }
 
             /**
@@ -98,7 +103,7 @@
                     executionStatisticsList.value = executionStatisticsList.value.map(item => {
                         const configIndex = promqlConfigs.findIndex(config => config.id === item.id)
                         if (configIndex !== -1) {
-                            return { ...item, value: extractValue(results[configIndex]) }
+                            return { ...item, value: extractValue(results[configIndex], item.id) }
                         }
                         return item
                     })
