@@ -203,7 +203,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId, pageSize)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -234,7 +236,9 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerAgentHashIds = triggerAgentHashIds
         )
         return Result(result)
     }

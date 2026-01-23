@@ -357,7 +357,13 @@ interface AppPipelineBuildResource {
         triggerBranch: List<String>?,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>? = null,
+        @Parameter(description = "触发节点agentHashId", required = false)
+        @QueryParam("triggerAgentHashIds")
+        triggerAgentHashIds: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取流水线构建参数")

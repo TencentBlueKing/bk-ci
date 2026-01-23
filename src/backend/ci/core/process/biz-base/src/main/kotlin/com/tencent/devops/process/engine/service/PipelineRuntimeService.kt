@@ -402,7 +402,9 @@ class PipelineRuntimeService @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -438,7 +440,9 @@ class PipelineRuntimeService @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerAgentHashIds = triggerAgentHashIds
         )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
@@ -2042,7 +2046,9 @@ class PipelineRuntimeService @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
@@ -2071,7 +2077,9 @@ class PipelineRuntimeService @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerAgentHashIds = triggerAgentHashIds
         )
     }
 

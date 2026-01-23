@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.api.util.JsonUtil
@@ -141,7 +142,9 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
+import com.tencent.devops.process.strategy.factory.HistoryConditionQueryStrategyFactory
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
+import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
@@ -191,7 +194,8 @@ class PipelineBuildFacadeService(
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
     private val pipelineBuildRetryService: PipelineBuildRetryService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val historyConditionQueryStrategyFactory: HistoryConditionQueryStrategyFactory
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -2058,7 +2062,9 @@ class PipelineBuildFacadeService(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2121,7 +2127,9 @@ class PipelineBuildFacadeService(
                 debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
-                triggerUser = triggerUser
+                triggerUser = triggerUser,
+                triggerEventTypes = triggerEventTypes,
+                triggerAgentHashIds = triggerAgentHashIds
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2155,7 +2163,9 @@ class PipelineBuildFacadeService(
                 debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
-                triggerUser = triggerUser
+                triggerUser = triggerUser,
+                triggerEventTypes = triggerEventTypes,
+                triggerAgentHashIds = triggerAgentHashIds
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -2231,6 +2241,25 @@ class PipelineBuildFacadeService(
             )
         )
         return StartType.getStartTypeMap(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+    }
+
+    fun getHistoryConditions(request: HistoryConditionQueryRequest): Page<IdValue> {
+        // 权限校验
+        pipelinePermissionService.validPipelinePermission(
+            userId = request.userId,
+            projectId = request.projectId,
+            pipelineId = request.pipelineId,
+            permission = AuthPermission.VIEW,
+            message = MessageUtil.getMessageByLocale(
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(request.userId),
+                arrayOf(request.userId, request.pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
+            )
+        )
+        // 根据条件类型获取对应的策略
+        val strategy = historyConditionQueryStrategyFactory.getStrategy(request.conditionType)
+        // 调用策略查询数据
+        return strategy.query(request)
     }
 
     fun getHistoryConditionRepo(

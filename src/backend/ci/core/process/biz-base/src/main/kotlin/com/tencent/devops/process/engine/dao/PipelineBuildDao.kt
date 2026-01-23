@@ -50,11 +50,14 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.BuildRetryInfo
+import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
+import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryResult
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
 import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -62,6 +65,7 @@ import org.jooq.DatePart
 import org.jooq.Record2
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
+import org.jooq.Table
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -79,6 +83,9 @@ class PipelineBuildDao {
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
+            val buildParameters = startBuildContext.buildParameters
+            val nodeAgentHashId =
+                buildParameters.firstOrNull { it.key == CREATIVE_STREAM_NODE_AGENT_ID }?.value?.toString()
             if (!startBuildContext.debug) {
                 with(T_PIPELINE_BUILD_HISTORY) {
                     dslContext.insertInto(
@@ -106,7 +113,8 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         VERSION_NAME,
                         YAML_VERSION,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        NODE_AGENT_HASH_ID
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -123,7 +131,7 @@ class PipelineBuildDao {
                         startBuildContext.channelCode.name,
                         startBuildContext.resourceVersion,
                         LocalDateTime.now(),
-                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                        JsonUtil.toJson(buildParameters, formatted = false),
                         startBuildContext.webhookInfo?.webhookType,
                         startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         startBuildContext.buildMsg,
@@ -131,7 +139,8 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        nodeAgentHashId
                     ).execute()
                 }
             } else {
@@ -161,7 +170,8 @@ class PipelineBuildDao {
                         CONCURRENCY_GROUP,
                         YAML_VERSION,
                         RESOURCE_MODEL,
-                        EXECUTE_COUNT
+                        EXECUTE_COUNT,
+                        NODE_AGENT_HASH_ID
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -186,7 +196,8 @@ class PipelineBuildDao {
                         startBuildContext.concurrencyGroup,
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
-                        startBuildContext.executeCount
+                        startBuildContext.executeCount,
+                        nodeAgentHashId
                     ).execute()
                 }
             }
@@ -1032,7 +1043,9 @@ class PipelineBuildDao {
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): Int {
         return if (debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1062,7 +1075,9 @@ class PipelineBuildDao {
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
                     triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    triggerUser = triggerUser,
+                    triggerEventTypes = triggerEventTypes,
+                    triggerAgentHashIds = triggerAgentHashIds
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1095,7 +1110,9 @@ class PipelineBuildDao {
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
                     triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    triggerUser = triggerUser,
+                    triggerEventTypes = triggerEventTypes,
+                    triggerAgentHashIds = triggerAgentHashIds
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1132,7 +1149,9 @@ class PipelineBuildDao {
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ): Collection<BuildInfo> {
         return if (debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1161,7 +1180,9 @@ class PipelineBuildDao {
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
                     triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    triggerUser = triggerUser,
+                    triggerEventTypes = triggerEventTypes,
+                    triggerAgentHashIds = triggerAgentHashIds
                 )
 
                 when (updateTimeDesc) {
@@ -1200,7 +1221,9 @@ class PipelineBuildDao {
                     buildMsg = buildMsg,
                     triggerAlias = triggerAlias,
                     triggerBranch = triggerBranch,
-                    triggerUser = triggerUser
+                    triggerUser = triggerUser,
+                    triggerEventTypes = triggerEventTypes,
+                    triggerAgentHashIds = triggerAgentHashIds
                 )
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
@@ -1237,7 +1260,9 @@ class PipelineBuildDao {
         buildMsg: String?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ) {
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
@@ -1368,6 +1393,12 @@ class PipelineBuildDao {
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
             where.and(TRIGGER_USER.`in`(triggerUser))
         }
+        if (!triggerEventTypes.isNullOrEmpty()) {
+            where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
+        }
+        if (!triggerAgentHashIds.isNullOrEmpty()) {
+            where.and(NODE_AGENT_HASH_ID.`in`(triggerAgentHashIds))
+        }
     }
 
     private fun TPipelineBuildHistoryDebug.makeDebugCondition(
@@ -1394,7 +1425,9 @@ class PipelineBuildDao {
         buildMsg: String?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerAgentHashIds: List<String>?
     ) {
         // 增加过滤，对前端屏蔽已删除的构建
         where.and(DELETE_TIME.isNull)
@@ -1526,6 +1559,12 @@ class PipelineBuildDao {
         }
         if (!triggerUser.isNullOrEmpty()) { // filterNotNull不能删
             where.and(TRIGGER_USER.`in`(triggerUser))
+        }
+        if (!triggerEventTypes.isNullOrEmpty()) {
+            where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
+        }
+        if (!triggerAgentHashIds.isNullOrEmpty()) {
+            where.and(NODE_AGENT_HASH_ID.`in`(triggerAgentHashIds))
         }
     }
 
@@ -2105,5 +2144,101 @@ class PipelineBuildDao {
                 )
             }
         }
+    }
+
+    /**
+     * 查询历史构建条件值（支持分页和关键字过滤）
+     * @param param 查询参数
+     * @return 查询结果，包含原始值列表和总数
+     */
+    fun queryHistoryConditions(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        // 根据debug标志选择表并执行查询
+        return if (param.debug) {
+            queryFromDebugTable(param)
+        } else {
+            queryFromNormalTable(param)
+        }
+    }
+
+    /**
+     * 从正常表查询
+     */
+    private fun queryFromNormalTable(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = buildHistoryConditions(param)
+            executeHistoryQuery(param, conditions, this)
+        }
+    }
+
+    /**
+     * 从调试表查询
+     */
+    private fun queryFromDebugTable(param: HistoryConditionQueryParam): HistoryConditionQueryResult {
+        return with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            val conditions = buildHistoryConditions(param)
+            // 调试表需要额外过滤已删除的记录
+            conditions.add(DELETE_TIME.isNull)
+            executeHistoryQuery(param, conditions, this)
+        }
+    }
+
+    private fun Any.buildHistoryConditions(param: HistoryConditionQueryParam): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        when (this) {
+            is TPipelineBuildHistory -> {
+                conditions.add(PROJECT_ID.eq(param.projectId))
+                conditions.add(PIPELINE_ID.eq(param.pipelineId))
+            }
+            is TPipelineBuildHistoryDebug -> {
+                conditions.add(PROJECT_ID.eq(param.projectId))
+                conditions.add(PIPELINE_ID.eq(param.pipelineId))
+            }
+        }
+        conditions.add(param.field.isNotNull)
+        if (!param.keyword.isNullOrBlank()) {
+            val escapedKeyword = param.keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+            conditions.add(param.field.contains(escapedKeyword))
+        }
+        return conditions
+    }
+
+    /**
+     * 执行查询（公共逻辑）
+     */
+    private fun <T : Table<*>> executeHistoryQuery(
+        param: HistoryConditionQueryParam,
+        conditions: MutableList<Condition>,
+        table: T
+    ): HistoryConditionQueryResult {
+        // 查询总数（使用count distinct）
+        val totalCount = param.dslContext.select(DSL.countDistinct(param.field))
+            .from(table)
+            .where(conditions)
+            .fetchOne(0, Long::class.java) ?: 0L
+        // 如果总数为0，直接返回空结果
+        if (totalCount == 0L) {
+            return HistoryConditionQueryResult(
+                values = emptyList(),
+                totalCount = 0L
+            )
+        }
+        // 计算分页偏移量
+        val offset = (param.page - 1) * param.pageSize
+        // 使用数据库分页查询distinct值
+        val pagedValues = param.dslContext.selectDistinct(param.field)
+            .from(table)
+            .where(conditions)
+            .orderBy(param.field.asc())
+            .limit(param.pageSize)
+            .offset(offset)
+            .fetch(param.field)
+            .filterNotNull()
+        return HistoryConditionQueryResult(
+            values = pagedValues,
+            totalCount = totalCount
+        )
     }
 }

@@ -25,29 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.enums
+package com.tencent.devops.common.pipeline.enums
 
-enum class NodeType(val typeName: String) {
-    CMDB("CMDB"),
-    DEVCLOUD("DevCloud虚拟机"),
-    THIRDPARTY("第三方构建机"),
-    CREATE("创作流机器"),
-    OTHER("其他"),
-    UNKNOWN("未知");
-
-    companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
-
-        fun getTypeName(nodeType: String): String {
-            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
-        }
-
-        fun get(nodeType: String): NodeType {
-            return values().find { it.name == nodeType } ?: UNKNOWN
-        }
-
-        fun parseByTypeName(typeName: String): NodeType {
-            return values().find { it.typeName == typeName } ?: UNKNOWN
-        }
-    }
+enum class BuildConditionType {
+    TRIGGER_METHOD, // 触发方式
+    TRIGGER_EVENT, // 触发事件
+    TRIGGER_USER, // 触发人
+    TRIGGER_NODE // 触发节点
 }
