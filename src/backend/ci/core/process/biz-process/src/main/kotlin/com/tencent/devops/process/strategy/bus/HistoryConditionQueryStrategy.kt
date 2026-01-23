@@ -44,4 +44,3 @@ interface IHistoryConditionQueryStrategy {
         request: HistoryConditionQueryRequest
     ): Page<IdValue>
 }
-

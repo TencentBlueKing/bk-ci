@@ -27,18 +27,98 @@
 
 package com.tencent.devops.process.strategy.bus.impl
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Field
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * 触发事件查询策略
  * TRIGGER_EVENT -> TRIGGER_EVENT_TYPE
  */
 @Component
-class TriggerEventQueryStrategy : AbstractHistoryConditionQueryStrategy() {
+class TriggerEventQueryStrategy @Autowired constructor(
+    private val client: Client
+) : AbstractHistoryConditionQueryStrategy() {
+
+    /**
+     * 缓存 value 到 displayName 的映射
+     * 缓存时间：30分钟
+     * 最大缓存数量：3000
+     */
+    private val displayNameCache: Cache<String, String> = Caffeine.newBuilder()
+        .maximumSize(3000)
+        .expireAfterWrite(30, TimeUnit.MINUTES)
+        .build()
+
     override fun getField(): Field<String?> {
         return T_PIPELINE_BUILD_HISTORY.TRIGGER_EVENT_TYPE
     }
-}
 
+    /**
+     * 将原始值转换为IdValue
+     * 首先尝试从接口获取组件名称，如果获取不到则使用StartType.toReadableString做国际化
+     * 使用 Caffeine 缓存优化性能
+     */
+    override fun convertToIdValue(userId: String, value: String): IdValue {
+        // 先从缓存中获取
+        val cachedDisplayName = displayNameCache.getIfPresent(value)
+        if (cachedDisplayName != null) {
+            return IdValue(value, cachedDisplayName)
+        }
+        // 缓存未命中，计算 displayName
+        val displayName = computeDisplayName(value, userId)
+        // 将结果放入缓存
+        displayNameCache.put(value, displayName)
+        return IdValue(value, displayName)
+    }
+
+    /**
+     * 计算显示名称
+     * 首先尝试从接口获取组件名称，如果获取不到则使用StartType.toReadableString做国际化
+     */
+    private fun computeDisplayName(value: String, userId: String): String {
+        // 首先尝试从接口获取组件名称
+        val componentName = try {
+            val result: Result<StoreBaseInfo?> = client.get(ServiceStoreComponentResource::class)
+                .getComponentBaseInfo(
+                    userId = userId,
+                    storeType = StoreTypeEnum.TRIGGER_EVENT.name,
+                    storeCode = value
+                )
+            val resultData = result.data
+            if (result.isOk() && resultData != null) {
+                resultData.storeName
+            } else {
+                logger.warn("Failed to get component($value) name, result:${result.message}")
+                null
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Failed to get component($value) name", ignored)
+            null
+        }
+        // 如果接口获取不到值，使用StartType.toReadableString做国际化
+        return componentName ?: StartType.toReadableString(
+            type = value,
+            channelCode = ChannelCode.getRequestChannelCode(),
+            language = I18nUtil.getLanguage(userId)
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TriggerEventQueryStrategy::class.java)
+    }
+}

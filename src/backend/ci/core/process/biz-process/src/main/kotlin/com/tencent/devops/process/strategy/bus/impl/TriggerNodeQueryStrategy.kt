@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
@@ -43,9 +45,7 @@ import org.springframework.stereotype.Component
  * 触发节点查询策略
  */
 @Component
-class TriggerNodeQueryStrategy @Autowired(
-    required = false
-) constructor(
+class TriggerNodeQueryStrategy @Autowired constructor(
     private val client: Client
 ) : IHistoryConditionQueryStrategy {
 
@@ -53,15 +53,16 @@ class TriggerNodeQueryStrategy @Autowired(
         request: HistoryConditionQueryRequest
     ): Page<IdValue> {
         // 调用远程接口获取节点数据
-        val result: Result<Page<NodeWithPermission>> =
-            client.get(ServiceNodeResource::class).fetchNodes(
-                userId = request.userId,
-                projectId = request.projectId,
-                page = request.page,
-                pageSize = request.pageSize,
-                displayName = request.keyword, // displayName对应接口的keyword参数
-                nodeType = NodeType.CREATE
-            )
+        val channelCode = ChannelCode.getRequestChannelCode()
+        val result: Result<Page<NodeWithPermission>> = client.get(ServiceNodeResource::class).fetchNodes(
+            userId = request.userId,
+            projectId = request.projectId,
+            page = request.page,
+            pageSize = request.pageSize,
+            displayName = request.keyword, // displayName对应接口的keyword参数
+            nodeType = if (channelCode == ChannelCode.CREATIVE_STREAM) NodeType.CREATE else null,
+            data = NodeFetchReq(tags = null)
+        )
         // 处理结果
         val nodePage = result.data
         if (result.isNotOk() || nodePage == null) {
@@ -88,4 +89,3 @@ class TriggerNodeQueryStrategy @Autowired(
         )
     }
 }
-

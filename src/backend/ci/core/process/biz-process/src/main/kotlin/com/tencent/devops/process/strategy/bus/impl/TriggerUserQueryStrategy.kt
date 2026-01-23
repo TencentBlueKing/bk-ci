@@ -37,8 +37,8 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TriggerUserQueryStrategy : AbstractHistoryConditionQueryStrategy() {
+
     override fun getField(): Field<String?> {
         return T_PIPELINE_BUILD_HISTORY.TRIGGER_USER
     }
 }
-

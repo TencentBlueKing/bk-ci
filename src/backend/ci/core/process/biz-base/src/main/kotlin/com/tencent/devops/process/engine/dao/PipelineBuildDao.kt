@@ -83,9 +83,7 @@ class PipelineBuildDao {
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
-            val buildParameters = startBuildContext.buildParameters
-            val nodeAgentHashId =
-                buildParameters.firstOrNull { it.key == CREATIVE_STREAM_NODE_AGENT_ID }?.value?.toString()
+            val nodeAgentHashId = startBuildContext.pipelineParamMap[CREATIVE_STREAM_NODE_AGENT_ID]?.value?.toString()
             if (!startBuildContext.debug) {
                 with(T_PIPELINE_BUILD_HISTORY) {
                     dslContext.insertInto(
@@ -131,7 +129,7 @@ class PipelineBuildDao {
                         startBuildContext.channelCode.name,
                         startBuildContext.resourceVersion,
                         LocalDateTime.now(),
-                        JsonUtil.toJson(buildParameters, formatted = false),
+                        JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
                         startBuildContext.webhookInfo?.webhookType,
                         startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         startBuildContext.buildMsg,

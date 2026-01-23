@@ -27,6 +27,10 @@
 
 package com.tencent.devops.process.strategy.bus.impl
 
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import org.jooq.Field
 import org.springframework.stereotype.Component
@@ -37,8 +41,18 @@ import org.springframework.stereotype.Component
  */
 @Component
 class TriggerMethodQueryStrategy : AbstractHistoryConditionQueryStrategy() {
+
     override fun getField(): Field<String?> {
         return T_PIPELINE_BUILD_HISTORY.TRIGGER
     }
-}
 
+    override fun convertToIdValue(userId: String, value: String): IdValue {
+        return IdValue(
+            value, StartType.toReadableString(
+                type = value,
+                channelCode = ChannelCode.getRequestChannelCode(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
+        )
+    }
+}

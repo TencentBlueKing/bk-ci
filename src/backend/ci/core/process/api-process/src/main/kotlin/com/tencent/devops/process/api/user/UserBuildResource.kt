@@ -557,10 +557,10 @@ interface UserBuildResource {
         @Parameter(description = "构建条件类型", required = true)
         @QueryParam("conditionType")
         conditionType: BuildConditionType,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = true, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = true, example = "20")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 20,

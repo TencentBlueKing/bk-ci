@@ -50,10 +50,11 @@ abstract class AbstractHistoryConditionQueryStrategy : IHistoryConditionQueryStr
     /**
      * 将原始值转换为IdValue
      * 子类可以重写此方法以实现自定义转换逻辑
+     * @param userId 用户ID
      * @param value 原始值
      * @return IdValue对象
      */
-    protected open fun convertToIdValue(value: String): IdValue {
+    protected open fun convertToIdValue(userId: String, value: String): IdValue {
         return IdValue(value, value)
     }
 
@@ -63,8 +64,8 @@ abstract class AbstractHistoryConditionQueryStrategy : IHistoryConditionQueryStr
      * @param values 原始值列表
      * @return IdValue列表
      */
-    protected open fun convertToIdValues(values: List<String>): List<IdValue> {
-        return values.map { convertToIdValue(it) }
+    protected open fun convertToIdValues(userId: String, values: List<String>): List<IdValue> {
+        return values.map { convertToIdValue(userId, it) }
     }
 
     override fun query(
@@ -85,7 +86,7 @@ abstract class AbstractHistoryConditionQueryStrategy : IHistoryConditionQueryStr
         val pipelineBuildDao = SpringContextUtil.getBean(PipelineBuildDao::class.java)
         val result = pipelineBuildDao.queryHistoryConditions(queryParam)
         // 转换为IdValue
-        val idValues = convertToIdValues(result.values)
+        val idValues = convertToIdValues(request.userId, result.values)
         // 构建分页结果
         return Page(
             page = request.page,

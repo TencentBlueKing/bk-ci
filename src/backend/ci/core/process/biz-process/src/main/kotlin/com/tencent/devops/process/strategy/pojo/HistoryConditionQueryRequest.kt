@@ -42,4 +42,3 @@ data class HistoryConditionQueryRequest(
     val page: Int = 1,
     val pageSize: Int = 20
 )
-
