@@ -512,7 +512,8 @@ class PublicVarGroupService @Autowired constructor(
             val varPOs = publicVarService.getGroupPublicVar(
                 projectId = projectId,
                 groupName = groupName,
-                version = groupRecord.version
+                version = groupRecord.version,
+                context = context
             )
             
             Pair(groupRecord, varPOs)

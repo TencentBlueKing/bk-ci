@@ -114,8 +114,8 @@ data class PreScriptBuildYamlParser(
                 val templateList = raw["template"] as? List<Map<String, String>>
                 if (raw["template"] != null && templateList == null) {
                     logger.warn(
-                        "variables.template 字段类型转换失败，" +
-                            "期望 List<Map<String, String>>，实际类型: ${raw["template"]?.javaClass?.name}"
+                        "variables.template type conversion failed, " +
+                            "expected List<Map<String, String>>, actual type: ${raw["template"]?.javaClass?.name}"
                     )
                 }
                 this.variableTemplates = templateList
@@ -125,7 +125,7 @@ data class PreScriptBuildYamlParser(
                 // 过滤掉 template 字段和 null key，并转换为 String key
                 val regularVariables = raw.filterKeys { key ->
                     if (key == null) {
-                        logger.warn("variables 中存在 null key，已忽略")
+                        logger.warn("null key found in variables, ignored")
                         false
                     } else {
                         key != "template"
@@ -143,8 +143,8 @@ data class PreScriptBuildYamlParser(
             else -> {
                 // 处理非预期类型
                 logger.warn(
-                    "variables 字段类型不支持，期望 Map<String, Any>，" +
-                        "实际类型: ${raw.javaClass.name}，值: $raw"
+                    "unsupported variables type, " +
+                        "expected Map<String, Any>, actual type: ${raw.javaClass.name}, value: $raw"
                 )
                 this.variables = null
                 this.variableTemplates = null
@@ -156,7 +156,7 @@ data class PreScriptBuildYamlParser(
         return when (value) {
             null -> {
                 // 显式处理 null 值
-                logger.warn("变量值为 null，将创建空值变量")
+                logger.warn("variable value is null, creating empty variable")
                 Variable(value = null)
             }
             // 处理对象格式

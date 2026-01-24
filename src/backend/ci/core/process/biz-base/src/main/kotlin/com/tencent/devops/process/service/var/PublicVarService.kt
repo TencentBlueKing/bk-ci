@@ -192,9 +192,14 @@ class PublicVarService @Autowired constructor(
         return (groupNamesByVarName + groupNamesByVarAlias).distinct()
     }
 
-    fun getGroupPublicVar(projectId: String, groupName: String, version: Int): List<PublicVarPO> {
+    fun getGroupPublicVar(
+        projectId: String,
+        groupName: String,
+        version: Int,
+        context: DSLContext = dslContext
+    ): List<PublicVarPO> {
         return publicVarDao.listVarByGroupName(
-            dslContext = dslContext,
+            dslContext = context,
             projectId = projectId,
             groupName = groupName,
             version = version
@@ -235,6 +240,7 @@ class PublicVarService @Autowired constructor(
 
         return publicVarPOs.map { publicVarPO ->
             val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
+            // 当查询动态版本时version为null，返回时也需要返回version，而不是实际版本
             buildFormProperty.varGroupVersion = version
             val actualReferCount = referCountMap[publicVarPO.varName] ?: 0
             PublicVarDO(
