@@ -56,7 +56,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
-import com.tencent.devops.process.service.TimerScheduleMeasureService
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import org.slf4j.MDC
@@ -77,7 +77,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val timerScheduleMeasureService: TimerScheduleMeasureService
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
@@ -108,7 +108,7 @@ class PipelineTimerBuildListener @Autowired constructor(
         } catch (ignored: Exception) {
             logger.warn("fail to trigger pipeline|event=$event", ignored)
         } finally {
-            timerScheduleMeasureService.recordActualExecutionTime(
+            pipelineTriggerMeasureService.recordActualExecutionTime(
                 name = NAME_PIPELINE_CRON_EXECUTE_DELAY,
                 event = event
             )

@@ -444,12 +444,14 @@ object ProcessMessageCode {
     const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
     const val ERROR_JOB_ID_DUPLICATE = "2101337" // Job ID在流水线下需全局唯一，存在重复ID[$0]的Job，保存失败!
     const val ERROR_STEP_ID_DUPLICATE = "2101338" // Step ID在Job下需全局唯一，Job[$0]下存在重复ID[$1]的Step，保存失败!
-    // 存量的实例化版本，不支持一键回滚
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不支持一键回滚
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK = "2101339"
     const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
     const val ERROR_INSTANCE_PARAM_PROP_EXCEPTION = "2101341" // 实例化的参数[{0}]属性[{1}]异常,请联系助手分析
     const val ERROR_INSTANCE_PARAM_COUNT_EXCEPTION = "2101342" // 实例化参数数量和模版的参数数量不同,请联系助手分析
-    // 触发事件缓存过期已清理。若需重放，请到代码库操作。
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不能直接开启PAC,请到模版实例列表界面升级流水线,明确引用的模版版本后再开启PAC。
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
+
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101341"
     const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101342" // 流水线公共变量组中变量名称格式错误
     // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置

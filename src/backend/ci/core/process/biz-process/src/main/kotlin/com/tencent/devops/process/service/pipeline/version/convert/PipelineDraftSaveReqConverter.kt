@@ -227,11 +227,16 @@ class PipelineDraftSaveReqConverter(
             ) {
                 return model
             }
-            val templateResource = pipelineTemplateResourceService.get(
+            val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
                 projectId = projectId,
-                templateId = pipelineTemplateRelated.templateId,
-                version = pipelineTemplateRelated.version
-            )
+                pipelineTemplateRelated = pipelineTemplateRelated
+            ) ?: run {
+                logger.info(
+                    "template resource not found|$projectId|${pipelineTemplateRelated.templateId}|" +
+                            "${pipelineTemplateRelated.version}"
+                )
+                return model
+            }
             val templateModel = templateResource.model
             if (templateModel !is Model) {
                 throw ErrorCodeException(

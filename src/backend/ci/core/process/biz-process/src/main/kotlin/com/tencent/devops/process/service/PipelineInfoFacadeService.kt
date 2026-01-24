@@ -1638,10 +1638,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             return
         }
         model.templateId = pipelineTemplateRelated.templateId
-        val templateResource = pipelineTemplateResourceService.getOrNull(
+        val templateResource = pipelineTemplateResourceService.getByRelatedPipeline(
             projectId = projectId,
-            templateId = pipelineTemplateRelated.templateId,
-            version = pipelineTemplateRelated.version
+            pipelineTemplateRelated = pipelineTemplateRelated
         ) ?: return
         val templateModel = templateResource.model
         if (templateModel !is Model) {

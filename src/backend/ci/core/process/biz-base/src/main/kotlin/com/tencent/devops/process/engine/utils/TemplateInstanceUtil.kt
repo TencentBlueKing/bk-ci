@@ -300,7 +300,8 @@ object TemplateInstanceUtil {
 
         return templateParam.copy(
             defaultValue = defaultValue,
-            required = pipelineParam.required
+            required = pipelineParam.required,
+            asInstanceInput = null
         )
     }
 
@@ -329,7 +330,8 @@ object TemplateInstanceUtil {
         // 用templateVariable覆盖模板的默认值
         return templateParam.copy(
             defaultValue = defaultValue,
-            required = templateVariable.allowModifyAtStartup ?: templateParam.required
+            required = templateVariable.allowModifyAtStartup ?: templateParam.required,
+            asInstanceInput = null
         )
     }
 
@@ -651,13 +653,14 @@ object TemplateInstanceUtil {
         pipelineProps: BuildCascadeProps?,
         templateProps: BuildCascadeProps?
     ): BuildCascadeProps? {
-        if (pipelineProps == null) {
+        if (templateProps == null) {
             return null
         }
-        if (templateProps == null) {
-            return pipelineProps
+        // 模版把参数从其他类型改成了级联,则前端渲染时,用模版的值
+        if (pipelineProps == null) {
+            return templateProps
         }
-        // 合并当前级别的options
+        // 模版和流水线都有级联,合并当前级别的options
         val mergedOptions = mutableSetOf<BuildFormValue>()
         mergedOptions.addAll(pipelineProps.options)
         mergedOptions.addAll(templateProps.options)
@@ -678,7 +681,7 @@ object TemplateInstanceUtil {
     }
 
     /**
-     * 验证实例化的model与前端传入的model正确性
+     * 验证实例化的model与前端传入的model准确性
      *
      * 断言参数: 转换的的参数应该与前端传入参数值和属性相同
      */

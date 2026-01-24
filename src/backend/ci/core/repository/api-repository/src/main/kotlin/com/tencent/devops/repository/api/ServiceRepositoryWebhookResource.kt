@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
 import com.tencent.devops.repository.pojo.webhook.WebhookData
 import com.tencent.devops.repository.pojo.webhook.WebhookParseRequest
+import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,6 +59,23 @@ interface ServiceRepositoryWebhookResource {
         @Parameter(description = "代码库触发请求", required = true)
         request: WebhookParseRequest
     ): Result<WebhookData?>
+
+    @Operation(summary = "解析代码库webhook")
+    @POST
+    @Path("/{scmCode}/{projectId}/{repoHashId}/parse")
+    fun webhookParseByRepo(
+        @PathParam("scmCode")
+        @Parameter(description = "代码库编码", required = true)
+        scmCode: String,
+        @PathParam("projectId")
+        @Parameter(description = "项目ID", required = true)
+        projectId: String,
+        @PathParam("repoHashId")
+        @Parameter(description = "代码库编码", required = true)
+        repoHashId: String,
+        @Parameter(description = "代码库触发请求", required = true)
+        request: WebhookParseRequest
+    ): Result<Webhook?>
 
     @Operation(summary = "保存代码库触发事件")
     @POST
