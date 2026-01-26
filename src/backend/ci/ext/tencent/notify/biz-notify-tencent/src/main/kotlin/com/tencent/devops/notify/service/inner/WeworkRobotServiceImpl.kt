@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.ImageContent
 import com.tencent.devops.notify.pojo.MediaContent
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
@@ -51,8 +52,11 @@ import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.security.MessageDigest
+import java.util.Base64
 import java.util.Optional
 import java.util.UUID
 import okhttp3.MediaType.Companion.toMediaType
@@ -100,52 +104,19 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
 
         try {
-            // 上传媒体文件获取media_id
-            val mediaId = uploadMediaToRobot(
-                inputStream = weworkNotifyMediaMessage.mediaInputStream,
-                fileName = weworkNotifyMediaMessage.mediaName,
-                mediaType = mediaType.name
-            )
-
-            // 遍历接收者发送消息
-            val errMsgs = mutableListOf<String>()
-            when (weworkNotifyMediaMessage.receiverType) {
-                WeworkReceiverType.group -> {
-                    logger.warn("wework robot does not support group media message")
+            // 根据媒体类型选择不同的发送方式
+            when (mediaType) {
+                WeworkMediaType.image -> {
+                    // 图片使用base64+md5方式发送
+                    sendImageMessage(weworkNotifyMediaMessage)
                 }
-                WeworkReceiverType.single -> {
-                    weworkNotifyMediaMessage.receivers.forEach { chatId ->
-                        try {
-                            val requestBody = buildMediaMessageBody(
-                                mediaId = mediaId,
-                                mediaType = mediaType.name,
-                                chatId = chatId
-                            )
-                            sendMediaRequest(requestBody)
-                        } catch (e: Throwable) {
-                            logger.error("failed to send media message to $chatId", e)
-                            errMsgs.add("chatId=$chatId: ${e.message}")
-                        }
-                    }
+                WeworkMediaType.file -> {
+                    // 文件使用media_id方式发送
+                    sendFileMessage(weworkNotifyMediaMessage)
                 }
-            }
-
-            // 记录发送结果
-            if (errMsgs.isEmpty()) {
-                logger.info("send media message success, mediaName=${weworkNotifyMediaMessage.mediaName}")
-                saveResult(
-                    receivers = weworkNotifyMediaMessage.receivers,
-                    body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                    success = true,
-                    errMsg = null
-                )
-            } else {
-                saveResult(
-                    receivers = weworkNotifyMediaMessage.receivers,
-                    body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                    success = false,
-                    errMsg = errMsgs.joinToString("; ")
-                )
+                else -> {
+                    logger.warn("unsupported media type: $mediaType")
+                }
             }
         } catch (e: Throwable) {
             logger.error("failed to send media message", e)
@@ -159,10 +130,163 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
+     * 发送图片消息（使用base64+md5方式）
+     */
+    private fun sendImageMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        val mediaType = weworkNotifyMediaMessage.mediaType
+        val errMsgs = mutableListOf<String>()
+
+        // 读取输入流并转换为base64和md5
+        val imageBytes = weworkNotifyMediaMessage.mediaInputStream.use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toByteArray()
+            }
+        }
+        val base64Content = Base64.getEncoder().encodeToString(imageBytes)
+        val md5Hash = calculateMd5(imageBytes)
+
+        // 遍历接收者发送消息
+        when (weworkNotifyMediaMessage.receiverType) {
+            WeworkReceiverType.group -> {
+                weworkNotifyMediaMessage.receivers.forEach { robotKey ->
+                    try {
+                        val requestBody = buildImageMessageBody(
+                            base64 = base64Content,
+                            md5 = md5Hash,
+                            chatId = null
+                        )
+                        sendMediaRequest(requestBody = requestBody, key = robotKey)
+                    } catch (e: Throwable) {
+                        logger.error("failed to send image message to robot: $robotKey", e)
+                        errMsgs.add("robotKey=$robotKey: ${e.message}")
+                    }
+                }
+            }
+            WeworkReceiverType.single -> {
+                weworkNotifyMediaMessage.receivers.forEach { receiver ->
+                    try {
+                        val requestBody = buildImageMessageBody(
+                            base64 = base64Content,
+                            md5 = md5Hash,
+                            chatId = null
+                        )
+                        sendMediaRequest(requestBody = requestBody, key = receiver)
+                    } catch (e: Throwable) {
+                        logger.error("failed to send image message to receiver: $receiver", e)
+                        errMsgs.add("receiver=$receiver: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        // 记录发送结果
+        if (errMsgs.isEmpty()) {
+            logger.info("send image message success, mediaName=${weworkNotifyMediaMessage.mediaName}")
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = true,
+                errMsg = null
+            )
+        } else {
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = false,
+                errMsg = errMsgs.joinToString("; ")
+            )
+        }
+    }
+
+    /**
+     * 发送文件消息（使用media_id方式）
+     */
+    private fun sendFileMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        val mediaType = weworkNotifyMediaMessage.mediaType
+        val errMsgs = mutableListOf<String>()
+
+        // 遍历接收者发送消息
+        when (weworkNotifyMediaMessage.receiverType) {
+            WeworkReceiverType.group -> {
+                weworkNotifyMediaMessage.receivers.forEach { robotKey ->
+                    try {
+                        // 上传媒体文件获取media_id
+                        val mediaId = uploadMediaToRobot(
+                            inputStream = weworkNotifyMediaMessage.mediaInputStream,
+                            fileName = weworkNotifyMediaMessage.mediaName,
+                            mediaType = mediaType.name,
+                            key = robotKey
+                        )
+                        val requestBody = buildFileMessageBody(mediaId = mediaId, chatId = null)
+                        sendMediaRequest(requestBody = requestBody, key = robotKey)
+                    } catch (e: Throwable) {
+                        logger.error("failed to send file message to robot: $robotKey", e)
+                        errMsgs.add("robotKey=$robotKey: ${e.message}")
+                    }
+                }
+            }
+            WeworkReceiverType.single -> {
+                weworkNotifyMediaMessage.receivers.forEach { receiver ->
+                    try {
+                        // 每个receiver需要单独上传媒体文件获取media_id
+                        val mediaId = uploadMediaToRobot(
+                            inputStream = weworkNotifyMediaMessage.mediaInputStream,
+                            fileName = weworkNotifyMediaMessage.mediaName,
+                            mediaType = mediaType.name,
+                            key = receiver
+                        )
+                        val requestBody = buildFileMessageBody(mediaId = mediaId, chatId = null)
+                        sendMediaRequest(requestBody = requestBody, key = receiver)
+                    } catch (e: Throwable) {
+                        logger.error("failed to send file message to receiver: $receiver", e)
+                        errMsgs.add("receiver=$receiver: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        // 记录发送结果
+        if (errMsgs.isEmpty()) {
+            logger.info("send file message success, mediaName=${weworkNotifyMediaMessage.mediaName}")
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = true,
+                errMsg = null
+            )
+        } else {
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = false,
+                errMsg = errMsgs.joinToString("; ")
+            )
+        }
+    }
+
+    /**
+     * 计算MD5哈希值
+     */
+    private fun calculateMd5(bytes: ByteArray): String {
+        val md = MessageDigest.getInstance("MD5")
+        val digest = md.digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
      * 上传媒体文件到企业微信机器人
      */
-    private fun uploadMediaToRobot(inputStream: InputStream, fileName: String, mediaType: String): String {
-        val tempDir = if (tempDirectory.isNotBlank()) tempDirectory else System.getProperty("java.io.tmpdir")
+    private fun uploadMediaToRobot(
+        inputStream: InputStream,
+        fileName: String,
+        mediaType: String,
+        key: String
+    ): String {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), tempDirectory)
+        if (!tempDir.exists()) {
+            tempDir.mkdirs()
+        }
         val tempFile = File(tempDir, "${UUID.randomUUID()}_$fileName")
         try {
             // 将输入流写入临时文件
@@ -173,7 +297,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             }
 
             // 构建multipart请求
-            val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$robotKey&type=$mediaType")
+            val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$key&type=$mediaType")
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(
@@ -220,28 +344,32 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 构建媒体消息请求体
+     * 构建图片消息请求体（base64+md5方式）
      */
-    private fun buildMediaMessageBody(mediaId: String, mediaType: String, chatId: String?): String {
-        val mediaContent = MediaContent(mediaId = mediaId)
-        val message: Any = when (mediaType) {
-            WeworkMediaType.image.name -> WeworkRobotImageMessage(
-                chatId = chatId,
-                image = mediaContent
-            )
-            else -> WeworkRobotFileMessage(
-                chatId = chatId,
-                file = mediaContent
-            )
-        }
+    private fun buildImageMessageBody(base64: String, md5: String, chatId: String?): String {
+        val message = WeworkRobotImageMessage(
+            chatId = chatId,
+            image = ImageContent(base64 = base64, md5 = md5)
+        )
+        return JsonUtil.toJson(message)
+    }
+
+    /**
+     * 构建文件消息请求体（media_id方式）
+     */
+    private fun buildFileMessageBody(mediaId: String, chatId: String?): String {
+        val message = WeworkRobotFileMessage(
+            chatId = chatId,
+            file = MediaContent(mediaId = mediaId)
+        )
         return JsonUtil.toJson(message)
     }
 
     /**
      * 发送媒体消息请求
      */
-    private fun sendMediaRequest(requestBody: String) {
-        val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
+    private fun sendMediaRequest(requestBody: String, key: String) {
+        val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$key")
         OkhttpUtils.doPost(url, requestBody).use { response ->
             val responseBody = response.body?.string() ?: ""
             val sendMessageResp = JsonUtil.to(responseBody, WeworkSendMessageResp::class.java)
