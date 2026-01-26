@@ -27,6 +27,7 @@
 package com.tencent.devops.store.image.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.TCategory
@@ -584,6 +585,39 @@ class MarketImageDao @Autowired constructor() {
             dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 根据镜像标识获取版本号最大的镜像记录
+     */
+    fun getMaxVersionImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
+        return with(TImage.T_IMAGE) {
+            dslContext.selectFrom(this)
+                .where(IMAGE_CODE.eq(imageCode))
+                .orderBy(
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = JooqUtils.subStr(
+                            str = VERSION,
+                            delim = ".",
+                            count = -2
+                        ),
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = -1
+                    ).plus(0).desc()
+                )
                 .limit(1)
                 .fetchOne()
         }

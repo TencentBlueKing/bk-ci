@@ -28,10 +28,16 @@
 package com.tencent.devops.store.image.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.MarketImageDao
+import com.tencent.devops.store.image.dao.MarketImageVersionLogDao
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import org.jooq.DSLContext
@@ -43,7 +49,9 @@ import org.springframework.stereotype.Service
 class MarketImageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageDao: ImageDao,
-    private val marketImageDao: MarketImageDao
+    private val marketImageDao: MarketImageDao,
+    private val marketImageVersionLogDao: MarketImageVersionLogDao,
+    private val storeCommonService: StoreCommonService
 ) {
     private val logger = LoggerFactory.getLogger(MarketImageService::class.java)
 
@@ -134,5 +142,43 @@ class MarketImageService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         }
+    }
+
+    /**
+     * 根据镜像标识获取镜像回显版本信息
+     */
+    fun getImageShowVersionInfo(userId: String, imageCode: String): Result<StoreShowVersionInfo> {
+        val record = marketImageDao.getNewestImageByCode(dslContext, imageCode) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(imageCode)
+        )
+        val cancelFlag = record.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val showVersion = if (cancelFlag) {
+            record.version
+        } else {
+            marketImageDao.getMaxVersionImageByCode(dslContext, imageCode)?.version
+        }
+
+        val isImageInitStatus = record.imageStatus == ImageStatusEnum.INIT.status.toByte()
+
+        val (releaseType, lastVersionContent) = if (isImageInitStatus) {
+            Pair(null, null)
+        } else {
+            val log = marketImageVersionLogDao.getImageVersion(dslContext, record.id)
+            Pair(log.releaseType, log.content)
+        }
+        val showReleaseType = if (releaseType != null) {
+            ReleaseTypeEnum.getReleaseTypeObj(releaseType.toInt())
+        } else {
+            null
+        }
+        val showVersionInfo = storeCommonService.getStoreShowVersionInfo(
+            storeType = StoreTypeEnum.IMAGE,
+            cancelFlag = cancelFlag,
+            releaseType = showReleaseType,
+            version = showVersion,
+            lastVersionContent = lastVersionContent
+        )
+        return Result(showVersionInfo)
     }
 }

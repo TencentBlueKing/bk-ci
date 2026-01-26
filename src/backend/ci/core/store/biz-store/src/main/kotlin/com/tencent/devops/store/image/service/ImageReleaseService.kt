@@ -341,7 +341,7 @@ abstract class ImageReleaseService {
             params = arrayOf(imageName),
             language = I18nUtil.getLanguage(userId)
         )
-        val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
+        val imageRecord = marketImageDao.getMaxVersionImageByCode(dslContext, imageCode)!!
         val imageSourceType = marketImageUpdateRequest.imageSourceType
         val imageRepoName = marketImageUpdateRequest.imageRepoName
         if (imageSourceType == ImageType.BKDEVOPS) {
@@ -1024,6 +1024,7 @@ abstract class ImageReleaseService {
                 val context = DSL.using(t)
                 val releaseImageRecords = marketImageDao.getReleaseImagesByCode(context, validImageCode)
                 if (null != releaseImageRecords && releaseImageRecords.size > 0) {
+                    val isLatestFlagImage = imageRecord.latestFlag
                     marketImageDao.updateImageStatusInfoById(
                         dslContext = context,
                         imageId = imageRecord.id,
@@ -1034,9 +1035,11 @@ abstract class ImageReleaseService {
                             latestFlag = false
                         )
                     )
-                    val newestReleaseImageRecord = releaseImageRecords[0]
-                    if (newestReleaseImageRecord.id == imageRecord.id) {
-                        if (releaseImageRecords.size == 1) {
+                    // 当下架的版本是latestFlag=true的版本时，需要把其他版本的latestFlag置为true
+                    if (isLatestFlagImage) {
+                        // 过滤掉当前下架的版本，获取剩余的已发布版本
+                        val remainingReleaseImages = releaseImageRecords.filter { it.id != imageRecord.id }
+                        if (remainingReleaseImages.isEmpty()) {
                             val newestUndercarriagedImage =
                                 marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
                             if (null != newestUndercarriagedImage) {
@@ -1050,8 +1053,8 @@ abstract class ImageReleaseService {
                                 )
                             }
                         } else {
-                            // 把前一个发布的版本的latestFlag置为true
-                            val tmpImageRecord = releaseImageRecords[1]
+                            // 把剩余发布版本中最新的版本的latestFlag置为true
+                            val tmpImageRecord = remainingReleaseImages[0]
                             marketImageDao.updateImageStatusInfoById(
                                 dslContext = context,
                                 imageId = tmpImageRecord.id,

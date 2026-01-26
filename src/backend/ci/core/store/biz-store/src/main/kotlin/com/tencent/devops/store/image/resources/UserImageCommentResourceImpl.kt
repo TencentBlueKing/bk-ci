@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreStatisticService
 import com.tencent.devops.store.image.service.MarketImageService
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -106,5 +107,9 @@ class UserImageCommentResourceImpl @Autowired constructor(
 
     override fun updateStoreCommentPraiseCount(userId: String, commentId: String): Result<Int> {
         return storeCommentService.updateStoreCommentPraiseCount(userId, commentId)
+    }
+
+    override fun getImageShowVersionInfo(userId: String, imageCode: String): Result<StoreShowVersionInfo> {
+        return marketImageService.getImageShowVersionInfo(userId, imageCode)
     }
 }

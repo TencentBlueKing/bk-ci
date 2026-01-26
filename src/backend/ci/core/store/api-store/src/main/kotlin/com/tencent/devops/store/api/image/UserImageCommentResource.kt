@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -133,4 +134,16 @@ interface UserImageCommentResource {
         @PathParam("commentId")
         commentId: String
     ): Result<Int>
+
+    @Operation(summary = "根据镜像标识获取镜像回显版本信息")
+    @GET
+    @Path("/images/{imageCode}/showVersionInfo")
+    fun getImageShowVersionInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "imageCode", required = true)
+        @PathParam("imageCode")
+        imageCode: String
+    ): Result<StoreShowVersionInfo>
 }
