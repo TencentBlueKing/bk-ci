@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.I18Variable
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -436,8 +435,8 @@ class PipelineTimerBuildListener @Autowired constructor(
 
     fun getEnvNodeList(
         projectId: String,
-        workspaceName:String
-    ) : List<String> {
+        workspaceName: String
+    ): List<String> {
 //        client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
 //            projectId = projectId,
 //            workspaceName = workspaceName

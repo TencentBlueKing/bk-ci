@@ -171,7 +171,7 @@ class WebhookRequestService(
             logger.info("replay trigger event not found|${replayEvent.eventId}")
             return
         }
-        when{
+        when {
             replayEvent.scmType != null -> {
                 handleRepoReplayEvent(replayEvent, triggerEvent)
             }

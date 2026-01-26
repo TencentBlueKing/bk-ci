@@ -31,7 +31,6 @@ package com.tencent.devops.process.trigger
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer

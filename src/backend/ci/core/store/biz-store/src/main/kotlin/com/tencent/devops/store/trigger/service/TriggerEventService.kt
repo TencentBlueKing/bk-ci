@@ -15,7 +15,6 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.BK_STORE_ALL_TRIGGER
-import com.tencent.devops.store.pojo.common.BK_STORE_COMMON_TRIGGER
 import com.tencent.devops.store.pojo.common.KEY_ATOM_FORM
 import com.tencent.devops.store.pojo.common.QueryGroupParam
 import com.tencent.devops.store.pojo.common.StoreInfoQuery

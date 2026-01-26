@@ -52,7 +52,7 @@ class ExternalMarketEventResourceImpl @Autowired constructor(
                     headers = headers,
                     queryParams = queryParams,
                     body = body
-                ),
+                )
             )
         )
         return Result(true)

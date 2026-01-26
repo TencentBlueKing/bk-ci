@@ -103,7 +103,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         element: MarketEventAtomElement,
         variables: Map<String, String>,
         eventConfig: TriggerEventConfig,
-        eventVariables: Map<String, Any>,
+        eventVariables: Map<String, Any>
     ): WebhookMatchResult {
         val conditionLabels = eventConfig.conditions.groupBy { it.label }
         eventConfig.conditions.forEach { condition ->

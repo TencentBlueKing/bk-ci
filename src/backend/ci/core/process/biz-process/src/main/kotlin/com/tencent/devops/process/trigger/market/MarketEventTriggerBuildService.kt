@@ -6,7 +6,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_CONDITION_NOT_MATCH
-import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService

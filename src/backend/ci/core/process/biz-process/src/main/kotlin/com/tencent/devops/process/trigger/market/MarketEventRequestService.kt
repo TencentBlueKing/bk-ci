@@ -74,7 +74,7 @@ class MarketEventRequestService constructor(
                             AUTH_HEADER_USER_ID to userId
                         ),
                         body = event.body,
-                        queryParams = mapOf(),
+                        queryParams = mapOf()
                     )
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
