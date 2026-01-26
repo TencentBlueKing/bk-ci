@@ -142,6 +142,7 @@
                                                 :handle-build-no-change="handleBuildNoChange"
                                                 :handle-check-change="handleCheckChange"
                                                 :version-param-list="versionParams"
+                                                :disabled="buildNo.isDelete"
                                             />
                                         </template>
                                     </renderSortCategoryParams>
@@ -448,9 +449,10 @@
             const buildNoChanged = curTemplateDetail.value?.buildNo && processedInstance?.buildNo && processedInstance.buildNo?.buildNo !== instanceBuildNo?.buildNo
             
             // 合并版本号参数和其他参数一起传入 shouldResetBuildNo
+            // 如果curTemplateDetail.value?.buildNo 不存在，则代表推荐版本号已经删除
             const mergedCurrentParams = [
                 ...(instanceParams ?? processedInstance.param ?? []),
-                ...(instanceBuildNoParams ?? [])
+                ...(curTemplateDetail.value?.buildNo ? instanceBuildNoParams : (instance?.param ?? []).filter(i => allVersionKeyList.includes(i.id)).map(p => ({ ...p, isDelete: true })))
             ]
             
             const needResetBuildNo = instance?.buildNo && shouldResetBuildNo({
@@ -459,18 +461,25 @@
                 currentBuildNo: instanceBuildNo?.buildNo,
                 initialBuildNo: instance?.buildNo?.buildNo
             })
+            // 获取原始实例的 buildNo 配置
+            const originalBuildNo = initialInstanceList.value?.[index]?.buildNo ?? instance?.buildNo
             return {
                 ...processedInstance,
                 param: mergedCurrentParams,
                 buildNo: curTemplateDetail.value?.buildNo ? {
                     ...instanceBuildNo,
                     currentBuildNo: (buildNoChanged ? instanceBuildNo?.buildNo : processedInstance.buildNo?.currentBuildNo) ?? instanceBuildNo?.currentBuildNo
+                } : originalBuildNo ? {
+                    ...instance?.buildNo,
+                    isNew: false,
+                    isDelete: true
                 } : undefined,
                 triggerConfigs: instanceTriggerConfigs ?? processedInstance.triggerConfigs,
-                resetBuildNo: needResetBuildNo,
+                resetBuildNo: curTemplateDetail.value?.buildNo ? needResetBuildNo : false,
                 buildNoChanged
             }
         }
+
         return processedInstance
     }
     
@@ -544,11 +553,15 @@
                 counts.deleted++
             }
         })
+
+        if (curInstance?.value?.buildNo?.isDelete) {
+            counts.deleted++
+        }
         
         if (curInstance.value?.buildNoChanged) {
             counts.changed++
         }
-        if (curInstance.value?.resetBuildN && curInstance.value?.buildNo) {
+        if (curInstance.value?.resetBuildNo && curInstance.value?.buildNo) {
             counts.changed++
         }
         // 触发器新增/删除统计
@@ -588,7 +601,7 @@
         })
     })
     const hideDeletedVersionParams = computed(() => {
-        return !hideDeleted.value && versionParams.value.every(i => i.isDelete)
+        return hideDeleted.value && versionParams.value.every(i => i.isDelete)
     })
     const isVisibleVersion = computed(() => {
         return buildNo.value?.required
@@ -804,12 +817,15 @@
                     required: templateBuildNo.required,
                     isRequiredParam: instanceBuildNo.required
                 },
-                buildNoParam: instanceBuildNoParams
+                buildNoParam: instanceBuildNoParams.length ?  instanceBuildNoParams : templateBuildNoParams
             }
         }
         
         // 兜底：返回实例配置
-        return instanceBuildNo
+        return {
+            buildNo: instanceBuildNo,
+            buildNoParam: instanceBuildNoParams
+        }
     }
     
     /**
@@ -1426,7 +1442,6 @@
                                     : (allVersionKeyList.includes(id)
                                         ? Number(initialParam?.defaultValue) !== Number(temDefaultValue)
                                         : initialParam?.defaultValue !== temDefaultValue)
-                                console.log(newDefaultValue, 'newDefaultValue')
                                 const propertyUpdates = collectPropertyUpdates({
                                     ...p,
                                     defaultValue: newDefaultValue

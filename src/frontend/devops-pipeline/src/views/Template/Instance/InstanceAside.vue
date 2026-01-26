@@ -243,14 +243,15 @@
     async function fetchPipelinesDetails () {
         try {
             proxy.$store.dispatch('templates/updateInstancePageLoading', true)
-            const pipelineIds = renderInstanceList.value.map(i => i.pipelineId)
+            const initialInstanceListValue = proxy.$store?.state?.templates?.initialInstanceList
+            const pipelineIds = initialInstanceListValue.map(i => i.pipelineId)
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
                 version: currentVersion.value,
                 templateId: templateId.value
             })
-            const list = renderInstanceList.value.map(i => {
+            const list = initialInstanceListValue.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
                 const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {

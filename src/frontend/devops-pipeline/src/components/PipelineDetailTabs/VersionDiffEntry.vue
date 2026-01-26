@@ -221,7 +221,7 @@
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
                         archiveFlag: this.archiveFlag,
-                        actionType: 'COMPARE'
+                        source: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml
