@@ -117,33 +117,33 @@ class PublicVarGroupReferInfoDao {
         pageSize: Int,
         orderByReferId: Boolean = false
     ): List<ResourcePublicVarGroupReferPO> {
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val t2 = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
 
         // 构建主查询条件
-        val conditions = mutableListOf(t.PROJECT_ID.eq(projectId))
-        groupName?.let { conditions.add(t.GROUP_NAME.eq(it)) }
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
-        version?.let { conditions.add(t.VERSION.eq(it)) }
-        versions?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.VERSION.`in`(it)) }
-        referIds?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.REFER_ID.`in`(it)) }
+        val conditions = mutableListOf(trpvgri.PROJECT_ID.eq(projectId))
+        groupName?.let { conditions.add(trpvgri.GROUP_NAME.eq(it)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
+        version?.let { conditions.add(trpvgri.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { conditions.add(trpvgri.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { conditions.add(trpvgri.REFER_ID.`in`(it)) }
 
         // 构建NOT EXISTS子查询条件
         var notExistsQuery = dslContext.selectOne()
-            .from(t2)
-            .where(t2.PROJECT_ID.eq(t.PROJECT_ID))
-            .and(t2.REFER_ID.eq(t.REFER_ID))
-            .and(t2.CREATE_TIME.gt(t.CREATE_TIME))
+            .from(trpvgriSub)
+            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
+            .and(trpvgriSub.CREATE_TIME.gt(trpvgri.CREATE_TIME))
 
-        groupName?.let { notExistsQuery = notExistsQuery.and(t2.GROUP_NAME.eq(t.GROUP_NAME)) }
-        referType?.let { notExistsQuery = notExistsQuery.and(t2.REFER_TYPE.eq(it.name)) }
-        version?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.eq(it)) }
-        versions?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.`in`(it)) }
-        referIds?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.REFER_ID.`in`(it)) }
+        groupName?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.GROUP_NAME.eq(trpvgri.GROUP_NAME)) }
+        referType?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
+        version?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.REFER_ID.`in`(it)) }
 
-        val orderField = if (orderByReferId) t.REFER_ID.asc() else t.UPDATE_TIME.desc()
+        val orderField = if (orderByReferId) trpvgri.REFER_ID.asc() else trpvgri.UPDATE_TIME.desc()
 
-        return dslContext.selectFrom(t)
+        return dslContext.selectFrom(trpvgri)
             .where(conditions)
             .and(DSL.notExists(notExistsQuery))
             .orderBy(orderField)
@@ -779,26 +779,26 @@ class PublicVarGroupReferInfoDao {
         groupName: String,
         referType: PublicVerGroupReferenceTypeEnum?
     ): Int {
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val varReferTable = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
         val conditions = mutableListOf(
-            t.PROJECT_ID.eq(projectId),
-            t.GROUP_NAME.eq(groupName)
+            trpvgri.PROJECT_ID.eq(projectId),
+            trpvgri.GROUP_NAME.eq(groupName)
         )
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
         // 统计有实际变量引用的不同 referId 数量
-        return dslContext.select(DSL.countDistinct(t.REFER_ID))
-            .from(t)
+        return dslContext.select(DSL.countDistinct(trpvgri.REFER_ID))
+            .from(trpvgri)
             .where(conditions)
             .andExists(
                 dslContext.selectOne()
-                    .from(varReferTable)
-                    .where(varReferTable.PROJECT_ID.eq(t.PROJECT_ID))
-                    .and(varReferTable.REFER_ID.eq(t.REFER_ID))
-                    .and(varReferTable.REFER_VERSION.eq(t.REFER_VERSION))
-                    .and(varReferTable.GROUP_NAME.eq(t.GROUP_NAME))
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                    .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
             )
             .fetchOne(0, Int::class.java) ?: 0
     }
@@ -814,48 +814,48 @@ class PublicVarGroupReferInfoDao {
         page: Int,
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val t2 = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val varReferTable = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
+        val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
         val conditions = mutableListOf(
-            t.PROJECT_ID.eq(projectId),
-            t.GROUP_NAME.eq(groupName)
+            trpvgri.PROJECT_ID.eq(projectId),
+            trpvgri.GROUP_NAME.eq(groupName)
         )
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
         // 存在实际变量引用的条件
         val existsVarReferCondition = DSL.exists(
             dslContext.selectOne()
-                .from(varReferTable)
-                .where(varReferTable.PROJECT_ID.eq(t.PROJECT_ID))
-                .and(varReferTable.REFER_ID.eq(t.REFER_ID))
-                .and(varReferTable.REFER_VERSION.eq(t.REFER_VERSION))
-                .and(varReferTable.GROUP_NAME.eq(t.GROUP_NAME))
+                .from(trpvri)
+                .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
         )
 
         // 构建子查询：查找同一 referId 下使用变量的更高版本不存在
         var notExistsHigherVersionQuery = dslContext.selectOne()
-            .from(t2)
-            .where(t2.PROJECT_ID.eq(t.PROJECT_ID))
-            .and(t2.REFER_ID.eq(t.REFER_ID))
-            .and(t2.GROUP_NAME.eq(t.GROUP_NAME))
-            .and(t2.REFER_VERSION.gt(t.REFER_VERSION))
+            .from(trpvgriSub)
+            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
+            .and(trpvgriSub.GROUP_NAME.eq(trpvgri.GROUP_NAME))
+            .and(trpvgriSub.REFER_VERSION.gt(trpvgri.REFER_VERSION))
             .andExists(
                 dslContext.selectOne()
-                    .from(varReferTable)
-                    .where(varReferTable.PROJECT_ID.eq(t2.PROJECT_ID))
-                    .and(varReferTable.REFER_ID.eq(t2.REFER_ID))
-                    .and(varReferTable.REFER_VERSION.eq(t2.REFER_VERSION))
-                    .and(varReferTable.GROUP_NAME.eq(t2.GROUP_NAME))
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgriSub.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgriSub.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
+                    .and(trpvri.GROUP_NAME.eq(trpvgriSub.GROUP_NAME))
             )
-        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(t2.REFER_TYPE.eq(it.name)) }
+        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
 
-        return dslContext.selectFrom(t)
+        return dslContext.selectFrom(trpvgri)
             .where(conditions)
             .and(existsVarReferCondition)
             .and(DSL.notExists(notExistsHigherVersionQuery))
-            .orderBy(t.UPDATE_TIME.desc())
+            .orderBy(trpvgri.UPDATE_TIME.desc())
             .limit(pageSize)
             .offset((page - 1) * pageSize)
             .fetch()
@@ -873,25 +873,25 @@ class PublicVarGroupReferInfoDao {
     ): Int {
         if (referIds.isEmpty()) return 0
 
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val varReferTable = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
         val conditions = mutableListOf(
-            t.PROJECT_ID.eq(projectId),
-            t.REFER_ID.`in`(referIds)
+            trpvgri.PROJECT_ID.eq(projectId),
+            trpvgri.REFER_ID.`in`(referIds)
         )
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
-        return dslContext.select(DSL.countDistinct(t.REFER_ID))
-            .from(t)
+        return dslContext.select(DSL.countDistinct(trpvgri.REFER_ID))
+            .from(trpvgri)
             .where(conditions)
             .andExists(
                 dslContext.selectOne()
-                    .from(varReferTable)
-                    .where(varReferTable.PROJECT_ID.eq(t.PROJECT_ID))
-                    .and(varReferTable.REFER_ID.eq(t.REFER_ID))
-                    .and(varReferTable.REFER_VERSION.eq(t.REFER_VERSION))
-                    .and(varReferTable.GROUP_NAME.eq(t.GROUP_NAME))
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                    .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
             )
             .fetchOne(0, Int::class.java) ?: 0
     }
@@ -909,46 +909,46 @@ class PublicVarGroupReferInfoDao {
     ): List<ResourcePublicVarGroupReferPO> {
         if (referIds.isEmpty()) return emptyList()
 
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val t2 = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val varReferTable = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
+        val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
         val conditions = mutableListOf(
-            t.PROJECT_ID.eq(projectId),
-            t.REFER_ID.`in`(referIds)
+            trpvgri.PROJECT_ID.eq(projectId),
+            trpvgri.REFER_ID.`in`(referIds)
         )
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
         // 存在实际变量引用的条件
         val existsVarReferCondition = DSL.exists(
             dslContext.selectOne()
-                .from(varReferTable)
-                .where(varReferTable.PROJECT_ID.eq(t.PROJECT_ID))
-                .and(varReferTable.REFER_ID.eq(t.REFER_ID))
-                .and(varReferTable.REFER_VERSION.eq(t.REFER_VERSION))
-                .and(varReferTable.GROUP_NAME.eq(t.GROUP_NAME))
+                .from(trpvri)
+                .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
         )
 
         // 不存在同一 referId 使用变量的更高版本
         var notExistsHigherVersionQuery = dslContext.selectOne()
-            .from(t2)
-            .where(t2.PROJECT_ID.eq(t.PROJECT_ID))
-            .and(t2.REFER_ID.eq(t.REFER_ID))
-            .and(t2.REFER_VERSION.gt(t.REFER_VERSION))
+            .from(trpvgriSub)
+            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
+            .and(trpvgriSub.REFER_VERSION.gt(trpvgri.REFER_VERSION))
             .andExists(
                 dslContext.selectOne()
-                    .from(varReferTable)
-                    .where(varReferTable.PROJECT_ID.eq(t2.PROJECT_ID))
-                    .and(varReferTable.REFER_ID.eq(t2.REFER_ID))
-                    .and(varReferTable.REFER_VERSION.eq(t2.REFER_VERSION))
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgriSub.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgriSub.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
             )
-        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(t2.REFER_TYPE.eq(it.name)) }
+        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
 
-        return dslContext.selectFrom(t)
+        return dslContext.selectFrom(trpvgri)
             .where(conditions)
             .and(existsVarReferCondition)
             .and(DSL.notExists(notExistsHigherVersionQuery))
-            .orderBy(t.UPDATE_TIME.desc())
+            .orderBy(trpvgri.UPDATE_TIME.desc())
             .limit(pageSize)
             .offset((page - 1) * pageSize)
             .fetch()

@@ -515,7 +515,6 @@ class PublicVarGroupService @Autowired constructor(
                 version = groupRecord.version,
                 context = context
             )
-            
             Pair(groupRecord, varPOs)
         }
 
