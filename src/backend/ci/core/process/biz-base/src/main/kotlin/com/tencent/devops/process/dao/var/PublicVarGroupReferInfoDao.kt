@@ -96,33 +96,33 @@ class PublicVarGroupReferInfoDao {
         pageSize: Int,
         orderByReferId: Boolean = false
     ): List<ResourcePublicVarGroupReferPO> {
-        val t = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val t2 = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
+        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
 
         // 构建主查询条件
-        val conditions = mutableListOf(t.PROJECT_ID.eq(projectId))
-        groupName?.let { conditions.add(t.GROUP_NAME.eq(it)) }
-        referType?.let { conditions.add(t.REFER_TYPE.eq(it.name)) }
-        version?.let { conditions.add(t.VERSION.eq(it)) }
-        versions?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.VERSION.`in`(it)) }
-        referIds?.takeIf { it.isNotEmpty() }?.let { conditions.add(t.REFER_ID.`in`(it)) }
+        val conditions = mutableListOf(trpvgri.PROJECT_ID.eq(projectId))
+        groupName?.let { conditions.add(trpvgri.GROUP_NAME.eq(it)) }
+        referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
+        version?.let { conditions.add(trpvgri.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { conditions.add(trpvgri.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { conditions.add(trpvgri.REFER_ID.`in`(it)) }
 
         // 构建NOT EXISTS子查询条件
         var notExistsQuery = dslContext.selectOne()
-            .from(t2)
-            .where(t2.PROJECT_ID.eq(t.PROJECT_ID))
-            .and(t2.REFER_ID.eq(t.REFER_ID))
-            .and(t2.CREATE_TIME.gt(t.CREATE_TIME))
+            .from(trpvgriSub)
+            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
+            .and(trpvgriSub.CREATE_TIME.gt(trpvgri.CREATE_TIME))
 
-        groupName?.let { notExistsQuery = notExistsQuery.and(t2.GROUP_NAME.eq(t.GROUP_NAME)) }
-        referType?.let { notExistsQuery = notExistsQuery.and(t2.REFER_TYPE.eq(it.name)) }
-        version?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.eq(it)) }
-        versions?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.VERSION.`in`(it)) }
-        referIds?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(t2.REFER_ID.`in`(it)) }
+        groupName?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.GROUP_NAME.eq(trpvgri.GROUP_NAME)) }
+        referType?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
+        version?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.VERSION.eq(it)) }
+        versions?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.VERSION.`in`(it)) }
+        referIds?.takeIf { it.isNotEmpty() }?.let { notExistsQuery = notExistsQuery.and(trpvgriSub.REFER_ID.`in`(it)) }
 
-        val orderField = if (orderByReferId) t.REFER_ID.asc() else t.UPDATE_TIME.desc()
+        val orderField = if (orderByReferId) trpvgri.REFER_ID.asc() else trpvgri.UPDATE_TIME.desc()
 
-        return dslContext.selectFrom(t)
+        return dslContext.selectFrom(trpvgri)
             .where(conditions)
             .and(DSL.notExists(notExistsQuery))
             .orderBy(orderField)
