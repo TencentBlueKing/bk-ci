@@ -31,11 +31,12 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**
- * 媒体内容
+ * 图片内容（base64+md5格式，用于群机器人）
  */
-@Schema(title = "媒体内容")
+@Schema(title = "图片内容")
 data class ImageContent(
-    @get:Schema(title = "媒体文件ID")
-    @JsonProperty("media_id")
-    val mediaId: String
+    @get:Schema(title = "图片base64编码")
+    val base64: String,
+    @get:Schema(title = "图片MD5值")
+    val md5: String
 )
