@@ -1194,25 +1194,6 @@ abstract class ImageService @Autowired constructor() {
         return versionList
     }
 
-    /**
-     * 根据镜像代码获取对应的最新版本镜像ID
-     */
-    fun getLatestImageIdByCode(userId: String, imageCode: String): Result<String?> {
-        // 判断当前用户是否是该镜像的成员
-        if (!storeMemberDao.isStoreMember(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-        )) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = GET_INFO_NO_PERMISSION,
-                language = I18nUtil.getLanguage(imageCode)
-            )
-        }
-        return Result(imageDao.getLatestImageIdByCode(dslContext, imageCode))
-    }
-
     fun updateImageBaseInfo(
         userId: String,
         imageCode: String,

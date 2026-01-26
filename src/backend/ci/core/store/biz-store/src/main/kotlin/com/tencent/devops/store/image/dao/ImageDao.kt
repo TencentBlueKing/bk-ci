@@ -240,19 +240,6 @@ class ImageDao {
         }
     }
 
-    /**
-     * 根据镜像代码获取最新版本镜像ID
-     */
-    fun getLatestImageIdByCode(dslContext: DSLContext, imageCode: String): String? {
-        return with(TImage.T_IMAGE) {
-            dslContext.select(ID)
-                .from(this)
-                .where(IMAGE_CODE.eq(imageCode))
-                .and(LATEST_FLAG.eq(true))
-                .fetchOne(ID)
-        }
-    }
-
     fun getImagesByBaseVersion(
         dslContext: DSLContext,
         imageCode: String,

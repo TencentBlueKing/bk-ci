@@ -51,10 +51,6 @@ class UserMarketImageResourceImpl @Autowired constructor(
         return Result(imageService.getPipelineImageVersions(projectCode, imageCode))
     }
 
-    override fun getLatestImageIdByCode(userId: String, imageCode: String): Result<String?> {
-        return imageService.getLatestImageIdByCode(userId = userId, imageCode = imageCode)
-    }
-
     override fun delete(userId: String, imageCode: String): Result<Boolean> {
         return imageService.delete(
             userId = userId,

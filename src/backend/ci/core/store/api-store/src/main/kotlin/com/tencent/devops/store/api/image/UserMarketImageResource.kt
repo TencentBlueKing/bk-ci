@@ -213,16 +213,4 @@ interface UserMarketImageResource {
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<VersionInfo>>
-
-    @Operation(summary = "根据镜像代码获取对应的latest版本ID")
-    @GET
-    @Path("/imageCodes/{imageCode}/version/latest")
-    fun getLatestImageIdByCode(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "镜像代码", required = true)
-        @PathParam("imageCode")
-        imageCode: String
-    ): Result<String?>
 }
