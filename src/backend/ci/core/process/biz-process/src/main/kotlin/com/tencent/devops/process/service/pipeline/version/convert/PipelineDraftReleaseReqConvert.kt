@@ -123,6 +123,11 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
                     )
                 }
+                if (draftResource.model.instanceFromTemplate == true && draftResource.model.template == null) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC
+                    )
+                }
             }
 
             val (versionStatus, branchName) = pipelineVersionGenerator.getDraftReleaseStatusAndBranchName(

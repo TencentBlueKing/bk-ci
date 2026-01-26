@@ -60,5 +60,7 @@ data class WorkspaceStartCloudDetail(
     @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
     @get:Schema(title = "机型配置")
-    val winConfig: WindowsResourceTypeConfig? = null
+    val winConfig: WindowsResourceTypeConfig? = null,
+    @get:Schema(title = "enableRecord")
+    val enableRecord: Boolean? = false
 )

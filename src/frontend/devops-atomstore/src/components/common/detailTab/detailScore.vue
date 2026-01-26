@@ -302,6 +302,9 @@
         ::v-deep .v-note-wrapper .v-note-panel .v-note-show .v-show-content {
             padding: 0;
         }
+        ::v-deep .markdown-body.v-note-wrapper {
+            z-index: 0;
+        }
         .summary-all {
             cursor: pointer;
             color: $primaryColor;

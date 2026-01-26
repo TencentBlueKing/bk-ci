@@ -156,11 +156,14 @@ object StreamBinding {
     // P4代码仓库webhook请求回调
     const val P4_BUILD_REQUEST_EVENT = "engine.pipeline.hook.p4.event"
 
-    // P4代码仓库webhook请求回调
+    // 重放代码仓库webhook
     const val REPLAY_BUILD_REQUEST_EVENT = "engine.pipeline.hook.replay.event"
 
-    // scm webhook请求回调
+    // scm webhook请求事件
     const val SCM_HOOK_BUILD_REQUEST_EVENT = "engine.pipeline.hook.scm.event"
+
+    // scm webhook触发事件
+    const val SCM_HOOK_BUILD_TRIGGER_EVENT = "engine.pipeline.scm.hook.trigger.event"
 
     // 流水线构建check-run事件
     const val PIPELINE_BUILD_CHECK_RUN = "engine.pipeline.build.check.run"

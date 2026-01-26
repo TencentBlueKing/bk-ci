@@ -1240,14 +1240,12 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
-            /*
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-             */
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1468,7 +1466,8 @@ class WorkspaceService @Autowired constructor(
             cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
             cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
-            winConfig = allConfig[workspace.winConfigId?.toLong()]
+            winConfig = allConfig[workspace.winConfigId?.toLong()],
+            enableRecord = workspace.enableRecord
         )
     }
 

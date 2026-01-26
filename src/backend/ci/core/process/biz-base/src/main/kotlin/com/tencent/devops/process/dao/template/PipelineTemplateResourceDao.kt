@@ -240,6 +240,21 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    fun getBySrcTemplateVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource? {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
+                .fetchOne()?.convert()
+        }
+    }
+
     fun getVersions(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition
@@ -269,6 +284,14 @@ class PipelineTemplateResourceDao {
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
+                .let {
+                    if (commonCondition.page != null && commonCondition.pageSize != null) {
+                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
+                            .limit(commonCondition.pageSize)
+                    } else {
+                        it
+                    }
+                }
                 .fetch()
                 .map {
                     PipelineTemplateVersionSimple(
@@ -456,7 +479,6 @@ class PipelineTemplateResourceDao {
                 if (baseVersion != null) conditions.add(BASE_VERSION.eq(baseVersion))
                 if (status != null) conditions.add(STATUS.eq(status!!.name))
                 if (branchAction != null) conditions.add(BRANCH_ACTION.eq(branchAction!!.name))
-                if (excludeBranchAction != null) conditions.add(BRANCH_ACTION.notEqual(excludeBranchAction!!.name))
                 if (creator != null) conditions.add(CREATOR.eq(creator))
                 if (updater != null) conditions.add(UPDATER.eq(updater))
                 if (releaseTime != null) conditions.add(RELEASE_TIME.eq(releaseTime))

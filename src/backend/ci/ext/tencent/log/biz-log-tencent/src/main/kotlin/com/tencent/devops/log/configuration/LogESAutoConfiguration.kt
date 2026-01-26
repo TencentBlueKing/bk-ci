@@ -104,6 +104,18 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch.https:#{null}}")
     private val e1Https: String? = null
 
+    @Value("\${log.elasticsearch.connectTimeout:#{null}}")
+    private val e1ConnectTimeout: Int? = null
+
+    @Value("\${log.elasticsearch.connectionRequestTimeout:#{null}}")
+    private val e1ConnectionRequestTimeout: Int? = null
+
+    @Value("\${log.elasticsearch.maxConnectNum:#{null}}")
+    private val e1MaxConnectNum: Int? = null
+
+    @Value("\${log.elasticsearch.maxConnectPerRoute:#{null}}")
+    private val e1MaxConnectPerRoute: Int? = null
+
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
 
@@ -140,14 +152,22 @@ class LogESAutoConfiguration {
     @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
     private val e2socketTimeout: Int? = null
 
-    @Value("\${log.elasticsearch.https:#{null}}")
+    @Value("\${log.elasticsearch2.https:#{null}}")
     private val e2Https: String? = null
 
+    @Value("\${log.elasticsearch2.connectTimeout:#{null}}")
+    private val e2ConnectTimeout: Int? = null
+
+    @Value("\${log.elasticsearch2.connectionRequestTimeout:#{null}}")
+    private val e2ConnectionRequestTimeout: Int? = null
+
+    @Value("\${log.elasticsearch2.maxConnectNum:#{null}}")
+    private val e2MaxConnectNum: Int? = null
+
+    @Value("\${log.elasticsearch2.maxConnectPerRoute:#{null}}")
+    private val e2MaxConnectPerRoute: Int? = null
+
     private val tcpKeepAliveSeconds = 30000 // 探活连接时长
-    private val connectTimeout = 1000 // 请求连接超时
-    private val connectionRequestTimeout = 500 // 获取连接的超时时间
-    private val maxConnectNum = 1000 // 最大连接数
-    private val maxConnectPerRoute = 300 // 最大单节点连接数
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
@@ -176,7 +196,11 @@ class LogESAutoConfiguration {
         val indexShards = e1Shards ?: 1 // 索引总分片数
         val indexReplicas = e1Replicas ?: 1 // 分片副本数
         val indexShardsPerNode = e1ShardsPerNode ?: 1 // 每个节点分片数
-        val socketTimeout = e1socketTimeout ?: 5000 // 等待连接响应超时
+        val socketTimeout = e1socketTimeout ?: 30000 // 等待连接响应超时
+        val connectTimeout = e1ConnectTimeout ?: 1000 // 请求连接超时
+        val connectionRequestTimeout = e1ConnectionRequestTimeout ?: 30000 // 获取连接的超时时间
+        val maxConnectNum = e1MaxConnectNum ?: 1000 // 最大连接数
+        val maxConnectPerRoute = e1MaxConnectPerRoute ?: 300 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
@@ -197,7 +221,11 @@ class LogESAutoConfiguration {
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
-        logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
+        logger.info(
+            "Init the log es1 transport client with host" +
+                "($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), " +
+                "credential($e1Username|$e1Password)"
+        )
         return ESClient(
             clusterName = e1Name!!,
             restClient = RestHighLevelClient(builder),
@@ -240,7 +268,11 @@ class LogESAutoConfiguration {
         val indexShards = e2Shards ?: 1 // 索引总分片数
         val indexReplicas = e2Replicas ?: 1 // 分片副本数
         val indexShardsPerNode = e2ShardsPerNode ?: 1 // 每个节点分片数
-        val socketTimeout = e2socketTimeout ?: 5000 // 等待连接响应超时
+        val socketTimeout = e2socketTimeout ?: 30000 // 等待连接响应超时
+        val connectTimeout = e2ConnectTimeout ?: 1000 // 请求连接超时
+        val connectionRequestTimeout = e2ConnectionRequestTimeout ?: 30000 // 获取连接的超时时间
+        val maxConnectNum = e2MaxConnectNum ?: 1000 // 最大连接数
+        val maxConnectPerRoute = e2MaxConnectPerRoute ?: 300 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2
         } else {
@@ -261,7 +293,11 @@ class LogESAutoConfiguration {
             sslContext = null,
             credentialsProvider = credentialsProvider
         )
-        logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
+        logger.info(
+            "Init the log es2 transport client with host" +
+                "($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), " +
+                "credential($e2Username|$e2Password)"
+        )
         return ESClient(
             clusterName = e2Name!!,
             restClient = RestHighLevelClient(builder),

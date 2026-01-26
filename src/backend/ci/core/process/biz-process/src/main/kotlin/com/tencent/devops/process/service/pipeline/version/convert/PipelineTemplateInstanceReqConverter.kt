@@ -295,9 +295,22 @@ class PipelineTemplateInstanceReqConverter(
                 templateVersion = templateVersion,
                 templateVersionName = templateResource.versionName,
                 templateSettingVersion = templateResource.settingVersion,
+                templateMode = templateInfo.mode,
+                templateSrcTemplateProjectId = templateResource.srcTemplateProjectId,
+                templateSrcTemplateId = templateResource.srcTemplateId,
+                templateSrcTemplateVersion = templateResource.srcTemplateVersion,
                 instanceModel = instanceModel,
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
                 refType = templateRefType
+            )
+
+            // 对实例化参数进行校验
+            val instanceParams = instanceModel.getTriggerContainer().params
+            TemplateInstanceUtil.assertParams(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                inputParams = params ?: emptyList(),
+                instanceParams = instanceParams
             )
 
             return PipelineVersionCreateContext(
