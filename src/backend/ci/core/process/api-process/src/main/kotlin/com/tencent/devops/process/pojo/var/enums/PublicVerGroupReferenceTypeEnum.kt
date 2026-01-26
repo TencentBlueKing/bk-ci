@@ -25,25 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.process.pojo.`var`.enums
 
-enum class BuildFormPropertyType(val value: String) {
-    STRING("string"),
-    TEXTAREA("textarea"),
-    ENUM("enum"),
-    DATE("date"),
-    LONG("long"),
-    BOOLEAN("boolean"),
-    SVN_TAG("svn_tag"),
-    GIT_REF("git_ref"),
-    REPO_REF("repo_ref"),
-    MULTIPLE("multiple"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
-    ARTIFACTORY("artifactory"), // 版本仓库
-    SUB_PIPELINE("sub_pipeline"), // 子流水线
-    CUSTOM_FILE("custom_file"), // 自定义仓库文件
-    PASSWORD("password"),
-    TEMPORARY("do not storage in database");
-    override fun toString() = value
+enum class PublicVerGroupReferenceTypeEnum {
+    PIPELINE, // 流水线
+    TEMPLATE; // 模板
 }

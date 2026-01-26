@@ -25,25 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.process.pojo.`var`.`do`
 
-enum class BuildFormPropertyType(val value: String) {
-    STRING("string"),
-    TEXTAREA("textarea"),
-    ENUM("enum"),
-    DATE("date"),
-    LONG("long"),
-    BOOLEAN("boolean"),
-    SVN_TAG("svn_tag"),
-    GIT_REF("git_ref"),
-    REPO_REF("repo_ref"),
-    MULTIPLE("multiple"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
-    ARTIFACTORY("artifactory"), // 版本仓库
-    SUB_PIPELINE("sub_pipeline"), // 子流水线
-    CUSTOM_FILE("custom_file"), // 自定义仓库文件
-    PASSWORD("password"),
-    TEMPORARY("do not storage in database");
-    override fun toString() = value
-}
+import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
+
+@Schema(title = "流水线关联公共变量组信息")
+data class PipelinePublicVarGroupDO(
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "变量总数")
+    val varCount: Int,
+    @get:Schema(title = "变量组描述")
+    val desc: String? = null,
+    @get:Schema(title = "修改人")
+    var modifier: String,
+    @get:Schema(title = "更新时间")
+    var updateTime: LocalDateTime
+)
+

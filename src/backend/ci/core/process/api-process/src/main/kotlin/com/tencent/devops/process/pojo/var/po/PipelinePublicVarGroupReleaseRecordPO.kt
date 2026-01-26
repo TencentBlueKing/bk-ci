@@ -25,25 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.process.pojo.`var`.po
 
-enum class BuildFormPropertyType(val value: String) {
-    STRING("string"),
-    TEXTAREA("textarea"),
-    ENUM("enum"),
-    DATE("date"),
-    LONG("long"),
-    BOOLEAN("boolean"),
-    SVN_TAG("svn_tag"),
-    GIT_REF("git_ref"),
-    REPO_REF("repo_ref"),
-    MULTIPLE("multiple"),
-    CODE_LIB("code_lib"),
-    CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
-    ARTIFACTORY("artifactory"), // 版本仓库
-    SUB_PIPELINE("sub_pipeline"), // 子流水线
-    CUSTOM_FILE("custom_file"), // 自定义仓库文件
-    PASSWORD("password"),
-    TEMPORARY("do not storage in database");
-    override fun toString() = value
-}
+import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
+
+@Schema(title = "流水线公共变量组发布记录数据")
+data class PipelinePublicVarGroupReleaseRecordPO(
+    @get:Schema(title = "主键ID")
+    val id: Long,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "变量组名称")
+    val groupName: String,
+    @get:Schema(title = "版本号")
+    val version: Int,
+    @get:Schema(title = "发布人")
+    val publisher: String,
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime,
+    @get:Schema(title = "描述")
+    val desc: String? = null,
+    @get:Schema(title = "内容")
+    val content: String? = null,
+    @get:Schema(title = "创建者")
+    val creator: String,
+    @get:Schema(title = "修改者")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime
+)

@@ -55,8 +55,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.ProjectCacheService
+import com.tencent.devops.process.service.`var`.PublicVarService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
@@ -106,7 +108,8 @@ class PipelineBuildService(
     private val pipelineUrlBean: PipelineUrlBean,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator,
-    private val pipelineAsCodeService: PipelineAsCodeService
+    private val pipelineAsCodeService: PipelineAsCodeService,
+    private val publicVarService: PublicVarService
 ) {
     companion object {
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
@@ -214,6 +217,13 @@ class PipelineBuildService(
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
 
+            publicVarService.handleModelParams(
+                projectId = resource.projectId,
+                model = resource.model,
+                referId = pipeline.pipelineId,
+                referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                referVersion = pipeline.version
+            )
             initPipelineParamMap(
                 buildId = buildId,
                 startType = startType,
