@@ -1559,7 +1559,7 @@ CREATE TABLE IF NOT EXISTS `T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO` (
     `ID` bigint(32) NOT NULL COMMENT '主键ID',
     `PROJECT_ID` varchar(64) NOT NULL COMMENT '项目ID',
     `GROUP_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '变量组名称',
-    `VERSION` int(11) NOT NULL COMMENT DEFAULT -1 '变量组版本号,-1代表未指定关联的变量组版本',
+    `VERSION` int(11) NOT NULL DEFAULT -1 COMMENT '变量组版本号,-1代表未指定关联的变量组版本',
     `REFER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '关联ID',
     `REFER_TYPE` varchar(64) NOT NULL COMMENT '关联类型',
     `REFER_VERSION_NAME` varchar(1024) DEFAULT '' COMMENT '引用版本名称',
