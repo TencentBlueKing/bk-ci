@@ -31,13 +31,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSetter
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.pojo.YamlVersionParser
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import org.slf4j.LoggerFactory
 
 /**
  * PreScriptBuildYamlI 是PreScriptBuildYaml的拓展，方便再既不修改data class的特性情况下，其他类可以在继承新增字段
@@ -49,18 +50,19 @@ interface PreScriptBuildYamlIParser : YamlVersionParser {
     var label: List<String>?
     var variables: Map<String, Variable>?
     var variableTemplates: List<VariableTemplate>?
-    var stages: List<PreStage>?
-    var jobs: LinkedHashMap<String, PreJob>?
-    var steps: List<PreStep>?
-    var extends: Extends?
+    var stages: List<IPreStage>?
+    var jobs: LinkedHashMap<String, IPreJob>?
+    var steps: List<IPreStep>?
+    var extends: PreExtends?
     var resources: Resources?
-    var finally: LinkedHashMap<String, PreJob>?
+    var finally: LinkedHashMap<String, IPreJob>?
     val concurrency: Concurrency?
     val disablePipeline: Boolean?
     val recommendedVersion: RecommendedVersion?
     val customBuildNum: String?
     val syntaxDialect: String?
     val failIfVariableInvalid: Boolean?
+    val cancelPolicy: String?
 }
 
 /**
@@ -78,47 +80,88 @@ data class PreScriptBuildYamlParser(
     var triggerOn: PreTriggerOn?,
     override var variables: Map<String, Variable>? = null,
     override var variableTemplates: List<VariableTemplate>? = null,
-    override var stages: List<PreStage>? = null,
-    override var jobs: LinkedHashMap<String, PreJob>? = null,
-    override var steps: List<PreStep>? = null,
-    override var extends: Extends? = null,
+    override var stages: List<IPreStage>? = null,
+    override var jobs: LinkedHashMap<String, IPreJob>? = null,
+    override var steps: List<IPreStep>? = null,
+    override var extends: PreExtends? = null,
     override var resources: Resources?,
     var notices: List<GitNotices>?,
-    override var finally: LinkedHashMap<String, PreJob>? = null,
+    override var finally: LinkedHashMap<String, IPreJob>? = null,
     override val concurrency: Concurrency? = null,
     override val disablePipeline: Boolean? = null,
     override val recommendedVersion: RecommendedVersion? = null,
     override val customBuildNum: String? = null,
     override val syntaxDialect: String?,
-    override val failIfVariableInvalid: Boolean? = null
+    override val failIfVariableInvalid: Boolean? = null,
+    override val cancelPolicy: String? = null
 ) : PreScriptBuildYamlIParser {
     override fun yamlVersion() = YamlVersion.V2_0
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PreScriptBuildYamlParser::class.java)
+    }
 
     @JsonSetter("variables")
     private fun setVariables(raw: Any?) {
         when (raw) {
+            null -> {
+                // 显式处理 null 情况，清空变量
+                this.variables = null
+                this.variableTemplates = null
+            }
             is Map<*, *> -> {
                 // 提取template数据
-                this.variableTemplates = (raw["template"] as? List<Map<String, String>>)
+                val templateList = raw["template"] as? List<Map<String, String>>
+                if (raw["template"] != null && templateList == null) {
+                    logger.warn(
+                        "variables.template type conversion failed, " +
+                            "expected List<Map<String, String>>, actual type: ${raw["template"]?.javaClass?.name}"
+                    )
+                }
+                this.variableTemplates = templateList
                     ?.filter { !it["name"].isNullOrBlank() }?.map {
-                        VariableTemplate(it["name"]!!, it["version"])
+                        VariableTemplate(name = it["name"]!!, version = it["version"])
                     }
-                val regularVariables = raw.filterKeys { it != "template" }
-                    .mapKeys { it.key.toString() }
+                // 过滤掉 template 字段和 null key，并转换为 String key
+                val regularVariables = raw.filterKeys { key ->
+                    if (key == null) {
+                        logger.warn("null key found in variables, ignored")
+                        false
+                    } else {
+                        key != "template"
+                    }
+                }.mapKeys { entry ->
+                    entry.key.toString()
+                }
+                
                 if (regularVariables.isNotEmpty()) {
-                    this.variables = regularVariables.mapValues { parseVariableValue(it.value) }
+                    this.variables = regularVariables.mapValues { parseVariableValue(value = it.value) }
                 } else {
                     this.variables = null
                 }
+            }
+            else -> {
+                // 处理非预期类型
+                logger.warn(
+                    "unsupported variables type, " +
+                        "expected Map<String, Any>, actual type: ${raw.javaClass.name}, value: $raw"
+                )
+                this.variables = null
+                this.variableTemplates = null
             }
         }
     }
 
     private fun parseVariableValue(value: Any?): Variable {
         return when (value) {
+            null -> {
+                // 显式处理 null 值
+                logger.warn("variable value is null, creating empty variable")
+                Variable(value = null)
+            }
             // 处理对象格式
-            is Map<*, *> -> parseVariable(value)
-            // 处理简单值格式
+            is Map<*, *> -> parseVariable(map = value)
+            // 处理简单值格式（字符串、数字、布尔等）
             else -> Variable(value = value)
         }
     }

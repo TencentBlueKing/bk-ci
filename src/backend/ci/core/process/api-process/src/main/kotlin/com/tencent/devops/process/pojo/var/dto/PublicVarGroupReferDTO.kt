@@ -28,7 +28,7 @@
 package com.tencent.devops.process.pojo.`var`.dto
 
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线公共变量组关联传输对象")
@@ -45,10 +45,16 @@ data class PublicVarGroupReferDTO(
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "关联组件名称")
     val referName: String,
-    @get:Schema(title = "关联组件内容")
+    @get:Schema(title = "关联组件版本号")
     val referVersion: Int,
     @get:Schema(title = "关联组件版本名称")
     val referVersionName: String? = null,
-    @get:Schema(title = "变量组引用列表,key为变量名，value为变量组版本号")
-    var publicVarGroupRefs: Map<String, Int?> = emptyMap()
-)
+    @get:Schema(title = "关联资源是否存在源模板")
+    val referHasSource: Boolean = false
+) {
+    override fun toString(): String {
+        return "PublicVarGroupReferDTO(userId='$userId', projectId='$projectId', " +
+            "referId='$referId', referType=$referType, referName='$referName', " +
+            "referVersion=$referVersion, referVersionName=$referVersionName)"
+    }
+}

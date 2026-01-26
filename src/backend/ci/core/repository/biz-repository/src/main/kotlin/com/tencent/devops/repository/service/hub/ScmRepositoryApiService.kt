@@ -30,6 +30,8 @@ package com.tencent.devops.repository.service.hub
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.credential.AuthRepository
@@ -65,6 +67,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.ScmConfig
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -87,7 +90,8 @@ class ScmRepositoryApiService @Autowired constructor(
     private val repositoryOauthService: RepositoryOauthService,
     private val p4Config: P4Config,
     private val scmConfig: ScmConfig,
-    private val githubService: IGithubService
+    private val githubService: IGithubService,
+    private val profile: Profile
 ) : AbstractScmApiService(
     repositoryService = repositoryService,
     providerRepositoryFactory = providerRepositoryFactory,
@@ -96,6 +100,23 @@ class ScmRepositoryApiService @Autowired constructor(
 
     @Value("\${scm.webhook.url:#{null}}")
     private val webhookUrl: String = ""
+
+    fun findRepository(
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String
+    ): ScmServerRepository {
+        return invokeApi(
+            projectId = projectId,
+            repositoryType = repositoryType,
+            repoHashIdOrName = repoHashIdOrName
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findRepository(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository
+            )
+        }
+    }
 
     fun findRepository(
         projectId: String,
@@ -138,7 +159,7 @@ class ScmRepositoryApiService @Autowired constructor(
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
         val opts = RepoListOptions(
-            repoName = search,
+            repoName = GitUtils.tryGetRepoName(search),
             page = 1,
             pageSize = 20
         )
@@ -183,7 +204,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findBranches(
+    fun listBranches(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -193,6 +214,36 @@ class ScmRepositoryApiService @Autowired constructor(
         return invokeApi(
             projectId = projectId,
             authRepository = authRepository
+        ) { providerProperties, providerRepository ->
+            scmApiManager.listBranches(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = BranchListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
+    fun listBranches(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
+        return invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repository)
         ) { providerProperties, providerRepository ->
             scmApiManager.listBranches(
                 providerProperties = providerProperties,
@@ -223,7 +274,7 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
-    fun findTags(
+    fun listTags(
         projectId: String,
         authRepository: AuthRepository,
         search: String?,
@@ -246,10 +297,40 @@ class ScmRepositoryApiService @Autowired constructor(
         }
     }
 
+    fun listTags(
+        userId: String,
+        projectId: String,
+        repositoryType: RepositoryType?,
+        repoHashIdOrName: String,
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ): List<Reference> {
+        val repository = repositoryService.userGet(
+            userId = userId,
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoHashIdOrName, repositoryType)
+        )
+        return invokeApi(
+            projectId = projectId,
+            authRepository = AuthRepository(repository)
+        ) { providerProperties, providerRepository ->
+            scmApiManager.findTags(
+                providerProperties = providerProperties,
+                providerRepository = providerRepository,
+                opts = TagListOptions(
+                    search = search,
+                    page = page,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
     /**
      * 批量创建hook,蓝盾每个事件一条hook记录,方便用户查询webhook历史
      *
-     * @param event webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
+     * @param events webhook事件,如果能够在ScmEventType中找到,则转换成HookEvent,否则转换成nativeEvent
      */
     fun createHook(
         projectId: String,
@@ -302,8 +383,9 @@ class ScmRepositoryApiService @Autowired constructor(
         checkRunInput: CheckRunInput
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
-        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+        val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode
+        return when {
+            supportCheckRun(providerCode) -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)
@@ -317,7 +399,7 @@ class ScmRepositoryApiService @Autowired constructor(
             }
 
             // github 暂时没对接sdk，先走老接口创建
-            ScmProviderCodes.GITHUB.name -> {
+            providerCode == ScmProviderCodes.GITHUB.name -> {
                 githubService.addCheckRuns(
                     token = oauth2TokenStoreManager.get(
                         userId = repo.userName,
@@ -351,8 +433,9 @@ class ScmRepositoryApiService @Autowired constructor(
         checkRunInput: CheckRunInput
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
-        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+        val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode
+        return when {
+            supportCheckRun(providerCode) -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)
@@ -366,7 +449,7 @@ class ScmRepositoryApiService @Autowired constructor(
             }
 
             // github 暂时没对接sdk，先走老接口创建
-            ScmProviderCodes.GITHUB.name -> {
+            providerCode == ScmProviderCodes.GITHUB.name -> {
                 val checkRunId = checkRunInput.id!!
                 githubService.updateCheckRuns(
                     token = oauth2TokenStoreManager.get(
@@ -440,7 +523,7 @@ class ScmRepositoryApiService @Autowired constructor(
                 } else {
                     listOf()
                 },
-                name = "",
+                name = "${SCM_REPO_WEBHOOK_NAME}_${profile.getEnv().name.lowercase()}",
                 path = if (subPath.isNullOrBlank()) {
                     null
                 } else {
@@ -550,7 +633,14 @@ class ScmRepositoryApiService @Autowired constructor(
             externalId = externalId ?: ""
         )
 
+    private fun supportCheckRun(providerCode: String) = listOf(
+        ScmProviderCodes.TGIT,
+        ScmProviderCodes.GITEE,
+        ScmProviderCodes.BKCODE
+    ).any { it.name == providerCode }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ScmRepositoryApiService::class.java)
+        private const val SCM_REPO_WEBHOOK_NAME = "bk_ci_devops_trigger"
     }
 }

@@ -42,7 +42,7 @@ data class DeleteDataParam(
     @get:Schema(title = "锁", required = false)
     val lock: RedisLock? = null,
     @get:Schema(title = "广播表删除标识", required = false)
-    val broadcastTableDeleteFlag: Boolean? = true,
+    val broadcastTableDeleteFlag: Boolean? = false,
     @get:Schema(title = "归档流水线标识", required = false)
     val archivePipelineFlag: Boolean? = null,
     @get:Schema(title = "迁移目标集群名称", required = false)

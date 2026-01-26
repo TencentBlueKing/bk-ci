@@ -30,7 +30,9 @@ package com.tencent.devops.common.auth.rbac
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.common.auth.api.AuthPlatformApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.mock.api.MockAuthPlatformApi
 import com.tencent.devops.common.auth.rbac.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.rbac.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.rbac.api.RbacAuthTokenApi
@@ -43,6 +45,7 @@ import com.tencent.devops.common.auth.rbac.code.RbacExperienceAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacPipelineAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacPipelineGroupAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacProjectAuthServiceCode
+import com.tencent.devops.common.auth.rbac.code.RbacPublicVarGroupAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacQualityAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.rbac.code.RbacTicketAuthServiceCode
@@ -111,6 +114,10 @@ class RbacAuthAutoConfiguration {
     ) = RbacAuthPermissionApi(client = client, tokenService = tokenService)
 
     @Bean
+    @ConditionalOnMissingBean(AuthPlatformApi::class)
+    fun authPlatformApi() = MockAuthPlatformApi()
+
+    @Bean
     @Primary
     fun bcsAuthServiceCode() = RbacBcsAuthServiceCode()
 
@@ -153,4 +160,8 @@ class RbacAuthAutoConfiguration {
     @Bean
     @Primary
     fun experienceAuthServiceCode() = RbacExperienceAuthServiceCode()
+
+    @Bean
+    @Primary
+    fun publicVarGroupAuthServiceCode() = RbacPublicVarGroupAuthServiceCode()
 }

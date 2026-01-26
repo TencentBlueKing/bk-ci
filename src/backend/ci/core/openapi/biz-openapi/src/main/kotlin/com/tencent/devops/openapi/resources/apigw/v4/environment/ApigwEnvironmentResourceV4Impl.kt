@@ -269,6 +269,28 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun enableEnvNode(
+        userId: String,
+        projectId: String,
+        envHashId: String?,
+        envName: String?,
+        nodeHashId: String?,
+        nodeName: String?,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("OPENAPI_ENVIRONMENT_V4|$userId|enable env node" +
+                        "|$projectId|$userId|$envHashId|$envName|$nodeHashId|$nodeName|$enable")
+        return client.get(ServiceEnvironmentResource::class).enableNodeEnv(
+            userId = userId,
+            projectId = projectId,
+            envHashId = envHashId,
+            envName = envName,
+            nodeHashId = nodeHashId,
+            nodeName = nodeName,
+            enableNode = enable
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwEnvironmentResourceV4Impl::class.java)
     }

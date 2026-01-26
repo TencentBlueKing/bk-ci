@@ -389,24 +389,69 @@ class TemplateDao {
         }
     }
 
+    /**
+     * 根据模板ID查询项目ID
+     * @param dslContext DSL上下文
+     * @param templateId 模板ID
+     * @return 项目ID，如果模板不存在则返回null
+     */
+    fun getProjectIdByTemplateId(dslContext: DSLContext, templateId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(PROJECT_ID).from(this)
+                .where(ID.eq(templateId))
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun getTemplateVersionInfos(
         dslContext: DSLContext,
         projectId: String,
-        templateId: String
+        templateId: String,
+        ascSort: Boolean = false
     ): Result<out Record>? {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.select(
                 ID,
                 VERSION,
                 VERSION_NAME,
+                CREATED_TIME,
                 UPDATE_TIME,
-                CREATOR
+                CREATOR,
+                DESC
             )
                 .from(this)
                 .where(ID.eq(templateId))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(VERSION_NAME.desc(), UPDATE_TIME.desc(), VERSION.desc())
+                .let {
+                    if (ascSort) {
+                        it.orderBy(VERSION_NAME.asc(), UPDATE_TIME.asc(), VERSION.asc())
+                    } else {
+                        it.orderBy(VERSION_NAME.desc(), UPDATE_TIME.desc(), VERSION.desc())
+                    }
+                }
                 .fetch()
+        }
+    }
+
+    fun countTemplateVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versionName: String? = null
+    ): Int {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(ID.eq(templateId))
+                .and(PROJECT_ID.eq(projectId))
+                .let {
+                    if (versionName != null) {
+                        it.and(VERSION_NAME.eq(versionName))
+                    } else {
+                        it
+                    }
+                }.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -419,13 +464,28 @@ class TemplateDao {
         }
     }
 
+    /**
+     * 获取项目下所有模板ID列表
+     */
+    fun listTemplateIds(
+        dslContext: DSLContext,
+        projectId: String
+    ): List<String> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectDistinct(ID)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetch(ID, String::class.java)
+        }
+    }
+
     fun countTemplate(
         dslContext: DSLContext,
-        projectId: String?,
-        includePublicFlag: Boolean?,
-        templateType: TemplateType?,
-        templateName: String?,
-        storeFlag: Boolean?
+        projectId: String? = null,
+        includePublicFlag: Boolean? = null,
+        templateType: TemplateType? = null,
+        templateName: String? = null,
+        storeFlag: Boolean? = null
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
@@ -511,6 +571,21 @@ class TemplateDao {
             conditions = conditions,
             queryModelFlag = queryModelFlag
         )
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int
+    ): List<String> {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .groupBy(ID)
+                .limit(limit).offset(offset)
+                .fetch().map { it.value1() }
+        }
     }
 
     fun listTemplateByProjectCondition(
@@ -670,12 +745,13 @@ class TemplateDao {
     fun listTemplateReferenceId(
         dslContext: DSLContext,
         templateId: String
-    ): Result<Record1<String>> {
+    ): Map<String, String> {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.selectDistinct(ID).from(this)
+            return dslContext.select(PROJECT_ID, ID).from(this)
                 .where(TYPE.eq(TemplateType.CONSTRAINT.name))
                 .and(SRC_TEMPLATE_ID.eq(templateId))
-                .fetch()
+                .groupBy(PROJECT_ID, ID)
+                .fetch().map { Pair(it.value1(), it.value2()) }.toMap()
         }
     }
 

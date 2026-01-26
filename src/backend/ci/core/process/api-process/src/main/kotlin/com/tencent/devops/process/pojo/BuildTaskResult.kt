@@ -58,5 +58,7 @@ data class BuildTaskResult(
     @get:Schema(title = "对接平台错误码", required = false)
     val platformErrorCode: Int? = null,
     @get:Schema(title = "插件监控数据", required = false)
-    val monitorData: Map<String, Any>? = null
+    val monitorData: Map<String, Any>? = null,
+    @get:Schema(title = "敏感变量Key列表", required = false)
+    val sensitiveKeys: Set<String>? = null
 )

@@ -77,7 +77,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
@@ -117,7 +116,6 @@ class BuildStartControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRecordService: PipelineBuildRecordService,
     private val stageRecordService: StageBuildRecordService,
     private val containerRecordService: ContainerBuildRecordService,
@@ -172,7 +170,7 @@ class BuildStartControl @Autowired constructor(
         watcher.stop()
 
         watcher.start("buildModel")
-        buildModel(buildInfo = buildInfo)
+        buildModel(buildInfo = buildInfo, executeCount = executeCount)
         watcher.stop()
 
         buildLogPrinter.addDebugLine(
@@ -585,8 +583,6 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
@@ -646,7 +642,6 @@ class BuildStartControl @Autowired constructor(
             )
         )
 
-        buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
             message = I18nUtil.getCodeLanMessage(
                 messageCode = BK_TRIGGER_USER,
@@ -787,8 +782,15 @@ class BuildStartControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo) {
-        val model = buildDetailService.getBuildModel(projectId, buildId) ?: run {
+    private fun PipelineBuildStartEvent.buildModel(buildInfo: BuildInfo, executeCount: Int) {
+        val model = pipelineRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = executeCount,
+            debug = buildInfo.debug
+        ) ?: run {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildCancelEvent(
                     source = TAG, projectId = projectId, pipelineId = pipelineId,

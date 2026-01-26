@@ -1,12 +1,12 @@
 package com.tencent.devops.common.pipeline
 
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+
 interface ModelHandleService {
 
     /**
      * 处理模型参数
-     * 
      * 该方法负责对流水线模型参数进行统一处理
-     *
      * @param projectId 项目ID
      * @param model 模型对象
      * @param referId 引用ID，标识参数引用的具体资源或对象
@@ -15,9 +15,16 @@ interface ModelHandleService {
      */
     fun handleModelParams(
         projectId: String,
-        model: Model,
-        referId: String,
-        referType: String,
-        referVersion: Int
+        modelPublicVarHandleContext: ModelPublicVarHandleContext
+    ): List<BuildFormProperty>
+
+    /**
+     * 处理模型中所有变量的引用
+     * @param userId 用户ID
+     * @param context Model变量引用处理上下文
+     */
+    fun handleModelVarReferences(
+        userId: String,
+        context: ModelVarReferenceHandleContext
     )
 }

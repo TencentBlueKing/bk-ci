@@ -50,8 +50,6 @@ data class PublicVarPO(
     val defaultValue: Any? = null,
     @get:Schema(title = "变量描述")
     val desc: String? = null,
-    @get:Schema(title = "关联流水线/模板总数")
-    val referCount: Int,
     @get:Schema(title = "变量组名称")
     val groupName: String,
     @get:Schema(title = "版本号")

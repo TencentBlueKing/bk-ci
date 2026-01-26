@@ -38,8 +38,6 @@ data class PublicVarGroupPO(
     val projectId: String,
     @get:Schema(title = "变量组名称")
     val groupName: String,
-    @get:Schema(title = "关联流水线/模板总数")
-    val referCount: Int,
     @get:Schema(title = "变量个数")
     val varCount: Int,
     @get:Schema(title = "变量组描述")

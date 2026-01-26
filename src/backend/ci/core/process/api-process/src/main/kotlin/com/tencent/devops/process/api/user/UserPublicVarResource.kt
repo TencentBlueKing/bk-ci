@@ -46,7 +46,7 @@ import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 
 @Tag(name = "USER_PUBLIC_VAR", description = "用户-公共变量")
-@Path("/user/pipeline/public/var")
+@Path("/user/public/var")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPublicVarResource {
@@ -69,7 +69,7 @@ interface UserPublicVarResource {
         version: Int? = null
     ): Result<PublicVarGroupVO>
 
-    @Operation(summary = "获取公共变量")
+    @Operation(summary = "获取变量组下的公共变量列表")
     @GET
     @Path("/group/{groupName}/variables")
     fun getVariables(

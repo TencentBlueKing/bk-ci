@@ -47,8 +47,6 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatri
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
-import com.tencent.devops.process.engine.service.PipelineElementService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -67,12 +65,10 @@ class ContainerBuildRecordService(
     private val dslContext: DSLContext,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResourceDao: PipelineResourceDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResourceVersionDao: PipelineResourceVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -86,25 +82,54 @@ class ContainerBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResourceVersionDao = pipelineResourceVersionDao
 ) {
 
     fun getRecord(
-        transactionContext: DSLContext?,
+        transactionContext: DSLContext? = null,
         projectId: String,
         pipelineId: String,
         buildId: String,
         containerId: String,
-        executeCount: Int
+        executeCount: Int? = null
     ): BuildRecordContainer? {
+        val finalExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = transactionContext
+        )
         return recordContainerDao.getRecord(
             transactionContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = containerId,
-            executeCount = executeCount
+            executeCount = finalExecuteCount
+        )
+    }
+
+    fun getLatestRecord(
+        transactionContext: DSLContext? = null,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        executeCount: Int? = null
+    ): BuildRecordContainer? {
+        val finalExecuteCount = fixedExecuteCount(
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            queryDslContext = transactionContext
+        )
+        return recordContainerDao.getLatestRecord(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = finalExecuteCount
         )
     }
 
@@ -128,7 +153,6 @@ class ContainerBuildRecordService(
         containerId: String,
         executeCount: Int
     ) {
-        containerBuildDetailService.containerPreparing(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerPreparing#$containerId"
@@ -156,12 +180,6 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerBuildStatus: BuildStatus
     ) {
-        containerBuildDetailService.containerStarted(
-            projectId = projectId,
-            buildId = buildId,
-            containerId = containerId,
-            containerBuildStatus = containerBuildStatus
-        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerStarted#$containerId"
@@ -195,13 +213,6 @@ class ContainerBuildRecordService(
         buildStatus: BuildStatus,
         operation: String
     ) {
-        containerBuildDetailService.updateContainerStatus(
-            projectId = projectId,
-            buildId = buildId,
-            containerId = containerId,
-            buildStatus = buildStatus,
-            executeCount = executeCount
-        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "$operation#$containerId"
@@ -300,15 +311,6 @@ class ContainerBuildRecordService(
         matrixOption: MatrixControlOption,
         modelContainer: Container?
     ) {
-        containerBuildDetailService.updateMatrixGroupContainer(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            matrixGroupId = matrixGroupId,
-            buildStatus = buildStatus,
-            matrixOption = matrixOption,
-            modelContainer = modelContainer
-        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId"
@@ -335,7 +337,6 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerId: String
     ) {
-        containerBuildDetailService.containerSkip(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerSkip#$containerId"
@@ -363,13 +364,6 @@ class ContainerBuildRecordService(
         vmInfo: VmInfo,
         executeCount: Int?
     ) {
-        containerBuildDetailService.saveBuildVmInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            vmInfo = vmInfo
-        )
         logger.info("ENGINE|$buildId|saveBuildVmInfo|containerId=$containerId|$vmInfo")
         if (executeCount == null) return
         update(

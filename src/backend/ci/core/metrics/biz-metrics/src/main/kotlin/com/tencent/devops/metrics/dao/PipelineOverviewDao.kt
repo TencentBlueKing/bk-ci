@@ -139,7 +139,7 @@ class PipelineOverviewDao {
         return conditions
     }
 
-    fun queryPipelineMonthlyExecCount(
+    fun queryPipelineByTimeRange(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -154,9 +154,9 @@ class PipelineOverviewDao {
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
-    
+
     /**
-     * 批量查询多个流水线近一月内执行次数
+     * 批量查询多个流水线区间内执行次数
      */
     fun queryPipelineMonthlyExecCounts(
         dslContext: DSLContext,
@@ -165,7 +165,7 @@ class PipelineOverviewDao {
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Result<Record2<String, BigDecimal>> {
-        
+
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             return dslContext.select(PIPELINE_ID, sum(TOTAL_EXECUTE_COUNT))
                 .from(this)

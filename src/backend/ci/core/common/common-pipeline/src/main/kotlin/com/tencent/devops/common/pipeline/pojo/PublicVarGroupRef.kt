@@ -35,5 +35,7 @@ data class PublicVarGroupRef(
     @get:Schema(title = "版本号", required = false)
     val version: Int? = null,
     @get:Schema(title = "版本名称", required = false)
-    val versionName: String? = null
+    val versionName: String? = null,
+    @get:Schema(title = "回显的历史变量列表", required = false)
+    var variables: List<BuildFormProperty>? = null
 )

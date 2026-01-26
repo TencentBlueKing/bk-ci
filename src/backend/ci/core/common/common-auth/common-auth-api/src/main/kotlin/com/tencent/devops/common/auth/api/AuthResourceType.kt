@@ -37,6 +37,8 @@ enum class AuthResourceType(val value: String) {
     PIPELINE_GROUP("pipeline_group"), // 流水线组类型
     PIPELINE_TEMPLATE("pipeline_template"), // 流水线模板类型
 
+    PUBLIC_VAR_GROUP("public_variable"), // 公共变量组
+
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 
     TICKET_CREDENTIAL("credential"), // 凭证服务凭据
@@ -61,6 +63,7 @@ enum class AuthResourceType(val value: String) {
 
     PROJECT("project"), // 项目管理
     CGS("cgs"),
+    CGS_GROUP("cgs_group"),
 
     TURBO("turbo"), // 编译加速
     CODECC_TASK("codecc_task"), // CodeCC任务

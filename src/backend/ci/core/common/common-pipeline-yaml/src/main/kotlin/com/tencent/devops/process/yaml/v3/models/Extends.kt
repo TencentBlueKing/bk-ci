@@ -29,17 +29,42 @@ package com.tencent.devops.process.yaml.v3.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
-import com.tencent.devops.process.yaml.v3.models.job.IPreJob
-import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.transfer.CodeTemplate
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsRecommendedVersion
+import com.tencent.devops.common.pipeline.pojo.transfer.ExtendsTriggerConfig
+import com.tencent.devops.common.pipeline.pojo.transfer.PreTemplateVariable
 
 /**
  * model
  */
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreExtends(
+    val template: Any?
+)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Extends(
-    val template: String,
-    val ref: String?,
-    val variables: Map<String, String>?
-) : IPreStep, IPreJob, IPreStage
+    val template: ExtendsTemplate?
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ExtendsTemplate(
+    @JsonProperty("path")
+    override val templatePath: String? = null,
+    @JsonProperty("ref")
+    override val templateRef: String? = null,
+    @JsonProperty("template-id")
+    override val templateId: String? = null,
+    @JsonProperty("version")
+    override val templateVersionName: String? = null,
+    @JsonProperty("variables")
+    override val variables: Map<String, PreTemplateVariable>? = null,
+    @JsonProperty("trigger-conf")
+    val triggerConfig: Map<String, ExtendsTriggerConfig>? = null,
+    @JsonProperty("recommended-version")
+    val recommendedVersion: ExtendsRecommendedVersion? = null
+) : CodeTemplate

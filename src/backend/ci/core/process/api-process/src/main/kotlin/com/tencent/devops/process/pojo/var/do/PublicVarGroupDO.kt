@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
+import com.tencent.devops.process.pojo.`var`.PublicVarGroupPermissions
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -34,12 +35,18 @@ import java.time.LocalDateTime
 data class PublicVarGroupDO(
     @get:Schema(title = "变量组名称")
     val groupName: String,
-    @get:Schema(title = "关联流水线/模板总数")
+    @get:Schema(title = "关联流水线/模板总数（动态版本+固定版本）")
     val referCount: Int,
+    @get:Schema(title = "动态版本引用数量")
+    val dynamicVersionReferCount: Int = 0,
+    @get:Schema(title = "固定版本引用数量")
+    val fixedVersionReferCount: Int = 0,
     @get:Schema(title = "变量总数")
     val varCount: Int,
     @get:Schema(title = "变量组描述")
     val desc: String? = null,
+    @get:Schema(title = "变量组权限")
+    val permission: PublicVarGroupPermissions,
     @get:Schema(title = "修改人")
     var modifier: String,
     @get:Schema(title = "更新时间")

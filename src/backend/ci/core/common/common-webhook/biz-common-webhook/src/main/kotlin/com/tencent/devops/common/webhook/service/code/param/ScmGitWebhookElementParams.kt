@@ -60,7 +60,7 @@ class ScmGitWebhookElementParams : ScmWebhookElementParams<CodeScmGitWebHookTrig
             } else {
                 EnvUtils.parseEnv(excludeUsers, variables)
             }
-            params.includeUsers = if (excludeUsers.isNullOrBlank()) {
+            params.includeUsers = if (includeUsers.isNullOrBlank()) {
                 ""
             } else {
                 EnvUtils.parseEnv(includeUsers, variables)
@@ -94,6 +94,10 @@ class ScmGitWebhookElementParams : ScmWebhookElementParams<CodeScmGitWebHookTrig
                         WebhookUtils.joinToString(actions)
                     }
                 }
+
+                eventType == CodeEventType.ISSUES -> {
+                    params.includeIssueAction = WebhookUtils.joinToString(actions)
+                }
             }
             params.eventType = eventType
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
@@ -105,6 +109,9 @@ class ScmGitWebhookElementParams : ScmWebhookElementParams<CodeScmGitWebHookTrig
             params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
             params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
             params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
+            params.includeCrState = WebhookUtils.joinToString(includeCrState)
+            params.includeNoteTypes = WebhookUtils.joinToString(includeNoteTypes)
+            params.includeNoteComment = EnvUtils.parseEnv(includeNoteComment ?: "", variables)
         }
         return params
     }

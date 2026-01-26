@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.`var`.`do`
 
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
@@ -47,6 +47,8 @@ data class PublicGroupVarRefDO(
     val modifier: String,
     @get:Schema(title = "最近更新时间")
     val updateTime: LocalDateTime,
+    @get:Schema(title = "实际引用变量数")
+    val actualRefCount: Int,
     @get:Schema(title = "实列个数")
     val instanceCount: Int? = null,
     @get:Schema(title = "最近一个月的执行次数")

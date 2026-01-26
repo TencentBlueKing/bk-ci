@@ -46,7 +46,12 @@ import org.junit.jupiter.api.Test
 class MutexControlTest {
 
     private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mockk(), mockk())
-    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
+    private val redisOperation: RedisOperation = RedisOperation(
+        masterRedisTemplate = mockk(),
+        slaveRedisTemplate = mockk(),
+        lockRedisTemplate = mockk(),
+        splitMode = mockk()
+    )
     private val variables: Map<String, String> = mapOf(Pair("var1", "Test"))
     private val buildId: String = "b-12345678901234567890123456789012"
     private val containerId: String = "1"
@@ -73,6 +78,7 @@ class MutexControlTest {
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
         controlOption = PipelineBuildContainerControlOption(jobControlOption = JobControlOption()),
+        containPostTaskFlag = null,
         matrixGroupId = null,
         matrixGroupFlag = false
     )

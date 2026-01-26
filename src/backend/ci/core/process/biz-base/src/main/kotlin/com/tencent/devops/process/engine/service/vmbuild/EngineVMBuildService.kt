@@ -91,7 +91,6 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineProgressRateService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
@@ -134,7 +133,6 @@ import org.springframework.stereotype.Service
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
@@ -204,8 +202,18 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
-        val model = containerBuildDetailService.getBuildModel(projectId, buildId)
+        val variablesWithType = buildVariableService.getAllVariableWithType(
+            projectId = projectId,
+            buildId = buildId
+        ).toMutableList()
+        val model = containerBuildRecordService.getRecordModel(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = buildInfo.version,
+            buildId = buildId,
+            executeCount = buildInfo.executeCount,
+            debug = buildInfo.debug
+        )
         // TODO 没有升级的worker还需要用到这个变量，下一版删除
         val asCodeSettings = pipelineAsCodeService.getPipelineAsCodeSettings(
             projectId = projectId, pipelineId = buildInfo.pipelineId
@@ -871,7 +879,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             try {
                 buildVariableService.batchUpdateVariable(
                     projectId = projectId,
-                    pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
+                    pipelineId = buildInfo.pipelineId,
+                    buildId = buildId,
+                    variables = result.buildResult,
+                    sensitiveKeys = result.sensitiveKeys
                 )
                 LOG.info("ENGINE|$buildId|BCT_ADD_VAR_DONE|$projectId")
                 writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId, buildInfo.startUser)
@@ -892,7 +903,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             buildId = buildId,
             containerId = vmSeqId,
             taskId = result.elementId,
-            executeCount = result.executeCount ?: buildInfo.executeCount ?: 1,
+            executeCount = result.executeCount ?: buildInfo.executeCount,
             buildStatus = buildStatus,
             errorType = errorType,
             errorCode = result.errorCode,
@@ -1059,7 +1070,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             buildId = buildId,
                             pipelineId = buildInfo.pipelineId,
                             containerId = vmSeqId,
-                            executeCount = result.executeCount ?: buildInfo.executeCount ?: 1
+                            executeCount = result.executeCount ?: buildInfo.executeCount
                         )
                         BuildStatus.RETRY
                     }

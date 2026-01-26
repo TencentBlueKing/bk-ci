@@ -29,44 +29,44 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPublicVarGroupResource
-import com.tencent.devops.process.pojo.`var`.`do`.PipelinePublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.`var`.PublicVarGroupPermissionService
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarGroupDO
-import com.tencent.devops.process.pojo.`var`.`do`.PublicVarReleaseDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
-import com.tencent.devops.process.pojo.`var`.enums.OperateTypeEnum
-import com.tencent.devops.process.pojo.`var`.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupVO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarGroupYamlStringVO
-import com.tencent.devops.process.service.`var`.PublicVarGroupReferInfoService
-import com.tencent.devops.process.service.`var`.PublicVarGroupReleaseRecordService
 import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import jakarta.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPublicVarGroupResourceImpl @Autowired constructor(
-    val publicVarGroupService: PublicVarGroupService,
-    val publicVarGroupReferInfoService: PublicVarGroupReferInfoService,
-    val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
+    private val publicVarGroupService: PublicVarGroupService,
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val publicVarGroupPermissionService: PublicVarGroupPermissionService
 ) : UserPublicVarGroupResource {
 
     override fun addGroup(
         userId: String,
         projectId: String,
-        operateType: OperateTypeEnum,
         publicVarGroup: PublicVarGroupVO
     ): Result<String> {
+        // 校验创建权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
         return Result(
             publicVarGroupService.addGroup(
                 PublicVarGroupDTO(
                     projectId = projectId,
                     userId = userId,
-                    publicVarGroup = publicVarGroup,
-                    operateType = operateType
+                    publicVarGroup = publicVarGroup
                 )
             )
         )
@@ -83,6 +83,12 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<PublicVarGroupDO>> {
+        // 校验列表权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
         return Result(publicVarGroupService.getGroups(
             userId = userId,
             queryReq = PublicVarGroupInfoQueryReqDTO(
@@ -99,19 +105,29 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     }
 
     override fun getGroupNames(userId: String, projectId: String): Result<List<String>> {
+        // 校验列表权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.LIST
+        )
         return Result(publicVarGroupService.listGroupNames(projectId))
     }
 
     override fun importGroup(
         userId: String,
         projectId: String,
-        operateType: OperateTypeEnum,
         yaml: PublicVarGroupYamlStringVO
     ): Result<String> {
+        // 校验创建权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
         return Result(publicVarGroupService.importGroup(
             userId = userId,
             projectId = projectId,
-            operateType = operateType,
             yaml = yaml
         ))
     }
@@ -122,6 +138,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         groupName: String,
         version: Int?
     ): Response {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW,
+            groupName = groupName
+        )
         return publicVarGroupService.exportGroup(
             projectId = projectId,
             groupName = groupName,
@@ -130,6 +153,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
     }
 
     override fun deleteGroup(userId: String, projectId: String, groupName: String): Result<Boolean> {
+        // 校验删除权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.DELETE,
+            groupName = groupName
+        )
         return Result(publicVarGroupService.deleteGroup(
             userId = userId,
             projectId = projectId,
@@ -137,42 +167,13 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun listVarReferInfo(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        varName: String?,
-        referType: PublicVerGroupReferenceTypeEnum?,
-        version: Int?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<PublicGroupVarRefDO>> {
-        return Result(publicVarGroupReferInfoService.listVarReferInfo(
-            PublicVarGroupInfoQueryReqDTO(
-                projectId = projectId,
-                groupName = groupName,
-                varName = varName,
-                referType = referType,
-                version = version,
-                page = page,
-                pageSize = pageSize
-            )
-        ))
-    }
-
-    override fun getChangePreview(
-        userId: String,
-        projectId: String,
-        publicVarGroup: PublicVarGroupVO
-    ): Result<List<PublicVarReleaseDO>> {
-        return Result(publicVarGroupService.getChangePreview(
+    override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
             userId = userId,
             projectId = projectId,
-            publicVarGroup = publicVarGroup
-        ))
-    }
-
-    override fun convertGroupYaml(userId: String, projectId: String, publicVarGroup: PublicVarGroupVO): Result<String> {
+            permission = AuthPermission.VIEW
+        )
         return Result(publicVarGroupService.convertGroupYaml(
             userId = userId,
             projectId = projectId,
@@ -185,48 +186,16 @@ class UserPublicVarGroupResourceImpl @Autowired constructor(
         projectId: String,
         yaml: PublicVarGroupYamlStringVO
     ): Result<PublicVarGroupVO> {
+        // 校验查看权限
+        publicVarGroupPermissionService.checkPublicVarGroupPermissions(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(publicVarGroupService.convertYamlToGroup(
             userId = userId,
             projectId = projectId,
             yaml = yaml
-        ))
-    }
-
-    override fun listPipelineVarGroupInfo(
-        userId: String,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int
-    ): Result<List<PipelinePublicVarGroupDO>> {
-        return publicVarGroupService.listPipelineVariables(
-            userId = userId,
-            projectId = projectId,
-            referId = referId,
-            referType = referType,
-            referVersion = referVersion
-        )
-    }
-
-    override fun listProjectVarGroupInfo(userId: String, projectId: String): Result<List<PipelinePublicVarGroupDO>> {
-        return publicVarGroupService.listProjectVarGroupInfo(
-            userId = userId,
-            projectId = projectId
-        )
-    }
-
-    override fun getReleaseHistory(
-        userId: String,
-        projectId: String,
-        groupName: String,
-        page: Int,
-        pageSize: Int
-    ): Result<List<PublicVarReleaseDO>> {
-        return Result(publicVarGroupReleaseRecordService.getReleaseHistory(
-            projectId = projectId,
-            groupName = groupName,
-            page = page,
-            pageSize = pageSize
         ))
     }
 }

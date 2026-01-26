@@ -31,7 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.pojo.transfer.IPreStep
 import com.tencent.devops.common.pipeline.pojo.transfer.Repositories
 import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
 import com.tencent.devops.common.pipeline.pojo.transfer.TemplateInfo
@@ -45,20 +45,17 @@ import com.tencent.devops.process.yaml.v3.check.PreStageCheck
 import com.tencent.devops.process.yaml.v3.check.PreTemplateStageCheck
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
 import com.tencent.devops.process.yaml.v3.exception.YamlFormatException
-import com.tencent.devops.process.yaml.v3.models.Extends
-import com.tencent.devops.process.yaml.v3.models.GitNotices
 import com.tencent.devops.process.yaml.v3.models.ITemplateFilter
-import com.tencent.devops.process.yaml.v3.models.PacNotices
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlIParser
-import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlParser
 import com.tencent.devops.process.yaml.v3.models.PreScriptBuildYamlV3Parser
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariableTemplate
-import com.tencent.devops.process.yaml.v3.models.job.PreJob
+import com.tencent.devops.process.yaml.v3.models.job.IPreJob
+import com.tencent.devops.process.yaml.v3.models.job.PreJobTemplate
+import com.tencent.devops.process.yaml.v3.models.job.PreJobTemplateList
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
-import com.tencent.devops.process.yaml.v3.models.stage.PreStage
+import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
 import com.tencent.devops.process.yaml.v3.parsers.template.models.GetTemplateParam
-import com.tencent.devops.process.yaml.v3.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.process.yaml.v3.parsers.template.models.TemplateDeepTreeNode
 
 @Suppress("ALL")
@@ -142,9 +139,6 @@ class YamlTemplate<T>(
 
         val preYamlObject = newYamlObject.initPreScriptBuildYamlI()
 
-        if (newYamlObject.extends != null) {
-            replaceExtends(newYamlObject.extends!!, preYamlObject, rootDeepTree)
-        }
         if (newYamlObject.variables != null) {
             replaceVariables(newYamlObject.variables!!, preYamlObject, rootDeepTree)
         }
@@ -162,111 +156,6 @@ class YamlTemplate<T>(
         }
 
         return preYamlObject
-    }
-
-    private fun replaceExtends(
-        extend: Extends,
-        preYamlObject: PreScriptBuildYamlIParser,
-        deepTree: TemplateDeepTreeNode
-    ) {
-        val toPath = TemplatePath(extend.template, extend.ref)
-        // 根据远程模板获取
-        val templateObject = replaceResAndParam(
-            templateType = TemplateType.EXTEND,
-            toPath = toPath,
-            parameters = null,
-            fromPath = filePath,
-            deepTree = deepTree
-        )
-        // 获取extends模板后filePath就为被替换的文件了
-        this.filePath = toPath
-        // 需要替换模板的的递归替换
-        if (templateObject[TemplateType.TRIGGER_ON.content] != null) {
-            replaceTriggerOn(
-                triggerOn = YamlObjects.transValue(
-                    file = filePath,
-                    type = TemplateType.TRIGGER_ON.text,
-                    value = templateObject[TemplateType.TRIGGER_ON.content]
-                ),
-                preYamlObject = preYamlObject,
-                deepTree = deepTree
-            )
-        }
-
-        if (templateObject[TemplateType.VARIABLE.content] != null) {
-            replaceVariables(
-                variables = YamlObjects.transValue(
-                    file = filePath,
-                    type = TemplateType.VARIABLE.text,
-                    value = templateObject[TemplateType.VARIABLE.content]
-                ),
-                preYamlObject = preYamlObject,
-                deepTree = deepTree
-            )
-        }
-        if (templateObject[TemplateType.STAGE.content] != null) {
-            replaceStages(
-                YamlObjects.transValue(filePath, TemplateType.STAGE.text, templateObject[TemplateType.STAGE.content]),
-                preYamlObject,
-                deepTree
-            )
-        }
-        if (templateObject[TemplateType.JOB.content] != null) {
-            replaceJobs(
-                YamlObjects.transValue(filePath, TemplateType.JOB.text, templateObject[TemplateType.JOB.content]),
-                preYamlObject,
-                deepTree
-            )
-        }
-        if (templateObject[TemplateType.STEP.content] != null) {
-            replaceSteps(
-                YamlObjects.transValue(filePath, TemplateType.STEP.text, templateObject[TemplateType.STEP.content]),
-                preYamlObject,
-                deepTree
-            )
-        }
-        if (templateObject[TemplateType.FINALLY.content] != null) {
-            replaceFinally(
-                finally = YamlObjects.transValue(
-                    file = filePath,
-                    type = TemplateType.FINALLY.text,
-                    value = templateObject[TemplateType.FINALLY.content]
-                ),
-                preYamlObject = preYamlObject,
-                deepTree = deepTree
-            )
-        }
-        // notices只用做一次模板替换没有嵌套模板
-        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlParser) {
-            val notices = mutableListOf<GitNotices>()
-            val temNotices =
-                YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
-            temNotices.forEach {
-                notices.add(YamlObjects.getNoticeV2(filePath, it))
-            }
-            preYamlObject.notices = notices
-        }
-
-        // notices只用做一次模板替换没有嵌套模板
-        if (templateObject["notices"] != null && preYamlObject is PreScriptBuildYamlV3Parser) {
-            val notices = mutableListOf<PacNotices>()
-            val temNotices =
-                YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
-            temNotices.forEach {
-                notices.add(YamlObjects.getNoticeV3(filePath, it))
-            }
-            preYamlObject.notices = notices
-        }
-
-        // 将不用替换的直接传入
-        val newYaml =
-            YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, TemplateYamlMapper.toYaml(templateObject))
-        preYamlObject.label = newYaml.label
-        preYamlObject.resources = newYaml.resources
-        // 用户没写就用模板的名字
-        if (preYamlObject.name.isNullOrBlank()) {
-            preYamlObject.name = newYaml.name
-        }
     }
 
     private fun replaceTriggerOn(
@@ -297,8 +186,12 @@ class YamlTemplate<T>(
                     else -> emptyList()
                 }
                 if (templateList.isNotEmpty()) {
-                    preYamlObject.variableTemplates = templateList.filter { it["name"] != null }.map {
-                        VariableTemplate(it["name"]!!, it["version"])
+                    preYamlObject.variableTemplates = templateList.mapNotNull { template ->
+                        val name = template["name"]
+                        if (name == null) {
+                            return@mapNotNull null
+                        }
+                        VariableTemplate(name = name, version = template["version"])
                     }
                 }
                 return@forEach
@@ -321,7 +214,7 @@ class YamlTemplate<T>(
         preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
-        val stageList = mutableListOf<PreStage>()
+        val stageList = mutableListOf<IPreStage>()
         stages.forEach { stage ->
             stageList.addAll(replaceStageTemplate(listOf(stage), filePath, deepTree))
         }
@@ -333,13 +226,10 @@ class YamlTemplate<T>(
         preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
-        val jobMap = LinkedHashMap<String, PreJob>()
+        val jobMap = LinkedHashMap<String, IPreJob>()
         jobs.forEach { (key, value) ->
             // 检查根文件处job_id重复
             val newJob = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
-            if (key == Constants.TEMPLATE_KEY) {
-                TemplateYamlUtil.checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
-            }
             jobMap.putAll(newJob)
         }
         preYamlObject.jobs = jobMap
@@ -350,7 +240,7 @@ class YamlTemplate<T>(
         preYamlObject: PreScriptBuildYamlIParser,
         deepTree: TemplateDeepTreeNode
     ) {
-        val stepList = mutableListOf<PreStep>()
+        val stepList = mutableListOf<IPreStep>()
         steps.forEach { step ->
             stepList.addAll(replaceStepTemplate(listOf(step), filePath, deepTree))
         }
@@ -363,115 +253,22 @@ class YamlTemplate<T>(
         deepTree: TemplateDeepTreeNode
     ) {
         // finally: 与jobs: 的结构相同
-        val finallyMap = LinkedHashMap<String, PreJob>()
+        val finallyMap = LinkedHashMap<String, IPreJob>()
         finally.forEach { (key, value) ->
-            // 检查根文件处job_id重复
-            val newFinally = replaceJobTemplate(mapOf(key to value), filePath, deepTree)
-            if (key == Constants.TEMPLATE_KEY) {
-                TemplateYamlUtil.checkDuplicateKey(filePath = filePath, keys = finally.keys, newKeys = newFinally.keys)
-            }
-            finallyMap.putAll(newFinally)
+            finallyMap.putAll(replaceJobTemplate(mapOf(key to value), filePath, deepTree))
         }
         preYamlObject.finally = finallyMap
-    }
-
-    // 进行模板替换
-    private fun replaceVariableTemplate(
-        variables: Map<String, Any>,
-        fromPath: TemplatePath,
-        deepTree: TemplateDeepTreeNode
-    ): Map<String, Variable> {
-        val variableMap = mutableMapOf<String, Variable>()
-        variables.forEach { (key, value) ->
-            // 如果是模板文件则进行模板替换
-            if (key == Constants.TEMPLATE_KEY) {
-                val toPathList =
-                    YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.VARIABLE.text, value)
-                toPathList.forEach { item ->
-                    val toPath = TemplatePath(
-                        item[Constants.OBJECT_TEMPLATE_PATH].toString(), item[Constants.REF]?.toString()
-                    )
-                    // 保存并检查是否存在循环引用模板
-                    templateGraph.saveAndCheckCyclicTemplate(
-                        fromPath.toString(), toPath.toString(), TemplateType.VARIABLE
-                    )
-                    // 获取需要替换的变量
-                    val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
-                        file = fromPath,
-                        type = Constants.PARAMETERS_KEY,
-                        key = Constants.PARAMETERS_KEY,
-                        map = item
-                    )
-                    // 对模板文件进行远程库和参数替换，并实例化
-                    val templateObject = replaceResAndParam(
-                        TemplateType.VARIABLE, toPath, parameters, fromPath,
-                        deepTree
-                    )
-                    // 判断实例化后的模板文件中是否引用了模板文件，如果有，则递归替换
-                    val newVar = replaceVariableTemplate(
-                        variables = YamlObjects.transValue(
-                            toPath, TemplateType.VARIABLE.text, templateObject[TemplateType.VARIABLE.content]
-                        ),
-                        fromPath = toPath,
-                        deepTree = deepTree.add(toPath)
-                    )
-                    // 检测variable是否存在重复的key
-                    TemplateYamlUtil.checkDuplicateKey(
-                        filePath = filePath,
-                        keys = variableMap.keys,
-                        newKeys = newVar.keys,
-                        toPath = toPath
-                    )
-                    variableMap.putAll(newVar)
-                }
-            } else {
-                // 不是模板文件则直接实例化
-                if (value !is Map<*, *>) {
-                    variableMap[key] = Variable(value.toString())
-                } else {
-                    variableMap[key] = YamlObjects.getVariable(
-                        fromPath = fromPath,
-                        key = key,
-                        variable = YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
-                    )
-                }
-            }
-        }
-        return variableMap
     }
 
     private fun replaceStageTemplate(
         stages: List<Map<String, Any>>,
         fromPath: TemplatePath,
         deepTree: TemplateDeepTreeNode
-    ): List<PreStage> {
-        val stageList = mutableListOf<PreStage>()
+    ): List<IPreStage> {
+        val stageList = mutableListOf<IPreStage>()
         stages.forEach { stage ->
-            if (Constants.TEMPLATE_KEY in stage.keys) {
-                val toPath = TemplatePath(
-                    stage[Constants.TEMPLATE_KEY].toString(), stage[Constants.REF]?.toString()
-                )
-                templateGraph.saveAndCheckCyclicTemplate(fromPath.toString(), toPath.toString(), TemplateType.STAGE)
-
-                val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
-                    file = fromPath,
-                    type = Constants.PARAMETERS_KEY,
-                    key = Constants.PARAMETERS_KEY,
-                    map = stage
-                )
-                // 对模板文件进行远程库和参数替换，并实例化
-                val templateObject = replaceResAndParam(TemplateType.STAGE, toPath, parameters, fromPath, deepTree)
-                stageList.addAll(
-                    replaceStageTemplate(
-                        stages = YamlObjects.transValue(
-                            toPath,
-                            TemplateType.STAGE.text,
-                            templateObject[TemplateType.STAGE.content]
-                        ),
-                        fromPath = toPath,
-                        deepTree = deepTree.add(toPath)
-                    )
-                )
+            if (keysInTemplateKey(stage.keys)) {
+                stageList.add(getStageTemplate(fromPath, stage, deepTree))
             } else {
                 stageList.add(getStage(fromPath, stage, deepTree))
             }
@@ -479,47 +276,26 @@ class YamlTemplate<T>(
         return stageList
     }
 
+    private fun keysInTemplateKey(keys: Collection<String>): Boolean {
+        return Constants.TEMPLATE_KEY in keys ||
+            Constants.TEMPLATE_KEY_NAME in keys ||
+            Constants.TEMPLATE_KEY_ID in keys
+    }
+
     fun replaceJobTemplate(
         jobs: Map<String, Any>,
         fromPath: TemplatePath,
         deepTree: TemplateDeepTreeNode
-    ): Map<String, PreJob> {
-        val jobMap = mutableMapOf<String, PreJob>()
+    ): Map<String, IPreJob> {
+        val jobMap = mutableMapOf<String, IPreJob>()
         jobs.forEach { (key, value) ->
             if (key == Constants.TEMPLATE_KEY) {
+                val templates = mutableListOf<PreJobTemplate>()
                 val toPathList = YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.JOB.text, value)
                 toPathList.forEach { item ->
-                    val toPath = TemplatePath(
-                        item[Constants.OBJECT_TEMPLATE_PATH].toString(), item[Constants.REF]?.toString()
-                    )
-                    templateGraph.saveAndCheckCyclicTemplate(fromPath.toString(), toPath.toString(), TemplateType.JOB)
-
-                    val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
-                        file = fromPath,
-                        type = Constants.PARAMETERS_KEY,
-                        key = Constants.PARAMETERS_KEY,
-                        map = item
-                    )
-
-                    // 对模板文件进行远程库和参数替换，并实例化
-                    val templateObject = replaceResAndParam(TemplateType.JOB, toPath, parameters, fromPath, deepTree)
-
-                    val newJob = replaceJobTemplate(
-                        jobs = YamlObjects.transValue(
-                            toPath, TemplateType.JOB.text, templateObject[TemplateType.JOB.content]
-                        ),
-                        fromPath = toPath,
-                        deepTree = deepTree.add(toPath)
-                    )
-                    // 检测job是否存在重复的key
-                    TemplateYamlUtil.checkDuplicateKey(
-                        filePath = filePath,
-                        keys = jobMap.keys,
-                        newKeys = newJob.keys,
-                        toPath = toPath
-                    )
-                    jobMap.putAll(newJob)
+                    templates.add(getJobTemplate(fromPath, item, deepTree))
                 }
+                jobMap[key] = PreJobTemplateList(templates)
             } else {
                 // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
                 if (key.length > 64) {
@@ -540,35 +316,18 @@ class YamlTemplate<T>(
         steps: List<Map<String, Any>>,
         fromPath: TemplatePath,
         deepTree: TemplateDeepTreeNode
-    ): List<PreStep> {
-        val stepList = mutableListOf<PreStep>()
+    ): List<IPreStep> {
+        val stepList = mutableListOf<IPreStep>()
         steps.forEach { step ->
-            if (Constants.TEMPLATE_KEY in step.keys) {
-                val toPath = TemplatePath(
-                    step[Constants.TEMPLATE_KEY].toString(), step[Constants.REF]?.toString()
-                )
-
-                templateGraph.saveAndCheckCyclicTemplate(fromPath.toString(), toPath.toString(), TemplateType.STEP)
-
-                val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
-                    file = fromPath,
-                    type = Constants.PARAMETERS_KEY,
-                    key = Constants.PARAMETERS_KEY,
-                    map = step
-                )
-
-                // 对模板文件进行远程库和参数替换，并实例化
-                val templateObject = replaceResAndParam(TemplateType.STEP, toPath, parameters, fromPath, deepTree)
-
-                stepList.addAll(
-                    replaceStepTemplate(
-                        steps = YamlObjects.transValue(
-                            toPath,
-                            TemplateType.STEP.text,
-                            templateObject[TemplateType.STEP.content]
-                        ),
-                        fromPath = toPath,
-                        deepTree = deepTree.add(toPath)
+            if (keysInTemplateKey(step.keys)) {
+                stepList.add(
+                    YamlObjects.getStepTemplate(
+                        fromPath,
+                        step,
+                        TemplateInfo(
+                            remote = repo != null,
+                            remoteTemplateProjectId = repo?.repository
+                        )
                     )
                 )
             } else {
@@ -755,77 +514,6 @@ class YamlTemplate<T>(
         resYamlObject.resources = null
         return TemplateYamlMapper.toYaml(resYamlObject)
     }
-//
-//    // 在parameters替换前做统一处理，例如替换模板
-//    private fun parseTemplateParameters(
-//        fromPath: TemplatePath,
-//        path: TemplatePath,
-//        template: String,
-//        parameters: Map<String, Any?>?,
-//        deepTree: TemplateDeepTreeNode
-//    ): String {
-//        // 后面的需要覆盖前面的，所以使用map
-//        val templateMap = mutableMapOf<String, Variable>()
-//
-//        val preTemplateParam =
-//            YamlObjects.getObjectFromYaml<PreParametersTemplate>(path, template).variables
-//
-//        val templates = preTemplateParam?.get(Constants.TEMPLATE_KEY)
-//        if (templates != null && templates is List<*>) {
-//            templates.forEach { pre ->
-//                val t = YamlObjects.transValue<Map<String, Any>>(fromPath, Constants.TEMPLATE_KEY, pre)
-//                val toPath = TemplatePath(
-//                    t[Constants.OBJECT_TEMPLATE_PATH].toString(), t[Constants.REF]?.toString()
-//                )
-//                // 因为这里是替换模板的模板参数，所以frompath需要使用模板文件而不是来源文件
-//                val templateObject = replaceResAndParam(
-//                    templateType = TemplateType.PARAMETERS,
-//                    toPath = toPath,
-//                    parameters = null,
-//                    fromPath = path,
-//                    deepTree = deepTree
-//                )
-//                val parametersTemplate = YamlObjects.getObjectFromYaml<ParametersTemplateNull>(
-//                    path = toPath,
-//                    template = TemplateYamlMapper.toYaml(templateObject)
-//                )
-//                parametersTemplate.variables?.let { p -> templateMap.putAll(p) }
-//            }
-//        }
-//
-//        preTemplateParam?.forEach { (key, value) ->
-//            if (value !is Map<*, *>) {
-//                templateMap[key] = Variable(value.toString())
-//            } else {
-//                templateMap[key] = YamlObjects.getVariable(
-//                    fromPath = fromPath,
-//                    key = key,
-//                    variable = YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
-//                )
-//            }
-//        }
-//
-//        return template
-//        // 不替换parameters变量了
-//        /*
-//                return if (conf.useOldParametersExpression) {
-//                    TemplateYamlUtil.parseTemplateParametersOld(
-//                        fromPath = fromPath,
-//                        path = path,
-//                        template = template,
-//                        templateParameters = templateMap.values.toMutableList(),
-//                        parameters = parameters
-//                    )
-//                } else {
-//                    ParametersExpressionParse.parseTemplateParameters(
-//                        fromPath = fromPath,
-//                        path = path,
-//                        template = template,
-//                        templateParameters = templateMap.values.toMutableList(),
-//                        parameters = parameters
-//                    )
-//                }*/
-//    }
 
     private fun error(content: String) {
         throw YamlFormatException(content)

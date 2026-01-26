@@ -44,17 +44,20 @@ const dictionary = {
             min_value: (field, args) => {
                 return `最小不能少于${args[0]}`
             },
+            nonVarRule: (field, args) => {
+                return `该字段不需要包含$${args[0]}`
+            },
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => '字段不能为空，只支持英文小写、数字、下划线以及/',
             mutualGroup: field => '字段不能为空，只支持英文、数字或填写变量',
-            nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
             paramsIdRule: field => '变量名只能使用英文字母，数字和下划线，首字符不能以数字开头',
             timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量',
             reminderTimeRule: field => '请输入1-168之间的正整数',
             maxConcurrencyRule: field => '请输入1-1000之间的正整数',
-            objectRequired: field => '字段值缺失，请填入完整的值'
+            objectRequired: field => '字段值缺失，请填入完整的值',
+            crontabArrayRule: field => '定时规则不能为空或格式不正确'
         }
     },
     'en-US': {
@@ -93,7 +96,8 @@ const dictionary = {
             timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable',
             reminderTimeRule: field => 'Please enter a positive integer between 1 and 168',
             maxConcurrencyRule: field => 'Please enter a positive integer between 1 and 1000',
-            objectRequired: field => 'The field value is missing, please provide a complete value'
+            objectRequired: field => 'The field value is missing, please provide a complete value',
+            crontabArrayRule: field => 'The timing rule cannot be empty or the format is incorrect'
         }
     },
     'ja-JP': {
@@ -133,7 +137,8 @@ const dictionary = {
             timeoutsRule: field => '1から10080の間の正の整数を入力してください。パイプライン変数もサポートしています',
             reminderTimeRule: field => '1から168の間の正の整数を入力してください',
             maxConcurrencyRule: field => '1から1000の間の正の整数を入力してください',
-            objectRequired: field => 'フィールド値が欠落しています。完全な値を入力してください'
+            objectRequired: field => 'フィールド値が欠落しています。完全な値を入力してください',
+            crontabArrayRule: field => 'タイミングルールは空にできないか、形式が正しくありません'
         }
     }
 

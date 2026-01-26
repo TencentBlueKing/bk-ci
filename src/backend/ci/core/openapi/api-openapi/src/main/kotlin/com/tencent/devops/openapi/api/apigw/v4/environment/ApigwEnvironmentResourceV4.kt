@@ -52,6 +52,7 @@ import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
+import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
@@ -459,4 +460,31 @@ interface ApigwEnvironmentResourceV4 {
         collation: String?,
         data: NodeFetchReq?
     ): Result<Page<NodeWithPermission>>
+
+    @Operation(summary = "环境中启用/停用节点", tags = ["v4_user_enable_env_node", "v4_app_enable_env_node"])
+    @PUT
+    @Path("/enable_env_node")
+    fun enableEnvNode(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId（优先）", required = true)
+        @QueryParam("envHashId")
+        envHashId: String?,
+        @Parameter(description = "环境名称（与环境 hashId 二选一）", required = true)
+        @QueryParam("envName")
+        envName: String?,
+        @Parameter(description = "节点 hashId（优先）", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @Parameter(description = "节点名称（与节点 hashId 二选一）", required = true)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @Parameter(description = "启动true/停用false", required = true)
+        @QueryParam("enable")
+        enable: Boolean
+    ): Result<Boolean>
 }

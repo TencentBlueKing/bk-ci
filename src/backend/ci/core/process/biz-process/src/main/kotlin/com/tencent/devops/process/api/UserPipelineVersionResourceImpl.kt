@@ -193,7 +193,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        editMode: Boolean?
     ): Result<PipelineVersionWithModel> {
         val userPipelinePermissionCheckStrategy =
             UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
@@ -209,7 +210,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                editMode = editMode
             )
         )
     }
@@ -455,6 +457,39 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(
             pipelineVersionFacadeService.rollbackDraftFromVersion(
                 userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+        )
+    }
+
+    override fun canRollbackFromVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<Boolean> {
+        checkParam(userId, projectId)
+        val permission = AuthPermission.EDIT
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
+                    pipelineId
+                )
+            )
+        )
+        return Result(
+            pipelineVersionFacadeService.canRollbackFromVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version

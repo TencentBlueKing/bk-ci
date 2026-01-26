@@ -11,14 +11,15 @@ class ModelDeserializerModifier : BeanDeserializerModifier() {
 
     /**
      * 修改反序列化器的主要入口方法
-     *
      * @param config Jackson 反序列化配置
      * @param beanDesc Bean 描述信息
      * @param deserializer 默认的反序列化器
      * @return 调整后的反序列化器
      */
     override fun modifyDeserializer(
-        config: DeserializationConfig, beanDesc: BeanDescription, deserializer: JsonDeserializer<*>
+        config: DeserializationConfig,
+        beanDesc: BeanDescription,
+        deserializer: JsonDeserializer<*>
     ): JsonDeserializer<*> {
         // 如果不是 Model 类，立即返回默认反序列化器
         if (beanDesc.beanClass != Model::class.java) {

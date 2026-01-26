@@ -76,16 +76,16 @@ data class Variable(
     val value: Any?,
     var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
-    val allowModifyAtStartup: Boolean? = true,
+    var allowModifyAtStartup: Boolean? = true,
+    @get:JsonProperty("as-instance-input")
+    @get:Schema(title = "默认为实例入参,只有模版才有值,流水线没有值", required = false)
+    var asInstanceInput: Boolean? = null,
     val const: Boolean? = null,
+    val sensitive: Boolean? = null,
     val props: VariableProps? = null,
     @JsonProperty("if")
     val ifCondition: Map<String, String>? = null
 ) : IVariable
-
-data class ShortVariable(val value: String) : IVariable
-
-data class TemplateVariable(private val list: List<Extends>) : List<Extends> by list, IVariable
 
 /**
  * Variable 属性变量

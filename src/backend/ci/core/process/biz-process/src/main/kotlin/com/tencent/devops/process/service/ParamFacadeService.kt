@@ -50,11 +50,10 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.store.api.container.ServiceContainerResource
+import java.io.File
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
-import java.lang.RuntimeException
 
 @Suppress("ALL")
 @Service
@@ -326,6 +325,7 @@ class ParamFacadeService @Autowired constructor(
     ): BuildFormProperty {
         return BuildFormProperty(
             id = property.id,
+            name = property.name,
             required = property.required,
             type = property.type,
             defaultValue = property.defaultValue,
@@ -342,7 +342,9 @@ class ParamFacadeService @Autowired constructor(
             replaceKey = replaceKey,
             valueNotEmpty = property.valueNotEmpty,
             category = property.category,
-            displayCondition = property.displayCondition
+            displayCondition = property.displayCondition,
+            asInstanceInput = property.asInstanceInput,
+            sensitive = property.sensitive
         )
     }
 

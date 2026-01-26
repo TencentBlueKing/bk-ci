@@ -51,8 +51,10 @@ const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.bu
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
+
 // 禁用定时触发器参数,当流水线配置这个参数，并且值为true,则禁用定时触发器
 const val PIPELINE_TIMER_DISABLE = "BK_CI_TIMER_DISABLE"
+
 // 子流水线运行方式
 const val PIPELINE_START_SUB_RUN_MODE = "BK_CI_SUB_PIPELINE_RUN_MODE"
 
@@ -66,6 +68,7 @@ const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
 const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "pipeline.build.id"
+const val PIPELINE_BUILD_DEBUG = "ci.debug"
 const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "pipeline.job.id"
 const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "pipeline.task.id"
 const val PIPELINE_TURBO_TASK_ID = "BK_CI_TURBO_ID" // "turbo.task.id"
@@ -129,6 +132,7 @@ const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文�
 const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
 const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
 const val PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG = "BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG" // "流水线变量校验失败是否继续执行"
+
 /**
  * 自定义触发材料
  */
@@ -211,7 +215,7 @@ const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
-const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 50
 
 /**
  * 流水线设置-Stage内最大分裂后Job数量-最大值

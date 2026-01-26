@@ -82,7 +82,7 @@ object ProcessMessageCode {
     const val BK_PIPELINE_NAME = "bkPipelineName" // 流水线名称
     const val BK_CREATOR = "bkCreator" // 创建人
     const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
-    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是 否正确
     const val BK_CONTINUE = "bkContinue" // 继续
     const val BK_OVERRULE = "bkOverrule" // 驳回
     const val BK_TRIGGER = "bkTrigger" // 触发
@@ -335,8 +335,10 @@ object ProcessMessageCode {
     const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
     const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容为空，请检查
     const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
+
     // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
     const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
+
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
     const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
@@ -374,6 +376,7 @@ object ProcessMessageCode {
     const val ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED = "2101269" // 默认分支yaml文件已删除
     const val ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC = "2101270" // 仅支持git类型代码库开启PAC
     const val ERROR_NOT_REPOSITORY_PUSH_PERMISSION = "2101271" // 用户 [{0}] 没有仓库 [{1}] PUSH权限
+
     // 同样的触发参数, 已不满足当前流水线最新版本 {0} 的触发条件, 继续运行可能会产生错误, 确认继续吗
     const val ERROR_TRIGGER_CONDITION_NOT_MATCH = "2101272"
     const val ERROR_RETRY_TASK_IN_STAGE_NOT_RUNNING = "2101273" // stage非运行中状态，不能进行插件级重试
@@ -381,27 +384,104 @@ object ProcessMessageCode {
     const val ERROR_OP_PIPELINE_NUM_INVALID = "2101275" // 处理的流水线数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
     const val ERROR_RUNNING_PIPELINE_ARCHIVE_INVALID = "2101276" // 流水线[{0}]正在运行中，无法归档
     const val ERROR_RETRY_TASK_NOT_FAILED = "2101277" // 重试的插件不是失败状态，不能进行插件级重试
-    const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
-    const val ERROR_BUILD_REMARK_MAX_LENGTH = "2101281" // 构建备注最多只能输入{0}个字符
-    const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}
 
-    const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
     // 流水线[<a href="{0}" target="_blank">{1}</a>]分支版本[{2}]不存在
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH = "2101278"
+    const val ERROR_TASK_REVIEW_NOT_FOUND_OR_NOT_RUNNING = "2101279" // 插件【ID:{0}】不存在或者不是可审核状态
+    const val ERROR_USER_NO_PUSH_PERMISSION = "2101280" // 用户[{0}]没有仓库[{1}]的推送权限, 请联系仓库管理员添加权限
+    const val ERROR_BUILD_REMARK_MAX_LENGTH = "2101281" // 构建备注最多只能输入{0}个字符
+    const val ERROR_MAX_BATCH_GET_BUILD_STATUS_ID_SIZE = "2101282" // 批量获取构建状态buildId数量不能超过{0}\
+
     // 分支版本不存在异常标题
     const val ERROR_NO_PIPELINE_VERSION_EXISTS_BY_BRANCH_TITLE = "2101283"
+
     // URL[{0}]中存在高危端口号
     const val ERROR_CALLBACK_URL_CONTAINS_HIGH_RISK_PORT = "2101286"
 
     const val SCM_REPO_INVALID = "2101285" // 无效的通用仓库
 
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101286" // 流水线公共变量组中存在变量[{0}]名称重复
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101287" // 流水线公共变量组中变量名称格式错误
-    const val PIPELINE_PUBLIC_VAR_GROUP_IS_EXIST = "2101288" // 流水线公共变量组({0})已存在
-    const val PIPELINE_PUBLIC_VAR_GROUP_REFERENCED = "2124007" // 流水线公共变量组({0})已被引用，无法删除
-    // 流水线配置流水线公共变量组{0}中存在冲突变量{1}，请调整变量组配置
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101289"
-    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101290" // 变量组引用更新失败
+    const val ERROR_TEMPLATE_INSTANCE_NEED_PIPELINE_TYPE = "2101287" // 实例化仅支持流水线类型
+    const val ERROR_TEMPLATE_PATH_REF_TEMPLATE_NEED_PAC = "2101288" // 模版没有开启PAC不能使用路径引用
+    const val ERROR_TEMPLATE_PATH_REF_TEMPLATE_REF_NOT_EMPTY = "2101289" // 路径引用,模板分支不能为空
+    const val ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH = "2101290" // 模版类型和编排类型不匹配
+    const val ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION = "2101291" // 发布流水线时必须使用草稿版本
+    const val ERROR_PIPELINE_BASE_VERSION_NOT_FOUND = "2101292" // 未找到基线版本
+    const val ERROR_TEMPLATE_YAML_REPOSITORY_NOT_FOUND = "2101293" // 模板YAML文件所属的代码仓库不存在
+    const val ERROR_YAML_FOR_TEMPLATE_NOT_FOUND = "2101294" // YAML文件{0}对应的模板不存在
+    const val ERROR_TEMPLATE_YAML_VERSION_NOT_FOUND = "2101295" // 分支[{0}]下的文件[{1}]对应的模版版本不存在
+    const val ERROR_TEMPLATE_VERSION_BY_ID_NOT_FOUND = "2101296" // 模版{0}对应的版本{1}不存在
+    const val ERROR_TEMPLATE_VERSION_BY_PATH_NOT_FOUND = "2101297" // 模版{0}在分支{1}对应的版本不存在
+    const val ERROR_TEMPLATE_REF_TYPE = "2101298" // 模版引用templateId和templatePath不能同时为空
+    const val ERROR_TEMPLATE_VERSION_NAME_NOT_EMPTY = "2101299" // 模版版本名称不能为空
+    const val ERROR_TEMPLATE_VERSION_NOT_FOUND = "21012300" // 模版{0}对应的版本{1}不存在
+    const val ERROR_TEMPLATE_NOT_ENABLE_PAC = "2101301" // 模版没有开启PAC,不能通过路径引用查询
+    const val ERROR_STATUS_NOT_MATCHED = "2101302" // 状态不匹配,预期状态为{0},实际状态为{1}
+    const val ERROR_PIPELINE_NOT_RELATED_TEMPLATE = "2101303" // 流水线没有关联模板
+    const val ERROR_TEMPLATE_LATEST_VERSION_NOT_PUBLISHED = "2101304" // 模板{0}的最新状态处于非发布状态
+    const val ERROR_TEMPLATE_TYPE_INVALID = "2101305" // 无效的模板类型
+    const val ERROR_RECENTLY_INSTALL_TEMPLATE_NOT_EXIST = "2101306" // 模板{0}的最近安装记录不存在
+    const val ERROR_LATEST_PUBLISHED_TEMPLATE_NOT_EXIST = "2101307" // 模板{0}的最新发布版本记录不存在
+    const val ERROR_TEMPLATE_TRANSFORM_TO_CUSTOM = "2101308" // 模板处于非约束状态，不允许转化自定义
+    const val ERROR_TEMPLATE_SETTING_NOT_EXISTS = "2101309" // 模板设置不存在
+    const val ERROR_PIPELINE_TRIGGER_CONFIG_STEP_ID_NOT_FOUND = "2101310" // 触发器的StepID不存在
+    const val ERROR_TEMPLATE_PATH_REF_PIPELINE_NEED_PAC = "2101311" // 路径引用流水线必须开启PAC
+    const val ERROR_TEMPLATE_INSTANCE_NOT_EXISTS = "2101312" // 模板实例不存在
+    const val ERROR_TEMPLATE_LATEST_VERSION_CAN_NOT_DELETE = "2101313" // 模板的最新版本不允许删除
+    const val ERROR_TEMPLATE_VERSION_NOT_EXISTS = "2101314" // 模板版本记录不存在
+    const val ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST = "2101315" // 模板的最新版本不存在
+    const val ERROR_TEMPLATE_LATEST_RELEASED_VERSION_NOT_EXIST = "2101316" // 模板的最新发布版本不存在
+    const val ERROR_TEMPLATE_LATEST_PUBLISHED_VERSION_NOT_EXIST = "2101317" // 模板的最新上架研发商店版本不存在
+    const val ERROR_PARENTS_TEMPLATE_NOT_EXISTS = "2101318" // 父模板{0}不存在
+    const val ERROR_TEMPLATE_VERSION_NAME_DUPLICATION = "2101330" // 版本名称[{0}]已存在，不允许重复
+    const val ERROR_TEMPLATE_VERSION_HAS_PUBLISHED = "2101331" // 模板{0}的最新版本已发布
+    // variable [xxx][yyy][zzz] 在模版中已定义为常量，不支持实例传入
+    const val ERROR_TEMPLATE_INSTANCE_OVERRIDE_CONST = "2101332"
+    // 流水线引用的模版文件[{0}]在分支[{1}]不存在或已被删除
+    const val ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND = "2101333"
+    const val ERROR_DELETE_YAML_TEMPLATE_IN_DEFAULT_BRANCH = "2101334" // 已开启PAC模式,不能删除默认分支yaml关联的模版
+
+    const val ERROR_BUILD_PARAM_COMBINATION_NOT_FOUND = "2101335" // 入参值组合不存在
+    const val ERROR_BUILD_PARAM_COMBINATION_NAME_EXIST = "2101336" // 入参值组合名已存在
+    const val ERROR_JOB_ID_DUPLICATE = "2101337" // Job ID在流水线下需全局唯一，存在重复ID[$0]的Job，保存失败!
+    const val ERROR_STEP_ID_DUPLICATE = "2101338" // Step ID在Job下需全局唯一，Job[$0]下存在重复ID[$1]的Step，保存失败!
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不支持一键回滚
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK = "2101339"
+    const val USER_NO_CANCEL_BUILD_PERMISSION = "2101340" // 用户{0}无权取消构建{1},仅限触发人或拥有流水线管理权限的用户可取消
+    const val ERROR_INSTANCE_PARAM_PROP_EXCEPTION = "2101341" // 实例化的参数[{0}]属性[{1}]异常,请联系助手分析
+    const val ERROR_INSTANCE_PARAM_COUNT_EXCEPTION = "2101342" // 实例化参数数量和模版的参数数量不同,请联系助手分析
+    // 历史原因导致当前约束流水线无法确定对应的模版版本,不能直接开启PAC,请到模版实例列表界面升级流水线,明确引用的模版版本后再开启PAC。
+    const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
+
+    const val ERROR_TRIGGER_EVENT_EXPIRED = "2101341"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR = "2101342" // 流水线公共变量组中变量名称格式错误
+    // 编排配置公共变量组中存在冲突变量{0}，请调整变量组配置
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT = "2101343"
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED = "2101344" // 变量组引用更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST = "2101345" // 变量组 {0} 不存在
+    const val ERROR_PUBLIC_VAR_GROUP_REFERENCED = "2101346" // 公共变量组({0})已被引用，无法删除
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE = "2101347" // 流水线公共变量组中变量名称重复
+
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_PARSE_FAILED = "2101348" // 公共变量组YAML解析失败: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_EMPTY = "2101349" // 公共变量组YAML中version字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VERSION_FORMAT = "2101350" // 公共变量组YAML版本格式不正确，应为vX.X格式
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_EMPTY = "2101351" // 公共变量组YAML中name字段不能为空
+const val ERROR_PUBLIC_VAR_GROUP_YAML_NAME_FORMAT = "2101352" // 公共变量组名称只能包含字母、数字、下划线和中划线，长度限制为1-64个字符
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLES_EMPTY = "2101353" // 公共变量组YAML中variables字段不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_EMPTY = "2101354" // 变量名不能为空
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_VARIABLE_NAME_FORMAT = "2101355" // 变量名{0}格式不正确，只能以字母或下划线开头，包含字母、数字、下划线，长度限制为1-64个字符
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_UNKNOWN_FIELD = "2101356" // 公共变量组YAML包含未知字段: {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_DESERIALIZE_ERROR = "2101357" // 公共变量组YAML格式不正确，请检查字段类型
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_MISSING_FIELD = "2101358" // 公共变量组YAML缺少必填字段 {0}
+    const val ERROR_PUBLIC_VAR_GROUP_YAML_FORMAT_ERROR = "2101359" // 公共变量组YAML格式错误
+    const val ERROR_PUBLIC_VAR_GROUP_IS_EXIST = "2101360" // 流水线公共变量组({0})已存在
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_COUNT_UPDATE_FAILED = "2101361" // 变量组引用计数更新失败
+    const val ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED = "2101362" // 变量组引用信息查询失败
+    const val ERROR_PUBLIC_VAR_GROUP_ADD_FAILED = "2101363" // 添加公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED = "2101364" // 删除公共变量组({0})失败
+    const val ERROR_PUBLIC_VAR_GROUP_GET_VARIABLES_FAILED = "2101365" // 获取公共变量组({0})的变量失败
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PIPELINE_VARIABLES_FAILED = "2101366" // 获取流水线变量失败(项目:{0}, 引用ID:{1})
+    const val ERROR_PUBLIC_VAR_GROUP_LIST_PROJECT_VAR_GROUP_FAILED = "2101367" // 获取项目({0})的公共变量组信息失败
+    const val ERROR_PUBLIC_VAR_GROUP_REFER_LOCK_ACQUIRE_FAILED = "2101368" // 获取公共变量组引用锁失败，请稍后重试
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -583,16 +663,23 @@ object ProcessMessageCode {
 
     const val BK_AGENT_REUSE_MUTEX = "bkAgentReuseMutex"
     const val BK_AGENT_REUSE_MUTEX_AGENT_ID_NULL = "bkAgentReuseMutexAgentIdNull"
-    const val BK_MERGE_YAML_CREATE_FILE_TITLE = "bkMergeYamlCreateFileTitle" // 新增流水线发布mr标题
-    const val BK_MERGE_YAML_UPDATE_FILE_TITLE = "bkMergeYamlUpdateFileTitle" // 修改流水线发布mr标题
+    const val BK_MERGE_PIPELINE_YAML_CREATE_TITLE = "bkMergePipelineYamlCreateTitle" // 新增流水线发布mr标题
+    const val BK_MERGE_PIPELINE_YAML_UPDATE_TITLE = "bkMergePipelineYamlUpdateTitle" // 修改流水线发布mr标题
+    const val BK_MERGE_TEMPLATE_YAML_CREATE_TITLE = "bkMergeTemplateYamlCreateTitle" // 新增模版发布mr标题
+    const val BK_MERGE_TEMPLATE_YAML_UPDATE_TITLE = "bkMergeTemplateYamlUpdateTitle" // 修改模版发布mr标题
+    const val BK_MERGE_TEMPLATE_INSTANCE_YAML_TITLE = "bkMergeTemplateInstanceYamlTitle" // 模版实例化标题
     const val BK_BUILD_QUEUE_WAIT_FOR_CONCURRENCY = "bkBuildQueueWaitingForConcurrency" // 并发组配置的排队
     const val BK_BUILD_QUEUE_WAIT = "bkBuildQueueWaiting" // 并发配置的排队
     const val BK_BUILD_CANCEL_BY_CONCURRENCY = "bkBuildCancelByConcurrency" // 并发组配置的取消
     const val BK_BUILD_TASK_RETRY_NOTICE = "bkBuildTaskRetryNotice" // 插件[{0}]执行失败，即将进行第[{1}]次自动重试。失败原因:{2}
 
     const val BK_PIPELINE_ELEMENT_CHECK_FAILED_MESSAGE = "bkPipelineElementCheckFailedMessage"
+
+    const val BK_TEMPLATE_VERSION_REFACTOR_SUFFIX_DESC = "bkTemplateVersionRefactorSuffixDesc"
+
     // 没有子流水线执行权限错误标题
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_TITLE = "bkNotSubPipelineExecutePermissionErrorTitle"
+
     // 没有子流水线执行权限错误消息
     const val BK_NOT_SUB_PIPELINE_EXECUTE_PERMISSION_ERROR_MESSAGE = "bkNotSubPipelineExecutePermissionErrorMessage"
 
@@ -602,6 +689,7 @@ object ProcessMessageCode {
 
     // 权限代持人[xxx]已无当前流水线执行权限，可能是权限已过期或不再负责此流水线，请联系流水线拥有者处理
     const val BK_AUTHOR_NOT_PIPELINE_EXECUTE_PERMISSION = "bkAuthorNotPipelineExecutePermission"
+
     // 子流水线循环依赖错误标题
     const val BK_SUB_PIPELINE_CIRCULAR_DEPENDENCY_ERROR_TITLE = "bkSubPipelineCircularDependencyErrorTitle"
 
@@ -619,21 +707,55 @@ object ProcessMessageCode {
 
     // [<a href={0}>{1}</a>]创建成功,版本:{2}
     const val BK_YAML_PIPELINE_CREATE_SUCCESS = "bkYamlPipelineCreateSuccess"
+
     // [<a href={0}>{1}</a>]更新成功,版本:{2}
     const val BK_YAML_PIPELINE_UPDATE_SUCCESS = "bkYamlPipelineUpdateSuccess"
+
     // [<a href={0}>{1}</a>]删除版本成功,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_SUCCESS = "bkYamlPipelineDeleteVersionSuccess"
+
     // [{0}]删除成功,流水线ID:{1}
     const val BK_YAML_PIPELINE_DELETE_SUCCESS = "bkYamlPipelineDeleteSuccess"
 
     // 创建流水线失败
     const val BK_YAML_PIPELINE_CREATE_FAILED = "bkYamlPipelineCreateFailed"
+
     // [<a href={0}>{1}</a>]更新失败
     const val BK_YAML_PIPELINE_UPDATE_FAILED = "bkYamlPipelineUpdateFailed"
+
+    // [<a href={0}>{1}</a>]更新失败
+    const val BK_YAML_PIPELINE_DEPENDENCY_UPGRADE_FAILED = "bkYamlPipelineDependencyUpgradeFailed"
+
     // [<a href={0}>{1}</a>]删除版本失败,版本:{2}
     const val BK_YAML_PIPELINE_DELETE_VERSION_FAILED = "bkYamlPipelineDeleteVersionFailed"
+
     // [<a href={0}>{1}</a>]删除失败
     const val BK_YAML_PIPELINE_DELETE_FAILED = "bkYamlPipelineDeleteFailed"
 
-    const val BK_PIPELINE_YAML_PUB_VAR_GROUP_ID = "template"
+    // [<a href={0}>{1}</a>]实例化状态更新失败
+    const val BK_YAML_PIPELINE_CLOSE_FAILED = "bkYamlPipelineCloseFailed"
+
+    // MR [<a href={0}>{1}</a>]已关闭，变更未发布到默认分支
+    const val BK_YAML_INSTANCE_PULL_REQUEST_CLOSED = "bkYamlInstancePullRequestClosed"
+
+    // 自定义模板名称
+    const val BK_CUSTOM_PIPELINE_TEMPLATE_NAME = "bkCustomPipelineTemplateName"
+
+    // 研发商店模板名称
+    const val BK_MARKET_PIPELINE_TEMPLATE_NAME = "bkMarketPipelineTemplateName"
+
+    // 公共模板名称
+    const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    const val DYNAMIC_VERSION = -1
+
+    // 公共变量组锁相关常量
+    const val PUBLIC_VAR_GROUP_ADD_LOCK_KEY = "PUBLIC_VAR_GROUP_ADD_LOCK"
+    const val PUBLIC_VAR_GROUP_DELETE_LOCK_KEY = "PUBLIC_VAR_GROUP_DELETE_LOCK"
+    // 引用计数锁：以项目ID和变量组名为粒度，格式为 PUBLIC_VAR_GROUP_REFER_LOCK:${projectId}:${groupName}
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_GROUP_REFER_LOCK"
+    // 变量引用计数锁：以项目ID、变量组名和变量名为粒度，格式为 PUBLIC_VAR_REFER_LOCK:${projectId}:${groupName}:${varName}
+    const val PUBLIC_VAR_REFER_LOCK_KEY_PREFIX = "PUBLIC_VAR_REFER_LOCK"
+    const val PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS = 10L
+    const val PUBLIC_VAR_GROUP_REFER_LOCK_MAX_RETRY_TIMES = 3
 }

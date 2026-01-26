@@ -679,11 +679,15 @@ class RbacPermissionResourceMemberService(
         memberIds: List<String>
     ): Boolean {
         if (memberIds.isNotEmpty()) {
-            iamV2ManagerService.deleteRoleGroupMemberV2(
-                groupId,
-                type,
-                memberIds.joinToString(",")
-            )
+            try {
+                iamV2ManagerService.deleteRoleGroupMemberV2(
+                    groupId,
+                    type,
+                    memberIds.joinToString(",")
+                )
+            } catch (e: Exception) {
+                logger.warn("delete iam group member failed, groupId=$groupId, type=$type, memberIds=$memberIds", e)
+            }
         }
         return true
     }
@@ -699,6 +703,44 @@ class RbacPermissionResourceMemberService(
             it.type == MemberType.USER.type &&
                 departedMembers.contains(it.id)
         }
+    }
+
+    override fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int> {
+        logger.info("[RBAC-IAM] get member groups in project: $projectCode|$memberId")
+        // 获取用户的所属组织
+        val memberDeptInfos = deptService.getUserInfo(memberId)?.deptInfo?.let {
+            if (it.isNotEmpty()) {
+                deptService.getUserDeptInfo(memberId).toList()
+            } else {
+                emptyList()
+            }
+        } ?: emptyList()
+        // 查询项目下包含该成员及所属组织的用户组列表
+        val projectGroupIds = authResourceGroupMemberDao.listResourceGroupMember(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            memberIds = memberDeptInfos + memberId,
+            minExpiredTime = LocalDateTime.now()
+        ).map { it.iamGroupId.toString() }
+        // 通过项目组ID获取人员模板ID
+        val iamTemplateIds = authResourceGroupDao.listByRelationId(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            iamGroupIds = projectGroupIds
+        ).filter { it.iamTemplateId != null }
+            .map { it.iamTemplateId.toString() }
+        // 获取用户在项目下加入的所有用户组ID（未过期）
+        return authResourceGroupMemberDao.listMemberGroupIdsInProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            memberId = memberId,
+            iamTemplateIds = iamTemplateIds,
+            memberDeptInfos = memberDeptInfos
+        )
     }
 
     companion object {

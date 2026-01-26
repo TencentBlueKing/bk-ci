@@ -28,23 +28,27 @@
 package com.tencent.devops.process.dao.`var`
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.model.process.tables.TPipelinePublicVar
+import com.tencent.devops.model.process.tables.TResourcePublicVar
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
 class PublicVarDao {
 
+    /**
+     * 批量保存公共变量
+     */
     fun batchSave(
         dslContext: DSLContext,
         publicVarGroupPOs: List<PublicVarPO>
     ) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             if (publicVarGroupPOs.isEmpty()) return
             
-            val batchInsert = dslContext.insertInto(
+            dslContext.insertInto(
                 this,
                 ID,
                 PROJECT_ID,
@@ -54,7 +58,6 @@ class PublicVarDao {
                 VALUE_TYPE,
                 DEFAULT_VALUE,
                 DESC,
-                REFER_COUNT,
                 GROUP_NAME,
                 VERSION,
                 BUILD_FORM_PROPERTY,
@@ -62,75 +65,90 @@ class PublicVarDao {
                 MODIFIER,
                 CREATE_TIME,
                 UPDATE_TIME
-            )
-            
-            publicVarGroupPOs.forEach {
-                batchInsert.values(
-                    it.id,
-                    it.projectId,
-                    it.varName,
-                    it.alias,
-                    it.type.name,
-                    it.valueType.name,
-                    it.defaultValue?.toString(),
-                    it.desc,
-                    it.referCount,
-                    it.groupName,
-                    it.version,
-                    it.buildFormProperty,
-                    it.creator,
-                    it.modifier,
-                    it.createTime,
-                    it.updateTime
-                )
-            }
-            
-            batchInsert.execute()
+            ).also { insert ->
+                publicVarGroupPOs.forEach { record ->
+                    insert.values(
+                        record.id,
+                        record.projectId,
+                        record.varName,
+                        record.alias,
+                        record.type.name,
+                        record.valueType.name,
+                        record.defaultValue?.toString(),
+                        record.desc,
+                        record.groupName,
+                        record.version,
+                        record.buildFormProperty,
+                        record.creator,
+                        record.modifier,
+                        record.createTime,
+                        record.updateTime
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(ALIAS, org.jooq.util.mysql.MySQLDSL.values(ALIAS))
+                .set(TYPE, org.jooq.util.mysql.MySQLDSL.values(TYPE))
+                .set(VALUE_TYPE, org.jooq.util.mysql.MySQLDSL.values(VALUE_TYPE))
+                .set(DEFAULT_VALUE, org.jooq.util.mysql.MySQLDSL.values(DEFAULT_VALUE))
+                .set(DESC, org.jooq.util.mysql.MySQLDSL.values(DESC))
+                .set(BUILD_FORM_PROPERTY, org.jooq.util.mysql.MySQLDSL.values(BUILD_FORM_PROPERTY))
+                .set(MODIFIER, org.jooq.util.mysql.MySQLDSL.values(MODIFIER))
+                .set(UPDATE_TIME, org.jooq.util.mysql.MySQLDSL.values(UPDATE_TIME))
+                .execute()
         }
     }
 
+    /**
+     * 根据变量名关键字查询变量组名称列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param keyword 变量名关键字
+     * @return 变量组名称列表（去重）
+     */
     fun listGroupNamesByVarName(
         dslContext: DSLContext,
         projectId: String,
         keyword: String
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(VAR_NAME.like("%$keyword%"))
+                .and(VAR_NAME.contains(keyword))
                 .fetchInto(String::class.java)
         }
     }
 
+    /**
+     * 根据变量别名关键字查询变量组名称列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param keyword 变量别名关键字
+     * @return 变量组名称列表（去重）
+     */
     fun listGroupNamesByVarAlias(
         dslContext: DSLContext,
         projectId: String,
         keyword: String
     ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             return dslContext.selectDistinct(GROUP_NAME)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(ALIAS.like("%$keyword%"))
+                .and(ALIAS.contains(keyword))
                 .fetchInto(String::class.java)
         }
     }
 
-    fun listGroupNamesByVarType(
-        dslContext: DSLContext,
-        projectId: String,
-        type: String
-    ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
-            return dslContext.selectDistinct(GROUP_NAME)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(TYPE.eq(type))
-                .fetchInto(String::class.java)
-        }
-    }
-
+    /**
+     * 根据变量组名和版本查询变量列表
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param version 版本号
+     * @param varNameList 变量名列表（可选，用于过滤特定变量）
+     * @return 公共变量PO列表
+     */
     fun listVarByGroupName(
         dslContext: DSLContext,
         projectId: String,
@@ -138,7 +156,7 @@ class PublicVarDao {
         version: Int,
         varNameList: List<String>? = null
     ): List<PublicVarPO> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             val query = dslContext.selectFrom(this)
                 .where(GROUP_NAME.eq(groupName))
                 .and(PROJECT_ID.eq(projectId))
@@ -159,7 +177,6 @@ class PublicVarDao {
                     valueType = BuildFormPropertyType.valueOf(it.valueType),
                     defaultValue = it.defaultValue,
                     desc = it.desc,
-                    referCount = it.referCount,
                     groupName = it.groupName,
                     version = it.version,
                     buildFormProperty = it.buildFormProperty,
@@ -172,8 +189,14 @@ class PublicVarDao {
         }
     }
 
+    /**
+     * 根据变量组名删除所有版本的变量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     */
     fun deleteByGroupName(dslContext: DSLContext, projectId: String, groupName: String) {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
+        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(GROUP_NAME.eq(groupName))
@@ -181,21 +204,4 @@ class PublicVarDao {
         }
     }
 
-    fun queryVarNamesByGroupName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ): List<String> {
-        with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
-            with(TPipelinePublicVar.T_PIPELINE_PUBLIC_VAR) {
-                return dslContext.select(VAR_NAME).from(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(GROUP_NAME.eq(groupName))
-                    .and(VERSION.eq(version))
-                    .groupBy(VAR_NAME)
-                    .fetch().map { it.value1() }
-            }
-        }
-    }
 }

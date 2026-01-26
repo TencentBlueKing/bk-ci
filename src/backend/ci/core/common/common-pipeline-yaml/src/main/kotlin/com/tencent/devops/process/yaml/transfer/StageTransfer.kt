@@ -29,26 +29,28 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.TemplateDescriptor
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.JobTemplateContainer
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.option.StageControlOption
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewGroup
+import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.api.service.ServicePublicVarGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
@@ -73,10 +75,14 @@ import com.tencent.devops.process.yaml.v3.models.RecommendedVersion
 import com.tencent.devops.process.yaml.v3.models.Variable
 import com.tencent.devops.process.yaml.v3.models.VariablePropType
 import com.tencent.devops.process.yaml.v3.models.VariableProps
+import com.tencent.devops.process.yaml.v3.models.job.IJob
 import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v3.models.job.JobTemplate
+import com.tencent.devops.process.yaml.v3.models.stage.IStage
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
+import com.tencent.devops.process.yaml.v3.models.stage.StageTemplate
 import com.tencent.devops.process.yaml.v3.utils.ScriptYmlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,20 +108,6 @@ class StageTransfer @Autowired(required = false) constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         elementTransfer.yaml2Triggers(yamlInput, triggerElementList)
-
-        val params = mutableListOf<BuildFormProperty>()
-        var publicParam: List<BuildFormProperty>? = null
-        val varGroupRefs = yamlInput.yaml.formatVariableTemplates().filter { !it.version.isNullOrBlank() }.map {
-            PublicVarGroupRef(groupName = it.name, versionName = it.version)
-        }
-        if (varGroupRefs.isNotEmpty()) {
-            publicParam = client.get(ServicePublicVarGroupResource::class).getProjectPublicParam(
-                userId = yamlInput.userId,
-                projectId = yamlInput.projectCode,
-                varGroupRefs = varGroupRefs
-            ).data
-        }
-        params.addAll(variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml), publicParam))
         val triggerContainer = TriggerContainer(
             id = "0",
             name = I18nUtil.getCodeLanMessage(CommonMessageCode.BK_BUILD_TRIGGER),
@@ -124,7 +116,7 @@ class StageTransfer @Autowired(required = false) constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = params
+            params = variableTransfer.makeVariableFromYaml(makeVariables(yamlInput.yaml)).toMutableList()
         )
         with(yamlInput.yaml.recommendedVersion) {
             if (this != null && this.enabled) {
@@ -178,7 +170,7 @@ class StageTransfer @Autowired(required = false) constructor(
 
     fun yaml2FinallyStage(
         stageIndex: Int,
-        finallyJobs: List<Job>,
+        finallyJobs: List<IJob>,
         yamlInput: YamlTransferInput
     ): Stage {
         return yaml2Stage(
@@ -198,52 +190,94 @@ class StageTransfer @Autowired(required = false) constructor(
     }
 
     fun yaml2Stage(
-        stage: StreamV3Stage,
+        stage: IStage,
         stageIndex: Int,
         yamlInput: YamlTransferInput,
         finalStage: Boolean = false
     ): Stage {
+        return when (stage) {
+            is StreamV3Stage -> yaml2Stage(stage, yamlInput, finalStage, stageIndex)
+            is StageTemplate -> yaml2Stage(stage, yamlInput, finalStage, stageIndex)
+            else -> throw PipelineTransferException(YAML_NOT_VALID)
+        }
+    }
+
+    private fun yaml2Stage(
+        stage: StreamV3Stage,
+        yamlInput: YamlTransferInput,
+        finalStage: Boolean,
+        stageIndex: Int
+    ): Stage {
         val containerList = mutableListOf<Container>()
 
         stage.jobs.forEachIndexed { jobIndex, job ->
-            yamlInput.aspectWrapper.setYamlJob4Yaml(
-                yamlJob = job,
-                aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
-            )
-            preCheckJob(job, yamlInput)
-            val elementList = elementTransfer.yaml2Elements(
-                job = job,
-                yamlInput = yamlInput
-            )
+            when (job) {
+                is Job -> {
+                    yamlInput.aspectWrapper.setYamlJob4Yaml(
+                        yamlJob = job,
+                        aspectType = PipelineTransferAspectWrapper.AspectType.BEFORE
+                    )
+                    preCheckJob(job)
+                    val elementList = elementTransfer.yaml2Elements(
+                        job = job,
+                        yamlInput = yamlInput
+                    )
 
-            val jobEnable = if (job.enable != null) job.enable!! else true
-            if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                containerTransfer.addNormalContainer(
-                    job = job,
-                    elementList = elementList,
-                    containerList = containerList,
-                    jobIndex = jobIndex,
-                    jobEnable = jobEnable,
-                    finalStage = finalStage
-                )
-            } else {
-                containerTransfer.addVmBuildContainer(
-                    job = job,
-                    elementList = elementList,
-                    containerList = containerList,
-                    jobIndex = jobIndex,
-                    projectCode = yamlInput.projectCode,
-                    userId = yamlInput.userId,
-                    finalStage = finalStage,
-                    jobEnable = jobEnable,
-                    resources = yamlInput.yaml.formatResources(),
-                    buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
-                )
+                    val jobEnable = if (job.enable != null) job.enable!! else true
+                    if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
+                        containerTransfer.addNormalContainer(
+                            job = job,
+                            elementList = elementList,
+                            containerList = containerList,
+                            jobIndex = jobIndex,
+                            jobEnable = jobEnable,
+                            finalStage = finalStage
+                        )
+                    } else {
+                        containerTransfer.addVmBuildContainer(
+                            job = job,
+                            elementList = elementList,
+                            containerList = containerList,
+                            jobIndex = jobIndex,
+                            projectCode = yamlInput.projectCode,
+                            userId = yamlInput.userId,
+                            finalStage = finalStage,
+                            jobEnable = jobEnable,
+                            resources = yamlInput.yaml.formatResources(),
+                            buildTemplateAcrossInfo = yamlInput.jobTemplateAcrossInfo?.get(job.id)
+                        )
+                    }
+                    yamlInput.aspectWrapper.setModelJob4Model(
+                        containerList.last(),
+                        PipelineTransferAspectWrapper.AspectType.AFTER
+                    )
+                }
+
+                is JobTemplate -> {
+                    containerList.add(
+                        JobTemplateContainer(
+                            template = TemplateDescriptor(
+                                templateRefType = if (job.templateId != null) {
+                                    TemplateRefType.ID
+                                } else {
+                                    TemplateRefType.PATH
+                                },
+                                templatePath = job.templatePath,
+                                templateRef = job.templateRef,
+                                templateId = job.templateId,
+                                templateVersionName = job.templateVersionName,
+                                templateVariables = job.variables?.map {
+                                    TemplateVariable(
+                                        key = it.key,
+                                        value = it.value.value,
+                                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                                    )
+                                }
+                            )
+                        )
+                    )
+                }
             }
-            yamlInput.aspectWrapper.setModelJob4Model(
-                containerList.last(),
-                PipelineTransferAspectWrapper.AspectType.AFTER
-            )
         }
 
         val stageEnable = if (stage.enable != null) stage.enable!! else true
@@ -298,6 +332,36 @@ class StageTransfer @Autowired(required = false) constructor(
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut
+            )
+        )
+    }
+
+    fun yaml2Stage(
+        stage: StageTemplate,
+        yamlInput: YamlTransferInput,
+        finalStage: Boolean = false,
+        stageIndex: Int
+    ): Stage {
+        val stageId = VMUtils.genStageId(stageIndex)
+        return Stage(
+            id = stageId,
+            template = TemplateDescriptor(
+                templateRefType = if (stage.templateId != null) {
+                    TemplateRefType.ID
+                } else {
+                    TemplateRefType.PATH
+                },
+                templatePath = stage.templatePath,
+                templateRef = stage.templateRef,
+                templateId = stage.templateId,
+                templateVersionName = stage.templateVersionName,
+                templateVariables = stage.variables?.map {
+                    TemplateVariable(
+                        key = it.key,
+                        value = it.value.value,
+                        allowModifyAtStartup = it.value.allowModifyAtStartup ?: false
+                    )
+                }
             )
         )
     }
@@ -465,17 +529,16 @@ class StageTransfer @Autowired(required = false) constructor(
         return params
     }
 
-    private fun preCheckJob(
-        job: Job,
-        yamlInput: YamlTransferInput
-    ) {
+    private fun preCheckJob(job: Job) {
         if (job.runsOn.hwSpec != null) {
-            val hw = transferCacheService.getDockerResource(
-                userId = yamlInput.userId,
-                projectId = yamlInput.projectCode,
-                buildType = transferCreator.defaultLinuxDispatchType()
-            )?.dockerResourceOptionsMaps?.find { it.dockerResourceOptionsShow.description == job.runsOn.hwSpec }
-            job.runsOn.hwSpec = hw?.id
+            // 针对旧的hwSpec字段内容做强制转换
+            if (job.runsOn.hwSpec.equals("Basic")) {
+                job.runsOn.hwSpec = "Standard-S"
+            } else if (job.runsOn.hwSpec.equals("Premium")) {
+                job.runsOn.hwSpec = "Standard-M"
+            } else if (job.runsOn.hwSpec.equals("High")) {
+                job.runsOn.hwSpec = "HighIO-L"
+            }
         }
     }
 }

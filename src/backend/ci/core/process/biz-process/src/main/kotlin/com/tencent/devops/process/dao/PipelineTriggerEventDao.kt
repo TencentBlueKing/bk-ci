@@ -48,6 +48,8 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.RepoTriggerEventDetail
+import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -55,6 +57,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.jooq.impl.DSL.countDistinct
 import org.jooq.impl.DSL.`when`
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -68,7 +71,7 @@ class PipelineTriggerEventDao {
         triggerEvent: PipelineTriggerEvent
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
-            dslContext.insertInto(
+            val insert = dslContext.insertInto(
                 this,
                 REQUEST_ID,
                 PROJECT_ID,
@@ -95,19 +98,30 @@ class PipelineTriggerEventDao {
                 triggerEvent.requestParams?.let { JsonUtil.toJson(it, false) },
                 triggerEvent.createTime,
                 triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
-            ).onDuplicateKeyIgnore().execute()
+            )
+            if (triggerEvent.eventBody != null) {
+                insert.onDuplicateKeyUpdate().set(
+                    EVENT_BODY,
+                    triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) }
+                )
+            } else {
+                insert.onDuplicateKeyIgnore()
+            }
+            insert.execute()
         }
     }
 
-    fun update(
+    fun updateEventBody(
         dslContext: DSLContext,
-        triggerEvent: PipelineTriggerEvent
+        projectId: String,
+        eventId: Long,
+        eventBody: TriggerEventBody
     ) {
         with(T_PIPELINE_TRIGGER_EVENT) {
             dslContext.update(this)
-                .set(EVENT_BODY, triggerEvent.eventBody?.let { JsonUtil.toJson(it, false) })
-                .where(PROJECT_ID.eq(triggerEvent.projectId))
-                .and(EVENT_ID.eq(triggerEvent.eventId))
+                .set(EVENT_BODY, JsonUtil.toJson(eventBody, false))
+                .where(PROJECT_ID.eq(projectId))
+                .and(EVENT_ID.eq(eventId))
                 .execute()
         }
     }
@@ -512,6 +526,20 @@ class PipelineTriggerEventDao {
         return record?.let { convertDetail(it) }
     }
 
+    fun getTriggerDetail(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) = with(T_PIPELINE_TRIGGER_DETAIL) {
+        dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .fetchOne()
+                ?.let { convertDetail(it) }
+    }
+
     private fun buildDetailCondition(
         t2: TPipelineTriggerDetail,
         eventId: Long? = null,
@@ -642,8 +670,17 @@ class PipelineTriggerEventDao {
                         object : TypeReference<Map<String, String>>() {})
                 },
                 createTime = createTime,
-                eventBody = eventBody?.let {
-                    JsonUtil.to(it, Webhook::class.java)
+                eventBody = try {
+                    eventBody?.let {
+                        JsonUtil.to(it, TriggerEventBody::class.java)
+                    }
+                } catch (ignored: Exception) {
+                    logger.warn("convert event body failed, eventBody: $eventBody", ignored)
+                    eventBody?.let {
+                        ScmWebhookEventBody(
+                            webhook = JsonUtil.to(it, Webhook::class.java)
+                        )
+                    }
                 }
             )
         }
@@ -713,5 +750,9 @@ class PipelineTriggerEventDao {
                     )
                 }
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTriggerEventDao::class.java)
     }
 }

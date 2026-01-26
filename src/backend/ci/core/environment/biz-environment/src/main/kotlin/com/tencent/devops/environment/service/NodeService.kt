@@ -60,6 +60,8 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_IMPORT_PERMISSION_NODES
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_BUILD
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.NODE_USAGE_DEPLOYMENT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.OS_TYPE
@@ -448,7 +450,8 @@ class NodeService @Autowired constructor(
             dslContext, nodeEnvs.map { it.envId }.toSet()
         ).associateBy { it.envId }
         val nodeEnvsGroups = nodeEnvs.groupBy({ it.nodeId }, { envInfos[it.envId]?.envName ?: "" })
-
+        val envNodeRecordList = envNodeDao.list(dslContext, projectId, envInfos.values.map { it.envId })
+        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
         return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
@@ -503,7 +506,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
-                tags = tagMaps[it.nodeId]
+                tags = tagMaps[it.nodeId],
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true
             )
         }
     }
@@ -621,7 +625,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                envEnableNode = null
             )
         }
     }
@@ -678,7 +683,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                envEnableNode = null
             )
         }
     }
@@ -741,6 +747,76 @@ class NodeService @Autowired constructor(
             }
         }
         return node.displayName
+    }
+
+    fun batchChangeCreateUser(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): List<Pair<String, String>> {
+        val nodeList = nodeDao.listAllByIds(
+            dslContext,
+            projectId,
+            nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+        )
+        checkNodesExists(nodeList, nodeHashIds)
+        checkNodesTypeCmdb(nodeList)
+        checkNodesImportPermission(userId, nodeList)
+
+        val toChangeNodeIds = nodeList.map { it.nodeId }
+        // 分批更新，以免单次where in 大列表
+        val nodeIdsInBatch = toChangeNodeIds.chunked(2000)
+        nodeIdsInBatch.forEach { it ->
+            nodeDao.batchUpdateNodeCreatedUser(dslContext, it, userId)
+        }
+
+        return nodeList.map { Pair(it.nodeHashId, it.displayName) }
+    }
+
+    private fun checkNodesExists(existedNodeList: List<TNodeRecord>, toChangeNodeHashIds: List<String>) {
+        val existNodeHashIdSet = existedNodeList.map { it.nodeHashId }.toSet()
+        val noExistNodeHashIdSet = toChangeNodeHashIds.toSet().minus(existNodeHashIdSet)
+        if (noExistNodeHashIdSet.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(noExistNodeHashIdSet.joinToString(","))
+            )
+        }
+    }
+
+    private fun checkNodesTypeCmdb(nodeList: List<TNodeRecord>) {
+        val invalidTypeNodeIps: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (it.nodeType != NodeType.CMDB.name) {
+                invalidTypeNodeIps.add(it.nodeIp)
+            }
+        }
+        if (invalidTypeNodeIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_TYPE_TO_CHANGE_CREATOR_ONLY_SUPPORT_CMDB,
+                params = arrayOf(invalidTypeNodeIps.joinToString(","))
+            )
+        }
+    }
+
+    private fun checkNodesImportPermission(userId: String, nodeList: List<TNodeRecord>) {
+        val noPermissionNodeIps: MutableList<String> = mutableListOf()
+        nodeList.forEach { it ->
+            if (!(it.bakOperator.split(";").contains(userId) || it.operator == userId)) {
+                noPermissionNodeIps.add(it.nodeIp)
+            }
+        }
+        if (noPermissionNodeIps.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                params = arrayOf(noPermissionNodeIps.joinToString(",")),
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_NODE_NO_IMPORT_PERMISSION_NODES,
+                    params = arrayOf(noPermissionNodeIps.joinToString(",")),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
     }
 
     fun checkCmdbOperator(
@@ -943,7 +1019,8 @@ class NodeService @Autowired constructor(
                 cloudAreaId = it.cloudAreaId,
                 taskId = null,
                 osType = it.osType,
-                serverId = it.serverId
+                serverId = it.serverId,
+                envEnableNode = null
             )
         }
     }

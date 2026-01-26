@@ -32,6 +32,7 @@ object ActionId {
     const val PIPELINE_TEMPLATE_CREATE = "pipeline_template_create"
     const val PIPELINE_TEMPLATE_EDIT = "pipeline_template_edit"
     const val PIPELINE_TEMPLATE_DELETE = "pipeline_template_delete"
+    const val PIPELINE_TEMPLATE_VIEW = "pipeline_template_view"
 
     // 凭据
     const val CREDENTIAL_CREATE = "credential_create"
@@ -100,4 +101,12 @@ object ActionId {
     // 自定义操作
     const val PROJECT_USER_VERIFY = "project_user_verify"
     const val WATER_MARK_GET = "water_mark_get"
+
+    // 公共变量组
+    const val PUBLIC_VARIABLE_CREATE = "public_variable_create"
+    const val PUBLIC_VARIABLE_EDIT = "public_variable_edit"
+    const val PUBLIC_VARIABLE_LIST = "public_variable_list"
+    const val PUBLIC_VARIABLE_VIEW = "public_variable_view"
+    const val PUBLIC_VARIABLE_DELETE = "public_variable_delete"
+    const val PUBLIC_VARIABLE_USE = "public_variable_use"
 }
