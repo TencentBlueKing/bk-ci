@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -46,7 +45,10 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TRIGGER_COND
 import com.tencent.devops.process.api.service.ServiceWebhookBuildResource
 import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
@@ -54,9 +56,8 @@ import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
-import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
-import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.enums.MatchStatus
+import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -86,10 +87,6 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
 ) {
     @Value("\${scm.webhook.trigger.max.count:$SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT}")
     private val scmWebhookTriggerMaxCount: Int = SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ScmWebhookTriggerBuildService::class.java)
-    }
 
     fun trigger(event: ScmWebhookTriggerEvent) {
         // 同一个项目,最大处理并发数
@@ -247,9 +244,9 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
                 pipelineTriggerMeasureService.recordTaskExecutionTime(
                     name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
                     tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
-                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
-                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
-                        .toList(),
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
+                            .toList(),
                     timeConsumingMills = timeConsumingMills
                 )
             }
@@ -282,14 +279,14 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
             ) ?: run {
                 logger.info(
                     "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|$eventId|" +
-                        "$projectId|$repoHashId|$filePath|$blobId"
+                            "$projectId|$repoHashId|$filePath|$blobId"
                 )
                 return
             }
             logger.info(
                 "[PAC_PIPELINE]|find yaml pipeline trigger version|$eventId|" +
-                    "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
-                    "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
+                        "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
+                        "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
             )
             trigger(
                 projectId = projectId,
@@ -383,7 +380,7 @@ class ScmWebhookTriggerBuildService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(ScmWebhookTriggerBuildService::class.java)
         private const val SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT = 100
         private const val DEFAULT_DELAY = 1000
     }

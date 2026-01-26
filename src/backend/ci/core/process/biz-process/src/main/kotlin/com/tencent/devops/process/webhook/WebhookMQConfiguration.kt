@@ -30,15 +30,15 @@ package com.tencent.devops.process.webhook
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.trigger.event.GenericWebhookRequestEvent
-import com.tencent.devops.process.trigger.event.RemoteDevWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.GenericWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.CdsWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.CdsWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
-import com.tencent.devops.process.trigger.market.MarketEventManager
+import com.tencent.devops.process.trigger.market.MarketEventRequestService
+import com.tencent.devops.process.trigger.market.MarketEventTriggerBuildService
+import com.tencent.devops.process.trigger.scm.ScmWebhookTriggerBuildService
 import com.tencent.devops.process.trigger.scm.WebhookManager
-import com.tencent.devops.process.trigger.scm.WebhookTriggerBuildService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
@@ -116,7 +116,7 @@ class WebhookMQConfiguration @Autowired constructor() {
 
     @EventConsumer
     fun scmWebhookTriggerEventConsumer(
-        @Autowired webhookTriggerBuildService: WebhookTriggerBuildService
+        @Autowired webhookTriggerBuildService: ScmWebhookTriggerBuildService
     ) = ScsConsumerBuilder.build<ScmWebhookTriggerEvent> { webhookTriggerBuildService.trigger(it) }
 
     @EventConsumer

@@ -182,7 +182,7 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     pipelineId = pipelineId,
                     taskId = element.id!!,
                     eventCode = element.atomCode,
-                    eventSource = pipelineSetting.envName ?: "",
+                    eventSource = "", // pipelineSetting.envName
                     eventType = eventType,
                     channelCode = channelCode,
                     triggerTarget = TriggerTargetEnum.CREATIVE

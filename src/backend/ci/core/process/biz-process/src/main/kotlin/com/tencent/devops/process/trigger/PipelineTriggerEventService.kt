@@ -417,7 +417,7 @@ class PipelineTriggerEventService @Autowired constructor(
             params = arrayOf(eventId.toString())
         )
         // :TODO 回放操作需支持创作流触发事件
-        val scmType = PipelineTriggerType.toScmType(triggerEvent.triggerType) ?: throw ErrorCodeException(
+        val triggerType = PipelineTriggerType.parse(triggerEvent.triggerType) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT,
             params = arrayOf(triggerEvent.triggerType)
         )
@@ -442,7 +442,7 @@ class PipelineTriggerEventService @Autowired constructor(
                 requestId = requestId,
                 projectId = projectId,
                 eventId = replayEventId,
-                triggerType = triggerType,
+                triggerType = triggerType.name,
                 eventSource = eventSource,
                 eventType = eventType,
                 triggerUser = userId,
@@ -473,7 +473,8 @@ class PipelineTriggerEventService @Autowired constructor(
                 projectId = projectId,
                 eventId = replayEventId,
                 replayRequestId = replayRequestId,
-                scmType = scmType,
+                scmType = triggerType.toScmType(),
+                triggerType = triggerType.name,
                 pipelineId = pipelineId
             )
         )

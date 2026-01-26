@@ -30,7 +30,6 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -39,12 +38,14 @@ import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.dao.PipelineTriggerEventDao
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.ScmWebhookEventBody
-import com.tencent.devops.process.trigger.WebhookTriggerService
+import com.tencent.devops.process.trigger.WebhookTriggerBuildService
 import com.tencent.devops.process.trigger.event.ScmWebhookRequestEvent
 import com.tencent.devops.process.trigger.scm.WebhookGrayCompareService
 import com.tencent.devops.process.trigger.scm.WebhookGrayService
 import com.tencent.devops.process.trigger.scm.WebhookManager
+import com.tencent.devops.process.trigger.market.MarketEventRequestService
 import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
@@ -61,13 +62,14 @@ import java.time.LocalDateTime
 class WebhookRequestService(
     private val client: Client,
     private val webhookEventFactory: WebhookEventFactory,
-    private val webhookTriggerService: WebhookTriggerService,
+    private val webhookTriggerBuildService: WebhookTriggerBuildService,
     private val dslContext: DSLContext,
     private val pipelineTriggerEventDao: PipelineTriggerEventDao,
     private val grayService: WebhookGrayService,
     private val simpleDispatcher: SampleEventDispatcher,
     private val webhookGrayCompareService: WebhookGrayCompareService,
-    private val webhookManager: WebhookManager
+    private val webhookManager: WebhookManager,
+    private val marketEventRequestService: MarketEventRequestService
 ) {
 
     companion object {
@@ -148,7 +150,7 @@ class WebhookRequestService(
                     eventTime = eventTime
                 )
             }
-            webhookTriggerService.trigger(
+            webhookTriggerBuildService.trigger(
                 scmType = scmType,
                 matcher = matcher,
                 requestId = requestId,
@@ -157,16 +159,34 @@ class WebhookRequestService(
         }
     }
 
+    /**
+     * 处理回放事件
+     */
     fun handleReplay(replayEvent: ReplayWebhookEvent) {
-        with(replayEvent) {
-            val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
-                dslContext = dslContext,
-                projectId = projectId,
-                eventId = eventId
-            ) ?: run {
-                logger.info("replay trigger event not found|$eventId")
-                return
+        val triggerEvent = pipelineTriggerEventDao.getTriggerEvent(
+            dslContext = dslContext,
+            projectId = replayEvent.projectId,
+            eventId = replayEvent.eventId
+        ) ?: run {
+            logger.info("replay trigger event not found|${replayEvent.eventId}")
+            return
+        }
+        when{
+            replayEvent.scmType != null -> {
+                handleRepoReplayEvent(replayEvent, triggerEvent)
             }
+
+            else -> {
+                handleStoreEvent(replayEvent, triggerEvent)
+            }
+        }
+    }
+
+    /**
+     * 回放代码库相关的触发事件
+     */
+    fun handleRepoReplayEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
+        with(replayEvent) {
             val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
                 requestId = triggerEvent.requestId
             ).data ?: run {
@@ -209,7 +229,7 @@ class WebhookRequestService(
                 )
                 webhookManager.fireEvent(
                     eventId = triggerEvent.eventId!!,
-                    eventTime = LocalDateTime.now(),
+                    eventTime = java.time.LocalDateTime.now(),
                     repository = repository,
                     webhook = webhook,
                     replayPipelineId = pipelineId
@@ -219,18 +239,29 @@ class WebhookRequestService(
                     headers = webhookRequest.requestHeader,
                     body = webhookRequest.requestBody
                 )
-                val event = webhookEventFactory.parseEvent(scmType = scmType, request = webhookRequest) ?: run {
+                val event = webhookEventFactory.parseEvent(scmType = scmType!!, request = webhookRequest) ?: run {
                     logger.warn("Failed to parse webhook event")
                     return
                 }
                 val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = event)
 
-                webhookTriggerService.replay(
+                webhookTriggerBuildService.replay(
                     replayEvent = replayEvent,
                     triggerEvent = triggerEvent,
                     matcher = matcher
                 )
             }
+        }
+    }
+
+    /**
+     * 回放研发商店注册的触发事件
+     * 注：目前此处仅对接远程桌面相关事件
+     */
+    fun handleStoreEvent(replayEvent: ReplayWebhookEvent, triggerEvent: PipelineTriggerEvent) {
+        with(replayEvent) {
+            // 使用MarketEventRequestService的公共方法处理事件分发逻辑
+            marketEventRequestService.handleTriggerEvent(triggerEvent, replayEvent.pipelineId)
         }
     }
 

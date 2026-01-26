@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     property = "@type"
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = ScmWebhookEventBody::class, name = ScmWebhookEventBody.classType)
+    JsonSubTypes.Type(value = ScmWebhookEventBody::class, name = ScmWebhookEventBody.classType),
+    JsonSubTypes.Type(value = GenericWebhookEventBody::class, name = GenericWebhookEventBody.classType)
 )
 interface TriggerEventBody

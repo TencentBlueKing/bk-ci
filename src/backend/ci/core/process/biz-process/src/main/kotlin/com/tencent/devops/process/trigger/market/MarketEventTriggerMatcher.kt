@@ -8,7 +8,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketEventAtomElement
 import com.tencent.devops.common.webhook.pojo.WebhookRequest
 import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
+import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_EVENT_CONFIG_NOT_FOUND_DESC
+import com.tencent.devops.process.pojo.trigger.TriggerEventBody
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION_EXCLUDE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIELD_CONDITION_NOT_MATCH
 import com.tencent.devops.process.trigger.enums.MatchStatus
@@ -34,7 +36,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
     fun matches(
         projectId: String,
         pipelineId: String,
-        webhookRequest: WebhookRequest,
+        triggerEventBody: TriggerEventBody,
         variables: Map<String, String>,
         element: MarketEventAtomElement
     ): WebhookAtomResponse {
@@ -60,12 +62,13 @@ class MarketEventTriggerMatcher @Autowired constructor(
             throw InvalidParamException("trigger condition not found")
         }
         val eventConfig = JsonUtil.mapTo(triggerConditionMap, TriggerEventConfig::class.java)
+        triggerEventBody as GenericWebhookEventBody
         // 解析request获取映射字段的值
         val eventVariables = marketEventVariablesResolver.getEventVariables(
             fieldMappings = eventConfig.fieldMapping,
-            incomingHeaders = webhookRequest.headers,
-            incomingQueryParamMap = webhookRequest.queryParams,
-            incomingBody = webhookRequest.body
+            incomingHeaders = triggerEventBody.headers,
+            incomingQueryParamMap = triggerEventBody.queryParams,
+            incomingBody = triggerEventBody.body
         )
         // val fieldMap = eventConfig.fieldMapping.associate { it.sourcePath to it.targetField }
         // 计算匹配结果

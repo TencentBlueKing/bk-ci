@@ -73,9 +73,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_NOT_FOUND,
                     params = arrayOf(eventId.toString())
                 )
-                val webhookRequest = triggerEvent.eventBody?.let {
-                    JsonUtil.to(it, WebhookRequest::class.java)
-                } ?: throw ErrorCodeException(
+                val triggerEventBody = triggerEvent.eventBody ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_EVENT_BODY_NOT_FOUND,
                     params = arrayOf(eventId.toString())
                 )
@@ -103,7 +101,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                     val atomResponse = marketEventTriggerMatcher.matches(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        webhookRequest = webhookRequest,
+                        triggerEventBody = triggerEventBody,
                         variables = variables,
                         element = element
                     )
