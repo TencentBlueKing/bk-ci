@@ -697,7 +697,7 @@ class PublicVarGroupReferManageService @Autowired constructor(
             number = dynamicPublicVarWithPositions.size
         ).data
 
-        if (segmentIds.isNullOrEmpty()) {
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != dynamicPublicVarWithPositions.size) {
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP
             )

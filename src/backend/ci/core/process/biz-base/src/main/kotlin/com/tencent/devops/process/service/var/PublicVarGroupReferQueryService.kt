@@ -271,7 +271,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     }
 
     /**
-     * 查询变量组引用信息（查询所有版本的引用）
+     * 查询变量组引用信息（查询使用变量的最新版本，按 referId 去重）
      */
     fun queryVarGroupReferInfo(
         queryReq: PublicVarGroupInfoQueryReqDTO
@@ -307,17 +307,16 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 )
             }
 
-            // 查询所有版本的引用
-            // 统计总数
-            val totalCount = publicVarGroupReferInfoDao.countByGroupName(
+            // 统计使用变量的资源数量（按 referId 去重）
+            val totalCount = publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
                 referType = queryReq.referType
             )
 
-            // 查询引用信息
-            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfo(
+            // 查询使用变量的最新版本记录
+            val varGroupReferInfo = publicVarGroupReferInfoDao.listLatestActiveVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
@@ -339,7 +338,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     }
 
     /**
-     * 根据变量名查询变量组引用信息（所有版本）
+     * 根据变量名查询变量组引用信息（按 referId 去重，返回使用该变量的最新版本）
      */
     private fun queryVarGroupReferInfoByVarNameAllVersions(
         queryReq: PublicVarGroupInfoQueryReqDTO,
@@ -365,16 +364,16 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 )
             }
 
-            // 统计总数
-            val totalCount = publicVarGroupReferInfoDao.countByReferIds(
+            // 统计使用变量的资源数量（按 referId 去重）
+            val totalCount = publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfoByReferIds(
                 dslContext = dslContext,
                 projectId = projectId,
                 referIds = referIds,
                 referType = queryReq.referType
             )
 
-            // 查询详细信息
-            val varGroupReferInfo = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferIds(
+            // 查询使用变量的最新版本记录
+            val varGroupReferInfo = publicVarGroupReferInfoDao.listLatestActiveVarGroupReferInfoByReferIds(
                 dslContext = dslContext,
                 projectId = projectId,
                 referIds = referIds,
