@@ -106,6 +106,9 @@ class TencentAgentMetricService @Autowired constructor(
     @Value("\${kafka.topics.agentMetricEnvTopic:#{null}}")
     val agentMetricEnvTopic: String? = null
 
+    @Value("\${kafka.topics.agentMetricHeartbeatTopic:#{null}}")
+    val agentMetricHeartbeatTopic: String? = null
+
     override fun reportAgentMetrics(data: String): Boolean {
         logger.debug("reportAgentMetrics|origin")
         logger.debug(data)
@@ -174,6 +177,25 @@ class TencentAgentMetricService @Autowired constructor(
         return true
     }
 
+    override fun reportAgentMetrics(
+        fields: Map<String, Any>?,
+        name: String?,
+        tags: Map<String, String>?,
+        timestamp: Long?
+    ): Boolean {
+        sendMetric(
+            name,
+            listOf(
+                AgentTelegrafData(
+                    dimensions = tags,
+                    time = timestamp,
+                    metrics = fields
+                )
+            )
+        )
+        return true
+    }
+
     private fun addAgentTags(
         originTags: Map<String, Any>?,
         agentInfos: MutableMap<Long, AgentTagInfo?>
@@ -222,6 +244,7 @@ class TencentAgentMetricService @Autowired constructor(
             AGENT_TELEGRAF_LOAD -> agentMetricLoadTopic
             AGENT_TELEGRAF_NETSTAT -> agentMetricNetstatTopic
             AGENT_TELEGRAF_ENV -> agentMetricEnvTopic
+            AGENT_TELEGRAF_HEARTBEAT -> agentMetricHeartbeatTopic
             else -> return
         }
 
