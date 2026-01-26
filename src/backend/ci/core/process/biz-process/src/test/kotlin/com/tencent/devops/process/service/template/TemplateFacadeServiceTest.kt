@@ -97,7 +97,8 @@ class TemplateFacadeServiceTest : BkCiAbstractTest() {
             pipelineTemplateVersionManager = mockk(relaxed = true),
             pipelineTemplateMarketFacadeService = mockk(relaxed = true),
             pipelineTemplateResourceService = mockk(relaxed = true),
-            pipelineEventDispatcher = mockk(relaxed = true)
+            pipelineEventDispatcher = mockk(relaxed = true),
+            publicVarGroupReferManageService = mockk(relaxed = true),
         )
     }
 
