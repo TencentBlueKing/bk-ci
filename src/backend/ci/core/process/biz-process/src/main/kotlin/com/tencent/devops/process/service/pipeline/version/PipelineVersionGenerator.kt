@@ -383,7 +383,7 @@ class PipelineVersionGenerator constructor(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 checkoutBranch = checkoutBranch,
-                baseVersion = draftResource.version,
+                baseVersion = draftResource.baseVersion,
                 targetBranch = targetBranch
             )
         } else {

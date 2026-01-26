@@ -57,6 +57,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
@@ -457,7 +458,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int,
         archiveFlag: Boolean? = false,
-        editMode: Boolean? = false
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): PipelineVersionWithModel {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -490,10 +491,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             version = resource.settingVersion ?: NUM_ZERO, // 历史没有关联过setting版本应该取正式版本
             archiveFlag = archiveFlag
         )
-        // 判断是否需要再重新生成yaml,这行代码需要放在getFixedModel之前,不然getFixedModel会把template字段补充
-        val force = resource.version == pipelineInfo.version &&
-                resource.model.instanceFromTemplate == true &&
-                resource.model.template == null
         val model = pipelineInfoFacadeService.getFixedModel(
             resource = resource,
             projectId = projectId,
@@ -503,12 +500,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             archiveFlag = archiveFlag
         )
 
-        // 在正常查看编排时，调用该接口，需要对敏感字段加密。在编辑状态且用户有编辑权限的情况下，不需要加密。
-        val isEncryptParamsValue = editMode == null || editMode == false || !editPermission
+        // 在正常查看/对比编排时需要对敏感字段加密，只有编辑场景且有编辑权限时不加密。
+        val isEncryptParamsValue = source != PipelineGetVersionSource.EDIT || !editPermission
         if (isEncryptParamsValue) {
             resource.model.encryptParamsValue()
             model.encryptParamsValue()
         }
+
         /* 兼容存量数据 */
         model.desc = setting.desc
         // 后端主动填充前端展示的标签名称
@@ -525,14 +523,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
         val (yamlSupported, yamlPreview, msg) = try {
+            // 如果是查看版本对比,如果是实例化流水线,需要展示完整的yaml内容
+            val yamlResource = if (source == PipelineGetVersionSource.COMPARE && resource.model.template != null) {
+                resource.copy(model = model.copy(template = null))
+            } else {
+                resource
+            }
             val response = transferService.buildPreview(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                resource = resource,
+                resource = yamlResource,
                 editPermission = editPermission,
                 archiveFlag = archiveFlag,
-                force = force,
                 isEncryptParamsValue = isEncryptParamsValue
             )
             Triple(true, response, null)
