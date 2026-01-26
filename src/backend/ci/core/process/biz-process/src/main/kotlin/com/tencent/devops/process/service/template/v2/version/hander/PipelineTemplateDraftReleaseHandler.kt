@@ -180,7 +180,8 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             commitMessage = pTemplateResourceWithoutVersion.description
                 ?: "update template ${pipelineTemplateInfo.name}",
             targetAction = targetAction!!,
-            targetBranch = branchName
+            targetBranch = branchName,
+            source = PipelineYamlFileReleaseReqSource.TEMPLATE
         )
         return pipelineYamlFacadeService.releaseYamlFile(
             yamlFileReleaseReq = yamlFileReleaseReq
