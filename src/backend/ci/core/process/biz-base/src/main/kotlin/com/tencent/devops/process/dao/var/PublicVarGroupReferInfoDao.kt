@@ -849,7 +849,9 @@ class PublicVarGroupReferInfoDao {
                     .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
                     .and(trpvri.GROUP_NAME.eq(trpvgriSub.GROUP_NAME))
             )
-        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
+        referType?.let {
+            notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
+        }
 
         return dslContext.selectFrom(trpvgri)
             .where(conditions)
@@ -942,7 +944,9 @@ class PublicVarGroupReferInfoDao {
                     .and(trpvri.REFER_ID.eq(trpvgriSub.REFER_ID))
                     .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
             )
-        referType?.let { notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name)) }
+        referType?.let {
+            notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
+        }
 
         return dslContext.selectFrom(trpvgri)
             .where(conditions)
