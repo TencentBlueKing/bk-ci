@@ -120,7 +120,7 @@ class PipelineDraftReleaseHandler @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_RELEASE_MUST_DRAFT_VERSION
             )
         }
-        val resourceOnlyVersion = pipelineVersionGenerator.generateDratReleaseVersion(
+        val resourceOnlyVersion = pipelineVersionGenerator.generateDraftReleaseVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             draftResource = draftResource,
