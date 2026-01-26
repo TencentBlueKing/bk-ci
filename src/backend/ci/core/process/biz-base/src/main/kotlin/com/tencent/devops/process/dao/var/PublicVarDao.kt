@@ -204,29 +204,4 @@ class PublicVarDao {
         }
     }
 
-    /**
-     * 查询指定变量组和版本的所有变量名
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 版本号
-     * @return 变量名列表（去重）
-     */
-    fun queryVarNamesByGroupName(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ): List<String> {
-        with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-            with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
-                return dslContext.select(VAR_NAME).from(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(GROUP_NAME.eq(groupName))
-                    .and(VERSION.eq(version))
-                    .groupBy(VAR_NAME)
-                    .fetch().map { it.value1() }
-            }
-        }
-    }
 }
