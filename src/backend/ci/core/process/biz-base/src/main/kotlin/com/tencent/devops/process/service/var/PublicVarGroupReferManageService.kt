@@ -30,43 +30,31 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
-import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED
-import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
-import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
-import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
 import com.tencent.devops.process.pojo.`var`.VarGroupVersionChangeInfo
-import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
-import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
-import com.tencent.devops.process.pojo.`var`.po.VarGroupReferUpdateContext
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -74,35 +62,17 @@ class PublicVarGroupReferManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val client: Client,
-    private val pipelineTemplateResourceDao: PipelineTemplateResourceDao,
-    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val templateDao: TemplateDao,
-    private val publicVarService: PublicVarService,
     private val publicVarDao: PublicVarDao,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val redisOperation: RedisOperation,
-    private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
     private val publicVarGroupReferCountService: PublicVarGroupReferCountService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupReferManageService::class.java)
-
-        // 批量操作相关常量
-        private const val DEFAULT_BATCH_SIZE = 100
-        private const val MAX_RETRY_TIMES = 3
     }
-
-    @Value("\${publicVarGroup.urlTemplates.base:#{null}}")
-    val basePath: String = ""
-
-    @Value("\${publicVarGroup.urlTemplates.pipeline:#{null}}")
-    val pipelinePath: String = ""
-
-    @Value("\${publicVarGroup.urlTemplates.template:#{null}}")
-    val templatePath: String = ""
 
     /**
      * 根据引用ID删除变量组引用
@@ -138,23 +108,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
             logger.warn("Failed to delete refer info for referId: $referId", t)
             throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_UPDATE_FAILED)
         }
-    }
-
-    /**
-     * 统计模板版本实例数量
-     * @param projectId 项目ID
-     * @param templateId 模板ID
-     * @param version 版本号
-     * @return 实例数量
-     */
-    private fun countTemplateVersionInstances(projectId: String, templateId: String, version: Long): Int {
-        return templatePipelineDao.countByTemplateByVersion(
-            dslContext = dslContext,
-            projectId = projectId,
-            instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-            templateId = templateId,
-            version = version
-        )
     }
 
     /**
@@ -315,19 +268,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 resourceVersionName = publicVarGroupReferDTO.referVersionName
             )
         )
-    }
-
-    /**
-     * 版本变化类型枚举
-     * 用于标识变量组引用的变化类型
-     */
-    private enum class VersionChangeType {
-        /** 新增变量组引用 */
-        ADD,
-        /** 删除变量组引用 */
-        DELETE,
-        /** 变量组版本切换 */
-        VERSION_SWITCH
     }
 
     /**
@@ -592,25 +532,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 createTime = currentTime,
                 updateTime = currentTime
             )
-        }
-    }
-
-    /**
-     * 获取变量组引用的URL
-     */
-    private fun getVarGroupReferUrl(
-        projectId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referId: String,
-        version: Long
-    ): String {
-        return when (referType) {
-            PublicVerGroupReferenceTypeEnum.PIPELINE -> {
-                String.format("$basePath/$projectId/${referId}$pipelinePath", version)
-            }
-            PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                String.format("$basePath/${projectId}$templatePath", referId, version)
-            }
         }
     }
 
