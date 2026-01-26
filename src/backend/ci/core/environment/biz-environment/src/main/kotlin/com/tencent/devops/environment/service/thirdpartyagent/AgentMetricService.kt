@@ -26,6 +26,16 @@ class AgentMetricService @Autowired constructor(
         return true
     }
 
+    fun reportAgentMetrics(
+        fields: Map<String, Any>?,
+        name: String?,
+        tags: Map<String, String>?,
+        timestamp: Long?
+    ): Boolean {
+        // 开源版本直接上报给influxdb，不需要这个接口
+        return true
+    }
+
     fun queryCpuUsageMetrix(
         userId: String,
         projectId: String,
@@ -131,5 +141,6 @@ class AgentMetricService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AgentMetricService::class.java)
+        const val AGENT_TELEGRAF_HEARTBEAT = "heartbeat"
     }
 }
