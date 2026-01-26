@@ -32,27 +32,39 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.MediaContent
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
+import com.tencent.devops.notify.pojo.WeworkRobotFileMessage
+import com.tencent.devops.notify.pojo.WeworkRobotImageMessage
 import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
+import java.io.File
+import java.io.InputStream
+import java.util.Optional
+import java.util.UUID
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
-import java.util.Optional
 import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.annotation.Configuration
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
@@ -70,8 +82,178 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
+    @Value("\${wework.tempDirectory:}")
+    private var tempDirectory: String = ""
+
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        return
+        val mediaType = weworkNotifyMediaMessage.mediaType
+        // 校验媒体类型，仅支持file和image
+        if (mediaType == WeworkMediaType.voice || mediaType == WeworkMediaType.video) {
+            logger.warn("wework robot does not support media type: $mediaType, skip sending")
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = false,
+                errMsg = "wework robot does not support media type: $mediaType"
+            )
+            return
+        }
+
+        try {
+            // 上传媒体文件获取media_id
+            val mediaId = uploadMediaToRobot(
+                inputStream = weworkNotifyMediaMessage.mediaInputStream,
+                fileName = weworkNotifyMediaMessage.mediaName,
+                mediaType = mediaType.name
+            )
+
+            // 遍历接收者发送消息
+            val errMsgs = mutableListOf<String>()
+            when (weworkNotifyMediaMessage.receiverType) {
+                WeworkReceiverType.group -> {
+                    logger.warn("wework robot does not support group media message")
+                }
+                WeworkReceiverType.single -> {
+                    weworkNotifyMediaMessage.receivers.forEach { chatId ->
+                        try {
+                            val requestBody = buildMediaMessageBody(
+                                mediaId = mediaId,
+                                mediaType = mediaType.name,
+                                chatId = chatId
+                            )
+                            sendMediaRequest(requestBody)
+                        } catch (e: Throwable) {
+                            logger.error("failed to send media message to $chatId", e)
+                            errMsgs.add("chatId=$chatId: ${e.message}")
+                        }
+                    }
+                }
+            }
+
+            // 记录发送结果
+            if (errMsgs.isEmpty()) {
+                logger.info("send media message success, mediaName=${weworkNotifyMediaMessage.mediaName}")
+                saveResult(
+                    receivers = weworkNotifyMediaMessage.receivers,
+                    body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                    success = true,
+                    errMsg = null
+                )
+            } else {
+                saveResult(
+                    receivers = weworkNotifyMediaMessage.receivers,
+                    body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                    success = false,
+                    errMsg = errMsgs.joinToString("; ")
+                )
+            }
+        } catch (e: Throwable) {
+            logger.error("failed to send media message", e)
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = false,
+                errMsg = e.message
+            )
+        }
+    }
+
+    /**
+     * 上传媒体文件到企业微信机器人
+     */
+    private fun uploadMediaToRobot(inputStream: InputStream, fileName: String, mediaType: String): String {
+        val tempDir = if (tempDirectory.isNotBlank()) tempDirectory else System.getProperty("java.io.tmpdir")
+        val tempFile = File(tempDir, "${UUID.randomUUID()}_$fileName")
+        try {
+            // 将输入流写入临时文件
+            inputStream.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            // 构建multipart请求
+            val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$robotKey&type=$mediaType")
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "media",
+                    fileName,
+                    tempFile.asRequestBody("application/octet-stream".toMediaType())
+                )
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            // 发送请求
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseBody = response.body?.string() ?: ""
+                if (!response.isSuccessful) {
+                    throw RemoteServiceException(
+                        httpStatus = response.code,
+                        responseContent = responseBody,
+                        errorMessage = "upload media to wework robot failed, httpCode=${response.code}"
+                    )
+                }
+
+                val uploadResponse = JsonUtil.to(responseBody, WeworkRobotUploadResponse::class.java)
+                if (uploadResponse.errCode != 0) {
+                    logger.error("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
+                    throw RemoteServiceException(
+                        errorMessage = "upload media to wework robot failed: ${uploadResponse.errMsg}",
+                        errorCode = uploadResponse.errCode
+                    )
+                }
+
+                return uploadResponse.mediaId
+                    ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
+            }
+        } finally {
+            // 清理临时文件
+            if (tempFile.exists()) {
+                tempFile.delete()
+            }
+        }
+    }
+
+    /**
+     * 构建媒体消息请求体
+     */
+    private fun buildMediaMessageBody(mediaId: String, mediaType: String, chatId: String?): String {
+        val mediaContent = MediaContent(mediaId = mediaId)
+        val message: Any = when (mediaType) {
+            WeworkMediaType.image.name -> WeworkRobotImageMessage(
+                chatId = chatId,
+                image = mediaContent
+            )
+            else -> WeworkRobotFileMessage(
+                chatId = chatId,
+                file = mediaContent
+            )
+        }
+        return JsonUtil.toJson(message)
+    }
+
+    /**
+     * 发送媒体消息请求
+     */
+    private fun sendMediaRequest(requestBody: String) {
+        val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
+        OkhttpUtils.doPost(url, requestBody).use { response ->
+            val responseBody = response.body?.string() ?: ""
+            val sendMessageResp = JsonUtil.to(responseBody, WeworkSendMessageResp::class.java)
+            if (!response.isSuccessful || sendMessageResp.errCode != 0) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    responseContent = responseBody,
+                    errorMessage = "send wework robot media message failed: ${sendMessageResp.errMsg}",
+                    errorCode = sendMessageResp.errCode
+                )
+            }
+        }
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
