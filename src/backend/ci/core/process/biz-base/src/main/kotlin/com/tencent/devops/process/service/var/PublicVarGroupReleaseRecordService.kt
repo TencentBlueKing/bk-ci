@@ -87,6 +87,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             )
         val oldVersion = oldVarPOs.firstOrNull()?.version
         val newVersion = newVarPOs.firstOrNull()?.version
+
         val oldVarDOs = convertPOToDO(
             varPOs = oldVarPOs,
             projectId = projectId,
@@ -506,6 +507,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         } else {
             emptyMap()
         }
+
         return varPOs.map { po ->
             val actualReferCount = referCountMap[po.varName] ?: 0
             PublicVarDO(
