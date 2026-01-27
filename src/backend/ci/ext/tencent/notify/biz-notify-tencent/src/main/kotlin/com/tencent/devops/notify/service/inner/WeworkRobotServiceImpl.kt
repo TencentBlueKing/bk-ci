@@ -28,6 +28,7 @@
 package com.tencent.devops.notify.service.inner
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,6 +38,7 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.ImageContent
@@ -54,7 +56,6 @@ import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.InputStream
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.Optional
@@ -116,10 +117,20 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 }
                 else -> {
                     logger.warn("unsupported media type: $mediaType")
+                    saveResult(
+                        receivers = weworkNotifyMediaMessage.receivers,
+                        body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                        success = false,
+                        errMsg = "unsupported media type: $mediaType"
+                    )
+                    throw ErrorCodeException(
+                        errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
+                        params = arrayOf(mediaType.name)
+                    )
                 }
             }
         } catch (e: Throwable) {
-            logger.error("failed to send media message", e)
+            logger.warn("failed to send media message", e)
             saveResult(
                 receivers = weworkNotifyMediaMessage.receivers,
                 body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
@@ -166,11 +177,17 @@ class WeworkRobotServiceImpl @Autowired constructor(
      */
     private fun sendFileMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val mediaType = weworkNotifyMediaMessage.mediaType
+        val fileBytes = weworkNotifyMediaMessage.mediaInputStream.use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toByteArray()
+            }
+        }
 
         // 统一遍历接收者发送消息
         val errMsgs = sendToReceivers(weworkNotifyMediaMessage.receivers) { receiver ->
             val mediaId = uploadMediaToRobot(
-                inputStream = weworkNotifyMediaMessage.mediaInputStream,
+                fileBytes = fileBytes,
                 fileName = weworkNotifyMediaMessage.mediaName,
                 mediaType = mediaType.name,
                 key = receiver
@@ -201,7 +218,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             try {
                 sendAction(receiver)
             } catch (e: Throwable) {
-                logger.error("failed to send media message to receiver: $receiver", e)
+                logger.warn("failed to send media message to receiver: $receiver", e)
                 errMsgs.add("receiver=$receiver: ${e.message}")
             }
         }
@@ -240,7 +257,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
      * 上传媒体文件到企业微信机器人
      */
     private fun uploadMediaToRobot(
-        inputStream: InputStream,
+        fileBytes: ByteArray,
         fileName: String,
         mediaType: String,
         key: String
@@ -251,11 +268,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
         }
         val tempFile = File(tempDir, "${UUID.randomUUID()}_$fileName")
         try {
-            // 将输入流写入临时文件
-            inputStream.use { input ->
-                tempFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
+            // 将字节数组写入临时文件
+            tempFile.outputStream().use { output ->
+                output.write(fileBytes)
             }
 
             // 构建multipart请求
@@ -287,7 +302,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
                 val uploadResponse = JsonUtil.to(responseBody, WeworkRobotUploadResponse::class.java)
                 if (uploadResponse.errCode != 0) {
-                    logger.error("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
+                    logger.warn("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
                     throw RemoteServiceException(
                         errorMessage = "upload media to wework robot failed: ${uploadResponse.errMsg}",
                         errorCode = uploadResponse.errCode
