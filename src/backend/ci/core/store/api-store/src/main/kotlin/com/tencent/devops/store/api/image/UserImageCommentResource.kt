@@ -32,10 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
