@@ -427,14 +427,25 @@ class PipelineTriggerEventService @Autowired constructor(
             repositoryHashId = triggerEvent.eventSource!!,
             permission = AuthPermission.USE
         )
-        val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
-            requestId = triggerEvent.requestId
-        ).data ?: throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND
-        )
         // 保存重放事件
         val requestId = MDC.get(TraceTag.BIZID)
         val replayEventId = getEventId()
+        // 代码库事件回放需校验[源webhook数据]是否存
+        if(triggerType.toScmType() != null) {
+            val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = triggerEvent.requestId
+            ).data ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_WEBHOOK_REQUEST_NOT_FOUND
+            )
+
+            // 保存重放的webhook请求
+            client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
+                repositoryWebhookRequest = webhookRequest.copy(
+                    requestId = requestId,
+                    createTime = LocalDateTime.now()
+                )
+            )
+        }
         // 如果重试的事件也由重试产生,则应该记录最开始的请求ID
         val replayRequestId = triggerEvent.replayRequestId ?: triggerEvent.requestId
         val replayTriggerEvent = with(triggerEvent) {
@@ -458,13 +469,6 @@ class PipelineTriggerEventService @Autowired constructor(
         pipelineTriggerEventDao.save(
             dslContext = dslContext,
             triggerEvent = replayTriggerEvent
-        )
-        // 保存重放的webhook请求
-        client.get(ServiceRepositoryWebhookResource::class).saveWebhookRequest(
-            repositoryWebhookRequest = webhookRequest.copy(
-                requestId = requestId,
-                createTime = LocalDateTime.now()
-            )
         )
         CodeWebhookEventDispatcher.dispatchReplayEvent(
             streamBridge = streamBridge,
