@@ -634,6 +634,7 @@
     font-size: 18px;
     border-radius: 2px;
     color: #63656E;
+    transform: translateZ(0);
     &:hover {
         cursor: pointer;
         color: #3a84ff;
