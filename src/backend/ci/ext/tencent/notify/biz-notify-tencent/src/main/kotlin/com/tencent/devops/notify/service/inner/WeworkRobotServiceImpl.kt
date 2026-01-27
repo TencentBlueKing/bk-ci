@@ -144,7 +144,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
         // 统一遍历接收者发送消息
         val errMsgs = sendToReceivers(weworkNotifyMediaMessage.receivers) { receiver ->
-            val requestBody = buildImageMessageBody(base64 = base64Content, md5 = md5Hash, chatId = null)
+            val requestBody = buildImageMessageBody(base64 = base64Content, md5 = md5Hash)
             sendMediaRequest(requestBody = requestBody, key = receiver)
         }
 
@@ -178,7 +178,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 mediaType = mediaType.name,
                 key = receiver
             )
-            val requestBody = buildFileMessageBody(mediaId = mediaId, chatId = null)
+            val requestBody = buildFileMessageBody(mediaId = mediaId)
             sendMediaRequest(requestBody = requestBody, key = receiver)
         }
 
@@ -263,7 +263,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 .addFormDataPart(
                     "media",
                     fileName,
-                    tempFile.asRequestBody("application/octet-stream".toMediaType())
+                    tempFile.asRequestBody(mediaType.toMediaType())
                 )
                 .build()
 
@@ -297,21 +297,19 @@ class WeworkRobotServiceImpl @Autowired constructor(
             }
         } finally {
             // 清理临时文件和临时目录
-            if (tempFile.exists()) {
-                tempFile.delete()
-            }
-            if (tempDir.exists()) {
-                tempDir.delete()
-            }
+            kotlin.runCatching {
+                if (tempDir.exists() && !tempDir.deleteRecursively()) {
+                    logger.warn("failed to delete temp dir: ${tempDir.absolutePath}")
+                }
+            }.onFailure { e -> logger.warn("failed to clean temp upload files", e) }
         }
     }
 
     /**
      * 构建图片消息请求体（base64+md5方式）
      */
-    private fun buildImageMessageBody(base64: String, md5: String, chatId: String?): String {
+    private fun buildImageMessageBody(base64: String, md5: String): String {
         val message = WeworkRobotImageMessage(
-            chatId = chatId,
             image = ImageContent(base64 = base64, md5 = md5)
         )
         return JsonUtil.toJson(message)
@@ -320,9 +318,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
     /**
      * 构建文件消息请求体（media_id方式）
      */
-    private fun buildFileMessageBody(mediaId: String, chatId: String?): String {
+    private fun buildFileMessageBody(mediaId: String): String {
         val message = WeworkRobotFileMessage(
-            chatId = chatId,
             file = MediaContent(mediaId = mediaId)
         )
         return JsonUtil.toJson(message)
