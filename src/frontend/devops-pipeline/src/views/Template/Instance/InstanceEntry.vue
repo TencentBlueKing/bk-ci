@@ -233,7 +233,7 @@
                 return {
                     pipelineId: item.pipelineId,
                     pipelineName: item.pipelineName,
-                    ...(item.buildNo ? {
+                    ...(item.buildNo && !item.buildNo.isDelete ? {
                         buildNo: {
                             ...item?.buildNo,
                             required: item.buildNo?.isRequiredParam

@@ -12,7 +12,8 @@ import {
     UPDATE_TEMPLATE_REF,
     UPDATE_TEMPLATE_REF_TYPE,
     UPDATE_USE_TEMPLATE_SETTING,
-    TRIGGER_MERGE_INSTANCES
+    TRIGGER_MERGE_INSTANCES,
+    SET_FETCH_PIPELINES_ERROR
 } from './constants'
 export default {
     [SET_INSTANCE_LIST]: (state, { list, init = true }) => {
@@ -56,5 +57,8 @@ export default {
     },
     [TRIGGER_MERGE_INSTANCES]: (state, value) => {
         Vue.set(state, 'shouldMergeInstances', value)
+    },
+    [SET_FETCH_PIPELINES_ERROR]: (state, value) => {
+        Vue.set(state, 'fetchPipelinesError', value)
     }
 }
