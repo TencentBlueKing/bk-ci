@@ -75,7 +75,13 @@ interface RemoteDevInterface {
     /**
      * 重装工作空间系统
      */
-    fun rebuildWorkspace(userId: String, workspaceName: String, imageCosFile: String, formatDataDisk: Boolean?): String
+    fun rebuildWorkspace(
+        userId: String,
+        workspaceName: String,
+        imageCosFile: String,
+        formatDataDisk: Boolean?,
+        resetDataDisk: Boolean? = null
+    ): String
 
     /**
      * 删除远程工作空间
