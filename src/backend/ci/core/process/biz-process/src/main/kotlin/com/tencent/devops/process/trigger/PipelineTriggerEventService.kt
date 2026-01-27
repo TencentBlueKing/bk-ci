@@ -526,7 +526,7 @@ class PipelineTriggerEventService @Autowired constructor(
             "CREATIVE_STREAM" -> {
                 client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
                     storeType = StoreTypeEnum.TRIGGER_EVENT,
-                    null
+                    storeCodes = null
                 ).data?.map {
                     IdValue(
                         id = it.storeCode,

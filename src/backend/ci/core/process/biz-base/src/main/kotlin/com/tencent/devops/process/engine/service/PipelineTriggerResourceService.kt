@@ -27,7 +27,7 @@ class PipelineTriggerResourceService @Autowired constructor(
         return try {
             client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
                 storeType = StoreTypeEnum.TRIGGER_EVENT,
-                storeCodes = storeCodes
+                storeCodes = storeCodes.joinToString(separator = ",")
             ).data?.associate {
                 it.storeCode to it.storeName
             } ?: mapOf()
