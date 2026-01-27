@@ -56,30 +56,49 @@
                             {{ $t('template.parsedYaml') }}
                         </bk-tag>
                     </p>
-                    <VersionSelector
-                        v-else
-                        ext-cls="dark-theme-select-trigger"
-                        ext-popover-cls="dark-theme-select-menu"
-                        :editable="canSwitchVersion"
-                        :show-draft-tag="!canSwitchVersion"
-                        :show-extension="false"
-                        v-model="activeVersion"
-                        @change="diffActiveVersion"
-                        v-bind="baseVersionSelectorConf"
-                    />
-                    <p class="latest-version-selector-right-part">
-                        <span v-if="instanceCompareWithTemplate">{{ $t('template.template') }}</span>
+                    <div v-else>
+                        <span
+                            v-if="!version && draftYaml !== ''"
+                            class="base-version-selector-left-part"
+                        >
+                            <i class="devops-icon icon-edit-line" />
+                            {{ $t('draft') }}： {{ draftInfo?.updater }} {{ formatDate(draftInfo?.updateTime) }}
+                        </span>
                         <VersionSelector
+                            v-else
                             ext-cls="dark-theme-select-trigger"
                             ext-popover-cls="dark-theme-select-menu"
                             :editable="canSwitchVersion"
                             :show-draft-tag="!canSwitchVersion"
                             :show-extension="false"
-                            v-model="currentVersion"
-                            @change="diffCurrentVersion"
-                            v-bind="versionSelectorConf"
+                            v-model="activeVersion"
+                            @change="diffActiveVersion"
+                            v-bind="baseVersionSelectorConf"
                         />
-                    </p>
+                    </div>
+                    <div class="latest-version-selector-right-part">
+                        <span
+                            v-if="!latestVersion && baseYaml !== ''"
+                            class="base-version-selector-left-part"
+                        >
+                            <i class="devops-icon icon-edit-line" />
+                            {{ $t('draft') }}： {{ $userInfo.username }} {{ formatDate() }}
+                            <span class="draft-editing">{{ $t('editing') }}</span>
+                        </span>
+                        <p v-else>
+                            <span v-if="instanceCompareWithTemplate">{{ $t('template.template') }}</span>
+                            <VersionSelector
+                                ext-cls="dark-theme-select-trigger"
+                                ext-popover-cls="dark-theme-select-menu"
+                                :editable="canSwitchVersion"
+                                :show-draft-tag="!canSwitchVersion"
+                                :show-extension="false"
+                                v-model="currentVersion"
+                                @change="diffCurrentVersion"
+                                v-bind="versionSelectorConf"
+                            />
+                        </p>
+                    </div>
                     <bk-checkbox
                         v-if="instanceCompareWithTemplate"
                         class="use-template-settings-checkbox"
@@ -113,6 +132,7 @@
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
     import { mapActions, mapGetters } from 'vuex'
+    import dayjs from 'dayjs'
     export default {
         components: {
             YamlDiff,
@@ -134,11 +154,22 @@
             },
             version: {
                 type: Number,
-                required: true
             },
             latestVersion: {
                 type: Number,
-                required: true
+            },
+            // 直接传入的 YAML 内容（用于编辑页面，当前编辑内容还未保存的情况）
+            baseYaml: {
+                type: String,
+                default: ''
+            },
+            draftYaml: {
+                type: String,
+                default: ''
+            },
+            draftInfo: {
+                type: Object,
+                default: () => ({})
             },
             canSwitchVersion: {
                 type: Boolean,
@@ -204,6 +235,15 @@
                 } : this.versionSelectorConf
             }
         },
+        watch: {
+            // 监听 baseYaml 和 draftYaml 的变化，当父组件传入新数据时重新初始化
+            baseYaml (newVal, oldVal) {
+                this.handleYamlChange(newVal, oldVal)
+            },
+            draftYaml (newVal, oldVal) {
+                this.handleYamlChange(newVal, oldVal)
+            },
+        },
 
         methods: {
             ...mapActions('atom', [
@@ -212,6 +252,16 @@
                 'compareYamlWithTemplate'
             ]),
             ...mapActions('templates', ['requestVersionCompare']),
+            handleYamlChange (newVal, oldVal) {
+                if (newVal && newVal !== oldVal && this.showVersionDiffDialog) {
+                    this.$nextTick(() => {
+                        this.initDiff()
+                    })
+                }
+            },
+            formatDate (data) {
+                return dayjs(data).format('YYYY-MM-DD HH:mm:ss')
+            },
             async fetchPipelineYaml (version) {
                 try {
                     const isTemplate = this.isTemplate || !!this.templateId
@@ -255,12 +305,19 @@
                     this.instanceName = instanceName
                     this.templateVersionName = templateVersionName
                 } else {
-                    const [activeYaml, currentYaml] = await Promise.all([
-                        this.fetchPipelineYaml(this.activeVersion),
-                        this.fetchPipelineYaml(this.currentVersion)
-                    ])
-                    this.activeYaml = activeYaml
-                    this.currentYaml = currentYaml
+                    // 如果传入了 baseYaml 和 draftYaml，直接使用；否则通过版本号获取
+                    if (this.latestVersion && this.version) {
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.activeVersion),
+                            this.fetchPipelineYaml(this.currentVersion)
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    } else {
+                        this.currentYaml = this.baseYaml
+                        this.activeYaml = this.draftYaml
+                    }
+
                 }
                 this.isLoadYaml = false
             },
@@ -351,5 +408,15 @@
                 }
             }
         }
+    }
+    .draft-editing {
+        padding: 2px 4px;
+        margin-left: 6px;
+        line-height: 21px;
+        background: #1F472E;
+        border: 1px solid #27633D;
+        font-size: 10px;
+        color: #3FC362;
+        border-radius: 2px;
     }
 </style>

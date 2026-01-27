@@ -348,6 +348,31 @@ export const actions = {
             console.log(e)
         }
     },
+    getDraftStatus: async ({ commit }, { projectId, pipelineId, actionType, version }) => {
+        const params = new URLSearchParams({ actionType })
+        if (version) params.append('version', version)
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftStatus?${params}`
+        const response = await request.get(url)
+        return response.data
+    },
+    getDraftVersion: async ({ commit }, { projectId, pipelineId, version }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/draftVersions?version=${version}`).then(response => {
+            return response.data
+        })
+    },
+    getTemplateDraftStatus: async ({ commit }, { projectId, templateId, actionType }) => {
+        const params = new URLSearchParams({ actionType })
+        
+        const url = `${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftStatus?${params}`
+        const response = await request.get(url)
+        return response.data
+    },
+    getTemplateDraftVersion: async ({ commit }, { projectId, templateId, version }) => {
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/draftVersions?version=${version}`).then(response => {
+            return response.data
+        })
+    },
     isPACOAuth: async (_, { projectId, ...query }) => {
         const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
             params: query

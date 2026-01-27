@@ -69,6 +69,18 @@
                     v-bkloading="{ isLoading: isLoading || releasing }"
                     class="release-pipeline-pac-form"
                 >
+                    <bk-alert
+                        v-if="draftStatus && draftStatus.status === 'OUTDATED'"
+                        type="warning"
+                    >
+                        <template slot="title">
+                            <i18n path="template.draftPublished">
+                                <span>{{ draftStatus?.draft?.baseVersionName || draftStatus?.draft?.baseVersion }}</span>
+                                <span class="red-tip">{{ $t('Earlier') }}</span>
+                                <span>{{ draftStatus?.release?.versionName }}</span>
+                            </i18n>
+                        </template>
+                    </bk-alert>
                     <!-- 构建号重置提醒 -->
                     <bk-alert
                         v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
@@ -551,6 +563,7 @@
                 currentSidesliderContentHeight: 0,
                 maxSidesliderContentHeight: 0,
                 isFooterFixed: false,
+                draftStatus: null,
             }
         },
         computed: {
@@ -839,7 +852,24 @@
             ...mapActions('templates', [
                 'fetchTemplateReleasePreFetch'
             ]),
-            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
+            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList', 'getDraftStatus', 'getTemplateDraftStatus']),
+            async getLastDraftStatus () {
+                try {
+                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        actionType: 'RELEASE',
+                        ...(this.isTemplate ? { templateId: this.$route.params.templateId } : { pipelineId: this.$route.params.pipelineId })
+                    }
+                    const res = await request(params)
+                    this.draftStatus = res
+                } catch (e) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                }
+            },
             errorHandler (error) {
                 const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {
@@ -871,6 +901,7 @@
                             ]
                             : []
                         ),
+                        this.getLastDraftStatus(),
                         this.prefetchReleaseVersion(this.prefetchParams)
                     ])
 
@@ -1418,6 +1449,10 @@
 
 .release-pipeline-pac-form {
     overflow: auto;
+
+    .red-tip {
+        color: #ff7e73;
+    }
 
     .release-pac-pipeline-form-header {
         display: flex;
