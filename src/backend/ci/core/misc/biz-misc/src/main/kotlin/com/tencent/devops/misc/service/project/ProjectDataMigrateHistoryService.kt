@@ -29,7 +29,7 @@ package com.tencent.devops.misc.service.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.BkApiUtil
+import com.tencent.devops.common.web.utils.ApiAccessLimitCacheManager
 import com.tencent.devops.misc.dao.project.ProjectDataMigrateHistoryDao
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistory
 import com.tencent.devops.misc.pojo.project.ProjectDataMigrateHistoryQueryParam
@@ -64,17 +64,21 @@ class ProjectDataMigrateHistoryService @Autowired constructor(
     fun isDataCanMigrate(queryParam: ProjectDataMigrateHistoryQueryParam): Boolean {
         val projectId = queryParam.projectId
         val pipelineId = queryParam.pipelineId
-        // 判读项目或者流水线的数据是否能迁移
+        // 判读项目或者流水线的数据是否能迁移（使用缓存管理器优化）
         val migratingFlag = if (pipelineId.isNullOrBlank()) {
+            // 项目迁移检查
             redisOperation.isMember(
                 key = MiscUtils.getMigratingProjectsRedisKey(SystemModuleEnum.PROCESS.name),
                 item = projectId
             )
         } else {
-            redisOperation.isMember(
-                key = BkApiUtil.getMigratingPipelinesRedisKey(SystemModuleEnum.PROCESS.name),
-                item = pipelineId
+            // 流水线迁移检查（使用缓存管理器优化，按需缓存单个流水线状态）
+            val result = ApiAccessLimitCacheManager.checkMigratingPipelines(
+                redisOperation = redisOperation,
+                moduleCode = SystemModuleEnum.PROCESS.name,
+                pipelineIds = arrayOf(pipelineId)
             )
+            result[pipelineId] ?: false
         }
         // 判断项目或者流水线的数据是否能迁移
         return !migratingFlag && projectDataMigrateHistoryDao.getLatestProjectDataMigrateHistory(
