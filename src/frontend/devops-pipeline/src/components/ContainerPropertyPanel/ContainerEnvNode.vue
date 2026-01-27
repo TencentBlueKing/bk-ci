@@ -306,7 +306,7 @@
                             id: this.showAgentById ? resource.id : resource.name,
                             isShared: !!resource.sharedProjectId && !!resource.sharedUserId,
                             name: resource.name + (resource.label ? resource.label : ''),
-                            envInfoHref: `${WEB_URL_PREFIX}/environment/${resource.sharedProjectId || this.projectId}/envDetail/${resource.id}/`,
+                            envInfoHref: `${WEB_URL_PREFIX}/environment/${resource.sharedProjectId || this.projectId}/pipeline/env/ALL/${resource.id}`,
                             disalbed: !resource.name
                         }))
                     }
