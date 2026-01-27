@@ -34,9 +34,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "企业微信机器人图片消息请求体")
 data class WeworkRobotImageMessage(
-    @get:Schema(title = "会话ID")
-    @JsonProperty("chatid")
-    val chatId: String? = null,
     @get:Schema(title = "消息类型")
     @JsonProperty("msgtype")
     val msgType: String = "image",
