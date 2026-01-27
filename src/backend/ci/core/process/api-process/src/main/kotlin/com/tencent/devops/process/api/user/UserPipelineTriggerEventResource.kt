@@ -79,7 +79,7 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "代码库类型,为空则返回所有事件类型", required = false)
         @QueryParam("scmType")
         scmType: ScmType?,
-        @Parameter(description = "流水线渠道", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "流水线渠道")
         @HeaderParam("x-devops-channel")
         channelCode: String?
     ): Result<List<IdValue>>

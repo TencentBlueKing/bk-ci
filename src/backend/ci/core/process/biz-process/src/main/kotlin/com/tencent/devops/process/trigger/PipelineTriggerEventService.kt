@@ -521,7 +521,7 @@ class PipelineTriggerEventService @Autowired constructor(
         scmType: ScmType?,
         channelCode: String?
     ): List<IdValue> {
-        when(channelCode) {
+        return when(channelCode) {
             // TODO: 改成常量
             "CREATIVE_STREAM" -> {
                 client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
@@ -546,8 +546,7 @@ class PipelineTriggerEventService @Autowired constructor(
                     )
                 }
             }
-        }
-        return listOf()
+        } ?: listOf()
     }
 
     /**
