@@ -143,8 +143,6 @@ class PublicVarReferCountService @Autowired constructor(
         version: Int,
         countChange: Int
     ) {
-        val currentTime = LocalDateTime.now()
-
         // 检查是否存在该版本的概要信息
         val existingSummary = publicVarVersionSummaryDao.getByVarNameAndVersion(
             dslContext = context,
@@ -166,25 +164,43 @@ class PublicVarReferCountService @Autowired constructor(
                 modifier = SYSTEM
             )
         } else {
-            // 创建新的版本概要记录
-            val summaryPO = PublicVarVersionSummaryPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY").data ?: 0,
+            createAndSaveNewVersionSummary(
+                context = context,
                 projectId = projectId,
                 groupName = groupName,
                 varName = varName,
                 version = version,
-                referCount = countChange,
-                creator = SYSTEM,
-                modifier = SYSTEM,
-                createTime = currentTime,
-                updateTime = currentTime
-            )
-            publicVarVersionSummaryDao.save(
-                dslContext = context,
-                po = summaryPO
+                referCount = countChange
             )
         }
+    }
+
+    /**
+     * 创建并保存新的版本概要记录（生成 ID、写入 DB）
+     */
+    private fun createAndSaveNewVersionSummary(
+        context: DSLContext,
+        projectId: String,
+        groupName: String,
+        varName: String,
+        version: Int,
+        referCount: Int
+    ) {
+        val currentTime = LocalDateTime.now()
+        val summaryPO = PublicVarVersionSummaryPO(
+            id = client.get(ServiceAllocIdResource::class)
+                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY").data ?: 0,
+            projectId = projectId,
+            groupName = groupName,
+            varName = varName,
+            version = version,
+            referCount = referCount,
+            creator = SYSTEM,
+            modifier = SYSTEM,
+            createTime = currentTime,
+            updateTime = currentTime
+        )
+        publicVarVersionSummaryDao.save(dslContext = context, po = summaryPO)
     }
 
     /**
@@ -260,23 +276,13 @@ class PublicVarReferCountService @Autowired constructor(
                 modifier = SYSTEM
             )
         } else if (actualReferCount > 0) {
-            // 只有当实际有引用时才创建新的版本概要记录
-            val summaryPO = PublicVarVersionSummaryPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_VERSION_SUMMARY").data ?: 0,
+            createAndSaveNewVersionSummary(
+                context = context,
                 projectId = projectId,
                 groupName = groupName,
                 varName = varName,
                 version = version,
-                referCount = actualReferCount,
-                creator = SYSTEM,
-                modifier = SYSTEM,
-                createTime = currentTime,
-                updateTime = currentTime
-            )
-            publicVarVersionSummaryDao.save(
-                dslContext = context,
-                po = summaryPO
+                referCount = actualReferCount
             )
         }
     }
