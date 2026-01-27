@@ -896,27 +896,46 @@ object ModelVarRefUtils {
     }
 
     /**
-     * 移除文本中的注释行
-     * 使用逐行处理的方式，确保正确过滤注释行
-     * 支持两种注释格式：
-     * 1. 以#开头的注释行
-     * 2. 以REM开头的注释行（不区分大小写）
+     * 检测文本中使用的换行符，以在输出时保持与来源一致（跨平台兼容）
+     * 优先级：CRLF（Windows）> LF（Linux/Mac）> CR（旧 Mac）
+     *
      * @param text 原始文本
-     * @return 移除注释行后的文本
+     * @return 换行符序列，默认 "\n"
+     */
+    private fun detectLineSeparator(text: String): String {
+        return when {
+            text.contains("\r\n") -> "\r\n"
+            text.contains("\n") -> "\n"
+            text.contains("\r") -> "\r"
+            else -> "\n"
+        }
+    }
+
+    /**
+     * 移除文本中的注释行
+     * 按行过滤，支持两种注释格式：
+     * 1. 以 # 开头的行（Shell/Python 风格）
+     * 2. 以 REM 开头的行（不区分大小写）：REM 后跟行尾或空白符视为注释，如 REM、REM x、rem\tfoo
+     * 换行符兼容：按文本中的实际换行符（CRLF/LF/CR）拆行，输出时沿用同一换行符，以支持 Windows/Linux/Mac。
+     *
+     * @param text 原始文本
+     * @return 移除注释行后的文本，空输入返回原串
      */
     private fun removeCommentLines(text: String): String {
         if (text.isEmpty()) return text
-        
-        // 使用lines()方法分割文本，然后过滤掉注释行
-        return text.lines()
+        val lineSep = detectLineSeparator(text)
+        val filtered = text.lineSequence()
             .filter { line ->
-                val trimmedLine = line.trimStart()
-                // 保留非注释行：不以#开头，且不以REM开头（不区分大小写）
-                !trimmedLine.startsWith("#") && 
-                !trimmedLine.startsWith("REM ", ignoreCase = true) &&
-                !trimmedLine.equals("REM", ignoreCase = true)
+                val t = line.trimStart()
+                when {
+                    t.startsWith("#") -> false
+                    t.uppercase().startsWith("REM") && (t.length == 3 || t.getOrNull(3)
+                        ?.isWhitespace() == true) -> false
+
+                    else -> true
+                }
             }
-            .joinToString("\n")
+        return filtered.joinToString(lineSep)
     }
 
     /**

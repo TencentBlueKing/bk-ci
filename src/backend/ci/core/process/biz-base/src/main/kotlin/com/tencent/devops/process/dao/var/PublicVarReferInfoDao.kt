@@ -119,84 +119,6 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据引用ID删除所有版本的变量引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     */
-    fun deleteByReferIdWithoutVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum
-    ) {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .execute()
-        }
-    }
-
-    /**
-     * 批量根据引用ID列表删除所有版本的变量引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referIds 引用ID列表
-     * @param referType 引用类型
-     */
-    fun deleteByReferIdsWithoutVersion(
-        dslContext: DSLContext,
-        projectId: String,
-        referIds: List<String>,
-        referType: PublicVerGroupReferenceTypeEnum
-    ) {
-        if (referIds.isEmpty()) {
-            return
-        }
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.`in`(referIds))
-                .and(REFER_TYPE.eq(referType.name))
-                .execute()
-        }
-    }
-
-    /**
-     * 删除引用记录（排除指定的变量组）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param referVersionName 引用版本名称
-     * @param excludedGroupNames 需要排除的变量组名列表
-     */
-    fun deleteByReferIdExcludingGroupNames(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersionName: String,
-        excludedGroupNames: List<String>? = null
-    ) {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            val conditions = mutableListOf(PROJECT_ID.eq(projectId))
-            conditions.add(REFER_ID.eq(referId))
-            conditions.add(REFER_TYPE.eq(referType.name))
-            conditions.add(REFER_VERSION_NAME.eq(referVersionName))
-            if (!excludedGroupNames.isNullOrEmpty()) {
-                conditions.add(GROUP_NAME.notIn(excludedGroupNames))
-            }
-            dslContext.deleteFrom(this)
-                .where(conditions)
-                .execute()
-        }
-    }
-
-    /**
      * 根据引用ID和变量组删除变量引用记录
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
@@ -436,71 +358,6 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据引用ID、引用类型、引用版本、变量组名和版本查询变量名列表
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param referVersion 引用版本
-     * @param groupName 变量组名
-     * @param version 变量组版本
-     * @return 变量名列表
-     */
-    fun listVarNamesByReferIdAndGroup(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int,
-        groupName: String,
-        version: Int
-    ): List<String> {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            return dslContext.select(VAR_NAME)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .and(REFER_VERSION.eq(referVersion))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .fetch()
-                .map { it.value1() }
-        }
-    }
-
-    /**
-     * 根据引用ID、引用类型、引用版本、变量组名和变量名删除单个变量引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     * @param referVersion 引用版本
-     * @param groupName 变量组名
-     * @param varName 变量名
-     */
-    fun deleteByReferIdAndVar(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int,
-        groupName: String,
-        varName: String
-    ) {
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .and(REFER_VERSION.eq(referVersion))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VAR_NAME.eq(varName))
-                .execute()
-        }
-    }
-
-    /**
      * 根据变量名查询引用该变量的资源ID列表（去重）
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
@@ -536,45 +393,6 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据变量名和版本列表查询引用该变量的资源ID列表（去重）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param varName 变量名
-     * @param versions 变量组版本列表
-     * @param referType 引用类型（可选）
-     * @return 引用ID列表（去重）
-     */
-    fun listReferIdsByVarNameAndVersions(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        varName: String,
-        versions: List<Int>,
-        referType: PublicVerGroupReferenceTypeEnum?
-    ): List<String> {
-        if (versions.isEmpty()) {
-            return emptyList()
-        }
-
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            val conditions = mutableListOf(
-                PROJECT_ID.eq(projectId),
-                GROUP_NAME.eq(groupName),
-                VAR_NAME.eq(varName),
-                VERSION.`in`(versions)
-            )
-            referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
-
-            return dslContext.selectDistinct(REFER_ID)
-                .from(this)
-                .where(conditions)
-                .fetch()
-                .map { it.value1() }
-        }
-    }
-
-    /**
      * 统计指定变量的不同 referId 数量（跨版本去重）
      * 计数原则：referId + varName 的唯一组合计数为1，跨版本去重
      * @param dslContext 数据库上下文
@@ -599,42 +417,6 @@ class PublicVarReferInfoDao {
                 .and(VERSION.eq(version))
                 .and(VAR_NAME.eq(varName))
                 .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    /**
-     * 批量统计多个变量的引用数量（按 referId 去重）
-     * 用于查询变量列表时显示实际引用该变量的资源数量
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名
-     * @param version 变量组版本
-     * @param varNames 变量名列表
-     * @return Map<String, Int> 变量名到引用数量的映射
-     */
-    fun batchCountDistinctReferIdsByVars(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int,
-        varNames: List<String>
-    ): Map<String, Int> {
-        if (varNames.isEmpty()) {
-            return emptyMap()
-        }
-
-        with(TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO) {
-            return dslContext.select(VAR_NAME, DSL.countDistinct(REFER_ID))
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .and(VAR_NAME.`in`(varNames))
-                .groupBy(VAR_NAME)
-                .fetch()
-                .associate { record ->
-                    record.getValue(VAR_NAME) to (record.getValue(1, Int::class.java) ?: 0)
-                }
         }
     }
 }
