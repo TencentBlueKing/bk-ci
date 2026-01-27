@@ -63,14 +63,18 @@
                 fixed="left"
                 prop="displayName"
                 width="280"
+                show-overflow-tooltip
             >
                 <template slot-scope="{ row }">
-                    <a
-                        class="node-name"
+                    <span
+                        :class="{
+                            'node-name': row.nodeType !== 'CMDB'
+                        }"
                         :title="row.displayName"
+                        @click="handleToNodeDetail(row)"
                     >
                         {{ row.displayName || '-' }}
-                    </a>
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -229,6 +233,8 @@
             const runningStatus = ref(['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'])
             const successStatus = ref(['NORMAL', 'BUILD_IMAGE_SUCCESS'])
             const failStatus = ref(['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'])
+
+            const resType = computed(() => proxy.$route.params.resType)
             const searchList = computed(() => ([
                 {
                     name: proxy.$t('environment.nodeInfo.hostName'),
@@ -415,6 +421,11 @@
                 fetchData()
             }
 
+            const handleToNodeDetail = (row) => {
+                if (row.nodeType === 'CMDB') return
+                window.open(`${location.origin}/console/environment/${projectId.value}/${resType.value}/node/allNode?keywords=${row.displayName}&nodeHashId=${row.nodeHashId}`, '_blank')
+            }
+
             onMounted(() => {
                 nextTick(() => {
                     calculateTableHeight()
@@ -458,7 +469,8 @@
                 handleSelectionChange,
                 handleBatchRemove,
                 handleRemoveNode,
-                handleToggleEnableNode
+                handleToggleEnableNode,
+                handleToNodeDetail
             }
         }
     }
@@ -482,6 +494,10 @@
     }
     .node-list-table {
         margin-top: 20px;
+        .node-name {
+            color: #3a84ff;
+            cursor: pointer;
+        }
     }
     .node-status-icon {
         display: inline-block;
