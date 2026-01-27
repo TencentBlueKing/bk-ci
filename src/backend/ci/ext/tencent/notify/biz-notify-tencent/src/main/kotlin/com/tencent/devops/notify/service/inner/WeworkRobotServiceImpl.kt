@@ -56,10 +56,10 @@ import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.Optional
-import java.util.UUID
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -87,22 +87,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
-    @Value("\${wework.tempDirectory:}")
-    private var tempDirectory: String = ""
-
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val mediaType = weworkNotifyMediaMessage.mediaType
-        // 校验媒体类型，仅支持file和image
-        if (mediaType == WeworkMediaType.voice || mediaType == WeworkMediaType.video) {
-            logger.warn("wework robot does not support media type: $mediaType, skip sending")
-            saveResult(
-                receivers = weworkNotifyMediaMessage.receivers,
-                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                success = false,
-                errMsg = "wework robot does not support media type: $mediaType"
-            )
-            return
-        }
 
         try {
             // 根据媒体类型选择不同的发送方式
@@ -262,11 +248,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
         mediaType: String,
         key: String
     ): String {
-        val tempDir = File(System.getProperty("java.io.tmpdir"), tempDirectory)
-        if (!tempDir.exists()) {
-            tempDir.mkdirs()
-        }
-        val tempFile = File(tempDir, "${UUID.randomUUID()}_$fileName")
+        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
+        val tempFile = File(tempDir, fileName)
         try {
             // 将字节数组写入临时文件
             tempFile.outputStream().use { output ->
@@ -313,9 +296,12 @@ class WeworkRobotServiceImpl @Autowired constructor(
                     ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
             }
         } finally {
-            // 清理临时文件
+            // 清理临时文件和临时目录
             if (tempFile.exists()) {
                 tempFile.delete()
+            }
+            if (tempDir.exists()) {
+                tempDir.delete()
             }
         }
     }
@@ -484,5 +470,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
         const val WEWORK_MAX_SIZE = 4000
+        const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
     }
 }
