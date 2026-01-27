@@ -317,8 +317,6 @@
                 </bk-button>
             </footer>
         </template>
-        <template>
-        </template>
     </section>
 </template>
 
