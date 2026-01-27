@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
@@ -65,17 +63,13 @@ class UserPipelineTriggerEventResourceImpl(
         scmType: ScmType?,
         channelCode: String?
     ): Result<List<IdValue>> {
-        val eventTypes = CodeEventType.getEventsByScmType(scmType).map {
-            IdValue(
-                id = it.name,
-                value = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.name}",
-                    defaultMessage = it.name,
-                    language = I18nUtil.getLanguage(userId)
-                )
+        return Result(
+            pipelineTriggerEventService.listEventType(
+                userId = userId,
+                channelCode = channelCode,
+                scmType = scmType
             )
-        }
-        return Result(eventTypes)
+        )
     }
 
     override fun listPipelineTriggerEvent(
