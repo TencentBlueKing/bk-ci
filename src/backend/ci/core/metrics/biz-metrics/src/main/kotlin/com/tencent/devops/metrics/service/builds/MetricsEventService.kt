@@ -63,6 +63,7 @@ import com.tencent.devops.metrics.pojo.po.MetricsEventPO.NodeType.SELF_HOST
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.time.LocalDateTime
@@ -108,6 +109,8 @@ class MetricsEventService @Autowired constructor(
         const val BUFFER_SIZE = 10
         const val TIMEOUT = 10L
         const val BUILD_METRICS_WHITE_LIST_KEY = "build_metrics:white_list"
+        const val BUILD_VAR_KEY_VERSION = "build_var_key_version"
+        const val BUILD_VAR_KEY_BUILD_NUM = "build_var_key_build_num"
     }
 
     private val processes = mutableListOf<EventSendProcess>()
@@ -200,7 +203,7 @@ class MetricsEventService @Autowired constructor(
             .register(registry)
         Gauge.builder(
             METRICS_EVENT_PIPELINE_VERSION_CACHE_KEY,
-            pipelineVersionCache
+            buildVarCache
         ) { cache -> cache.estimatedSize().toDouble() }
             .register(registry)
         Gauge.builder(
@@ -254,13 +257,22 @@ class MetricsEventService @Autowired constructor(
             }.getOrNull() ?: emptyMap()
         }
 
-    private val pipelineVersionCache = Caffeine.newBuilder()
+    private val buildVarCache = Caffeine.newBuilder()
         .maximumSize(100000)
         .expireAfterAccess(5, TimeUnit.MINUTES)
-        .build<String, Int> { key ->
+        .build<String, Map<String, String>> { key ->
             kotlin.runCatching {
-                val (projectId, buildId) = key.split("@@")
-                client.get(ServiceBuildResource::class).getPipelineVersionFromBuildId(projectId, buildId).data
+                val (projectId, pipelineId, buildId) = key.split("@@")
+                val version =
+                    client.get(ServiceBuildResource::class)
+                        .getPipelineVersionFromBuildId(projectId, buildId).data!!.toString()
+                val vars = client.get(ServiceVarResource::class).getBuildVars(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    keys = setOf(PIPELINE_BUILD_NUM)
+                ).data!!
+                mapOf(BUILD_VAR_KEY_VERSION to version, BUILD_VAR_KEY_BUILD_NUM to (vars[PIPELINE_BUILD_NUM] ?: "1"))
             }.getOrNull()
         }
 
@@ -293,23 +305,31 @@ class MetricsEventService @Autowired constructor(
         }.getOrNull() ?: return emptyMap()
         val map = mutableMapOf<String, String>()
         map["${PipelineBuildStatusBroadCastEvent.Labels::pipelineName.name}.$pipelineId"] = model.name
+        var stageIndex = 0
         model.stages.forEach stage@{ stage ->
             stage.id?.let {
                 map["${PipelineBuildStatusBroadCastEvent.Labels::stageName.name}.$it"] = stage.name ?: ""
             }
+            var jobIndex = 0
             stage.containers.forEach container@{ container ->
+                jobIndex++
                 container.jobId?.ifBlank { null }?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
                 }
                 container.containerHashId?.let {
                     map["${PipelineBuildStatusBroadCastEvent.Labels::jobName.name}.$it"] = container.name
+                    map["${PipelineBuildStatusBroadCastEvent.Labels::jobIndex.name}.$it"] = "$stageIndex-$jobIndex"
                 }
+                var stepIndex = 0
                 container.elements.forEach { element ->
+                    stepIndex++
                     element.stepId?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
                     }
                     element.id?.ifBlank { null }?.let {
                         map["${PipelineBuildStatusBroadCastEvent.Labels::stepName.name}.$it"] = element.name
+                        map["${PipelineBuildStatusBroadCastEvent.Labels::stepIndex.name}.$it"] =
+                            "$stageIndex-$jobIndex-$stepIndex"
                     }
                 }
                 if (container is VMBuildContainer) {
@@ -375,13 +395,23 @@ class MetricsEventService @Autowired constructor(
                     }
                 }
             }
+            stageIndex++
         }
         return map
     }
 
     private fun getPipelineCache(projectId: String, pipelineId: String, buildId: String): Map<String, String> {
-        val version = pipelineVersionCache.get("$projectId@@$buildId")
+        val version = buildVarCache.get("$projectId@@$pipelineId@@$buildId")?.get(BUILD_VAR_KEY_VERSION)
         return pipelineCache.get("$projectId@@$pipelineId@@$version")
+    }
+
+    private fun getBuildVarCache(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        varName: String
+    ): String {
+        return buildVarCache.get("$projectId@@$pipelineId@@$buildId")?.get(varName) ?: ""
     }
 
     private fun getPropertiesFromEnvironment(event: PipelineBuildStatusBroadCastEvent): Map<String, String>? {
@@ -504,6 +534,22 @@ class MetricsEventService @Autowired constructor(
         }
     }
 
+    private fun replaceIndex(index: String, event: PipelineBuildStatusBroadCastEvent) =
+        when (event.jobId?.contains(".")) {
+            // jobId包含.说明是矩阵里的元素，需要对index进行替换
+            true -> {
+                val subIndex = event.jobId!!.substringAfter(".").toIntOrNull()
+                // 取index第二位坐标进行替换
+                val splitIndex = index.split("-").toMutableList()
+                if (splitIndex.size > 1) {
+                    splitIndex[1] = "${splitIndex[1]}.$subIndex"
+                }
+                splitIndex.joinToString("-")
+            }
+
+            else -> index
+        }
+
     private fun cacheGet(
         cache: Map<String, String>,
         event: PipelineBuildStatusBroadCastEvent,
@@ -519,9 +565,15 @@ class MetricsEventService @Autowired constructor(
             PipelineBuildStatusBroadCastEvent.Labels::jobName ->
                 cache["${property.name}.${event.jobId}"] ?: cache["${property.name}.${event.containerHashId}"]
 
+            PipelineBuildStatusBroadCastEvent.Labels::jobIndex ->
+                replaceIndex(cache["${property.name}.${event.containerHashId}"] ?: "", event)
+
             PipelineBuildStatusBroadCastEvent.Labels::stepName ->
                 event.stepId?.ifBlank { null }?.let { cache["${property.name}.${event.stepId}"] }
                     ?: cache["${property.name}.${event.taskId}"]
+
+            PipelineBuildStatusBroadCastEvent.Labels::stepIndex ->
+                replaceIndex(cache["${property.name}.${event.taskId}"] ?: "", event)
 
             PipelineBuildStatusBroadCastEvent.Labels::dispatchType ->
                 cache["${property.name}.${event.containerHashId}"]
@@ -579,6 +631,12 @@ class MetricsEventService @Autowired constructor(
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             trigger = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::trigger),
             triggerUser = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::triggerUser),
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             buildId = event.buildId,
             status = event.buildStatus ?: "",
             eventType = type,
@@ -630,6 +688,12 @@ class MetricsEventService @Autowired constructor(
             pipelineId = event.pipelineId,
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             buildId = event.buildId,
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             status = event.buildStatus ?: "",
             eventType = type,
             stageId = labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::stageSeq)?.toString()
@@ -678,11 +742,18 @@ class MetricsEventService @Autowired constructor(
             pipelineId = event.pipelineId,
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             buildId = event.buildId,
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             status = event.buildStatus ?: "",
             eventType = type,
             stageId = event.stageId ?: "",
             stageName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stageName),
             jobId = event.jobId ?: "",
+            jobIndex = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobIndex),
             jobName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobName),
             dispatchType = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::dispatchType),
             dispatchIdentity = cacheGet(
@@ -766,11 +837,18 @@ class MetricsEventService @Autowired constructor(
             pipelineId = event.pipelineId,
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             buildId = event.buildId,
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             status = event.buildStatus ?: "",
             eventType = type,
             stageId = event.stageId ?: "",
             stageName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stageName),
             jobId = event.jobId ?: "",
+            jobIndex = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobIndex),
             jobName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobName),
             nodeType = nodeType,
             hostName = nodeType?.let { loadHostName(it) },
@@ -820,13 +898,21 @@ class MetricsEventService @Autowired constructor(
             pipelineId = event.pipelineId,
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             buildId = event.buildId,
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             status = event.buildStatus ?: "",
             eventType = type,
             stageId = event.stageId ?: "",
             stageName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stageName),
             jobId = event.jobId ?: "",
+            jobIndex = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobIndex),
             jobName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::jobName),
             stepId = event.stepId ?: event.taskId ?: "",
+            stepIndex = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stepIndex),
             stepName = specialStep?.let { "DEVOPS_INNER_$it" }
                 ?: labelGet(event.labels, PipelineBuildStatusBroadCastEvent.Labels::stepName)
                 ?: cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::stepName),
@@ -876,6 +962,12 @@ class MetricsEventService @Autowired constructor(
             pipelineId = event.pipelineId,
             pipelineName = cacheGet(readPipelineCache, event, PipelineBuildStatusBroadCastEvent.Labels::pipelineName),
             buildId = event.buildId,
+            buildNum = getBuildVarCache(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                varName = BUILD_VAR_KEY_BUILD_NUM
+            ).toIntOrNull() ?: 1,
             status = event.buildStatus ?: "",
             eventType = type,
             stageId = event.stageId ?: "",
