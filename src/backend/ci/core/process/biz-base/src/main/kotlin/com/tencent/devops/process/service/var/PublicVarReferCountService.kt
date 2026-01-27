@@ -90,15 +90,13 @@ class PublicVarReferCountService @Autowired constructor(
             // 优化：使用单个事务批量处理所有变量组，减少事务数量
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-
-                sortedVarGroups.forEach { (key, varReferInfos) ->
+                sortedVarGroups.forEach nextVarGroup@{ (key, varReferInfos) ->
                     val (sourceProjectId, groupName, varName) = key
                     // 验证引用记录列表不为空
                     if (varReferInfos.isEmpty()) {
-                        logger.warn("Empty varReferInfos list for groupName=$groupName, varName=$varName, skip processing")
-                        return@forEach
+                        logger.warn("Empty varReferInfos list for groupName:$groupName, varName:$varName, skip")
+                        return@nextVarGroup
                     }
-
                     logger.info(
                         "Processing variable reference addition: " +
                             "sourceProjectId=$sourceProjectId, groupName=$groupName, varName=$varName, " +
@@ -244,8 +242,6 @@ class PublicVarReferCountService @Autowired constructor(
         varName: String,
         version: Int
     ) {
-        val currentTime = LocalDateTime.now()
-
         // 统计该版本的实际引用数量
         val actualReferCount = publicVarReferInfoDao.countDistinctReferIdsByVar(
             dslContext = context,
