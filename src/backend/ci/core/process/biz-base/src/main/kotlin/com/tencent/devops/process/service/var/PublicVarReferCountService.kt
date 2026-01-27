@@ -62,10 +62,6 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 批量新增引用并更新引用计数（无锁版本）
-     * 
-     * 注意：该方法不提供锁保护，因为通常由外层（PublicVarReferInfoService）已经提供了锁保护。
-     * 优化：使用单个事务批量处理，减少事务数量，提升性能
-     * 
      * @param referInfos 引用信息列表
      */
     fun batchAddReferWithCount(referInfos: List<ResourcePublicVarReferPO>) {
