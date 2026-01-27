@@ -31,24 +31,16 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelPublicVarHandleContext
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.VarRefDetail
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_DUPLICATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_VAR_NAME_FORMAT_ERROR
-import com.tencent.devops.process.dao.VarRefDetailDao
 import com.tencent.devops.process.dao.`var`.PublicVarDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
-import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
-import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.VarGroupDiffResult
-import com.tencent.devops.process.pojo.`var`.VarReferenceUpdateResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarDTO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReleaseDTO
@@ -56,29 +48,24 @@ import com.tencent.devops.process.pojo.`var`.enums.PublicVarTypeEnum
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPO
 import com.tencent.devops.process.pojo.`var`.po.PublicVarPositionPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
-import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.process.pojo.`var`.vo.PublicVarVO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PublicVarService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val redisOperation: RedisOperation,
     private val publicVarDao: PublicVarDao,
     private val publicVarGroupDao: PublicVarGroupDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
-    private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
-    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService,
-    private val publicVarReferInfoService: PublicVarReferInfoService,
-    private val publicVarReferCountService: PublicVarReferCountService
+    private val publicVarGroupReleaseRecordService: PublicVarGroupReleaseRecordService
 ) {
 
     companion object {
@@ -96,7 +83,7 @@ class PublicVarService @Autowired constructor(
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR", publicVarDTO.publicVars.size).data
-        if (segmentIds.isNullOrEmpty()|| segmentIds.size != publicVarDTO.publicVars.size) {
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != publicVarDTO.publicVars.size) {
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("Failed to generate segment IDs")
@@ -206,6 +193,36 @@ class PublicVarService @Autowired constructor(
         )
     }
 
+    /**
+     * 将PublicVarPO列表转换为PublicVarDO列表，并批量查询引用计数
+     * 
+     * @param varPOs 变量PO列表
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param version 版本号（用于设置buildFormProperty.varGroupVersion，可为null）
+     * @return 变量DO列表
+     */
+    private fun convertVarPOsToDOsWithReferCount(
+        varPOs: List<PublicVarPO>,
+        projectId: String,
+        groupName: String,
+        version: Int?
+    ): List<PublicVarDO> {
+        if (varPOs.isEmpty()) {
+            return emptyList()
+        }
+
+        // 批量查询所有变量的引用数量（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
+        val varNames = varPOs.map { it.varName }
+        val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            varNames = varNames
+        )
+        return convertVarPOsToPublicVarDOs(varPOs, referCountMap, version)
+    }
+
     fun getVariables(
         userId: String,
         projectId: String,
@@ -225,35 +242,12 @@ class PublicVarService @Autowired constructor(
             version = targetVersion
         )
 
-        // 批量查询所有变量的引用数量（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
-        val varNames = publicVarPOs.map { it.varName }
-        val referCountMap = if (varNames.isNotEmpty()) {
-            publicVarVersionSummaryDao.batchGetTotalReferCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                varNames = varNames
-            )
-        } else {
-            emptyMap()
-        }
-
-        return publicVarPOs.map { publicVarPO ->
-            val buildFormProperty = JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
-            // 当查询动态版本时version为null，返回时也需要返回version，而不是实际版本
-            buildFormProperty.varGroupVersion = version
-            val actualReferCount = referCountMap[publicVarPO.varName] ?: 0
-            PublicVarDO(
-                varName = publicVarPO.varName,
-                alias = publicVarPO.alias,
-                type = publicVarPO.type,
-                valueType = publicVarPO.valueType,
-                defaultValue = publicVarPO.defaultValue,
-                desc = publicVarPO.desc,
-                buildFormProperty = buildFormProperty,
-                referCount = actualReferCount
-            )
-        }
+        return convertVarPOsToDOsWithReferCount(
+            varPOs = publicVarPOs,
+            projectId = projectId,
+            groupName = groupName,
+            version = version
+        )
     }
 
     fun checkGroupPublicVar(publicVars: List<PublicVarVO>) {
@@ -271,6 +265,76 @@ class PublicVarService @Autowired constructor(
         }
     }
 
+    /**
+     * 将 PublicVarPO 列表转换为 BuildFormProperty 列表（供 PublicVarGroupService 等复用）
+     */
+    fun convertVarPOsToBuildFormProperties(varPOs: List<PublicVarPO>): List<BuildFormProperty> {
+        return varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
+    }
+
+    /**
+     * 将 PublicVarPO 列表转换为 PublicVarVO 列表（供 PublicVarGroupService 等复用）
+     */
+    fun convertVarPOsToPublicVarVOs(varPOs: List<PublicVarPO>): List<PublicVarVO> {
+        return varPOs.map { po ->
+            PublicVarVO(
+                varName = po.varName,
+                alias = po.alias,
+                type = po.type,
+                valueType = po.valueType,
+                defaultValue = po.defaultValue,
+                desc = po.desc,
+                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            )
+        }
+    }
+
+    /**
+     * 将 PublicVarVO 列表转换为 PublicVarDO 列表并设置引用计数（供 PublicVarGroupService.getChangePreview 等复用）
+     */
+    fun convertPublicVarVOsToDOsWithReferCount(
+        publicVars: List<PublicVarVO>,
+        referCountMap: Map<String, Int>
+    ): List<PublicVarDO> {
+        return publicVars.map { vo ->
+            PublicVarDO(
+                varName = vo.varName,
+                alias = vo.alias,
+                desc = vo.desc,
+                type = vo.type,
+                valueType = vo.valueType,
+                defaultValue = vo.defaultValue,
+                buildFormProperty = vo.buildFormProperty,
+                referCount = referCountMap[vo.varName] ?: 0
+            )
+        }
+    }
+
+    /**
+     * 将 PublicVarPO 列表转换为 PublicVarDO 列表，并设置引用计数与变量组版本（供 PublicVarGroupReferQueryService 等复用）
+     */
+    fun convertVarPOsToPublicVarDOs(
+        varPOs: List<PublicVarPO>,
+        referCountMap: Map<String, Int>,
+        varGroupVersion: Int?
+    ): List<PublicVarDO> {
+        return varPOs.map { varPO ->
+            val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
+            buildFormProperty.varGroupVersion = varGroupVersion
+            val actualReferCount = referCountMap[varPO.varName] ?: 0
+            PublicVarDO(
+                varName = varPO.varName,
+                alias = varPO.alias,
+                type = varPO.type,
+                valueType = varPO.valueType,
+                defaultValue = varPO.defaultValue,
+                desc = varPO.desc,
+                buildFormProperty = buildFormProperty,
+                referCount = actualReferCount
+            )
+        }
+    }
+
     fun handleModelParams(
         projectId: String,
         modelPublicVarHandleContext: ModelPublicVarHandleContext
@@ -285,7 +349,7 @@ class PublicVarService @Autowired constructor(
         val referId = modelPublicVarHandleContext.referId
         val referType = modelPublicVarHandleContext.referType
 
-        // 查询引用信息，获取sourceProjectId
+        // 查询引用信息，每个变量组可能有独立的 sourceProjectId（跨项目场景）
         val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
@@ -293,15 +357,16 @@ class PublicVarService @Autowired constructor(
             referId = referId,
             referVersion = modelPublicVarHandleContext.referVersion
         )
-        // 从引用信息中获取源头项目ID，如果没有则使用当前项目ID
-        val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
-        logger.info("handleModelParams sourceProjectId: $sourceProjectId, projectId: $projectId")
+        // 按变量组维度获取 sourceProjectId，支持不同变量组来自不同项目
+        val groupToSourceProjectId = groupsToUpdate.associate { group ->
+            group.groupName to (groupReferInfos.find { it.groupName == group.groupName }?.sourceProjectId ?: projectId)
+        }
+        logger.info("handleModelParams projectId: $projectId, groupToSourceProjectId: $groupToSourceProjectId")
 
-        // 批量获取所有非固定版本组的最新版本信息
-        val groupNames = groupsToUpdate.map { it.groupName }
-        val latestGroupVersionMap = getLatestVersionsForGroups(sourceProjectId, groupNames)
-        // 批量获取所有变量组最新版本的变量
-        val latestVars = getAllLatestVarsForGroups(sourceProjectId, latestGroupVersionMap)
+        // 按 sourceProjectId 分组后批量查询最新版本，再合并结果
+        val latestGroupVersionMap = getLatestVersionsForGroupsBySourceProject(groupToSourceProjectId)
+        // 按（项目+组+版本）批量获取变量
+        val latestVars = getAllLatestVarsForGroupsBySourceProject(latestGroupVersionMap)
 
         val params = modelPublicVarHandleContext.params.toMutableList()
         // 获取流水线中所有非变量组的变量名集合
@@ -498,7 +563,32 @@ class PublicVarService @Autowired constructor(
     }
 
     /**
-     * 批量获取多个组的最新版本
+     * 批量获取多个组的最新版本（按源项目分组查询，支持跨项目变量组）
+     * 
+     * @param groupToSourceProjectId 变量组名 -> 源项目ID（跨项目时取引用记录的 sourceProjectId，否则为当前 projectId）
+     * @return 变量组名 -> (源项目ID, 最新版本号)
+     */
+    private fun getLatestVersionsForGroupsBySourceProject(
+        groupToSourceProjectId: Map<String, String>
+    ): Map<String, Pair<String, Int>> {
+        if (groupToSourceProjectId.isEmpty()) return emptyMap()
+        // 按 sourceProjectId 分组，减少 DAO 调用次数
+        val projectToGroupNames = groupToSourceProjectId.entries
+            .groupBy({ it.value }, { it.key })
+        val result = mutableMapOf<String, Pair<String, Int>>()
+        projectToGroupNames.forEach { (sourceProjectId, groupNames) ->
+            val versionMap = getLatestVersionsForGroups(sourceProjectId, groupNames)
+            groupNames.forEach { groupName ->
+                versionMap[groupName]?.let { version ->
+                    result[groupName] = Pair(sourceProjectId, version)
+                }
+            }
+        }
+        return result
+    }
+
+    /**
+     * 批量获取多个组的最新版本（单项目场景）
      */
     private fun getLatestVersionsForGroups(
         projectId: String,
@@ -509,141 +599,32 @@ class PublicVarService @Autowired constructor(
             projectId = projectId,
             groupNames = groupNames
         )
-
-        // 检查是否有组名不存在
         val missingGroups = groupNames.filter { it !in versionMap }
         if (missingGroups.isNotEmpty()) {
             throw ErrorCodeException(errorCode = ERROR_INVALID_PARAM_, params = arrayOf(missingGroups.first()))
         }
-
         return versionMap
     }
 
     /**
-     * 批量获取所有组的最新版本变量
+     * 按（组 -> 源项目+版本）批量获取变量，支持跨项目变量组
+     * 
+     * @param groupToProjectAndVersion 变量组名 -> (源项目ID, 版本号)
+     * @return 变量组名 -> 变量 BuildFormProperty 列表
      */
-    private fun getAllLatestVarsForGroups(
-        projectId: String,
-        latestVersionMap: Map<String, Int>
+    private fun getAllLatestVarsForGroupsBySourceProject(
+        groupToProjectAndVersion: Map<String, Pair<String, Int>>
     ): Map<String, List<BuildFormProperty>> {
-        return latestVersionMap.mapValues { (groupName, version) ->
+        return groupToProjectAndVersion.mapValues { (groupName, projectAndVersion) ->
+            val (sourceProjectId, version) = projectAndVersion
             publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectId = sourceProjectId,
                 groupName = groupName,
                 version = version
             ).map { publicVarPO ->
                 JsonUtil.to(publicVarPO.buildFormProperty, BuildFormProperty::class.java)
-//                    .apply {
-//                    varGroupVersion = null // 清除版本信息
-//                }
             }
-        }
-    }
-
-    /**
-     * 统一处理资源的变量引用
-     * 该方法是变量引用处理的统一入口，按顺序执行以下操作：
-     * 1. 使用资源级锁处理资源维度的所有操作（在同一事务中）：
-     *    - 处理资源维度的引用记录（varRefDetail 业务）
-     *    - 处理变量组引用关系（publicVarReferInfoService 业务）
-     * 2. 使用变量级锁更新变量维度的引用计数
-     * 
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param resourceId 资源ID（流水线ID或模板ID）
-     * @param resourceType 资源类型（PIPELINE或TEMPLATE）
-     * @param resourceVersion 资源版本号
-     * @param model 流水线模型对象
-     * @param varRefDetails 变量引用详情列表
-     */
-    fun handleResourceVarReferences(
-        userId: String,
-        projectId: String,
-        resourceId: String,
-        resourceType: String,
-        resourceVersion: Int,
-        model: Model,
-        varRefDetails: List<VarRefDetail>
-    ) {
-        logger.info(
-            "Start handling resource var references: " +
-            "resourceId=$resourceId, resourceType=$resourceType, resourceVersion=$resourceVersion"
-        )
-
-        try {
-            // 1. 使用资源级锁处理所有资源维度的操作
-            val referenceUpdateResult = handleResourceGroupVarReferInfo(
-                userId = userId,
-                projectId = projectId,
-                resourceId = resourceId,
-                resourceType = resourceType,
-                resourceVersion = resourceVersion,
-                model = model,
-                varRefDetails = varRefDetails
-            )
-
-            // 2. 更新变量维度的引用计数
-            publicVarReferCountService.updateVarReferCounts(
-                referRecordsToAdd = referenceUpdateResult.referRecordsToAdd,
-                varsNeedRecalculate = referenceUpdateResult.varsNeedRecalculate
-            )
-
-        } catch (e: Throwable) {
-            logger.warn(
-                "Failed to handle resource var references: " +
-                "resourceId=$resourceId, resourceVersion=$resourceVersion",
-                e
-            )
-            throw e
-        }
-    }
-
-    private fun handleResourceGroupVarReferInfo(
-        userId: String,
-        projectId: String,
-        resourceId: String,
-        resourceType: String,
-        resourceVersion: Int,
-        model: Model,
-        varRefDetails: List<VarRefDetail>
-    ): VarReferenceUpdateResult {
-
-        val lockKey = "RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion"
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = lockKey,
-            expiredTimeInSeconds = 10L
-        )
-
-        try {
-            redisLock.lock()
-
-            val result = dslContext.transactionResult { configuration ->
-                val transactionContext = DSL.using(configuration)
-                
-                // 调用 publicVarReferInfoService 统一处理所有引用关系
-                publicVarReferInfoService.handleResourceVarReferences(
-                    context = transactionContext,
-                    userId = userId,
-                    projectId = projectId,
-                    resourceId = resourceId,
-                    resourceType = resourceType,
-                    resourceVersion = resourceVersion,
-                    model = model,
-                    varRefDetails = varRefDetails
-                )
-            }
-            return result
-        } catch (e: Throwable) {
-            logger.warn(
-                "Failed to handle resource-level operations: " +
-                "resourceId=$resourceId, resourceVersion=$resourceVersion",
-                e
-            )
-            throw e
-        } finally {
-            redisLock.unlock()
         }
     }
 }

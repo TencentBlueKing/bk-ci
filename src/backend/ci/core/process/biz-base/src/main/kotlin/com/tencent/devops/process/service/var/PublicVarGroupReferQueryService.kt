@@ -30,12 +30,10 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.toLocalDateTime
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
@@ -45,19 +43,18 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarVersionSummaryDao
-import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.`var`.VarGroupReferInfoQueryResult
 import com.tencent.devops.process.pojo.`var`.`do`.PublicGroupVarRefDO
 import com.tencent.devops.process.pojo.`var`.`do`.PublicVarDO
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupInfoQueryReqDTO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 公共变量组引用查询服务
@@ -72,9 +69,9 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val templatePipelineDao: TemplatePipelineDao,
-    private val templateDao: TemplateDao,
     private val publicVarDao: PublicVarDao,
-    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao
+    private val publicVarVersionSummaryDao: PublicVarVersionSummaryDao,
+    private val publicVarService: PublicVarService
 ) {
 
     companion object {
@@ -101,7 +98,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         val totalCount = queryResult.totalCount
         val varGroupReferInfo = queryResult.referInfos
 
-        logger.info("listVarReferInfo queryReq:{$queryReq }totalCount: $totalCount ${varGroupReferInfo.size}")
+        logger.info("listVarReferInfo queryReq: $queryReq, totalCount: $totalCount, referInfosSize: ${varGroupReferInfo.size}")
         if (totalCount == 0) {
             return Page(
                 count = 0,
@@ -136,6 +133,63 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     }
 
     /**
+     * 查询资源实际引用的变量数量
+     */
+    private fun countActualVarReferences(
+        projectId: String,
+        referId: String,
+        referType: PublicVerGroupReferenceTypeEnum,
+        referVersion: Int
+    ): Int {
+        return publicVarReferInfoDao.countActualVarReferencesByReferId(
+            dslContext = dslContext,
+            projectId = projectId,
+            referId = referId,
+            referType = referType,
+            referVersion = referVersion
+        )
+    }
+
+    /**
+     * 由引用信息构建 PublicGroupVarRefDO 的入参封装
+     */
+    private data class PublicGroupVarRefBuildParams(
+        val referInfo: ResourcePublicVarGroupReferPO,
+        val projectId: String,
+        val actualRefCount: Int,
+        val creator: String,
+        val modifier: String,
+        val updateTime: LocalDateTime,
+        val urlVersion: Long,
+        val executeCount: Int? = null,
+        val instanceCount: Int? = null
+    )
+
+    /**
+     * 由引用信息构建 PublicGroupVarRefDO
+     */
+    private fun buildPublicGroupVarRefDO(params: PublicGroupVarRefBuildParams): PublicGroupVarRefDO {
+        val referInfo = params.referInfo
+        return PublicGroupVarRefDO(
+            referId = referInfo.referId,
+            referName = referInfo.referName,
+            referUrl = getVarGroupReferUrl(
+                projectId = params.projectId,
+                referType = referInfo.referType,
+                referId = referInfo.referId,
+                version = params.urlVersion
+            ),
+            referType = referInfo.referType,
+            creator = params.creator,
+            modifier = params.modifier,
+            updateTime = params.updateTime,
+            actualRefCount = params.actualRefCount,
+            executeCount = params.executeCount,
+            instanceCount = params.instanceCount
+        )
+    }
+
+    /**
      * 处理流水线类型的引用
      */
     private fun processPipelineReferences(
@@ -143,53 +197,36 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         referInfoByType: Map<PublicVerGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>
     ): List<PublicGroupVarRefDO> {
         val pipelineReferInfos = referInfoByType[PublicVerGroupReferenceTypeEnum.PIPELINE]
-            ?: return emptyList()
+            ?.takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        if (pipelineReferInfos.isEmpty()) {
-            return emptyList()
-        }
-
-        try {
-            val pipelineIds = pipelineReferInfos.map { it.referId }.distinct()
-
-            // 批量查询流水线执行次数
+        return runCatching {
             val pipelineExecCounts = client.get(ServiceMetricsResource::class)
-                .queryPipelineMonthlyExecCountByList(queryReq.projectId, pipelineIds)
+                .queryPipelineMonthlyExecCountByList(queryReq.projectId, pipelineReferInfos.map { it.referId }.distinct())
                 .data ?: emptyMap()
 
-            // 构建流水线引用记录
-            return pipelineReferInfos.map { referInfo ->
-                // 查询该流水线实际引用的变量数量
-                val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
-                    dslContext = dslContext,
+            pipelineReferInfos.map { referInfo ->
+                val actualRefCount = countActualVarReferences(
                     projectId = queryReq.projectId,
                     referId = referInfo.referId,
                     referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
                     referVersion = referInfo.referVersion
                 )
-
-                PublicGroupVarRefDO(
-                    referId = referInfo.referId,
-                    referName = referInfo.referName,
-                    referUrl = getVarGroupReferUrl(
+                buildPublicGroupVarRefDO(
+                    PublicGroupVarRefBuildParams(
+                        referInfo = referInfo,
                         projectId = queryReq.projectId,
-                        referType = referInfo.referType,
-                        referId = referInfo.referId,
-                        version = referInfo.referVersion.toLong()
-                    ),
-                    referType = referInfo.referType,
-                    creator = referInfo.creator,
-                    modifier = referInfo.modifier,
-                    updateTime = referInfo.updateTime,
-                    actualRefCount = actualRefCount,
-                    executeCount = pipelineExecCounts[referInfo.referId] ?: 0
+                        actualRefCount = actualRefCount,
+                        creator = referInfo.creator,
+                        modifier = referInfo.modifier,
+                        updateTime = referInfo.updateTime,
+                        urlVersion = referInfo.referVersion.toLong(),
+                        executeCount = pipelineExecCounts[referInfo.referId] ?: 0
+                    )
                 )
             }
-        } catch (e: Throwable) {
+        }.getOrElse { e ->
             logger.warn("Failed to process pipeline references for project: ${queryReq.projectId}", e)
-            throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
-            )
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED)
         }
     }
 
@@ -201,18 +238,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         referInfoByType: Map<PublicVerGroupReferenceTypeEnum, List<ResourcePublicVarGroupReferPO>>
     ): List<PublicGroupVarRefDO> {
         val templateReferInfos = referInfoByType[PublicVerGroupReferenceTypeEnum.TEMPLATE]
-            ?: return emptyList()
+            ?.takeIf { it.isNotEmpty() } ?: return emptyList()
 
-        if (templateReferInfos.isEmpty()) {
-            return emptyList()
-        }
-
-        try {
-            // 批量查询模板信息
-            val templateKeys = templateReferInfos
-                .map { Pair(it.referId, it.referVersion.toLong()) }
-                .distinct()
-
+        return runCatching {
+            val templateKeys = templateReferInfos.map { Pair(it.referId, it.referVersion.toLong()) }.distinct()
             val templateMap = templateKeys.mapNotNull { (templateId, version) ->
                 pipelineTemplateResourceDao.get(
                     dslContext = dslContext,
@@ -222,51 +251,38 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 )?.let { Pair(templateId, version) to it }
             }.toMap()
 
-            // 构建模板引用记录
-            return templateReferInfos.mapNotNull { referInfo ->
-                val templateKey = Pair(referInfo.referId, referInfo.referVersion.toLong())
-                val template = templateMap[templateKey]
-
-                if (template == null) {
-                    logger.warn("Template not found: ${referInfo.referId}, version: ${referInfo.referVersion}")
-                    return@mapNotNull null
-                }
-
-                // 查询该模板实际引用的变量数量
-                val actualRefCount = publicVarReferInfoDao.countActualVarReferencesByReferId(
-                    dslContext = dslContext,
+            templateReferInfos.mapNotNull { referInfo ->
+                val template = templateMap[Pair(referInfo.referId, referInfo.referVersion.toLong())]
+                    ?: run {
+                        logger.warn("Template not found: ${referInfo.referId}, version: ${referInfo.referVersion}")
+                        return@mapNotNull null
+                    }
+                val actualRefCount = countActualVarReferences(
                     projectId = queryReq.projectId,
                     referId = referInfo.referId,
                     referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
                     referVersion = referInfo.referVersion
                 )
-
-                PublicGroupVarRefDO(
-                    referId = referInfo.referId,
-                    referName = referInfo.referName,
-                    referUrl = getVarGroupReferUrl(
+                buildPublicGroupVarRefDO(
+                    PublicGroupVarRefBuildParams(
+                        referInfo = referInfo,
                         projectId = queryReq.projectId,
-                        referType = referInfo.referType,
-                        referId = referInfo.referId,
-                        version = template.version
-                    ),
-                    referType = referInfo.referType,
-                    creator = template.creator,
-                    modifier = template.creator,
-                    updateTime = template.updateTime?.toLocalDateTime() ?: LocalDateTime.now(),
-                    actualRefCount = actualRefCount,
-                    instanceCount = countTemplateVersionInstances(
-                        projectId = queryReq.projectId,
-                        templateId = referInfo.referId,
-                        version = template.version
+                        actualRefCount = actualRefCount,
+                        creator = template.creator,
+                        modifier = template.creator,
+                        updateTime = template.updateTime?.toLocalDateTime() ?: LocalDateTime.now(),
+                        urlVersion = template.version,
+                        instanceCount = countTemplateVersionInstances(
+                            projectId = queryReq.projectId,
+                            templateId = referInfo.referId,
+                            version = template.version
+                        )
                     )
                 )
             }
-        } catch (e: Throwable) {
+        }.getOrElse { e ->
             logger.warn("Failed to process template references for project: ${queryReq.projectId}", e)
-            throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED
-            )
+            throw ErrorCodeException(errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_REFER_QUERY_FAILED)
         }
     }
 
@@ -434,23 +450,29 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     }
 
     /**
+     * 资源变量引用信息查询请求DTO
+     */
+    data class ResourceVarReferInfoQueryRequest(
+        val projectId: String,
+        val referId: String,
+        val referType: PublicVerGroupReferenceTypeEnum,
+        val referVersion: Int,
+        val groupName: String,
+        val version: Int?
+    )
+
+    /**
      * 获取资源关联的变量组变量引用信息
-     * @param projectId 项目ID
-     * @param referId 引用资源ID
-     * @param referType 引用资源类型
-     * @param referVersion 引用版本号
-     * @param groupName 变量组名称
-     * @param version 变量组版本号
+     * @param request 资源变量引用信息查询请求
      * @return 变量列表
      */
-    fun listResourceVarReferInfo(
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum,
-        referVersion: Int,
-        groupName: String,
-        version: Int?
-    ): List<PublicVarDO> {
+    fun listResourceVarReferInfo(request: ResourceVarReferInfoQueryRequest): List<PublicVarDO> {
+        val projectId = request.projectId
+        val referId = request.referId
+        val referType = request.referType
+        val referVersion = request.referVersion
+        val groupName = request.groupName
+        val version = request.version
         logger.info("listResourceVarReferInfo for referId: $referId, referType: $referType, " +
                 "referVersion: $referVersion, groupName: $groupName, version: $version")
 
@@ -491,31 +513,17 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 return emptyList()
             }
 
-            // 批量查询变量的引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
-            val varNames = groupVars.map { it.varName }
             val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
                 projectId = sourceProjectId,
                 groupName = groupName,
-                varNames = varNames
+                varNames = groupVars.map { it.varName }
             )
-
-            // 返回所有变量，设置referCount
-            return groupVars.map { varPO ->
-                val buildFormProperty = JsonUtil.to(varPO.buildFormProperty, BuildFormProperty::class.java)
-                buildFormProperty.varGroupVersion = version
-                val actualReferCount = referCountMap[varPO.varName] ?: 0
-                PublicVarDO(
-                    varName = varPO.varName,
-                    alias = varPO.alias,
-                    type = varPO.type,
-                    valueType = varPO.valueType,
-                    defaultValue = varPO.defaultValue,
-                    desc = varPO.desc,
-                    buildFormProperty = buildFormProperty,
-                    referCount = actualReferCount
-                )
-            }
+            return publicVarService.convertVarPOsToPublicVarDOs(
+                varPOs = groupVars,
+                referCountMap = referCountMap,
+                varGroupVersion = version
+            )
         } catch (e: ErrorCodeException) {
             throw e
         } catch (e: Throwable) {

@@ -11,7 +11,9 @@ import com.tencent.devops.common.pipeline.template.ITemplateModel
 import com.tencent.devops.common.pipeline.utils.ModelVarRefUtils
 import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
+import com.tencent.devops.process.service.`var`.VarReferenceRequestWithLock
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service
 @Service
 class ModelHandleServiceImpl @Autowired constructor(
     private val publicVarService: PublicVarService,
+    private val publicVarReferInfoService: PublicVarReferInfoService,
     private val dslContext: DSLContext,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineTemplateResourceDao: PipelineTemplateResourceDao
@@ -48,45 +51,36 @@ class ModelHandleServiceImpl @Autowired constructor(
         val projectId = context.projectId
         val resourceId = context.resourceId
         val resourceType = context.resourceType
-        val model = context.model
         val resourceVersion = context.resourceVersion
 
         try {
             logger.info("Start detecting variable references for resource: $resourceId|$resourceVersion")
-
-            val modelInfo = if (model == null) {
-                getResourceModel(
-                    projectId = projectId,
-                    resourceType = resourceType,
-                    resourceId = resourceId,
-                    resourceVersion = resourceVersion
-                )
-            } else {
-                model
-            } ?: return
-            
+            val modelInfo = context.model ?: getResourceModel(
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceId = resourceId,
+                resourceVersion = resourceVersion
+            ) ?: return
             modelInfo.handlePublicVarInfo()
-            
             // 使用 ModelVarRefUtils 解析变量引用
             val varRefDetails = ModelVarRefUtils.parseModelVarReferences(
                 model = modelInfo,
                 projectId = projectId
             )
-
             varRefDetails.forEach { varRefDetail ->
                 varRefDetail.referVersion = resourceVersion
             }
-
             logger.info("handleModelVarReferences for varRefDetails: $varRefDetails")
-
-            publicVarService.handleResourceVarReferences(
-                userId = userId,
-                projectId = projectId,
-                resourceId = resourceId,
-                resourceType = resourceType,
-                resourceVersion = resourceVersion,
-                model = modelInfo,
-                varRefDetails = varRefDetails
+            publicVarReferInfoService.handleResourceVarReferencesWithLock(
+                VarReferenceRequestWithLock(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceId = resourceId,
+                    resourceType = resourceType,
+                    resourceVersion = resourceVersion,
+                    model = modelInfo,
+                    varRefDetails = varRefDetails
+                )
             )
             
             logger.info("Variable references update completed for resource: $resourceId")

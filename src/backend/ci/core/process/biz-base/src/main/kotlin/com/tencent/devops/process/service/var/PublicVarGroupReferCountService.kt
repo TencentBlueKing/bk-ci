@@ -30,30 +30,23 @@ package com.tencent.devops.process.service.`var`
 import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.ProcessMessageCode.DYNAMIC_VERSION
-import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
-import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX
 import com.tencent.devops.process.dao.`var`.PublicVarGroupReferInfoDao
 import com.tencent.devops.process.dao.`var`.PublicVarGroupVersionSummaryDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.pojo.`var`.VarGroupVersionChangeInfo
 import com.tencent.devops.process.pojo.`var`.po.PublicVarGroupVersionSummaryPO
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarGroupReferPO
-import com.tencent.devops.process.pojo.`var`.po.VarGroupReferUpdateContext
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PublicVarGroupReferCountService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val publicVarGroupReferInfoDao: PublicVarGroupReferInfoDao,
     private val publicVarGroupVersionSummaryDao: PublicVarGroupVersionSummaryDao,
     private val publicVarReferInfoDao: PublicVarReferInfoDao,
@@ -65,63 +58,28 @@ class PublicVarGroupReferCountService @Autowired constructor(
     }
 
     /**
-     * 创建分布式锁
+     * 事务执行模板方法
      * 
-     * 锁粒度策略：
-     * - 使用变量组级别的锁（项目+变量组级别）
-     *   锁key格式：prefix:projectId:groupName
-     * @param projectId 项目ID（必需）
-     * @param groupName 变量组名称（必需）
-     * @return RedisLock实例
-     */
-    private fun createLock(
-        projectId: String,
-        groupName: String
-    ): RedisLock {
-        val lockKey = "$PUBLIC_VAR_GROUP_REFER_LOCK_KEY_PREFIX:$projectId:$groupName"
-        
-        return RedisLock(
-            redisOperation = redisOperation,
-            lockKey = lockKey,
-            expiredTimeInSeconds = PUBLIC_VAR_GROUP_LOCK_EXPIRED_TIME_IN_SECONDS
-        )
-    }
-
-    /**
-     * 带锁保护的事务执行模板方法
+     * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
      * 
-     * 该方法提供分布式锁保护下的事务执行能力，使用变量组级别的锁。
-     * 锁粒度：项目+变量组级别，确保同一变量组的引用操作和计数更新在同一锁保护下完成。
-     * 
-     * @param projectId 项目ID（必需）
-     * @param groupName 变量组名称（必需）
      * @param operation 要执行的业务操作
      * @return 操作结果
      */
-    fun <T> executeWithLockAndTransaction(
-        projectId: String,
-        groupName: String,
+    private fun <T> executeWithTransaction(
         operation: (DSLContext) -> T
     ): T {
-        val lock = createLock(
-            projectId = projectId,
-            groupName = groupName
-        )
-        lock.lock()
-
-        try {
-            return dslContext.transactionResult { configuration ->
-                val context = DSL.using(configuration)
-                operation(context)
-            }
-        } finally {
-            lock.unlock()
+        return dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
+            operation(context)
         }
     }
 
     /**
      * 批量删除引用并更新引用计数
      * 同时删除变量组引用记录和变量引用记录
+     * 
+     * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
+     * 
      * @param projectId 项目ID（引用记录所在的当前项目）
      * @param referId 引用ID
      * @param referType 引用类型
@@ -142,13 +100,13 @@ class PublicVarGroupReferCountService @Autowired constructor(
         }
 
         // 按 (sourceProjectId, groupName) 分组
-        // sourceProjectId 用于加锁和更新引用计数（变量组实际所在的项目）
+        // sourceProjectId 用于更新引用计数（变量组实际所在的项目）
         // 如果 sourceProjectId 为空，则使用当前 projectId（非跨项目场景）
         val groupedReferInfos = referInfosToDelete.groupBy {
             Pair(it.sourceProjectId ?: projectId, it.groupName)
         }
 
-        // 按固定顺序排序，避免死锁
+        // 按固定顺序排序，保持一致的执行顺序
         val sortedGroups = groupedReferInfos.toList().sortedWith(
             compareBy<Pair<Pair<String, String>, List<ResourcePublicVarGroupReferPO>>> { it.first.first }
                 .thenBy { it.first.second }
@@ -157,12 +115,9 @@ class PublicVarGroupReferCountService @Autowired constructor(
         sortedGroups.forEach { (key, groupReferInfos) ->
             // sourceProjectId: 变量组所在的项目ID
             val (sourceProjectId, groupName) = key
-            
-            // 使用变量组级别的锁，在同一个事务中完成引用删除和计数更新
-            executeWithLockAndTransaction(
-                projectId = sourceProjectId,
-                groupName = groupName
-            ) { context ->
+            // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
+            // 在同一个事务中完成引用删除和计数更新
+            executeWithTransaction { context ->
                 // 1. 删除变量引用记录
                 if (referVersion != null) {
                     // 删除指定版本
@@ -212,6 +167,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 增加引用计数（增量更新）
+     * 
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -268,6 +224,12 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 减少引用计数（增量更新，确保不会变为负数）
+     * 
+     * @param context 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名称
+     * @param version 版本号（动态版本为-1）
+     * @param countChange 减少的数量
      */
     fun decrementReferCount(
         context: DSLContext,
@@ -286,7 +248,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
         if (existingSummary == null) {
             logger.warn(
                 "Summary record not found for decrement, projectId: $projectId, " +
-                    "groupName: $groupName, version: $version"
+                        "groupName: $groupName, version: $version"
             )
             return
         }
@@ -317,6 +279,9 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 批量更新引用和计数
+     * 
+     * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
+     * 
      * @param projectId 当前项目ID（用于删除记录）
      * @param changeInfos 变量组版本变化信息列表
      */
@@ -328,25 +293,23 @@ class PublicVarGroupReferCountService @Autowired constructor(
             return
         }
 
-        // 按 sourceProjectId + groupName 排序，避免死锁
+        // 按 sourceProjectId + groupName 排序，保持一致的执行顺序
         val sortedChangeInfos = changeInfos.sortedWith(
             compareBy<VarGroupVersionChangeInfo> { it.sourceProjectId }
                 .thenBy { it.groupName }
         )
 
-        // 依次获取锁并处理每个变量组
+        // 依次处理每个变量组
+        // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护
         sortedChangeInfos.forEach { changeInfo ->
-            executeWithLockAndTransaction(
-                projectId = changeInfo.sourceProjectId,
-                groupName = changeInfo.groupName
-            ) { dslCtx ->
+            executeWithTransaction { dslCtx ->
                 logger.info(
                     "Processing variable group reference update: " +
-                        "sourceProjectId=${changeInfo.sourceProjectId}, groupName=${changeInfo.groupName}, " +
-                        "referId=${changeInfo.referId}, referType=${changeInfo.referType}, " +
-                        "referVersion=${changeInfo.referVersion}, " +
-                        "hasDelete=${changeInfo.referInfoToDelete != null}, " +
-                        "hasAdd=${changeInfo.referInfoToAdd != null}"
+                            "sourceProjectId=${changeInfo.sourceProjectId}, groupName=${changeInfo.groupName}, " +
+                            "referId=${changeInfo.referId}, referType=${changeInfo.referType}, " +
+                            "referVersion=${changeInfo.referVersion}, " +
+                            "hasDelete=${changeInfo.referInfoToDelete != null}, " +
+                            "hasAdd=${changeInfo.referInfoToAdd != null}"
                 )
 
                 // 1. 删除变量引用记录
@@ -408,7 +371,6 @@ class PublicVarGroupReferCountService @Autowired constructor(
                 }
             }
         }
-
         logger.info("Successfully batch updated ${changeInfos.size} variable group references")
     }
 }

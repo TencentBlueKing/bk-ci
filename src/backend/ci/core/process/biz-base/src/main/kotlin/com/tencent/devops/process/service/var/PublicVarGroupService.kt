@@ -204,18 +204,7 @@ class PublicVarGroupService @Autowired constructor(
             groupName = groupName,
             version = groupRecord.version
         )
-
-        val publicVars = varPOs.map { po ->
-            PublicVarVO(
-                varName = po.varName,
-                alias = po.alias,
-                type = po.type,
-                valueType = po.valueType,
-                defaultValue = po.defaultValue,
-                desc = po.desc,
-                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
-            )
-        }
+        val publicVars = publicVarService.convertVarPOsToPublicVarVOs(varPOs)
 
         return PublicVarGroupVO(
             groupName = groupRecord.groupName,
@@ -396,7 +385,7 @@ class PublicVarGroupService @Autowired constructor(
             groupName = groupName,
             version = groupInfo.version
         )
-        val params = varPOs.map { JsonUtil.to(it.buildFormProperty, BuildFormProperty::class.java) }
+        val params = publicVarService.convertVarPOsToBuildFormProperties(varPOs)
         val variables = variableTransfer.makeVariableFromBuildParams(params, false)
         val parserVO = PublicVarGroupYamlParser(
             version = "v3.0",
@@ -538,32 +527,24 @@ class PublicVarGroupService @Autowired constructor(
         } else {
             emptyMap()
         }
-
-        val newVarDOs = publicVarGroup.publicVars.map { vo ->
-            val actualReferCount = newVarReferCountMap[vo.varName] ?: 0
-            PublicVarDO(
-                varName = vo.varName,
-                alias = vo.alias,
-                desc = vo.desc,
-                type = vo.type,
-                valueType = vo.valueType,
-                defaultValue = vo.defaultValue,
-                buildFormProperty = vo.buildFormProperty,
-                referCount = actualReferCount
-            )
-        }
+        val newVarDOs = publicVarService.convertPublicVarVOsToDOsWithReferCount(
+            publicVars = publicVarGroup.publicVars,
+            referCountMap = newVarReferCountMap
+        )
 
         val version = latestGroupRecord.version + 1
         val pubTime = LocalDateTime.now()
 
         return publicVarGroupReleaseRecordService.generateVarChangeRecords(
-            oldVars = latestVarDOs,
-            newVars = newVarDOs,
-            groupName = groupName,
-            version = version,
-            userId = userId,
-            pubTime = pubTime,
-            versionDesc = publicVarGroup.versionDesc
+            PublicVarGroupReleaseRecordService.VarChangeRecordRequest(
+                oldVars = latestVarDOs,
+                newVars = newVarDOs,
+                groupName = groupName,
+                version = version,
+                userId = userId,
+                pubTime = pubTime,
+                versionDesc = publicVarGroup.versionDesc
+            )
         )
     }
 
@@ -650,21 +631,19 @@ class PublicVarGroupService @Autowired constructor(
         processedVarNames: MutableSet<String>,
         currentIndex: Int
     ): Int {
+        val buildFormProperties = publicVarService.convertVarPOsToBuildFormProperties(varPOs)
         var index = currentIndex
-        varPOs.forEach { po ->
+        varPOs.forEachIndexed { i, po ->
             val varName = po.varName
-
             if (processedVarNames.contains(varName)) {
                 throw ErrorCodeException(
                     errorCode = ERROR_PIPELINE_COMMON_VAR_GROUP_CONFLICT,
                     params = arrayOf(groupName, varName)
                 )
             }
-
-            val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            val buildFormProperty = buildFormProperties[i]
             buildFormProperty.varGroupName = groupName
             buildFormProperty.varGroupVersion = groupVersion
-
             publicVarGroupVariables.add(
                 PublicVarGroupVariable(
                     groupName = groupName,

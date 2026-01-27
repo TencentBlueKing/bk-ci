@@ -68,6 +68,12 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         const val SHOW_INFO = "showInfo"
     }
 
+    /**
+     * 批量添加公共变量组发布记录
+     * 
+     * @param dslContext 数据库上下文
+     * @param publicVarGroupReleaseDTO 发布记录DTO
+     */
     fun batchAddPublicVarGroupReleaseRecord(
         dslContext: DSLContext,
         publicVarGroupReleaseDTO: PublicVarGroupReleaseDTO
@@ -75,19 +81,13 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
-        val projectId = oldVarPOs.firstOrNull()?.projectId ?: newVarPOs.firstOrNull()?.projectId
-            ?: throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("projectId")
-            )
-        val groupName = oldVarPOs.firstOrNull()?.groupName ?: newVarPOs.firstOrNull()?.groupName
-            ?: throw ErrorCodeException(
-                errorCode = ERROR_INVALID_PARAM_,
-                params = arrayOf("groupName")
-            )
+        
+        // 验证并提取公共参数
+        val (projectId, groupName) = extractCommonParams(oldVarPOs, newVarPOs)
         val oldVersion = oldVarPOs.firstOrNull()?.version
         val newVersion = newVarPOs.firstOrNull()?.version
 
+        // 转换PO到DO
         val oldVarDOs = convertPOToDO(
             varPOs = oldVarPOs,
             projectId = projectId,
@@ -100,34 +100,97 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             groupName = groupName,
             version = newVersion
         )
+        
+        // 生成变更记录
         val releaseRecords = generateVarChangeRecords(
-            oldVars = oldVarDOs,
-            newVars = newVarDOs,
-            groupName = groupName,
-            version = publicVarGroupReleaseDTO.version,
-            userId = userId,
-            pubTime = LocalDateTime.now(),
-            versionDesc = publicVarGroupReleaseDTO.versionDesc
+            VarChangeRecordRequest(
+                oldVars = oldVarDOs,
+                newVars = newVarDOs,
+                groupName = groupName,
+                version = publicVarGroupReleaseDTO.version,
+                userId = userId,
+                pubTime = LocalDateTime.now(),
+                versionDesc = publicVarGroupReleaseDTO.versionDesc
+            )
         )
-        // 批量生成ID
-        val segmentIds = if (releaseRecords.isNotEmpty()) {
-            client.get(ServiceAllocIdResource::class)
-                .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
-        } else {
-            emptyList()
+        
+        // 如果没有变更记录，直接返回
+        if (releaseRecords.isEmpty()) {
+            logger.info("No changes detected for group: $groupName, version: ${publicVarGroupReleaseDTO.version}")
+            return
         }
-        val listSize = segmentIds?.size ?: 0
-        if (segmentIds.isNullOrEmpty() || listSize != releaseRecords.size) {
-            logger.warn("Failed to generate segment IDs for release records, size: ${releaseRecords.size}")
+        
+        // 批量生成ID并转换为PO
+        val records = convertReleaseRecordsToPO(
+            releaseRecords = releaseRecords,
+            projectId = projectId,
+            userId = userId
+        )
+        
+        // 批量插入数据库
+        pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
+    }
+
+    /**
+     * 从变量PO列表中提取公共参数（projectId和groupName）
+     * 
+     * @param oldVarPOs 旧版本变量PO列表
+     * @param newVarPOs 新版本变量PO列表
+     * @return Pair<projectId, groupName>
+     * @throws ErrorCodeException 如果无法提取projectId或groupName
+     */
+    private fun extractCommonParams(
+        oldVarPOs: List<PublicVarPO>,
+        newVarPOs: List<PublicVarPO>
+    ): Pair<String, String> {
+        // 优先从newVarPOs获取，如果为空则从oldVarPOs获取
+        val projectId = newVarPOs.firstOrNull()?.projectId 
+            ?: oldVarPOs.firstOrNull()?.projectId
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("projectId")
+            )
+        
+        val groupName = newVarPOs.firstOrNull()?.groupName
+            ?: oldVarPOs.firstOrNull()?.groupName
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_INVALID_PARAM_,
+                params = arrayOf("groupName")
+            )
+        
+        return Pair(projectId, groupName)
+    }
+
+    /**
+     * 将发布记录DO转换为PO，并批量生成ID
+     * 
+     * @param releaseRecords 发布记录DO列表
+     * @param projectId 项目ID
+     * @param userId 用户ID
+     * @return 发布记录PO列表
+     * @throws ErrorCodeException 如果ID生成失败
+     */
+    private fun convertReleaseRecordsToPO(
+        releaseRecords: List<PublicVarReleaseDO>,
+        projectId: String,
+        userId: String
+    ): List<ResourcePublicVarGroupReleaseRecordPO> {
+        // 批量生成ID
+        val segmentIds = client.get(ServiceAllocIdResource::class)
+            .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
+        
+        if (segmentIds.isNullOrEmpty() || segmentIds.size != releaseRecords.size) {
+            logger.warn("Failed to generate segment IDs for release records, expected: ${releaseRecords.size}, actual: ${segmentIds?.size ?: 0}")
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("Failed to generate segment IDs")
             )
         }
-        var index = 0
-        val records = releaseRecords.map { releaseRecord ->
+        
+        val currentTime = LocalDateTime.now()
+        return releaseRecords.mapIndexed { index, releaseRecord ->
             ResourcePublicVarGroupReleaseRecordPO(
-                id = segmentIds.get(index++) ?: 0,
+                id = segmentIds[index] ?: 0,
                 projectId = projectId,
                 groupName = releaseRecord.groupName,
                 version = releaseRecord.version,
@@ -137,12 +200,9 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 content = releaseRecord.content,
                 creator = userId,
                 modifier = userId,
-                createTime = LocalDateTime.now(),
-                updateTime = LocalDateTime.now()
+                createTime = currentTime,
+                updateTime = currentTime
             )
-        }
-        if (records.isNotEmpty()) {
-            pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
         }
     }
 
@@ -296,58 +356,51 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     }
 
     /**
+     * 变量变更记录生成请求DTO
+     */
+    data class VarChangeRecordRequest(
+        val oldVars: List<PublicVarDO>,
+        val newVars: List<PublicVarDO>,
+        val groupName: String,
+        val version: Int,
+        val userId: String,
+        val pubTime: LocalDateTime,
+        val versionDesc: String?
+    )
+
+    /**
      * 生成变量变更记录
-     * @param oldVars 旧版本变量列表
-     * @param newVars 新版本变量列表
-     * @param groupName 变量组名称
-     * @param version 版本号
-     * @param userId 用户ID
-     * @param pubTime 发布时间
-     * @param versionDesc 版本描述
+     * @param request 变量变更记录生成请求
      * @return 变更记录列表
      */
-    fun generateVarChangeRecords(
-        oldVars: List<PublicVarDO>,
-        newVars: List<PublicVarDO>,
-        groupName: String,
-        version: Int,
-        userId: String,
-        pubTime: LocalDateTime,
-        versionDesc: String?
-    ): List<PublicVarReleaseDO> {
+    fun generateVarChangeRecords(request: VarChangeRecordRequest): List<PublicVarReleaseDO> {
+        val oldVars = request.oldVars
+        val newVars = request.newVars
+        val groupName = request.groupName
+        val version = request.version
+        val userId = request.userId
+        val pubTime = request.pubTime
+        val versionDesc = request.versionDesc
         val releaseRecords = mutableListOf<PublicVarReleaseDO>()
 
         val newVarNameSet = newVars.map { it.varName }.toSet()
         val oldVarNameSet = oldVars.map { it.varName }.toSet()
+        val oldVarByName = oldVars.associateBy { it.varName }
 
         // 处理删除的变量
         val deletedVars = oldVars.filter { it.varName !in newVarNameSet }
         deletedVars.forEach { oldVar ->
-            val showInfo = mapOf(
-                PublicVarDO::alias.name to oldVar.alias,
-                PublicVarDO::desc.name to oldVar.desc,
-                PublicVarDO::defaultValue.name to oldVar.defaultValue,
-                BuildFormProperty::readOnly.name to oldVar.buildFormProperty.readOnly,
-                BuildFormProperty::required.name to oldVar.buildFormProperty.required,
-                BuildFormProperty::valueNotEmpty.name to oldVar.buildFormProperty.valueNotEmpty
-            )
-            val content = JsonUtil.toJson(
-                mapOf(
-                    OPERATE to OperateTypeEnum.DELETE,
-                    PublicVarDO::varName.name to oldVar.varName,
-                    TYPE to oldVar.type.name,
-                    SHOW_INFO to showInfo
-                )
-            )
-
             releaseRecords.add(
-                PublicVarReleaseDO(
+                buildReleaseDO(
                     groupName = groupName,
                     version = version,
-                    publisher = userId,
+                    userId = userId,
                     pubTime = pubTime,
-                    content = content,
-                    desc = versionDesc
+                    versionDesc = versionDesc,
+                    operate = OperateTypeEnum.DELETE,
+                    varName = oldVar.varName,
+                    type = oldVar.type.name,
+                    showInfo = buildShowInfoFromVar(oldVar)
                 )
             )
         }
@@ -355,48 +408,27 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         // 处理新增的变量
         val addedVars = newVars.filter { it.varName !in oldVarNameSet }
         addedVars.forEach { newVar ->
-            val showInfo = mapOf(
-                PublicVarDO::alias.name to newVar.alias,
-                PublicVarDO::desc.name to newVar.desc,
-                PublicVarDO::defaultValue.name to newVar.defaultValue,
-                BuildFormProperty::required.name to newVar.buildFormProperty.required,
-                BuildFormProperty::readOnly.name to newVar.buildFormProperty.readOnly,
-                BuildFormProperty::valueNotEmpty.name to newVar.buildFormProperty.valueNotEmpty
-            )
-            val content = JsonUtil.toJson(
-                mapOf(
-                    OPERATE to OperateTypeEnum.CREATE,
-                    PublicVarDO::varName.name to newVar.varName,
-                    TYPE to newVar.type.name,
-                    SHOW_INFO to showInfo
-                )
-            )
-
             releaseRecords.add(
-                PublicVarReleaseDO(
+                buildReleaseDO(
                     groupName = groupName,
                     version = version,
-                    publisher = userId,
+                    userId = userId,
                     pubTime = pubTime,
-                    content = content,
-                    desc = versionDesc
+                    versionDesc = versionDesc,
+                    operate = OperateTypeEnum.CREATE,
+                    varName = newVar.varName,
+                    type = newVar.type.name,
+                    showInfo = buildShowInfoFromVar(newVar)
                 )
             )
         }
 
-        // 处理修改的变量
+        // 处理修改的变量（存在旧集合中且至少有一个字段发生变化）
         val modifiedVars = newVars.filter { newVar ->
-            newVar.varName in oldVarNameSet &&
-                    oldVars.any { oldVar ->
-                        oldVar.varName == newVar.varName &&
-                                (oldVar.alias != newVar.alias ||
-                                        oldVar.desc != newVar.desc ||
-                                        oldVar.defaultValue != newVar.defaultValue ||
-                                        !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty))
-                    }
+            newVar.varName in oldVarNameSet && isVarContentModified(oldVarByName[newVar.varName]!!, newVar)
         }
         modifiedVars.forEach { newVar ->
-            val oldVar = oldVars.first { it.varName == newVar.varName }
+            val oldVar = oldVarByName[newVar.varName]!!
 
             // 收集所有变更字段
             val changes = mutableMapOf<String, Map<String, Any?>>()
@@ -408,7 +440,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 changes[PublicVarDO::desc.name] = mapOf(OLD_VALUE to oldVar.desc, NEW_VALUE to newVar.desc)
             }
             if (oldVar.defaultValue != newVar.defaultValue) {
-                changes[PublicVarDO::defaultValue.name] = mapOf(OLD_VALUE to oldVar.defaultValue, NEW_VALUE to newVar.defaultValue)
+                changes[PublicVarDO::defaultValue.name] =
+                    mapOf(OLD_VALUE to oldVar.defaultValue, NEW_VALUE to newVar.defaultValue)
             }
 
             // 直接比较BuildFormProperty对象的属性
@@ -425,44 +458,118 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             }
             if (oldBuildFormProperty.valueNotEmpty != newBuildFormProperty.valueNotEmpty) {
                 changes[BuildFormProperty::valueNotEmpty.name] = mapOf(
-                    OLD_VALUE to oldBuildFormProperty.valueNotEmpty,
-                    NEW_VALUE to newBuildFormProperty.valueNotEmpty
+                    OLD_VALUE to oldBuildFormProperty.valueNotEmpty, NEW_VALUE to newBuildFormProperty.valueNotEmpty
                 )
             }
 
             if (changes.isNotEmpty()) {
-                val showInfo = mapOf(
-                    PublicVarDO::alias.name to newVar.alias,
-                    PublicVarDO::desc.name to newVar.desc,
-                    BuildFormProperty::required.name to newVar.buildFormProperty.required,
-                    BuildFormProperty::readOnly.name to newVar.buildFormProperty.readOnly,
-                    PublicVarDO::defaultValue.name to newVar.defaultValue,
-                    BuildFormProperty::valueNotEmpty.name to newVar.buildFormProperty.valueNotEmpty
-                )
-                val content = JsonUtil.toJson(
-                    mapOf(
-                        OPERATE to OperateTypeEnum.UPDATE,
-                        PublicVarDO::varName.name to newVar.varName,
-                        CHANGES to changes,
-                        TYPE to newVar.type.name,
-                        SHOW_INFO to showInfo
-                    )
-                )
-
+                val showInfo = buildShowInfoFromVar(newVar)
                 releaseRecords.add(
-                    PublicVarReleaseDO(
+                    buildReleaseDOForUpdate(
                         groupName = groupName,
                         version = version,
-                        publisher = userId,
+                        userId = userId,
                         pubTime = pubTime,
-                        content = content,
-                        desc = versionDesc
+                        versionDesc = versionDesc,
+                        varName = newVar.varName,
+                        type = newVar.type.name,
+                        changes = changes,
+                        showInfo = showInfo
                     )
                 )
             }
         }
 
         return releaseRecords
+    }
+
+    /**
+     * 从 PublicVarDO 构建 SHOW_INFO 映射（用于发布记录 content）
+     */
+    private fun buildShowInfoFromVar(varDO: PublicVarDO): Map<String, Any?> {
+        return mapOf(
+            PublicVarDO::alias.name to varDO.alias,
+            PublicVarDO::desc.name to varDO.desc,
+            PublicVarDO::defaultValue.name to varDO.defaultValue,
+            BuildFormProperty::required.name to varDO.buildFormProperty.required,
+            BuildFormProperty::readOnly.name to varDO.buildFormProperty.readOnly,
+            BuildFormProperty::valueNotEmpty.name to varDO.buildFormProperty.valueNotEmpty
+        )
+    }
+
+    /**
+     * 构建单条发布记录 DO（新增/删除场景）
+     */
+    private fun buildReleaseDO(
+        groupName: String,
+        version: Int,
+        userId: String,
+        pubTime: LocalDateTime,
+        versionDesc: String?,
+        operate: OperateTypeEnum,
+        varName: String,
+        type: String,
+        showInfo: Map<String, Any?>
+    ): PublicVarReleaseDO {
+        val content = JsonUtil.toJson(
+            mapOf(
+                OPERATE to operate,
+                PublicVarDO::varName.name to varName,
+                TYPE to type,
+                SHOW_INFO to showInfo
+            )
+        )
+        return PublicVarReleaseDO(
+            groupName = groupName,
+            version = version,
+            publisher = userId,
+            pubTime = pubTime,
+            content = content,
+            desc = versionDesc
+        )
+    }
+
+    /**
+     * 构建单条发布记录 DO（修改场景）
+     */
+    private fun buildReleaseDOForUpdate(
+        groupName: String,
+        version: Int,
+        userId: String,
+        pubTime: LocalDateTime,
+        versionDesc: String?,
+        varName: String,
+        type: String,
+        changes: Map<String, Map<String, Any?>>,
+        showInfo: Map<String, Any?>
+    ): PublicVarReleaseDO {
+        val content = JsonUtil.toJson(
+            mapOf(
+                OPERATE to OperateTypeEnum.UPDATE,
+                PublicVarDO::varName.name to varName,
+                CHANGES to changes,
+                TYPE to type,
+                SHOW_INFO to showInfo
+            )
+        )
+        return PublicVarReleaseDO(
+            groupName = groupName,
+            version = version,
+            publisher = userId,
+            pubTime = pubTime,
+            content = content,
+            desc = versionDesc
+        )
+    }
+
+    /**
+     * 判断变量内容是否有变更（别名、描述、默认值、buildFormProperty 任一不同即视为已修改）
+     */
+    private fun isVarContentModified(oldVar: PublicVarDO, newVar: PublicVarDO): Boolean {
+        return oldVar.alias != newVar.alias ||
+                oldVar.desc != newVar.desc ||
+                oldVar.defaultValue != newVar.defaultValue ||
+                !isBuildFormPropertyEqual(oldVar.buildFormProperty, newVar.buildFormProperty)
     }
 
     /**
@@ -480,11 +587,12 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 将PublicVarPO转换为PublicVarDO
-     * 将数据库实体对象转换为业务对象，包括解析buildFormProperty JSON字符串
+     * 将数据库实体对象转换为业务对象，包括解析buildFormProperty JSON字符串和批量查询引用计数
+     * 
      * @param varPOs 数据库实体对象列表
      * @param projectId 项目ID
      * @param groupName 变量组名称
-     * @param version 版本号（可为null）
+     * @param version 版本号（可为null，用于设置buildFormProperty.varGroupVersion）
      * @return 业务对象列表
      */
     fun convertPOToDO(
@@ -497,18 +605,19 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
         // 批量查询引用计数（从 T_PIPELINE_PUBLIC_VAR_VERSION_SUMMARY 表读取，汇总所有版本）
         val varNames = varPOs.map { it.varName }
-        val referCountMap = if (varNames.isNotEmpty()) {
-            publicVarVersionSummaryDao.batchGetTotalReferCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                varNames = varNames
-            )
-        } else {
-            emptyMap()
-        }
+        val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            varNames = varNames
+        )
 
         return varPOs.map { po ->
+            val buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java)
+            // 如果提供了version，设置到buildFormProperty中
+            if (version != null) {
+                buildFormProperty.varGroupVersion = version
+            }
             val actualReferCount = referCountMap[po.varName] ?: 0
             PublicVarDO(
                 varName = po.varName,
@@ -517,7 +626,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 type = po.type,
                 valueType = po.valueType,
                 defaultValue = po.defaultValue,
-                buildFormProperty = JsonUtil.to(po.buildFormProperty, BuildFormProperty::class.java),
+                buildFormProperty = buildFormProperty,
                 referCount = actualReferCount
             )
         }
