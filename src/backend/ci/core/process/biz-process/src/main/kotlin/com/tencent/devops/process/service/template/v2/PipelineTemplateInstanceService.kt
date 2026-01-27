@@ -20,7 +20,6 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedErrors
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedMsg
@@ -663,7 +662,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineModel = model,
-                        templateModel = templateModel,
                         templateParams = templateParams,
                         pipelineTemplateInfo = pipelineTemplateInfo,
                         pipelineId2TemplateRelated = pipelineId2TemplateRelated,
@@ -734,7 +732,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipelineModel: Model,
-        templateModel: Model,
         templateParams: List<BuildFormProperty>,
         pipelineTemplateInfo: PipelineTemplateInfoV2,
         pipelineId2TemplateRelated: Map<String, PipelineTemplateRelated>,
@@ -774,16 +771,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
             templateParams = templateParams,
             pipelineParams = instanceTriggerContainer.params
         )
-        // 模板中的buildNo存在才需要回显
-        // 将实例自己维护的当前值一起返回
-        val instanceBuildNoObj = templateModel.getTriggerContainer().buildNo?.let { no ->
-            BuildNo(
-                buildNoType = no.buildNoType,
-                required = no.required ?: instanceTriggerContainer.buildNo?.required,
-                buildNo = no.buildNo,
-                currentBuildNo = pipelineCurrentBuildNos[pipelineId]
-            )
-        }
+        val instanceBuildNoObj = instanceTriggerContainer.buildNo?.copy(
+            currentBuildNo = pipelineCurrentBuildNos[pipelineId]
+        )
         return pipelineId to TemplateInstanceParams(
             pipelineId = pipelineId,
             pipelineName = pipelineId2Name[pipelineId] ?: "",
