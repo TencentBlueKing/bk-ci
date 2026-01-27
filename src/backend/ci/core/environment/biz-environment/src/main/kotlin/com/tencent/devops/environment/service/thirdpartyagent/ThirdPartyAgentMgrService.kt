@@ -1340,8 +1340,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 )
             }
 
-            heartbeatTags[NodeBaseInfo::nodeId.name] = nodeRecord.nodeHashId
-            heartbeatTags[NodeBaseInfo::displayName.name] = nodeRecord.displayName
             val oldUserProps = getUserProps(projectId, agentId = agentId, record = agentRecord)
 
             var agentChanged = false
@@ -1425,6 +1423,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
             heartbeatMetrics[NewHeartbeatInfo::parallelTaskCount.name] = agentRecord.parallelTaskCount
             heartbeatMetrics[NewHeartbeatInfo::dockerParallelTaskCount.name] = agentRecord.dockerParallelTaskCount
+            heartbeatMetrics[NewHeartbeatInfo::busyTaskSize.name] = newHeartbeatInfo.busyTaskSize
+            heartbeatMetrics[NewHeartbeatInfo::dockerBusyTaskSize.name] = newHeartbeatInfo.dockerBusyTaskSize
+            heartbeatTags[NodeBaseInfo::nodeId.name] = nodeRecord.nodeHashId
+            heartbeatTags[NodeBaseInfo::displayName.name] = nodeRecord.displayName
             heartbeatTags[NewHeartbeatInfo::agentIp.name] = agentRecord.ip
             HeartbeatResponse(
                 // 避免老的没有删除 master 校验的版本进程阻塞导致心跳异常
@@ -1447,8 +1449,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         thirdPartyAgentHeartbeatUtils.saveNewHeartbeat(projectId, agentId, newHeartbeatInfo)
         online?.let { thirdPartAgentService.addAgentAction(projectId, agentId, action = AgentAction.ONLINE) }
-        heartbeatMetrics[NewHeartbeatInfo::busyTaskSize.name] = newHeartbeatInfo.busyTaskSize
-        heartbeatMetrics[NewHeartbeatInfo::dockerBusyTaskSize.name] = newHeartbeatInfo.dockerBusyTaskSize
         agentMetricService.reportAgentMetrics(
             fields = heartbeatMetrics,
             name = AGENT_TELEGRAF_HEARTBEAT,
