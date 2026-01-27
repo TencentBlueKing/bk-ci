@@ -183,6 +183,9 @@ class TencentAgentMetricService @Autowired constructor(
         tags: Map<String, String>?,
         timestamp: Long?
     ): Boolean {
+        if (fields.isNullOrEmpty() || tags.isNullOrEmpty()) {
+            return false
+        }
         sendMetric(
             name,
             listOf(
