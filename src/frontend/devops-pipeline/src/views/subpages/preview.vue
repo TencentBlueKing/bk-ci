@@ -563,17 +563,6 @@
                             ...this.versionParamValues
                         }
                     })
-                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
-                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
-                        this.buildNo.isChanged = true
-
-                        this.setExecuteParams({
-                            pipelineId: this.pipelineId,
-                            params: {
-                                buildNo: this.buildNo
-                            }
-                        })
-                    }
                 }
             },
             async handleValidate () {
