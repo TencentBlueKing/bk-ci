@@ -1022,50 +1022,13 @@ abstract class ImageReleaseService {
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                val releaseImageRecords = marketImageDao.getReleaseImagesByCode(context, validImageCode)
-                if (null != releaseImageRecords && releaseImageRecords.size > 0) {
-                    val isLatestFlagImage = imageRecord.latestFlag
-                    marketImageDao.updateImageStatusInfoById(
-                        dslContext = context,
-                        imageId = imageRecord.id,
-                        userId = validUserId,
-                        imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                            imageStatus = ImageStatusEnum.UNDERCARRIAGED,
-                            imageStatusMsg = reason,
-                            latestFlag = false
-                        )
-                    )
-                    // 当下架的版本是latestFlag=true的版本时，需要把其他版本的latestFlag置为true
-                    if (isLatestFlagImage) {
-                        // 过滤掉当前下架的版本，获取剩余的已发布版本
-                        val remainingReleaseImages = releaseImageRecords.filter { it.id != imageRecord.id }
-                        if (remainingReleaseImages.isEmpty()) {
-                            val newestUndercarriagedImage =
-                                marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
-                            if (null != newestUndercarriagedImage) {
-                                marketImageDao.updateImageStatusInfoById(
-                                    dslContext = context,
-                                    imageId = newestUndercarriagedImage.id,
-                                    userId = validUserId,
-                                    imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                        latestFlag = true
-                                    )
-                                )
-                            }
-                        } else {
-                            // 把剩余发布版本中最新的版本的latestFlag置为true
-                            val tmpImageRecord = remainingReleaseImages[0]
-                            marketImageDao.updateImageStatusInfoById(
-                                dslContext = context,
-                                imageId = tmpImageRecord.id,
-                                userId = validUserId,
-                                imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                    latestFlag = true
-                                )
-                            )
-                        }
-                    }
-                }
+                handleOfflineImageByVersion(
+                    context = context,
+                    imageCode = validImageCode,
+                    imageId = imageRecord.id,
+                    userId = validUserId,
+                    reason = reason
+                )
             }
         } else {
             // 把镜像所有已发布的版本全部下架
@@ -1091,6 +1054,55 @@ abstract class ImageReleaseService {
         }
         logger.info("$interfaceName:offlineMarketImage:Output:true")
         return Result(true)
+    }
+
+    private fun handleOfflineImageByVersion(
+        context: DSLContext,
+        imageCode: String,
+        imageId: String,
+        userId: String,
+        reason: String?
+    ) {
+        marketImageDao.updateImageStatusInfoById(
+            dslContext = context,
+            imageId = imageId,
+            userId = userId,
+            imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                imageStatus = ImageStatusEnum.UNDERCARRIAGED,
+                imageStatusMsg = reason,
+                latestFlag = false
+            )
+        )
+        // get released image count
+        val releaseCount = marketImageDao.countReleaseImageByCode(context, imageCode)
+        val tmpImageId = if (releaseCount > 0) {
+            // get max version released image record
+            val maxReleaseVersionRecord = marketImageDao.getMaxVersionImageByCode(
+                dslContext = context,
+                imageCode = imageCode,
+                imageStatus = ImageStatusEnum.RELEASED
+            )
+            maxReleaseVersionRecord?.id
+        } else {
+            // get max version undercarriaged image record
+            val maxUndercarriagedVersionRecord = marketImageDao.getMaxVersionImageByCode(
+                dslContext = context,
+                imageCode = imageCode,
+                imageStatus = ImageStatusEnum.UNDERCARRIAGED
+            )
+            maxUndercarriagedVersionRecord?.id
+        }
+        if (null != tmpImageId) {
+            marketImageDao.cleanLatestFlag(context, imageCode)
+            marketImageDao.updateImageStatusInfoById(
+                dslContext = context,
+                imageId = tmpImageId,
+                userId = userId,
+                imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                    latestFlag = true
+                )
+            )
+        }
     }
 
     /**

@@ -134,16 +134,4 @@ interface UserImageCommentResource {
         @PathParam("commentId")
         commentId: String
     ): Result<Int>
-
-    @Operation(summary = "根据镜像标识获取镜像回显版本信息")
-    @GET
-    @Path("/images/{imageCode}/showVersionInfo")
-    fun getImageShowVersionInfo(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "imageCode", required = true)
-        @PathParam("imageCode")
-        imageCode: String
-    ): Result<StoreShowVersionInfo>
 }

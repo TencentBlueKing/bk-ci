@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
@@ -152,4 +153,16 @@ interface UserImageReleaseResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ImageAgentTypeInfo>>
+
+    @Operation(summary = "根据镜像标识获取镜像回显版本信息")
+    @GET
+    @Path("/images/{imageCode}/showVersionInfo")
+    fun getImageShowVersionInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "imageCode", required = true)
+        @PathParam("imageCode")
+        imageCode: String
+    ): Result<StoreShowVersionInfo>
 }

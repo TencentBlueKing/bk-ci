@@ -593,10 +593,19 @@ class MarketImageDao @Autowired constructor() {
     /**
      * 根据镜像标识获取版本号最大的镜像记录
      */
-    fun getMaxVersionImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
+    fun getMaxVersionImageByCode(
+        dslContext: DSLContext,
+        imageCode: String,
+        imageStatus: ImageStatusEnum? = null
+    ): TImageRecord? {
         return with(TImage.T_IMAGE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(IMAGE_CODE.eq(imageCode))
+            if (imageStatus != null) {
+                conditions.add(IMAGE_STATUS.eq(imageStatus.status.toByte()))
+            }
             dslContext.selectFrom(this)
-                .where(IMAGE_CODE.eq(imageCode))
+                .where(conditions)
                 .orderBy(
                     JooqUtils.subStr(
                         str = VERSION,

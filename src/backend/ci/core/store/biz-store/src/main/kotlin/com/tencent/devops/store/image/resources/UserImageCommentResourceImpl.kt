@@ -108,8 +108,4 @@ class UserImageCommentResourceImpl @Autowired constructor(
     override fun updateStoreCommentPraiseCount(userId: String, commentId: String): Result<Int> {
         return storeCommentService.updateStoreCommentPraiseCount(userId, commentId)
     }
-
-    override fun getImageShowVersionInfo(userId: String, imageCode: String): Result<StoreShowVersionInfo> {
-        return marketImageService.getImageShowVersionInfo(userId, imageCode)
-    }
 }
