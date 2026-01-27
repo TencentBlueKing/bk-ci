@@ -213,7 +213,7 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
 
     override fun getComponentBaseInfoByCodes(
         storeType: StoreTypeEnum,
-        storeCodes: Set<String>
+        storeCodes: Set<String>?
     ): Result<List<StoreBaseInfo>> {
         return Result(
             storeComponentQueryService.getComponentBaseInfoList(

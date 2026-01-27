@@ -62,7 +62,8 @@ class UserPipelineTriggerEventResourceImpl(
 
     override fun listEventType(
         userId: String,
-        scmType: ScmType?
+        scmType: ScmType?,
+        channelCode: String?
     ): Result<List<IdValue>> {
         val eventTypes = CodeEventType.getEventsByScmType(scmType).map {
             IdValue(

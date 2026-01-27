@@ -134,7 +134,7 @@ class StoreBaseQueryDao {
 
     fun getLatestComponentByCodes(
         dslContext: DSLContext,
-        storeCodes: Set<String>,
+        storeCodes: Set<String>?,
         storeType: StoreTypeEnum,
         storeStatus: StoreStatusEnum? = null
     ): Result<TStoreBaseRecord> {
@@ -142,12 +142,14 @@ class StoreBaseQueryDao {
             dslContext.selectFrom(this)
                     .where(
                         mutableListOf(
-                            STORE_CODE.`in`(storeCodes),
                             STORE_TYPE.eq(storeType.type.toByte()),
                             LATEST_FLAG.eq(true)
                         ).let {
                             if (storeStatus != null) {
                                 it.add(STATUS.eq(storeStatus.name))
+                            }
+                            if (!storeCodes.isNullOrEmpty()) {
+                                it.add(STORE_CODE.`in`(storeCodes))
                             }
                             it
                         }

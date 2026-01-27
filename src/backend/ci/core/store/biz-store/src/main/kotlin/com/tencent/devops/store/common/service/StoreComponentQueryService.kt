@@ -179,7 +179,7 @@ interface StoreComponentQueryService {
      */
     fun getComponentBaseInfoList(
         storeType: StoreTypeEnum,
-        storeCodes: Set<String>
+        storeCodes: Set<String>?
     ): List<StoreBaseInfo>
 
     /**

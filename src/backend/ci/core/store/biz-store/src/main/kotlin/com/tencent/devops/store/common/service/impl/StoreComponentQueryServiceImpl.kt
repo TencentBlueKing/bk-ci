@@ -1010,17 +1010,13 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
 
     override fun getComponentBaseInfoList(
         storeType: StoreTypeEnum,
-        storeCodes: Set<String>
-    ) = if (storeCodes.isEmpty()) {
-        listOf()
-    } else {
-        storeBaseQueryDao.getLatestComponentByCodes(
-            dslContext = dslContext,
-            storeCodes = storeCodes,
-            storeType = storeType
-        ).map {
-            it.convertStoreBaseInfo()
-        }
+        storeCodes: Set<String>?
+    ) = storeBaseQueryDao.getLatestComponentByCodes(
+        dslContext = dslContext,
+        storeCodes = storeCodes,
+        storeType = storeType
+    ).map {
+        it.convertStoreBaseInfo()
     }
 
     private fun TStoreBaseRecord.convertStoreBaseInfo() = StoreBaseInfo(

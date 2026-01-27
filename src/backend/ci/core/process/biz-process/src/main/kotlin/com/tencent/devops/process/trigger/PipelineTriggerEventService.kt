@@ -29,16 +29,19 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -62,6 +65,8 @@ import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryPermissionResource
 import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -510,6 +515,40 @@ class PipelineTriggerEventService @Autowired constructor(
         pipelineId = pipelineId,
         buildId = buildId
     )
+
+    fun listEventType(
+        userId: String,
+        scmType: ScmType?,
+        channelCode: String?
+    ): List<IdValue> {
+        when(channelCode) {
+            // TODO: 改成常量
+            "CREATIVE_STREAM" -> {
+                client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
+                    storeType = StoreTypeEnum.TRIGGER_EVENT,
+                    null
+                ).data?.map {
+                    IdValue(
+                        id = it.storeCode,
+                        value = it.storeName
+                    )
+                }
+            }
+            else -> {
+                CodeEventType.getEventsByScmType(scmType).map {
+                    IdValue(
+                        id = it.name,
+                        value = I18nUtil.getCodeLanMessage(
+                            messageCode = "${CodeEventType.MESSAGE_CODE_PREFIX}_${it.name}",
+                            defaultMessage = it.name,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    )
+                }
+            }
+        }
+        return listOf()
+    }
 
     /**
      * 获取国际化构建事件描述
