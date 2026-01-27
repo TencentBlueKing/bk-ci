@@ -710,7 +710,8 @@
       "glob": "Filter rules"
     },
     "propertyUpdated": "Updated",
-    "toInstance": "To instantiate"
+    "toInstance": "To instantiate",
+    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis."
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",
