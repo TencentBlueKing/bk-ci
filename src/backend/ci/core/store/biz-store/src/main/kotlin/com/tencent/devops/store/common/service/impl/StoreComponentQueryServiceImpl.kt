@@ -887,32 +887,6 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         return Result(record.value1())
     }
 
-    override fun getComponentCount(
-        userId: String,
-        queryComponentsParam: QueryComponentsParam
-    ): Int {
-        val storeType = StoreTypeEnum.valueOf(queryComponentsParam.storeType)
-        val classifyId = queryComponentsParam.classifyCode?.let {
-            classifyDao.getClassifyByCode(
-                dslContext = dslContext,
-                classifyCode = it,
-                type = storeType
-            )
-        }
-        val categoryIds = queryComponentsParam.categoryCodes?.let { queryComponentsCategoryIds(storeType, it) }
-        val labelIds = queryComponentsParam.labelCodes?.let {
-            labelDao.getIdsByCodes(dslContext, it.split(","), storeType.type.toByte())
-        }
-        val count = storeBaseQueryDao.countComponents(
-            dslContext = dslContext,
-            queryComponentsParam = queryComponentsParam,
-            classifyId = classifyId?.id,
-            categoryIds = categoryIds,
-            labelIds = labelIds
-        )
-        return count;
-    }
-
     override fun getComponentGroupCount(userId: String, queryGroupParam: QueryGroupParam): List<Pair<String, Int>> {
         val watcher = Watcher("getComponentGroupCount|$userId|$queryGroupParam")
         watcher.start("queryComponents")

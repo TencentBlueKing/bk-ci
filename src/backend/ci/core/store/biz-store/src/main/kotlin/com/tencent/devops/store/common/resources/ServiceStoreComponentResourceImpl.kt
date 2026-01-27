@@ -196,7 +196,6 @@ class ServiceStoreComponentResourceImpl @Autowired constructor(
     }
 
     override fun getComponentDataInfoByCode(
-        userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String?,

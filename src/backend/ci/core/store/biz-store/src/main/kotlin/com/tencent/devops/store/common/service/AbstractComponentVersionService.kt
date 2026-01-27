@@ -3,11 +3,11 @@ package com.tencent.devops.store.common.service
 import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.version.VersionInfo
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Record
 import org.jooq.Result
 

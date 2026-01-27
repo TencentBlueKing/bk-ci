@@ -170,7 +170,7 @@ object StoreUtils {
     }
 
     fun getVersionService(storeType: StoreTypeEnum): AbstractComponentVersionService {
-        val beanName = StoreUtils.getVersionServiceBeanName(storeType)
+        val beanName = getVersionServiceBeanName(storeType)
         return if (SpringContextUtil.isBeanExist(beanName)) {
             SpringContextUtil.getBean(AbstractComponentVersionService::class.java, beanName)
         } else {
