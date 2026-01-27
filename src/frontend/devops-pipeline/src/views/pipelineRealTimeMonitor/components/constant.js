@@ -1,7 +1,6 @@
-import { time } from "echarts"
-
 export const jumpUrlPre = 'https://bkmonitor.woa.com/grafana/dashboard?'
 
+export const jumpUrlPostBuildResource = `${window.BK_PAAS_PRIVATE_URL}/console/environment`
 /**
  * 生成完整跳转URL
  * @param {string} urlParams - URL参数字符串
@@ -151,6 +150,10 @@ export const goMonitorBoard = (projectId, from, to) => {
     return `spaceUid=bkci__${projectId}&dashName=BKCI-运行中的任务&from=${from}&to=${to}`
 }
 
+export const buildNodesUrl =(projectId,status)=>{
+    return `${jumpUrlPostBuildResource}/${projectId}/pipeline/node/THIRDPARTY?nodeStatus=${status}`
+}
+
 export const urlMap = {
 
     runningPipelines: runningPipelinesUrl,
@@ -190,5 +193,7 @@ export const urlMap = {
     downloadArtifacts: downloadArtifactsUrl,
 
     goMonitorBoard: goMonitorBoard,
+
+
 
 }

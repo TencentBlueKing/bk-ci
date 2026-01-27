@@ -6,6 +6,7 @@
                 v-for="(item, index) in legendData"
                 :key="index"
                 class="legend-item"
+                @click="handleClick(item.label)"
             >
                 <span
                     class="legend-icon"
@@ -52,7 +53,8 @@
                 default: () => []
             }
         },
-        setup (props) {
+        emits: ['item-click'],
+        setup (props, { emit }) {
             // 图例数据（不包含其它发节点）
             const legendData = computed(() => {
                 return props.data.filter(item => item.type !== 'other-load')
@@ -96,11 +98,17 @@
                 }))
             })
 
+            const handleClick = (label) => {
+                console.log('click',label)
+                emit('item-click', label)
+            }
+
             return {
                 legendData,
                 firstRowData,
                 secondRowData,
-                canUsePercentage
+                canUsePercentage,
+                handleClick
             }
         }
     })

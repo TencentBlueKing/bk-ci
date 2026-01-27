@@ -3,8 +3,9 @@ import {
 } from '@/store/constants'
 import ajax from '@/utils/request'
 
-const prefix = `/${MERTICS_URL_PREFIX}/user/metrics/query/`
 
+const prefix = `/${MERTICS_URL_PREFIX}/user/metrics/query/`
+const prefixBuild ='/ms/environment/api/user/envnode/'
 const stateParams = {
     format: "table",
     type: "instant"
@@ -21,6 +22,13 @@ const actions = {
             ...params
         }
         return ajax.post(`${prefix}`, paramsMerge).then(response => {
+            return response.data
+        })
+    },
+
+    getBuildResource (_,params) {
+
+        return ajax.post(`${prefixBuild}/${params}`, {}).then(response => {
             return response.data
         })
     }

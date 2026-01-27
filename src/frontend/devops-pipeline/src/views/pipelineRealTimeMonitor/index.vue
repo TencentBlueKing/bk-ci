@@ -32,7 +32,7 @@
 
         <!-- 当前构建资源 & 当前资源使用 -->
         <div class="dual-section">
-            <BuildResources />
+            <BuildResources @item-click="handleClickJump" />
             <ResourceUsage
                 :time-range="timeRange"
                 @item-click="handleClickJump"
@@ -59,7 +59,7 @@
     import BuildResources from './components/BuildResources.vue'
     import ResourceUsage from './components/ResourceUsage.vue'
     import ArtifactRepository from './components/ArtifactRepository.vue'
-    import { generateJumpUrl, urlMap } from './components/constant'
+    import { generateJumpUrl, urlMap,buildNodesUrl } from './components/constant'
     import { getTimeRange24h,convertTimeToTimestamp } from './components/util'
     import DatePicker from '@blueking/date-picker/vue2'
     import '@blueking/date-picker/vue2/vue2.css'
@@ -101,6 +101,17 @@
             const handleClickJump = (val) => {
                 const [originalStartTime, endTime] = timeRange.value
                 let startTime = originalStartTime
+                console.log('click',val)
+                if(val==='availableNodes'||val==='offlineNodes'){
+                    const statusMap = {
+                        availableNodes: 'NORMAL',
+                        offlineNodes: 'ABNORMAL'
+                    }
+                    const currentUrl = buildNodesUrl(proxy.$route.params.projectId,statusMap[val])
+                    console.log(currentUrl,'currentUrlcurrentUrl')
+                    window.open(currentUrl, '_blank')
+                    return
+                }
                 
                 // 针对当前流水线状态的项目，进行时间范围限制处理
                 const currentPipelineStatusIds = ['runningPipelines', 'waitingPipelines', 'waitingJob', 'auditPipelines']
