@@ -315,7 +315,7 @@ interface ServiceStoreComponentResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件CODE集合", required = true)
+        @Parameter(description = "组件CODE集合", required = false)
         storeCodes: Set<String>?
     ): Result<List<StoreBaseInfo>>
 }
