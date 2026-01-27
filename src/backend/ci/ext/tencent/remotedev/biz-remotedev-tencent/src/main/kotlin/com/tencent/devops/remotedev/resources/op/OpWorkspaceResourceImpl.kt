@@ -72,7 +72,12 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         workspaceStatus: WorkspaceStatus
     ): Result<Boolean> {
-        workspaceCommon.updateStatusAndCreateHistory(workspaceName, workspaceStatus, WorkspaceAction.SYSTEM_CHANGES)
+        workspaceCommon.updateStatusAndCreateHistory(
+            workspaceName = workspaceName,
+            newStatus = workspaceStatus,
+            action = WorkspaceAction.SYSTEM_CHANGES,
+            allowUpdateDeleted = true  // OP 管理接口允许修改 DELETED 状态，主要用于捞回已删除实例。
+        )
         return Result(true)
     }
 

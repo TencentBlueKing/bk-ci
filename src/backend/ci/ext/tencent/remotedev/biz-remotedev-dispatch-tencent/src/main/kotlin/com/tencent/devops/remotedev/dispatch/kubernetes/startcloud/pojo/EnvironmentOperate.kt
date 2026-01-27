@@ -22,7 +22,8 @@ data class EnvironmentOperate(
     val imageName: String? = null,
     val tolerations: List<Toleration>? = null,
     val nodeSelector: Map<String, String>? = null,
-    val force: Boolean = false
+    val force: Boolean = false,
+    val delaySeconds: Int? = null
 ) : EnvironmentOperateInf(uid)
 
 /**

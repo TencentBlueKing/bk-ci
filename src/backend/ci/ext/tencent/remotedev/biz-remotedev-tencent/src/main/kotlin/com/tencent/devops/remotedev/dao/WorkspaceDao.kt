@@ -418,7 +418,8 @@ class WorkspaceDao {
     fun updateWorkspaceStatus(
         dslContext: DSLContext,
         workspaceName: String,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        allowUpdateDeleted: Boolean = false
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
@@ -426,7 +427,15 @@ class WorkspaceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                 .where(NAME.eq(workspaceName))
-                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .let {
+                    if (allowUpdateDeleted) {
+                        // 管理员场景：允许更新任何状态的工作空间
+                        it
+                    } else {
+                        // 普通场景：不允许更新已删除的工作空间
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    }
+                }
                 .execute()
         }
     }
