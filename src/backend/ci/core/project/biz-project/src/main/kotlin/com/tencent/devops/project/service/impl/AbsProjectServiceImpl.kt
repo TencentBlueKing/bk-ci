@@ -117,6 +117,7 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import jakarta.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -126,7 +127,6 @@ import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
-import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -231,6 +231,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             needValidate = createExtInfo.needValidate!!,
             projectCreateInfo = projectCreateInfo
         )
+        projectCreateInfo.properties?.let {
+            it.enableShareArtifact = false
+        }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
         val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
@@ -625,6 +628,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             )
                         }
                     }
+                    // 同步共享制品开关变更到 BkRepo
+                    projectExtService.syncShareArtifactIfChanged(
+                        userId = userId,
+                        projectId = englishName,
+                        oldProperties = properties,
+                        newProperties = projectUpdateInfo.properties
+                    )
                 }
                 // 记录项目更新记录
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
