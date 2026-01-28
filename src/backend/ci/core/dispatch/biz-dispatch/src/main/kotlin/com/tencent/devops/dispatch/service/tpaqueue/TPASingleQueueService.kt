@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.service.tpaqueue
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
@@ -244,6 +245,14 @@ class TPASingleQueueService @Autowired constructor(
         agent: ThirdPartyAgent,
         envId: Long?
     ) {
+        // 上报资源交付中
+        BeanUtil.getDispatchMessageTracking().trackResourceDelivering(
+            buildId = data.buildId,
+            vmSeqId = data.vmSeqId,
+            executeCount = data.executeCount ?: 1,
+            operator = "${this::class.java.simpleName}.inQueue"
+        )
+
         thirdPartyAgentService.queueBuild(
             agent = agent,
             dispatchData = data,

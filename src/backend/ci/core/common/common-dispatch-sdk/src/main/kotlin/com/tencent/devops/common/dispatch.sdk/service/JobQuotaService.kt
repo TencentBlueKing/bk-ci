@@ -34,6 +34,7 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -103,6 +104,7 @@ class JobQuotaService constructor(
             handleJobQuotaOverrun(
                 logPrefix = logPrefix,
                 buildId = buildId,
+                vmSeqId = vmSeqId,
                 containerId = containerId,
                 containerHashId = containerHashId,
                 executeCount = executeCount,
@@ -127,6 +129,7 @@ class JobQuotaService constructor(
     fun handleJobQuotaOverrun(
         logPrefix: String,
         buildId: String,
+        vmSeqId: String,
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
@@ -194,7 +197,7 @@ class JobQuotaService constructor(
             else -> {
                 logger.error("$logPrefix Maximum number of retries reached. " +
                         "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
-                throwJobQuotaExcessException()
+                throwJobQuotaExcessException(buildId, vmSeqId, executeCount ?: DEFAULT_EXECUTE_COUNT)
             }
         }
     }
@@ -422,7 +425,18 @@ class JobQuotaService constructor(
     /**
      * 抛出配额超限异常
      */
-    private fun throwJobQuotaExcessException(): Nothing {
+    private fun throwJobQuotaExcessException(
+        buildId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): Nothing {
+        // 记录配额不足导致失败状态
+        BeanUtil.getDispatchMessageTracking().trackQuotaInSufficient(
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            executeCount = executeCount,
+        )
+
         val errorMessage = I18nUtil.getCodeLanMessage(DispatchSdkErrorCode.JOB_QUOTA_EXCESS.toString())
         throw BuildFailureException(
             errorType = ErrorType.USER,
