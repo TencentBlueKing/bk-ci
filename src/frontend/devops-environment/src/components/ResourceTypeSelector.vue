@@ -51,7 +51,8 @@
 <script>
     import { ref, computed, onMounted, onUnmounted } from 'vue'
     import {
-        SERVICE_RESOURCE_TYPE
+        SERVICE_RESOURCE_TYPE,
+        RES_TYPE_STORAGE_KEY
     } from '@/store/constants'
     import UseInstance from '@/hooks/useInstance'
     import Logo from '@/components/Logo'
@@ -97,6 +98,8 @@
             const selectResource = (value) => {
                 if (value !== activeValue.value) {
                     activeValue.value = value
+                    localStorage.setItem(RES_TYPE_STORAGE_KEY, value)
+
                     proxy.$router.replace({
                         params: {
                             ...proxy.$route.params,
