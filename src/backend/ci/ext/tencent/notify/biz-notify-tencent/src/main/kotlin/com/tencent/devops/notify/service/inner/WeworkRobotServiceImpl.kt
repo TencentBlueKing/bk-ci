@@ -28,31 +28,48 @@
 package com.tencent.devops.notify.service.inner
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.ImageContent
+import com.tencent.devops.notify.pojo.MediaContent
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
+import com.tencent.devops.notify.pojo.WeworkRobotFileMessage
+import com.tencent.devops.notify.pojo.WeworkRobotImageMessage
 import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.nio.file.Files
+import java.security.MessageDigest
+import java.util.Base64
+import java.util.Optional
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
-import java.util.Optional
 import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.annotation.Configuration
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
@@ -71,7 +88,260 @@ class WeworkRobotServiceImpl @Autowired constructor(
     lateinit var robotKey: String
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        return
+        val mediaType = weworkNotifyMediaMessage.mediaType
+
+        try {
+            // 根据媒体类型选择不同的发送方式
+            when (mediaType) {
+                WeworkMediaType.image -> {
+                    // 图片使用base64+md5方式发送
+                    sendImageMessage(weworkNotifyMediaMessage)
+                }
+                WeworkMediaType.file -> {
+                    // 文件使用media_id方式发送
+                    sendFileMessage(weworkNotifyMediaMessage)
+                }
+                else -> {
+                    logger.warn("unsupported media type: $mediaType")
+                    saveResult(
+                        receivers = weworkNotifyMediaMessage.receivers,
+                        body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                        success = false,
+                        errMsg = "unsupported media type: $mediaType"
+                    )
+                    throw ErrorCodeException(
+                        errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
+                        params = arrayOf(mediaType.name)
+                    )
+                }
+            }
+        } catch (e: Throwable) {
+            logger.warn("failed to send media message", e)
+            saveResult(
+                receivers = weworkNotifyMediaMessage.receivers,
+                body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                success = false,
+                errMsg = e.message
+            )
+        }
+    }
+
+    /**
+     * 发送图片消息（使用base64+md5方式）
+     */
+    private fun sendImageMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        val mediaType = weworkNotifyMediaMessage.mediaType
+
+        // 读取输入流并转换为base64和md5
+        val imageBytes = weworkNotifyMediaMessage.mediaInputStream.use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toByteArray()
+            }
+        }
+        val base64Content = Base64.getEncoder().encodeToString(imageBytes)
+        val md5Hash = calculateMd5(imageBytes)
+
+        // 统一遍历接收者发送消息
+        val errMsgs = sendToReceivers(weworkNotifyMediaMessage.receivers) { receiver ->
+            val requestBody = buildImageMessageBody(base64 = base64Content, md5 = md5Hash)
+            sendMediaRequest(requestBody = requestBody, key = receiver)
+        }
+
+        // 记录发送结果
+        saveMediaResult(
+            receivers = weworkNotifyMediaMessage.receivers,
+            mediaType = mediaType,
+            mediaName = weworkNotifyMediaMessage.mediaName,
+            errMsgs = errMsgs,
+            messageType = "image"
+        )
+    }
+
+    /**
+     * 发送文件消息（使用media_id方式）
+     */
+    private fun sendFileMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        val mediaType = weworkNotifyMediaMessage.mediaType
+        val fileBytes = weworkNotifyMediaMessage.mediaInputStream.use { input ->
+            ByteArrayOutputStream().use { output ->
+                input.copyTo(output)
+                output.toByteArray()
+            }
+        }
+
+        // 统一遍历接收者发送消息
+        val errMsgs = sendToReceivers(weworkNotifyMediaMessage.receivers) { receiver ->
+            val mediaId = uploadMediaToRobot(
+                fileBytes = fileBytes,
+                fileName = weworkNotifyMediaMessage.mediaName,
+                mediaType = mediaType.name,
+                key = receiver
+            )
+            val requestBody = buildFileMessageBody(mediaId = mediaId)
+            sendMediaRequest(requestBody = requestBody, key = receiver)
+        }
+
+        // 记录发送结果
+        saveMediaResult(
+            receivers = weworkNotifyMediaMessage.receivers,
+            mediaType = mediaType,
+            mediaName = weworkNotifyMediaMessage.mediaName,
+            errMsgs = errMsgs,
+            messageType = "file"
+        )
+    }
+
+    /**
+     * 统一遍历接收者发送消息
+     */
+    private fun sendToReceivers(
+        receivers: Collection<String>,
+        sendAction: (receiver: String) -> Unit
+    ): List<String> {
+        val errMsgs = mutableListOf<String>()
+        receivers.forEach { receiver ->
+            try {
+                sendAction(receiver)
+            } catch (e: Throwable) {
+                logger.warn("failed to send media message to receiver: $receiver", e)
+                errMsgs.add("receiver=$receiver: ${e.message}")
+            }
+        }
+        return errMsgs
+    }
+
+    /**
+     * 保存媒体消息发送结果
+     */
+    private fun saveMediaResult(
+        receivers: Collection<String>,
+        mediaType: WeworkMediaType,
+        mediaName: String,
+        errMsgs: List<String>,
+        messageType: String
+    ) {
+        val body = "mediaType:$mediaType, mediaName:$mediaName"
+        if (errMsgs.isEmpty()) {
+            logger.info("send $messageType message success, mediaName=$mediaName")
+            saveResult(receivers = receivers, body = body, success = true, errMsg = null)
+        } else {
+            saveResult(receivers = receivers, body = body, success = false, errMsg = errMsgs.joinToString("; "))
+        }
+    }
+
+    /**
+     * 计算MD5哈希值
+     */
+    private fun calculateMd5(bytes: ByteArray): String {
+        val md = MessageDigest.getInstance("MD5")
+        val digest = md.digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * 上传媒体文件到企业微信机器人
+     */
+    private fun uploadMediaToRobot(
+        fileBytes: ByteArray,
+        fileName: String,
+        mediaType: String,
+        key: String
+    ): String {
+        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
+        val tempFile = File(tempDir, fileName)
+        try {
+            // 将字节数组写入临时文件
+            tempFile.outputStream().use { output ->
+                output.write(fileBytes)
+            }
+
+            // 构建multipart请求
+            val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$key&type=$mediaType")
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "media",
+                    fileName,
+                    tempFile.asRequestBody(mediaType.toMediaType())
+                )
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            // 发送请求
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseBody = response.body?.string() ?: ""
+                if (!response.isSuccessful) {
+                    throw RemoteServiceException(
+                        httpStatus = response.code,
+                        responseContent = responseBody,
+                        errorMessage = "upload media to wework robot failed, httpCode=${response.code}"
+                    )
+                }
+
+                val uploadResponse = JsonUtil.to(responseBody, WeworkRobotUploadResponse::class.java)
+                if (uploadResponse.errCode != 0) {
+                    logger.warn("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
+                    throw RemoteServiceException(
+                        errorMessage = "upload media to wework robot failed: ${uploadResponse.errMsg}",
+                        errorCode = uploadResponse.errCode
+                    )
+                }
+
+                return uploadResponse.mediaId
+                    ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
+            }
+        } finally {
+            // 清理临时文件和临时目录
+            kotlin.runCatching {
+                if (tempDir.exists() && !tempDir.deleteRecursively()) {
+                    logger.warn("failed to delete temp dir: ${tempDir.absolutePath}")
+                }
+            }.onFailure { e -> logger.warn("failed to clean temp upload files", e) }
+        }
+    }
+
+    /**
+     * 构建图片消息请求体（base64+md5方式）
+     */
+    private fun buildImageMessageBody(base64: String, md5: String): String {
+        val message = WeworkRobotImageMessage(
+            image = ImageContent(base64 = base64, md5 = md5)
+        )
+        return JsonUtil.toJson(message)
+    }
+
+    /**
+     * 构建文件消息请求体（media_id方式）
+     */
+    private fun buildFileMessageBody(mediaId: String): String {
+        val message = WeworkRobotFileMessage(
+            file = MediaContent(mediaId = mediaId)
+        )
+        return JsonUtil.toJson(message)
+    }
+
+    /**
+     * 发送媒体消息请求
+     */
+    private fun sendMediaRequest(requestBody: String, key: String) {
+        val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$key")
+        OkhttpUtils.doPost(url, requestBody).use { response ->
+            val responseBody = response.body?.string() ?: ""
+            val sendMessageResp = JsonUtil.to(responseBody, WeworkSendMessageResp::class.java)
+            if (!response.isSuccessful || sendMessageResp.errCode != 0) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    responseContent = responseBody,
+                    errorMessage = "send wework robot media message failed: ${sendMessageResp.errMsg}",
+                    errorCode = sendMessageResp.errCode
+                )
+            }
+        }
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
@@ -197,5 +467,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
         const val WEWORK_MAX_SIZE = 4000
+        const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
     }
 }
