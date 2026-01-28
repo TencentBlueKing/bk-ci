@@ -53,107 +53,6 @@ const TelegrafConf = `
   logfile = ""
   hostname = ""
   omit_hostname = false
-{{ if eq .ProjectType "stream" }}
-[[outputs.influxdb]]
-  urls = ["{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetrix"
-  skip_database_creation = true
-  {{.TlsCa}}
-
-[[inputs.mem]]
-[[inputs.disk]]
-  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
-[[inputs.win_perf_counters]]
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Processor"
-    Instances = ["*"]
-    Counters = [
-      "% Idle Time",
-      "% Interrupt Time",
-      "% Privileged Time",
-      "% User Time",
-      "% Processor Time",
-      "% DPC Time",
-    ]
-    Measurement = "win_cpu"
-    IncludeTotal=true
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "LogicalDisk"
-    Instances = ["*"]
-    Counters = [
-      "% Idle Time",
-      "% Disk Time",
-      "% Disk Read Time",
-      "% Disk Write Time",
-      "Current Disk Queue Length",
-      "% Free Space",
-      "Free Megabytes",
-    ]
-    Measurement = "win_disk"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "PhysicalDisk"
-    Instances = ["*"]
-    Counters = [
-      "Disk Read Bytes/sec",
-      "Disk Write Bytes/sec",
-      "Current Disk Queue Length",
-      "Disk Reads/sec",
-      "Disk Writes/sec",
-      "% Disk Time",
-      "% Disk Read Time",
-      "% Disk Write Time",
-    ]
-    Measurement = "win_diskio"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Network Interface"
-    Instances = ["*"]
-    Counters = [
-      "Bytes Received/sec",
-      "Bytes Sent/sec",
-      "Packets Received/sec",
-      "Packets Sent/sec",
-      "Packets Received Discarded",
-      "Packets Outbound Discarded",
-      "Packets Received Errors",
-      "Packets Outbound Errors",
-    ]
-    Measurement = "win_net"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "System"
-    Counters = [
-      "Context Switches/sec",
-      "System Calls/sec",
-      "Processor Queue Length",
-      "System Up Time",
-    ]
-    Instances = ["------"]
-    Measurement = "win_system"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Memory"
-    Counters = [
-      "Available Bytes",
-      "Cache Faults/sec",
-      "Demand Zero Faults/sec",
-      "Page Faults/sec",
-      "Pages/sec",
-      "Transition Faults/sec",
-      "Pool Nonpaged Bytes",
-      "Pool Paged Bytes",
-      "Standby Cache Reserve Bytes",
-      "Standby Cache Normal Priority Bytes",
-      "Standby Cache Core Bytes",
-    ]
-    Instances = ["------"]
-    Measurement = "win_mem"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Paging File"
-    Counters = [
-      "% Usage",
-    ]
-    Instances = ["_Total"]
-    Measurement = "win_swap"
-
-{{ else }}
 
 [[outputs.http]]
   url = "{{.Gateway}}/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrics"
@@ -180,7 +79,7 @@ const TelegrafConf = `
       "% DPC Time",
     ]
     Measurement = "cpu"
-    IncludeTotal=true
+    IncludeTotal = true
   [[inputs.win_perf_counters.object]]
     ObjectName = "PhysicalDisk"
     Instances = ["*"]
@@ -299,7 +198,11 @@ const TelegrafConf = `
   namepass = ["disk"]
   [[processors.rename.replace]]
     field = "used_percent"
-    dest = "in_use"  
+    dest = "in_use"
 
-{{ end }}
+[[processors.rename]]
+  namepass = ["cpu"]
+  [[processors.rename.replace]]
+    tag = "instance"
+    dest = "cpu"
 `
