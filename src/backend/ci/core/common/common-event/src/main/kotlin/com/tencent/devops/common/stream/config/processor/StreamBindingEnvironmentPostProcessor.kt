@@ -34,6 +34,7 @@ import com.tencent.devops.common.stream.constants.StreamBinder
 import com.tencent.devops.common.stream.rabbit.RabbitQueueType
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils
 import java.util.Properties
+import java.util.UUID
 import java.util.function.Consumer
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
@@ -52,6 +53,15 @@ import kotlin.reflect.jvm.kotlinFunction
 @Suppress("LongMethod", "MagicNumber", "TooGenericExceptionThrown", "NestedBlockDepth")
 class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered {
     private var groupName = "undefined"
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamBindingEnvironmentPostProcessor::class.java)
+        private const val STREAM_SOURCE_NAME = "streamBindingProperties"
+        // 存储匿名队列名称，供服务退出时清理使用
+        val anonymousQueueNames = mutableSetOf<String>()
+        // 当前实例唯一标识，用于生成匿名队列名称
+        val instanceId: String = UUID.randomUUID().toString().substring(0, 8)
+    }
 
     override fun postProcessEnvironment(environment: ConfigurableEnvironment, application: SpringApplication) {
         environment.propertySources.forEach {
@@ -154,9 +164,11 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
         }
         setProperty("$bindingPrefix.consumer.concurrency", concurrencyExpression)
         if (consumer.anonymous) {
-            // 如果队列匿名则在消费者销毁后删除该队列
-            setProperty("$rabbitPropPrefix.consumer.anonymousGroupPrefix", groupName)
-            setProperty("$rabbitPropPrefix.consumer.durableSubscription", "true")
+            // 匿名队列：创建持久化队列，队列名称包含实例唯一标识，服务退出时通过RabbitMQ API删除
+            val anonymousQueueGroup = "$groupName-$bindingName-${instanceId}"
+            setProperty("$bindingPrefix.group", anonymousQueueGroup)
+            // 记录匿名队列名称供服务退出时删除
+            anonymousQueueNames.add("${event.destination}.$anonymousQueueGroup")
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", "NonDurable")
         } else {
             setProperty("$bindingPrefix.group", consumer.groupName.ifBlank { "$groupName-$bindingName" })
@@ -174,10 +186,5 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
 
     override fun getOrder(): Int {
         return ConfigDataEnvironmentPostProcessor.ORDER + 1
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamBindingEnvironmentPostProcessor::class.java)
-        private const val STREAM_SOURCE_NAME = "streamBindingProperties"
     }
 }
