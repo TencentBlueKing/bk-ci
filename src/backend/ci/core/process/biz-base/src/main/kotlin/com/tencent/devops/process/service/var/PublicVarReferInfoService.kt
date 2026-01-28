@@ -133,7 +133,8 @@ class PublicVarReferInfoService @Autowired constructor(
         // - 资源级别锁确保同一资源的引用操作串行化，避免并发修改导致的数据不一致
         // - 不同资源之间可以并发处理，提升整体性能
         // - 锁持有时间：事务处理 + 计数更新，已优化为批量处理，减少锁持有时间
-        val lockKey = "RESOURCE_VAR_REFER_LOCK:${request.projectId}:${request.resourceType}:${request.resourceId}:${request.resourceVersion}"
+        val lockKey = "RESOURCE_VAR_REFER_LOCK:${request.projectId}:${request.resourceType}" +
+                ":${request.resourceId}:${request.resourceVersion}"
         val redisLock = RedisLock(
             redisOperation = redisOperation,
             lockKey = lockKey,
@@ -611,7 +612,10 @@ class PublicVarReferInfoService @Autowired constructor(
      * 线程安全说明：
      * - 该方法在事务中执行，只负责删除引用记录和收集需要重算的变量信息
      * - 该方法不提供锁保护，必须由外层调用方提供锁保护
-     * - 当前调用路径：handleResourceVarReferencesWithLock (资源级锁) -> doHandleResourceVarReferences (事务中) -> cleanupRemovedVarGroupReferences
+     * - 当前调用路径：
+     * handleResourceVarReferencesWithLock (资源级锁) ->
+     * doHandleResourceVarReferences (事务中) ->
+     * cleanupRemovedVarGroupReferences
      * - 因此该方法在资源级锁保护下执行，是线程安全的
      * - 注意：如果未来在其他地方调用此方法，必须确保外层提供适当的锁保护
      * 

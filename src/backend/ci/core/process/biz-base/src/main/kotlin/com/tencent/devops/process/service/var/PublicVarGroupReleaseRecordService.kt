@@ -180,7 +180,8 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
         
         if (segmentIds.isNullOrEmpty() || segmentIds.size != releaseRecords.size) {
-            logger.warn("Failed to generate segment IDs for release records, expected: ${releaseRecords.size}, actual: ${segmentIds?.size ?: 0}")
+            logger.warn("Failed to generate segment IDs for release records, " +
+                    "expected: ${releaseRecords.size}, actual: ${segmentIds?.size ?: 0}")
             throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("Failed to generate segment IDs")

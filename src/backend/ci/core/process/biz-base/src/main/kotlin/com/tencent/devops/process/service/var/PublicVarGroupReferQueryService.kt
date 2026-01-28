@@ -98,7 +98,9 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         val totalCount = queryResult.totalCount
         val varGroupReferInfo = queryResult.referInfos
 
-        logger.info("listVarReferInfo queryReq: $queryReq, totalCount: $totalCount, referInfosSize: ${varGroupReferInfo.size}")
+        logger.info(
+            "listVarReferInfo queryReq: $queryReq, totalCount: $totalCount, referInfosSize: ${varGroupReferInfo.size}"
+        )
         if (totalCount == 0) {
             return Page(
                 count = 0,
@@ -201,7 +203,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
 
         return runCatching {
             val pipelineExecCounts = client.get(ServiceMetricsResource::class)
-                .queryPipelineMonthlyExecCountByList(queryReq.projectId, pipelineReferInfos.map { it.referId }.distinct())
+                .queryPipelineMonthlyExecCountByList(
+                    projectId = queryReq.projectId,
+                    pipelineIdList = pipelineReferInfos.map { it.referId }.distinct()
+                )
                 .data ?: emptyMap()
 
             pipelineReferInfos.map { referInfo ->
