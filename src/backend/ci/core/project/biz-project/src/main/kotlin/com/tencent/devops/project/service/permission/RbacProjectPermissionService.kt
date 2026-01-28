@@ -65,7 +65,7 @@ class RbacProjectPermissionService(
     @Value("\${auth.project.approval:#{false}}")
     private val authProjectApproval: Boolean = false
 
-    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+    override fun verifyUserProjectPermission(projectCode: String, userId: String): Boolean {
         return authProjectApi.checkProjectUser(
             user = userId,
             serviceCode = projectAuthServiceCode,
@@ -74,7 +74,6 @@ class RbacProjectPermissionService(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String,
         permission: AuthPermission

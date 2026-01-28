@@ -8,8 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AuthProjectCreateInfo(
     @get:Schema(title = "用户id")
     val userId: String,
-    @get:Schema(title = "accessToken")
-    val accessToken: String?,
     @get:Schema(title = "用户部门详细")
     val userDeptDetail: UserDeptDetail?,
     @get:Schema(title = "iamSubjectScopes")

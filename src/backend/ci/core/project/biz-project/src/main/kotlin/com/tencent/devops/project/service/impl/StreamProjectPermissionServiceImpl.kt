@@ -42,7 +42,6 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
     val tokenService: ClientTokenService
 ) : ProjectPermissionService {
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String
     ): Boolean {
@@ -79,7 +78,6 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String,
         permission: AuthPermission

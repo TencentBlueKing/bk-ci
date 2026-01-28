@@ -69,7 +69,6 @@ interface ProjectService {
     fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
-        accessToken: String?,
         createExtInfo: ProjectCreateExtInfo,
         defaultProjectId: String? = null,
         projectChannel: ProjectChannelCode
@@ -92,8 +91,7 @@ interface ProjectService {
      */
     fun getByEnglishName(
         userId: String,
-        englishName: String,
-        accessToken: String?
+        englishName: String
     ): ProjectVO?
 
     /**
@@ -103,8 +101,7 @@ interface ProjectService {
      */
     fun show(
         userId: String,
-        englishName: String,
-        accessToken: String?
+        englishName: String
     ): ProjectVO?
 
     /**
@@ -112,7 +109,7 @@ interface ProjectService {
      * @param englishName projectCode 英文ID
      * @return ProjectDiffVO 如果没有则为null
      */
-    fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO?
+    fun diff(userId: String, englishName: String): ProjectDiffVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -129,7 +126,6 @@ interface ProjectService {
         userId: String,
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?,
         needApproval: Boolean? = false
     ): Boolean
 
@@ -140,8 +136,7 @@ interface ProjectService {
         userId: String,
         englishName: String, /* englishName is projectId */
         inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        accessToken: String?
+        disposition: FormDataContentDisposition
     ): Result<ProjectLogo>
 
     /**
@@ -149,8 +144,7 @@ interface ProjectService {
      */
     fun uploadLogo(
         userId: String,
-        inputStream: InputStream,
-        accessToken: String?
+        inputStream: InputStream
     ): Result<String>
 
     fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
@@ -160,7 +154,6 @@ interface ProjectService {
      */
     fun list(
         userId: String,
-        accessToken: String?,
         enabled: Boolean? = null,
         unApproved: Boolean,
         sortType: ProjectSortType? = null,
@@ -169,7 +162,6 @@ interface ProjectService {
 
     fun listProjectsForApply(
         userId: String,
-        accessToken: String?,
         projectName: String?,
         projectId: String?,
         page: Int,
@@ -236,8 +228,7 @@ interface ProjectService {
     fun verifyUserProjectPermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission,
-        accessToken: String?
+        permission: AuthPermission
     ): Boolean
 
     fun listSecrecyProject(): Set<String>?
