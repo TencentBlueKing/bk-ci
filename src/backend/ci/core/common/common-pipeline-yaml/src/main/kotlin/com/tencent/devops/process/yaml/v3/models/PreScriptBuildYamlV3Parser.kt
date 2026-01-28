@@ -51,6 +51,7 @@ data class PreScriptBuildYamlV3Parser(
     @JsonProperty("on")
     var triggerOn: List<PreTriggerOnV3>?,
     override var variables: Map<String, Variable>? = null,
+    override var variableTemplates: List<VariableTemplate>? = null,
     override var stages: List<IPreStage>? = null,
     override var jobs: LinkedHashMap<String, IPreJob>? = null,
     override var steps: List<IPreStep>? = null,

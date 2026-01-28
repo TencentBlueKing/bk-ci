@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -125,6 +126,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.TemplateWithPermission
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -136,6 +138,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateCommonServ
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.process.utils.BK_EMPTY_PIPELINE
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -147,6 +150,8 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import jakarta.ws.rs.NotFoundException
 import jakarta.ws.rs.core.Response
+import java.text.MessageFormat
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -157,8 +162,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -193,7 +196,8 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineTemplateVersionManager: PipelineTemplateVersionManager,
     private val pipelineTemplateMarketFacadeService: PipelineTemplateMarketFacadeService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     @Value("\${template.maxSyncInstanceNum:10}")
@@ -232,13 +236,22 @@ class TemplateFacadeService @Autowired constructor(
         )
         checkTemplate(template, projectId, userId)
         val templateId = UUIDUtil.generate()
+        val version = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data ?: 0
+        val versionName = INIT_TEMPLATE_NAME
         templateCommonService.checkTemplateName(
             dslContext = dslContext,
             name = template.name,
             projectId = projectId,
             templateId = templateId
         )
-        updateModelParam(template)
+        updateModelParam(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version.toInt(),
+            versionName = versionName,
+            model = template
+        )
         val setting = templateCommonService.getDefaultSetting(
             projectId = projectId,
             templateId = templateId,
@@ -369,6 +382,10 @@ class TemplateFacadeService @Autowired constructor(
         templateModel.name = saveAsTemplateReq.templateName
         checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
+        val templateVersion = client.get(ServiceAllocIdResource::class).generateSegmentId(TEMPLATE_BIZ_TAG_NAME).data
+        templateModel.projectId = projectId
+        templateModel.templateId = templateId
+        templateModel.latestVersion = templateVersion?.toInt() ?: 0
         templateCommonService.checkTemplateName(
             dslContext = dslContext,
             name = templateModel.name,
@@ -554,9 +571,6 @@ class TemplateFacadeService @Autowired constructor(
             .setInstanceId(templateId)
             .setInstanceName(template.name)
 
-        // 注意：此方法会直接修改入参template对象
-        updateModelParam(template)
-
         // 2. 决策：根据数据同步状态，选择更新路径
         val v2LatestTemplateResource = pipelineTemplateResourceService.getLatestReleasedResource(projectId, templateId)
         val needsMigration = v2LatestTemplateResource == null ||
@@ -586,6 +600,15 @@ class TemplateFacadeService @Autowired constructor(
                 v1LatestTemplate = v1LatestTemplate
             )
         }
+        // 注意：此方法会直接修改入参template对象
+        updateModelParam(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version.toInt(),
+            versionName = versionName,
+            model = template
+        )
         logger.info("Get the update template version $version")
         return version
     }
@@ -2562,9 +2585,29 @@ class TemplateFacadeService @Autowired constructor(
         return null
     }
 
-    private fun updateModelParam(model: Model) {
+    private fun updateModelParam(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Int,
+        versionName: String,
+        model: Model
+    ) {
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
         val defaultTagIds = defaultStageTagId?.let { listOf(it) }
+        model.handlePublicVarInfo()
+        publicVarGroupReferManageService.handleVarGroupReferBus(
+            PublicVarGroupReferDTO(
+                userId = userId,
+                projectId = projectId,
+                model = model,
+                referId = templateId,
+                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                referName = model.name,
+                referVersion = version,
+                referVersionName = versionName
+            )
+        )
         var randomSeed = 1
         val jobIdSet = mutableSetOf<String>()
         model.stages.forEachIndexed { index, stage ->
@@ -2591,6 +2634,9 @@ class TemplateFacadeService @Autowired constructor(
                 }
             }
         }
+        model.projectId = projectId
+        model.templateId = templateId
+        model.latestVersion = version
     }
 
     fun listLatestModel(projectId: String, pipelineIds: Set<String>): Map<String/*Pipeline ID*/, String/*Model*/> {
@@ -2801,6 +2847,7 @@ class TemplateFacadeService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
+        private const val INIT_TEMPLATE_NAME = "init"
         private const val TEMPLATE_BIZ_TAG_NAME = "TEMPLATE"
     }
 }

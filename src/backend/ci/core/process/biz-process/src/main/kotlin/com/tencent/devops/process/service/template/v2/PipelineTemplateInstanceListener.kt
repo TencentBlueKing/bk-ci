@@ -30,7 +30,9 @@ package com.tencent.devops.process.service.template.v2
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
@@ -43,7 +45,9 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItem
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItemUpdate
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -66,6 +70,8 @@ class PipelineTemplateInstanceListener @Autowired constructor(
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     private val pipelineTemplateInstanceService: PipelineTemplateInstanceService,
     private val sampleEventDispatcher: SampleEventDispatcher,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao
 ) {
     fun handle(event: PipelineTemplateInstanceEvent) {
         logger.info("consume pipeline template instance event {}", event)
@@ -306,6 +312,26 @@ class PipelineTemplateInstanceListener @Autowired constructor(
                 status = status,
                 pullRequestUrl = deployPipelineResult.targetUrl,
                 pullRequestId = deployPipelineResult.pullRequestId
+            )
+        }
+        val versionResource = pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            pipelineId = deployPipelineResult.pipelineId,
+            projectId = projectId,
+            version = deployPipelineResult.version
+        )
+        if (versionResource != null) {
+            publicVarGroupReferManageService.handleVarGroupReferBus(
+                PublicVarGroupReferDTO(
+                    userId = "system",
+                    projectId = projectId,
+                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                    referId = deployPipelineResult.pipelineId,
+                    referName = deployPipelineResult.pipelineName,
+                    referVersion = deployPipelineResult.version,
+                    referVersionName = deployPipelineResult.versionName,
+                    model = versionResource.model
+                )
             )
         }
     }

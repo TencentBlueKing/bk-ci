@@ -344,6 +344,24 @@ class TemplateDao {
         }
     }
 
+    fun getVersionByVersionName(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Long? {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.select(VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(ID.eq(templateId))
+                .and(VERSION_NAME.eq(versionName))
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
+                .limit(1)
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getPublicTemplate(
         dslContext: DSLContext
     ): List<String> {
@@ -366,6 +384,21 @@ class TemplateDao {
             }
             dslContext.select(SRC_TEMPLATE_ID).from(this)
                 .where(conditions)
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
+    /**
+     * 根据模板ID查询项目ID
+     * @param dslContext DSL上下文
+     * @param templateId 模板ID
+     * @return 项目ID，如果模板不存在则返回null
+     */
+    fun getProjectIdByTemplateId(dslContext: DSLContext, templateId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(PROJECT_ID).from(this)
+                .where(ID.eq(templateId))
                 .limit(1)
                 .fetchOne(0, String::class.java)
         }

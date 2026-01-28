@@ -17,11 +17,11 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class PipelineTemplateResourceDao {
@@ -252,6 +252,45 @@ class PipelineTemplateResourceDao {
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
                 .fetchOne()?.convert()
+        }
+    }
+
+    fun getVersionModelString(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        version: Long?,
+        includeDraft: Boolean? = null
+    ): String? {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_ID.eq(templateId))
+            conditions.add(PROJECT_ID.eq(projectId))
+            
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            } else {
+                // 非新的逻辑请求则保持旧逻辑
+                if (includeDraft != true) {
+                    conditions.add(
+                        (
+                            STATUS.ne(VersionStatus.COMMITTING.name)
+                                .and(STATUS.ne(VersionStatus.DELETE.name))
+                        )
+                            .or(STATUS.isNull)
+                    )
+                }
+            }
+            
+            val query = dslContext.select(MODEL)
+                .from(this)
+                .where(conditions)
+            
+            if (version == null) {
+                query.orderBy(VERSION.desc()).limit(1)
+            }
+            
+            query.fetchAny(0, String::class.java)
         }
     }
 
