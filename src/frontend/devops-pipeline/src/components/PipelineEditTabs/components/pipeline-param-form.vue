@@ -13,7 +13,7 @@
                 :error-msg="errors.first(`pipelineParam.id`)"
             >
                 <vuex-input
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     :handle-change="(name, value) => handleUpdateParam(name, value)"
                     :data-vv-scope="'pipelineParam'"
                     v-validate="idValidRule"
@@ -47,7 +47,7 @@
             >
                 <selector
                     :popover-min-width="246"
-                    :disabled="disabled"
+                    :disabled="disabled || param.published"
                     name="type"
                     :clearable="false"
                     :list="paramsList"
@@ -55,7 +55,6 @@
                     :value="param.type"
                 />
             </form-field>
-
             <param-value-option
                 :param="param"
                 :disabled="disabled"
@@ -79,6 +78,7 @@
             </form-field>
 
             <form-field
+                v-if="!isPublicVar"
                 :hide-colon="true"
                 :label="$t('groupLabel')"
                 :desc="$t('groupLabelTips')"
@@ -147,6 +147,7 @@
                 </div>
             </template>
             <Accordion
+                v-if="!isPublicVar"
                 show-content
                 show-checkbox
             >
@@ -202,11 +203,20 @@
         },
         mixins: [validMixins],
         props: {
+            isPublicVar: {
+                type: Boolean,
+                default: false
+            },
             editIndex: {
                 type: Number,
                 default: -1
             },
             paramType: {
+                /**
+                 * var 入参
+                 * constant 常量
+                 * other 其他变量
+                 */
                 type: String,
                 default: 'var'
             },
@@ -316,7 +326,13 @@
                 this.param = deepCopy(DEFAULT_PARAM[STRING])
                 if (this.paramType === 'constant') {
                     Object.assign(this.param, { constant: true, required: false })
+                } else if (this.paramType === 'other') {
+                    Object.assign(this.param, { required: false })
                 }
+                this.resetEditItem(this.param)
+            } else if(this.editIndex === -2) {
+                console.log(this.editItem)
+                this.param = deepCopy(this.editItem)
                 this.resetEditItem(this.param)
             } else {
                 this.param = deepCopy(this.editItem)
@@ -338,6 +354,7 @@
                 this.updateParam(key, value)
             },
             getUniqueArgs (field) {
+                // 新增变量可与公共变量组下变量重名
                 return this.globalParams
                     .filter((item) => item[field] !== this.initParamItem[field])
                     .map((p) =>

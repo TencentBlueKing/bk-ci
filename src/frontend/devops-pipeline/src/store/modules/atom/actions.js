@@ -88,7 +88,8 @@ import {
     UPDATE_STAGE,
     UPDATE_STORESTATUS,
     UPDATE_TEMPLATE_CONSTRAINT,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_PIPELINE_PUBLIC_VAR_GROUPS
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -461,6 +462,7 @@ export default {
     setPipelineYaml: actionCreator(SET_PIPELINE_YAML),
     updatePipelineSetting: PipelineEditActionCreator(UPDATE_PIPELINE_SETTING_MUNTATION),
     updatePipelineConstraintGroup: PipelineEditActionCreator(UPDATE_TEMPLATE_CONSTRAINT),
+    updatePipelinePublicVarGroups: PipelineEditActionCreator(UPDATE_PIPELINE_PUBLIC_VAR_GROUPS),
     resetPipelineSetting: actionCreator(RESET_PIPELINE_SETTING_MUNTATION),
     setPipelineSetting: actionCreator(PIPELINE_SETTING_MUTATION),
     setEditFrom: actionCreator(SET_EDIT_FROM),
