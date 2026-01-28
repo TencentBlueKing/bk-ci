@@ -47,6 +47,9 @@ class BuildReportResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
+        parentProjectId: String?,
+        parentPipelineId: String?,
+        parentPipelineBuildId: String?,
         taskId: String,
         indexFile: String,
         name: String,
@@ -54,9 +57,9 @@ class BuildReportResourceImpl @Autowired constructor(
         reportEmail: ReportEmail?
     ): Result<Boolean> {
         reportService.create(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
+            projectId = parentProjectId ?: projectId,
+            pipelineId = parentPipelineId ?: pipelineId,
+            buildId = parentPipelineBuildId ?: buildId,
             taskId = taskId,
             indexFile = indexFile,
             name = name,

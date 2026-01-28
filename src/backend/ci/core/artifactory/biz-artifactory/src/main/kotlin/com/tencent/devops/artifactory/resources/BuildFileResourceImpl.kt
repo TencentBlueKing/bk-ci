@@ -69,17 +69,21 @@ class BuildFileResourceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        parentProjectId: String?,
+        parentPipelineId: String?,
+        parentBuildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        val userId = getLastModifyUser(projectCode, pipelineId)
+        val userId = getLastModifyUser(parentProjectId ?: projectCode, parentPipelineId ?: pipelineId)
+
         val url = archiveFileService.archiveFile(
             userId = userId,
-            projectId = projectCode,
-            pipelineId = pipelineId,
-            buildId = buildId,
+            projectId = parentProjectId ?: projectCode,
+            pipelineId = parentPipelineId ?: pipelineId,
+            buildId = parentBuildId ?: buildId,
             fileType = fileType,
             customFilePath = customFilePath,
             inputStream = inputStream,
