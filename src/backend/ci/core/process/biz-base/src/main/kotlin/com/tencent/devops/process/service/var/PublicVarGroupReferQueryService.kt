@@ -477,7 +477,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 "referVersion: $referVersion, groupName: $groupName, version: $version")
 
         try {
-            // 先查询引用信息，获取sourceProjectId
+            // 查询引用信息
             val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -487,13 +487,10 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 groupName = groupName
             )
 
-            // 获取sourceProjectId，如果不为空则使用它来查询变量组信息
-            val sourceProjectId = groupReferInfos.firstOrNull()?.sourceProjectId ?: projectId
-            logger.info("listResourceVarReferInfo projectId:$projectId|sourceProjectId: $sourceProjectId")
             // 查询变量组信息，确认变量组存在
             val varGroupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = dslContext,
-                projectId = sourceProjectId,
+                projectId = projectId,
                 groupName = groupName,
                 version = version
             ) ?: throw ErrorCodeException(
@@ -504,7 +501,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
             // 先查询变量组中的所有变量详细信息
             val groupVars = publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
-                projectId = sourceProjectId,
+                projectId = projectId,
                 groupName = groupName,
                 version = varGroupRecord.version
             )
@@ -515,7 +512,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
 
             val referCountMap = publicVarVersionSummaryDao.batchGetTotalReferCount(
                 dslContext = dslContext,
-                projectId = sourceProjectId,
+                projectId = projectId,
                 groupName = groupName,
                 varNames = groupVars.map { it.varName }
             )

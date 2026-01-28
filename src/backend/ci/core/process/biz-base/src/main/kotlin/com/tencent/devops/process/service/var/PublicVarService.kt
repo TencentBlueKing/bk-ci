@@ -345,11 +345,11 @@ class PublicVarService @Autowired constructor(
         val groupsToUpdate = publicVarGroups.filter {
             it.version == null
         }
-        // 获取sourceProjectId和引用信息
+        // 获取引用信息
         val referId = modelPublicVarHandleContext.referId
         val referType = modelPublicVarHandleContext.referType
 
-        // 查询引用信息，每个变量组可能有独立的 sourceProjectId（跨项目场景）
+        // 查询引用信息
         val groupReferInfos = publicVarGroupReferInfoDao.listVarGroupReferInfoByReferId(
             dslContext = dslContext,
             projectId = projectId,
@@ -357,16 +357,17 @@ class PublicVarService @Autowired constructor(
             referId = referId,
             referVersion = modelPublicVarHandleContext.referVersion
         )
-        // 按变量组维度获取 sourceProjectId，支持不同变量组来自不同项目
-        val groupToSourceProjectId = groupsToUpdate.associate { group ->
-            group.groupName to (groupReferInfos.find { it.groupName == group.groupName }?.sourceProjectId ?: projectId)
-        }
-        logger.info("handleModelParams projectId: $projectId, groupToSourceProjectId: $groupToSourceProjectId")
 
-        // 按 sourceProjectId 分组后批量查询最新版本，再合并结果
-        val latestGroupVersionMap = getLatestVersionsForGroupsBySourceProject(groupToSourceProjectId)
-        // 按（项目+组+版本）批量获取变量
-        val latestVars = getAllLatestVarsForGroupsBySourceProject(latestGroupVersionMap)
+        // 批量查询最新版本
+        val latestGroupVersionMap = getLatestVersionsForGroups(
+            projectId = projectId,
+            groupNames = groupsToUpdate.map { it.groupName }
+        )
+        // 批量获取变量
+        val latestVars = getAllLatestVarsForGroups(
+            projectId = projectId,
+            groupToVersion = latestGroupVersionMap
+        )
 
         val params = modelPublicVarHandleContext.params.toMutableList()
         // 获取流水线中所有非变量组的变量名集合
@@ -563,37 +564,13 @@ class PublicVarService @Autowired constructor(
     }
 
     /**
-     * 批量获取多个组的最新版本（按源项目分组查询，支持跨项目变量组）
-     * 
-     * @param groupToSourceProjectId 变量组名 -> 源项目ID（跨项目时取引用记录的 sourceProjectId，否则为当前 projectId）
-     * @return 变量组名 -> (源项目ID, 最新版本号)
-     */
-    private fun getLatestVersionsForGroupsBySourceProject(
-        groupToSourceProjectId: Map<String, String>
-    ): Map<String, Pair<String, Int>> {
-        if (groupToSourceProjectId.isEmpty()) return emptyMap()
-        // 按 sourceProjectId 分组，减少 DAO 调用次数
-        val projectToGroupNames = groupToSourceProjectId.entries
-            .groupBy({ it.value }, { it.key })
-        val result = mutableMapOf<String, Pair<String, Int>>()
-        projectToGroupNames.forEach { (sourceProjectId, groupNames) ->
-            val versionMap = getLatestVersionsForGroups(sourceProjectId, groupNames)
-            groupNames.forEach { groupName ->
-                versionMap[groupName]?.let { version ->
-                    result[groupName] = Pair(sourceProjectId, version)
-                }
-            }
-        }
-        return result
-    }
-
-    /**
-     * 批量获取多个组的最新版本（单项目场景）
+     * 批量获取多个组的最新版本
      */
     private fun getLatestVersionsForGroups(
         projectId: String,
         groupNames: List<String>
     ): Map<String, Int> {
+        if (groupNames.isEmpty()) return emptyMap()
         val versionMap = publicVarGroupDao.getLatestVersionsByGroupNames(
             dslContext = dslContext,
             projectId = projectId,
@@ -607,19 +584,20 @@ class PublicVarService @Autowired constructor(
     }
 
     /**
-     * 按（组 -> 源项目+版本）批量获取变量，支持跨项目变量组
+     * 批量获取变量
      * 
-     * @param groupToProjectAndVersion 变量组名 -> (源项目ID, 版本号)
+     * @param projectId 项目ID
+     * @param groupToVersion 变量组名 -> 版本号
      * @return 变量组名 -> 变量 BuildFormProperty 列表
      */
-    private fun getAllLatestVarsForGroupsBySourceProject(
-        groupToProjectAndVersion: Map<String, Pair<String, Int>>
+    private fun getAllLatestVarsForGroups(
+        projectId: String,
+        groupToVersion: Map<String, Int>
     ): Map<String, List<BuildFormProperty>> {
-        return groupToProjectAndVersion.mapValues { (groupName, projectAndVersion) ->
-            val (sourceProjectId, version) = projectAndVersion
+        return groupToVersion.mapValues { (groupName, version) ->
             publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
-                projectId = sourceProjectId,
+                projectId = projectId,
                 groupName = groupName,
                 version = version
             ).map { publicVarPO ->

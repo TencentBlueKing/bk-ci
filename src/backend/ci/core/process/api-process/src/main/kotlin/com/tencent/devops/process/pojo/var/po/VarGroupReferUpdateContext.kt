@@ -32,14 +32,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 变量组引用更新上下文
- * 按 (sourceProjectId, groupName) 分组的操作集合
+ * 按 groupName 分组的操作集合
  */
 @Schema(title = "变量组引用更新上下文")
 data class VarGroupReferUpdateContext(
-    @get:Schema(title = "当前项目ID，用于删除记录")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @get:Schema(title = "源项目ID，用于更新计数和获取锁")
-    val sourceProjectId: String,
     @get:Schema(title = "变量组名称")
     val groupName: String,
     @get:Schema(title = "引用资源ID")

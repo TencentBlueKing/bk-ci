@@ -51,8 +51,6 @@ data class ResourcePublicVarReferPO(
     val referVersion: Int,
     @get:Schema(title = "引用的版本名称")
     val referVersionName: String,
-    @get:Schema(title = "源项目ID（跨项目引用时，变量组所在的项目ID）")
-    val sourceProjectId: String? = null,
     @get:Schema(title = "创建者")
     val creator: String,
     @get:Schema(title = "修改者")

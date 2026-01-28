@@ -99,11 +99,9 @@ class PublicVarGroupReferCountService @Autowired constructor(
             return
         }
 
-        // 按 (sourceProjectId, groupName) 分组
-        // sourceProjectId 用于更新引用计数（变量组实际所在的项目）
-        // 如果 sourceProjectId 为空，则使用当前 projectId（非跨项目场景）
+        // 按 (projectId, groupName) 分组
         val groupedReferInfos = referInfosToDelete.groupBy {
-            Pair(it.sourceProjectId ?: projectId, it.groupName)
+            Pair(projectId, it.groupName)
         }
 
         // 按固定顺序排序，保持一致的执行顺序
@@ -113,8 +111,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
         )
 
         sortedGroups.forEach { (key, groupReferInfos) ->
-            // sourceProjectId: 变量组所在的项目ID
-            val (sourceProjectId, groupName) = key
+            val (groupProjectId, groupName) = key
             // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护，这里不需要再加锁
             // 在同一个事务中完成引用删除和计数更新
             executeWithTransaction { context ->
@@ -148,14 +145,13 @@ class PublicVarGroupReferCountService @Autowired constructor(
                 )
 
                 // 3. 按版本分组，统计每个版本的引用数量，然后减少引用计数
-                // 注意：使用 sourceProjectId 更新引用计数，因为计数存储在变量组所在项目
                 groupReferInfos
                     .groupingBy { it.version }
                     .eachCount()
                     .forEach { (version, count) ->
                         decrementReferCount(
                             context = context,
-                            projectId = sourceProjectId,
+                            projectId = groupProjectId,
                             groupName = groupName,
                             version = version,
                             countChange = count
@@ -293,11 +289,8 @@ class PublicVarGroupReferCountService @Autowired constructor(
             return
         }
 
-        // 按 sourceProjectId + groupName 排序，保持一致的执行顺序
-        val sortedChangeInfos = changeInfos.sortedWith(
-            compareBy<VarGroupVersionChangeInfo> { it.sourceProjectId }
-                .thenBy { it.groupName }
-        )
+        // 按 groupName 排序，保持一致的执行顺序
+        val sortedChangeInfos = changeInfos.sortedBy { it.groupName }
 
         // 依次处理每个变量组
         // 注意：外层（PublicVarGroupReferManageService）已经提供了锁保护
@@ -305,7 +298,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
             executeWithTransaction { dslCtx ->
                 logger.info(
                     "Processing variable group reference update: " +
-                            "sourceProjectId=${changeInfo.sourceProjectId}, groupName=${changeInfo.groupName}, " +
+                            "projectId=$projectId, groupName=${changeInfo.groupName}, " +
                             "referId=${changeInfo.referId}, referType=${changeInfo.referType}, " +
                             "referVersion=${changeInfo.referVersion}, " +
                             "hasDelete=${changeInfo.referInfoToDelete != null}, " +
@@ -351,7 +344,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
                     changeInfo.referInfoToAdd?.let { addInfo ->
                         incrementReferCount(
                             context = dslCtx,
-                            projectId = changeInfo.sourceProjectId,
+                            projectId = projectId,
                             groupName = changeInfo.groupName,
                             version = addInfo.version,
                             countChange = changeInfo.countChange
@@ -362,7 +355,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
                     changeInfo.referInfoToDelete?.let { deleteInfo ->
                         decrementReferCount(
                             context = dslCtx,
-                            projectId = changeInfo.sourceProjectId,
+                            projectId = projectId,
                             groupName = changeInfo.groupName,
                             version = deleteInfo.version,
                             countChange = -changeInfo.countChange

@@ -38,6 +38,7 @@ import com.tencent.devops.process.yaml.pojo.YamlVersionParser
 import com.tencent.devops.process.yaml.v3.models.job.IPreJob
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.IPreStage
+import com.tencent.devops.process.yaml.v3.parsers.template.Constants.TEMPLATE_KEY
 import org.slf4j.LoggerFactory
 
 /**
@@ -102,7 +103,7 @@ data class PreScriptBuildYamlParser(
     }
 
     @JsonSetter("variables")
-    private fun setVariables(raw: Any?) {
+    fun setVariables(raw: Any?) {
         when (raw) {
             null -> {
                 // 显式处理 null 情况，清空变量
@@ -111,7 +112,7 @@ data class PreScriptBuildYamlParser(
             }
             is Map<*, *> -> {
                 // 提取template数据
-                val templateList = raw["template"] as? List<Map<String, String>>
+                val templateList = raw[TEMPLATE_KEY] as? List<Map<String, String>>
                 if (raw["template"] != null && templateList == null) {
                     logger.warn(
                         "variables.template type conversion failed, " +

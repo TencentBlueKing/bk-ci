@@ -45,8 +45,6 @@ data class ResourcePublicVarGroupReferPO(
     val referId: String,
     @get:Schema(title = "引用名称")
     val referName: String,
-    @get:Schema(title = "源模板所属项目")
-    val sourceProjectId: String? = null,
     @get:Schema(title = "关联类型")
     val referType: PublicVerGroupReferenceTypeEnum,
     @get:Schema(title = "引用版本号")

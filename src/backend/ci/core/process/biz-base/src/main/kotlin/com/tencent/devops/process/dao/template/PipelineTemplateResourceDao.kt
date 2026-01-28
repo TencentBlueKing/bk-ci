@@ -263,23 +263,34 @@ class PipelineTemplateResourceDao {
         includeDraft: Boolean? = null
     ): String? {
         return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
-            val where = dslContext.select(MODEL)
-                .from(this)
-                .where(TEMPLATE_ID.eq(templateId).and(PROJECT_ID.eq(projectId)))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_ID.eq(templateId))
+            conditions.add(PROJECT_ID.eq(projectId))
+            
             if (version != null) {
-                where.and(VERSION.eq(version))
+                conditions.add(VERSION.eq(version))
             } else {
                 // 非新的逻辑请求则保持旧逻辑
-                if (includeDraft != true) where.and(
-                    (
-                        STATUS.ne(VersionStatus.COMMITTING.name)
-                            .and(STATUS.ne(VersionStatus.DELETE.name))
+                if (includeDraft != true) {
+                    conditions.add(
+                        (
+                            STATUS.ne(VersionStatus.COMMITTING.name)
+                                .and(STATUS.ne(VersionStatus.DELETE.name))
                         )
-                        .or(STATUS.isNull)
-                )
-                where.orderBy(VERSION.desc()).limit(1)
+                            .or(STATUS.isNull)
+                    )
+                }
             }
-            where.fetchAny(0, String::class.java)
+            
+            val query = dslContext.select(MODEL)
+                .from(this)
+                .where(conditions)
+            
+            if (version == null) {
+                query.orderBy(VERSION.desc()).limit(1)
+            }
+            
+            query.fetchAny(0, String::class.java)
         }
     }
 

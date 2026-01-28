@@ -73,11 +73,9 @@ class PublicVarReferCountService @Autowired constructor(
         val groupedByVersion = referInfos.groupBy { it.version ?: -1 }
 
         groupedByVersion.forEach { (version, varReferInfosForVersion) ->
-            // 按 (sourceProjectId, groupName, varName) 分组
-            // 注意：需要按 sourceProjectId 分组，因为不同变量可能来自不同项目
+            // 按 (projectId, groupName, varName) 分组
             val groupedByVar = varReferInfosForVersion.groupBy {
-                val actualSourceProjectId = it.sourceProjectId ?: it.projectId
-                Triple(actualSourceProjectId, it.groupName, it.varName)
+                Triple(it.projectId, it.groupName, it.varName)
             }
 
             // 按固定顺序排序，保持一致的执行顺序，避免死锁
@@ -91,7 +89,7 @@ class PublicVarReferCountService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 sortedVarGroups.forEach nextVarGroup@{ (key, varReferInfos) ->
-                    val (sourceProjectId, groupName, varName) = key
+                    val (projectId, groupName, varName) = key
                     // 验证引用记录列表不为空
                     if (varReferInfos.isEmpty()) {
                         logger.warn("Empty varReferInfos list for groupName:$groupName, varName:$varName, skip")
@@ -99,20 +97,20 @@ class PublicVarReferCountService @Autowired constructor(
                     }
                     logger.info(
                         "Processing variable reference addition: " +
-                            "sourceProjectId=$sourceProjectId, groupName=$groupName, varName=$varName, " +
+                            "projectId=$projectId, groupName=$groupName, varName=$varName, " +
                             "version=$version, count=${varReferInfos.size}"
                     )
 
-                    // 1. 批量插入引用记录（使用当前 projectId，引用记录存储在当前项目）
+                    // 1. 批量插入引用记录
                     publicVarReferInfoDao.batchSave(
                         dslContext = context,
                         pipelinePublicVarReferPOs = varReferInfos
                     )
 
-                    // 2. 增量更新引用计数（使用 sourceProjectId，计数存储在变量组所在项目）
+                    // 2. 增量更新引用计数
                     incrementReferCount(
                         context = context,
-                        projectId = sourceProjectId,
+                        projectId = projectId,
                         groupName = groupName,
                         varName = varName,
                         version = version,

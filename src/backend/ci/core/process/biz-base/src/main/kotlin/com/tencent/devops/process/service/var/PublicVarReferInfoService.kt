@@ -110,119 +110,8 @@ class PublicVarReferInfoService @Autowired constructor(
     }
 
     /**
-     * 获取变量组的源项目ID
-     * 用于跨项目引用场景，返回变量组实际所在的项目ID
-     * 
-     * @param projectId 当前项目ID
-     * @param groupName 变量组名称
-     * @param referId 引用资源ID（流水线ID或模板ID）
-     * @param referType 引用类型
-     * @return 变量组所在的项目ID，如果无法确定则返回null（表示非跨项目引用）
-     */
-    private fun getSourceProjectIdForVarGroup(
-        projectId: String,
-        groupName: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum
-    ): String? {
-        // 查询变量组信息，检查是否在当前项目存在
-        val varGroup = publicVarGroupDao.getRecordByGroupName(
-            dslContext = dslContext,
-            projectId = projectId,
-            groupName = groupName
-        )
-
-        // 如果变量组在当前项目存在，则不是跨项目引用
-        if (varGroup != null) {
-            return null
-        }
-
-        // 变量组在当前项目不存在，可能是跨项目引用
-        // 尝试从引用资源获取源项目ID
-        return try {
-            when (referType) {
-                PublicVerGroupReferenceTypeEnum.TEMPLATE -> {
-                    getSourceProjectIdForTemplate(projectId, referId)
-                }
-                PublicVerGroupReferenceTypeEnum.PIPELINE -> {
-                    getSourceProjectIdForPipeline(projectId, referId)
-                }
-            }
-        } catch (e: Throwable) {
-            logger.warn(
-                "Failed to get source project id for varGroup: $groupName, " +
-                "referId: $referId, referType: $referType",
-                e
-            )
-            null
-        }
-    }
-
-    /**
-     * 获取模板的源项目ID
-     */
-    private fun getSourceProjectIdForTemplate(projectId: String, templateId: String): String? {
-        val srcTemplateId = templateDao.getSrcTemplateId(
-            dslContext = dslContext,
-            projectId = projectId,
-            templateId = templateId
-        )
-
-        if (srcTemplateId.isNullOrBlank()) {
-            return null
-        }
-
-        return templateDao.getProjectIdByTemplateId(
-            dslContext = dslContext,
-            templateId = srcTemplateId
-        )
-    }
-
-    /**
-     * 获取流水线的源项目ID
-     */
-    private fun getSourceProjectIdForPipeline(projectId: String, pipelineId: String): String? {
-        val templateId = templatePipelineDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )?.templateId
-
-        if (templateId.isNullOrBlank()) {
-            return null
-        }
-
-        val srcTemplateId = templateDao.getSrcTemplateId(
-            dslContext = dslContext,
-            projectId = projectId,
-            templateId = templateId
-        )
-
-        if (srcTemplateId.isNullOrBlank()) {
-            return null
-        }
-
-        return templateDao.getProjectIdByTemplateId(
-            dslContext = dslContext,
-            templateId = srcTemplateId
-        )
-    }
-
-    /**
-     * 获取用于查询的实际项目ID
-     * 如果 sourceProjectId 不为空，返回 sourceProjectId（跨项目场景）
-     * 否则返回当前 projectId（非跨项目场景）
-     * 
-     * @param projectId 当前项目ID
-     * @param sourceProjectId 源项目ID（可选）
-     * @return 用于查询的项目ID
-     */
-    private fun getActualProjectIdForQuery(projectId: String, sourceProjectId: String?): String {
-        return sourceProjectId ?: projectId
-    }
-
-    /**
      * 处理资源的变量引用关系（带锁保护的公共方法）
+     * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
      * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
      * 
      * 线程安全说明：
@@ -475,7 +364,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 批量查询最新版本号
-     * 支持跨项目引用：如果变量组来自其他项目，使用 sourceProjectId 查询
      * 
      * @param queryParams 资源引用查询参数
      * @param modelVarGroups Model中的变量组列表
@@ -496,19 +384,10 @@ class PublicVarReferInfoService @Autowired constructor(
         val result = mutableMapOf<String, Int>()
         
         groupsNeedLatestVersion.forEach { groupName ->
-            // 获取变量组的源项目ID
-            val sourceProjectId = getSourceProjectIdForVarGroup(
-                projectId = queryParams.projectId,
-                groupName = groupName,
-                referId = queryParams.resourceId,
-                referType = queryParams.referType
-            )
-            
-            // 使用实际项目ID查询版本
-            val actualProjectId = getActualProjectIdForQuery(queryParams.projectId, sourceProjectId)
+            // 使用当前项目ID查询版本
             val version = publicVarGroupDao.getLatestVersionByGroupName(
                 dslContext = dslContext,
-                projectId = actualProjectId,
+                projectId = queryParams.projectId,
                 groupName = groupName
             )
             
@@ -567,14 +446,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
             // 执行删除操作并收集需要更新计数的变量
             if (diffResult.varsToRemove.isNotEmpty()) {
-                // 获取源项目ID
-                val sourceProjectId = getSourceProjectIdForVarGroup(
-                    projectId = varGroupContext.projectId,
-                    groupName = groupName,
-                    referId = varGroupContext.resourceId,
-                    referType = varGroupContext.referType
-                ) ?: varGroupContext.projectId
-
                 // 删除引用记录
                 publicVarReferInfoDao.deleteByReferIdAndGroupAndVarNames(
                     dslContext = context,
@@ -591,7 +462,7 @@ class PublicVarReferInfoService @Autowired constructor(
                 diffResult.varsToRemove.forEach { varName ->
                     varsNeedUpdateCount.add(
                         VarCountUpdateInfo(
-                            projectId = sourceProjectId,
+                            projectId = varGroupContext.projectId,
                             groupName = groupName,
                             varName = varName,
                             version = version
@@ -664,14 +535,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
             // 收集需要新增的变量
             if (diffResult.varsToAdd.isNotEmpty()) {
-                // 获取变量组的源项目ID（用于跨项目引用）
-                val sourceProjectId = getSourceProjectIdForVarGroup(
-                    projectId = context.projectId,
-                    groupName = groupName,
-                    referId = context.resourceId,
-                    referType = context.referType
-                )
-
                 // 批量生成ID
                 val segmentIds = client.get(ServiceAllocIdResource::class)
                     .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_REFER_INFO", diffResult.varsToAdd.size).data
@@ -694,7 +557,6 @@ class PublicVarReferInfoService @Autowired constructor(
                         referType = context.referType,
                         referVersion = context.resourceVersion,
                         referVersionName = "v${context.resourceVersion}",
-                        sourceProjectId = sourceProjectId,  // 设置源项目ID
                         creator = context.userId,
                         modifier = context.userId,
                         createTime = currentTime,
@@ -787,9 +649,8 @@ class PublicVarReferInfoService @Autowired constructor(
             // 收集所有涉及的变量信息
             // 按项目+变量组+变量+版本去重，避免重复计算
             val uniqueVars = allReferRecords.map { record ->
-                val actualProjectId = record.sourceProjectId ?: projectId
                 VarCountUpdateInfo(
-                    projectId = actualProjectId,
+                    projectId = projectId,
                     groupName = record.groupName,
                     varName = record.varName,
                     version = record.version ?: -1
@@ -833,13 +694,10 @@ class PublicVarReferInfoService @Autowired constructor(
                 
                 if (records.isNotEmpty()) {
                     // 收集需要重算的变量
-                    // 注意：同一组内的记录应该有相同的 sourceProjectId，使用第一个记录的 sourceProjectId
-                    val actualProjectId = records.first().sourceProjectId ?: projectId
-                    
                     // 按变量去重，避免重复计算
                     val uniqueVars = records.map { record ->
                         VarCountUpdateInfo(
-                            projectId = actualProjectId,
+                            projectId = projectId,
                             groupName = record.groupName,
                             varName = record.varName,
                             version = record.version ?: -1

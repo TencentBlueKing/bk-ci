@@ -10,8 +10,6 @@ data class VarGroupVersionChangeInfo(
     val groupName: String,
     @get:Schema(title = "版本号")
     val version: Int,
-    @get:Schema(title = "变量组所属项目")
-    val sourceProjectId: String,
     @get:Schema(title = "关联引用ID")
     val referId: String,
     @get:Schema(title = "关联引用类型")
