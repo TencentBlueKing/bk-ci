@@ -11,7 +11,7 @@
             <template>
                 <section class="filter-bar">
                     <div class="btn-part">
-                        <template v-if="isExtendTx">
+                        <template v-if="isExtendTx && !isCreateResType">
                             <bk-dropdown-menu
                                 trigger="click"
                                 class="mr10"
@@ -69,22 +69,6 @@
                                 </ul>
                             </bk-dropdown-menu>
                         </template>
-                        <bk-button
-                            v-if="!isExtendTx && !isCreateResType"
-                            :key="projectId"
-                            v-perm="{
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: projectId,
-                                    action: NODE_RESOURCE_ACTION.CREATE
-                                }
-                            }"
-                            theme="primary"
-                            @click="toImportNode('construct')"
-                        >
-                            {{ $t('environment.nodeInfo.importNode') }}
-                        </bk-button>
                         <bk-dropdown-menu
                             trigger="click"
                             ext-cls="batch-menu"
