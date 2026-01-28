@@ -27,15 +27,26 @@
 
 package com.tencent.devops.process.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.ScsConsumerBuilder
 import com.tencent.devops.process.mq.ModelVarReferenceEvent
 import com.tencent.devops.process.mq.ModelVarReferenceListener
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.converter.MappingJackson2MessageConverter
+import org.springframework.messaging.converter.MessageConverter
 
 @Configuration
 class ModelVarRefListenerConfiguration {
+
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper): MessageConverter {
+        val converter = MappingJackson2MessageConverter()
+        converter.objectMapper = objectMapper
+        return converter
+    }
 
     @EventConsumer
     fun modelVarReferenceConsumer(
