@@ -586,7 +586,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         version: Long,
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
-        val pipelineTemplateInfo = pipelineTemplateInfoService.get(
+        pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
@@ -618,10 +618,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
             projectId = projectId,
             pipelineIds = pipelineIds
         ).associate { it.pipelineId to it.buildNo }
-        val pipelineId2TemplateRelated = pipelineTemplateRelatedService.listByPipelineIds(
-            projectId = projectId,
-            pipelineIds = pipelineIds
-        ).associateBy { it.pipelineId }
         // 获取流水线yaml信息
         val pipelineYamlInfoList = pipelineYamlService.listByPipelineIds(
             projectId = projectId,
