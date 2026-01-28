@@ -586,10 +586,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
         version: Long,
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
-        pipelineTemplateInfoService.get(
-            projectId = projectId,
-            templateId = templateId
-        )
         val templateResource = pipelineTemplateResourceService.get(
             projectId = projectId,
             templateId = templateId,
@@ -626,6 +622,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         val yamlPipelineMap = pipelineYamlInfoList.associateBy { it.pipelineId }
         // 增加缓存,防止相同的版本重复解析
         val templateResourceCache = mutableMapOf<String, PipelineTemplateResource>()
+        // 解析模版的参数,主要是为了获取模版的options字段,然后填充给实例化的options
         val templateParams = paramService.filterParams(
             userId = userId,
             projectId = projectId,
