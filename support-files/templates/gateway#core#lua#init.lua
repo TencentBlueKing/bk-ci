@@ -89,6 +89,7 @@ config = {
         authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
     },
     jwtPrivateKey = "__BK_CI_JWT_RSA_PRIVATE_KEY__",
+    jwtKid = "__BK_CI_JWT_KID__",
     bkci = { host = "__BK_CI_FQDN__", port = 80 },
     kubernetes = {
         domain = "kubernetes.demo.com",
