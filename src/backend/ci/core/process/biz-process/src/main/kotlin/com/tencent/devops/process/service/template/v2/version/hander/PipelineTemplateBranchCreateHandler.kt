@@ -33,7 +33,7 @@ class PipelineTemplateBranchCreateHandler @Autowired constructor(
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
         with(context) {
-            logger.info("create template branch version with context={}", JsonUtil.toJson(context, false))
+            logger.info("create template branch version|$projectId|$templateId|$versionAction|$version|$branchName")
             if (!enablePac) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,

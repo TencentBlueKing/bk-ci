@@ -60,8 +60,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
-        logger.info("create template released version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info("handle template released version|$projectId|$templateId|$versionAction|$version")
             if (pTemplateResourceWithoutVersion.status != VersionStatus.RELEASED) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,
