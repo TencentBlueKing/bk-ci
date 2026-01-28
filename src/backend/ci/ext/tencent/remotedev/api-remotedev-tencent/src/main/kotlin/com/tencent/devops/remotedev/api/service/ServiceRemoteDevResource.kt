@@ -613,7 +613,10 @@ interface ServiceRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String
+        ip: String,
+        @Parameter(description = "是否是录屏灰度", required = true)
+        @QueryParam("mediaGary")
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData>
 
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")

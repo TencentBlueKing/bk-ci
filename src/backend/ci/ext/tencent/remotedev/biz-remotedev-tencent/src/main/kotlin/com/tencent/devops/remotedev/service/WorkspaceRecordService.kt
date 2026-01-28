@@ -117,7 +117,8 @@ class WorkspaceRecordService @Autowired constructor(
     fun checkRecordAndAddress(
         userId: String,
         appId: Long,
-        ip: String
+        ip: String,
+        mediaGary: Boolean?
     ): Pair<Boolean, String?> {
         val projectId = startAppLinkDao.getAppName(dslContext, appId) ?: return Pair(false, null)
         val (workspaceName, enableUser, hostIp) = workspaceWindowsDao.fetchRecordByProjectIp(dslContext, projectId, ip)
@@ -141,7 +142,8 @@ class WorkspaceRecordService @Autowired constructor(
                 projectId = projectId,
                 repoName = genRepoName(workspaceName),
                 userId = enableUser,
-                media = true
+                media = true,
+                gray = mediaGary
             ) + "&skToken=$token&recordUser=$userId"
         )
     }

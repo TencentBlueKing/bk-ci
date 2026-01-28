@@ -700,7 +700,10 @@ interface ApigwRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String
+        ip: String,
+        @Parameter(description = "是否是录屏灰度", required = true)
+        @QueryParam("mediaGary")
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData>
 
     @Operation(
