@@ -29,6 +29,7 @@ package com.tencent.devops.store.image.dao
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
+import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -40,9 +41,11 @@ import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record5
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -164,5 +167,46 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_CODE).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
+    }
+
+    override fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Record5<String, String, LocalDateTime, String, String>>? {
+        val image = TImage.T_IMAGE
+        val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+        val baseStep =
+            dslContext.select(image.VERSION, imageLog.CONTENT, image.UPDATE_TIME, imageLog.MODIFIER, image.IMAGE_SIZE)
+                .from(image)
+                .join(imageLog)
+                .on(image.ID.eq(imageLog.IMAGE_ID))
+                .where(
+                    image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode))
+                        .and(image.IMAGE_SIZE.isNotNull)
+                ).orderBy(image.UPDATE_TIME.desc())
+                .limit((page - 1) * pageSize, pageSize)
+        return baseStep.fetch()
+    }
+
+    override fun countStoreComponentVersionLogs(dslContext: DSLContext, storeCode: String): Long {
+        val image = TImage.T_IMAGE
+        val imageLog = TImageVersionLog.T_IMAGE_VERSION_LOG
+        val baseStep = dslContext.selectCount()
+            .from(image)
+            .join(imageLog)
+            .on(image.ID.eq(imageLog.IMAGE_ID))
+            .where(image.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(image.IMAGE_CODE.eq(storeCode)))
+
+        return baseStep.fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    fun getComponentSizeByVersionAndCode(dslContext: DSLContext, storeCode: String, version: String): String? {
+        val image = TImage.T_IMAGE
+        val baseStep = dslContext.select(image.IMAGE_SIZE)
+            .from(image)
+            .where(image.IMAGE_CODE.eq(storeCode).and(image.VERSION.eq(version)))
+        return baseStep.fetchOne(0, String::class.java)
     }
 }

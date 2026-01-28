@@ -242,4 +242,13 @@ interface OpStoreComponentResource {
         @Parameter(description = "更新组件已安装包文件sha1摘要值请求报文", required = true)
         installedPkgFileShaContentRequest: InstalledPkgFileShaContentRequest
     ): Result<Boolean>
+
+    @Operation(summary = "批量更新存量组件版本包大小")
+    @PUT
+    @Path("/components/size/batch/update")
+    fun batchUpdateComponentsVersionSize(
+        @Parameter(description = "组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+    ): Result<Boolean>
 }

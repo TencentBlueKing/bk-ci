@@ -29,10 +29,15 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreVersionLogRecord
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import org.jooq.DSLContext
+import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -110,5 +115,103 @@ class StoreVersionLogDao {
                 .where(STORE_ID.`in`(storeIds))
                 .execute()
         }
+    }
+
+    fun getStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        page: Int,
+        pageSize: Int
+    ): Result<Record3<String, String, LocalDateTime>>? {
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.select(tsb.VERSION, tsvl.CONTENT, tsb.UPDATE_TIME)
+            .from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
+            ).orderBy(tsb.UPDATE_TIME.desc())
+        baseStep.limit((page - 1) * pageSize, pageSize)
+        return baseStep.fetch()
+    }
+
+    fun countStoreComponentVersionLogs(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): Long {
+
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.selectCount()
+            .from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType).and(tsb.STATUS.eq(StoreStatusEnum.RELEASED.name)))
+            )
+        return baseStep.fetchOne(0, Long::class.java) ?: 0L
+    }
+
+    fun updateComponentVersionInfo(dslContext: DSLContext, storeId: String, pkgSize: String) {
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        dslContext.update(tsvl).set(tsvl.PACKAGE_SIZE, pkgSize)
+            .where(tsvl.STORE_ID.eq(storeId)).execute()
+    }
+
+    fun getComponentVersionSizeInfo(dslContext: DSLContext, storeId: String): String? {
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        return dslContext.select(tsvl.PACKAGE_SIZE).from(tsvl)
+            .where(tsvl.STORE_ID.eq(storeId)).orderBy(tsvl.CREATE_TIME.desc()).limit(1)
+            .fetchOne(0, String::class.java)
+    }
+
+    fun countComponent(dslContext: DSLContext, storeStatus: Byte): Long {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_TYPE.eq(storeStatus).and(STATUS.eq(AtomStatusEnum.RELEASED.name)))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun selectComponentEnvInfoByStoreIds(
+        dslContext: DSLContext,
+        storeIds: List<String>
+    ): Result<Record4<String, String, String, String>>? {
+        with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            return dslContext.select(STORE_ID, OS_NAME, OS_ARCH, PKG_PATH).from(this)
+                .where(STORE_ID.`in`(storeIds)).fetch()
+        }
+    }
+
+    fun selectComponentIds(dslContext: DSLContext, offset: Long, batchSize: Long): List<String>? {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(ID).from(this).where(STATUS.eq(AtomStatusEnum.RELEASED.name))
+                .limit(offset, batchSize)
+                .fetch().into(String::class.java)
+        }
+    }
+
+    fun getComponentSizeByVersionAndCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        version: String,
+        storeType: Byte
+    ): String? {
+        val tsb = TStoreBase.T_STORE_BASE
+        val tsvl = TStoreVersionLog.T_STORE_VERSION_LOG
+        val baseStep = dslContext.select(tsvl.PACKAGE_SIZE).from(tsb)
+            .join(tsvl)
+            .on(tsb.ID.eq(tsvl.STORE_ID))
+            .where(
+                tsb.STORE_CODE.eq(storeCode)
+                    .and(tsb.STORE_TYPE.eq(storeType))
+                    .and(tsb.VERSION.eq(version))
+            )
+        return baseStep.fetchOne(0, String::class.java)
     }
 }
