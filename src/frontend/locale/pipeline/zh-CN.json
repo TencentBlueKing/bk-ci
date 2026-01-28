@@ -713,7 +713,8 @@
       "glob": "过滤规则"
     },
     "propertyUpdated": "更新",
-    "toInstance": "去实例化"
+    "toInstance": "去实例化",
+    "fetchPipelinesErrorTips": "获取流水线模板参数失败，请联系助手分析"
   },
   "newlist": {
     "exportYamlTip": "PreCI 是蓝盾 DevOps 为开发者在 CI 之前的研发活动所提供的一套解决方案，能在提交代码之前尽早发现问题，提升代码质量。包括 IDE 插件和命令行工具。",
@@ -2104,5 +2105,6 @@
   "placeholderVar": "请输入变量，如 ${'{{'}var{'}}'} 或 ${'{'}var{'}'}",
   "selectTips": "请选择",
   "rollbackToVersion": "回滚至版本{0}",
-  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。"
+  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。",
+  "toggleConstraintFailedTips": "历史原因导致当前约束流水线无法确定对应的模版版本，不能切换至跟随模版。升级实例后可恢复正常。"
 }

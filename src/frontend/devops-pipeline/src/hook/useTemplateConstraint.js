@@ -29,12 +29,13 @@ export default function useTemplateConstraint () {
     }
     const vm = getCurrentInstance()
     const reverting = ref(false)
+    const hasOverrideTemplateField = computed(() => Object.prototype.hasOwnProperty.call(vm.proxy.$store.state.atom.pipeline ?? {}, 'overrideTemplateField'))
     const overrideTemplateGroups = computed(() => vm.proxy.$store.state.atom.pipeline?.overrideTemplateField ?? {})
-
     const instanceFromTemplate = computed(() => vm.proxy.$store.getters['atom/instanceFromTemplate'])
 
     function isOverrideTemplate (classify, field) {
         if (!instanceFromTemplate.value) return vm.proxy.$route.meta.edit
+        if (!hasOverrideTemplateField.value) return true
         return vm.proxy.$route.meta.edit && overrideTemplateGroups.value[classify]?.includes(field)
     }
 
@@ -154,6 +155,11 @@ export default function useTemplateConstraint () {
         }
     }
     async function toggleConstraint (classify, fieldAlias, field) {
+        if (!hasOverrideTemplateField.value) {
+            vm.proxy.$bkMessage({ theme: 'error', message: vm.proxy.$t('toggleConstraintFailedTips') })
+            return
+        }
+    
         if (reverting.value) return
         let constraintList = overrideTemplateGroups.value[classify] || []
         const pos = constraintList.indexOf(fieldAlias)

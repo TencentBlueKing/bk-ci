@@ -351,12 +351,13 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatusAndCreateHistory(
         workspaceName: String,
         newStatus: WorkspaceStatus,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        allowUpdateDeleted: Boolean = false
     ) {
-        logger.info("updateStatusAndCreateHistory|$workspaceName|$newStatus|$action")
+        logger.info("updateStatusAndCreateHistory|$workspaceName|$newStatus|$action|$allowUpdateDeleted")
         workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)?.let {
             updateStatusAndCreateHistory(
-                it, newStatus, action
+                it, newStatus, action, allowUpdateDeleted
             )
         }
     }
@@ -364,16 +365,18 @@ class WorkspaceCommon @Autowired constructor(
     fun updateStatusAndCreateHistory(
         workspace: WorkspaceRecordInf,
         newStatus: WorkspaceStatus,
-        action: WorkspaceAction
+        action: WorkspaceAction,
+        allowUpdateDeleted: Boolean = false
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action|allowUpdateDeleted=$allowUpdateDeleted"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
             workspaceName = workspace.workspaceName,
-            status = newStatus
+            status = newStatus,
+            allowUpdateDeleted = allowUpdateDeleted
         )
         workspaceOpHistoryDao.createWorkspaceHistory(
             dslContext = dslContext,

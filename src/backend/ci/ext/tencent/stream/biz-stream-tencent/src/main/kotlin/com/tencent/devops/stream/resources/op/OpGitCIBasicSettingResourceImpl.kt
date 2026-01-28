@@ -65,4 +65,10 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun refreshAllStreamProjectDepartedUsers(userId: String): Result<Boolean> {
+        return Result(
+            txStreamBasicSettingService.refreshAllStreamProjectDepartedUsers(userId = userId)
+        )
+    }
 }

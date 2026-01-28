@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
@@ -331,7 +332,10 @@ class PipelineVersionGenerator constructor(
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
-                throw IllegalArgumentException("repoHashId is empty")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("repoHashId")
+                )
             }
             val checkoutBranch = "$PAC_TEMPLATE_INSTANCE_BRANCH_PREFIX$templateId-$templateVersion"
             generateVersionWithPac(
@@ -354,7 +358,7 @@ class PipelineVersionGenerator constructor(
         }
     }
 
-    fun generateDratReleaseVersion(
+    fun generateDraftReleaseVersion(
         projectId: String,
         pipelineId: String,
         draftResource: PipelineResourceVersion,
@@ -365,7 +369,10 @@ class PipelineVersionGenerator constructor(
     ): PipelineResourceOnlyVersion {
         return if (enablePac) {
             if (repoHashId.isNullOrEmpty()) {
-                throw IllegalArgumentException("repoHashId is empty")
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("repoHashId")
+                )
             }
             val checkoutBranch = "$PAC_BRANCH_PREFIX$pipelineId-${draftResource.version}"
             generateVersionWithPac(
@@ -376,7 +383,7 @@ class PipelineVersionGenerator constructor(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 checkoutBranch = checkoutBranch,
-                baseVersion = draftResource.version,
+                baseVersion = draftResource.baseVersion,
                 targetBranch = targetBranch
             )
         } else {
@@ -422,7 +429,10 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
                 if (checkoutBranch.isNullOrEmpty()) {
-                    throw IllegalArgumentException("checkoutBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("checkoutBranch")
+                    )
                 }
                 generateBranchVersion(
                     projectId = projectId,
@@ -435,7 +445,10 @@ class PipelineVersionGenerator constructor(
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH,
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE -> {
                 if (baseVersion == null) {
-                    throw IllegalArgumentException("baseBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("baseBranch")
+                    )
                 }
                 val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
                     dslContext = dslContext,
@@ -456,7 +469,10 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.COMMIT_TO_BRANCH -> {
                 if (targetBranch == null) {
-                    throw IllegalArgumentException("targetBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("targetBranch")
+                    )
                 }
                 val finalDefaultBranch = defaultBranch ?: getDefaultBranch(
                     projectId = projectId, repoHashId = repoHashId
@@ -525,6 +541,7 @@ class PipelineVersionGenerator constructor(
         enablePac: Boolean,
         repoHashId: String?,
         targetAction: CodeTargetAction?,
+        baseVersion: Int? = null,
         targetBranch: String? = null,
     ): Pair<VersionStatus, String?> {
         return if (enablePac) {
@@ -535,6 +552,7 @@ class PipelineVersionGenerator constructor(
                 repoHashId = repoHashId,
                 targetAction = targetAction,
                 checkoutBranch = checkoutBranch,
+                baseVersion = baseVersion,
                 targetBranch = targetBranch,
             )
         } else {
@@ -556,7 +574,10 @@ class PipelineVersionGenerator constructor(
         defaultBranch: String? = null,
     ): Pair<VersionStatus, String?> {
         if (repoHashId.isNullOrBlank()) {
-            throw IllegalArgumentException("repoHashId is null")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("repoHashId")
+            )
         }
         return when (targetAction) {
 
@@ -566,7 +587,10 @@ class PipelineVersionGenerator constructor(
 
             CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE -> {
                 if (checkoutBranch.isNullOrEmpty()) {
-                    throw IllegalArgumentException("checkoutBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("checkoutBranch")
+                    )
                 }
                 Pair(VersionStatus.BRANCH, checkoutBranch)
             }
@@ -574,10 +598,16 @@ class PipelineVersionGenerator constructor(
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH,
             CodeTargetAction.COMMIT_TO_SOURCE_BRANCH_AND_REQUEST_MERGE -> {
                 if (pipelineId.isNullOrEmpty()) {
-                    throw IllegalArgumentException("pipelineId is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("pipelineId")
+                    )
                 }
                 if (baseVersion == null) {
-                    throw IllegalArgumentException("baseBranch is null")
+                    throw ErrorCodeException(
+                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("baseBranch")
+                    )
                 }
                 val pipelineVersionSimple = pipelineResourceVersionDao.getPipelineVersionSimple(
                     dslContext = dslContext,
@@ -686,7 +716,10 @@ class PipelineVersionGenerator constructor(
         repoHashId: String?
     ): String? {
         if (repoHashId.isNullOrBlank()) {
-            throw IllegalArgumentException("repoHashId is null")
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("repoHashId")
+            )
         }
         val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepositoryById(
             projectId = projectId,

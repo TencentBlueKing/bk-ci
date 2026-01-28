@@ -294,7 +294,6 @@ export default {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
                     hasPermission: this.isManage,
-                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: RESOURCE_TYPE.PROJECT,

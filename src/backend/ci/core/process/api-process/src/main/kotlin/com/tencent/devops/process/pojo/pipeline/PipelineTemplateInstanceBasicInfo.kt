@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线实例化基础信息")
@@ -45,6 +46,14 @@ data class PipelineTemplateInstanceBasicInfo(
     val templateVersionName: String?,
     @get:Schema(title = "模版设置版本")
     val templateSettingVersion: Int,
+    @get:Schema(title = "公共/约束/自定义模式", required = true)
+    val templateMode: TemplateType,
+    @get:Schema(title = "源模板项目ID", required = false)
+    val templateSrcTemplateProjectId: String? = null,
+    @get:Schema(title = "源模板ID", required = false)
+    val templateSrcTemplateId: String? = null,
+    @get:Schema(title = "源模板版本", required = false)
+    val templateSrcTemplateVersion: Long? = null,
     @get:Schema(title = "实例化model,如果从模版实例化,有完整的编排内容", required = false)
     val instanceModel: Model,
     @get:Schema(title = "实例化类型")

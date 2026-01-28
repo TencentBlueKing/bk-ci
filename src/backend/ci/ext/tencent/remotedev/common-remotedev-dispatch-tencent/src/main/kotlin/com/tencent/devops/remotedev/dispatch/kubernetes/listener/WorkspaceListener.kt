@@ -91,7 +91,8 @@ class WorkspaceListener @Autowired constructor(
                         userId = event.userId,
                         workspaceName = event.workspaceName,
                         imageCosFile = event.imageCosFile ?: "",
-                        formatDataDisk = event.formatDataDisk
+                        formatDataDisk = event.formatDataDisk,
+                        resetDataDisk = event.resetDataDisk
                     )
                     if (event.rebuildRemoveOwner == true) {
                         WorkspaceOperateCommonObject.saveRebuildOptions(
