@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -57,6 +58,7 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.process.constant.MeasureConstant
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -80,15 +82,17 @@ import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
+import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import io.micrometer.core.instrument.Tags
 import jakarta.ws.rs.core.Response
-import java.time.LocalDate
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 
 @Suppress("ALL")
 @Service
@@ -106,7 +110,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: SampleEventDispatcher,
     private val pipelineYamlService: PipelineYamlService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineTriggerMeasureService: PipelineTriggerMeasureService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -128,7 +133,14 @@ class PipelineBuildWebhookService @Autowired constructor(
 
             // 代码库触发的事件ID,一个代码库会触发多条流水线,但应该只有一条触发事件
             val repoEventIdMap = mutableMapOf<String, Long>()
+            if (triggerPipelines.size >= 50) {
+                logger.warn(
+                    "Repository webhook triggered too many pipelines|" +
+                            "${matcher.getRepoName()}|${triggerPipelines.size} pipelines triggered"
+                )
+            }
             triggerPipelines.forEach outside@{ subscriber ->
+                var status = PipelineTriggerReason.TRIGGER_SUCCESS
                 val projectId = subscriber.projectId
                 val pipelineId = subscriber.pipelineId
                 try {
@@ -137,12 +149,15 @@ class PipelineBuildWebhookService @Autowired constructor(
                         .projectId(projectId)
                         .pipelineId(pipelineId)
 
-                    webhookTriggerPipelineBuild(
+                    val triggerResult = webhookTriggerPipelineBuild(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         matcher = matcher,
                         builder = builder
                     )
+                    if (!triggerResult) {
+                        status = PipelineTriggerReason.TRIGGER_NOT_MATCH
+                    }
                     saveTriggerEvent(
                         projectId = projectId,
                         builder = builder,
@@ -150,7 +165,24 @@ class PipelineBuildWebhookService @Autowired constructor(
                         repoEventIdMap = repoEventIdMap
                     )
                 } catch (e: Throwable) {
+                    status = PipelineTriggerReason.TRIGGER_FAILED
                     logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+                } finally {
+                    val timeConsumingMills = System.currentTimeMillis() - triggerEvent.createTime.timestampmilli()
+                    if (timeConsumingMills >= 60 * 1000) {
+                        logger.warn(
+                            "old Webhook trigger execution time exceeds threshold|" +
+                                    "${matcher.getRepoName()}|$projectId|$pipelineId|$timeConsumingMills"
+                        )
+                    }
+                    pipelineTriggerMeasureService.recordTaskExecutionTime(
+                        name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
+                        tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, "false")
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "true")
+                            .toList(),
+                        timeConsumingMills = timeConsumingMills
+                    )
                 }
             }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。

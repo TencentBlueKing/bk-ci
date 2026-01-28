@@ -379,10 +379,5 @@ class RepositoryPacService @Autowired constructor(
                 )
             )
         }
-        repositoryService.addGrayRepoWhite(
-            scmCode = repository.scmCode,
-            pac = true,
-            projectNames = listOf(serverRepository.fullName)
-        )
     }
 }

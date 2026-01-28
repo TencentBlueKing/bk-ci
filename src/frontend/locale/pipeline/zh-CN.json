@@ -711,7 +711,8 @@
       "glob": "过滤规则"
     },
     "propertyUpdated": "更新",
-    "toInstance": "去实例化"
+    "toInstance": "去实例化",
+    "fetchPipelinesErrorTips": "获取流水线模板参数失败，请联系助手分析"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",
@@ -2076,5 +2077,6 @@
   "placeholderVar": "请输入变量，如 ${'{{'}var{'}}'} 或 ${'{'}var{'}'}",
   "selectTips": "请选择",
   "rollbackToVersion": "回滚至版本{0}",
-  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。"
+  "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。",
+  "toggleConstraintFailedTips": "历史原因导致当前约束流水线无法确定对应的模版版本，不能切换至跟随模版。升级实例后可恢复正常。"
 }

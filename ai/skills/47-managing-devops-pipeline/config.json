@@ -1,8 +1,0 @@
-{
-  "pipelines": [
-    {
-      "name": "部署开发环境服务",
-      "url": "https://xxx/console/pipeline/xxx/p-xxx"
-    }
-  ]
-}
