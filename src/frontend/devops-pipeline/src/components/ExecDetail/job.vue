@@ -155,7 +155,11 @@
         },
         methods: {
             handleDebug () {
-                this.$refs.container?.startDebug?.()
+                if (this.currentJob.baseOS === 'LINUX') {
+                    this.$refs.container.startDebug?.()
+                } else {
+                    this.$refs.container.openDebug?.()
+                }
             }
         }
     }

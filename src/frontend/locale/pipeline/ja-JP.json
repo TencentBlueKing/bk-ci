@@ -2189,5 +2189,22 @@
   "selectTips": "選択してください",
   "rollbackToVersion": "バージョン {0} にロールバック",
   "constraintPipelineEditTips": "このパイプラインは制約モードです。ここで入力パラメータのデフォルト値、通知などの設定を変更できます。編成をアップグレードするには、テンプレートのインスタンス化インターフェースで操作してください。",
-  "toggleConstraintFailedTips": "過去の経緯により、現在の制約パイプラインは対応するテンプレートのバージョンを判別できず、テンプレートに従うように切り替えることができません。インスタンスをアップグレードすると、通常の動作に戻ります。"
+  "toggleConstraintFailedTips": "過去の経緯により、現在の制約パイプラインは対応するテンプレートのバージョンを判別できず、テンプレートに従うように切り替えることができません。インスタンスをアップグレードすると、通常の動作に戻ります。",
+  "debugDisconnectNotice": "デバッグ接続が {0} 操作なしと検出された場合、デバッグは {1}",
+  "autoExit": "自動終了",
+  "tenMinutes": "10 分",
+  "debugConnectionMethod": "以下の方法でビルドマシンにリモートログインしてデバッグできます：",
+  "commandTool": "コマンドラインツール",
+  "likeWeTerm": "WeTermなど",
+  "vncTool": "VNCツール",
+  "likeMacScreenShare": "Macスクリーンシェアなど",
+  "viewMoreGuidance": "より多くのガイダンスを表示",
+  "debugging": "デバッグ中",
+  "loginCommand": "ログインコマンド",
+  "loginPassword": "ログインパスワード",
+  "vncAddress": "VNCアドレス",
+  "loginUsername": "ログインユーザー名",
+  "exitDebug": "デバッグ終了",
+  "minimize": "最小化",
+  "confirmExitDebugSession": "このデバッグセッションを終了してもよろしいですか？"
 }

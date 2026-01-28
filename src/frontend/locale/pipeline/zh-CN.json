@@ -2105,5 +2105,22 @@
   "selectTips": "请选择",
   "rollbackToVersion": "回滚至版本{0}",
   "constraintPipelineEditTips": "该流水线为约束模式，可在此修改入参默认值、通知等设置信息。若需升级编排，请到模版实例化界面操作。",
-  "toggleConstraintFailedTips": "历史原因导致当前约束流水线无法确定对应的模版版本，不能切换至跟随模版。升级实例后可恢复正常。"
+  "toggleConstraintFailedTips": "历史原因导致当前约束流水线无法确定对应的模版版本，不能切换至跟随模版。升级实例后可恢复正常。",
+  "debugDisconnectNotice": "若检测到调试连接连续 {0}无操作，将{1}调试",
+  "autoExit": "自动退出",
+  "tenMinutes": "10 分钟",
+  "debugConnectionMethod": "可通过如下方式远程登录构建机调试：",
+  "commandTool": "命令行工具",
+  "likeWeTerm": "如 WeTerm",
+  "vncTool": "VNC 工具",
+  "likeMacScreenShare": "如 Mac 屏幕共享",
+  "viewMoreGuidance": "查看更多指引",
+  "debugging": "调试中",
+  "loginCommand": "登录命令",
+  "loginPassword": "登录密码",
+  "vncAddress": "VNC 地址",
+  "loginUsername": "登录用户名",
+  "exitDebug": "退出调试",
+  "minimize": "最小化",
+  "confirmExitDebugSession": "确认退出本次调试？"
 }

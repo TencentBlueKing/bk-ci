@@ -212,9 +212,9 @@ export default {
             return response.data
         })
     },
-    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, query }) => {
+    requestTemplate: async ({ dispatch, commit }, { projectId, templateId, version, editMode, query }) => {
         const [templateRes, atomPropRes] = await Promise.all([
-            dispatch('fetchTemplateByVersion', { projectId, templateId, version }),
+            dispatch('fetchTemplateByVersion', { projectId, templateId, version, editMode}),
             request.get(`/${PROCESS_API_URL_PREFIX}/user/template/v2/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
                 params: {
                     ...query,
@@ -283,8 +283,14 @@ export default {
             return res.data
         })
     },
-    fetchTemplateByVersion ({ commit }, { projectId, templateId, version }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`).then(res => {
+    fetchTemplateByVersion ({ commit }, { projectId, templateId, version, editMode }) {
+        const query = {}
+        if (editMode) {
+            query.editMode = true
+        }
+        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/template/v2/${projectId}/${templateId}/${version}/details/`, {
+            params: query
+        }).then(res => {
             return res.data
         })
     },

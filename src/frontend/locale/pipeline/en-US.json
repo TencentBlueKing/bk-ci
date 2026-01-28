@@ -2111,5 +2111,22 @@
   "selectTips": "Please select",
   "rollbackToVersion": "Rollback to version {0}",
   "constraintPipelineEditTips": "This pipeline is in constraint mode, where you can modify input parameter default values, notifications, and other settings. For orchestration upgrades, please go to the template instantiation interface.",
-  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation."
+  "toggleConstraintFailedTips": "Due to historical reasons, the current constraint pipeline cannot determine the corresponding template version and cannot switch to following the template. Upgrading the instance will restore normal operation.",
+  "debugDisconnectNotice": "If the debug connection is detected to have no operation for {0}, debugging will {1}",
+  "autoExit": "exit automatically",
+  "tenMinutes": "10 minutes",
+  "debugConnectionMethod": "You can remotely log in to the build machine for debugging via the following methods:",
+  "commandTool": "Command line tool",
+  "likeWeTerm": "such as WeTerm",
+  "vncTool": "VNC tool",
+  "likeMacScreenShare": "such as Mac Screen Sharing",
+  "viewMoreGuidance": "View more guidance",
+  "debugging": "Debugging",
+  "loginCommand": "Login Command",
+  "loginPassword": "Login Password",
+  "vncAddress": "VNC Address",
+  "loginUsername": "Login Username",
+  "exitDebug": "Exit Debug",
+  "minimize": "Minimize",
+  "confirmExitDebugSession": "Confirm exit this debug session?"
 }

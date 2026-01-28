@@ -115,7 +115,7 @@ const customeRules = {
         validate: function (value, args) {
             const numberPattern = /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/
             const isValidNumber = numberPattern.test(value)
-            const isValidVar = args[0] === 'CLASSIC' ? value.isBkVar() : value.isBKConstraintVar()
+            const isValidVar = args[0] === 'CLASSIC' ? String(value).isBkVar() : String(value).isBKConstraintVar()
     
             return isValidNumber || isValidVar
         }

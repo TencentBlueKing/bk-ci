@@ -486,6 +486,10 @@
             :build-resource-type="buildResourceType"
             @choose="choose"
         ></image-selector>
+        <MacDebugDialog
+            :is-show="isShowDebug"
+            @close="closeDebugDialog"
+        />
     </section>
 </template>
 
@@ -507,6 +511,7 @@
     import JobMutual from './JobMutual'
     import JobOption from './JobOption'
     import LinuxOsDockerImage from './LinuxOsDockerImage'
+    import MacDebugDialog from '../MacDebugDialog.vue'
 
     export default {
         name: 'container-content',
@@ -525,6 +530,7 @@
             ImageSelector,
             SelectInput,
             CustomEnvField,
+            MacDebugDialog,
             LinuxOsDockerImage
         },
         props: {
@@ -554,6 +560,7 @@
                 isLoadingWin: false,
                 windowsVersionList: [],
                 macOSHwSpecList: [],
+                isShowDebug: false,
                 isShowPerformance: false
             }
         },
@@ -1271,6 +1278,12 @@
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            openDebug () {
+                this.isShowDebug = true
+            },
+            closeDebugDialog () {
+                this.isShowDebug = false
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
