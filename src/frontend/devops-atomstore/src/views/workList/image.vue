@@ -543,13 +543,11 @@
             },
 
             handleUpdate (imageCode) {
-                try {
-                    this.$store.dispatch('store/getLargestImageCode', imageCode).then(LargestImageCode => {
-                        this.$router.push({ name: 'editImage', params: { imageId: LargestImageCode } })
-                    })
-                } catch (error) {
+                this.$store.dispatch('store/getLargestImageCode', imageCode).then(LargestImageCode => {
+                    this.$router.push({ name: 'editImage', params: { imageId: LargestImageCode } })
+                }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }
+                })
             },
 
             deleteImage (imageCode) {
