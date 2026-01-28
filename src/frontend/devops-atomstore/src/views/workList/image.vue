@@ -112,7 +112,7 @@
                         <span
                             class="shelf-btn"
                             v-if="props.row.imageStatus === 'RELEASED'"
-                            @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"
+                            @click="handleUpdate(props.row.imageCode)"
                         > {{ $t('store.升级') }} </span>
                         <span
                             class="shelf-btn"
@@ -535,6 +535,14 @@
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => (this.offlineImageData.isLoading = false))
+            },
+
+            handleUpdate (imageCode) {
+                this.$store.dispatch('store/getLargestImageCode', imageCode).then(LargestImageCode => {
+                    this.$router.push({ name: 'editImage', params: { imageId: LargestImageCode } })
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                })
             },
 
             deleteImage (imageCode) {
