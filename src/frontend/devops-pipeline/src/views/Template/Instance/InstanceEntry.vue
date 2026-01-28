@@ -26,7 +26,7 @@
                     >
                         <bk-button
                             theme="primary"
-                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing"
+                            :disabled="(templateRefTypeById ? !templateVersion : !templateRef) || (isInstanceCreateViewType && !instanceList.length) || isEditing || fetchPipelinesError"
                             @click="handleBatchUpgrade"
                         >
                             {{ releaseBtnText }}
@@ -123,6 +123,7 @@
     const templateRefType = computed(() => proxy.$store?.state?.templates?.templateRefType)
     const templateRefTypeById = computed(() => templateRefType.value === 'ID')
     const curTemplateDetail = computed(() => proxy.$store?.state?.templates?.templateDetail)
+    const fetchPipelinesError = computed(() => proxy.$store?.state?.templates?.fetchPipelinesError)
 
     const releaseBtnText = computed(() => {
         const type = proxy.$route.params?.type
