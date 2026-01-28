@@ -279,7 +279,7 @@ export const actions = {
         return vue.$ajax.get(`${prefix}/user/market/image/agentType/list`)
     },
     getImageVersionInfo ({ commit }, imageCode) {
-        return vue.$ajax.get(`${prefix}/user/market/image/comment/images/${imageCode}/showVersionInfo`)
+        return vue.$ajax.get(`${prefix}/user/market/images/${imageCode}/showVersionInfo`)
     }
 }
 
