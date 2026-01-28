@@ -365,7 +365,8 @@
                 'pacEnabled'
             ]),
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'tempParamSet'
             ]),
             execVersionSelectorDisableTips () {
                 return {
@@ -444,12 +445,17 @@
             setTimeout(() => {
                 this.resetExecuteConfig(this.pipelineId)
             }, 0)
+            // Clear temp paramSet when leaving preview page
+            if (this.tempParamSet) {
+                this.setTempParamSet(null)
+            }
         },
         methods: {
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'fetchPipelineByVersion',
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'setTempParamSet'
             ]),
             ...mapActions('pipelines', [
                 'requestStartupInfo',
@@ -557,17 +563,6 @@
                             ...this.versionParamValues
                         }
                     })
-                    if (this.buildNo.buildNoType === 'CONSISTENT' && this.buildNo.currentBuildNo !== this.buildNo.lastBuildNo) {
-                        this.buildNo.currentBuildNo = this.buildNo.lastBuildNo
-                        this.buildNo.isChanged = true
-
-                        this.setExecuteParams({
-                            pipelineId: this.pipelineId,
-                            params: {
-                                buildNo: this.buildNo
-                            }
-                        })
-                    }
                 }
             },
             async handleValidate () {
@@ -764,7 +759,7 @@
 
                     if (!param) {
                         diffMap.deleted.push(key)
-                    } else if (!(param.required === true) && !allVersionKeyList.includes(key)) {
+                    } else if (!(param.required === true && param.constant === false) && !allVersionKeyList.includes(key)) {
                         diffMap.noRequired.push(key)
                     } else if (!isShallowEqual(param.defaultValue, partical[key])) {
                         diffMap.changed.push(key)

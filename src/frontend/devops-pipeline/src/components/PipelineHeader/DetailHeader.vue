@@ -167,6 +167,54 @@
                     {{ $t(isDebugExec ? "debug" : "exec") }}
                 </bk-button>
             </span>
+            <bk-dropdown-menu
+                v-if="!isDebugExec"
+                trigger="click"
+                :disabled="reuseParamsLoading"
+            >
+                <div
+                    class="more-action-dropdown-trigger"
+                    slot="dropdown-trigger"
+                >
+                    <i
+                        v-if="reuseParamsLoading"
+                        class="devops-icon icon-circle-2-1 spin-icon"
+                    />
+                    <i
+                        v-else
+                        class="devops-icon icon-more"
+                    />
+                </div>
+                <ul
+                    class="more-action-dropdown-content"
+                    slot="dropdown-content"
+                >
+                    <li
+                        :class="['dropdown-item', {
+                            'disabled': reuseParamsLoading || isCurPipelineLocked
+                        }]"
+                        v-perm="{
+                            hasPermission: canExecute,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: RESOURCE_TYPE.PIPELINE,
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EXECUTE
+                            }
+                        }"
+                        @click="handleReuseParamsExecute"
+                    >
+                        {{ $t("reuseParamsExecute") }}
+                        <bk-popover :z-index="3000">
+                            <i class="bk-icon icon-info-circle" />
+                            <template slot="content">
+                                <p>{{ $t('reuseParamsExecuteTips') }}</p>
+                            </template>
+                        </bk-popover>
+                    </li>
+                </ul>
+            </bk-dropdown-menu>
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
@@ -188,6 +236,7 @@
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
+    import { TEMP_PARAM_SET_ID } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import ReleaseButton from './ReleaseButton'
@@ -205,6 +254,7 @@
         data () {
             return {
                 loading: false,
+                reuseParamsLoading: false,
                 timesNum: 1,
                 canReplay: true
             }
@@ -278,6 +328,7 @@
                     'requestRePlayEventDetail'
                 ]
             ),
+            ...mapActions('atom', ['fetchBuildParamsByBuildId', 'setTempParamSet']),
             async handleCancel () {
                 try {
                     this.loading = true
@@ -439,6 +490,43 @@
                 }
             },
             
+            async handleReuseParamsExecute () {
+                if (this.reuseParamsLoading || this.isCurPipelineLocked) return
+                try {
+                    this.reuseParamsLoading = true
+                    const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                    const buildParamProperties = await this.fetchBuildParamsByBuildId({
+                        projectId,
+                        pipelineId,
+                        buildId
+                    })
+                    const buildNum = this.execDetail?.buildNum
+                    const tempParamSet = {
+                        id: TEMP_PARAM_SET_ID,
+                        name: `${this.$t('reuseParamsExecute')} - #${buildNum}`,
+                        params: buildParamProperties,
+                        isTemp: true,
+                        sourceBuildNum: buildNum
+                    }
+                    this.setTempParamSet(tempParamSet)
+                    const version = this.pipelineInfo?.releaseVersion
+                    this.$router.push({
+                        name: 'executePreview',
+                        params: {
+                            ...this.$route.params,
+                            version
+                        }
+                    })
+                } catch (err) {
+                    console.error(err)
+                    this.$showTips({
+                        message: err.message || this.$t('reuseParamsExecuteFailed'),
+                        theme: 'error'
+                    })
+                } finally {
+                    this.reuseParamsLoading = false
+                }
+            },
             async fetchRePlayEventDetail (eventId) {
                 try {
                     this.loading = true
@@ -535,6 +623,53 @@
         margin-right: 5px;
         color: #458bff;
         z-index: 2000;
+    }
+  }
+  .more-action-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    width: 32px;
+    font-size: 18px;
+    border-radius: 2px;
+    color: #63656E;
+    transform: translateZ(0);
+    &:hover {
+        cursor: pointer;
+        color: #3a84ff;
+        background-color: #f0f1f5;
+    }
+    .spin-icon {
+        font-size: 14px;
+        color: #458bff;
+    }
+  }
+  .more-action-dropdown-content {
+    min-width: 160px;
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        height: 32px;
+        line-height: 32px;
+        font-size: 14px;
+        white-space: nowrap;
+        padding: 0 12px;
+
+        &:hover {
+            background-color: #f0f1f5;
+            color: #3a84ff;
+        }
+        &.disabled {
+            cursor: not-allowed;
+            color: #dcdee5;
+        }
+        .icon-info-circle {
+            margin-left: 5px;
+            font-size: 12px;
+        }
     }
   }
   .rebuild-dropdown-content {
