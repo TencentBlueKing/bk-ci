@@ -271,7 +271,6 @@ class PublicVarGroupReferInfoDao {
                     REFER_ID,
                     REFER_TYPE,
                     REFER_NAME,
-                    GROUP_PROJECT_ID,
                     REFER_VERSION,
                     REFER_VERSION_NAME,
                     POSITION_INFO,
@@ -340,6 +339,15 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 查询使用变量的最新版本记录（按 referId 去重，每个资源只返回使用变量的最新版本）
+     * 查询逻辑：使用子查询获取每个 referId 的最大 referVersion
+     * 只返回在 T_RESOURCE_PUBLIC_VAR_REFER_INFO 表中有实际变量引用的记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param referType 引用类型（可选）
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 变量组引用信息列表（每个referId只返回最大版本）
      */
     fun listLatestActiveVarGroupReferInfo(
         dslContext: DSLContext,
@@ -350,48 +358,39 @@ class PublicVarGroupReferInfoDao {
         pageSize: Int
     ): List<ResourcePublicVarGroupReferPO> {
         val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
         val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
+        // Build subquery to get max referVersion for each referId that has actual variable references
+        val maxVersionSubquery = dslContext.select(
+            trpvgri.REFER_ID,
+            DSL.max(trpvgri.REFER_VERSION).`as`("max_refer_version")
+        )
+            .from(trpvgri)
+            .where(trpvgri.PROJECT_ID.eq(projectId))
+            .and(trpvgri.GROUP_NAME.eq(groupName))
+            .apply { referType?.let { and(trpvgri.REFER_TYPE.eq(it.name)) } }
+            .andExists(
+                dslContext.selectOne()
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                    .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
+            )
+            .groupBy(trpvgri.REFER_ID)
+
+        // Main query: join with subquery to get only the max version records
         val conditions = mutableListOf(
             trpvgri.PROJECT_ID.eq(projectId),
             trpvgri.GROUP_NAME.eq(groupName)
         )
         referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
-        // 存在实际变量引用的条件
-        val existsVarReferCondition = DSL.exists(
-            dslContext.selectOne()
-                .from(trpvri)
-                .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
-                .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
-                .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
-                .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
-        )
-
-        // 构建子查询：查找同一 referId 下使用变量的更高版本不存在
-        var notExistsHigherVersionQuery = dslContext.selectOne()
-            .from(trpvgriSub)
-            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
-            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
-            .and(trpvgriSub.GROUP_NAME.eq(trpvgri.GROUP_NAME))
-            .and(trpvgriSub.REFER_VERSION.gt(trpvgri.REFER_VERSION))
-            .andExists(
-                dslContext.selectOne()
-                    .from(trpvri)
-                    .where(trpvri.PROJECT_ID.eq(trpvgriSub.PROJECT_ID))
-                    .and(trpvri.REFER_ID.eq(trpvgriSub.REFER_ID))
-                    .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
-                    .and(trpvri.GROUP_NAME.eq(trpvgriSub.GROUP_NAME))
-            )
-        referType?.let {
-            notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
-        }
-
         return dslContext.selectFrom(trpvgri)
             .where(conditions)
-            .and(existsVarReferCondition)
-            .and(DSL.notExists(notExistsHigherVersionQuery))
+            .and(
+                DSL.row(trpvgri.REFER_ID, trpvgri.REFER_VERSION).`in`(maxVersionSubquery)
+            )
             .orderBy(trpvgri.UPDATE_TIME.desc())
             .limit(pageSize)
             .offset((page - 1) * pageSize)
@@ -401,6 +400,12 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 统计按 referId 列表筛选且使用变量的资源数量（按 referId 去重）
+     * 查询逻辑：统计有实际变量引用的不同 referId 数量
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID列表
+     * @param referType 引用类型（可选）
+     * @return 符合条件的不同 referId 数量
      */
     fun countLatestActiveVarGroupReferInfoByReferIds(
         dslContext: DSLContext,
@@ -419,6 +424,7 @@ class PublicVarGroupReferInfoDao {
         )
         referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
+        // Count distinct referIds that have actual variable references
         return dslContext.select(DSL.countDistinct(trpvgri.REFER_ID))
             .from(trpvgri)
             .where(conditions)
@@ -435,6 +441,15 @@ class PublicVarGroupReferInfoDao {
 
     /**
      * 根据 referId 列表查询使用变量的最新版本记录
+     * 查询逻辑：使用 INNER JOIN 子查询获取每个 referId 的最大 referVersion
+     * 只返回在 T_RESOURCE_PUBLIC_VAR_REFER_INFO 表中有实际变量引用的记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param referIds 引用ID列表
+     * @param referType 引用类型（可选）
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return 变量组引用信息列表（每个referId只返回最大版本）
      */
     fun listLatestActiveVarGroupReferInfoByReferIds(
         dslContext: DSLContext,
@@ -447,46 +462,40 @@ class PublicVarGroupReferInfoDao {
         if (referIds.isEmpty()) return emptyList()
 
         val trpvgri = TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO
-        val trpvgriSub = trpvgri.`as`("trpvgri_sub")
         val trpvri = TResourcePublicVarReferInfo.T_RESOURCE_PUBLIC_VAR_REFER_INFO
 
+        // Build subquery to get max referVersion for each referId that has actual variable references
+        // This subquery ensures we only consider versions that have entries in T_RESOURCE_PUBLIC_VAR_REFER_INFO
+        val maxVersionSubquery = dslContext.select(
+            trpvgri.REFER_ID,
+            DSL.max(trpvgri.REFER_VERSION).`as`("max_refer_version")
+        )
+            .from(trpvgri)
+            .where(trpvgri.PROJECT_ID.eq(projectId))
+            .and(trpvgri.REFER_ID.`in`(referIds))
+            .apply { referType?.let { and(trpvgri.REFER_TYPE.eq(it.name)) } }
+            .andExists(
+                dslContext.selectOne()
+                    .from(trpvri)
+                    .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
+                    .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
+                    .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
+                    .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
+            )
+            .groupBy(trpvgri.REFER_ID)
+
+        // Main query: join with subquery to get only the max version records
         val conditions = mutableListOf(
             trpvgri.PROJECT_ID.eq(projectId),
             trpvgri.REFER_ID.`in`(referIds)
         )
         referType?.let { conditions.add(trpvgri.REFER_TYPE.eq(it.name)) }
 
-        // 存在实际变量引用的条件
-        val existsVarReferCondition = DSL.exists(
-            dslContext.selectOne()
-                .from(trpvri)
-                .where(trpvri.PROJECT_ID.eq(trpvgri.PROJECT_ID))
-                .and(trpvri.REFER_ID.eq(trpvgri.REFER_ID))
-                .and(trpvri.REFER_VERSION.eq(trpvgri.REFER_VERSION))
-                .and(trpvri.GROUP_NAME.eq(trpvgri.GROUP_NAME))
-        )
-
-        // 不存在同一 referId 使用变量的更高版本
-        var notExistsHigherVersionQuery = dslContext.selectOne()
-            .from(trpvgriSub)
-            .where(trpvgriSub.PROJECT_ID.eq(trpvgri.PROJECT_ID))
-            .and(trpvgriSub.REFER_ID.eq(trpvgri.REFER_ID))
-            .and(trpvgriSub.REFER_VERSION.gt(trpvgri.REFER_VERSION))
-            .andExists(
-                dslContext.selectOne()
-                    .from(trpvri)
-                    .where(trpvri.PROJECT_ID.eq(trpvgriSub.PROJECT_ID))
-                    .and(trpvri.REFER_ID.eq(trpvgriSub.REFER_ID))
-                    .and(trpvri.REFER_VERSION.eq(trpvgriSub.REFER_VERSION))
-            )
-        referType?.let {
-            notExistsHigherVersionQuery = notExistsHigherVersionQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
-        }
-
         return dslContext.selectFrom(trpvgri)
             .where(conditions)
-            .and(existsVarReferCondition)
-            .and(DSL.notExists(notExistsHigherVersionQuery))
+            .and(
+                DSL.row(trpvgri.REFER_ID, trpvgri.REFER_VERSION).`in`(maxVersionSubquery)
+            )
             .orderBy(trpvgri.UPDATE_TIME.desc())
             .limit(pageSize)
             .offset((page - 1) * pageSize)

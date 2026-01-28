@@ -155,12 +155,14 @@ class UserPublicVarGroupReferenceResourceImpl @Autowired constructor(
             groupName = groupName
         )
         return Result(publicVarGroupReferQueryService.listResourceVarReferInfo(
-            projectId = projectId,
-            referId = referId,
-            referType = referType,
-            referVersion = referVersion,
-            groupName = groupName,
-            version = version
+            PublicVarGroupReferQueryService.ResourceVarReferInfoQueryRequest(
+                projectId = projectId,
+                referId = referId,
+                referType = referType,
+                referVersion = referVersion,
+                groupName = groupName,
+                version = version
+            )
         ))
     }
 }

@@ -358,14 +358,15 @@ class PublicVarReferInfoDao {
     }
 
     /**
-     * 根据变量名查询引用该变量的资源ID列表（去重）
+     * 根据变量名查询引用该变量的资源ID列表（每个referId只返回最大版本）
+     * 查询逻辑：使用 GROUP BY 和 MAX 聚合函数获取每个 referId 的最大 referVersion
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名
      * @param varName 变量名
      * @param version 变量组版本
      * @param referType 引用类型（可选）
-     * @return 引用ID列表（去重）
+     * @return 引用ID列表（每个referId只返回最大版本的记录）
      */
     fun listReferIdsByVarName(
         dslContext: DSLContext,
@@ -384,9 +385,13 @@ class PublicVarReferInfoDao {
             version?.let { conditions.add(VERSION.eq(it)) }
             referType?.let { conditions.add(REFER_TYPE.eq(it.name)) }
 
-            return dslContext.selectDistinct(REFER_ID)
+            // Use GROUP BY and MAX to get only the latest version for each referId
+            // This ensures when a variable is referenced by multiple versions of the same referId,
+            // only the maximum referVersion is returned
+            return dslContext.select(REFER_ID)
                 .from(this)
                 .where(conditions)
+                .groupBy(REFER_ID)
                 .fetch()
                 .map { it.value1() }
         }

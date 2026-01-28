@@ -77,6 +77,7 @@ import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import jakarta.ws.rs.core.Response
 import java.time.LocalDateTime
+import org.checkerframework.checker.units.qual.t
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -463,7 +464,11 @@ class PublicVarGroupService @Autowired constructor(
             )
 
             return true
-        } catch (t: Throwable) {
+        } catch (e: ErrorCodeException) {
+            logger.warn("Failed to delete variable group $groupName", e)
+            throw e
+        }
+        catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED,

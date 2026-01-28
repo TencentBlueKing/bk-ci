@@ -359,7 +359,15 @@ class PublicVarGroupReferQueryService @Autowired constructor(
     }
 
     /**
-     * 根据变量名查询变量组引用信息（按 referId 去重，返回使用该变量的最新版本）
+     * 根据变量名查询变量组变量引用信息（每个 referId 只返回最大版本）
+     * 查询逻辑：
+     * 1. 查询引用了该变量的所有 referId（使用 GROUP BY 获取每个 referId 的最大版本）
+     * 2. 统计这些 referId 的最大版本数量
+     * 3. 查询这些 referId 的最大版本详细信息
+     * @param queryReq 查询请求
+     * @param groupName 变量组名
+     * @param varName 变量名
+     * @return 变量组引用信息查询结果（每个 referId 只包含最大版本）
      */
     private fun queryVarGroupReferInfoByVarNameAllVersions(
         queryReq: PublicVarGroupInfoQueryReqDTO,
@@ -369,13 +377,18 @@ class PublicVarGroupReferQueryService @Autowired constructor(
         val projectId = queryReq.projectId
 
         try {
-            // 查询引用了该变量的 referId 列表（所有版本）
+            // Query referIds that reference this variable (max version for each referId)
             val referIds = publicVarReferInfoDao.listReferIdsByVarName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
                 varName = varName,
                 referType = queryReq.referType
+            )
+
+            logger.info(
+                "Query var refer info: project=$projectId, group=$groupName, var=$varName, " +
+                "referType=${queryReq.referType?.name}, referIdCount=${referIds.size}"
             )
 
             if (referIds.isEmpty()) {
@@ -385,7 +398,6 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 )
             }
 
-            // 统计使用变量的资源数量（按 referId 去重）
             val totalCount = publicVarGroupReferInfoDao.countLatestActiveVarGroupReferInfoByReferIds(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -393,7 +405,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 referType = queryReq.referType
             )
 
-            // 查询使用变量的最新版本记录
+            // Query max version details for each referId
             val varGroupReferInfo = publicVarGroupReferInfoDao.listLatestActiveVarGroupReferInfoByReferIds(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -403,13 +415,17 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 pageSize = queryReq.pageSize
             )
 
+            logger.info(
+                "Query result: totalCount=$totalCount, returnedCount=${varGroupReferInfo.size}"
+            )
+
             return VarGroupReferInfoQueryResult(
                 totalCount = totalCount,
                 referInfos = varGroupReferInfo
             )
         } catch (e: Throwable) {
             logger.warn(
-                "Failed to query var group refer info by varName: $varName (all versions) in project: $projectId",
+                "Failed to query var refer info: project=$projectId, group=$groupName, var=$varName",
                 e
             )
             throw ErrorCodeException(
