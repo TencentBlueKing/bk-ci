@@ -55,8 +55,10 @@
 <script>
     import environmentUrl from '@/scss/logo/environment.svg'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
-    const RES_TYPE_STORAGE_KEY = 'bk_devops_environment_res_type'
+    import {
+        SERVICE_RESOURCE_TYPE,
+        RES_TYPE_STORAGE_KEY
+    } from '@/store/constants'
     
     export default {
         data () {
@@ -196,7 +198,6 @@
                         // 获取最近访问的服务（按访问时间排序，第二个是上一次访问的服务）
                         if (recentVisitServiceList.length > 1) {
                             const resType = recentVisitServiceList[1]?.key
-                            console.log(resType, 'resTyperesType')
                             if ([SERVICE_RESOURCE_TYPE.PIPELINE, SERVICE_RESOURCE_TYPE.CREATE].includes(resType)) {
                                 this.handleResTypeChange(resType)
                                 this.currentResType = resType
@@ -246,7 +247,6 @@
                         name: 'envDetail',
                         params: {
                             ...this.$route.params,
-                            resType: this.currentResType,
                             envType: 'ALL', // 默认环境类型
                             envId: undefined, // 由 useEnvAside 设置默认的 envId
                             tabName: undefined // 由 env_detail 设置默认的 tabName
@@ -256,7 +256,6 @@
                         name: 'nodeList',
                         params: {
                             ...this.$route.params,
-                            resType: this.currentResType,
                             nodeType: 'allNode' // 节点页面的默认类型
                         }
                     },

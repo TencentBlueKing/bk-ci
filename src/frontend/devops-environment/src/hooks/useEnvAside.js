@@ -101,7 +101,6 @@ export default function useEnvAside () {
     }
 
     const fetchEnvCountAsType = async (createEnv) => {
-        console.log(isCreateResType, 'isCreateResType')
         try {
             const res = await proxy.$store.dispatch('environment/requestEnvCount', {
                 projectId: projectId.value,
