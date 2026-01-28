@@ -383,6 +383,14 @@ export default {
             return acc
         }, 0) + containerIndex
     },
+    // 是否是MacOS on DevCloud
+    isMacOSContainer: state => container => {
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'MACOS'
+    },
+    // 是否是MacOS 2.0
+    isMacOSNonVMware: state => container => {
+        return container && container.dispatchType && typeof container.dispatchType.macOSHwSpec === 'string' && container.dispatchType.macOSHwSpec !== 'VMware'
+    },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
     },
@@ -402,13 +410,15 @@ export default {
         return container?.dispatchType?.buildType?.indexOf('THIRD_PARTY_') > -1 && container?.dispatchType?.dockerInfo && Object.keys(container?.dispatchType?.dockerInfo).length
     },
     checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
+        const isMacOS = getters.isMacOSContainer(container)
+        const isMacOSNonVMware = getters.isMacOSNonVMware(container)
         const isDocker = getters.isDockerBuildResource(container)
         const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
         const isBcsContainer = getters.isBcsContainer(container)
         const isThirdDocker = getters.isThirdDockerContainer(container)
         const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum
 
-        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
+        return routeName !== 'templateEdit' && (container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer || isThirdDocker) || (isMacOS && isMacOSNonVMware)) && (['pipelinesEdit', 'pipelinesHistory'].includes(routeName) || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)
