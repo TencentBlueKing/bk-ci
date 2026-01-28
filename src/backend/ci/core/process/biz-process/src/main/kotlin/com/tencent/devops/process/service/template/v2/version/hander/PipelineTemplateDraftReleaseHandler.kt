@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,8 +66,11 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
-        logger.info("Template draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template draft to released version|" +
+                        "$projectId|$templateId|$versionAction|$version|$targetAction|$branchName|$customVersionName"
+            )
             if (version == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,

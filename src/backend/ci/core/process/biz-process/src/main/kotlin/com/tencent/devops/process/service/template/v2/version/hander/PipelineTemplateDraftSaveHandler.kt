@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -62,8 +61,10 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     }
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
-        logger.info("save template draft version with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle save template draft version|$projectId|$templateId|$versionAction|$version"
+            )
             if (pTemplateResourceWithoutVersion.status != VersionStatus.COMMITTING) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_STATUS_NOT_MATCHED,
