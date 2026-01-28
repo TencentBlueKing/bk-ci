@@ -67,10 +67,9 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectCreateInfo: ProjectCreateInfo,
-        accessToken: String?
+        projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean> {
-        logger.info("OPENAPI_PROJECT_V4|$userId|create|$projectCreateInfo|$accessToken|$projectRouteTag")
+        logger.info("OPENAPI_PROJECT_V4|$userId|create|$projectCreateInfo|$projectRouteTag")
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
@@ -79,8 +78,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
 
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken
+            projectCreateInfo = projectCreateInfo
         )
     }
 
@@ -89,15 +87,13 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
-        logger.info("OPENAPI_PROJECT_V4|$userId|update|$projectId|$projectUpdateInfo|$accessToken")
+        logger.info("OPENAPI_PROJECT_V4|$userId|update|$projectId|$projectUpdateInfo")
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo,
-            accessToken = accessToken
+            projectUpdateInfo = projectUpdateInfo
         )
     }
 
@@ -105,8 +101,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectId: String,
-        accessToken: String?
+        projectId: String
     ): Result<ProjectVO?> {
         logger.info("OPENAPI_PROJECT_V4|$userId|get|$projectId")
         return client.get(ServiceProjectResource::class).get(
@@ -118,7 +113,6 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        accessToken: String?,
         productIds: String?,
         channelCodes: String?,
         sort: ProjectSortType?,
