@@ -73,7 +73,8 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams.toMutableList()
+            params = pipelineParams.toMutableList(),
+            templateParams = null
         )
 
         return Model(
@@ -161,7 +162,8 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams.toMutableList()
+            params = pipelineParams.toMutableList(),
+            templateParams = null
         )
     }
 
@@ -298,7 +300,9 @@ object TemplateInstanceUtil {
             overrideBuildNo = overrideBuildNo
         )
 
+        val name = templateParam.name ?: templateParam.id
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = pipelineParam.required,
             asInstanceInput = null
@@ -327,8 +331,10 @@ object TemplateInstanceUtil {
             templateParam = templateParam,
             templateVariable = templateVariable
         )
+        val name = templateParam.name ?: templateParam.id
         // 用templateVariable覆盖模板的默认值
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = templateVariable.allowModifyAtStartup ?: templateParam.required,
             asInstanceInput = null
@@ -500,7 +506,10 @@ object TemplateInstanceUtil {
         } else {
             templateBuildNo.buildNo
         }
-        return pipelineBuildNo.copy(buildNo = buildNo)
+        return pipelineBuildNo.copy(
+            buildNo = buildNo,
+            asInstanceInput = null
+        )
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -529,7 +538,8 @@ object TemplateInstanceUtil {
 
         return templateBuildNo.copy(
             required = recommendedVersion.allowModifyAtStartup ?: templateBuildNo.required,
-            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo
+            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo,
+            asInstanceInput = null
         )
     }
 

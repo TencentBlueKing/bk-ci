@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -157,7 +158,8 @@ class PipelineTemplateInstanceHandler @Autowired constructor(
         val yamlFileReleaseResult = enablePac.takeIf { it }?.let {
             pipelineVersionPersistenceService.releaseYamlFile(
                 context = this,
-                resourceOnlyVersion = resourceOnlyVersion
+                resourceOnlyVersion = resourceOnlyVersion,
+                source = PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE
             )
         }
 

@@ -19,7 +19,7 @@
                     {{ renderInstanceList.length }}
                 </span>
             </i18n>
-            <!-- <div
+            <div
                 v-if="renderInstanceList.length"
                 class="batch-edit-btn"
                 @click="handleBatchEdit"
@@ -32,7 +32,7 @@
                 <span>
                     {{ $t('template.batchEditParams') }}
                 </span>
-            </div> -->
+            </div>
         </div>
         <ul class="instance-list">
             <li
@@ -128,7 +128,8 @@
         SET_TEMPLATE_DETAIL,
         SET_INSTANCE_LIST,
         UPDATE_USE_TEMPLATE_SETTING,
-        INSTANCE_OPERATE_TYPE
+        INSTANCE_OPERATE_TYPE,
+        SET_FETCH_PIPELINES_ERROR
     } from '@/store/modules/templates/constants'
     import { deepClone } from '@/utils/util'
     import Logo from '@/components/Logo'
@@ -243,14 +244,16 @@
     async function fetchPipelinesDetails () {
         try {
             proxy.$store.dispatch('templates/updateInstancePageLoading', true)
-            const pipelineIds = renderInstanceList.value.map(i => i.pipelineId)
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, false)
+            const initialInstanceListValue = proxy.$store?.state?.templates?.initialInstanceList
+            const pipelineIds = initialInstanceListValue.map(i => i.pipelineId)
             const res = await proxy.$store.dispatch('templates/fetchPipelineDetailById', {
                 pipelineIds,
                 projectId: projectId.value,
                 version: currentVersion.value,
                 templateId: templateId.value
             })
-            const list = renderInstanceList.value.map(i => {
+            const list = initialInstanceListValue.map(i => {
                 const triggerElements = res[i.pipelineId]?.triggerElements
                 const overrideTemplateField = res[i.pipelineId]?.overrideTemplateField ?? {}
                 return {
@@ -297,10 +300,7 @@
             proxy.$store.commit(`templates/${SET_INSTANCE_LIST}`, { list })
             proxy.$store.commit('templates/TRIGGER_MERGE_INSTANCES', true)
         } catch (e) {
-            proxy.$bkMessage({
-                theme: 'error',
-                message: e.message || e
-            })
+            proxy.$store.commit(`templates/${SET_FETCH_PIPELINES_ERROR}`, true)
             console.error(e)
         } finally {
             proxy.$store.dispatch('templates/updateInstancePageLoading', false)
@@ -353,6 +353,7 @@
                         }
                     ]
                 })
+                fetchPipelinesDetails()
             }
 
             if (instanceViewType.value === INSTANCE_OPERATE_TYPE.UPGRADE  && !instanceList.value.length) {
@@ -365,7 +366,6 @@
                 })
                 return
             }
-            // await fetchPipelinesDetails()
             proxy.$nextTick(() => {
                 handleInstanceClick(instanceActiveIndex.value)
             })

@@ -463,9 +463,6 @@ class PipelineTransferYamlService @Autowired constructor(
         return elementTransfer.yaml2element(userId, ScriptYmlUtils.preStepToStep(tYml), null)
     }
 
-    /**
-     * @param force 是否强制更新
-     */
     fun buildPreview(
         userId: String,
         projectId: String,
@@ -473,7 +470,6 @@ class PipelineTransferYamlService @Autowired constructor(
         resource: PipelineResourceVersion,
         editPermission: Boolean? = null,
         archiveFlag: Boolean? = false,
-        force: Boolean = false,
         isEncryptParamsValue: Boolean? = false
     ): PreviewResponse {
         val setting = pipelineSettingVersionService.getPipelineSetting(
@@ -492,7 +488,7 @@ class PipelineTransferYamlService @Autowired constructor(
         val triggerIndex = mutableListOf<TransferMark>()
         val noticeIndex = mutableListOf<TransferMark>()
         val settingIndex = mutableListOf<TransferMark>()
-        val yaml = if (force || editPermission == false || resource.yaml.isNullOrBlank() || isEncryptParamsValue == true) {
+        val yaml = if (editPermission == false || resource.yaml.isNullOrBlank() || isEncryptParamsValue == true) {
             transfer(
                 userId = userId,
                 projectId = projectId,
