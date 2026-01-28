@@ -759,7 +759,7 @@
 
                     if (!param) {
                         diffMap.deleted.push(key)
-                    } else if (!(param.required === true || param.constant === true) && !allVersionKeyList.includes(key)) {
+                    } else if (!(param.required === true && param.constant === false) && !allVersionKeyList.includes(key)) {
                         diffMap.noRequired.push(key)
                     } else if (!isShallowEqual(param.defaultValue, partical[key])) {
                         diffMap.changed.push(key)
