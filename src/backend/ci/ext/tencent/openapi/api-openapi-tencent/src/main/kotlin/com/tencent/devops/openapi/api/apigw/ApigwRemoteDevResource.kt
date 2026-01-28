@@ -1108,8 +1108,11 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "类型", required = true)
         @QueryParam("type")
         type: String,
+        @Parameter(description = "工作空间名称", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
         @Parameter(description = "envId", required = true)
         @QueryParam("envId")
-        envId: String
+        envId: String?
     ): Result<Boolean>
 }

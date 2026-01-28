@@ -910,13 +910,20 @@ class ServiceRemoteDevResourceImpl(
         return Result(tGitBindService.bindTGitProject(userId, data.tgitId, data.tgitUrl, data.projectIds))
     }
 
-    override fun cdsWebhookEvent(userId: String, type: String, envId: String): Result<Boolean> {
+    override fun cdsWebhookEvent(
+        userId: String,
+        type: String,
+        workspaceName: String?,
+        envId: String?
+    ): Result<Boolean> {
+        if (workspaceName.isNullOrEmpty() && envId.isNullOrEmpty()) return Result(false)
         val eventType = CdsWebhookEvent.Type.fromWebhook(type) ?: return Result(false)
         dispatcher.dispatch(
             CdsWebhookEvent(
                 userId = userId,
                 type = eventType,
-                envId = envId
+                envId = envId ?: "",
+                workspaceName = workspaceName
             )
         )
         return Result(true)

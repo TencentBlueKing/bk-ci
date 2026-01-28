@@ -755,12 +755,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         apigwType: String?,
         userId: String,
         type: String,
-        envId: String
+        workspaceName: String?,
+        envId: String?
     ): Result<Boolean> {
         logger.info("cgsReportNotify ,type:$type,envId:$envId")
         return client.get(ServiceRemoteDevResource::class).cdsWebhookEvent(
             userId = userId,
             type = type,
+            workspaceName = workspaceName,
             envId = envId
         )
     }
