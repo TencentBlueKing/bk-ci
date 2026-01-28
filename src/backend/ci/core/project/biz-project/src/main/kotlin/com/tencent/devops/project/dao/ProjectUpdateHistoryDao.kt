@@ -23,6 +23,10 @@ class ProjectUpdateHistoryDao {
                 AFTER_PROJECT_NAME,
                 BEFORE_PRODUCT_ID,
                 AFTER_PRODUCT_ID,
+                BEFORE_KPI_CODE,
+                AFTER_KPI_CODE,
+                BEFORE_KPI_NAME,
+                AFTER_KPI_NAME,
                 BEFORE_ORGANIZATION,
                 AFTER_ORGANIZATION,
                 BEFORE_SUBJECT_SCOPES,
@@ -37,6 +41,10 @@ class ProjectUpdateHistoryDao {
                 projectUpdateHistoryInfo.afterProjectName,
                 projectUpdateHistoryInfo.beforeProductId,
                 projectUpdateHistoryInfo.afterProductId,
+                projectUpdateHistoryInfo.beforeKpiCode,
+                projectUpdateHistoryInfo.afterKpiCode,
+                projectUpdateHistoryInfo.beforeKpiName,
+                projectUpdateHistoryInfo.afterKpiName,
                 projectUpdateHistoryInfo.beforeOrganization,
                 projectUpdateHistoryInfo.afterOrganization,
                 projectUpdateHistoryInfo.beforeSubjectScopes,
@@ -79,6 +87,22 @@ class ProjectUpdateHistoryDao {
                 .where(UPDATED_AT.between(twentyFourHoursAgo, currentTime))
                 .and(APPROVAL_STATUS.eq(ProjectApproveStatus.APPROVED.status))
                 .fetch()
+        }
+    }
+
+    /**
+     * 获取最近一条已审批通过的历史记录
+     */
+    fun getLatestApprovedHistory(
+        dslContext: DSLContext,
+        englishName: String
+    ): TProjectUpdateHistoryRecord? {
+        return with(TProjectUpdateHistory.T_PROJECT_UPDATE_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(ENGLISH_NAME.eq(englishName))
+                .and(APPROVAL_STATUS.eq(ProjectApproveStatus.APPROVED.status))
+                .orderBy(UPDATED_AT.desc())
+                .fetchAny()
         }
     }
 }

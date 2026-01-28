@@ -190,7 +190,8 @@ class PermissionGradeManagerService @Autowired constructor(
                         name = ALL_MEMBERS_NAME
                     )
                 ),
-                productName = projectApprovalInfo.productName!!
+                productName = projectApprovalInfo.productName!!,
+                kpiProductName = projectApprovalInfo.kpiName
             )
             val gradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
                 .builder()
@@ -245,7 +246,8 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String,
         /*该字段主要用于当创建项目审批回调时，需要修改分级管理员并注册监控权限资源，此时不走审批流程*/
-        registerMonitorPermission: Boolean = false
+        registerMonitorPermission: Boolean = false,
+        enabled: Boolean? = null
     ): Boolean {
         val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
             ?: throw ErrorCodeException(
@@ -298,6 +300,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
                 .groupName(groupConfig.groupName)
+                .let { if (enabled != null) it.enabled(enabled) else it }
                 .build()
             logger.info("update grade manager|$name|$finalMembers")
             iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
@@ -318,6 +321,7 @@ class PermissionGradeManagerService @Autowired constructor(
                     )
                 ),
                 productName = projectApprovalInfo.productName!!,
+                kpiProductName = projectApprovalInfo.kpiName,
                 isCreateProject = false
             )
 
