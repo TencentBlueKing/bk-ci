@@ -151,14 +151,6 @@ export const actions = {
     requestDelImage ({ commit }, imageCode) {
         return vue.$ajax.delete(`${prefix}/user/market/image/imageCodes/${imageCode}`)
     },
-
-    /**
-     * 升级镜像需获取最大版本的镜像ID
-     */
-    getLargestImageCode ({ commit }, imageCode) {
-        return vue.$ajax.get(`${prefix}/user/market/imageCodes/${imageCode}/version/latest`)
-    },
-
     /**
      * 关联镜像
      */
