@@ -56,6 +56,6 @@ data class PipelineVersionWithModel(
     val updater: String?,
     @get:Schema(title = "版本修改时间", required = false)
     val updateTime: Long?,
-    @get:Schema(title = "运行环境名称", required = false)
-    val envName: String? = null
+    @get:Schema(title = "运行环境HashId", required = false)
+    val envHashId: String? = null
 )

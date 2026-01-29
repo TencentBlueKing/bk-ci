@@ -557,7 +557,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
             updateTime = resource.updateTime?.timestampmilli(),
-            envName = setting.envHashId
+            envHashId = setting.envHashId
         )
     }
 
