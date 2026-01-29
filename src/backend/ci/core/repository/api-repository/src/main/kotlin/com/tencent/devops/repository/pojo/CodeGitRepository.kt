@@ -83,7 +83,11 @@ data class CodeGitRepository(
     override fun isLegal(): Boolean {
         return when (authType) {
             RepoAuthType.HTTP, RepoAuthType.OAUTH, RepoAuthType.HTTPS ->
-                GitUtils.isLegalHttpUrl(url)
+                if (repoResourceType == RepoResourceType.REPOSITORY_GROUP) { // 项目组url没有[.git]后缀
+                    GitUtils.isLegalGroupHttpUrl(url)
+                } else {
+                    GitUtils.isLegalHttpUrl(url)
+                }
             else ->
                 GitUtils.isLegalSshUrl(url)
         }
