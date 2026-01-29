@@ -740,7 +740,7 @@ class RepositoryService @Autowired constructor(
                 createUser = repository.userId,
                 createTime = repository.createdTime.timestamp(),
                 updatedUser = repository.updatedUser,
-                repoResourceType = RepoResourceType.parse(repository.resourceType)
+                repoResourceType = RepoResourceType.parse(repository.repoResourceType)
             )
         }.toList()
     }
@@ -846,7 +846,7 @@ class RepositoryService @Autowired constructor(
                 enablePac = it.enablePac,
                 scmCode = scmCode,
                 logoUrl = repoLogoMap[scmCode],
-                repoResourceType = RepoResourceType.parse(it.resourceType)
+                repoResourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -899,7 +899,7 @@ class RepositoryService @Autowired constructor(
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
                 scmCode = it.scmCode,
-                resourceType = RepoResourceType.parse(it.resourceType)
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -939,7 +939,7 @@ class RepositoryService @Autowired constructor(
                 url = it.url,
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
-                resourceType = RepoResourceType.parse(it.resourceType)
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -979,7 +979,7 @@ class RepositoryService @Autowired constructor(
                 url = it.url,
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
-                resourceType = RepoResourceType.parse(it.resourceType)
+                resourceType = RepoResourceType.parse(it.repoResourceType)
             )
         }
         return SQLPage(count, repositoryList)
@@ -1177,7 +1177,7 @@ class RepositoryService @Autowired constructor(
                     type = ScmType.valueOf(it.type),
                     updatedTime = it.updatedTime.timestampmilli(),
                     createUser = it.userId,
-                    resourceType = RepoResourceType.parse(it.resourceType)
+                    resourceType = RepoResourceType.parse(it.repoResourceType)
                 )
             )
         }
@@ -1216,7 +1216,7 @@ class RepositoryService @Autowired constructor(
                     type = ScmType.valueOf(it.type),
                     updatedTime = it.updatedTime.timestampmilli(),
                     createUser = it.userId,
-                    resourceType = RepoResourceType.parse(it.resourceType)
+                    resourceType = RepoResourceType.parse(it.repoResourceType)
                 )
             )
         }
