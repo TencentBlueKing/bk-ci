@@ -137,6 +137,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
+                        :all-pipeline-param-values="allExecuteParams"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -311,7 +312,7 @@
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import renderSortCategoryParams from '@/components/renderSortCategoryParams'
-    import { UPDATE_PREVIEW_PIPELINE_NAME, bus } from '@/utils/bus'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { getParamsValuesMap, isObject, isShallowEqual } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -422,6 +423,9 @@
                     const item = diffs[key]
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
+            },
+            allExecuteParams () {
+                return this.getExecuteParams(this.pipelineId)
             }
         },
         watch: {
@@ -485,7 +489,7 @@
             },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
-                    const values = this.getExecuteParams(this.pipelineId)
+                    const values = this.allExecuteParams
                     if (startupInfo.buildNo) {
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
@@ -658,7 +662,7 @@
                 let message, theme
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
-                const params = this.getExecuteParams(this.pipelineId)
+                const params = this.allExecuteParams
                 Object.keys(params).forEach(key => {
                     if (key !== 'buildNo' && isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])
