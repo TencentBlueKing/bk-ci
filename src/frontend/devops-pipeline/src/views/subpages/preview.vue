@@ -135,7 +135,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
-                        :all-pipeline-param-values="allExecuteParams"
+                        :all-pipeline-param-values="getExecuteParams(pipelineId)"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -427,9 +427,6 @@
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
             },
-            allExecuteParams () {
-                return this.getExecuteParams(this.pipelineId)
-            }
         },
         watch: {
             executeVersion: {
@@ -492,7 +489,7 @@
             },
             initParams (startupInfo) {
                 if (startupInfo.canManualStartup) {
-                    const values = this.allExecuteParams
+                    const values = this.getExecuteParams(this.pipelineId)
                     if (startupInfo.buildNo) {
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
@@ -665,7 +662,7 @@
                 let message, theme
                 const paramsValid = await this.handleValidate()
                 if (!paramsValid) return
-                const params = this.allExecuteParams
+                const params = this.getExecuteParams(this.pipelineId)
                 Object.keys(params).forEach(key => {
                     if (key !== 'buildNo' && isObject(params[key])) {
                         params[key] = JSON.stringify(params[key])
@@ -754,7 +751,7 @@
                 })
             },
             particalyUpdateParams (origin, partical, diffMap) {
-                const allParamMap = this.startupInfo.properties.reduce((acc, param) => {
+                const allParamMap = this.startupInfo?.properties?.reduce((acc, param) => {
                     acc.set(param.id, param)
                     return acc
                 }, new Map())
