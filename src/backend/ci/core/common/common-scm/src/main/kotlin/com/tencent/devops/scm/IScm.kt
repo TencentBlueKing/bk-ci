@@ -34,6 +34,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitTagInfo
 import com.tencent.devops.scm.pojo.LoginSession
@@ -104,4 +105,6 @@ interface IScm {
     fun getTag(tagName: String): GitTagInfo? = null
 
     fun getTapdWorkItems(refType: String, iid: Long): List<TapdWorkItem> = listOf()
+
+    fun getProjectGroupInfo(groupName: String, includeSubgroups: Boolean?): GitProjectGroupInfo? = null
 }

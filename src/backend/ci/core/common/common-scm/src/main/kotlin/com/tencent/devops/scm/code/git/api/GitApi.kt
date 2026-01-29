@@ -48,6 +48,7 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitServerError
 import com.tencent.devops.scm.pojo.GitTagInfo
@@ -820,6 +821,25 @@ open class GitApi {
         val request = get(host, token, url, "")
         val responseBody = getBody(
             getMessageByLocale(CommonMessageCode.GET_TAG_INFO),
+            request
+        )
+        return JsonUtil.getObjectMapper().readValue(responseBody)
+    }
+
+    fun getProjectGroupInfo(
+        host: String,
+        token: String,
+        groupName: String,
+        includeSubgroups: Boolean?
+    ): GitProjectGroupInfo? {
+        val url = "groups/${urlEncode(groupName)}?".addParams(
+            mapOf(
+                "include_subgroups" to includeSubgroups
+            )
+        )
+        val request = get(host, token, url, "")
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_GROUP_INFO),
             request
         )
         return JsonUtil.getObjectMapper().readValue(responseBody)
