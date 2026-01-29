@@ -3220,7 +3220,7 @@ class PipelineBuildFacadeService(
                     "url" to "/environment/api/user/environment/$projectId/$envHashId/listNodesNew?page=-1",
                     "dataPath" to "data.records",
                     "paramName" to "displayName",
-                    "paramId" to "agentId"
+                    "paramId" to "agentHashId"
                 )
                 params.add(
                     BuildFormProperty(
