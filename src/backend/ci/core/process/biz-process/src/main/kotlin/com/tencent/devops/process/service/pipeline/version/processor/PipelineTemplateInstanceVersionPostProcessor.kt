@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
- * 流水线模板关联关系版本创建后置处理器
+ * 流水线模板实例关系后置处理器
  */
 @Service
 class PipelineTemplateInstanceVersionPostProcessor @Autowired constructor(
@@ -54,11 +54,15 @@ class PipelineTemplateInstanceVersionPostProcessor @Autowired constructor(
         if (templateInstanceBasicInfo?.baseId != null) {
             val beforePipelineVersion = context.pipelineInfo?.version
             val afterPipelineVersion = pipelineResourceVersion.version
+            val beforeTemplateVersion = templateInstanceBasicInfo.beforeTemplateVersion
+            val afterTemplateVersion = templateInstanceBasicInfo.templateVersion
             templateInstanceItemDao.update(
                 dslContext = transactionContext,
                 record = PipelineTemplateInstanceItemUpdate(
                     beforePipelineVersion = beforePipelineVersion,
-                    afterPipelineVersion = afterPipelineVersion
+                    afterPipelineVersion = afterPipelineVersion,
+                    beforeTemplateVersion = beforeTemplateVersion,
+                    afterTemplateVersion = afterTemplateVersion
                 ),
                 condition = PipelineTemplateInstanceItemCondition(
                     projectId = projectId,

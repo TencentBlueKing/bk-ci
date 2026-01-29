@@ -42,6 +42,8 @@ data class PipelineTemplateInstanceBasicInfo(
     val baseId: String? = null,
     @get:Schema(title = "模版名称")
     val templateName: String,
+    @get:Schema(title = "变更前的模板版本", required = false)
+    val beforeTemplateVersion: Long? = null,
     @get:Schema(title = "模版版本")
     val templateVersion: Long,
     @get:Schema(title = "模版版本名称")

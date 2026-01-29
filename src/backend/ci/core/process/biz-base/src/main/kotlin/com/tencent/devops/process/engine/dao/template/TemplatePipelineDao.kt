@@ -418,4 +418,21 @@ class TemplatePipelineDao {
                 .execute()
         }
     }
+
+    fun updateVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        templateVersion: Long,
+        userId: String
+    ): Int {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.update(this)
+                .set(VERSION, templateVersion)
+                .set(UPDATOR, userId)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
 }

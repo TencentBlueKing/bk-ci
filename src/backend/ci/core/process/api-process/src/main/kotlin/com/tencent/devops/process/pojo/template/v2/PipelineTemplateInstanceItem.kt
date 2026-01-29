@@ -38,6 +38,10 @@ data class PipelineTemplateInstanceItem(
     val beforePipelineVersion: Int? = null,
     @get:Schema(title = "更新后流水线版本", required = false)
     val afterPipelineVersion: Int? = null,
+    @get:Schema(title = "更新前模板版本", required = false)
+    val beforeTemplateVersion: Long? = null,
+    @get:Schema(title = "更新后模板版本", required = false)
+    val afterTemplateVersion: Long? = null,
     @get:Schema(title = "创建者", required = true)
     val creator: String,
     @get:Schema(title = "修改者", required = true)

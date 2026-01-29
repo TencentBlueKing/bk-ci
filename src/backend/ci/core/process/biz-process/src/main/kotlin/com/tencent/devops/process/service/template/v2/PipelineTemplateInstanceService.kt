@@ -36,6 +36,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateInstanceEvent
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -87,6 +88,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
+    private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineIdGenerator: PipelineIdGenerator,
     private val sampleEventDispatcher: SampleEventDispatcher,
     private val pipelineVersionManager: PipelineVersionManager,
@@ -1184,11 +1186,22 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     request = cloneReq
                 )
 
+                // 5. 如果有记录实例化前的模板版本，则回滚模板版本关系
+                item.beforeTemplateVersion?.let { beforeTemplateVersion ->
+                    templatePipelineDao.updateVersion(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = item.pipelineId,
+                        templateVersion = beforeTemplateVersion,
+                        userId = userId
+                    )
+                }
+
                 successPipelines.add(item.pipelineName)
                 successPipelineIds.add(item.pipelineId)
                 logger.info(
                     "rollback pipeline success|$projectId|${item.pipelineId}|" +
-                        "${item.pipelineName}|$beforeVersion"
+                        "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
                 )
             } catch (e: Exception) {
                 logger.error(
