@@ -483,9 +483,9 @@ interface UserBuildResource {
         @Parameter(description = "触发事件", required = false)
         @QueryParam("triggerEventTypes")
         triggerEventTypes: List<String>?,
-        @Parameter(description = "触发节点agentHashId", required = false)
-        @QueryParam("triggerAgentHashIds")
-        triggerAgentHashIds: List<String>?
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")

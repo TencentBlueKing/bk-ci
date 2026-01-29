@@ -78,7 +78,10 @@ interface ServiceNodeResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "节点 hashIds", required = true)
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>,
+        @Parameter(description = "是否校验权限，默认 true 校验权限")
+        @QueryParam("checkPermission")
+        checkPermission: Boolean? = true
     ): Result<List<NodeWithPermission>>
 
     @Operation(summary = "获取项目节点详情")

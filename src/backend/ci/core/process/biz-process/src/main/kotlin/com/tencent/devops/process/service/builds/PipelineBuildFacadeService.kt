@@ -147,7 +147,7 @@ import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckSt
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
@@ -2064,7 +2064,7 @@ class PipelineBuildFacadeService(
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 50
@@ -2129,7 +2129,7 @@ class PipelineBuildFacadeService(
                 triggerBranch = triggerBranch,
                 triggerUser = triggerUser,
                 triggerEventTypes = triggerEventTypes,
-                triggerAgentHashIds = triggerAgentHashIds
+                triggerNodeHashIds = triggerNodeHashIds
             )
 
             val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
@@ -2165,7 +2165,7 @@ class PipelineBuildFacadeService(
                 triggerBranch = triggerBranch,
                 triggerUser = triggerUser,
                 triggerEventTypes = triggerEventTypes,
-                triggerAgentHashIds = triggerAgentHashIds
+                triggerNodeHashIds = triggerNodeHashIds
             )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
@@ -3036,7 +3036,7 @@ class PipelineBuildFacadeService(
             } else {
                 true
             }
-            const && required && it.id != CREATIVE_STREAM_NODE_AGENT_ID
+            const && required && it.id != NODE_AGENT_ID
         }
         for (item in prop) {
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
@@ -3213,7 +3213,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineVersion = version
-            )?.envName
+            )?.envHashId
             envName?.let {
                 val payload = mapOf(
                     "type" to "remote",
@@ -3224,7 +3224,7 @@ class PipelineBuildFacadeService(
                 )
                 params.add(
                     BuildFormProperty(
-                        id = CREATIVE_STREAM_NODE_AGENT_ID,
+                        id = NODE_AGENT_ID,
                         required = true,
                         type = BuildFormPropertyType.ENUM,
                         defaultValue = "",

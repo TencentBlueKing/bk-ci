@@ -57,7 +57,7 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_HASH_ID
 import jakarta.ws.rs.core.Response
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -83,7 +83,7 @@ class PipelineBuildDao {
 
     fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
-            val nodeAgentHashId = startBuildContext.pipelineParamMap[CREATIVE_STREAM_NODE_AGENT_ID]?.value?.toString()
+            val nodeHashId = startBuildContext.pipelineParamMap[NODE_HASH_ID]?.value?.toString()
             if (!startBuildContext.debug) {
                 with(T_PIPELINE_BUILD_HISTORY) {
                     dslContext.insertInto(
@@ -112,7 +112,7 @@ class PipelineBuildDao {
                         VERSION_NAME,
                         YAML_VERSION,
                         EXECUTE_COUNT,
-                        NODE_AGENT_HASH_ID
+                        NODE_HASH_ID
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -138,7 +138,7 @@ class PipelineBuildDao {
                         startBuildContext.versionName,
                         startBuildContext.yamlVersion,
                         startBuildContext.executeCount,
-                        nodeAgentHashId
+                        nodeHashId
                     ).execute()
                 }
             } else {
@@ -169,7 +169,7 @@ class PipelineBuildDao {
                         YAML_VERSION,
                         RESOURCE_MODEL,
                         EXECUTE_COUNT,
-                        NODE_AGENT_HASH_ID
+                        NODE_HASH_ID
                     ).values(
                         startBuildContext.buildId,
                         startBuildContext.buildNum,
@@ -195,7 +195,7 @@ class PipelineBuildDao {
                         startBuildContext.yamlVersion,
                         startBuildContext.debugModelStr,
                         startBuildContext.executeCount,
-                        nodeAgentHashId
+                        nodeHashId
                     ).execute()
                 }
             }
@@ -1043,7 +1043,7 @@ class PipelineBuildDao {
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ): Int {
         return if (debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1075,7 +1075,7 @@ class PipelineBuildDao {
                     triggerBranch = triggerBranch,
                     triggerUser = triggerUser,
                     triggerEventTypes = triggerEventTypes,
-                    triggerAgentHashIds = triggerAgentHashIds
+                    triggerNodeHashIds = triggerNodeHashIds
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1110,7 +1110,7 @@ class PipelineBuildDao {
                     triggerBranch = triggerBranch,
                     triggerUser = triggerUser,
                     triggerEventTypes = triggerEventTypes,
-                    triggerAgentHashIds = triggerAgentHashIds
+                    triggerNodeHashIds = triggerNodeHashIds
                 )
                 where.fetchOne(0, Int::class.java)!!
             }
@@ -1149,7 +1149,7 @@ class PipelineBuildDao {
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ): Collection<BuildInfo> {
         return if (debug != true) {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -1180,7 +1180,7 @@ class PipelineBuildDao {
                     triggerBranch = triggerBranch,
                     triggerUser = triggerUser,
                     triggerEventTypes = triggerEventTypes,
-                    triggerAgentHashIds = triggerAgentHashIds
+                    triggerNodeHashIds = triggerNodeHashIds
                 )
 
                 when (updateTimeDesc) {
@@ -1221,7 +1221,7 @@ class PipelineBuildDao {
                     triggerBranch = triggerBranch,
                     triggerUser = triggerUser,
                     triggerEventTypes = triggerEventTypes,
-                    triggerAgentHashIds = triggerAgentHashIds
+                    triggerNodeHashIds = triggerNodeHashIds
                 )
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
@@ -1260,7 +1260,7 @@ class PipelineBuildDao {
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ) {
         if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
             var conditionsOr: Condition
@@ -1394,8 +1394,8 @@ class PipelineBuildDao {
         if (!triggerEventTypes.isNullOrEmpty()) {
             where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
         }
-        if (!triggerAgentHashIds.isNullOrEmpty()) {
-            where.and(NODE_AGENT_HASH_ID.`in`(triggerAgentHashIds))
+        if (!triggerNodeHashIds.isNullOrEmpty()) {
+            where.and(NODE_HASH_ID.`in`(triggerNodeHashIds))
         }
     }
 
@@ -1425,7 +1425,7 @@ class PipelineBuildDao {
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ) {
         // 增加过滤，对前端屏蔽已删除的构建
         where.and(DELETE_TIME.isNull)
@@ -1561,8 +1561,8 @@ class PipelineBuildDao {
         if (!triggerEventTypes.isNullOrEmpty()) {
             where.and(TRIGGER_EVENT_TYPE.`in`(triggerEventTypes))
         }
-        if (!triggerAgentHashIds.isNullOrEmpty()) {
-            where.and(NODE_AGENT_HASH_ID.`in`(triggerAgentHashIds))
+        if (!triggerNodeHashIds.isNullOrEmpty()) {
+            where.and(NODE_HASH_ID.`in`(triggerNodeHashIds))
         }
     }
 
@@ -2072,7 +2072,8 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = false, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    nodeHashId = t.nodeHashId
                 )
             }
         }
@@ -2138,7 +2139,8 @@ class PipelineBuildDao {
                     buildNumAlias = t.buildNumAlias,
                     remark = t.remark,
                     debug = true, // #8164 原历史表中查出的记录均为非调试的记录
-                    versionChange = t.versionChange
+                    versionChange = t.versionChange,
+                    nodeHashId = t.nodeHashId
                 )
             }
         }

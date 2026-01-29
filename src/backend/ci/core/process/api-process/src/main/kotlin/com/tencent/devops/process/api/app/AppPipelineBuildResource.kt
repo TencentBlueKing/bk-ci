@@ -361,9 +361,9 @@ interface AppPipelineBuildResource {
         @Parameter(description = "触发事件", required = false)
         @QueryParam("triggerEventTypes")
         triggerEventTypes: List<String>? = null,
-        @Parameter(description = "触发节点agentHashId", required = false)
-        @QueryParam("triggerAgentHashIds")
-        triggerAgentHashIds: List<String>? = null
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "获取流水线构建参数")

@@ -75,10 +75,10 @@ class TriggerNodeQueryStrategy @Autowired constructor(
         }
         // 转换为IdValue列表
         val idValues = nodePage.records.map { node ->
-            // 使用节点的agentHashId作为id，displayName作为显示值
+            // 使用节点的nodeHashId作为id，displayName作为显示值
             IdValue(
-                id = node.agentHashId ?: "",
-                value = node.displayName ?: node.agentHashId ?: ""
+                id = node.nodeHashId,
+                value = node.displayName ?: node.nodeHashId
             )
         }
         return Page(

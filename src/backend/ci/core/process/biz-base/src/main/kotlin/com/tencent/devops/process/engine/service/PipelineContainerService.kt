@@ -72,7 +72,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -581,7 +581,7 @@ class PipelineContainerService @Autowired constructor(
         }
         container.startVMTaskSeq = startVMTaskSeq
         if (container is VMBuildContainer) {
-            context.variables[CREATIVE_STREAM_NODE_OS]
+            context.variables[NODE_OS]
                 ?.takeIf { it.isNotBlank() && container.baseOS != null }
                 ?.let { nodeOs ->
                     container.baseOS = VMBaseOS.valueOf(nodeOs)

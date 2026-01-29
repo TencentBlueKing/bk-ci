@@ -64,8 +64,9 @@ import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_ID
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_NAME
 import com.tencent.devops.process.utils.BK_CI_MATERIAL_URL
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_AGENT_ID
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
+import com.tencent.devops.process.utils.NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_HASH_ID
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_DEBUG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -433,19 +434,26 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
-        startValues?.get(CREATIVE_STREAM_NODE_AGENT_ID)?.let {
+        startValues?.get(NODE_AGENT_ID)?.let {
             // 获取节点的操作系统
-            val nodeOs = client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentById(pipeline.projectId, it).data?.os?.uppercase()
-            pipelineParamMap[CREATIVE_STREAM_NODE_AGENT_ID] = BuildParameters(
-                key = CREATIVE_STREAM_NODE_AGENT_ID,
+            val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
+                .getAgentById(pipeline.projectId, it).data
+            pipelineParamMap[NODE_AGENT_ID] = BuildParameters(
+                key = NODE_AGENT_ID,
                 value = it,
                 readOnly = true
             )
-            nodeOs?.let {
-                pipelineParamMap[CREATIVE_STREAM_NODE_OS] = BuildParameters(
-                    key = CREATIVE_STREAM_NODE_OS,
-                    value = nodeOs,
+            agentInfo?.os?.let { nodeOs ->
+                pipelineParamMap[NODE_OS] = BuildParameters(
+                    key = NODE_OS,
+                    value = nodeOs.uppercase(),
+                    readOnly = true
+                )
+            }
+            agentInfo?.nodeId?.let { nodeId ->
+                pipelineParamMap[NODE_HASH_ID] = BuildParameters(
+                    key = NODE_HASH_ID,
+                    value = nodeId,
                     readOnly = true
                 )
             }

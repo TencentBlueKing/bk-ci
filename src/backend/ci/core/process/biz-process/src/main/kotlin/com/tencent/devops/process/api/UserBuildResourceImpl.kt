@@ -476,7 +476,7 @@ class UserBuildResourceImpl @Autowired constructor(
         triggerBranch: List<String>?,
         triggerUser: List<String>?,
         triggerEventTypes: List<String>?,
-        triggerAgentHashIds: List<String>?
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -510,7 +510,7 @@ class UserBuildResourceImpl @Autowired constructor(
             triggerBranch = triggerBranch,
             triggerUser = triggerUser,
             triggerEventTypes = triggerEventTypes,
-            triggerAgentHashIds = triggerAgentHashIds
+            triggerNodeHashIds = triggerNodeHashIds
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)
