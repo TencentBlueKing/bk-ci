@@ -151,7 +151,6 @@ export const actions = {
     requestDelImage ({ commit }, imageCode) {
         return vue.$ajax.delete(`${prefix}/user/market/image/imageCodes/${imageCode}`)
     },
-
     /**
      * 关联镜像
      */
