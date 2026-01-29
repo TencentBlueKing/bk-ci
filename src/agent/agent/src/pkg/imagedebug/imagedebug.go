@@ -273,8 +273,10 @@ func CreateDebugContainer(
 
 		hostConfig = dockerConfig.HostConfig
 		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
-		hostConfig.NetworkMode = container.NetworkMode("bridge")
 
+		if len(debugInfo.Options.Network) == 0 {
+			hostConfig.NetworkMode = container.NetworkMode("bridge")
+		}
 		netConfig = dockerConfig.NetworkingConfig
 	} else {
 		confg = &container.Config{

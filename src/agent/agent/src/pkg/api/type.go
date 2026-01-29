@@ -89,6 +89,7 @@ type DockerOptions struct {
 	Gpus       string   `json:"gpus"`
 	Mounts     []string `json:"mounts"`
 	Privileged bool     `json:"privileged"`
+	Network    []string `json:"network"`
 }
 
 type ThirdPartyBuildWithStatus struct {

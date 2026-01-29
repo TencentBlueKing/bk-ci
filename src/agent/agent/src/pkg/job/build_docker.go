@@ -274,7 +274,10 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 
 		hostConfig = dockerConfig.HostConfig
 		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
-		hostConfig.NetworkMode = container.NetworkMode("bridge")
+
+		if len(dockerBuildInfo.Options.Network) == 0 {
+			hostConfig.NetworkMode = container.NetworkMode("bridge")
+		}
 
 		netConfig = dockerConfig.NetworkingConfig
 	} else {
