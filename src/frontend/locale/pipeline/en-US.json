@@ -2045,6 +2045,7 @@
   "paramList": "Parameter List",
   "addParamField": "Add Parameter Field",
   "noParamsAdded": "No parameters added yet",
+  "currentPipelineHasNoParams": "Current pipeline has no input parameters, ignored and not filled",
   "newParamSet": "New Parameter Set",
   "lastUsedParams": "My Last Used Parameter Values",
   "recentlyUsed": "Recently Used",
