@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserMetricsResourceImpl @Autowired constructor(
     private val metricsQueryService: MetricsQueryService
 ) : UserMetricsResource {
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(UserMetricsResourceImpl::class.java)
     }
-    
+
     @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
     override fun queryMetrics(
         projectId: String,
@@ -25,7 +25,7 @@ class UserMetricsResourceImpl @Autowired constructor(
         request: Map<String, Any>
     ): Result<Map<String, Any>> {
         logger.info("Query metrics for project: $projectId, user: $userId, request: $request")
-        
+
         return try {
             val result = metricsQueryService.queryMetrics(projectId, request)
             Result(result)
@@ -41,6 +41,30 @@ class UserMetricsResourceImpl @Autowired constructor(
             Result(
                 status = 1,
                 message = e.message ?: "查询指标数据失败",
+                data = null
+            )
+        }
+    }
+
+    @BkApiPermission([BkApiHandleType.PROJECT_MEMBER_CHECK])
+    override fun queryBkAlert(projectId: String, userId: String, request: Map<String, Any>): Result<Map<String, Any>> {
+        logger.info("Query bk alert for project: $projectId, user: $userId, request: $request")
+
+        return try {
+            val result = metricsQueryService.queryBkAlert(projectId, request)
+            Result(result)
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid request parameters for project: $projectId", e)
+            Result(
+                status = 1,
+                message = e.message ?: "请求参数不合法",
+                data = null
+            )
+        } catch (e: Exception) {
+            logger.error("Query bk alert failed for project: $projectId", e)
+            Result(
+                status = 1,
+                message = e.message ?: "查询数据失败",
                 data = null
             )
         }

@@ -19,11 +19,27 @@ import jakarta.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserMetricsResource {
-    
+
     @Operation(summary = "查询指标数据")
     @Path("/query")
     @POST
     fun queryMetrics(
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @BkField(required = true)
+        projectId: String,
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @Parameter(description = "查询请求体", required = true)
+        request: Map<String, Any>
+    ): Result<Map<String, Any>>
+
+    @Operation(summary = "查询告警数据")
+    @Path("/query_bk_alert")
+    @POST
+    fun queryBkAlert(
         @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)

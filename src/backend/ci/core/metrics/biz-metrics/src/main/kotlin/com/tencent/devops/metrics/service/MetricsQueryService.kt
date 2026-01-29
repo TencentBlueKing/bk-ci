@@ -18,6 +18,9 @@ class MetricsQueryService @Autowired constructor(
     @Value("\${metrics.monitor.url:}")
     val monitorUrl: String = ""
 
+    @Value("\${metrics.monitor.alertTopNUrl:}")
+    val alertTopNUrl: String = ""
+
     @Value("\${metrics.monitor.appCode:}")
     val monitorAppCode: String = ""
 
@@ -105,6 +108,64 @@ class MetricsQueryService @Autowired constructor(
             }
 
             logger.info("Query metrics success: $responseBody")
+
+            // 解析响应
+            return try {
+                objectMapper.readValue(responseBody, Map::class.java) as Map<String, Any>
+            } catch (e: Exception) {
+                logger.error("Parse response failed", e)
+                throw RuntimeException("解析响应数据失败: ${e.message}")
+            }
+        }
+    }
+
+
+    /**
+     * 查询告警Top N数据
+     * @param projectId 项目ID
+     * @param requestParams 请求参数（不包含bk_biz_id）
+     * @return 监控平台返回的数据
+     */
+    fun queryBkAlert(projectId: String, requestParams: Map<String, Any>): Map<String, Any> {
+        if (alertTopNUrl.isEmpty()) {
+            return emptyMap()
+        }
+
+        // 构建完整的请求参数，添加bk_biz_id和替换后的promql
+        val fullParams = requestParams.toMutableMap()
+        fullParams["space_uids"] = "bkci__$projectId"
+
+        // 构建请求体
+        val requestBody = JsonUtil.toJson(fullParams, false)
+
+        // 构建认证头
+        val authHeader = JsonUtil.toJson(
+            mapOf(
+                "bk_app_code" to monitorAppCode,
+                "bk_app_secret" to monitorAppSecret
+            ),
+            false
+        )
+
+        logger.info("Query bk alert with params: $requestBody")
+
+        // 发送HTTP请求
+        val request = Request.Builder()
+            .url(alertTopNUrl)
+            .header("X-Bkapi-Authorization", authHeader)
+            .header("Content-Type", "application/json")
+            .post(requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseBody = response.body?.string() ?: ""
+
+            if (!response.isSuccessful) {
+                logger.error("Query bk alert failed: code=${response.code}, body=$responseBody")
+                throw RuntimeException("查询指标数据失败: ${response.code}")
+            }
+
+            logger.info("Query bk alert success: $responseBody")
 
             // 解析响应
             return try {
