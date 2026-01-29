@@ -191,9 +191,9 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     // GITHUB Pull Request Hook事件触发
     // 已覆盖
 
-    // 创作流
-    BK_CI_CREATIVE_STREAM_NODE_AGENT_ID,
-    BK_CI_CREATIVE_STREAM_NODE_OS
+    // 节点信息
+    BK_CI_NODE_AGENT_ID,
+    BK_CI_NODE_OS
     ;
 
     companion object {

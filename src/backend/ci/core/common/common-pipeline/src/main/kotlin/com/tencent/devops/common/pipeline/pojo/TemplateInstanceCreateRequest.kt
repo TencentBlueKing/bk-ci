@@ -57,6 +57,6 @@ data class TemplateInstanceCreateRequest(
     val labels: List<String> = emptyList(),
     @get:Schema(title = "流水线描述", required = false)
     val pipelineDesc: String? = null,
-    @get:Schema(title = "环境名称", required = false)
-    val envName: String? = null
+    @get:Schema(title = "环境hashId", required = false)
+    val envHashId: String? = null
 )

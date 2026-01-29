@@ -47,7 +47,6 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.PipelineBaseInfoCreateReq
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -404,7 +403,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         ).copy(
             pipelineAsCodeSettings = pipelineAsCodeSettings,
             labels = request.labels,
-            envName = request.envName
+            envHashId = request.envHashId
         )
 
         return pipelineInfoFacadeService.createPipeline(
@@ -558,7 +557,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             yamlInvalidMsg = msg,
             updater = resource.updater ?: resource.creator,
             updateTime = resource.updateTime?.timestampmilli(),
-            envName = setting.envName
+            envName = setting.envHashId
         )
     }
 

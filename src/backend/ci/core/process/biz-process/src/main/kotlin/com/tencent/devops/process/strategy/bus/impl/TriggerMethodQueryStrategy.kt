@@ -25,29 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.enums
+package com.tencent.devops.process.strategy.bus.impl
 
-enum class NodeType(val typeName: String) {
-    CMDB("CMDB"),
-    DEVCLOUD("DevCloud虚拟机"),
-    THIRDPARTY("第三方构建机"),
-    CREATE("创作流机器"),
-    OTHER("其他"),
-    UNKNOWN("未知");
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import org.jooq.Field
+import org.springframework.stereotype.Component
 
-    companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
+/**
+ * 触发方式查询策略
+ * TRIGGER_METHOD -> TRIGGER
+ */
+@Component
+class TriggerMethodQueryStrategy : AbstractHistoryConditionQueryStrategy() {
 
-        fun getTypeName(nodeType: String): String {
-            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
-        }
+    override fun getField(): Field<String?> {
+        return T_PIPELINE_BUILD_HISTORY.TRIGGER
+    }
 
-        fun get(nodeType: String): NodeType {
-            return values().find { it.name == nodeType } ?: UNKNOWN
-        }
-
-        fun parseByTypeName(typeName: String): NodeType {
-            return values().find { it.typeName == typeName } ?: UNKNOWN
-        }
+    override fun convertToIdValue(userId: String, value: String): IdValue {
+        return IdValue(
+            value, StartType.toReadableString(
+                type = value,
+                channelCode = ChannelCode.getRequestChannelCode(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
+        )
     }
 }

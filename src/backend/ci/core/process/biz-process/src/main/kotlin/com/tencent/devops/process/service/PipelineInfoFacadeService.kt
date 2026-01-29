@@ -565,12 +565,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            // 如果是渠道是创作流，环境名称不能为空
-            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envName.isNullOrBlank()) {
+            // 如果是渠道是创作流，环境hashId不能为空
+            if (channelCode == ChannelCode.CREATIVE_STREAM && setting?.envHashId.isNullOrBlank()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
-                    params = arrayOf(PipelineSetting::envName.name)
+                    params = arrayOf(PipelineSetting::envHashId.name)
                 )
             }
 

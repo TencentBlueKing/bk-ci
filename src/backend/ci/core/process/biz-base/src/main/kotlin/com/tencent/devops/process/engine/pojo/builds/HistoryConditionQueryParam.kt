@@ -25,29 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.enums
+package com.tencent.devops.process.engine.pojo.builds
 
-enum class NodeType(val typeName: String) {
-    CMDB("CMDB"),
-    DEVCLOUD("DevCloud虚拟机"),
-    THIRDPARTY("第三方构建机"),
-    CREATE("创作流机器"),
-    OTHER("其他"),
-    UNKNOWN("未知");
+import org.jooq.DSLContext
+import org.jooq.Field
 
-    companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
-
-        fun getTypeName(nodeType: String): String {
-            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
-        }
-
-        fun get(nodeType: String): NodeType {
-            return values().find { it.name == nodeType } ?: UNKNOWN
-        }
-
-        fun parseByTypeName(typeName: String): NodeType {
-            return values().find { it.typeName == typeName } ?: UNKNOWN
-        }
-    }
-}
+/**
+ * 历史条件查询参数
+ */
+data class HistoryConditionQueryParam(
+    val dslContext: DSLContext,
+    val projectId: String,
+    val pipelineId: String,
+    val field: Field<String?>,
+    val keyword: String?,
+    val debug: Boolean,
+    val page: Int,
+    val pageSize: Int
+)

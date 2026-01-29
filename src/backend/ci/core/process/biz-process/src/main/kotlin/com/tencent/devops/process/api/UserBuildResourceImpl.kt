@@ -31,8 +31,10 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.pipeline.enums.BuildConditionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -57,6 +59,7 @@ import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import jakarta.ws.rs.core.Response
@@ -471,7 +474,9 @@ class UserBuildResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
@@ -503,7 +508,9 @@ class UserBuildResourceImpl @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
         )
         if (archiveFlag != true) {
             pipelineRecentUseService.record(userId, projectId, pipelineId)
@@ -545,6 +552,33 @@ class UserBuildResourceImpl @Autowired constructor(
     ): Result<List<IdValue>> {
         checkParam(userId, projectId, pipelineId)
         return Result(pipelineBuildFacadeService.getHistoryConditionTrigger(userId, projectId, pipelineId))
+    }
+
+    override fun getHistoryConditions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        conditionType: BuildConditionType,
+        page: Int,
+        pageSize: Int,
+        keyword: String?,
+        debug: Boolean?
+    ): Result<Page<IdValue>> {
+        checkParam(userId, projectId, pipelineId)
+        // 构建查询请求
+        val request = HistoryConditionQueryRequest(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            conditionType = conditionType,
+            keyword = keyword,
+            debug = debug ?: false,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(
+            pipelineBuildFacadeService.getHistoryConditions(request)
+        )
     }
 
     override fun getHistoryConditionRepo(

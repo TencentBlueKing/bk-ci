@@ -108,7 +108,7 @@ class PipelineSettingVersionDao {
                 setting.maxConRunningQueueSize ?: -1,
                 setting.failIfVariableInvalid,
                 setting.buildCancelPolicy.value,
-                setting.envName
+                setting.envHashId
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -128,7 +128,7 @@ class PipelineSettingVersionDao {
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
                 .set(BUILD_CANCEL_POLICY, setting.buildCancelPolicy.value)
 
-            setting.envName?.let { envName ->
+            setting.envHashId?.let { envName ->
                 insert.set(ENV_NAME, envName)
             }
             return insert.execute()
@@ -159,7 +159,7 @@ class PipelineSettingVersionDao {
                     JsonUtil.toJson(self, false)
                 })
                 .set(FAIL_IF_VARIABLE_INVALID, setting.failIfVariableInvalid)
-            setting.envName?.let { envName ->
+            setting.envHashId?.let { envName ->
                 updateStep.set(ENV_NAME, envName)
             }
             updateStep.where(PROJECT_ID.eq(setting.projectId))

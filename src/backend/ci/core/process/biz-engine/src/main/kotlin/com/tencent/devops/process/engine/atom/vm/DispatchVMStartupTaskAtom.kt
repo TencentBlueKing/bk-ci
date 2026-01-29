@@ -69,7 +69,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.utils.BK_CI_AUTHORIZER
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.yaml.transfer.VariableDefault
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
@@ -118,7 +118,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val os = ContainerUtils.getContainerOs(
             modelOs = param.baseOS?.name,
-            nodeOs = runVariables[CREATIVE_STREAM_NODE_OS]
+            nodeOs = runVariables[NODE_OS]
         )
         try {
             atomResponse = if (!checkBeforeStart(
@@ -434,7 +434,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet(),
                         os = ContainerUtils.getContainerOs(
                             modelOs = param.baseOS?.name,
-                            nodeOs = runVariables[CREATIVE_STREAM_NODE_OS]
+                            nodeOs = runVariables[NODE_OS]
                         )
                     )
                 }

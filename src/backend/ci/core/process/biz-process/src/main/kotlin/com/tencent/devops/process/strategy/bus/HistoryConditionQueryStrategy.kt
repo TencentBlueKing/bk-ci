@@ -25,29 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.enums
+package com.tencent.devops.process.strategy.bus
 
-enum class NodeType(val typeName: String) {
-    CMDB("CMDB"),
-    DEVCLOUD("DevCloud虚拟机"),
-    THIRDPARTY("第三方构建机"),
-    CREATE("创作流机器"),
-    OTHER("其他"),
-    UNKNOWN("未知");
+import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 
-    companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
-
-        fun getTypeName(nodeType: String): String {
-            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
-        }
-
-        fun get(nodeType: String): NodeType {
-            return values().find { it.name == nodeType } ?: UNKNOWN
-        }
-
-        fun parseByTypeName(typeName: String): NodeType {
-            return values().find { it.typeName == typeName } ?: UNKNOWN
-        }
-    }
+/**
+ * 历史条件查询策略接口
+ */
+interface IHistoryConditionQueryStrategy {
+    /**
+     * 查询符合条件的条件值
+     * @param request 查询请求参数
+     * @return 分页结果
+     */
+    fun query(
+        request: HistoryConditionQueryRequest
+    ): Page<IdValue>
 }

@@ -851,6 +851,41 @@ class StoreComponentQueryServiceImpl : StoreComponentQueryService {
         return Result(record.value1())
     }
 
+    override fun getComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        version: String?
+    ): StoreBaseInfo? {
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+        val baseRecord = if (version.isNullOrBlank()) {
+            storeBaseQueryDao.getLatestComponentByCode(
+                dslContext = dslContext, storeCode = storeCode, storeType = storeTypeEnum
+            )
+        } else {
+            storeBaseQueryDao.getComponent(
+                dslContext = dslContext, storeCode = storeCode, version = version, storeType = storeTypeEnum
+            )
+        } ?: return null
+        val publicFlag = storeBaseFeatureQueryDao.isPublic(
+            dslContext = dslContext, storeCode = storeCode, storeType = storeTypeEnum
+        )
+        return StoreBaseInfo(
+            storeId = baseRecord.id,
+            storeCode = storeCode,
+            storeName = baseRecord.name,
+            storeType = storeTypeEnum,
+            version = baseRecord.version,
+            publicFlag = publicFlag,
+            status = baseRecord.status,
+            logoUrl = baseRecord.logoUrl?.let {
+                StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(it) as? String
+            },
+            publisher = baseRecord.publisher,
+            classifyId = baseRecord.classifyId
+        )
+    }
+
     private fun isUpdateRequired(
         storeId: String,
         installedTime: LocalDateTime,

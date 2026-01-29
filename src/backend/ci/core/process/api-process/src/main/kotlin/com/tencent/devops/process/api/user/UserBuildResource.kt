@@ -31,13 +31,16 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildConditionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.enums.HistorySearchType
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -474,9 +477,15 @@ interface UserBuildResource {
         @Parameter(description = "触发分支", required = false)
         @QueryParam("triggerBranch")
         triggerBranch: List<String>?,
-        @Parameter(description = "触发方式", required = false)
+        @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>?,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>?
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @Operation(summary = "修改流水线备注")
@@ -531,6 +540,37 @@ interface UserBuildResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<IdValue>>
+
+    @Operation(summary = "获取流水线构建历史中的查询条件")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/history/conditions")
+    fun getHistoryConditions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "构建条件类型", required = true)
+        @QueryParam("conditionType")
+        conditionType: BuildConditionType,
+        @Parameter(description = "第几页", required = true, example = "1")
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "每页多少条", required = true, example = "20")
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 20,
+        @Parameter(description = "查询关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String? = null,
+        @Parameter(description = "是否指定查询调试数据", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = null
+    ): Result<Page<IdValue>>
 
     @Operation(summary = "获取流水线构建中的查询条件-代码库")
     @GET

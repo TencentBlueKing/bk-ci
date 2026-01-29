@@ -28,6 +28,8 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.BUILD_QUEUE
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,6 +39,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.pojo.ArtifactQualityMetadataAnalytics
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -72,6 +75,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -190,7 +194,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
-    private val pipelineArtifactQualityService: PipelineArtifactQualityService
+    private val pipelineArtifactQualityService: PipelineArtifactQualityService,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -198,7 +203,14 @@ class PipelineRuntimeService @Autowired constructor(
         private const val TAG = "startVM-0"
         private const val JOB_ID = "0"
         private const val BUILD_REMARK_MAX_LENGTH = 4096
+        private const val NODE_NAME_CACHE_MAX_SIZE = 5000
+        private const val NODE_NAME_CACHE_EXPIRE_MINUTES = 30L
     }
+
+    private val nodeNameCache: Cache<String, String> = Caffeine.newBuilder()
+        .maximumSize(NODE_NAME_CACHE_MAX_SIZE.toLong())
+        .expireAfterWrite(NODE_NAME_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+        .build<String, String>()
 
     fun cancelPendingTask(projectId: String, pipelineId: String, userId: String) {
         val runningBuilds = pipelineBuildDao.getBuildTasksByStatus(
@@ -354,6 +366,11 @@ class PipelineRuntimeService @Autowired constructor(
             limit = if (limit < 0) 1000 else limit,
             updateTimeDesc = updateTimeDesc
         )
+        val hashIdToName = getNodeNamesByHashIds(
+            projectId = projectId,
+            userId = null,
+            hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
+        )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
         list.reversed().forEach {
@@ -361,7 +378,8 @@ class PipelineRuntimeService @Autowired constructor(
                 genBuildHistory(
                     buildInfo = it,
                     currentTimestamp = currentTimestamp,
-                    prevBuildVersion = prevBuildVersion
+                    prevBuildVersion = prevBuildVersion,
+                    nodeName = it.nodeHashId?.let { hashId -> hashIdToName[hashId] }
                 )
             )
             prevBuildVersion = it.version
@@ -400,7 +418,9 @@ class PipelineRuntimeService @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
@@ -436,7 +456,14 @@ class PipelineRuntimeService @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
+        )
+        val hashIdToName = getNodeNamesByHashIds(
+            projectId = projectId,
+            userId = userId,
+            hashIds = list.mapNotNull { it.nodeHashId }.filter { it.isNotBlank() }.toSet()
         )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
@@ -451,7 +478,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildInfo = buildInfo,
                     currentTimestamp = currentTimestamp,
                     artifactQuality = artifactQuality,
-                    prevBuildVersion = prevBuildVersion
+                    prevBuildVersion = prevBuildVersion,
+                    nodeName = buildInfo.nodeHashId?.let { hashIdToName[it] }
                 )
             )
             prevBuildVersion = buildInfo.version
@@ -590,11 +618,41 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
+    private fun getNodeNamesByHashIds(
+        projectId: String,
+        userId: String?,
+        hashIds: Set<String>
+    ): Map<String, String> {
+        if (hashIds.isEmpty()) return emptyMap()
+        val cached = hashIds.mapNotNull { hashId ->
+            nodeNameCache.getIfPresent(cacheKey(projectId, hashId))?.let { hashId to it }
+        }.toMap()
+        val missedIds = hashIds - cached.keys
+        if (missedIds.isEmpty()) return cached
+        val effectiveUserId = userId ?: I18nUtil.getRequestUserId() ?: ""
+        val result = client.get(ServiceNodeResource::class).listByHashIds(
+            userId = effectiveUserId,
+            projectId = projectId,
+            nodeHashIds = missedIds.toList(),
+            checkPermission = false
+        )
+        val nodes = result.data ?: return cached
+        val fresh = nodes
+            .filter { it.nodeHashId.isNotBlank() && it.name.isNotBlank() }
+        fresh.forEach { node ->
+            nodeNameCache.put(cacheKey(projectId, node.nodeHashId), node.name)
+        }
+        return cached + fresh.associate { it.nodeHashId to it.name }
+    }
+
+    private fun cacheKey(projectId: String, nodeHashId: String) = "$projectId:$nodeHashId"
+
     private fun genBuildHistory(
         buildInfo: BuildInfo,
         currentTimestamp: Long,
         artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
-        prevBuildVersion: Int? = null
+        prevBuildVersion: Int? = null,
+        nodeName: String? = null
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
@@ -635,7 +693,8 @@ class PipelineRuntimeService @Autowired constructor(
                 updateTime = updateTime ?: endTime ?: 0L, // 防止空异常
                 concurrencyGroup = concurrencyGroup,
                 executeCount = executeCount,
-                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion)
+                versionChange = (versionChange ?: false) || (prevBuildVersion != null && version != prevBuildVersion),
+                nodeName = nodeName
             )
         }
     }
@@ -2005,7 +2064,9 @@ class PipelineRuntimeService @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Int {
         return pipelineBuildDao.count(
             dslContext = queryDslContext ?: dslContext,
@@ -2034,7 +2095,9 @@ class PipelineRuntimeService @Autowired constructor(
             debug = debug,
             triggerAlias = triggerAlias,
             triggerBranch = triggerBranch,
-            triggerUser = triggerUser
+            triggerUser = triggerUser,
+            triggerEventTypes = triggerEventTypes,
+            triggerNodeHashIds = triggerNodeHashIds
         )
     }
 

@@ -106,7 +106,7 @@ import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.process.utils.CREATIVE_STREAM_NODE_OS
+import com.tencent.devops.process.utils.NODE_OS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_DIALECT
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -373,7 +373,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ),
                 os = ContainerUtils.getContainerOs(
                     modelOs = container.baseOS?.name,
-                    nodeOs = variables[CREATIVE_STREAM_NODE_OS]
+                    nodeOs = variables[NODE_OS]
                 )
             ).data?.let { self -> envList.add(self) }
         }

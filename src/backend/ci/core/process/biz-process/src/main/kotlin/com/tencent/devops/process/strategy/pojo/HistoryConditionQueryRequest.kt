@@ -25,29 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.enums
+package com.tencent.devops.process.strategy.pojo
 
-enum class NodeType(val typeName: String) {
-    CMDB("CMDB"),
-    DEVCLOUD("DevCloud虚拟机"),
-    THIRDPARTY("第三方构建机"),
-    CREATE("创作流机器"),
-    OTHER("其他"),
-    UNKNOWN("未知");
+import com.tencent.devops.common.pipeline.enums.BuildConditionType
 
-    companion object {
-        fun coreTypesName() = listOf(CMDB.name, DEVCLOUD.name, THIRDPARTY.name, OTHER.name, UNKNOWN.name)
-
-        fun getTypeName(nodeType: String): String {
-            return values().find { it.name == nodeType }?.typeName ?: UNKNOWN.typeName
-        }
-
-        fun get(nodeType: String): NodeType {
-            return values().find { it.name == nodeType } ?: UNKNOWN
-        }
-
-        fun parseByTypeName(typeName: String): NodeType {
-            return values().find { it.typeName == typeName } ?: UNKNOWN
-        }
-    }
-}
+/**
+ * 历史条件查询请求参数
+ */
+data class HistoryConditionQueryRequest(
+    val userId: String,
+    val projectId: String,
+    val pipelineId: String,
+    val conditionType: BuildConditionType,
+    val keyword: String? = null,
+    val debug: Boolean = false,
+    val page: Int = 1,
+    val pageSize: Int = 20
+)
