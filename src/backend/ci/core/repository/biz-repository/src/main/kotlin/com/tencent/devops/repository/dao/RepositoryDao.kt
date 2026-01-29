@@ -88,7 +88,7 @@ class RepositoryDao {
                     ATOM,
                     ENABLE_PAC,
                     SCM_CODE,
-                    RESOURCE_TYPE
+                    REPO_RESOURCE_TYPE
                 ).values(
                     projectId,
                     userId,
@@ -164,7 +164,7 @@ class RepositoryDao {
                 step.and(SCM_CODE.eq(scmCode))
             }
             if (resourceType != null) {
-                step.and(RESOURCE_TYPE.eq(resourceType.name))
+                step.and(REPO_RESOURCE_TYPE.eq(resourceType.name))
             }
             return when (repositoryTypes) {
                 null -> {
@@ -348,7 +348,7 @@ class RepositoryDao {
                 query.and(TYPE.`in`(repositoryType.name))
             }
             if (repoResourceType != null) {
-                query.and(RESOURCE_TYPE.`in`(repoResourceType.name))
+                query.and(REPO_RESOURCE_TYPE.`in`(repoResourceType.name))
             }
             query.orderBy(REPOSITORY_ID.desc())
                 .offset(offset)
