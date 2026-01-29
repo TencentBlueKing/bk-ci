@@ -14,6 +14,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
@@ -271,7 +272,6 @@ func CreateDebugContainer(
 		confg.Env = parseContainerEnv(debugInfo)
 
 		hostConfig = dockerConfig.HostConfig
-		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
 		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
 		hostConfig.NetworkMode = container.NetworkMode("bridge")
 
@@ -285,12 +285,17 @@ func CreateDebugContainer(
 		}
 
 		hostConfig = &container.HostConfig{
-			CapAdd:      []string{"SYS_PTRACE"},
 			Mounts:      mounts,
 			NetworkMode: container.NetworkMode("bridge"),
 		}
 
 		netConfig = nil
+	}
+
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); !ok {
+		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
+	} else if strings.TrimSpace(v) != "" {
+		hostConfig.CapAdd = append(hostConfig.CapAdd, v)
 	}
 
 	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)

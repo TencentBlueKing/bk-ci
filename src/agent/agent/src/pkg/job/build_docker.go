@@ -45,6 +45,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	envvars "github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job_docker"
@@ -272,7 +273,6 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		confg.Env = parseContainerEnv(dockerBuildInfo)
 
 		hostConfig = dockerConfig.HostConfig
-		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
 		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
 		hostConfig.NetworkMode = container.NetworkMode("bridge")
 
@@ -286,12 +286,17 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 
 		hostConfig = &container.HostConfig{
-			CapAdd:      []string{"SYS_PTRACE"},
 			Mounts:      mounts,
 			NetworkMode: container.NetworkMode("bridge"),
 		}
 
 		netConfig = nil
+	}
+
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); !ok {
+		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
+	} else if strings.TrimSpace(v) != "" {
+		hostConfig.CapAdd = append(hostConfig.CapAdd, v)
 	}
 
 	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
@@ -515,11 +520,11 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 
 	// 创建并挂载data和log
 	// data目录优先选择用户自定的工作空间
-	dataDir := ""
-	if buildInfo.Workspace == "" {
-		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
-	} else {
+	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, job_docker.LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	targetDir := constant.DockerDataDir
+	if buildInfo.Workspace != "" {
 		dataDir = buildInfo.Workspace
+		targetDir = buildInfo.Workspace
 	}
 	err := systemutil.MkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
@@ -528,7 +533,7 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	mounts = append(mounts, mount.Mount{
 		Type:     mount.TypeBind,
 		Source:   dataDir,
-		Target:   constant.DockerDataDir,
+		Target:   targetDir,
 		ReadOnly: false,
 	})
 

@@ -36,6 +36,8 @@ const (
 	DevopsAgentEnableNewConsole = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
 	// DevopsAgentEnableExitGroup 启动Agent杀掉构建进程组的兜底逻辑
 	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
+	// DevopsAgentDockerCapAdd 启动docker时的capadd参数，为空则不添加
+	DevopsAgentDockerCapAdd = "DEVOPS_AGENT_DOCKER_CAP_ADD"
 
 	// CommonFileModePerm 公共文件权限
 	CommonFileModePerm os.FileMode = 0644
