@@ -9,6 +9,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.dispatch.macos.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.TaskResponse
@@ -36,7 +37,8 @@ import java.net.URLEncoder
 class DevCloudMacosService @Autowired constructor(
     private val dslContext: DSLContext,
     private val macVmTypeService: MacVmTypeService,
-    private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao
+    private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao,
+    private val buildHistoryDao: BuildHistoryDao
 ) {
 
     companion object {
@@ -449,4 +451,129 @@ class DevCloudMacosService @Autowired constructor(
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
+
+    /**
+     * 开启MacOS虚拟机调试
+     * @param userId 用户ID
+     * @param pipelineId 流水线ID
+     * @param vmSeqId 虚拟机序列ID
+     * @param buildId 构建ID，可选
+     * @param executeCount 执行次数
+     * @return 调试登录响应信息，失败返回null
+     */
+    fun startDebug(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String?,
+        executeCount: Int
+    ): DevCloudMacosVmDebugLoginResponse? {
+        logger.info(
+            "Start macOS debug login - userId: $userId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                "buildId: $buildId, executeCount: $executeCount"
+        )
+
+        val taskId = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount)
+        if (taskId == null) {
+            logger.warn(
+                "TaskId not found for startDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                    "buildId: $buildId, executeCount: $executeCount"
+            )
+            return null
+        }
+
+        logger.info("Found taskId: $taskId for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
+
+        val debugLoginRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
+        val debugLoginResponse = debugLogin(userId, debugLoginRequest)
+        
+        if (debugLoginResponse != null) {
+            logger.info("Debug login successful for taskId: $taskId")
+        } else {
+            logger.error("Debug login failed for taskId: $taskId")
+        }
+        
+        return debugLoginResponse
+    }
+
+    /**
+     * 停止MacOS虚拟机调试
+     * @param userId 用户ID
+     * @param pipelineId 流水线ID
+     * @param vmSeqId 虚拟机序列ID
+     * @param buildId 构建ID，可选
+     * @param executeCount 执行次数
+     * @return 是否成功停止调试
+     */
+    fun stopDebug(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String?,
+        executeCount: Int
+    ): Boolean {
+        logger.info(
+            "Stop macOS debug login - userId: $userId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                "buildId: $buildId, executeCount: $executeCount"
+        )
+
+        val taskId = getTaskIdFromBuildHistory(pipelineId, vmSeqId, buildId, executeCount)
+        if (taskId == null) {
+            logger.warn(
+                "TaskId not found for stopDebug - pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                    "buildId: $buildId, executeCount: $executeCount"
+            )
+            return false
+        }
+
+        logger.info("Found taskId: $taskId for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
+
+        val debugCloseRequest = DevCloudMacosVmDebugLoginRequest(taskId = taskId)
+        val result = debugClose(userId, debugCloseRequest)
+        
+        if (result != null) {
+            logger.info("Debug close successful for taskId: $taskId")
+            return true
+        } else {
+            logger.error("Debug close failed for taskId: $taskId")
+            return false
+        }
+    }
+
+    /**
+     * 从buildHistory表中查询taskId
+     * @param pipelineId 流水线ID
+     * @param vmSeqId 虚拟机序列ID
+     * @param buildId 构建ID，可选
+     * @param executeCount 执行次数
+     * @return taskId，如果查询不到或taskId为空则返回null
+     */
+    private fun getTaskIdFromBuildHistory(
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String?,
+        executeCount: Int
+    ): String? {
+        val buildHistoryRecord = if (buildId != null) {
+            buildHistoryDao.getBuildHistory(dslContext, buildId, vmSeqId, executeCount)?.firstOrNull()
+        } else {
+            buildHistoryDao.getLatestByPipelineIdAndVmSeqId(dslContext, pipelineId, vmSeqId, executeCount)
+        }
+
+        if (buildHistoryRecord == null) {
+            logger.warn(
+                "Build history record not found for pipelineId: $pipelineId, vmSeqId: $vmSeqId, " +
+                    "buildId: $buildId, executeCount: $executeCount"
+            )
+            return null
+        }
+
+        val taskId = buildHistoryRecord.taskId
+        if (taskId.isNullOrBlank()) {
+            logger.warn("TaskId is null or empty for pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId")
+            return null
+        }
+
+        return taskId
+    }
 }
