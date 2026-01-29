@@ -99,7 +99,7 @@ class PipelineVersionCloneReqConverter(
             baseVersion = request.sourceVersion,
             description = request.description,
             pipelineSettingWithoutVersion = sourceSetting,
-            versionStatus = sourceResource.status?:VersionStatus.RELEASED,
+            versionStatus = sourceResource.status ?: VersionStatus.RELEASED,
             versionAction = PipelineVersionAction.CREATE_RELEASE
         )
     }

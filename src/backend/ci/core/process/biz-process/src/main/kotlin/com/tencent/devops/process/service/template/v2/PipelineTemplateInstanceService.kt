@@ -1122,14 +1122,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
                 // 检查 beforePipelineVersion 是否存在
                 val beforeVersion = item.beforePipelineVersion
                     ?: throw CustomMessageException(
-                        message = "beforePipelineVersion",
-                        "Pipeline ${item.pipelineName} has no before version to rollback"
+                        message = "流水线[${item.pipelineName}]没有可回滚的前置版本"
                     )
                 // 检查 afterPipelineVersion 是否存在
                 val afterVersion = item.afterPipelineVersion
                     ?: throw CustomMessageException(
-                        message = "afterPipelineVersion",
-                        "Pipeline ${item.pipelineName} has no after version to rollback"
+                        message = "流水线[${item.pipelineName}]没有记录实例化后的版本信息"
                     )
 
                 // 检查用户是否有编辑权限
