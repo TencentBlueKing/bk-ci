@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_MAX_CON_QUEUE_S
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_CATEGORY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -52,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.enums.PipelineCategory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
@@ -327,7 +329,17 @@ class PipelineBuildService(
             value = projectVO?.projectName ?: "",
             valueType = BuildFormPropertyType.STRING
         )
-
+        // 流水线类型
+        pipelineParamMap[CI_CATEGORY] = BuildParameters(
+            key = PROJECT_NAME_CHINESE,
+            value = if (channelCode.name == "CREATIVE_STREAM") { // TODO: 改成常量
+                PipelineCategory.CREATIVE_STREAM
+            } else {
+                PipelineCategory.PIPELINE
+            },
+            valueType = BuildFormPropertyType.STRING,
+            readOnly = true
+        )
         // 解析出定义的流水线变量
 //        val realStartParamKeys = (model.getTriggerContainer()).params.map { it.id }
 //        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
