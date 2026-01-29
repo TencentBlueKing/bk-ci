@@ -72,8 +72,11 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT
 
     override fun handle(context: PipelineTemplateVersionCreateContext): DeployTemplateResult {
-        logger.info("Template draft version released with context={}", JsonUtil.toJson(context, false))
         with(context) {
+            logger.info(
+                "handle template draft to released version|" +
+                        "$projectId|$templateId|$versionAction|$version|$targetAction|$branchName|$customVersionName"
+            )
             if (version == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
