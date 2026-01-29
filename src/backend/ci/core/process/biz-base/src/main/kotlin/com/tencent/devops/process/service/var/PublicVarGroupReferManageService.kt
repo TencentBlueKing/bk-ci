@@ -263,7 +263,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
     ) {
         val model = publicVarGroupReferDTO.model
         val params = model.getTriggerContainer().params
-        logger.info("handleVarGroupReferBus params: $params")
         if (params.isEmpty()) {
             return
         }
@@ -289,7 +288,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
             )
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
-            logger.info("handleVarGroupReferBus publicVarGroups: $publicVarGroups")
             publicVarGroups?.let { validatePublicVarGroupsExist(publicVarGroupReferDTO.projectId, it) }
             // 提取并处理动态变量组
             val pipelinePublicVarGroupReferPOs = processDynamicVarGroups(
@@ -362,7 +360,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
         try {
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
-            logger.info("handleCrossProjectVarGroup publicVarGroups: $publicVarGroups")
             
             // 验证变量组在源项目中是否存在
             publicVarGroups?.let { validatePublicVarGroupsExist(sourceProjectId, it) }
@@ -373,7 +370,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 model = model,
                 sourceProjectId = sourceProjectId
             )
-            logger.info("handleCrossProjectVarGroup params after expand: $params")
             logger.info("Cross-project var groups expanded, skip saving reference records")
         } finally {
             lock.unlock()
@@ -401,11 +397,21 @@ class PublicVarGroupReferManageService @Autowired constructor(
             "groupCount=${publicVarGroups.size}"
         )
 
-        // 收集所有需要移除的占位符索引和需要添加的变量
+        // 预先收集所有需要处理的varGroupName集合，避免多次遍历params
+        val groupNameSet = publicVarGroups.map { it.groupName }.toSet()
+
+        // 一次遍历params，收集所有需要移除的占位符索引
         val indicesToRemove = mutableListOf<Int>()
+        params.forEachIndexed { index, param ->
+            if (param.varGroupName != null && groupNameSet.contains(param.varGroupName)) {
+                indicesToRemove.add(index)
+            }
+        }
+
+        // 收集所有需要添加的变量
         val varsToAdd = mutableListOf<BuildFormProperty>()
 
-        // 遍历每个变量组
+        // 遍历每个变量组，查询并收集变量
         publicVarGroups.forEach { publicVarGroup ->
             val groupName = publicVarGroup.groupName
             val versionName = publicVarGroup.versionName
@@ -436,13 +442,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 "varCount=${groupVars.size}"
             )
 
-            // 找出params中属于该变量组的占位符
-            params.forEachIndexed { index, param ->
-                if (param.varGroupName == groupName) {
-                    indicesToRemove.add(index)
-                }
-            }
-
             // 将变量组的变量转换为BuildFormProperty并添加到待添加列表
             // 在添加前清除公共变量组引用信息，因为跨项目场景不保存引用记录
             groupVars.forEach { varPO ->
@@ -452,7 +451,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 buildFormProperty.varGroupVersion = null
                 varsToAdd.add(buildFormProperty)
             }
-            logger.info("expandCrossProjectVarGroupsInternal varsToAdd: $varsToAdd")
         }
 
         // 按降序移除占位符（避免索引偏移问题）
@@ -783,15 +781,12 @@ class PublicVarGroupReferManageService @Autowired constructor(
         val model = publicVarGroupReferDTO.model
         val publicVarGroups = model.publicVarGroups
 
-        logger.info("handleVarGroupReferByVersionName publicVarGroups: $publicVarGroups")
-
         if (publicVarGroups.isNullOrEmpty()) {
             logger.info("No public var groups found, skip handling")
             return
         }
 
         val params = model.getTriggerContainer().params
-        logger.info("handleVarGroupReferByVersionName params: $params")
         // 查出params中已存在的变量组名称
         val existingGroupNames = params
             .mapNotNull { it.varGroupName }
@@ -812,7 +807,6 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 )
             }
         }
-        logger.info("handleVarGroupReferByVersionName end params: $params")
     }
 
     /**

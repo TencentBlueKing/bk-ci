@@ -467,8 +467,7 @@ class PublicVarGroupService @Autowired constructor(
         } catch (e: ErrorCodeException) {
             logger.warn("Failed to delete variable group $groupName", e)
             throw e
-        }
-        catch (t: Throwable) {
+        } catch (t: Throwable) {
             logger.warn("Failed to delete variable group $groupName", t)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PUBLIC_VAR_GROUP_DELETE_FAILED,
