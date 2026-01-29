@@ -173,9 +173,9 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPOSITORY'
+                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
                     AND COLUMN_NAME = 'REPO_RESOURCE_TYPE') THEN
-    ALTER TABLE T_REPOSITORY
+    ALTER TABLE T_PIPELINE_WEBHOOK
         ADD COLUMN `REPO_RESOURCE_TYPE` varchar(32) DEFAULT NULL COMMENT '代码库资源类型';
     END IF;
 COMMIT;
