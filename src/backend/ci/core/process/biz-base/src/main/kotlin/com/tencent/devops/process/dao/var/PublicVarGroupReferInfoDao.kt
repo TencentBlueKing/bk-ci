@@ -350,7 +350,8 @@ class PublicVarGroupReferInfoDao {
                     .and(trpvri.GROUP_NAME.eq(trpvgriSub.GROUP_NAME))
             )
         referType?.let {
-            notExistsHigherVersionWithVarQuery = notExistsHigherVersionWithVarQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
+            notExistsHigherVersionWithVarQuery = notExistsHigherVersionWithVarQuery
+                .and(trpvgriSub.REFER_TYPE.eq(it.name))
         }
 
         // 构建子查询：查找同一 referId 下更高版本不存在（不要求有变量引用）
@@ -471,7 +472,8 @@ class PublicVarGroupReferInfoDao {
                     .and(trpvri.GROUP_NAME.eq(trpvgriSub.GROUP_NAME))
             )
         referType?.let {
-            notExistsHigherVersionWithVarQuery = notExistsHigherVersionWithVarQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
+            notExistsHigherVersionWithVarQuery =
+                notExistsHigherVersionWithVarQuery.and(trpvgriSub.REFER_TYPE.eq(it.name))
         }
 
         // 构建子查询：查找同一 referId 下更高版本不存在（不要求有变量引用）

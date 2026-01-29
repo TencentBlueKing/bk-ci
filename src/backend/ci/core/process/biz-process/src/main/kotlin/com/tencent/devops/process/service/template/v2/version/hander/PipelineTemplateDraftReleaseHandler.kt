@@ -29,10 +29,7 @@ package com.tencent.devops.process.service.template.v2.version.hander
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
-import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -41,7 +38,6 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReqSource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
-import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService

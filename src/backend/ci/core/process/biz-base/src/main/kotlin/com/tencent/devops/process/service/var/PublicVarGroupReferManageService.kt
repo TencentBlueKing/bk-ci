@@ -334,11 +334,10 @@ class PublicVarGroupReferManageService @Autowired constructor(
             "handleCrossProjectVarGroup: projectId=$projectId, referId=$referId, " +
             "referType=$referType, referVersion=$referVersion"
         )
-        
         if (params.isEmpty()) {
             return
         }
-        
+
         // 获取源头项目ID
         val sourceProjectId = getSourceProjectId(
             projectId = projectId,
@@ -346,9 +345,9 @@ class PublicVarGroupReferManageService @Autowired constructor(
             referType = referType,
             referHasSource = true
         )
-        
+
         logger.info("Source project ID: $sourceProjectId")
-        
+
         // 使用分布式锁保护操作
         val lock = createReferLock(
             projectId = projectId,
@@ -360,10 +359,10 @@ class PublicVarGroupReferManageService @Autowired constructor(
         try {
             model.handlePublicVarInfo()
             val publicVarGroups = model.publicVarGroups
-            
+
             // 验证变量组在源项目中是否存在
             publicVarGroups?.let { validatePublicVarGroupsExist(sourceProjectId, it) }
-            
+
             // 展开跨项目变量组
             expandCrossProjectVarGroupsInternal(
                 params = params,
