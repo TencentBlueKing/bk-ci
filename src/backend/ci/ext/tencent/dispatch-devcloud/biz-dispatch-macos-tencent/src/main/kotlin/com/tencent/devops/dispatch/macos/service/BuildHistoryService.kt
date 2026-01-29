@@ -34,7 +34,7 @@ class BuildHistoryService @Autowired constructor(
         )
 
         // 检查此任务是否已消费,如已有消费记录且非主动发起的event重试，则返回存储异常标志
-        if (buildHistory?.isNotEmpty == true && (event.retryTime ?: 0) <= 1) {
+        if (buildHistory?.isNotEmpty == true && event.retryTime <= 1) {
             logger.error("$event has been consumed.")
             return -1L
         }
@@ -59,6 +59,7 @@ class BuildHistoryService @Autowired constructor(
         vmIp: String,
         vmId: Int,
         buildHistoryId: Long,
+        taskId: String,
         event: PipelineAgentStartupEvent
     ) {
         val buildTaskRecord = TBuildTaskRecord()
@@ -78,7 +79,13 @@ class BuildHistoryService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             buildTaskDao.save(context, buildTaskRecord)
-            buildHistoryDao.updateVmIP(vmIp, vmId, buildHistoryId, context)
+            buildHistoryDao.updateVmIP(
+                vmIp = vmIp,
+                vmId = vmId,
+                buildHistoryId = buildHistoryId,
+                taskId = taskId,
+                dslContext = context
+            )
         }
     }
 

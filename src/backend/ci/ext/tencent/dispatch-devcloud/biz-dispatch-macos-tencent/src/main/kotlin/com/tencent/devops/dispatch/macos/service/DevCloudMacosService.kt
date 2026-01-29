@@ -15,6 +15,8 @@ import com.tencent.devops.dispatch.macos.pojo.TaskResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DMAllVmModelRsp
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugLoginRequest
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDebugLoginResponse
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmModelRequest
@@ -57,7 +59,7 @@ class DevCloudMacosService @Autowired constructor(
 
     fun creatVM(
         dispatchMessage: DispatchMessage
-    ): DevCloudMacosVmCreateInfo? {
+    ): Pair<DevCloudMacosVmCreateInfo?, String> {
         val buildId = dispatchMessage.event.buildId
 
         var taskId = ""
@@ -81,14 +83,14 @@ class DevCloudMacosService @Autowired constructor(
                     "$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
                         "msg: $responseContent"
                 )
-                return null
+                return Pair(null, "")
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
             val message = responseData["actionMessage"] as String
             if (code != 200) {
                 logger.info("$buildId DevCloud fail to create MacOS,actionCode is $code ,actionMessage is $message")
-                return null
+                return Pair(null, "")
             }
             val temp = responseData["data"] as Map<String, Any>
             taskId = temp["taskId"] as String
@@ -102,11 +104,11 @@ class DevCloudMacosService @Autowired constructor(
                 when (taskResponse.data.status) {
                     DevCloudCreateMacVMStatus.failed.title, DevCloudCreateMacVMStatus.canceled.title -> {
                         logger.info("$taskId status: failed or canceled, Try again")
-                        return null
+                        return Pair(null, taskId)
                     }
                     DevCloudCreateMacVMStatus.succeeded.title -> {
                         logger.info("$taskId status: succeeded")
-                        return taskResponse.data
+                        return Pair(taskResponse.data, taskId)
                     }
                 }
             }
@@ -117,7 +119,7 @@ class DevCloudMacosService @Autowired constructor(
         }
 
         logger.info("Loop task timout 10min")
-        return null
+        return Pair(null, "")
     }
 
     private fun buildCreateBody(dispatchMessage: DispatchMessage): DevCloudMacosVmCreate {
@@ -290,14 +292,14 @@ class DevCloudMacosService @Autowired constructor(
 
             vmInfoList.add(
                 DevCloudMacosVmInfo(
-                    name = itemTmp["name"] as String ?: "",
-                    memory = itemTmp["memory"] as String ?: "",
-                    assetId = itemTmp["assetId"] as String ?: "",
-                    ip = itemTmp["ip"] as String ?: "",
-                    disk = itemTmp["disk"] as String ?: "",
-                    os = itemTmp["os"] as String ?: "",
-                    id = itemTmp["id"] as Int ?: 0,
-                    cpu = itemTmp["cpu"] as String ?: ""
+                    name = itemTmp["name"] as String,
+                    memory = itemTmp["memory"] as String,
+                    assetId = itemTmp["assetId"] as String,
+                    ip = itemTmp["ip"] as String,
+                    disk = itemTmp["disk"] as String,
+                    os = itemTmp["os"] as String,
+                    id = itemTmp["id"] as Int,
+                    cpu = itemTmp["cpu"] as String
                 )
             )
         }
@@ -368,6 +370,79 @@ class DevCloudMacosService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("Failed to getAllVmModes from DevCloud, url: $url", e)
+            return null
+        }
+    }
+
+    /**
+     * 开启MacOS虚拟机调试登录
+     */
+    fun debugLogin(
+        creator: String,
+        debugLoginRequest: DevCloudMacosVmDebugLoginRequest
+    ): DevCloudMacosVmDebugLoginResponse? {
+        return executeDebugLoginRequest(
+            creator = creator,
+            debugLoginRequest = debugLoginRequest,
+            apiPath = "/api/mac/vm/open/debuglogin",
+            operationType = "open"
+        )
+    }
+
+    /**
+     * 关闭MacOS虚拟机调试登录
+     */
+    fun debugClose(
+        creator: String,
+        debugLoginRequest: DevCloudMacosVmDebugLoginRequest
+    ): DevCloudMacosVmDebugLoginResponse? {
+        return executeDebugLoginRequest(
+            creator = creator,
+            debugLoginRequest = debugLoginRequest,
+            apiPath = "/api/mac/vm/close/debuglogin",
+            operationType = "close"
+        )
+    }
+
+    /**
+     * 执行调试登录请求的通用方法
+     */
+    private fun executeDebugLoginRequest(
+        creator: String,
+        debugLoginRequest: DevCloudMacosVmDebugLoginRequest,
+        apiPath: String,
+        operationType: String
+    ): DevCloudMacosVmDebugLoginResponse? {
+        val url = "$devCloudUrl$apiPath"
+        val body = ObjectMapper().writeValueAsString(debugLoginRequest)
+        logger.info("MacOS VM debug login $operationType request - taskId: ${debugLoginRequest.taskId}, creator: $creator, body: $body")
+        
+        val request = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info(
+                    "MacOS VM debug login $operationType response - taskId: ${debugLoginRequest.taskId}, " +
+                        "httpCode: ${response.code}, response: $responseContent"
+                )
+                
+                if (!response.isSuccessful) {
+                    logger.error(
+                        "Failed to $operationType MacOS VM debug login - taskId: ${debugLoginRequest.taskId}, " +
+                            "httpCode: ${response.code}, msg: $responseContent"
+                    )
+                    return null
+                }
+                
+                return JsonUtil.to(responseContent, DevCloudMacosVmDebugLoginResponse::class.java)
+            }
+        } catch (e: Exception) {
+            logger.error("Exception occurred when ${operationType}ing MacOS VM debug login - taskId: ${debugLoginRequest.taskId}, url: $url", e)
             return null
         }
     }

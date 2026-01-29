@@ -40,6 +40,7 @@ class BuildHistoryDao {
         vmIp: String,
         vmId: Int,
         buildHistoryId: Long,
+        taskId: String,
         dslContext: DSLContext
     ) {
         with(TBuildHistory.T_BUILD_HISTORY) {
@@ -47,6 +48,7 @@ class BuildHistoryDao {
                 .set(STATUS, MacJobStatus.Running.title)
                 .set(VM_IP, vmIp)
                 .set(VM_ID, vmId)
+                .set(TASK_ID, taskId)
                 .where(ID.eq(buildHistoryId))
                 .execute()
         }
@@ -95,6 +97,21 @@ class BuildHistoryDao {
             conditions.add(PIPELINE_ID.notEqual("").and(PIPELINE_ID.isNotNull))
             conditions.add(BUILD_ID.notEqual("").and(BUILD_ID.isNotNull))
             return dslContext.selectFrom(this).where(conditions).orderBy(START_TIME.desc()).fetch()
+        }
+    }
+
+    fun getLatestByPipelineIdAndVmSeqId(
+        dslContext: DSLContext,
+        pipelineId: String,
+        vmSeqId: String,
+        executeCount: Int
+    ): TBuildHistoryRecord? {
+        with(TBuildHistory.T_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VM_SEQ_ID.eq(vmSeqId))
+            conditions.add(EXECUTE_COUNT.eq(executeCount))
+            return dslContext.selectFrom(this).where(conditions).orderBy(START_TIME.desc()).fetchAny()
         }
     }
 }

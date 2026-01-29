@@ -150,10 +150,16 @@ class MacBuildListener @Autowired constructor(
                 return
             }
 
-            val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
+            val (devCloudMacosVmInfo, taskId) = devCloudMacosService.creatVM(dispatchMessage)
             devCloudMacosVmInfo?.let {
                 devCloudMacosService.saveVM(it)
-                buildHistoryService.saveBuildTask(it.ip, it.id, buildHistoryId, dispatchMessage.event)
+                buildHistoryService.saveBuildTask(
+                    vmIp = it.ip,
+                    vmId = it.id,
+                    buildHistoryId = buildHistoryId,
+                    taskId = taskId,
+                    event = dispatchMessage.event
+                )
                 macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
 
                 logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
@@ -236,8 +242,7 @@ class MacBuildListener @Autowired constructor(
                 buildId = buildId,
                 containerHashId = containerHashId,
                 vmSeqId = vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("${CommonMessageCode.BK_FAILED_START_BUILD_MACHINE}")} " +
-                        "- ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage(CommonMessageCode.BK_FAILED_START_BUILD_MACHINE)}-${t.message}",
                 executeCount = executeCount,
                 jobId = jobId
             )
