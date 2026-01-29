@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.exception.CustomMessageException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
@@ -44,6 +45,7 @@ import com.tencent.devops.process.permission.template.PipelineTemplatePermission
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
+import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCloneReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage
@@ -1077,6 +1079,139 @@ class PipelineTemplateInstanceService @Autowired constructor(
             comparedVersionYaml = templateYaml,
             instanceName = pipelineName ?: "",
             templateVersionName = pipelineTemplateRelated?.versionName ?: ""
+        )
+    }
+
+    /**
+     * 回滚实例任务
+     * @param userId 用户ID
+     * @param projectId 项目ID
+     * @param baseId 实例任务ID
+     * @return 回滚结果，包含成功和失败的流水线信息
+     */
+    fun rollbackTemplateInstances(
+        userId: String,
+        projectId: String,
+        baseId: String
+    ): TemplateOperationRet {
+        logger.info("rollback template instances start|$projectId|$userId|$baseId")
+
+        // 1. 根据 baseId 查询所有成功实例化的 Item
+        val instanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseIds = listOf(baseId),
+            statusList = listOf(TemplateInstanceStatus.SUCCESS.name)
+        )
+
+        if (instanceItems.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("baseId", "No successful instance items found for baseId: $baseId")
+            )
+        }
+
+        val successPipelines = mutableListOf<String>()
+        val failurePipelines = mutableListOf<String>()
+        val successPipelineIds = mutableListOf<String>()
+        val failureMessages = mutableMapOf<String, String>()
+
+        // 2. 遍历每个实例，进行回滚
+        instanceItems.forEach { item ->
+            try {
+                // 检查 beforePipelineVersion 是否存在
+                val beforeVersion = item.beforePipelineVersion
+                    ?: throw CustomMessageException(
+                        message = "beforePipelineVersion",
+                        "Pipeline ${item.pipelineName} has no before version to rollback"
+                    )
+                // 检查 afterPipelineVersion 是否存在
+                val afterVersion = item.afterPipelineVersion
+                    ?: throw CustomMessageException(
+                        message = "afterPipelineVersion",
+                        "Pipeline ${item.pipelineName} has no after version to rollback"
+                    )
+
+                // 检查用户是否有编辑权限
+                val hasPermission = pipelinePermissionService.checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = item.pipelineId,
+                    permission = AuthPermission.EDIT
+                )
+                if (!hasPermission) {
+                    throw PermissionForbiddenException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                            params = arrayOf(
+                                userId,
+                                projectId,
+                                AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                                item.pipelineId
+                            ),
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    )
+                }
+                // 目前仅最新版本可回滚，检查流水线是否已被修改过
+                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+                    projectId = projectId,
+                    pipelineId = item.pipelineId
+                )
+                if (pipelineInfo?.version != afterVersion) {
+                    throw CustomMessageException(
+                        message = "流水线[${item.pipelineName}]在实例化后已被修改，" +
+                            "当前版本(${pipelineInfo?.version})与实例化版本($afterVersion)不一致，无法回滚"
+                    )
+                }
+
+                // 3. 获取回滚版本的名称用于描述
+                val versionResource = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = item.pipelineId,
+                    version = beforeVersion
+                )
+
+                val versionName = versionResource?.versionName ?: "$beforeVersion"
+
+                // 4. 使用 PipelineVersionCloneReq 回滚到 beforePipelineVersion
+                val cloneReq = PipelineVersionCloneReq(
+                    sourceVersion = beforeVersion,
+                    description = "回滚自模板实例化任务，基于版本[$versionName]"
+                )
+                pipelineVersionManager.deployPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = item.pipelineId,
+                    request = cloneReq
+                )
+
+                successPipelines.add(item.pipelineName)
+                successPipelineIds.add(item.pipelineId)
+                logger.info(
+                    "rollback pipeline success|$projectId|${item.pipelineId}|" +
+                        "${item.pipelineName}|$beforeVersion"
+                )
+            } catch (e: Exception) {
+                logger.error(
+                    "rollback pipeline failed|$projectId|${item.pipelineId}|${item.pipelineName}",
+                    e
+                )
+                failurePipelines.add(item.pipelineName)
+                failureMessages[item.pipelineName] = e.message ?: "Unknown error"
+            }
+        }
+
+        val operationMessage = TemplateOperationMessage(
+            successPipelines = successPipelines,
+            failurePipelines = failurePipelines,
+            failureMessages = failureMessages,
+            successPipelinesId = successPipelineIds
+        )
+        return TemplateOperationRet(
+            status = if (failurePipelines.isEmpty()) 0 else 1,
+            data = operationMessage,
+            message = if (failurePipelines.isEmpty()) "回滚成功" else "部分流水线回滚失败"
         )
     }
 

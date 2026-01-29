@@ -27,14 +27,20 @@
 
 package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
+import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
@@ -62,4 +68,25 @@ interface OpPipelineVersionResource {
         @QueryParam("queryUnknownRelatedFlag")
         queryUnknownRelatedFlag: Boolean? = null
     ): Result<Boolean>
+
+    @Operation(summary = "基于指定版本创建新版本")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/clone")
+    fun cloneVersion(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "源版本号", required = true)
+        @QueryParam("sourceVersion")
+        sourceVersion: Int,
+        @Parameter(description = "版本描述", required = false)
+        @QueryParam("description")
+        description: String? = null
+    ): Result<DeployPipelineResult>
 }

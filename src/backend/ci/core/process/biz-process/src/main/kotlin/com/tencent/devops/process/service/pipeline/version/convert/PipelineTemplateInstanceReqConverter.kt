@@ -291,6 +291,7 @@ class PipelineTemplateInstanceReqConverter(
 
             val templateInstanceBasicInfo = PipelineTemplateInstanceBasicInfo(
                 templateId = templateId,
+                baseId = baseId,
                 templateName = templateInfo.name,
                 templateVersion = templateVersion,
                 templateVersionName = templateResource.versionName,

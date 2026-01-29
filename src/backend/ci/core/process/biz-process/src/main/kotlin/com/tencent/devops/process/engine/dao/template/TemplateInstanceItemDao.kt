@@ -335,6 +335,8 @@ class TemplateInstanceItemDao {
                 .apply {
                     record.status?.let { set(STATUS, it.name) }
                     record.errorMessage?.let { set(ERROR_MESSAGE, it) }
+                    record.beforePipelineVersion?.let { set(BEFORE_PIPELINE_VERSION, it) }
+                    record.afterPipelineVersion?.let { set(AFTER_PIPELINE_VERSION, it) }
                 }
                 .set(UPDATE_TIME, now)
                 .where(buildQueryCondition(condition))
@@ -386,6 +388,8 @@ class TemplateInstanceItemDao {
             filePath = filePath,
             errorMessage = errorMessage,
             resetBuildNo = resetBuildNo,
+            beforePipelineVersion = beforePipelineVersion,
+            afterPipelineVersion = afterPipelineVersion,
             creator = creator,
             modifier = modifier,
             createTime = createTime.timestampmilli(),

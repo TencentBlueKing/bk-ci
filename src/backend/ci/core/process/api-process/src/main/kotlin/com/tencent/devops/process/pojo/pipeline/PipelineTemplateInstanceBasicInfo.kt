@@ -29,8 +29,8 @@ package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
+import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -38,6 +38,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineTemplateInstanceBasicInfo(
     @get:Schema(title = "模版ID")
     val templateId: String,
+    @get:Schema(title = "实例任务ID")
+    val baseId: String? = null,
     @get:Schema(title = "模版名称")
     val templateName: String,
     @get:Schema(title = "模版版本")

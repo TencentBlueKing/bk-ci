@@ -25,23 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template.v2
+package com.tencent.devops.process.pojo.pipeline.version
 
-import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "流水线模板实例具体更新信息")
-data class PipelineTemplateInstanceItemUpdate(
-    @get:Schema(title = "实例化状态", required = true)
-    val status: TemplateInstanceStatus? = null,
-    @get:Schema(title = "流水线版本", required = true)
-    val pipelineVersion: Int? = null,
-    @get:Schema(title = "流水线版本名称", required = true)
-    val pipelineVersionName: String? = null,
-    @get:Schema(title = "实例化错误信息", required = true)
-    val errorMessage: String? = null,
-    @get:Schema(title = "实例化前流水线版本", required = true)
-    val beforePipelineVersion: Int? = null,
-    @get:Schema(title = "实例化后流水线版本", required = true)
-    val afterPipelineVersion: Int? = null
-)
+/**
+ * 流水线版本克隆请求
+ * 用于基于现有版本快速创建一个内容一模一样但版本号不同的新版本
+ */
+@Schema(title = "流水线版本克隆请求")
+data class PipelineVersionCloneReq(
+    @get:Schema(title = "源版本号", required = true)
+    val sourceVersion: Int,
+    @get:Schema(title = "版本描述", required = false)
+    val description: String? = null
+) : PipelineVersionCreateReq
