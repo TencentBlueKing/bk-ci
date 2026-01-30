@@ -79,12 +79,11 @@ class RbacPipelinePermissionService(
         permission: AuthPermission,
         authResourceType: AuthResourceType?
     ): Boolean {
-        val finalAuthResourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType)
-
-        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$finalAuthResourceType")
+        val finalResourceType = AuthResourceType.getAuthResourceTypeByChannel(authResourceType ?: resourceType)
+        logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission|$finalResourceType")
         val startEpoch = System.currentTimeMillis()
         try {
-            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, finalAuthResourceType)
+            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId, finalResourceType)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
@@ -95,7 +94,7 @@ class RbacPipelinePermissionService(
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to check pipeline permission|" +
-                        "$userId|$projectId|$pipelineId|$permission|$finalAuthResourceType"
+                        "$userId|$projectId|$pipelineId|$permission|$finalResourceType"
             )
         }
     }

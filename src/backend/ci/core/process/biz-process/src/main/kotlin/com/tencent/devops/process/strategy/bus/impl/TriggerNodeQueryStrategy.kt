@@ -37,7 +37,7 @@ import com.tencent.devops.environment.pojo.NodeFetchReq
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
-import com.tencent.devops.process.strategy.bus.IHistoryConditionQueryStrategy
+import com.tencent.devops.process.strategy.bus.HistoryConditionQueryStrategy
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Component
 @Component
 class TriggerNodeQueryStrategy @Autowired constructor(
     private val client: Client
-) : IHistoryConditionQueryStrategy {
+) : HistoryConditionQueryStrategy {
 
     override fun query(
         request: HistoryConditionQueryRequest

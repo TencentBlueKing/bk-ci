@@ -145,54 +145,55 @@ object AtomJobTypeUtil {
         defaultJobType: String? = null
     ): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        
-        // 如果默认Job类型存在，设置 PIPELINE 的Job类型
-        if (!defaultJobType.isNullOrBlank()) {
-            result["PIPELINE"] = defaultJobType
+
+        // 设置默认值
+        defaultJobType?.takeIf { it.isNotBlank() }?.let {
+            result["PIPELINE"] = it
         }
-        
-        if (!jobTypeValue.isNullOrBlank()) {
-            try {
-                val jobTypeMap = JsonUtil.toOrNull(jobTypeValue, Map::class.java) as? Map<String, String>
-                if (jobTypeMap != null) {
-                    // 是JSON对象
-                    jobTypeMap.forEach { (scope, jobType) ->
-                        if (jobType.isNotBlank()) {
-                            // 标准化服务范围（统一转换为大写）
-                            val normalizedScope = ServiceScopeUtil.normalize(scope) ?: scope
-                            result[normalizedScope] = jobType
-                        }
-                    }
+
+        return when {
+            jobTypeValue.isNullOrBlank() -> result
+            else -> parseJobTypeValue(jobTypeValue, result)
+        }
+    }
+
+    private fun parseJobTypeValue(
+        jobTypeValue: String,
+        result: MutableMap<String, String>
+    ): Map<String, String> {
+        return try {
+            val parsedMap = parseJobTypeJsonOrString(jobTypeValue)
+            result.apply {
+                if (parsedMap.isNotEmpty()) {
+                    putAll(parsedMap)
                 } else {
-                    // 是字符串格式（老数据），只有PIPELINE
-                    result["PIPELINE"] = jobTypeValue
-                }
-            } catch (e: Exception) {
-                logger.warn("Failed to parse jobTypeValue: $jobTypeValue", e)
-                // 解析失败，使用默认值
-                if (!defaultJobType.isNullOrBlank()) {
-                    result["PIPELINE"] = defaultJobType
+                    // 解析为空时，将原始值作为 PIPELINE
+                    putIfValueNotBlank("PIPELINE", jobTypeValue)
                 }
             }
+        } catch (e: Exception) {
+            logger.warn("Failed to parse jobTypeValue: $jobTypeValue", e)
+            result // 解析失败，返回已有结果（可能包含默认值）
         }
-        
-        return result
     }
-    
-    /**
-     * 检查是否包含指定服务范围的Job类型
-     * 
-     * @param jobTypeValue JOB_TYPE字段值（可能是字符串或JSON对象）
-     * @param defaultJobType 默认Job类型（用于兼容老数据）
-     * @param serviceScope 服务范围
-     * @return 是否包含
-     */
-    fun hasJobType(
-        jobTypeValue: String?,
-        defaultJobType: String? = null,
-        serviceScope: String?
-    ): Boolean {
-        return getJobType(jobTypeValue, defaultJobType, serviceScope) != null
+
+    private fun parseJobTypeJsonOrString(value: String): Map<String, String> {
+        return JsonUtil.toOrNull(value, Map::class.java)
+            ?.let { rawMap -> rawMap as? Map<String, String> }
+            ?.mapNotNull { (scope, jobType) ->
+                jobType.takeIf { it.isNotBlank() }?.let { validJobType ->
+                    val normalizedScope = ServiceScopeUtil.normalize(scope) ?: scope
+                    normalizedScope to validJobType
+                }
+            }
+            ?.toMap()
+            ?: emptyMap()
+    }
+
+    private fun MutableMap<String, String>.putIfValueNotBlank(key: String, value: String?) {
+        value?.takeIf { it.isNotBlank() }?.let {
+            this[key] = it
+        }
     }
 }
 

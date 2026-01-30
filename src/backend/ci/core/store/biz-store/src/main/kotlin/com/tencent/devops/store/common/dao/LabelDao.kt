@@ -64,7 +64,12 @@ class LabelDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, labelName: String, type: Byte, serviceScope: ServiceScopeEnum? = null): Int {
+    fun countByName(
+        dslContext: DSLContext,
+        labelName: String,
+        type: Byte,
+        serviceScope: ServiceScopeEnum? = null
+    ): Int {
         with(TLabel.T_LABEL) {
             val conditions = mutableListOf<Condition>().apply {
                 add(LABEL_NAME.eq(labelName))

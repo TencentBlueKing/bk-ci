@@ -39,7 +39,6 @@ import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record18
 import org.jooq.Record19
 import org.jooq.Result
 import org.jooq.SelectJoinStep

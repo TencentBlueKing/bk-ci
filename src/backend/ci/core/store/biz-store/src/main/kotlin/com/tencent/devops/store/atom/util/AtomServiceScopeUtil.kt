@@ -45,7 +45,7 @@ object AtomServiceScopeUtil {
     
     /**
      * 从 SERVICE_SCOPE 和 CLASSIFY_ID_MAP 中获取所有服务范围
-     * 
+     *
      * @param serviceScopeStr SERVICE_SCOPE 字段值（JSON 数组）
      * @param classifyIdMapJson CLASSIFY_ID_MAP 字段值（JSON 对象）
      * @return 服务范围名称列表（大写格式）
@@ -55,48 +55,40 @@ object AtomServiceScopeUtil {
         classifyIdMapJson: String?
     ): List<String> {
         val serviceScopes = mutableSetOf<String>()
-        
-        // 从 SERVICE_SCOPE 中获取
-        if (!serviceScopeStr.isNullOrEmpty()) {
-            try {
-                val serviceScopeList = JsonUtil.toOrNull(serviceScopeStr, List::class.java)
-                serviceScopeList?.forEach { scope ->
-                    val scopeName = when (scope) {
-                        is String -> scope
-                        else -> scope.toString()
-                    }
-                    if (scopeName.isNotEmpty()) {
-                        val normalized = ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
-                        serviceScopes.add(normalized)
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Failed to parse SERVICE_SCOPE: $serviceScopeStr", e)
-            }
-        }
-        
-        // 从 CLASSIFY_ID_MAP 中获取
-        if (!classifyIdMapJson.isNullOrEmpty()) {
-            try {
-                val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java)
-                classifyIdMap?.keys?.forEach { key ->
-                    val scopeName = key.toString()
-                    if (scopeName.isNotEmpty()) {
-                        val normalized = ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
-                        serviceScopes.add(normalized)
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
-            }
-        }
-        
-        // 如果没有找到任何服务范围，默认返回 PIPELINE
+        serviceScopes.addAll(parseServiceScopesFromJson(serviceScopeStr))
+        serviceScopes.addAll(parseServiceScopesFromClassifyIdMap(classifyIdMapJson))
         if (serviceScopes.isEmpty()) {
             serviceScopes.add(ServiceScopeEnum.PIPELINE.name)
         }
-        
         return serviceScopes.toList()
+    }
+
+    private fun parseServiceScopesFromJson(serviceScopeStr: String?): Set<String> {
+        if (serviceScopeStr.isNullOrEmpty()) return emptySet()
+        return try {
+            val list = JsonUtil.toOrNull(serviceScopeStr, List::class.java) ?: return emptySet()
+            list.mapNotNull { scope ->
+                val scopeName = (scope as? String) ?: scope.toString()
+                if (scopeName.isEmpty()) null else ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
+            }.toSet()
+        } catch (e: Exception) {
+            logger.warn("Failed to parse SERVICE_SCOPE: $serviceScopeStr", e)
+            emptySet()
+        }
+    }
+
+    private fun parseServiceScopesFromClassifyIdMap(classifyIdMapJson: String?): Set<String> {
+        if (classifyIdMapJson.isNullOrEmpty()) return emptySet()
+        return try {
+            val map = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java) ?: return emptySet()
+            map.keys.mapNotNull { key ->
+                val scopeName = key.toString()
+                if (scopeName.isEmpty()) null else ServiceScopeUtil.normalize(scopeName) ?: scopeName.uppercase()
+            }.toSet()
+        } catch (e: Exception) {
+            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+            emptySet()
+        }
     }
     
     /**
@@ -114,54 +106,50 @@ object AtomServiceScopeUtil {
         getClassifyCode: (ServiceScopeEnum) -> String?,
         getLabelIdList: (ServiceScopeEnum) -> List<String>?
     ): List<ServiceScopeConfig>? {
-        if (serviceScopes.isEmpty()) {
-            return null
-        }
-        
-        // 获取所有服务范围的 JobType 映射
+        if (serviceScopes.isEmpty()) return null
         val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, null)
-        
-        // 为每个服务范围构建 ServiceScopeConfig
-        val serviceScopeConfigs = mutableListOf<ServiceScopeConfig>()
-        for (scope in serviceScopes) {
-            try {
-                val serviceScopeEnum = ServiceScopeEnum.valueOf(scope)
-                
-                // 获取该服务范围的分类代码
-                val classifyCode = getClassifyCode(serviceScopeEnum)
-                
-                // 获取该服务范围的 JobType
-                val jobTypeName = allJobTypes[scope] ?: allJobTypes["PIPELINE"]
-                val jobType = if (!jobTypeName.isNullOrEmpty()) {
-                    try {
-                        JobTypeEnum.valueOf(jobTypeName)
-                    } catch (e: Exception) {
-                        JobTypeEnum.AGENT // 默认值
-                    }
-                } else {
-                    JobTypeEnum.AGENT // 默认值
-                }
-                
-                // 获取该服务范围的标签ID列表
-                val labelIdList = getLabelIdList(serviceScopeEnum)
-                
-                // 构建 ServiceScopeConfig
-                if (classifyCode != null) {
-                    serviceScopeConfigs.add(
-                        ServiceScopeConfig(
-                            serviceScope = serviceScopeEnum,
-                            classifyCode = classifyCode,
-                            jobType = jobType,
-                            labelIdList = labelIdList
-                        )
-                    )
-                }
-            } catch (e: Exception) {
-                logger.warn("Failed to build ServiceScopeConfig for scope: $scope", e)
-            }
+        val configs = serviceScopes.mapNotNull { scope ->
+            buildSingleServiceScopeConfig(
+                scope = scope,
+                allJobTypes = allJobTypes,
+                getClassifyCode = getClassifyCode,
+                getLabelIdList = getLabelIdList
+            )
         }
-        
-        return serviceScopeConfigs.ifEmpty { null }
+        return configs.ifEmpty { null }
+    }
+
+    private fun resolveJobType(scope: String, allJobTypes: Map<String, String>): JobTypeEnum {
+        val jobTypeName = allJobTypes[scope] ?: allJobTypes["PIPELINE"]
+        if (jobTypeName.isNullOrEmpty()) return JobTypeEnum.AGENT
+        return try {
+            JobTypeEnum.valueOf(jobTypeName)
+        } catch (e: Exception) {
+            JobTypeEnum.AGENT
+        }
+    }
+
+    private fun buildSingleServiceScopeConfig(
+        scope: String,
+        allJobTypes: Map<String, String>,
+        getClassifyCode: (ServiceScopeEnum) -> String?,
+        getLabelIdList: (ServiceScopeEnum) -> List<String>?
+    ): ServiceScopeConfig? {
+        return try {
+            val serviceScopeEnum = ServiceScopeEnum.valueOf(scope)
+            val classifyCode = getClassifyCode(serviceScopeEnum) ?: return null
+            val jobType = resolveJobType(scope, allJobTypes)
+            val labelIdList = getLabelIdList(serviceScopeEnum)
+            ServiceScopeConfig(
+                serviceScope = serviceScopeEnum,
+                classifyCode = classifyCode,
+                jobType = jobType,
+                labelIdList = labelIdList
+            )
+        } catch (e: Exception) {
+            logger.warn("Failed to build ServiceScopeConfig for scope: $scope", e)
+            null
+        }
     }
 }
 
