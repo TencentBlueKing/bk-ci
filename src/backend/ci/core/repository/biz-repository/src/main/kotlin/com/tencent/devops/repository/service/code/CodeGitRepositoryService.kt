@@ -254,7 +254,8 @@ class CodeGitRepositoryService @Autowired constructor(
             enablePac = repository.enablePac,
             yamlSyncStatus = repository.yamlSyncStatus,
             scmCode = repository.scmCode ?: ScmType.CODE_GIT.name,
-            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name
+            credentialType = record.credentialType ?: RepoCredentialType.OAUTH.name,
+            repoResourceType = RepoResourceType.parse(repository.repoResourceType)
         )
     }
 

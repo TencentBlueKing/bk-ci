@@ -387,6 +387,9 @@ class RepositoryDao {
             if (scmCode != null) {
                 step.and(SCM_CODE.eq(scmCode))
             }
+            if (resourceType != null) {
+                step.and(REPO_RESOURCE_TYPE.eq(resourceType.name))
+            }
             when (repositoryTypes) {
                 null -> {
                 }
