@@ -92,40 +92,42 @@ class WeworkRobotServiceImpl @Autowired constructor(
     lateinit var robotKey: String
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        if (weworkNotifyMediaMessage.receivers.isEmpty()) {
-            throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
-        }
-        val mediaType = weworkNotifyMediaMessage.mediaType
-        val receiverType = weworkNotifyMediaMessage.receiverType
-
-        // 根据接收者类型选择不同的发送方式
-        when (receiverType) {
-            WeworkReceiverType.group -> {
-                throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED)
+        weworkNotifyMediaMessage.mediaInputStream.use {
+            if (weworkNotifyMediaMessage.receivers.isEmpty()) {
+                throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
             }
-            WeworkReceiverType.single -> {
-                // 通过chatid发送到指定会话
-                try {
-                    sendMediaMessageByChatId(weworkNotifyMediaMessage)
-                    logger.info("send media message success, $weworkNotifyMediaMessage")
-                    saveResult(
-                        receivers = weworkNotifyMediaMessage.receivers,
-                        body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                        success = true,
-                        errMsg = null
-                    )
-                } catch (e: Throwable) {
-                    logger.warn("send media message fail, $weworkNotifyMediaMessage", e)
-                    saveResult(
-                        receivers = weworkNotifyMediaMessage.receivers,
-                        body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                        success = false,
-                        errMsg = e.message
-                    )
-                    if (e is ErrorCodeException) throw e
-                    throw ErrorCodeException(
-                        errorCode = ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
-                    )
+            val mediaType = weworkNotifyMediaMessage.mediaType
+            val receiverType = weworkNotifyMediaMessage.receiverType
+
+            // 根据接收者类型选择不同的发送方式
+            when (receiverType) {
+                WeworkReceiverType.group -> {
+                    throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED)
+                }
+                WeworkReceiverType.single -> {
+                    // 通过chatid发送到指定会话
+                    try {
+                        sendMediaMessageByChatId(weworkNotifyMediaMessage)
+                        logger.info("send media message success, $weworkNotifyMediaMessage")
+                        saveResult(
+                            receivers = weworkNotifyMediaMessage.receivers,
+                            body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                            success = true,
+                            errMsg = null
+                        )
+                    } catch (e: Throwable) {
+                        logger.warn("send media message fail, $weworkNotifyMediaMessage", e)
+                        saveResult(
+                            receivers = weworkNotifyMediaMessage.receivers,
+                            body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
+                            success = false,
+                            errMsg = e.message
+                        )
+                        if (e is ErrorCodeException) throw e
+                        throw ErrorCodeException(
+                            errorCode = ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
+                        )
+                    }
                 }
             }
         }
@@ -137,50 +139,48 @@ class WeworkRobotServiceImpl @Autowired constructor(
     private fun sendMediaMessageByChatId(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val mediaType = weworkNotifyMediaMessage.mediaType
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
+        val inputStream = weworkNotifyMediaMessage.mediaInputStream
 
-        // 使用use块确保inputStream始终被关闭，避免资源泄漏
-        weworkNotifyMediaMessage.mediaInputStream.use { inputStream ->
-            when (mediaType) {
-                WeworkMediaType.image -> {
-                    // 图片消息：流式计算base64和md5，避免内存溢出
-                    val (base64Content, md5Hash) = processImageStream(inputStream)
-                    weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                        sendRequest.add(
-                            WeworkRobotSingleImageMessage(
-                                chatid = chatid,
-                                postId = null,
-                                image = ImageContent(base64 = base64Content, md5 = md5Hash),
-                                visibleToUser = null
-                            )
+        when (mediaType) {
+            WeworkMediaType.image -> {
+                // 图片消息：流式计算base64和md5，避免内存溢出
+                val (base64Content, md5Hash) = processImageStream(inputStream)
+                weworkNotifyMediaMessage.receivers.forEach { chatid ->
+                    sendRequest.add(
+                        WeworkRobotSingleImageMessage(
+                            chatid = chatid,
+                            postId = null,
+                            image = ImageContent(base64 = base64Content, md5 = md5Hash),
+                            visibleToUser = null
                         )
-                    }
-                }
-                WeworkMediaType.file -> {
-                    // 文件消息：流式写入临时文件后上传，避免内存溢出
-                    val mediaId = uploadMediaToRobotFromStream(
-                        inputStream = inputStream,
-                        fileName = weworkNotifyMediaMessage.mediaName,
-                        mediaType = mediaType.name,
-                        key = robotKey
-                    )
-                    weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                        sendRequest.add(
-                            WeworkRobotSingleFileMessage(
-                                chatid = chatid,
-                                postId = null,
-                                file = MediaContent(mediaId = mediaId),
-                                visibleToUser = null
-                            )
-                        )
-                    }
-                }
-                else -> {
-                    logger.warn("unsupported media type for chatid send: $mediaType")
-                    throw ErrorCodeException(
-                        errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
-                        params = arrayOf(mediaType.name)
                     )
                 }
+            }
+            WeworkMediaType.file -> {
+                // 文件消息：流式写入临时文件后上传，避免内存溢出
+                val mediaId = uploadMediaToRobotFromStream(
+                    inputStream = inputStream,
+                    fileName = weworkNotifyMediaMessage.mediaName,
+                    mediaType = mediaType.name,
+                    key = robotKey
+                )
+                weworkNotifyMediaMessage.receivers.forEach { chatid ->
+                    sendRequest.add(
+                        WeworkRobotSingleFileMessage(
+                            chatid = chatid,
+                            postId = null,
+                            file = MediaContent(mediaId = mediaId),
+                            visibleToUser = null
+                        )
+                    )
+                }
+            }
+            else -> {
+                logger.warn("unsupported media type for chatid send: $mediaType")
+                throw ErrorCodeException(
+                    errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
+                    params = arrayOf(mediaType.name)
+                )
             }
         }
 
