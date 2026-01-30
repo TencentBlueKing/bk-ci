@@ -65,8 +65,8 @@ class GitGroupWebhookElementParams : ScmWebhookElementParams<CodeGitGroupWebHook
             }
             params.version = element.version
             params.includeRepoGroupAction = WebhookUtils.joinToString(includeRepoGroupAction)
-            params.includeRepoNames = WebhookUtils.joinToString(includeRepoNames)
-            params.excludeRepoNames = WebhookUtils.joinToString(excludeRepoNames)
+            params.includeRepoNames = includeRepoNames
+            params.excludeRepoNames = excludeRepoNames
         }
         return params
     }
