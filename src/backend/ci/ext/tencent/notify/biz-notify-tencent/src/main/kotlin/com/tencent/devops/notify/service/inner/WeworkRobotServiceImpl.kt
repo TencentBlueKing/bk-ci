@@ -93,44 +93,45 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         weworkNotifyMediaMessage.mediaInputStream.use {
-            if (weworkNotifyMediaMessage.receivers.isEmpty()) {
-                throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
-            }
-            val mediaType = weworkNotifyMediaMessage.mediaType
-            val receiverType = weworkNotifyMediaMessage.receiverType
-
-            // 根据接收者类型选择不同的发送方式
-            when (receiverType) {
-                WeworkReceiverType.group -> {
-                    throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED)
-                }
-                WeworkReceiverType.single -> {
-                    // 通过chatid发送到指定会话
-                    try {
-                        sendMediaMessageByChatId(weworkNotifyMediaMessage)
-                        logger.info("send media message success, $weworkNotifyMediaMessage")
-                        saveResult(
-                            receivers = weworkNotifyMediaMessage.receivers,
-                            body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                            success = true,
-                            errMsg = null
-                        )
-                    } catch (e: Throwable) {
-                        logger.warn("send media message fail, $weworkNotifyMediaMessage", e)
-                        saveResult(
-                            receivers = weworkNotifyMediaMessage.receivers,
-                            body = "mediaType:$mediaType, mediaName:${weworkNotifyMediaMessage.mediaName}",
-                            success = false,
-                            errMsg = e.message
-                        )
-                        if (e is ErrorCodeException) throw e
-                        throw ErrorCodeException(
-                            errorCode = ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
-                        )
-                    }
-                }
-            }
+            validateMediaMessage(weworkNotifyMediaMessage)
+            dispatchMediaMessage(weworkNotifyMediaMessage)
         }
+    }
+
+    /**
+     * 校验媒体消息参数
+     */
+    private fun validateMediaMessage(message: WeworkNotifyMediaMessage) {
+        if (message.receivers.isEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
+        }
+        if (message.receiverType == WeworkReceiverType.group) {
+            throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED)
+        }
+    }
+
+    /**
+     * 分发媒体消息到指定会话
+     */
+    private fun dispatchMediaMessage(message: WeworkNotifyMediaMessage) {
+        val body = "mediaType:${message.mediaType}, mediaName:${message.mediaName}"
+        try {
+            sendMediaMessageByChatId(message)
+            logger.info("send media message success, $message")
+            saveResult(receivers = message.receivers, body = body, success = true, errMsg = null)
+        } catch (e: Throwable) {
+            handleMediaMessageError(message = message, body = body, error = e)
+        }
+    }
+
+    /**
+     * 处理媒体消息发送异常
+     */
+    private fun handleMediaMessageError(message: WeworkNotifyMediaMessage, body: String, error: Throwable): Nothing {
+        logger.warn("send media message fail, $message", error)
+        saveResult(receivers = message.receivers, body = body, success = false, errMsg = error.message)
+        if (error is ErrorCodeException) throw error
+        throw ErrorCodeException(errorCode = ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL)
     }
 
     /**
