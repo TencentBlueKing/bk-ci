@@ -66,6 +66,8 @@ data class Model(
     var srcTemplateId: String? = null,
     @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String? = null,
+    @get:Schema(title = "流水线ID", required = false)
+    var pipelineId: String? = null,
     @get:Schema(title = "提示", required = false)
     var tips: String? = null,
     @get:Schema(title = "流水线事件回调", required = false)
