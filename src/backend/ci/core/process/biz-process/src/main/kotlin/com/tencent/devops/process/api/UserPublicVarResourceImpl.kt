@@ -51,13 +51,7 @@ class UserPublicVarResourceImpl @Autowired constructor(
         groupName: String,
         version: Int?
     ): Result<PublicVarGroupVO> {
-        // 校验查看权限
-        publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
-            userId = userId,
-            projectId = projectId,
-            permission = AuthPermission.VIEW,
-            groupName = groupName
-        )
+        checkViewPermission(userId = userId, projectId = projectId, groupName = groupName)
         return Result(publicVarGroupService.getPipelineGroupsVar(
             projectId = projectId,
             groupName = groupName,
@@ -71,13 +65,16 @@ class UserPublicVarResourceImpl @Autowired constructor(
         groupName: String,
         version: Int?
     ): Result<List<PublicVarDO>> {
-        // 校验查看权限
+        checkViewPermission(userId = userId, projectId = projectId, groupName = groupName)
+        return Result(publicVarService.getVariables(userId, projectId, groupName, version))
+    }
+
+    private fun checkViewPermission(userId: String, projectId: String, groupName: String) {
         publicVarGroupPermissionService.checkPublicVarGroupPermissionWithMessage(
             userId = userId,
             projectId = projectId,
             permission = AuthPermission.VIEW,
             groupName = groupName
         )
-        return Result(publicVarService.getVariables(userId, projectId, groupName, version))
     }
 }
