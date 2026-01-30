@@ -133,7 +133,14 @@ class CodeGitRepositoryService @Autowired constructor(
             repositoryCodeGitDao.create(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
-                projectName = GitUtils.getProjectName(repository.url),
+                projectName = GitUtils.getProjectName(repository.url).let {
+                    // 关联项目组时，解析出的projectName中存在[groups]前缀，在此处进行移除
+                    if (repository.repoResourceType == RepoResourceType.REPOSITORY_GROUP) {
+                        it.removePrefix(REPO_GROUP_FLAG)
+                    } else {
+                        it
+                    }
+                },
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 authType = repository.authType,
@@ -623,5 +630,7 @@ class CodeGitRepositoryService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeGitRepositoryService::class.java)
+        // 工蜂项目组标识
+        private const val REPO_GROUP_FLAG = "groups"
     }
 }

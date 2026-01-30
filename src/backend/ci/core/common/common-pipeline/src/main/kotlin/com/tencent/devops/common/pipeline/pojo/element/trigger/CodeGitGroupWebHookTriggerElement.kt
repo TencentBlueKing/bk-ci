@@ -93,7 +93,7 @@ data class CodeGitGroupWebHookTriggerInput(
     @get:Schema(title = "监听的代码库组动作")
     val includeRepoGroupAction: List<String>? = null,
     @get:Schema(title = "监听的代码库名称", required = false)
-    val includeRepoNames: List<String>? = null,
+    val includeRepoNames: String? = null,
     @get:Schema(title = "忽略的代码库名称", required = false)
-    val excludeRepoNames: List<String>? = null
+    val excludeRepoNames: String? = null
 )
