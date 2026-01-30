@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -377,11 +378,16 @@ class UserPipelineTemplateV2ResourceImpl(
             permission = AuthPermission.VIEW,
             templateId = templateId
         )
+        val pageNotNull = request.page ?: 0
+        val pageSizeNotNull = request.pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
         return Result(
             templateFacadeService.getTemplateVersions(
                 projectId = projectId,
                 templateId = templateId,
-                commonCondition = request
+                commonCondition = request.copy(
+                    page = pageNotNull,
+                    pageSize = pageSizeNotNull
+                )
             )
         )
     }

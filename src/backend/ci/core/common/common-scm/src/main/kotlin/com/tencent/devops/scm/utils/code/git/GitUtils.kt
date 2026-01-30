@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_LOGIN_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_SERCRT_WRONG
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
+import org.slf4j.LoggerFactory
 import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -41,6 +42,14 @@ import java.net.URLEncoder
 object GitUtils {
     // 工蜂pre-push虚拟分支
     private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
+
+    private val logger = LoggerFactory.getLogger(GitUtils::class.java)
+
+    private val GIT_URL_REGEX_LIST = listOf(
+        Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*)\\.git"),
+        Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)\\.git"),
+        Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)")
+    )
 
     fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
@@ -51,9 +60,7 @@ object GitUtils {
     fun getDomainAndRepoName(gitUrl: String): Pair<String/*domain*/, String/*repoName*/> {
         // 兼容http存在端口的情況 http://gitlab.xx:8888/xx.git
         // [.git] 后缀小数点需转义, 否则会匹配失败
-        val groups = Regex("git@([-.a-z0-9A-Z]+):([0-9]+/)?(.*)\\.git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)\\.git").find(gitUrl)?.groups
-            ?: Regex("http[s]?://([-.a-z0-9A-Z]+)(:[0-9]+)?/(.*)").find(gitUrl)?.groups
+        val groups = GIT_URL_REGEX_LIST.firstNotNullOfOrNull { regex -> regex.find(gitUrl)?.groups }
             ?: throw ScmException("Git error, invalid field [http_url]:$gitUrl", ScmType.CODE_GIT.name)
 
         if (groups.size < 3) {
@@ -200,5 +207,29 @@ object GitUtils {
         val containsKeyword = keywordList.any { trimmedMessage.contains(it, ignoreCase = true) }
 
         return matchesPrefix || containsKeyword
+    }
+
+    /**
+     * 获取仓库名称, 如果获取失败，返回原始字符串
+     */
+    fun tryGetRepoName(url: String?) = if (isValidGitUrl(url)) {
+        try {
+            getDomainAndRepoName(url!!).second
+        } catch (ignored: Exception) {
+            logger.warn("failed to get domain and repo name: $url, use source string", ignored)
+            url
+        }
+    } else {
+        url
+    }
+
+    /**
+     * 判断字符串是否为有效的git仓库地址
+     * @param url 待验证的字符串
+     */
+    fun isValidGitUrl(url: String?) = if (url.isNullOrBlank()) {
+        false
+    } else {
+        GIT_URL_REGEX_LIST.any { regex -> regex.matches(url) }
     }
 }

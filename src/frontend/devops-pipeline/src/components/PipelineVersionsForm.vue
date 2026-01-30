@@ -100,7 +100,7 @@
                     <bk-checkbox
                         v-if="isInstance && !isInitInstance"
                         class="instance_reset"
-                        :disabled="disabled"
+                        :disabled="disabled || isFollowTemplate"
                         :value="resetBuildNo"
                         @change="handleCheckChange"
                     >
@@ -122,6 +122,9 @@
                         >
                             <vuex-input
                                 :disabled="isPreviewAndLockedNo || isFollowTemplate || disabled"
+                                :class="{
+                                    'is-change-param': buildNoChanged
+                                }"
                                 input-type="number"
                                 name="buildNo"
                                 placeholder="BK_CI_BUILD_NO"
@@ -224,6 +227,10 @@
             showBaseline: {
                 type: Boolean,
                 default: true
+            },
+            buildNoChanged: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

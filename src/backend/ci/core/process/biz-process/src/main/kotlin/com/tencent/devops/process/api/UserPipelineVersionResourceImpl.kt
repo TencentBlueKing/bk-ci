@@ -46,6 +46,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineVersionResource
 import com.tencent.devops.process.audit.service.AuditService
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
@@ -194,7 +195,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean?
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
     ): Result<PipelineVersionWithModel> {
         val userPipelinePermissionCheckStrategy =
             UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
@@ -210,7 +212,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 version = version,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                source = source
             )
         )
     }

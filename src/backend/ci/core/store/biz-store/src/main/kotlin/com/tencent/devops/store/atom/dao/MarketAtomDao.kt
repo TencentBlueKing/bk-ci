@@ -39,8 +39,8 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.atom.util.AtomJobTypeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -470,11 +470,11 @@ class MarketAtomDao : AtomBaseDao() {
     ) {
         // 获取当前记录，用于保留现有的 CLASSIFY_ID_MAP
         val currentRecord = getAtomRecordById(dslContext, id)
-
+        
         // 从 serviceScopeConfigs 构建 jobTypeMap
         val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
         val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
-
+        
         // 构建 CLASSIFY_ID_MAP（支持多服务范围）
         val classifyIdMap = buildClassifyIdMap(
             dslContext = dslContext,
@@ -482,14 +482,14 @@ class MarketAtomDao : AtomBaseDao() {
             serviceScopeConfigs = serviceScopeConfigs,
             currentClassifyIdMap = currentRecord?.classifyIdMap
         )
-
+        
         // 获取 PIPELINE 服务范围的分类ID（用于 CLASSIFY_ID 字段）
         val classifyId = getClassifyIdByCode(
             dslContext = dslContext,
             classifyCode = marketAtomUpdateRequest.classifyCode,
             serviceScope = ServiceScopeEnum.PIPELINE
         ) ?: classifyIdMap?.get(ServiceScopeEnum.PIPELINE.name)
-
+        
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
@@ -506,17 +506,17 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
-
+            
             // 更新分类ID（用于 PIPELINE 服务范围）
             classifyId?.let {
                 baseStep.set(CLASSIFY_ID, it)
             }
-
+            
             // 更新 CLASSIFY_ID_MAP（支持多服务范围）
             classifyIdMap?.let {
                 baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
             }
-
+            
             // 更新 jobType（支持多服务范围）
             jobTypeValue?.let {
                 baseStep.set(JOB_TYPE, it)
@@ -524,10 +524,10 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.where(ID.eq(id)).execute()
         }
     }
-
+    
     /**
      * 构建 CLASSIFY_ID_MAP
-     *
+     * 
      * @param dslContext DSL上下文
      * @param classifyCode 分类代码
      * @param serviceScopeConfigs 服务范围配置列表
@@ -543,7 +543,7 @@ class MarketAtomDao : AtomBaseDao() {
         if (classifyCode.isNullOrEmpty() || serviceScopeConfigs.isNullOrEmpty()) {
             return null
         }
-
+        
         // 解析现有的 CLASSIFY_ID_MAP（如果存在），保留其他服务范围的分类ID
         val existingMap = try {
             if (!currentClassifyIdMap.isNullOrEmpty()) {
@@ -554,7 +554,7 @@ class MarketAtomDao : AtomBaseDao() {
         } catch (e: Exception) {
             null
         } ?: mutableMapOf()
-
+        
         // 为每个服务范围查询对应的分类ID
         val classifyIdMap = existingMap.toMutableMap()
         for (config in serviceScopeConfigs) {
@@ -569,7 +569,7 @@ class MarketAtomDao : AtomBaseDao() {
                 config is String -> config
                 else -> null
             } ?: continue
-
+            
             // 尝试解析为 ServiceScopeEnum
             val serviceScope = try {
                 ServiceScopeEnum.valueOf(serviceScopeName.uppercase())
@@ -577,19 +577,19 @@ class MarketAtomDao : AtomBaseDao() {
                 // 如果无法解析，跳过该服务范围
                 continue
             }
-
+            
             // 查询该服务范围对应的分类ID
             val classifyId = getClassifyIdByCode(
                 dslContext = dslContext,
                 classifyCode = classifyCode,
                 serviceScope = serviceScope
             )
-
+            
             classifyId?.let {
                 classifyIdMap[serviceScope.name] = it
             }
         }
-
+        
         return if (classifyIdMap.isNotEmpty()) classifyIdMap else null
     }
 
@@ -609,12 +609,12 @@ class MarketAtomDao : AtomBaseDao() {
             classifyCode = atomRequest.classifyCode,
             serviceScope = ServiceScopeEnum.PIPELINE
         )
-
+        
         // 从 serviceScopeConfigs 构建 jobTypeMap
         val serviceScopeConfigs = atomRequest.toServiceScopeConfigs()
         val currentJobType = atomRecord.jobType  // 使用旧记录的 jobType 作为默认值
         val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, currentJobType)
-
+        
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
                 this,
@@ -779,7 +779,7 @@ class MarketAtomDao : AtomBaseDao() {
         val tAtom = TAtom.T_ATOM
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         val tClassify = TClassify.T_CLASSIFY
-
+        
         // 当 serviceScope 为 null 时，默认使用 PIPELINE 服务范围
         val targetServiceScope = serviceScope ?: ServiceScopeEnum.PIPELINE
 

@@ -131,6 +131,7 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         userId: String,
         projectId: String,
         templateId: String,
+        version: Long,
         pipelineIds: Set<String>
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(
@@ -138,19 +139,20 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
+                version = version,
                 pipelineIds = pipelineIds
             )
         )
     }
 
-    override fun getTemplateInstanceParamsById(
+    override fun getTemplateParamsById(
         userId: String,
         projectId: String,
         templateId: String,
         version: Long
     ): Result<TemplateInstanceParams> {
         return Result(
-            instanceFacadeService.getTemplateInstanceParamsById(
+            instanceFacadeService.getTemplateParamsById(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
@@ -159,14 +161,14 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         )
     }
 
-    override fun getTemplateInstanceParamsByRef(
+    override fun getTemplateParamsByRef(
         userId: String,
         projectId: String,
         templateId: String,
         ref: String
     ): Result<TemplateInstanceParams> {
         return Result(
-            instanceFacadeService.getTemplateInstanceParamsByRef(
+            instanceFacadeService.getTemplateParamsByRef(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
