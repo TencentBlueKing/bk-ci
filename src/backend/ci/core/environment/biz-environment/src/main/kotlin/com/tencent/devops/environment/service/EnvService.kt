@@ -1660,7 +1660,7 @@ class EnvService @Autowired constructor(
         val result = mutableListOf<EnvData>()
         // 校验管理员权限看能否用所有构建节点
         if (authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
-            result.add(EnvData(AllCreateNodeEnv.ENV_ID, AllCreateNodeEnv.name(), agentHashId))
+            result.add(EnvData(AllCreateNodeEnv.hashId(), AllCreateNodeEnv.name(), agentHashId))
         }
         if (envNodeList.isEmpty() && tagEnvList.isEmpty()) {
             logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
@@ -1689,7 +1689,7 @@ class EnvService @Autowired constructor(
             envIds = envIds
         ).map {
             EnvData(
-                id = it.envId,
+                hashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 agentHashId = agentHashId
             )

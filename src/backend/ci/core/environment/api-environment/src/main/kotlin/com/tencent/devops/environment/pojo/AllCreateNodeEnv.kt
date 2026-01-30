@@ -12,5 +12,5 @@ object AllCreateNodeEnv {
     const val ENV_ID = -2L
     const val ENV_NAME_KEY = "allNodeCreateEnv"
     fun name(): String = I18nUtil.getCodeLanMessage(ENV_NAME_KEY)
-    fun hashId(): String = "-${HashUtil.encodeLongId(1)}"
+    fun hashId(): String = "-${HashUtil.encodeLongId(2)}"
 }
