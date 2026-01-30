@@ -698,8 +698,8 @@ class CreateControl @Autowired constructor(
             if (bak) {
                 // 备份windows config
                 workspaceWindowsDao.bakWindowsConfig(dslContext, copy.workspaceName, bakName)
-                // 备份分享信息
-                workspaceSharedDao.bakWorkspaceShareInfo(dslContext, copy.workspaceName, bakName)
+                // 备份并迁移分享信息
+                workspaceSharedDao.bakAndTransferWorkspaceShareInfo(dslContext, copy.workspaceName, bakName)
                 workspaceDao.bakWorkspace(
                     dslContext = dslContext,
                     workspaceName = copy.workspaceName,

@@ -586,7 +586,6 @@
                 return atomMap[this.atomCode] || NormalAtom
             },
             isOverride () {
-                console.log(this.atom, this.element)
                 return this.editable || this.element?.isOverride
             },
         },

@@ -25,42 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo
+package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "start客户端工作空间详情")
-data class WorkspaceStartCloudDetail(
-    @get:Schema(title = "ip地址")
-    val ip: String,
-    @get:Schema(title = "start客户端所需唯一索引")
-    val curLaunchId: Int,
-    @get:Schema(title = "云区域ID")
-    val regionId: Int? = null,
-    @get:Schema(title = "项目ID")
-    val projectId: String? = null,
-    @get:Schema(title = "工作空间名称")
-    val name: String? = null,
-    @get:Schema(title = "创建人")
-    val creator: String? = null,
-    @get:Schema(title = "拥有者")
-    val owner: String? = null,
-    @get:Schema(title = "resourceId")
-    val resourceId: String? = null,
-    @get:Schema(title = "实例别名")
-    val displayName: String? = null,
-    @get:Schema(
-        title = "单向网络配置",
-        description = "0-未启用单向网络；1-Mesh单向网络；2-SSL单向网络",
-        allowableValues = ["0", "1", "2"]
-    )
-    val cdsMesh: Int? = null,
-    @get:Schema(title = "独立域名")
-    val cdsDomain: String? = null,
-    @get:Schema(title = "windows 地域配置")
-    val zoneConfig: WindowsResourceZoneConfig? = null,
-    @get:Schema(title = "机型配置")
-    val winConfig: WindowsResourceTypeConfig? = null,
-    @get:Schema(title = "enableRecord")
-    val enableRecord: Boolean? = false
+@Schema(title = "保密签平台展示内容更新请求")
+data class SignaturePlatformUpdateRequest(
+    @Schema(title = "平台名称", required = false)
+    val platformName: String? = null,
+    @Schema(title = "中文文案信息", required = false)
+    val informationCn: String? = null,
+    @Schema(title = "英文文案信息", required = false)
+    val informationEn: String? = null
 )

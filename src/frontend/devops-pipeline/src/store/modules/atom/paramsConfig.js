@@ -211,7 +211,8 @@ export const DEFAULT_PARAM = {
         typeDesc: 'buildResource',
         required: true,
         readOnly: false,
-        replaceKey: '{{__keywords__}}'
+        replaceKey: '{{__keywords__}}',
+        asInstanceInput: true
     },
     [ARTIFACTORY]: {
         id: 'artifactory',
@@ -224,7 +225,8 @@ export const DEFAULT_PARAM = {
         properties: {},
         type: ARTIFACTORY,
         typeDesc: 'artifactory',
-        required: true
+        required: true,
+        asInstanceInput: true
     },
     [SUB_PIPELINE]: {
         id: 'subPipeline',

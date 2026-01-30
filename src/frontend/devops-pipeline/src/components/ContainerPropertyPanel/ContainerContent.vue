@@ -1027,7 +1027,7 @@
                     const params = {
                         projectId: this.projectId,
                         platform: 'landun',
-                        pipelineId: this.pipelineId
+                        pipelineId: this.pipelineId || this.templateId
                     }
                     const res = await this.getMacvmModel(params)
                     if (res.data) {

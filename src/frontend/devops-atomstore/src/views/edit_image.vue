@@ -597,6 +597,11 @@
                             this.form.releaseType = 'COMPATIBILITY_FIX'
                             break
                     }
+                    
+                    this.getImageVersionInfo(this.form.imageCode).then(versionInfo => {
+                        this.showVersionList = versionInfo?.showVersionList || []
+                        this.setVersionByReleaseType(this.form.releaseType)
+                    }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
 
                     this.getImageVersionInfo(this.form.imageCode).then(versionInfo => {
                         this.showVersionList = versionInfo?.showVersionList || []
