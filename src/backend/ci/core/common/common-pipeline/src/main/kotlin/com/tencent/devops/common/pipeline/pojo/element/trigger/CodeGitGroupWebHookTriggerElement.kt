@@ -44,7 +44,7 @@ data class CodeGitGroupWebHookTriggerElement(
     @get:Schema(title = "插件用户ID", required = false)
     override var stepId: String? = null,
     @get:Schema(title = "插件入参", required = false)
-    val input: CodeGitGroupWebHookTriggerInput
+    val data: CodeGitGroupWebHookTriggerData
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitGroupWebHookTrigger"
@@ -61,7 +61,7 @@ data class CodeGitGroupWebHookTriggerElement(
     }
 
     // 增加条件这里也要补充上,不然代码库触发器列表展示会不对
-    override fun triggerCondition() = with(input) {
+    override fun triggerCondition() = with(data.input) {
         listOfNotNull(
             vuexInput(name = "action", value = joinToString(includeRepoGroupAction)),
             includeUsers?.let {
@@ -73,6 +73,11 @@ data class CodeGitGroupWebHookTriggerElement(
         )
     }
 }
+
+data class CodeGitGroupWebHookTriggerData(
+    @get:Schema(title = "插件入参", required = false)
+    val input: CodeGitGroupWebHookTriggerInput
+)
 
 data class CodeGitGroupWebHookTriggerInput(
     @get:Schema(title = "新版的git原子的类型")

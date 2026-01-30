@@ -246,10 +246,11 @@ object RepositoryConfigUtils {
             }
 
             is CodeGitGroupWebHookTriggerElement -> {
+                val input = element.data.input
                 val repositoryConfig = RepositoryConfig(
-                    repositoryHashId = element.input.repositoryHashId,
-                    repositoryName = EnvUtils.parseEnv(element.input.repositoryName, variables),
-                    triggerRepositoryType = element.input.repositoryType,
+                    repositoryHashId = input.repositoryHashId,
+                    repositoryName = EnvUtils.parseEnv(input.repositoryName, variables),
+                    triggerRepositoryType = input.repositoryType,
                     selfRepoHashId = null
                 )
                 Triple(ScmType.CODE_GIT, CodeEventType.GROUP, repositoryConfig)

@@ -52,7 +52,7 @@ class GitGroupWebhookElementParams : ScmWebhookElementParams<CodeGitGroupWebHook
                 variables = variables
             ).third
         )
-        with(element.input) {
+        with(element.data.input) {
             params.excludeUsers = if (!excludeUsers.isNullOrBlank()) {
                 EnvUtils.parseEnv(excludeUsers, variables)
             } else {
