@@ -55,7 +55,8 @@ class PipelineTemplateInstanceVersionPostProcessor @Autowired constructor(
             val beforePipelineVersion = context.pipelineInfo?.version
             val afterPipelineVersion = pipelineResourceVersion.version
             val beforeTemplateVersion = templateInstanceBasicInfo.beforeTemplateVersion
-            val afterTemplateVersion = templateInstanceBasicInfo.templateVersion
+            val afterTemplateVersion = templateInstanceBasicInfo.templateSrcTemplateVersion
+                ?: templateInstanceBasicInfo.templateVersion
             templateInstanceItemDao.update(
                 dslContext = transactionContext,
                 record = PipelineTemplateInstanceItemUpdate(
