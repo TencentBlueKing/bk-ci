@@ -14,4 +14,8 @@ class CreateEnvService {
     fun getWorkspaceZoneName(projectId: String, workspaceId: String): String? {
         return null
     }
+
+    fun getWorkspaceDisplayName(projectId: String, workspaceId: String?): String? {
+        return null
+    }
 }

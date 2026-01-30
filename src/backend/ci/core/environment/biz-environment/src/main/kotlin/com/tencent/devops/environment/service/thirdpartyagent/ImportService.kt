@@ -55,6 +55,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.AgentType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.service.CreateEnvService
 import com.tencent.devops.environment.service.NodeTagService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
@@ -74,7 +75,8 @@ class ImportService @Autowired constructor(
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val simpleRateLimiter: SimpleRateLimiter,
-    private val nodeTagService: NodeTagService
+    private val nodeTagService: NodeTagService,
+    private val createEnvService: CreateEnvService
 ) {
 
     companion object {
@@ -206,7 +208,8 @@ class ImportService @Autowired constructor(
             )
 
             val nodeStringId = if (agentRecord.agentType == AgentType.CREATE.name) {
-                "CREATE_${agentRecord.createWorkspaceName}"
+                createEnvService.getWorkspaceDisplayName(projectId, agentRecord.createWorkspaceName)
+                    ?: agentRecord.createWorkspaceName ?: "CREATE_${agentRecord.ip}"
             } else {
                 "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"
             }

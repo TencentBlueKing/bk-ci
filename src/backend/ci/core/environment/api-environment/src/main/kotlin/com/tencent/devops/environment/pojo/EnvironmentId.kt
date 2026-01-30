@@ -36,7 +36,7 @@ data class EnvironmentId(
 )
 
 data class EnvData(
-    val id: Long,
+    val hashId: String,
     val name: String,
     val agentHashId: String
 )

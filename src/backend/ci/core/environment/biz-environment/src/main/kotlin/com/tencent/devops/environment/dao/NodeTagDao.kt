@@ -344,7 +344,7 @@ class NodeTagDao {
         with(TNodeTags.T_NODE_TAGS) {
             val dsl = dslContext.select().from(this)
             if (!nodeTypeList.isNullOrEmpty()) {
-                dsl.leftJoin(TNode.T_NODE).on(NODE_ID.eq(TNode.T_NODE.NODE_ID))
+                dsl.innerJoin(TNode.T_NODE).on(NODE_ID.eq(TNode.T_NODE.NODE_ID))
                     .and(TNode.T_NODE.NODE_TYPE.`in`(nodeTypeList))
             }
             return dsl.where(PROJECT_ID.eq(projectId)).fetch().map {
