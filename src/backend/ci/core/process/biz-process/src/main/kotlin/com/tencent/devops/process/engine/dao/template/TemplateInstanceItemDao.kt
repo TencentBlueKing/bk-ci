@@ -166,6 +166,18 @@ class TemplateInstanceItemDao {
         }
     }
 
+    fun getTemplateInstanceItem(
+        dslContext: DSLContext,
+        projectId: String,
+        itemId: String
+    ): PipelineTemplateInstanceItem? {
+        with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(ID.eq(itemId)))
+                .fetchOne()?.convert()
+        }
+    }
+
     fun getTemplateInstanceItemList(
         dslContext: DSLContext,
         status: String,

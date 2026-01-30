@@ -61,11 +61,7 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 // 只有在【创建新流水线】或【实例化时】的情况下，T_TEMPLATE_PIPELINE 关联才存储数据
                 createOrUpdateRelation(transactionContext)
             }
-        } ?: run {
-            if (pipelineInfo == null || pipelineResourceVersion.status == VersionStatus.RELEASED) {
-                unbindRelation(transactionContext)
-            }
-        }
+        } ?: return@with
     }
 
     /**

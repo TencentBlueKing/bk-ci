@@ -34,6 +34,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceBase
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceCompareResponse
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceItem
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceReleaseInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequest
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesTaskDetail
@@ -85,6 +87,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
+    private val templateDao: TemplateDao,
     private val dslContext: DSLContext,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
@@ -549,7 +552,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
             val finalStatus = when {
                 record.status == null -> TemplatePipelineStatus.UPDATED
                 record.status == TemplatePipelineStatus.UPDATED &&
-                    record.version != latestReleaseVersion -> TemplatePipelineStatus.PENDING_UPDATE
+                        record.version != latestReleaseVersion -> TemplatePipelineStatus.PENDING_UPDATE
+
                 else -> record.status!!
             }
 
@@ -1085,11 +1089,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
     }
 
     /**
-     * 回滚实例任务
-     * @param userId 用户ID
-     * @param projectId 项目ID
-     * @param baseId 实例任务ID
-     * @return 回滚结果，包含成功和失败的流水线信息
+     * 回滚实例任务（通过 baseId 批量回滚）
      */
     fun rollbackTemplateInstances(
         userId: String,
@@ -1098,7 +1098,11 @@ class PipelineTemplateInstanceService @Autowired constructor(
     ): TemplateOperationRet {
         logger.info("rollback template instances start|$projectId|$userId|$baseId")
 
-        // 1. 根据 baseId 查询所有成功实例化的 Item
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = baseId
+        ) ?: throw CustomMessageException("instance Base not found for baseId: $baseId")
         val instanceItems = templateInstanceItemDao.listTemplateInstanceItemByBaseIds(
             dslContext = dslContext,
             projectId = projectId,
@@ -1113,117 +1117,186 @@ class PipelineTemplateInstanceService @Autowired constructor(
             )
         }
 
-        val successPipelines = mutableListOf<String>()
-        val failurePipelines = mutableListOf<String>()
-        val successPipelineIds = mutableListOf<String>()
-        val failureMessages = mutableMapOf<String, String>()
-
-        // 2. 遍历每个实例，进行回滚
-        instanceItems.forEach { item ->
-            try {
-                // 检查 beforePipelineVersion 是否存在
-                val beforeVersion = item.beforePipelineVersion
-                    ?: throw CustomMessageException(
-                        message = "流水线[${item.pipelineName}]没有可回滚的前置版本"
-                    )
-                // 检查 afterPipelineVersion 是否存在
-                val afterVersion = item.afterPipelineVersion
-                    ?: throw CustomMessageException(
-                        message = "流水线[${item.pipelineName}]没有记录实例化后的版本信息"
-                    )
-
-                // 检查用户是否有编辑权限
-                val hasPermission = pipelinePermissionService.checkPipelinePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = item.pipelineId,
-                    permission = AuthPermission.EDIT
-                )
-                if (!hasPermission) {
-                    throw PermissionForbiddenException(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                            params = arrayOf(
-                                userId,
-                                projectId,
-                                AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
-                                item.pipelineId
-                            ),
-                            language = I18nUtil.getLanguage(userId)
-                        )
-                    )
-                }
-                // 目前仅最新版本可回滚，检查流水线是否已被修改过
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
-                    projectId = projectId,
-                    pipelineId = item.pipelineId
-                )
-                if (pipelineInfo?.version != afterVersion) {
-                    throw CustomMessageException(
-                        message = "流水线[${item.pipelineName}]在实例化后已被修改，" +
-                            "当前版本(${pipelineInfo?.version})与实例化版本($afterVersion)不一致，无法回滚"
-                    )
-                }
-
-                // 3. 获取回滚版本的名称用于描述
-                val versionResource = pipelineRepositoryService.getPipelineResourceVersion(
-                    projectId = projectId,
-                    pipelineId = item.pipelineId,
-                    version = beforeVersion
-                )
-
-                val versionName = versionResource?.versionName ?: "$beforeVersion"
-
-                // 4. 使用 PipelineVersionCloneReq 回滚到 beforePipelineVersion
-                val cloneReq = PipelineVersionCloneReq(
-                    sourceVersion = beforeVersion,
-                    description = "回滚自模板实例化任务，基于版本[$versionName]"
-                )
-                pipelineVersionManager.deployPipeline(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = item.pipelineId,
-                    request = cloneReq
-                )
-
-                // 5. 如果有记录实例化前的模板版本，则回滚模板版本关系
-                item.beforeTemplateVersion?.let { beforeTemplateVersion ->
-                    templatePipelineDao.updateVersion(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        pipelineId = item.pipelineId,
-                        templateVersion = beforeTemplateVersion,
-                        userId = userId
-                    )
-                }
-
-                successPipelines.add(item.pipelineName)
-                successPipelineIds.add(item.pipelineId)
-                logger.info(
-                    "rollback pipeline success|$projectId|${item.pipelineId}|" +
-                        "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
-                )
-            } catch (e: Exception) {
-                logger.error(
-                    "rollback pipeline failed|$projectId|${item.pipelineId}|${item.pipelineName}",
-                    e
-                )
-                failurePipelines.add(item.pipelineName)
-                failureMessages[item.pipelineName] = e.message ?: "Unknown error"
-            }
+        val results = instanceItems.map { item ->
+            doRollbackItem(userId, projectId, item, instanceBase.templateId)
         }
 
-        val operationMessage = TemplateOperationMessage(
-            successPipelines = successPipelines,
-            failurePipelines = failurePipelines,
-            failureMessages = failureMessages,
-            successPipelinesId = successPipelineIds
+        return buildRollbackResult(results, isBatch = true)
+    }
+
+    /**
+     * 回滚单个实例任务（通过 itemId）
+     */
+    fun rollbackTemplateInstanceByItemId(
+        userId: String,
+        projectId: String,
+        itemId: String
+    ): TemplateOperationRet {
+        logger.info("rollback template instance by itemId start|$projectId|$userId|$itemId")
+
+        val item = templateInstanceItemDao.getTemplateInstanceItem(
+            dslContext = dslContext,
+            projectId = projectId,
+            itemId = itemId
+        ) ?: throw CustomMessageException("instance item not found for itemId: $itemId")
+
+        if (item.status != TemplateInstanceStatus.SUCCESS) {
+            throw CustomMessageException("实例项状态为[${item.status}]，只有成功的实例项才能回滚")
+        }
+
+        val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
+            dslContext = dslContext,
+            projectId = projectId,
+            baseId = item.baseId
+        ) ?: throw CustomMessageException("instance Base not found for baseId: ${item.baseId}")
+        val result = doRollbackItem(userId, projectId, item, instanceBase.templateId)
+
+        return buildRollbackResult(listOf(result), isBatch = false)
+    }
+
+    /**
+     * 执行单个实例项的回滚
+     * @return 回滚结果
+     */
+    private fun doRollbackItem(
+        userId: String,
+        projectId: String,
+        item: PipelineTemplateInstanceItem,
+        templateId: String
+    ): ItemRollbackResult {
+        return try {
+            executeRollback(userId, projectId, item, templateId)
+            ItemRollbackResult.success(item.pipelineId, item.pipelineName)
+        } catch (e: Exception) {
+            logger.error("rollback pipeline failed|$projectId|${item.pipelineId}|${item.pipelineName}", e)
+            ItemRollbackResult.failure(item.pipelineName, e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * 执行回滚操作
+     */
+    private fun executeRollback(
+        userId: String,
+        projectId: String,
+        item: PipelineTemplateInstanceItem,
+        templateId: String
+    ) {
+        val beforeVersion = item.beforePipelineVersion
+            ?: throw CustomMessageException("流水线[${item.pipelineName}]没有可回滚的前置版本")
+
+        // 检查用户编辑权限
+        checkEditPermission(userId, projectId, item.pipelineId)
+
+        // 回滚流水线版本
+        val versionName = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = item.pipelineId,
+            version = beforeVersion
+        )?.versionName ?: "$beforeVersion"
+
+        pipelineVersionManager.deployPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = item.pipelineId,
+            request = PipelineVersionCloneReq(
+                sourceVersion = beforeVersion,
+                description = "回滚自模板实例化任务，基于版本[$versionName]"
+            )
         )
+
+        // 回滚模板版本关系
+        item.beforeTemplateVersion?.let { beforeTemplateVersion ->
+            val templateVersionName = templateDao.getTemplate(
+                dslContext = dslContext,
+                version = beforeTemplateVersion
+            )?.versionName ?: throw CustomMessageException(
+                "before template version name[$templateId] not found"
+            )
+
+            templatePipelineDao.updateVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = item.pipelineId,
+                templateVersion = beforeTemplateVersion,
+                templateVersionName = templateVersionName,
+                userId = userId
+            )
+        }
+
+        logger.info(
+            "rollback pipeline success|$projectId|${item.pipelineId}|" +
+                    "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
+        )
+    }
+
+    /**
+     * 检查用户编辑权限
+     */
+    private fun checkEditPermission(userId: String, projectId: String, pipelineId: String) {
+        val hasPermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        if (!hasPermission) {
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    params = arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    ),
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
+    }
+
+    /**
+     * 构建回滚结果
+     */
+    private fun buildRollbackResult(results: List<ItemRollbackResult>, isBatch: Boolean): TemplateOperationRet {
+        val successResults = results.filter { it.success }
+        val failureResults = results.filter { !it.success }
+
+        val message = when {
+            failureResults.isEmpty() -> "回滚成功"
+            isBatch && successResults.isNotEmpty() -> "部分流水线回滚失败"
+            else -> "回滚失败"
+        }
+
         return TemplateOperationRet(
-            status = if (failurePipelines.isEmpty()) 0 else 1,
-            data = operationMessage,
-            message = if (failurePipelines.isEmpty()) "回滚成功" else "部分流水线回滚失败"
+            status = if (failureResults.isEmpty()) 0 else 1,
+            data = TemplateOperationMessage(
+                successPipelines = successResults.map { it.pipelineName },
+                failurePipelines = failureResults.map { it.pipelineName },
+                failureMessages = failureResults.associate { it.pipelineName to (it.errorMessage ?: "") },
+                successPipelinesId = successResults.mapNotNull { it.pipelineId }
+            ),
+            message = message
         )
+    }
+
+    /**
+     * 单个实例项回滚结果
+     */
+    private data class ItemRollbackResult(
+        val success: Boolean,
+        val pipelineId: String?,
+        val pipelineName: String,
+        val errorMessage: String? = null
+    ) {
+        companion object {
+            fun success(pipelineId: String, pipelineName: String) =
+                ItemRollbackResult(true, pipelineId, pipelineName)
+
+            fun failure(pipelineName: String, errorMessage: String) =
+                ItemRollbackResult(false, null, pipelineName, errorMessage)
+        }
     }
 
     companion object {

@@ -72,4 +72,18 @@ class OpPipelineTemplateResourceImpl(
             )
         )
     }
+
+    override fun rollbackTemplateInstanceByItemId(
+        userId: String,
+        projectId: String,
+        itemId: String
+    ): Result<TemplateOperationRet> {
+        return Result(
+            pipelineTemplateInstanceService.rollbackTemplateInstanceByItemId(
+                userId = userId,
+                projectId = projectId,
+                itemId = itemId
+            )
+        )
+    }
 }
