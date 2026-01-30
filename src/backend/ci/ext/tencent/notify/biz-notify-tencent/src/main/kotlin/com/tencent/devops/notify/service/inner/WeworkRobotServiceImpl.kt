@@ -38,8 +38,10 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.ImageContent
@@ -55,9 +57,10 @@ import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkRobotUploadResponse
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
 import com.tencent.devops.notify.service.WeworkService
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.nio.file.Files
+import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.Optional
@@ -88,7 +91,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage): Boolean {
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        if (weworkNotifyMediaMessage.receivers.isEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
+        }
         val mediaType = weworkNotifyMediaMessage.mediaType
         val receiverType = weworkNotifyMediaMessage.receiverType
 
@@ -99,7 +105,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             }
             WeworkReceiverType.single -> {
                 // 通过chatid发送到指定会话
-                return try {
+                try {
                     sendMediaMessageByChatId(weworkNotifyMediaMessage)
                     logger.info("send media message success, $weworkNotifyMediaMessage")
                     saveResult(
@@ -108,7 +114,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
                         success = true,
                         errMsg = null
                     )
-                    true
                 } catch (e: Throwable) {
                     logger.warn("send media message fail, $weworkNotifyMediaMessage", e)
                     saveResult(
@@ -117,7 +122,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
                         success = false,
                         errMsg = e.message
                     )
-                    false
+                    if (e is ErrorCodeException) throw e
+                    throw ErrorCodeException(
+                        errorCode = ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
+                    )
                 }
             }
         }
@@ -130,55 +138,49 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val mediaType = weworkNotifyMediaMessage.mediaType
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
 
-        // 读取输入流为字节数组
-        val mediaBytes = weworkNotifyMediaMessage.mediaInputStream.use { input ->
-            ByteArrayOutputStream().use { output ->
-                input.copyTo(output)
-                output.toByteArray()
-            }
-        }
-
-        when (mediaType) {
-            WeworkMediaType.image -> {
-                // 图片消息：使用base64+md5方式
-                val base64Content = Base64.getEncoder().encodeToString(mediaBytes)
-                val md5Hash = calculateMd5(mediaBytes)
-                weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                    sendRequest.add(
-                        WeworkRobotSingleImageMessage(
-                            chatid = chatid,
-                            postId = null,
-                            image = ImageContent(base64 = base64Content, md5 = md5Hash),
-                            visibleToUser = null
+        // 使用use块确保inputStream始终被关闭，避免资源泄漏
+        weworkNotifyMediaMessage.mediaInputStream.use { inputStream ->
+            when (mediaType) {
+                WeworkMediaType.image -> {
+                    // 图片消息：流式计算base64和md5，避免内存溢出
+                    val (base64Content, md5Hash) = processImageStream(inputStream)
+                    weworkNotifyMediaMessage.receivers.forEach { chatid ->
+                        sendRequest.add(
+                            WeworkRobotSingleImageMessage(
+                                chatid = chatid,
+                                postId = null,
+                                image = ImageContent(base64 = base64Content, md5 = md5Hash),
+                                visibleToUser = null
+                            )
                         )
+                    }
+                }
+                WeworkMediaType.file -> {
+                    // 文件消息：流式写入临时文件后上传，避免内存溢出
+                    val mediaId = uploadMediaToRobotFromStream(
+                        inputStream = inputStream,
+                        fileName = weworkNotifyMediaMessage.mediaName,
+                        mediaType = mediaType.name,
+                        key = robotKey
+                    )
+                    weworkNotifyMediaMessage.receivers.forEach { chatid ->
+                        sendRequest.add(
+                            WeworkRobotSingleFileMessage(
+                                chatid = chatid,
+                                postId = null,
+                                file = MediaContent(mediaId = mediaId),
+                                visibleToUser = null
+                            )
+                        )
+                    }
+                }
+                else -> {
+                    logger.warn("unsupported media type for chatid send: $mediaType")
+                    throw ErrorCodeException(
+                        errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
+                        params = arrayOf(mediaType.name)
                     )
                 }
-            }
-            WeworkMediaType.file -> {
-                // 文件消息：使用全局robotKey上传文件获取media_id
-                val mediaId = uploadMediaToRobot(
-                    fileBytes = mediaBytes,
-                    fileName = weworkNotifyMediaMessage.mediaName,
-                    mediaType = mediaType.name,
-                    key = robotKey
-                )
-                weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                    sendRequest.add(
-                        WeworkRobotSingleFileMessage(
-                            chatid = chatid,
-                            postId = null,
-                            file = MediaContent(mediaId = mediaId),
-                            visibleToUser = null
-                        )
-                    )
-                }
-            }
-            else -> {
-                logger.warn("unsupported media type for chatid send: $mediaType")
-                throw ErrorCodeException(
-                    errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
-                    params = arrayOf(mediaType.name)
-                )
             }
         }
 
@@ -187,19 +189,21 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 计算MD5哈希值
+     * 流式处理图片：同时计算base64和md5，避免内存溢出
      */
-    private fun calculateMd5(bytes: ByteArray): String {
+    private fun processImageStream(inputStream: InputStream): Pair<String, String> {
         val md = MessageDigest.getInstance("MD5")
-        val digest = md.digest(bytes)
-        return digest.joinToString("") { "%02x".format(it) }
+        val digestInputStream = DigestInputStream(inputStream, md)
+        val base64Content = Base64.getEncoder().encodeToString(digestInputStream.readBytes())
+        val md5Hash = md.digest().joinToString("") { "%02x".format(it) }
+        return Pair(base64Content, md5Hash)
     }
 
     /**
-     * 上传媒体文件到企业微信机器人
+     * 流式上传媒体文件到企业微信机器人，避免内存溢出
      */
-    private fun uploadMediaToRobot(
-        fileBytes: ByteArray,
+    private fun uploadMediaToRobotFromStream(
+        inputStream: InputStream,
         fileName: String,
         mediaType: String,
         key: String
@@ -207,9 +211,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
         val tempFile = File(tempDir, fileName)
         try {
-            // 将字节数组写入临时文件
+            // 流式写入临时文件，避免全量加载到内存
             tempFile.outputStream().use { output ->
-                output.write(fileBytes)
+                inputStream.copyTo(output)
             }
 
             // 构建multipart请求
@@ -262,6 +266,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
+        if (weworkNotifyTextMessage.receivers.isEmpty()) {
+            throw ErrorCodeException(errorCode = ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY)
+        }
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
         val attachments = weworkNotifyTextMessage.attachments
         val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
