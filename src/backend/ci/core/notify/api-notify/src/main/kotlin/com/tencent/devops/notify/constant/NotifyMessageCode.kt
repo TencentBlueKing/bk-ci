@@ -54,6 +54,8 @@ object NotifyMessageCode {
     const val ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL = "2111006" // 通知服务：腾讯云邮件通知发送失败 返回错误码{0}
     const val ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE = "2111007" // 通知服务：不支持的媒体类型：{0}
     const val ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED = "2111008" // 通知服务：企业微信机器人不支持group模式发送消息
+    const val ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY = "2111009" // 通知服务：企业微信消息接收者不能为空
+    const val ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL = "2111010" // 通知服务：发送媒体消息失败
 
     const val BK_CONTROL_MESSAGE_LENGTH = "bkControlMessageLength" // ...(消息长度超{0} 已截断,请控制消息长度)
     const val BK_LINE_BREAKS_WILL_ESCAPED = "bkLineBreaksWillEscaped" // (注意: 换行会被转义为\\n)
