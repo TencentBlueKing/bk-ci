@@ -18,4 +18,13 @@ class ServiceAgentResourceImpl @Autowired constructor(
     ): Result<WeSecProjectWorkspace?> {
         return Result(agentService.getWorkspaceInfo(userId, projectId, agentHashId))
     }
+
+    override fun updateDisplayNameByWorkspaceId(
+        userId: String,
+        projectId: String,
+        workspaceId: String,
+        displayName: String
+    ) {
+        agentService.updateDisplayNameByWorkspaceId(userId, projectId, workspaceId, displayName)
+    }
 }
