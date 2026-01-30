@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
@@ -79,7 +80,6 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -93,6 +93,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.AgentReuseMutexTree
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -123,6 +124,7 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -149,15 +151,15 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 流水线运行时相关的服务
@@ -182,10 +184,10 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val buildDetailDao: BuildDetailDao,
     private val recordModelDao: BuildRecordModelDao,
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
@@ -197,6 +199,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineArtifactQualityService: PipelineArtifactQualityService,
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val client: Client
 ) {
     companion object {
@@ -1112,8 +1115,6 @@ class PipelineRuntimeService @Autowired constructor(
         context.pipelineParamMap[PIPELINE_START_TASK_ID] =
             BuildParameters(PIPELINE_START_TASK_ID, context.firstTaskId, readOnly = true)
 
-        val modelJson = JsonUtil.toJson(fullModel, formatted = false)
-
         val retryInfo = if (buildInfo != null) {
             context.buildNum = buildInfo.buildNum
             BuildRetryInfo(
@@ -1151,15 +1152,6 @@ class PipelineRuntimeService @Autowired constructor(
                         buildId = context.buildId,
                         retryInfo = retryInfo!!
                     )
-                    // 重置状态和人
-                    buildDetailDao.update(
-                        dslContext = transactionContext,
-                        projectId = context.projectId,
-                        buildId = context.buildId,
-                        model = modelJson,
-                        buildStatus = context.startBuildStatus,
-                        cancelUser = ""
-                    )
                 }
             } else {
                 context.watcher.start("updateBuildNum")
@@ -1175,18 +1167,16 @@ class PipelineRuntimeService @Autowired constructor(
                 context.watcher.stop()
                 // 创建构建记录
                 pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
-
-                // detail记录,未正式启动，先排队状态
-                buildDetailDao.create(
-                    dslContext = transactionContext,
-                    projectId = context.projectId,
-                    buildId = context.buildId,
-                    startUser = context.userId,
-                    startType = context.startType,
-                    buildNum = context.buildNum,
-                    model = modelJson,
-                    buildStatus = context.startBuildStatus
-                )
+                if (!context.debug) {
+                    // 更新版本引用标识（草稿版本会是最新的版本，不会被清理，故无需处理草稿版本）
+                    pipelineResourceVersionDao.updatePipelineVersionReferInfo(
+                        dslContext = transactionContext,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        versions = listOf(context.resourceVersion),
+                        referFlag = true
+                    )
+                }
             }
 
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
@@ -1462,13 +1452,6 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildInfo.buildId,
                 buildStatus = newBuildStatus,
                 executeCount = executeCount
-            )
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = buildInfo.projectId,
-                buildId = buildInfo.buildId,
-                buildStatus = newBuildStatus,
-                startTime = now
             )
             buildLogPrinter.addYellowLine(
                 buildId = buildInfo.buildId, message = "Approved by user($userId)",
@@ -1870,13 +1853,6 @@ class PipelineRuntimeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             val startTime = LocalDateTime.now()
-            buildDetailDao.updateStatus(
-                dslContext = transactionContext,
-                projectId = latestRunningBuild.projectId,
-                buildId = latestRunningBuild.buildId,
-                buildStatus = BuildStatus.RUNNING,
-                startTime = startTime
-            )
             recordModelDao.updateStatus(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
@@ -2404,5 +2380,23 @@ class PipelineRuntimeService @Autowired constructor(
         CodeType.SCM_GIT.name -> CodeType.GIT.name
         CodeType.SCM_SVN.name -> CodeType.SVN.name
         else -> webhookType
+    }
+
+    fun listLightPipelineBuildHistory(
+        query: PipelineBuildQuery
+    ): List<LightBuildHistory> {
+        return pipelineBuildDao.listLightPipelineBuildInfo(
+            dslContext = dslContext,
+            query = query
+        )
+    }
+
+    fun getLightPipelineBuildHistoryCount(
+        query: PipelineBuildQuery
+    ): Int {
+        return pipelineBuildDao.lightPipelineBuildHistoryCount(
+            dslContext = dslContext,
+            query = query
+        )
     }
 }

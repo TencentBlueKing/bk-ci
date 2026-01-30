@@ -336,6 +336,7 @@ class ParamFacadeService @Autowired constructor(
     ): BuildFormProperty {
         return BuildFormProperty(
             id = property.id,
+            name = property.name,
             required = property.required,
             type = property.type,
             defaultValue = property.defaultValue,
@@ -352,7 +353,9 @@ class ParamFacadeService @Autowired constructor(
             replaceKey = replaceKey,
             valueNotEmpty = property.valueNotEmpty,
             category = property.category,
-            displayCondition = property.displayCondition
+            displayCondition = property.displayCondition,
+            asInstanceInput = property.asInstanceInput,
+            sensitive = property.sensitive
         )
     }
 

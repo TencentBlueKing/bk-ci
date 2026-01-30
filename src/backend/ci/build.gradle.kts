@@ -133,6 +133,8 @@ allprojects {
             }
             // lettuce 6.4.1 有BUG
             dependency("io.lettuce:lettuce-core:6.4.2.RELEASE")
+            // spring-amqp 3.2.0 有BUG https://github.com/spring-projects/spring-amqp/issues/2914
+            dependency("org.springframework.amqp:spring-amqp:3.2.8")
         }
     }
 

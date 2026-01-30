@@ -29,10 +29,12 @@ package com.tencent.devops.process.trigger.scm
 
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import java.time.LocalDateTime
 
 interface WebHookEventListener {
     fun onEvent(
         eventId: Long,
+        eventTime: LocalDateTime?,
         repository: Repository,
         webhook: Webhook,
         replayPipelineId: String? = null

@@ -12,15 +12,17 @@
                     <template slot="content">
                         <div
                             v-for="param in paramsListMap[key]"
+                            v-if="param.show"
                             :key="param.id"
                         >
                             <render-param
+                                
                                 v-bind="param"
                                 :param="param"
                                 ref="categoryRenderParam"
                                 :is-in-param-set="isInParamSet"
                                 :is-exec-preview="isExecPreview"
-                                :disabled="disabled || param.isFollowTemplate"
+                                :disabled="disabled || (param.isFollowTemplate && !batchEditFlag)"
                                 :show-operate-btn="showOperateBtn"
                                 :handle-set-parma-required="handleSetParmaRequired"
                                 :handle-use-default-value="handleUseDefaultValue"
@@ -36,14 +38,16 @@
             <template v-else>
                 <div
                     v-for="param in paramList"
+                    v-if="param.show"
                     :key="param.id"
                 >
                     <render-param
+                        
                         v-bind="param"
                         :param="param"
                         ref="renderParam"
                         :is-exec-preview="isExecPreview"
-                        :disabled="disabled || param.isFollowTemplate"
+                        :disabled="disabled || (param.isFollowTemplate && !batchEditFlag)"
                         :show-operate-btn="showOperateBtn"
                         :handle-set-parma-required="handleSetParmaRequired"
                         :handle-use-default-value="handleUseDefaultValue"
@@ -150,6 +154,10 @@
                 // 是否为执行预览页面
                 type: Boolean,
                 default: true
+            },
+            batchEditFlag: {
+                type: Boolean,
+                default: false
             }
         },
         data () {

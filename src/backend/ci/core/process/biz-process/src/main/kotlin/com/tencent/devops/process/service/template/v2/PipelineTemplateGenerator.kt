@@ -55,6 +55,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
@@ -80,6 +81,7 @@ import org.springframework.stereotype.Service
  * 生成流水线模版模型
  */
 @Service
+@Suppress("LongParameterList")
 class PipelineTemplateGenerator @Autowired constructor(
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
@@ -495,131 +497,249 @@ class PipelineTemplateGenerator @Autowired constructor(
         templateModel: ITemplateModel?,
         templateSetting: PipelineSetting?,
         params: List<BuildFormProperty>?,
-        yaml: String?
+        yaml: String?,
+        fallbackOnError: Boolean = false
     ): PTemplateModelTransferResult {
         return if (storageType == PipelineStorageType.YAML) {
-            val newYaml = Preconditions.checkNotNull(
-                yaml,
-                "yaml must not be null"
-            )
-            val transferResult = transferService.transfer(
+            // YAML 转 Model
+            transferYamlToModel(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = null,
-                actionType = TransferActionType.TEMPLATE_YAML2MODEL_PIPELINE,
-                data = TransferBody(
-                    oldYaml = newYaml
-                )
-            )
-            val newTemplateModel = Preconditions.checkNotNull(
-                transferResult.templateModelAndSetting?.templateModel,
-                "The transfer data is incorrect, so the modelAndYaml.templateModel.model must not be null"
-            )
-            val newTemplateSetting = Preconditions.checkNotNull(
-                transferResult.templateModelAndSetting?.setting,
-                "The transfer data is incorrect, " +
-                    "so the modelAndYaml.templateModel.templateSetting must not be null"
-            )
-            PTemplateModelTransferResult(
-                templateType = PipelineTemplateType.PIPELINE,
-                templateModel = newTemplateModel,
-                templateSetting = newTemplateSetting,
-                yamlWithVersion = transferResult.yamlWithVersion,
-                // TODO pac模板 需要改造，由code转化接口中获取。
-                params = (newTemplateModel as Model).getTriggerContainer().params
+                templateType = templateType,
+                params = params,
+                yaml = yaml
             )
         } else {
-            val newTemplateType = Preconditions.checkNotNull(
-                templateType,
-                "template type must not be null"
+            // Model 转 YAML
+            transferModelToYamlWithFallback(
+                userId = userId,
+                projectId = projectId,
+                templateType = templateType,
+                templateModel = templateModel,
+                templateSetting = templateSetting,
+                params = params,
+                fallbackOnError = fallbackOnError
             )
-            val newTemplateModel = Preconditions.checkNotNull(
-                templateModel,
-                "template model must not be null"
-            )
-            val newTemplateSetting = Preconditions.checkNotNull(
-                templateSetting,
-                "template setting must not be null"
-            )
-            val result = when (templateType) {
-                PipelineTemplateType.PIPELINE -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_PIPELINE,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = newTemplateModel,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        }
+    }
 
-                PipelineTemplateType.STAGE -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_STAGE,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+    /**
+     * YAML 转 Model
+     */
+    private fun transferYamlToModel(
+        userId: String,
+        projectId: String,
+        templateType: PipelineTemplateType?,
+        params: List<BuildFormProperty>?,
+        yaml: String?
+    ): PTemplateModelTransferResult {
+        val validYaml = Preconditions.checkNotNull(yaml, "yaml must not be null")
 
-                PipelineTemplateType.JOB -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_JOB,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        val transferResult = transferService.transfer(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = null,
+            actionType = TransferActionType.TEMPLATE_YAML2MODEL_PIPELINE,
+            data = TransferBody(oldYaml = validYaml)
+        )
 
-                PipelineTemplateType.STEP -> {
-                    transferService.transfer(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = null,
-                        actionType = TransferActionType.TEMPLATE_MODEL2YAML_STEP,
-                        data = TransferBody(
-                            templateModelAndSetting = TemplateModelAndSetting(
-                                templateModel = templateModel!!,
-                                setting = newTemplateSetting
-                            ),
-                            oldYaml = ""
-                        )
-                    )
-                }
+        val resultTemplateModel = Preconditions.checkNotNull(
+            transferResult.templateModelAndSetting?.templateModel,
+            "The transfer data is incorrect, so the modelAndYaml.templateModel.model must not be null"
+        )
+        val resultSetting = Preconditions.checkNotNull(
+            transferResult.templateModelAndSetting?.setting,
+            "The transfer data is incorrect, so the modelAndYaml.templateModel.templateSetting must not be null"
+        )
 
-                else -> {
-                    throw IllegalArgumentException("unknown template type: $templateType")
+        val finalType = templateType ?: PipelineTemplateType.PIPELINE
+        val finalParams = extractParams(finalType, resultTemplateModel, params)
+
+        return PTemplateModelTransferResult(
+            templateType = finalType,
+            templateModel = resultTemplateModel,
+            templateSetting = resultSetting,
+            yamlWithVersion = transferResult.yamlWithVersion,
+            params = finalParams
+        )
+    }
+
+    /**
+     * Model 转 YAML (带异常兜底)
+     */
+    private fun transferModelToYamlWithFallback(
+        userId: String,
+        projectId: String,
+        templateType: PipelineTemplateType?,
+        templateModel: ITemplateModel?,
+        templateSetting: PipelineSetting?,
+        params: List<BuildFormProperty>?,
+        fallbackOnError: Boolean
+    ): PTemplateModelTransferResult {
+        // 前置处理：参数验证和合并
+        val prepareTransferResult = prepareModelTransfer(
+            templateType = templateType,
+            templateModel = templateModel,
+            templateSetting = templateSetting,
+            params = params
+        )
+
+        return with(prepareTransferResult) {
+            try {
+                // 执行转换
+                val actionType = getTransferActionType(validType)
+                val transferResult = transferService.transfer(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = null,
+                    actionType = actionType,
+                    data = TransferBody(
+                        templateModelAndSetting = TemplateModelAndSetting(
+                            templateModel = validModel,
+                            setting = validSetting
+                        ),
+                        oldYaml = ""
+                    )
+                )
+
+                PTemplateModelTransferResult(
+                    templateType = validType,
+                    templateModel = validModel,
+                    yamlWithVersion = transferResult.yamlWithVersion,
+                    templateSetting = validSetting,
+                    params = finalParams
+                )
+            } catch (ex: Exception) {
+                if (fallbackOnError) {
+                    logger.warn(
+                        "Model to YAML transfer failed for projectId={}, templateType={}: {}",
+                        projectId, templateType, ex.message, ex
+                    )
+                    // 兜底返回原始数据(参数已在前置处理中合并)
+                    PTemplateModelTransferResult(
+                        templateType = validType,
+                        templateModel = validModel,
+                        templateSetting = validSetting,
+                        yamlWithVersion = null,
+                        params = finalParams
+                    )
+                } else {
+                    throw ex
                 }
             }
-            PTemplateModelTransferResult(
-                templateType = newTemplateType,
-                templateModel = newTemplateModel,
-                yamlWithVersion = result.yamlWithVersion,
-                templateSetting = newTemplateSetting,
-                // TODO pac模板 局部模板时，需要优化
-                params = takeIf { templateType == PipelineTemplateType.PIPELINE }?.let {
-                    (newTemplateModel as Model).getTriggerContainer().params
-                } ?: emptyList(),
-            )
+        }
+    }
+
+    /**
+     * 准备 Model 转换：验证参数、合并模板参数、提取最终参数
+     * @return (validType, validModel, validSetting, finalParams)
+     */
+    private fun prepareModelTransfer(
+        templateType: PipelineTemplateType?,
+        templateModel: ITemplateModel?,
+        templateSetting: PipelineSetting?,
+        params: List<BuildFormProperty>?
+    ): PrepareTransferResult {
+        val validType = Preconditions.checkNotNull(
+            obj = templateType,
+            message = "template type must not be null"
+        )
+        val validModel = Preconditions.checkNotNull(
+            obj = templateModel,
+            message = "template model must not be null"
+        )
+        val validSetting = Preconditions.checkNotNull(
+            obj = templateSetting,
+            message = "template setting must not be null"
+        )
+
+        // Pipeline 模板需要特殊处理:合并 templateParams和params，并置空templateParams。
+        // templateParams 新版本中废除，不再使用。
+        if (validType == PipelineTemplateType.PIPELINE) {
+            mergeTemplateParamsIfNeeded(validModel as Model)
+            // 兼容旧版模板参数入参和构建号入参
+            fixTemplateRequiredParam(model = validModel)
+        }
+        val finalParams = extractParams(validType, validModel, params)
+        return PrepareTransferResult(validType, validModel, validSetting, finalParams)
+    }
+
+    /**
+     * Model 转换准备结果
+     */
+    private data class PrepareTransferResult(
+        val validType: PipelineTemplateType,
+        val validModel: ITemplateModel,
+        val validSetting: PipelineSetting,
+        val finalParams: List<BuildFormProperty>
+    )
+
+    /**
+     * 合并模板参数到触发器参数(仅适用于 Pipeline 模板)
+     */
+    private fun mergeTemplateParamsIfNeeded(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        if (!triggerContainer.templateParams.isNullOrEmpty()) {
+            triggerContainer.params = BuildPropertyCompatibilityTools.mergeProperties(
+                from = triggerContainer.templateParams!!.map { it.copy(constant = true) },
+                to = triggerContainer.params
+            ).toMutableList()
+            triggerContainer.templateParams = null
+        }
+    }
+
+    private fun fixTemplateRequiredParam(model: Model) {
+        val triggerContainer = model.getTriggerContainer()
+        // 存量模版除了「模版常量」，其他变量升级后均为模版入参
+        triggerContainer.params.forEach { param ->
+            if (param.constant == true || param.asInstanceInput != null) return@forEach
+            // 旧变量若勾选了[执行时显示],[默认为实例入参]= true
+            if (param.required) {
+                param.asInstanceInput = true
+            } else {
+                // 旧变量若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
+                param.required = true
+                param.asInstanceInput = false
+            }
+        }
+        triggerContainer.buildNo?.let {
+            if (it.asInstanceInput != null) return@let
+            // 旧构建号若勾选了[执行时显示],[默认为实例入参]= true
+            if (it.required == true) {
+                it.asInstanceInput = true
+            } else {
+                // 旧构建号若去掉了[执行时显示],升级后均为模版入参, [默认为实例入参]= false
+                it.required = true
+                it.asInstanceInput = false
+            }
+        }
+    }
+
+    /**
+     * 提取最终参数列表
+     */
+    private fun extractParams(
+        templateType: PipelineTemplateType,
+        templateModel: ITemplateModel,
+        fallbackParams: List<BuildFormProperty>?
+    ): List<BuildFormProperty> {
+        return if (templateType == PipelineTemplateType.PIPELINE) {
+            (templateModel as Model).getTriggerContainer().params
+        } else {
+            fallbackParams
+        } ?: emptyList()
+    }
+
+    /**
+     * 根据模板类型获取对应的转换动作类型
+     */
+    private fun getTransferActionType(templateType: PipelineTemplateType): TransferActionType {
+        return when (templateType) {
+            PipelineTemplateType.PIPELINE -> TransferActionType.TEMPLATE_MODEL2YAML_PIPELINE
+            PipelineTemplateType.STAGE -> TransferActionType.TEMPLATE_MODEL2YAML_STAGE
+            PipelineTemplateType.JOB -> TransferActionType.TEMPLATE_MODEL2YAML_JOB
+            PipelineTemplateType.STEP -> TransferActionType.TEMPLATE_MODEL2YAML_STEP
+            else -> throw IllegalArgumentException("unknown template type: $templateType")
         }
     }
 

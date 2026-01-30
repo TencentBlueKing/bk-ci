@@ -50,6 +50,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -109,7 +110,7 @@ class GitOauthService @Autowired constructor(
                     userId = userId,
                     page = 1,
                     pageSize = 100,
-                    search = search
+                    search = GitUtils.tryGetRepoName(search)
                 )
             )
             authResult
