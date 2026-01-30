@@ -34,7 +34,7 @@ interface WeworkService {
 
     fun sendMqMsg(message: WeworkNotifyMessageWithOperation) = Unit
 
-    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
+    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage): Boolean
 
     fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean
 }

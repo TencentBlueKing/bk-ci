@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class BlueKingWeworkServiceImpl @Autowired constructor() : WeworkService {
 
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage): Boolean {
         TODO("Not yet implemented")
     }
 

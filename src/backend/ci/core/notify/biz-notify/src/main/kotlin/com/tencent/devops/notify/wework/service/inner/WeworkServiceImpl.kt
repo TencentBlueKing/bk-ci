@@ -81,7 +81,7 @@ class WeworkServiceImpl(
         message.sendTo(streamBridge)
     }
 
-    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage): Boolean {
         with(weworkNotifyMediaMessage) {
             kotlin.runCatching {
                 val (toUser, toParty) =
@@ -106,6 +106,7 @@ class WeworkServiceImpl(
                 saveResult(receivers, "media:[type:$mediaType,name:$mediaName]", false, it.message)
             })
         }
+        return true
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
