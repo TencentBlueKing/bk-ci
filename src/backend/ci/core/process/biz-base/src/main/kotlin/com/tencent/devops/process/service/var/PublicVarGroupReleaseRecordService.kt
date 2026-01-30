@@ -241,16 +241,23 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             pageSize = pageSize
         )
 
-        // 对每个版本，查询所有记录并组合 content
-        val records = versions.map { version ->
-            val versionRecords = pipelinePublicVarGroupReleaseRecordDao.listAllRecordsByVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                groupName = groupName,
-                version = version
-            )
+        // 批量查询所有版本的记录
+        val allRecords = pipelinePublicVarGroupReleaseRecordDao.listAllRecordsByVersions(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupName = groupName,
+            versions = versions
+        )
 
-            // 取第一条记录的基本信息
+        // 在内存中按版本分组
+        val recordsByVersion = allRecords.groupBy { it.version }
+
+        // 对每个版本，组合 content
+        val records = versions.map { version ->
+            val versionRecords = recordsByVersion[version] ?: emptyList()
+
+            // 取第一条记录的基本信息（同一版本的所有记录共享相同的元数据：groupName、version、pubTime、publisher、desc）
+            // 只有 content 字段不同，每条记录存储单个变量的变更信息
             val firstRecord = versionRecords.firstOrNull()
             if (firstRecord == null) {
                 throw ErrorCodeException(
@@ -259,7 +266,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 )
             }
 
-            // 解析并组合所有记录的 content
+            // 解析并组合所有记录的 content，生成该版本的变更汇总描述
             val combinedContent = combineReleaseContents(versionRecords)
 
             PublicVarReleaseDO(

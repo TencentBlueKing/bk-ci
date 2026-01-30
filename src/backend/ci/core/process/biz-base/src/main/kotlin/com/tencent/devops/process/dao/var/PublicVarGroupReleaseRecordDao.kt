@@ -288,4 +288,46 @@ class PublicVarGroupReleaseRecordDao {
                 .fetch(VERSION)
         }
     }
+
+    /**
+     * 批量查询多个版本的所有发布记录
+     * @param dslContext 数据库上下文
+     * @param projectId 项目ID
+     * @param groupName 变量组名
+     * @param versions 版本号列表
+     * @return 发布记录DO列表
+     */
+    fun listAllRecordsByVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        groupName: String,
+        versions: List<Int>
+    ): List<PublicVarReleaseDO> {
+        if (versions.isEmpty()) return emptyList()
+
+        with(TResourcePublicVarGroupReleaseRecord.T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD) {
+            return dslContext.select(
+                GROUP_NAME,
+                VERSION,
+                PUBLISHER,
+                PUB_TIME,
+                DESC,
+                CONTENT
+            ).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(GROUP_NAME.eq(groupName))
+                .and(VERSION.`in`(versions))
+                .orderBy(VERSION.desc(), CREATE_TIME.asc())
+                .fetch { record ->
+                    PublicVarReleaseDO(
+                        groupName = record.get(GROUP_NAME),
+                        version = record.get(VERSION),
+                        publisher = record.get(PUBLISHER),
+                        pubTime = record.get(PUB_TIME),
+                        desc = record.get(DESC),
+                        content = record.get(CONTENT)
+                    )
+                }
+        }
+    }
 }

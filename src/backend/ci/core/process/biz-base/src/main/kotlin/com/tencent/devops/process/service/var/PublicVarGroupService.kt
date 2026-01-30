@@ -140,15 +140,7 @@ class PublicVarGroupService @Autowired constructor(
                 createTime = LocalDateTime.now(),
                 updateTime = LocalDateTime.now()
             )
-            // 如果是新建变量组（首次创建），注册到权限中心
-            if (isCreate) {
-                publicVarGroupPermissionService.createResource(
-                    userId = userId,
-                    projectId = projectId,
-                    groupCode = groupName,
-                    name = groupName
-                )
-            }
+            // 先完成数据库事务操作
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (version != 0) {
@@ -171,6 +163,15 @@ class PublicVarGroupService @Autowired constructor(
                         versionDesc = publicVarGroupDTO.publicVarGroup.versionDesc ?: "",
                         publicVars = publicVarGroupDTO.publicVarGroup.publicVars
                     )
+                )
+            }
+            // 数据库事务成功后，如果是新建变量组（首次创建），注册到权限中心
+            if (isCreate) {
+                publicVarGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    groupCode = groupName,
+                    name = groupName
                 )
             }
         } catch (t: Throwable) {
