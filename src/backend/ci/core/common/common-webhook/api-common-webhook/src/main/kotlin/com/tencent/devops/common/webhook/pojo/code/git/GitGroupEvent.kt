@@ -7,8 +7,6 @@ import java.time.OffsetDateTime
  * 项目相关事件数据模型
  */
 data class GitGroupEvent(
-    @JsonProperty("object_kind")
-    val objectKind: String, // 事件类型
     @JsonProperty("operation_kind")
     val operationKind: String, // 操作类型（如 "project_dereference"）
     val user: GitUser, // 操作用户信息
