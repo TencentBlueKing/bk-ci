@@ -15,7 +15,7 @@ class CreateEnvService {
         return null
     }
 
-    fun getWorkspaceDisplayName(projectId: String, workspaceId: String?): String? {
+    fun getWorkspaceDisplayName(userId: String, projectId: String, workspaceId: String?): String? {
         return null
     }
 }
