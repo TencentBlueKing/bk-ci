@@ -21,4 +21,10 @@ class TXCreateEnvService @Autowired constructor(
             search = WorkspaceSearch()
         ).data?.records?.map { it.workspaceName } ?: emptyList()
     }
+
+    override fun getWorkspaceDisplayName(userId: String, projectId: String, workspaceId: String?): String? {
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+            userId, projectId, workspaceId ?: return null
+        ).data?.displayName
+    }
 }
