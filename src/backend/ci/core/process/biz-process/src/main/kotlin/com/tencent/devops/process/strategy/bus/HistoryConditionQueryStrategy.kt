@@ -34,7 +34,7 @@ import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
 /**
  * 历史条件查询策略接口
  */
-interface IHistoryConditionQueryStrategy {
+interface HistoryConditionQueryStrategy {
     /**
      * 查询符合条件的条件值
      * @param request 查询请求参数

@@ -27,18 +27,15 @@
 
 package com.tencent.devops.process.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
-import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST

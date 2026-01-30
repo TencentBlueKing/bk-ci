@@ -28,7 +28,7 @@
 package com.tencent.devops.process.strategy.factory
 
 import com.tencent.devops.common.pipeline.enums.BuildConditionType
-import com.tencent.devops.process.strategy.bus.IHistoryConditionQueryStrategy
+import com.tencent.devops.process.strategy.bus.HistoryConditionQueryStrategy
 import com.tencent.devops.process.strategy.bus.impl.TriggerEventQueryStrategy
 import com.tencent.devops.process.strategy.bus.impl.TriggerMethodQueryStrategy
 import com.tencent.devops.process.strategy.bus.impl.TriggerNodeQueryStrategy
@@ -49,7 +49,7 @@ class HistoryConditionQueryStrategyFactory @Autowired constructor(
     /**
      * 根据条件类型获取对应的策略
      */
-    fun getStrategy(conditionType: BuildConditionType): IHistoryConditionQueryStrategy {
+    fun getStrategy(conditionType: BuildConditionType): HistoryConditionQueryStrategy {
         return when (conditionType) {
             BuildConditionType.TRIGGER_METHOD -> triggerMethodQueryStrategy
             BuildConditionType.TRIGGER_EVENT -> triggerEventQueryStrategy

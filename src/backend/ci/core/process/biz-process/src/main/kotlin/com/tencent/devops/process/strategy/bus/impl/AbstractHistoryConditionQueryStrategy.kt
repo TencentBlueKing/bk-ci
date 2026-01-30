@@ -34,13 +34,13 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.builds.HistoryConditionQueryParam
 import com.tencent.devops.process.strategy.pojo.HistoryConditionQueryRequest
-import com.tencent.devops.process.strategy.bus.IHistoryConditionQueryStrategy
+import com.tencent.devops.process.strategy.bus.HistoryConditionQueryStrategy
 import org.jooq.Field
 
 /**
  * 抽象历史条件查询策略
  */
-abstract class AbstractHistoryConditionQueryStrategy : IHistoryConditionQueryStrategy {
+abstract class AbstractHistoryConditionQueryStrategy : HistoryConditionQueryStrategy {
     
     /**
      * 获取要查询的字段

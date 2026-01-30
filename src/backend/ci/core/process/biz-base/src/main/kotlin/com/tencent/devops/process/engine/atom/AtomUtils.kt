@@ -244,46 +244,38 @@ object AtomUtils {
         inputTypeConfigMap: Map<String, Int>,
         client: Client
     ) {
-        if (atomVersions.isEmpty()) {
-            return
-        }
-        // 批量获取插件运行时信息
-        val atomRunInfoResult = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+        if (atomVersions.isEmpty()) return
+        val atomRunInfoMap = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
             projectCode = projectCode,
             atomVersions = atomVersions
-        )
-        val atomRunInfoMap = atomRunInfoResult.data
+        ).data
         atomInputParamList.forEach { storeParam ->
-            val atomCode = storeParam.storeCode
-            val version = storeParam.version
-            val atomName = storeParam.storeName
-            val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-            if (atomRunInfo != null) {
-                // 检查插件在当前运行环境中是否被允许使用
-                atomRunInfo.serviceScope?.let { serviceScope ->
-                    val channelCode = ChannelCode.getRequestChannelCode()
-                    // 根据渠道类型确定所需的服务范围
-                    val requiredScope = when (channelCode) {
-                        ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
-                        else -> ServiceScopeEnum.PIPELINE.name
-                    }
-                    // 验证插件是否支持当前渠道：检查服务范围列表中是否包含所需范围
-                    require(serviceScope.contains(requiredScope)) {
-                        ErrorCodeException(
-                            errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, 
-                            params = arrayOf(atomName)
-                        )
-                    }
-                }
-                
-                // 验证插件输入参数的有效性
-                validateAtomParam(
-                    atomParamDataMap = storeParam.inputParam,
-                    atomRunInfo = atomRunInfo,
-                    inputTypeConfigMap = inputTypeConfigMap,
-                    atomName = atomName
-                )
-            }
+            val atomRunInfo = atomRunInfoMap?.get("${storeParam.storeCode}:${storeParam.version}") ?: return@forEach
+            checkAtomServiceScopeForChannel(atomRunInfo, storeParam.storeName)
+            validateAtomParam(
+                atomParamDataMap = storeParam.inputParam,
+                atomRunInfo = atomRunInfo,
+                inputTypeConfigMap = inputTypeConfigMap,
+                atomName = storeParam.storeName
+            )
+        }
+    }
+
+    /**
+     * 检查插件在当前渠道下的服务范围是否允许使用，不满足时抛出 [ErrorCodeException]。
+     */
+    private fun checkAtomServiceScopeForChannel(atomRunInfo: AtomRunInfo, atomName: String) {
+        val serviceScope = atomRunInfo.serviceScope ?: return
+        val channelCode = ChannelCode.getRequestChannelCode()
+        val requiredScope = when (channelCode) {
+            ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
+            else -> ServiceScopeEnum.PIPELINE.name
+        }
+        require(serviceScope.contains(requiredScope)) {
+            ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                params = arrayOf(atomName)
+            )
         }
     }
 
