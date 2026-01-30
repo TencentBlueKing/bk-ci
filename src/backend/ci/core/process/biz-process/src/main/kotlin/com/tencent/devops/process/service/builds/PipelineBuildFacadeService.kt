@@ -3213,18 +3213,18 @@ class PipelineBuildFacadeService(
         )
         if (channelCode == ChannelCode.CREATIVE_STREAM) {
             // 查出环境信息
-            val envName = pipelineRepositoryService.getSettingByPipelineVersion(
+            val envHashId = pipelineRepositoryService.getSettingByPipelineVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineVersion = version
             )?.envHashId
-            envName?.let {
+            envHashId?.let {
                 val payload = mapOf(
                     "type" to "remote",
-                    "url" to "/environment/api/user/environment/$projectId/listNodesNew?page=-1&envName=$it",
+                    "url" to "/environment/api/user/environment/$projectId/$envHashId/listNodesNew?page=-1",
                     "dataPath" to "data.records",
                     "paramName" to "displayName",
-                    "paramId" to "agentId"
+                    "paramId" to "agentHashId"
                 )
                 params.add(
                     BuildFormProperty(
