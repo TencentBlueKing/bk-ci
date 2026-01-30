@@ -108,7 +108,8 @@ class BuildNotifyResourceImpl @Autowired constructor(
             mediaType = mediaType,
             mediaName = mediaName
         )
-        return Result(weworkService.sendMediaMessage(weworkNotifyMediaMessage))
+        weworkService.sendMediaMessage(weworkNotifyMediaMessage)
+        return Result(true)
     }
 
     override fun sendWeworkTextNotify(
