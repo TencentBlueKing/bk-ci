@@ -832,12 +832,8 @@ open class GitApi {
         groupName: String,
         includeSubgroups: Boolean?
     ): GitProjectGroupInfo? {
-        val url = "groups/${urlEncode(groupName)}?".addParams(
-            mapOf(
-                "include_subgroups" to includeSubgroups
-            )
-        )
-        val request = get(host, token, url, "")
+        val url = "groups/${urlEncode(groupName)}"
+        val request = get(host, token, url, "include_subgroups=$includeSubgroups")
         val responseBody = getBody(
             getMessageByLocale(CommonMessageCode.GET_GROUP_INFO),
             request
