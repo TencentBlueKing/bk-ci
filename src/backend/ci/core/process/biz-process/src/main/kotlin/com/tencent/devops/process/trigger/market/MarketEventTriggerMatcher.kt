@@ -134,7 +134,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
             val result = expression.evaluate(eventValue, finalInputValue)
             logger.info(
                 "$projectId|$pipelineId|${element.id}|${condition.targetField}|" +
-                        "triggerOn:${eventValue}|${condition.operator}|$finalInputValue|$result"
+                        "triggerOn:$eventValue|${condition.operator}|$finalInputValue|$result"
             )
             if (!result) {
                 val messageCode = when (condition.operator) {
