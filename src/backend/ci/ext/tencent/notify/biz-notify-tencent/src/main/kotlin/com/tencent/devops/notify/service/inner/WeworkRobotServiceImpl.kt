@@ -138,24 +138,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
     /**
      * 通过chatid发送多媒体消息到指定会话
      */
-    private fun sendMediaMessageByChatId(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
-        val mediaType = weworkNotifyMediaMessage.mediaType
-        val inputStream = weworkNotifyMediaMessage.mediaInputStream
-
-        when (mediaType) {
+    private fun sendMediaMessageByChatId(message: WeworkNotifyMediaMessage) {
+        when (message.mediaType) {
             WeworkMediaType.image -> {
-                // 图片消息：流式写入临时文件，完成大小校验、base64/md5计算和消息发送
-                processImageWithTempFile(weworkNotifyMediaMessage)
+                validateImageFormat(message.mediaName)
+                processImageWithTempFile(message)
             }
             WeworkMediaType.file -> {
-                // 文件消息：流式写入临时文件后上传
-                val mediaId = uploadMediaToRobotFromStream(
-                    inputStream = inputStream,
-                    fileName = weworkNotifyMediaMessage.mediaName,
-                    mediaType = mediaType.name,
-                    key = robotKey
-                )
-                val sendRequest = weworkNotifyMediaMessage.receivers.map { chatid ->
+                val mediaId = uploadMediaToRobotFromStream(message)
+                val sendRequest = message.receivers.map { chatid ->
                     WeworkRobotSingleFileMessage(
                         chatid = chatid,
                         postId = null,
@@ -166,10 +157,9 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 doSendRequest(sendRequest)
             }
             else -> {
-                logger.warn("unsupported media type for chatid send: $mediaType")
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE,
-                    params = arrayOf(mediaType.name)
+                    params = arrayOf(message.mediaType.name)
                 )
             }
         }
@@ -179,29 +169,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
      * 处理图片消息：流式写入临时文件，一次性完成大小校验、base64/md5计算和消息发送
      */
     private fun processImageWithTempFile(message: WeworkNotifyMediaMessage) {
-        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
-        val tempFile = File(tempDir, message.mediaName)
-        try {
-            // 流式写入临时文件，同时计算md5
-            val md = MessageDigest.getInstance("MD5")
-            tempFile.outputStream().use { output ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                var bytesRead: Int
-                while (message.mediaInputStream.read(buffer).also { bytesRead = it } != -1) {
-                    output.write(buffer, 0, bytesRead)
-                    md.update(buffer, 0, bytesRead)
-                }
-            }
-            val md5Hash = md.digest().joinToString("") { "%02x".format(it) }
-
-            // 更新消息大小并校验图片
-            message.mediaSize = tempFile.length()
-            validateImageMessage(message)
-
-            // 读取临时文件内容并计算base64
+        withTempFile(message.mediaName) { tempFile ->
+            val md5Hash = writeStreamToFileWithMd5(message.mediaInputStream, tempFile)
+            validateImageSize(tempFile.length())
             val base64Content = Base64.getEncoder().encodeToString(tempFile.readBytes())
-
-            // 构建消息并发送
             val sendRequest = message.receivers.map { chatid ->
                 WeworkRobotSingleImageMessage(
                     chatid = chatid,
@@ -211,6 +182,33 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 )
             }
             doSendRequest(sendRequest)
+        }
+    }
+
+    /**
+     * 流式写入文件并计算MD5
+     */
+    private fun writeStreamToFileWithMd5(inputStream: InputStream, targetFile: File): String {
+        val md = MessageDigest.getInstance("MD5")
+        targetFile.outputStream().use { output ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var bytesRead: Int
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                output.write(buffer, 0, bytesRead)
+                md.update(buffer, 0, bytesRead)
+            }
+        }
+        return md.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * 临时文件处理模板方法，自动创建和清理临时目录
+     */
+    private fun <T> withTempFile(fileName: String, block: (File) -> T): T {
+        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
+        val tempFile = File(tempDir, fileName)
+        return try {
+            block(tempFile)
         } finally {
             cleanupTempDir(tempDir)
         }
@@ -220,7 +218,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
      * 清理临时目录及其内容
      */
     private fun cleanupTempDir(tempDir: File) {
-        kotlin.runCatching {
+        runCatching {
             if (tempDir.exists() && !tempDir.deleteRecursively()) {
                 logger.warn("failed to delete temp dir: ${tempDir.absolutePath}")
             }
@@ -228,20 +226,26 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 校验图片消息：图片大小不超过2MB，格式仅支持JPG/PNG
+     * 校验图片格式：仅支持JPG/PNG
      */
-    private fun validateImageMessage(message: WeworkNotifyMediaMessage) {
-        if (message.mediaSize > IMAGE_MAX_SIZE) {
-            throw ErrorCodeException(
-                errorCode = ERROR_NOTIFY_IMAGE_SIZE_EXCEED,
-                params = arrayOf((IMAGE_MAX_SIZE / 1024 / 1024).toString())
-            )
-        }
-        val fileName = message.mediaName.lowercase()
-        if (!SUPPORTED_IMAGE_FORMATS.any { fileName.endsWith(it) }) {
+    private fun validateImageFormat(fileName: String) {
+        val lowerName = fileName.lowercase()
+        if (!SUPPORTED_IMAGE_FORMATS.any { lowerName.endsWith(it) }) {
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED,
-                params = arrayOf(SUPPORTED_IMAGE_FORMATS.joinToString(", ") { it.uppercase() })
+                params = arrayOf(SUPPORTED_IMAGE_FORMATS.joinToString(", ") { it.removePrefix(".").uppercase() })
+            )
+        }
+    }
+
+    /**
+     * 校验图片大小：不超过2MB
+     */
+    private fun validateImageSize(fileSize: Long) {
+        if (fileSize > IMAGE_MAX_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NOTIFY_IMAGE_SIZE_EXCEED,
+                params = arrayOf(IMAGE_MAX_SIZE_MB.toString())
             )
         }
     }
@@ -249,67 +253,53 @@ class WeworkRobotServiceImpl @Autowired constructor(
     /**
      * 流式上传媒体文件到企业微信机器人，避免内存溢出
      */
-    private fun uploadMediaToRobotFromStream(
-        inputStream: InputStream,
-        fileName: String,
-        mediaType: String,
-        key: String
-    ): String {
-        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
-        val tempFile = File(tempDir, fileName)
-        try {
-            // 流式写入临时文件，避免全量加载到内存
+    private fun uploadMediaToRobotFromStream(message: WeworkNotifyMediaMessage): String {
+        return withTempFile(message.mediaName) { tempFile ->
             tempFile.outputStream().use { output ->
-                inputStream.copyTo(output)
+                message.mediaInputStream.copyTo(output)
             }
-
-            // 构建multipart请求
-            val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$key&type=$mediaType")
-            val requestBody = MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart(
-                    "media",
-                    fileName,
-                    tempFile.asRequestBody(mediaType.toMediaType())
-                )
-                .build()
-
-            val request = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
-
-            // 发送请求
-            OkhttpUtils.doHttp(request).use { response ->
-                val responseBody = response.body?.string() ?: ""
-                if (!response.isSuccessful) {
-                    throw RemoteServiceException(
-                        httpStatus = response.code,
-                        responseContent = responseBody,
-                        errorMessage = "upload media to wework robot failed, httpCode=${response.code}"
-                    )
-                }
-
-                val uploadResponse = JsonUtil.to(responseBody, WeworkRobotUploadResponse::class.java)
-                if (uploadResponse.errCode != 0) {
-                    logger.warn("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
-                    throw RemoteServiceException(
-                        errorMessage = "upload media to wework robot failed: ${uploadResponse.errMsg}",
-                        errorCode = uploadResponse.errCode
-                    )
-                }
-
-                return uploadResponse.mediaId
-                    ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
-            }
-        } finally {
-            // 清理临时文件和临时目录
-            kotlin.runCatching {
-                if (tempDir.exists() && !tempDir.deleteRecursively()) {
-                    logger.warn("failed to delete temp dir: ${tempDir.absolutePath}")
-                }
-            }.onFailure { e -> logger.warn("failed to clean temp upload files", e) }
+            uploadFileToWework(tempFile = tempFile, mediaType = message.mediaType.name)
         }
+    }
+
+    /**
+     * 上传文件到企业微信
+     */
+    private fun uploadFileToWework(tempFile: File, mediaType: String): String {
+        val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$robotKey&type=$mediaType")
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("media", tempFile.name, tempFile.asRequestBody(mediaType.toMediaType()))
+            .build()
+        val request = Request.Builder().url(url).post(requestBody).build()
+
+        return OkhttpUtils.doHttp(request).use { response ->
+            val responseBody = response.body?.string() ?: ""
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    responseContent = responseBody,
+                    errorMessage = "upload media to wework robot failed, httpCode=${response.code}"
+                )
+            }
+            parseUploadResponse(responseBody)
+        }
+    }
+
+    /**
+     * 解析上传响应
+     */
+    private fun parseUploadResponse(responseBody: String): String {
+        val uploadResponse = JsonUtil.to(responseBody, WeworkRobotUploadResponse::class.java)
+        if (uploadResponse.errCode != 0) {
+            logger.warn("upload media failed, errCode=${uploadResponse.errCode}, errMsg=${uploadResponse.errMsg}")
+            throw RemoteServiceException(
+                errorMessage = "upload media to wework robot failed: ${uploadResponse.errMsg}",
+                errorCode = uploadResponse.errCode
+            )
+        }
+        return uploadResponse.mediaId
+            ?: throw RemoteServiceException(errorMessage = "upload media response missing media_id")
     }
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
@@ -436,10 +426,11 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
-        const val WEWORK_MAX_SIZE = 4000
-        const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
-        const val IMAGE_MAX_SIZE = 2 * 1024 * 1024L
-        val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
+        private val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
+        private const val WEWORK_MAX_SIZE = 4000
+        private const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
+        private const val IMAGE_MAX_SIZE = 2 * 1024 * 1024L
+        private const val IMAGE_MAX_SIZE_MB = 2
+        private val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
     }
 }
