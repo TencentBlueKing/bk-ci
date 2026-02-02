@@ -470,8 +470,12 @@ export const usePreviewStore = defineStore('preview', () => {
   }
 
   const updatePipelineFromChange = (newPipeline: { stages: Stage[] }): void => {
+
     if (!newPipeline?.stages) return
-    stagesWithSkipState.value = newPipeline.stages
+    // Deep clone to ensure shallowRef reactivity update detects all nested changes
+    // This is necessary because Object.assign in bk-pipeline modifies objects in place
+    // and shallowRef only detects top-level reference changes
+    stagesWithSkipState.value = JSON.parse(JSON.stringify(newPipeline.stages))
   }
 
   const getAllElements = (stages: Stage[]): Element[] => {

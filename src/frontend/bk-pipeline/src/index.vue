@@ -246,8 +246,42 @@ const checkIsTriggerStage = (stage) => {
 };
 
 const updatePipeline = (model, params) => {
+  // Apply updates to the model object
   Object.assign(model, params);
-  emitPipelineChange(model);
+  
+  // Determine if model is a stage or container by checking for containers array
+  const isStage = Array.isArray(model.containers);
+  
+  // Get unique identifier for matching
+  const modelId = model.id || model.containerId;
+  
+  let newStages;
+  if (isStage) {
+    // model is a stage - find by id and replace with updated version
+    newStages = props.pipeline.stages.map(stage => 
+      (stage.id === modelId) ? model : stage
+    );
+  } else {
+    // model is a container - find by containerId and update it in the correct stage
+    newStages = props.pipeline.stages.map(stage => {
+      const containerIndex = stage.containers?.findIndex(
+        c => (c.containerId === modelId || c.id === modelId)
+      );
+      if (containerIndex !== -1 && containerIndex !== undefined) {
+        const newContainers = stage.containers.map((c, idx) => 
+          idx === containerIndex ? model : c
+        );
+        return { ...stage, containers: newContainers };
+      }
+      return stage;
+    });
+  }
+  
+  // Emit a new pipeline object with the updated stages
+  emitPipelineChange({
+    ...props.pipeline,
+    stages: newStages,
+  });
 };
 
 const checkMove = (event) => {

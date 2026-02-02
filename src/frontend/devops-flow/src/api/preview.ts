@@ -173,7 +173,7 @@ export async function requestExecPipeline({
   }
   // Add resourceHashId (selected node) to params body with correct field name
   if (resourceHashId) {
-    params.BK_CI_CREATIVE_STREAM_NODE_AGENT_ID = resourceHashId
+    params.BK_CI_NODE_AGENT_ID = resourceHashId
   }
 
   return await post<ExecutePipelineResponse>(

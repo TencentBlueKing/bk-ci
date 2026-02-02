@@ -302,7 +302,7 @@ export default {
         handleContainerRunChange(value) {
             const newElements = this.container.elements.map((element) => ({
                 ...element,
-                runContainer: value,
+                canElementSkip: value,
             }))
             this.handleChange({
                 ...this.container,

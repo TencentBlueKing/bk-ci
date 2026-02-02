@@ -26,7 +26,8 @@
       "updateFail": "修改失败",
       "reset": "清空",
       "true": "是",
-      "false": "否"
+      "false": "否",
+      "pleaseSelect": "请选择"
     },
     "sidebar": {
       "myFlows": "我的创作流",
@@ -783,6 +784,7 @@
       "runtimeInfo": "运行信息",
       "creationNode": "创作节点",
       "creationNodeDesc": "选择创作环境中的具体节点",
+      "offline": "已下架",
       "runMessage": "运行信息",
       "runMessagePlaceholder": "手动触发",
       "runMessageDesc": "此次构建的描述信息，如触发方式、构建目的、构建原因等。不填时默认为该次构建的触发方式。",

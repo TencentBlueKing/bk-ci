@@ -26,7 +26,8 @@
       "updateFail": "更新失敗",
       "reset": "クリア",
       "true": "はい",
-      "false": "いいえ"
+      "false": "いいえ",
+      "pleaseSelect": "選択してください"
     },
     "sidebar": {
       "myFlows": "自分の作成フロー",

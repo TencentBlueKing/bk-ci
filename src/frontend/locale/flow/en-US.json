@@ -26,7 +26,8 @@
       "updateFail": "Update failed",
       "reset": "Clear",
       "true": "Yes",
-      "false": "No"
+      "false": "No",
+      "pleaseSelect": "Please select"
     },
     "sidebar": {
       "myFlows": "My Creation Flows",
