@@ -75,6 +75,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOrganization
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithWindows
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
@@ -460,7 +461,7 @@ class CreateControl @Autowired constructor(
 
     // 处理创建工作空间逻辑，用于客户端上创建
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
-        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
+        val ws = workspaceJoinDao.fetchAnyWindowsWorkspace(dslContext, workspaceName = event.workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
                 params = arrayOf(event.workspaceName)
@@ -474,7 +475,7 @@ class CreateControl @Autowired constructor(
     }
 
     // k8s创建workspace后回调的方法
-    fun afterCreateWorkspace(event: RemoteDevUpdateEvent, ws: WorkspaceRecord) {
+    fun afterCreateWorkspace(event: RemoteDevUpdateEvent, ws: WorkspaceRecordWithWindows) {
         if (event.status) {
             val opActions = kotlin.runCatching {
                 arrayOf(
@@ -558,8 +559,11 @@ class CreateControl @Autowired constructor(
 
                 // 创建实例成功后异步执行流水线
                 workspaceCommon.executeCreateWorkspacePipeline(
-                    ips = setOf(ip),
-                    user = event.userId
+                    ip = ip,
+                    user = event.userId,
+                    projectId = ws.projectId,
+                    workspaceName = ws.workspaceName,
+                    zoneType = ws.zoneId?.let { windowsResourceConfigService.getZoneConfig(it)?.type?.name } ?: ""
                 )
 
                 if (ws.ownerType.projectPublicUse()) {
@@ -920,19 +924,13 @@ class CreateControl @Autowired constructor(
                     values = newParam
                 )
             )
-
-            // 创建实例成功后异步执行流水线
-            workspaceCommon.executeCreateWorkspacePipeline(
-                ips = resIps,
-                user = userId
-            )
         } catch (e: Exception) {
             logger.warn("execute assignWorkspace pipeline error", e)
         }
     }
 
     private fun workspaceCreateFail(
-        ws: WorkspaceRecord,
+        ws: WorkspaceRecordWithWindows,
         event: RemoteDevUpdateEvent
     ) {
         if (ws.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {

@@ -139,7 +139,7 @@ class WorkspaceCommon @Autowired constructor(
     fun getOpHistory(key: OpHistoryCopyWriting) = I18nUtil.getCodeLanMessage(key.default)
 
     fun updateWorkspaceWinDetail(
-        ws: WorkspaceRecord?,
+        ws: WorkspaceRecordInf?,
         workspaceName: String
     ) {
         val workspace =
@@ -813,14 +813,21 @@ class WorkspaceCommon @Autowired constructor(
 
     // 创建实例成功后异步执行流水线
     fun executeCreateWorkspacePipeline(
-        ips: Set<String>,
+        ip: String,
+        projectId: String,
+        workspaceName: String,
+        zoneType: String,
         user: String
     ) {
         try {
             val infoS = redisCache.get(PIPELINE_CREATE_WORKSPACE_INFO) ?: return
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
             val newParam = mutableMapOf<String, String>()
-            newParam["job_ip_list"] = ips.joinToString(separator = " ")
+            newParam["job_ip_list"] = ip
+            newParam["projectId"] = ip
+            newParam["workspaceName"] = ip
+            newParam["userId"] = ip
+            newParam["zoneType"] = ip
 
             AsyncExecute.dispatch(
                 streamBridge,
