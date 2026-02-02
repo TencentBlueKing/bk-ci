@@ -17,6 +17,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.TemplateInstanceDescriptor
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
@@ -27,6 +28,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedM
 import com.tencent.devops.common.pipeline.pojo.element.atom.PipelineCheckFailedReason
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
+import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ELEMENT_CHECK_FAILED
@@ -66,8 +68,10 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.pojo.template.v2.TemplateInstanceType
 import com.tencent.devops.process.service.ParamFacadeService
+import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineVersionFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
@@ -82,6 +86,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("LongParameterList")
 class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -110,7 +115,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val pipelineInfoService: PipelineInfoService,
-    private val pipelineModelParser: PipelineModelParser
+    private val pipelineModelParser: PipelineModelParser,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
     /*同步创建模板实例*/
     fun createTemplateInstances(
@@ -552,7 +559,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             val finalStatus = when {
                 record.status == null -> TemplatePipelineStatus.UPDATED
                 record.status == TemplatePipelineStatus.UPDATED &&
-                        record.version != latestReleaseVersion -> TemplatePipelineStatus.PENDING_UPDATE
+                    record.version != latestReleaseVersion -> TemplatePipelineStatus.PENDING_UPDATE
 
                 else -> record.status!!
             }
@@ -1184,25 +1191,44 @@ class PipelineTemplateInstanceService @Autowired constructor(
     ) {
         val beforeVersion = item.beforePipelineVersion
             ?: throw CustomMessageException("流水线[${item.pipelineName}]没有可回滚的前置版本")
-
-        // 检查用户编辑权限
-        checkEditPermission(userId, projectId, item.pipelineId)
-
+        val pipelineId = item.pipelineId
         // 回滚流水线版本
         val versionName = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = item.pipelineId,
             version = beforeVersion
         )?.versionName ?: "$beforeVersion"
+        // 获取源版本的资源信息
+        val sourceResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = beforeVersion,
+            includeDraft = false
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(beforeVersion.toString())
+        )
+        // 获取源版本的设置信息
+        val sourceSetting = pipelineSettingVersionService.getPipelineSetting(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            detailInfo = null,
+            version = sourceResource.settingVersion!!
+        )
+        val channelCode = pipelineInfoFacadeService.getPipelineChannel(projectId, pipelineId) ?: ChannelCode.BS
 
-        pipelineVersionManager.deployPipeline(
+        pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
-            pipelineId = item.pipelineId,
-            request = PipelineVersionCloneReq(
-                sourceVersion = beforeVersion,
-                description = "回滚自模板实例化任务，基于版本[$versionName]"
-            )
+            pipelineId = pipelineId,
+            model = sourceResource.model,
+            yaml = YamlWithVersion(sourceResource.yaml, sourceResource.yamlVersion),
+            savedSetting = sourceSetting,
+            channelCode = channelCode,
+            checkPermission = true,
+            checkTemplate = false,
+            description = "回滚自模板实例化任务，基于版本[$versionName]"
         )
 
         // 回滚模板版本关系
@@ -1226,34 +1252,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
 
         logger.info(
             "rollback pipeline success|$projectId|${item.pipelineId}|" +
-                    "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
+                "${item.pipelineName}|$beforeVersion|${item.beforeTemplateVersion}"
         )
-    }
-
-    /**
-     * 检查用户编辑权限
-     */
-    private fun checkEditPermission(userId: String, projectId: String, pipelineId: String) {
-        val hasPermission = pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT
-        )
-        if (!hasPermission) {
-            throw PermissionForbiddenException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    params = arrayOf(
-                        userId,
-                        projectId,
-                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    ),
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
     }
 
     /**
