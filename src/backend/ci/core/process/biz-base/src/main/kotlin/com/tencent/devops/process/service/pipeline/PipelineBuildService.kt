@@ -434,23 +434,23 @@ class PipelineBuildService(
                 readOnly = true
             )
         }
-        startValues?.get(NODE_AGENT_ID)?.let {
-            // 获取节点的操作系统
+        startValues?.get(NODE_AGENT_ID)?.takeIf(String::isNotBlank)?.let { agentId ->
+            // 获取节点信息
             val agentInfo = client.get(ServiceThirdPartyAgentResource::class)
-                .getAgentById(pipeline.projectId, it).data
+                .getAgentById(pipeline.projectId, agentId).data
             pipelineParamMap[NODE_AGENT_ID] = BuildParameters(
                 key = NODE_AGENT_ID,
-                value = it,
+                value = agentId,
                 readOnly = true
             )
-            agentInfo?.os?.let { nodeOs ->
+            agentInfo?.os?.takeIf(String::isNotBlank)?.let { os ->
                 pipelineParamMap[NODE_OS] = BuildParameters(
                     key = NODE_OS,
-                    value = nodeOs.uppercase(),
+                    value = os.uppercase(),
                     readOnly = true
                 )
             }
-            agentInfo?.nodeId?.let { nodeId ->
+            agentInfo?.nodeId?.takeIf(String::isNotBlank)?.let { nodeId ->
                 pipelineParamMap[NODE_HASH_ID] = BuildParameters(
                     key = NODE_HASH_ID,
                     value = nodeId,
