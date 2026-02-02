@@ -38,6 +38,7 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_FILE_SIZE_EXCEED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_SIZE_EXCEED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
@@ -145,7 +146,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 processImageWithTempFile(message)
             }
             WeworkMediaType.file -> {
-                val mediaId = uploadMediaToRobotFromStream(message)
+                val mediaId = uploadMediaToRobotFromStreamWithValidation(message)
                 val sendRequest = message.receivers.map { chatid ->
                     WeworkRobotSingleFileMessage(
                         chatid = chatid,
@@ -251,14 +252,27 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 流式上传媒体文件到企业微信机器人，避免内存溢出
+     * 流式上传媒体文件到企业微信机器人，包含文件大小校验
      */
-    private fun uploadMediaToRobotFromStream(message: WeworkNotifyMediaMessage): String {
+    private fun uploadMediaToRobotFromStreamWithValidation(message: WeworkNotifyMediaMessage): String {
         return withTempFile(message.mediaName) { tempFile ->
             tempFile.outputStream().use { output ->
                 message.mediaInputStream.copyTo(output)
             }
+            validateFileSize(tempFile.length())
             uploadFileToWework(tempFile = tempFile, mediaType = message.mediaType.name)
+        }
+    }
+
+    /**
+     * 校验文件大小：不超过20MB
+     */
+    private fun validateFileSize(fileSize: Long) {
+        if (fileSize > FILE_MAX_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NOTIFY_FILE_SIZE_EXCEED,
+                params = arrayOf(FILE_MAX_SIZE_MB.toString())
+            )
         }
     }
 
@@ -431,6 +445,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
         private const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
         private const val IMAGE_MAX_SIZE = 2 * 1024 * 1024L
         private const val IMAGE_MAX_SIZE_MB = 2
+        private const val FILE_MAX_SIZE = 20 * 1024 * 1024L
+        private const val FILE_MAX_SIZE_MB = 20
         private val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
     }
 }
