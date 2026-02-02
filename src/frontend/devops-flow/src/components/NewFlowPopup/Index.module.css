@@ -1,0 +1,285 @@
+.header {
+  display: flex;
+  background-color: var(--bg-primary);
+  padding-bottom: var(--spacing-lg);
+}
+
+.stepContent {
+  flex: 1;
+  padding: 0 var(--sidebar-width);
+  :global(.bk-steps .bk-step .bk-step-description) {
+    min-width: 180px;
+  }
+}
+
+.newFlowPopup {
+  :global(.bk-step:not(.current):not(.done) .bk-step-indicator) {
+    color: var(--color-text-medium-black);
+    background-color: #EAEBF0;
+    border-color: #EAEBF0;
+  }
+
+  :global(.bk-step.done .bk-step-indicator) {
+    color: var(--color-primary);
+    background-color: var(--bg-hover-active);
+    border-color: var(--bg-hover-active);
+  }
+
+  :global(.bk-dialog-content) {
+    padding: 0;
+    margin: 0;
+  }
+
+  :global(.bk-modal-content) {
+    padding: var(--spacing-xl);
+    padding-bottom: 0;
+    background: var(--bg-secondary); 
+  }
+}
+
+.content {
+  height: 566px;
+  overflow-y: auto;
+}
+
+/* 基础设置 */
+.baseInfo {
+  width: 640px;
+  margin: auto;
+}
+
+.baseItem {
+  padding: 0 var(--spacing-xl);
+  padding-bottom: 1px;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.baseItem:not(:last-child) {
+  margin-bottom: var(--spacing-lg);
+}
+
+.baseTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) 0;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-medium-black);
+  line-height: 22px;
+}
+
+.titleSet {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.jumpIcon {
+  margin-right: 6px;
+  vertical-align: middle;
+  margin-top: 2px;
+}
+
+/* 选择模板 */
+.selectTemplate {
+  height: 100%;
+  overflow: hidden;
+}
+
+.headerAside {
+  display: flex;
+  align-items: center;
+  height: 88px;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.settingAside {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: 64px;
+}
+
+.activeSelect {
+  display: flex;
+  align-items: center;
+  width: 380px;
+  height: 56px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.activeImage {
+  height: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-tertiary);
+}
+
+.activeLabel {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.activeDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.selectIcon {
+  width: 35px;
+  height: 100%;
+  background: var(--bg-secondary);
+  text-align: center;
+  line-height: 56px;
+  cursor: pointer;
+  color: var(--color-text-medium-black);
+}
+
+.modelSelect {
+  margin-right: 120px;
+}
+
+.settingLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-medium-black);
+  margin-bottom: 9px;
+}
+
+.cloneTemplateSet {
+  :global(.bk-checkbox-label) {
+    font-size: var(--font-size-xs);
+  }
+}
+
+.contentConfig {
+  display: flex;
+  height: calc(100% - 104px);
+  box-shadow: var(--shadow-sm);
+  border-radius: 4px 4px 2px 2px;
+}
+
+.configAside {
+  width: 160px;
+  background: var(--bg-tertiary);
+  border-right: 1px solid var(--border-color);
+  padding: var(--spacing-xs) 0;
+}
+
+.configItem {
+  height: 40px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-medium-black);
+  line-height: 22px;
+  padding: 9px 32px;
+  cursor: pointer;
+}
+
+.configActive {
+  background-color: var(--bg-hover-active);
+  color: var(--color-primary);
+  border-right: 2px solid var(--color-primary);
+}
+
+.configContent {
+  display: flex;
+  flex: 1;
+  background-color: var(--bg-primary);
+}
+
+.btn {
+  margin-left: var(--spacing-sm);
+}
+
+/* 模板列表样式 */
+.templateList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+  gap: var(--spacing-lg);
+  padding-top: 6px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.templateItem {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 72px;
+  padding: 14px var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-primary);
+}
+
+.templateItem:hover {
+  border-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.templateCorner {
+  display: none;
+  border-color: #3a84ff #0000 #0000 #3a84ff;
+  border-style: solid;
+  border-width: 12px 10px;
+  color: #fff;
+  height: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+
+  svg {
+    position: absolute;
+    top: -11px;
+    left: -9px;
+    color: var(--bg-primary);
+  }
+}
+
+.templateItemActive {
+  border-color: var(--color-primary);
+
+  .templateCorner {
+    display: block;
+  }
+}
+
+.templateImage {
+  color: var(--color-text-tertiary);
+  padding-right: var(--spacing-md);
+}
+
+.templateName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.templateStore {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  text-align: center;
+
+  svg {
+    vertical-align: sub;
+  }
+}
+
+.templateDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.4;
+}

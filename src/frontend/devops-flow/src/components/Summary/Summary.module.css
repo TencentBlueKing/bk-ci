@@ -1,0 +1,201 @@
+.execDetailSummary {
+  background: var(--bg-primary);
+  position: relative;
+  padding: 0 var(--spacing-xl);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.instanceTemplateInfo {
+  display: inline-flex;
+  margin-right: 6px;
+  line-height: 52px;
+  height: 100%;
+}
+
+.templateInfoEntry {
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.templateInfoEntry:hover {
+  color: var(--primary-color);
+}
+
+.execDetailSummaryInfo {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 8fr 8fr 3fr minmax(168px, 4fr);
+  font-size: var(--font-size-xs);
+  grid-gap: 100px;
+  padding-top: 18px;
+}
+
+.execDetailSummaryInfo > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.execDetailSummaryInfo > div:first-child {
+  margin-left: var(--spacing-md-negative);
+}
+
+.execDetailSummaryInfoMaterial {
+  padding: 0 var(--spacing-sm);
+}
+
+.noExecMaterial {
+  display: flex;
+  line-height: 48px;
+  align-items: center;
+  padding-left: var(--spacing-sm);
+}
+
+.execDetailSummaryInfoMaterial .execDetailSummaryInfoBlockTitle {
+  padding-left: var(--spacing-xs);
+}
+
+.execDetailSummaryInfoMaterialList {
+  position: relative;
+  width: 100%;
+  padding: 0 var(--spacing-sm);
+}
+
+.allExecMaterialList {
+  position: absolute;
+  z-index: 11;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+  background: var(--bg-primary);
+  top: -1px;
+  padding: 0 var(--spacing-sm);
+  left: 0;
+}
+
+.allExecMaterialList :not(:first-child) .execMoreMaterial {
+  opacity: 0;
+}
+
+.execDetailSummaryInfoBlockTitle {
+  display: flex;
+  color: var(--color-text-tertiary);
+  height: 22px;
+  align-items: center;
+}
+
+.execRemarkEditIcon {
+  margin-left: 6px;
+  cursor: pointer;
+}
+
+.pipelineExecRemarkActions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.pipelineExecRemarkActions > :first-child {
+  margin-right: 6px;
+}
+
+.pipelineExecRemarkActions .bk-button-text {
+  font-size: var(--font-size-xs);
+}
+
+.execDetailSummaryInfoBlockContent {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  height: 48px;
+}
+
+.pipelineCurVersionSpan {
+  display: inline-block;
+  line-height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+}
+
+.execRemark {
+  width: 100%;
+  max-height: 54px;
+  align-items: center;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.execRemark .bk-form-textarea,
+.execRemark .bk-textarea-wrapper {
+  min-height: auto;
+  width: 100%;
+}
+
+.execRemark .bk-form-textarea {
+  height: 32px;
+}
+
+.execRemark .bk-textarea-wrapper {
+  margin-bottom: 14px;
+}
+
+.pipelineTemplateInfoPopover .templateInfoHeader {
+  color: var(--color-text-tertiary);
+}
+
+.templateInfoSection {
+  padding: var(--spacing-sm);
+  background: var(--bg-hover);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  grid-gap: 10px;
+  margin-top: var(--spacing-sm);
+}
+
+.templateInfoSection > p {
+  display: flex;
+  align-items: center;
+  grid-gap: var(--spacing-sm);
+}
+
+.templateInfoSection > p > label {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.templateLinkIcon {
+  font-size: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.templateInfoSection > p > span {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.partQualityBlock {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  padding-bottom: var(--spacing-md);
+  font-size: var(--font-size-xs);
+}
+
+.partQualityBlockTitle {
+  color: var(--color-text-tertiary);
+  margin-right: var(--spacing-xl);
+  margin-top: 3px;
+  padding-top: var(--spacing-xs);
+  flex-shrink: 0;
+}

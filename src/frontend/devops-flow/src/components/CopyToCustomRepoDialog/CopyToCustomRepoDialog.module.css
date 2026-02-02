@@ -1,0 +1,65 @@
+.copyToCustomDialog :global(.bk-dialog-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.copyToCustomRepoDialogHeader {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.copyToCustomRepoSearch {
+  margin: var(--spacing-lg) 0;
+}
+
+.copyCustomRepoTree {
+  flex: 1;
+  overflow: hidden;
+  min-height: 300px;
+  max-height: 400px;
+}
+
+.copyToCustomSucMessage {
+  display: inline-block;
+  text-align: left;
+}
+
+.goDistLink {
+  margin-left: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+}
+
+.copyToCustomSucIcon {
+  margin-right: var(--spacing-xs);
+}
+
+/* 自定义树节点样式 */
+.customRepoTreeNode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  border-radius: var(--border-radius-small);
+  transition: all 0.2s;
+}
+
+.customRepoTreeNode:hover {
+  background-color: var(--color-bg-2);
+}
+
+.rotate90 {
+  transform: rotate(-90deg);
+}
+
+.customRepoTreeNodeActive {
+  background-color: var(--color-primary-1);
+  color: var(--color-primary);
+}
+
+.folderName {
+  font-size: var(--font-size-sm);
+}

@@ -1,0 +1,103 @@
+.stageSteps {
+  display: flex;
+  align-items: center;
+}
+
+.stageStep {
+  position: relative;
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+
+  &:before {
+    position: absolute;
+    top: 50%;
+    right: -7px;
+    content: '';
+    width: 6px;
+    height: 1px;
+    background-color: #a9abb9;
+    transform: translateY(-50%);
+  }
+
+  &:last-child::before {
+    display: none;
+  }
+
+  &.SUCCEED {
+    &:before {
+      background-color: var(--color-success);
+    }
+    .stepIcon {
+      fill: var(--color-success) !important;
+    }
+  }
+
+  &.FAILED {
+    &:before {
+      background-color: var(--color-danger);
+    }
+    .stepIcon {
+      fill: var(--color-danger) !important;
+    }
+  }
+
+  &.RUNNING {
+    &:before {
+      background-color: var(--color-primary);
+    }
+    .stepIcon {
+      fill: var(--color-primary) !important;
+    }
+  }
+
+  &.SKIP {
+    &:before {
+      background-color: #c3cdd7;
+    }
+    .stepIcon {
+      fill: #c3cdd7 !important;
+    }
+  }
+
+  &.PAUSE {
+    &:before {
+      background-color: #3c96ff;
+    }
+    .stepIcon {
+      fill: #3c96ff !important;
+    }
+  }
+
+  &.CANCELED {
+    &:before {
+      background-color: var(--color-warning);
+    }
+    .stepIcon {
+      fill: var(--color-warning) !important;
+    }
+  }
+
+  &.QUEUE {
+    &:before {
+      background-color: var(--color-primary);
+    }
+    .stepIcon {
+      fill: var(--color-primary) !important;
+    }
+  }
+
+  &.UNEXEC {
+    &:before {
+      background-color: #c3cdd7;
+    }
+    .stepIcon {
+      fill: #c3cdd7 !important;
+    }
+  }
+}
+
+.stepIcon {
+  display: inline-block;
+  fill: #c3cdd7;
+}

@@ -1,0 +1,161 @@
+/* AtomForm 样式 */
+/* 使用项目 CSS 变量，参考 /src/styles/variables.css */
+
+.atomForm {
+  /* 基础样式 */
+}
+
+/* 修复 bkui-vue FormItem 组件 label 换行时必填标识错位的问题 */
+/* bkui-vue 的必填标识使用 ::after 伪元素，默认 position: absolute; top: 0 */
+/* 当 label 文本换行时，星号会固定在容器顶部导致错位 */
+/* 解决方案：将必填标识改为 inline 布局，跟随文本流 */
+.atomForm :global(.bk-form-item.is-required .bk-form-label::after) {
+  position: static;
+  display: inline;
+  margin-left: 2px;
+  vertical-align: baseline;
+}
+
+/* 分组折叠面板 */
+.groupCollapse {
+  margin-top: var(--spacing-md);
+}
+
+/* 分组标题 */
+.groupHeader {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* 分组内容 */
+.groupContent {
+  padding: var(--spacing-md) 0;
+}
+
+/* ============================================
+   Trigger 模式样式（扁平化分组）
+   ============================================ */
+
+.triggerForm {
+  /* Trigger 表单容器 */
+}
+
+/* Trigger 模式 - 分组 */
+.triggerGroup {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Trigger 模式 - 分组标题 */
+.triggerGroupTitle {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Trigger 模式 - 分组内容（整体色块） */
+.triggerGroupContent {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+  padding: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+/* Trigger 模式 - 字段行 */
+.triggerFieldRow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 32px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+/* Trigger 模式 - 字段标签（左侧卡片） */
+.triggerFieldLabel {
+  flex-shrink: 0;
+  width: 120px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* Trigger 模式 - 字段标签文字容器 */
+.triggerFieldLabelText {
+  display: inline;
+  word-break: break-all;
+}
+
+/* Trigger 模式 - 必填标记 */
+.requiredMark {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+/* Trigger 模式 - 输入框容器 */
+.triggerFieldInput {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+
+  /* 移除输入框的边框，因为外层已有边框 */
+  :global(.bk-input) {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  :global(.bk-input--text) {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+  }
+
+  :global(.bk-input:focus),
+  :global(.bk-input--text:focus),
+  :global(.bk-input.is-focused),
+  :global(.bk-input--text.is-focused) {
+    box-shadow: none;
+  }
+
+  :global(.bk-select) {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+
+    &:focus,
+    &.is-focus {
+      box-shadow: none;
+    }
+  }
+
+  :global(.bk-textarea) {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: transparent;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+}

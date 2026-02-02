@@ -1,0 +1,63 @@
+.versionSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  border-left: 1px solid var(--border-color);
+  padding-left: var(--spacing-sm);
+}
+
+.versionTrigger {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  background-color: var(--bg-hover);
+  line-height: var(--line-height-md);
+  padding: 0 var(--spacing-sm);
+  min-width: 200px;
+}
+
+.versionSelectToggleIcon {
+  margin-left: auto;
+  justify-self: flex-end;
+  transition: transform 0.3s ease-in-out;
+  transform: rotate(-90deg);
+}
+
+.checkIcon {
+  &.latestCheckIcon {
+    color: var(--color-success) !important;
+  }
+}
+
+.versionOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.versionOption:active {
+  background-color: var(--bg-hover-active);
+}
+
+.versionTag {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.moreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: background var(--transition-fast);
+  color: var(--color-text-tertiary);
+}
+
+.moreButton:hover {
+  background: var(--bg-hover);
+  color: var(--color-text-primary);
+}

@@ -1,0 +1,327 @@
+/* 选项编辑器容器 - 对应 .selector-type-param */
+.selectorTypeParam {
+  background-color: var(--bg-tertiary);
+}
+
+/* Tab 切换区域 - 对应 .option-type */
+.optionType {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Tab 选项 - 对应 .type-select */
+.typeSelect {
+  flex: 1;
+  font-size: var(--font-size-xs);
+  height: 36px;
+  line-height: 36px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Tab 选中状态 - 对应 .is-active */
+.typeSelect.isActive {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+/* 内容区域 - 对应 .option-items */
+.optionItems {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+/* ==================== 批量导入区域 ==================== */
+
+/* 批量导入标题 - 对应 .batch-add */
+.batchAddSection {
+  margin-bottom: var(--spacing-md);
+}
+
+.batchAddHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.infoIcon:hover {
+  color: var(--color-text-secondary);
+}
+
+/* 提示气泡 */
+.tipsPopover :global(.bk-popover-content) {
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+}
+
+/* 提示列表 */
+.tooltipsList {
+  padding-left: var(--spacing-lg);
+  margin: 0;
+  list-style-type: disc;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.tooltipsList li {
+  list-style: disc;
+}
+
+.tooltipsList li + li {
+  margin-top: var(--spacing-xs);
+}
+
+/* 批量导入字段 */
+.batchAddField {
+  margin-bottom: 6px;
+}
+
+/* 确认导入按钮 - 对应 .batch-confirm-div */
+.batchConfirmDiv {
+  width: 100%;
+  padding: 6px 0 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+/* ==================== 选项列表区域 ==================== */
+
+/* 选项列表容器 - 对应 .Key-value-nomal */
+.keyValueNormal {
+  position: relative;
+  margin-top: 10px;
+}
+
+/* 批量复制按钮 - 对应 .batch-copy */
+.batchCopy {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  line-height: var(--line-height-sm);
+  cursor: pointer;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.batchCopy:hover {
+  color: var(--color-primary-hover);
+}
+
+/* 选项设置标签 */
+.optionFieldLabel {
+  margin-bottom: 6px;
+}
+
+.optionFieldLabel label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* 选项列表 */
+.optionsList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 选项行 - 对应 .param-item */
+.paramItem {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+  transition: background-color var(--transition-normal);
+}
+
+.paramItem.dragOver {
+  background-color: var(--bg-hover-active);
+}
+
+/* 拖拽图标 - 对应 .column-drag-icon */
+.columnDragIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--line-height-xl);
+  margin-right: 6px;
+  cursor: move;
+  color: var(--color-text-disabled);
+  flex-shrink: 0;
+}
+
+/* 选项输入框容器 */
+.optionInputWrapper {
+  flex: 1;
+  margin-right: 6px;
+}
+
+.optionInputWrapper:last-of-type {
+  margin-right: 0;
+}
+
+/* 错误状态 */
+.hasError {
+  border-color: var(--color-danger) !important;
+}
+
+.errorMsg {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  margin-top: 2px;
+  display: block;
+}
+
+/* 操作按钮 - 对应 .operate-icon-div */
+.operateIconDiv {
+  display: flex;
+  height: var(--line-height-xl);
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.operateIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--transition-normal);
+}
+
+.operateIcon:not(:last-child) {
+  margin-right: 6px;
+}
+
+.operateIcon:hover {
+  color: var(--color-primary);
+}
+
+.deleteIcon:hover {
+  color: var(--color-danger);
+}
+
+/* 添加选项链接 - 对应 .text-link */
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.textLink:hover {
+  color: var(--color-primary-hover);
+}
+
+/* ==================== API 配置区域 ==================== */
+
+.apiConfigForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.fieldLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 18px;
+}
+
+.fieldTips {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-xs);
+}
+
+/* URL 输入框包装 */
+.urlInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.urlInputWrapper :global(.bk-input) {
+  flex: 1;
+}
+
+/* 刷新按钮 */
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--line-height-xl);
+  height: var(--line-height-xl);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-text-disabled);
+  border-radius: var(--border-radius);
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.refreshBtn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.refreshBtn.disabled {
+  cursor: not-allowed;
+  color: var(--color-text-disabled);
+  border-color: var(--border-color);
+}
+
+.refreshBtn.disabled:hover {
+  color: var(--color-text-disabled);
+  border-color: var(--border-color);
+}
+
+/* 解析后的 URL 预览 */
+.resolvedUrlPreview {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.resolvedUrlLabel {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.resolvedUrlValue {
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+.resolvedUrlValue.hasUnresolved {
+  color: var(--color-warning);
+}

@@ -1,0 +1,212 @@
+.panelBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* 标题区域名称编辑 */
+.nameEdit {
+  display: flex;
+  align-items: center;
+  height: var(--line-height-xl);
+  line-height: var(--line-height-xl);
+  gap: var(--spacing-md);
+}
+
+.nameText {
+  max-width: 350px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.nameInput {
+  width: 320px;
+}
+
+.editIcon {
+  display: flex;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: color var(--transition-normal);
+}
+
+.editIcon:hover {
+  color: var(--color-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.title {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.enableToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  > span {
+    font-size: var(--font-size-sm);
+  }
+}
+
+.enableToggle.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.content {
+  height: calc(100% - 120px);
+  overflow-y: auto;
+}
+
+.section {
+  padding: var(--spacing-lg);
+  background-color: var(--bg-white);
+}
+
+.manualForm {
+  padding: 0 var(--spacing-lg)
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: var(--spacing-xl);
+  background-color: var(--bg-white);
+}
+
+.noConfig {
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  gap: var(--spacing-md);
+}
+
+.fieldRow.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.infoBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-warning-light);
+  color: var(--color-warning);
+  margin-bottom: var(--spacing-md);
+}
+
+.footer {
+  display: flex;
+  width: 100%;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg) 0;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-default);
+}
+
+.emptyState {
+  padding: var(--spacing-xl);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+/* Step ID 和版本选择行 - 一行两列布局 */
+.stepIdAndVersionRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  align-items: start;
+}
+
+.stepIdAndVersionRow.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Step ID 列样式 */
+.stepIdColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.labelWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.infoIcon {
+  color: var(--color-text-tertiary);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  transition: color var(--transition-normal);
+}
+
+.infoIcon:hover {
+  color: var(--color-primary);
+}
+
+.stepIdInput {
+  width: 100%;
+}
+
+/* 版本选择列样式 */
+.versionColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.versionLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  gap: var(--spacing-md);
+}
+
+.fieldRow.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

@@ -1,0 +1,76 @@
+.workflowOrchestration {
+  padding: var(--spacing-md);
+}
+.emptyFlowStage {
+  width: var(--panel-width-sm);
+  height: var(--panel-height-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--bg-light-blue);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  margin: var(--spacing-xl) 0 0 var(--spacing-xxxl);
+  transition: var(--transition-all);
+}
+
+.emptyFlowStage:hover {
+  background: var(--bg-hover-active);
+  border-color: var(--border-color-hover);
+}
+
+.emptyFlowStage i {
+  font-size: var(--icon-size-sm);
+  margin-right: var(--spacing-sm);
+}
+
+.emptyFlowStageDisabled {
+  cursor: not-allowed;
+  background: var(--bg-disabled);
+  border: 1px solid var(--border-color-light);
+  color: var(--color-text-light-gray);
+}
+
+.emptyFlowStageDisabled:hover {
+  background: var(--bg-disabled);
+  border-color: var(--border-color-light);
+}
+
+.stageTypeDialog {
+  .stageTypeList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0 var(--spacing-massive);
+  }
+
+  .stageTypeItem {
+    text-align: center;
+    cursor: pointer;
+    margin: 0 var(--spacing-base) var(--spacing-huge) var(--spacing-base);
+    font-size: var(--font-size-md);
+    transition: var(--transition-all);
+  }
+
+  .stageTypeItem:hover .stageTypeIcon {
+    color: var(--color-primary);
+  }
+
+  .stageTypeIcon {
+    display: block;
+    width: var(--icon-size-xl);
+    height: var(--icon-size-xl);
+    color: var(--color-text-light-gray);
+    line-height: var(--icon-size-xl);
+    font-size: var(--icon-size-lg);
+    transition: color var(--transition-slow);
+  }
+
+  .stageLabel {
+    display: block;
+    margin-top: var(--spacing-md);
+  }
+}

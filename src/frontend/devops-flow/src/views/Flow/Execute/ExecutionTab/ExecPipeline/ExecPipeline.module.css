@@ -1,0 +1,355 @@
+:root {
+  --track-bottom: 0;
+  --error-popup-height: 0px;
+}
+
+.execPipelineWrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.constantWidthNum {
+  font-family: "Microsoft Yahei";
+}
+
+.pipelineExecSummary {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  font-size: var(--font-size-xs);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  z-index: 9;
+}
+
+.pipelineExecCount {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+}
+
+.pipelineExecCountSelect {
+  width: 88px;
+  flex-shrink: 0;
+  margin: 0 var(--spacing-sm);
+}
+
+.execStatusLabel {
+  display: grid;
+  align-items: center;
+  grid-auto-flow: column;
+  grid-gap: 6px;
+  margin-right: var(--spacing-sm);
+}
+
+.pipelineExecTimeline {
+  width: 666px;
+  max-width: calc(100% - var(--timeline-offset));
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  top: 11px;
+  margin-left: var(--timeline-offset);
+  flex-shrink: 1;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .pipelineExecTimeline {
+    width: auto;
+    max-width: calc(100% - var(--timeline-offset));
+    margin-left: var(--spacing-xxl);
+  }
+}
+
+.pipelineExecTimelineItem {
+  position: relative;
+  padding-left: var(--spacing-xl);
+  font-size: var(--font-size-xs);
+}
+
+.pipelineExecTimelineItem > span {
+  position: relative;
+  background: var(--bg-primary);
+  padding: 0 var(--spacing-xs) 0 0;
+  z-index: 2;
+  color: var(--color-text-tertiary);
+  display: inline-block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pipelineExecTimelineItem:before {
+  position: absolute;
+  content: "";
+  left: 0;
+  top: var(--spacing-xs);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color-lighter);
+}
+
+.pipelineExecTimelineItem:not(:last-child) .titleItem {
+  display: flex;
+}
+
+.timeStepDivider {
+  flex: 1;
+  height: var(--line-height-xs);
+  cursor: pointer;
+}
+
+.timeStepDivider:hover p {
+  background: var(--color-primary);
+}
+
+.timeStepDivider p {
+  position: relative;
+  top: var(--spacing-sm);
+  left: var(--spacing-xs);
+  width: 96%;
+  height: 1px;
+  background: var(--border-color-lighter);
+}
+
+.titleItem {
+  display: flex;
+}
+
+.pipelineExecContent {
+  flex: 1;
+  position: relative;
+  background: var(--bg-tertiary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pipelineStyleSettingHeader {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  flex-shrink: 0;
+}
+
+.hideSkipPipelineTask {
+  padding: 0 var(--spacing-lg) 0 0;
+  position: relative;
+}
+
+.hideSkipPipelineTask:after {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: var(--line-height-xs);
+  right: 7px;
+  top: 1px;
+  background: var(--border-color);
+}
+
+.expandJobCheckbox {
+  margin-right: var(--spacing-lg);
+}
+
+.execPipelineScrollBox {
+  flex: 1;
+  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.execPipelineUiWrapper {
+  padding: var(--spacing-xxl);
+  padding-bottom: calc(var(--error-popup-min-height) + var(--error-popup-height, 0px));
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.execPipelineUiWrapper :global(.bk-pipeline) {
+  padding: 0 var(--spacing-xl);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.execErrorsPopup {
+  position: fixed;
+  bottom: 0;
+  left: var(--spacing-xxl);
+  right: var(--spacing-xxl);
+  overflow: hidden;
+  will-change: auto;
+  max-height: 30vh;
+  transition: all var(--transition-medium) ease;
+  transform: translateY(calc(100% - var(--error-popup-min-height)));
+  box-shadow: var(--shadow-xl);
+  background: var(--bg-primary);
+  z-index: 6;
+  width: calc(100% - calc(var(--spacing-xxl) * 2));
+  max-width: calc(100% - calc(var(--spacing-xxl) * 2));
+  box-sizing: border-box;
+}
+
+.execErrorsPopup.visible {
+  transform: translateY(0);
+}
+
+.execErrorsPopup.visible .toggleErrorPopupIcon {
+  transition: transform var(--transition-long) ease;
+  transform: rotate(180deg);
+}
+
+.dragDot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 2;
+}
+
+.toggleErrorPopupIcon {
+  display: flex;
+  align-items: center;
+  transform-origin: center;
+  transition: transform var(--transition-long) ease;
+}
+
+.toggleErrorPopupIcon.rotated {
+  transform: rotate(180deg);
+}
+
+.errorContent {
+  padding: var(--spacing-lg) var(--spacing-xxl);
+}
+
+.execCountSelectOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.execCountTimeCost {
+  margin: 0 var(--spacing-sm);
+}
+
+.execCountSelectOptionUser {
+  color: var(--color-text-tertiary);
+}
+
+.queueTimeDetailPopup,
+.timeDetailPopup {
+  font-size: var(--font-size-xs);
+  width: 160px;
+  padding: var(--spacing-sm);
+}
+
+.pipelineTimeDetailSum {
+  display: flex;
+}
+
+.pipelineTimeDetailSum > span {
+  color: var(--color-text-secondary);
+  text-align: left;
+  font-weight: 600;
+}
+
+.pipelineTimeDetailSum > span:first-child {
+  color: var(--color-text-tertiary);
+  font-weight: normal;
+  width: var(--timeline-label-width);
+  flex-shrink: 0;
+}
+
+.timeDetailPopup .pipelineTimeDetailSum {
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 0 6px 0;
+  margin-bottom: 6px;
+}
+
+.pipelineTimeDetailSumList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pipelineTimeDetailSumList > li {
+  display: flex;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pipelineTimeDetailSumList > li > span {
+  color: var(--color-text-secondary);
+  text-align: left;
+}
+
+.pipelineTimeDetailSumList > li > span:first-child {
+  color: var(--color-text-tertiary);
+  width: var(--timeline-label-width);
+  flex-shrink: 0;
+}
+
+.pipelineTimeDetailSumList > li:last-child {
+  margin-bottom: 0;
+}
+
+.pipelineModelScrollViewport {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  z-index: -2;
+}
+
+.completeLogWrapper {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 1200px;
+  max-height: 80vh;
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.completeLogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.completeLogContent {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-xxl);
+}
+
+.emptyState {
+  padding: var(--spacing-xxl);
+  text-align: center;
+  color: var(--color-text-tertiary);
+}

@@ -1,0 +1,322 @@
+.atomSelectorPopup {
+  position: fixed;
+  right: 660px;
+  top: 64px;
+  width: 600px;
+  height: calc(100% - 80px);
+  background: var(--bg-primary);
+  z-index: 10000;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-md);
+}
+
+.atomSelectorPopup::before {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-left-color: var(--bg-primary);
+  border-bottom-color: var(--bg-primary);
+  transform: rotate(45deg);
+  right: -6px;
+  top: 136px;
+}
+
+/* 头部区域 */
+.atomSelectorHeader {
+  position: relative;
+  height: 36px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px 21px 10px 21px;
+}
+
+.atomSelectorHeader h3 {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-primary);
+}
+
+.atomFresh {
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--icon-size-sm);
+  padding: var(--spacing-xs);
+  margin-left: var(--spacing-xs);
+  color: var(--color-primary);
+  transition: var(--transition-all);
+}
+
+.atomFresh:hover {
+  color: var(--color-primary-hover);
+}
+
+.atomFresh.spinIcon {
+  color: var(--color-text-disabled);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.atomSearchInput {
+  width: 200px;
+}
+
+/* Tab 区域 */
+.atomTab {
+  height: calc(100% - 70px);
+  border: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  padding: 0 10px 10px 10px;
+  overflow: hidden;
+}
+
+.tabSection {
+  height: calc(100% - 42px);
+  overflow-y: auto;
+  padding: 0;
+}
+
+.atomTab :global(.bk-tab-content) {
+  height: 100%;
+  overflow: auto;
+  box-shadow: none;
+}
+
+/* 插件列表项 */
+.atomItem {
+  padding: 20px 20px 9px 20px;
+  height: 100px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.atomItem:hover,
+.atomItem.active {
+  background: var(--bg-hover-active);
+}
+
+.atomItem:hover .atomInfoContent .atomFrom,
+.atomItem.active .atomInfoContent .atomFrom,
+.atomItem:hover .atomOperate .atomFrom,
+.atomItem.active .atomOperate .atomFrom {
+  opacity: 1;
+}
+
+.atomItem:not(.active):hover {
+  background: var(--bg-tertiary);
+}
+
+.atomItem.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.atomItem.disabled .atomInfoContent,
+.atomItem.disabled .atomInfoContent .desc {
+  color: var(--color-text-disabled);
+}
+
+.atomItemMain {
+  display: flex;
+  height: 100%;
+}
+
+/* 插件图标 */
+.atomLogo {
+  width: 48px;
+  height: 48px;
+  font-size: 48px;
+  line-height: 48px;
+  margin-right: var(--spacing-base);
+  color: var(--color-text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.atomLogo img {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-large);
+}
+
+/* 插件信息 */
+.atomInfoContent {
+  flex: 1;
+  color: var(--color-text-primary);
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: calc(100% - 143px);
+  max-width: 345px;
+  min-width: 0;
+}
+
+.atomName {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  margin-bottom: var(--spacing-xs);
+}
+
+.atomNameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: var(--spacing-lg);
+}
+
+.desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: normal;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 0;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 评分和使用量 */
+.atomRate {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: normal;
+  color: var(--color-text-tertiary);
+}
+
+.scoreGroup {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ml6 {
+  margin-left: 6px;
+}
+
+.ml3 {
+  margin-left: var(--spacing-xs);
+}
+
+.hotIcon {
+  height: 18px;
+  width: 18px;
+  margin-left: 25px;
+}
+
+/* 操作区域 */
+.atomOperate {
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.selectAtomBtn {
+  width: 100%;
+}
+
+.selectAtomBtn:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--bg-primary);
+}
+
+.selectAtomBtn[disabled] {
+  cursor: not-allowed !important;
+  background-color: var(--bg-primary);
+  color: var(--color-text-disabled);
+}
+
+.selectAtomBtn.disabled {
+  opacity: 0;
+}
+
+.atomFrom {
+  font-size: var(--font-size-xs);
+  opacity: 0;
+  color: var(--color-text-disabled);
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  text-align: right;
+}
+
+/* 搜索结果 */
+.searchResult {
+  height: calc(100% - 70px);
+  overflow-y: auto;
+  margin: 0 11px 0 21px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+
+.searchTitle {
+  line-height: var(--line-height-xs);
+  font-weight: bold;
+  font-size: var(--font-size-xs);
+  margin: 9px 0;
+  color: var(--color-text-primary);
+}
+
+.searchTitle.gapBorder {
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color-light);
+}
+
+/* 空状态 */
+.emptyAtomList {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 过渡动画 */
+:global(.selector-slide-enter-active),
+:global(.selector-slide-leave-active) {
+  transition:
+    transform 0.2s linear,
+    opacity 0.2s cubic-bezier(1, -0.05, 0.94, 0.17);
+}
+
+:global(.selector-slide-enter-from) {
+  transform: translateX(600px);
+  opacity: 0;
+}
+
+:global(.selector-slide-leave-to) {
+  display: none;
+}

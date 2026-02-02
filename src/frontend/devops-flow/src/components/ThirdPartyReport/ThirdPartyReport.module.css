@@ -1,0 +1,16 @@
+.reportTdName :global(.bk-link-text) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  grid-gap: var(--spacing-xs);
+}
+
+.jumpIcon {
+  color: var(--color-primary);
+}
+
+.emptyState {
+  padding: var(--spacing-xxl);
+  text-align: center;
+  color: var(--color-text-tertiary);
+}

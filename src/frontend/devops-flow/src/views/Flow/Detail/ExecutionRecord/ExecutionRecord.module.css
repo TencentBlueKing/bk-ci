@@ -1,0 +1,180 @@
+.executionRecord {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    flex-direction: column;
+    padding: var(--spacing-xl);
+}
+.filterLeft {
+  flex: 1;
+  flex-shrink: 0;
+}
+
+.filterRight {
+  flex: 0 0 50%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tableWrapper {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  :global(.bk-table) {
+    max-width: 100%;
+    width: 100%;
+    max-height: 100%;
+  }
+}
+
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
+/* 修复 search-select 组件获得焦点时的抖动问题 */
+/* 目标元素是 .bk-search-select-container，确保边框宽度不变，允许高度自然展开 */
+.searchInput :global(.bk-search-select-container) {
+  /* 预留滚动条空间，避免滚动条出现时导致布局抖动 */
+  scrollbar-gutter: stable !important;
+  /* 确保宽度维持，即使没有 placeholder 也能保持宽度 */
+  width: 100% !important;
+  min-width: 200px !important;
+  /* 平滑过渡，包括高度变化，避免抖动 */
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
+}
+
+.filterBar {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+  background-color: var(--bg-primary);
+}
+
+.buildNoStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.buildNo {
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* 操作列 */
+.operationDisabled {
+  color: var(--text-tertiary);
+}
+
+/* 备注单元格 */
+.remarkCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 200px;
+  cursor: pointer;
+}
+
+.remarkText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remarkEdit {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+  flex-shrink: 0;
+
+  .remarkCell:hover & {
+    opacity: 1;
+  }
+}
+
+/* 备注浮层 - 全局样式 */
+:global(.remark-edit-popover) {
+  :global(.bk-popover-content) {
+    padding: 0 !important;
+  }
+}
+
+/* 备注浮层 */
+.remarkPopover {
+  padding: 16px;
+}
+
+.remarkPopoverTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.remarkPopover :global(.bk-textarea) {
+  width: 100%;
+  min-height: 100px;
+}
+
+.remarkPopoverActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.remarkPopoverCancel,
+.remarkPopoverConfirm {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 16px;
+  border-radius: 2px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.remarkPopoverCancel {
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary, #f0f1f5);
+
+  &:hover {
+    background-color: var(--bg-tertiary, #dcdee5);
+  }
+}
+
+.remarkPopoverConfirm {
+  color: #fff;
+  background-color: var(--primary-color, #3a84ff);
+
+  &:hover {
+    background-color: var(--primary-color-hover, #699df4);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+

@@ -1,0 +1,59 @@
+.triggerEventContent {
+  padding: 0;
+}
+
+.table {
+  :global(.bk-table-header) {
+    background-color: var(--bg-secondary);
+  }
+
+  :global(.bk-table-header th) {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  :global(.bk-table-body td) {
+    text-align: center;
+    font-size: 12px;
+    color: var(--color-text-primary);
+  }
+}
+
+.eventCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-left: 16px;
+}
+
+.eventIconEnabled {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.eventIconDisabled {
+  color: var(--color-text-disabled);
+  flex-shrink: 0;
+}
+
+.eventNameEnabled {
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.eventNameDisabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.versionCell {
+  color: var(--color-text-primary);
+}
+
+.statusButton {
+  min-width: 60px;
+}

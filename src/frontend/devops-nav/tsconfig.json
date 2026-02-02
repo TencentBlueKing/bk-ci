@@ -12,21 +12,19 @@
         "noImplicitAny": false,
         "skipLibCheck": true,
         "module": "esnext",
-        "moduleResolution": "node",
         "target": "es5",
         "lib": [
             "dom",
             "es2017",
             "ESNext"
         ],
-        "baseUrl": ".",
         "types": [
             "node",
             "webpack-env"
         ],
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
             ]
         }
     },

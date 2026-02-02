@@ -1,0 +1,166 @@
+/**
+ * LogViewer Component Styles
+ * Vue 3 兼容的日志渲染组件样式
+ * 参考 @blueking/log 的 bk-log 组件样式
+ */
+
+/* === Container === */
+.logViewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--log-bg-dark);
+  color: var(--log-text-dark);
+  font-family: var(--log-font-family);
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+}
+
+/* === Log Content === */
+.logContent {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-md);
+  position: relative;
+}
+
+.logLines {
+  font-family: var(--log-font-family);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.logLine {
+  display: flex;
+  white-space: pre-wrap;
+  word-break: break-all;
+  padding: 2px 0;
+}
+
+.logLine:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.lineNumber {
+  color: var(--log-text-dark-muted);
+  min-width: var(--log-line-number-width);
+  padding-right: var(--spacing-md);
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.timestamp {
+  color: var(--log-text-dark-muted);
+  min-width: var(--log-timestamp-width);
+  padding-right: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.message {
+  flex: 1;
+  color: var(--log-text-dark);
+}
+
+/* === Log Level Colors === */
+.levelError {
+  color: var(--log-color-error);
+}
+
+.levelWarning {
+  color: var(--log-color-warning);
+}
+
+.levelInfo {
+  color: var(--log-color-info);
+}
+
+.levelDebug {
+  color: var(--log-color-debug);
+}
+
+/* === Search Highlight === */
+.searchHighlight {
+  background: var(--log-search-highlight, #ffdd00);
+  color: #000;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.highlighted {
+  background: rgba(255, 221, 0, 0.15);
+}
+
+.highlightedActive {
+  background: rgba(255, 149, 0, 0.25);
+}
+
+/* === Loading States === */
+.loadingPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xxxl);
+  color: var(--log-text-dark-secondary);
+  font-size: var(--font-size-sm);
+  height: 100%;
+}
+
+.loadingMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  color: var(--log-text-dark-secondary);
+  font-size: var(--font-size-xs);
+  gap: var(--spacing-sm);
+}
+
+.loadingSpinner {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Error and Empty States === */
+.errorMessage {
+  color: var(--log-color-error);
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.emptyMessage {
+  color: var(--log-text-dark-secondary);
+  padding: var(--spacing-xxxl);
+  text-align: center;
+}
+
+/* === Scrollbar Styles === */
+.logContent::-webkit-scrollbar {
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
+}
+
+.logContent::-webkit-scrollbar-track {
+  background: var(--log-bg-dark);
+}
+
+.logContent::-webkit-scrollbar-thumb {
+  background: var(--log-border-dark-light);
+  border-radius: var(--border-radius-large);
+}
+
+.logContent::-webkit-scrollbar-thumb:hover {
+  background: var(--log-border-dark-lighter);
+}

@@ -1,0 +1,91 @@
+/**
+ * GroupTable Component Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.groupTable {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-primary);
+  padding: var(--spacing-lg);
+}
+
+.btn {
+  margin-right: var(--spacing-xs);
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.statusContent {
+  display: flex;
+  align-items: center;
+}
+
+.statusIcon {
+  display: inline-block;
+  height: 13px;
+  width: 13px;
+  border-radius: 50%;
+  margin-right: var(--spacing-xs);
+}
+
+.default {
+  border: 3px solid var(--color-text-disabled);
+}
+
+.success {
+  border: 3px solid var(--color-success);
+}
+
+.failed {
+  border: 3px solid var(--color-danger);
+}
+
+.detailTitle {
+  display: flex;
+  align-items: center;
+}
+
+.groupNameLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-left: var(--spacing-sm);
+}
+
+.detailContent {
+  padding: var(--spacing-xl);
+}
+
+.title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-sm);
+  position: relative;
+}
+
+.title::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--spacing-sm));
+  top: 2px;
+  width: 4px;
+  height: 16px;
+  background: var(--color-primary-hover);
+  border-radius: 1px;
+}
+
+.content {
+  margin-top: var(--spacing-base);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.permissionItem {
+  min-width: 150px;
+  margin-bottom: var(--spacing-sm);
+  cursor: default !important;
+}

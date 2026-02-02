@@ -1,0 +1,26 @@
+.deleteConfirmContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: var(--font-size-md);
+  flex-direction: column;
+  .deleteConfirmIcon {
+    color: var(--color-primary);
+  }
+  .dangerIcon {
+    color: var(--color-danger);
+  }
+}
+
+.deleteConfirmMessage {
+  white-space: pre-line;
+  text-align: center;
+  font-weight: normal;
+  color: var(--color-text-primary);
+  :global(strong),
+  :global(.bold) {
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+}

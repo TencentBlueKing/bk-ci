@@ -1,0 +1,229 @@
+.pipelineExecOutputs {
+  display: flex;
+  height: 100%;
+}
+
+.pipelineExecOutputsAside {
+  position: relative;
+  height: 100%;
+  flex-shrink: 0;
+  padding: var(--spacing-lg) 11px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+}
+
+.pipelineExecOutputsFilterInput {
+  display: flex;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.artifactSearch {
+  display: flex;
+  height: var(--line-height-xl);
+  margin-right: var(--spacing-xs);
+  flex: 0 0 40%;
+}
+
+.artifactSearch p {
+  min-width: 62px;
+  text-align: center;
+  height: var(--line-height-xl);
+  line-height: var(--line-height-xl);
+  background-color: var(--bg-tertiary);
+  font-size: var(--font-size-xs);
+  border: 1px solid var(--color-text-disabled);
+  border-radius: var(--border-radius);
+  border-right: none;
+}
+
+/* 搜索输入框 */
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
+/* 修复 search-select 组件获得焦点时的抖动问题 */
+.searchInput :global(.bk-search-select-container) {
+  /* 预留滚动条空间，避免滚动条出现时导致布局抖动 */
+  scrollbar-gutter: stable !important;
+  /* 确保宽度维持，即使没有 placeholder 也能保持宽度 */
+  width: 100% !important;
+  min-width: 200px !important;
+  /* 平滑过渡，包括高度变化，避免抖动 */
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
+}
+
+.inputSearch {
+  flex-shrink: 0;
+  flex: 1;
+}
+
+.pipelineExecOutputsList {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: var(--spacing-sm);
+}
+
+.pipelineExecOutputsList li {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) 19px;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-sm);
+  grid-gap: var(--spacing-sm);
+}
+
+.pipelineExecOutputsList li:hover,
+.pipelineExecOutputsList li.active {
+  color: var(--color-primary);
+  background-color: var(--bg-light-blue);
+}
+
+.outputName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.outputSize {
+  margin-left: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+
+.outputHoverIconBox {
+  display: flex;
+  align-items: center;
+  grid-gap: 6px;
+  line-height: 1;
+}
+
+.outputHoverIconBox:hover {
+  color: var(--color-primary);
+}
+
+.fullScreen {
+  line-height: 1;
+}
+
+.noOutputsPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-secondary);
+}
+
+.pipelineExecOutputsSection {
+  height: 100%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pipelineExecOutputHeader {
+  display: flex;
+  background: var(--bg-tertiary);
+  padding: var(--spacing-sm) var(--spacing-xxl);
+  flex-shrink: 0;
+}
+
+.pipelineExecOutputHeaderName {
+  display: flex;
+  max-width: 60%;
+  align-items: center;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  padding-right: var(--spacing-lg);
+}
+
+.outputDetailName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.pipelineExecOutputActions {
+  display: grid;
+  grid-gap: var(--spacing-lg);
+  grid-auto-flow: column;
+  align-items: center;
+  justify-self: flex-end;
+  margin-left: auto;
+}
+
+.pipelineExecOutputArtifact {
+  flex: 1;
+  overflow: auto;
+}
+
+.pipelineExecOutputBlock {
+  padding: var(--spacing-lg) var(--spacing-xxl);
+}
+
+.colorBlock {
+  display: inline-block;
+  margin-right: var(--spacing-sm);
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
+  border-radius: 50%;
+}
+
+.pipelineExecOutputBlockTitle {
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--border-color);
+  margin: 0 0 var(--spacing-lg) 0;
+  line-height: var(--line-height-md);
+}
+
+.pipelineExecOutputBlockContent {
+  font-size: var(--font-size-xs);
+}
+
+.pipelineExecOutputBlockContent li {
+  display: flex;
+  margin-bottom: var(--spacing-lg);
+}
+
+.pipelineExecOutputBlockRowLabel {
+  color: var(--color-text-tertiary);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.pipelineExecOutputBlockRowValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pipelineExecOutputBlockRowFullName {
+  flex: 1;
+  line-height: 1.5;
+  word-break: break-all;
+}

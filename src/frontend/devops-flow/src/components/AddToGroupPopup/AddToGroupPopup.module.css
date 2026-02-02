@@ -1,0 +1,103 @@
+.addToGroupPopup {
+  :global(.bk-dialog-header) {
+    display: none;
+  }
+
+  :global(.bk-dialog-content) {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.addGroupMain {
+  display: flex;
+  height: 480px;
+}
+
+.addGroupLeft {
+  display: flex;
+  flex-direction: column;
+  flex: 3;
+  padding: var(--spacing-xl);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.addToGroupTitle {
+  margin: var(--spacing-lg) 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.addToFlowGroupList {
+  flex: 1;
+  overflow: auto;
+  margin-top: var(--spacing-sm);
+  padding-right: var(--spacing-md);
+}
+
+.addToFlowGroupTreeNode {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  line-height: 32px;
+  font-size: var(--font-size-xs);
+}
+
+.iconMiddle {
+  vertical-align: middle;
+}
+
+.addedGroupName {
+  padding-left: var(--spacing-sm);
+}
+
+.addedGroupDesc {
+  color: #c4c4c4;
+}
+
+.addGroupRight {
+  display: flex;
+  flex-direction: column;
+  flex: 2;
+  padding: var(--spacing-xl);
+  background: var(--bg-secondary);
+  box-shadow: -1px 0 0 0 var(--border-color);
+  overflow: hidden;
+}
+
+.resultPreviewTip {
+  padding-right: 10px;
+  font-size: var(--font-size-xs);
+}
+
+.addGroupCount {
+  color: var(--color-primary);
+  font-weight: bold;
+  font-style: normal;
+}
+
+.addGroupResultPreviewList {
+  flex: 1;
+  overflow: auto;
+}
+
+.viewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  background: var(--bg-primary);
+  font-size: var(--font-size-xs);
+}
+
+.viewItem:hover {
+  background: var(--bg-hover-active);
+}
+
+.iconClose {
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+}

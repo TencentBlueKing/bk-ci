@@ -1,0 +1,444 @@
+/* Preview Page Styles - Using CSS variables from variables.css */
+
+.previewPage {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  background-color: var(--bg-secondary);
+}
+
+.previewContent {
+  flex: 1 1 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-xxl);
+  min-height: 0;
+  height: 0;
+  /* Important for flex scroll */
+}
+
+.previewSection {
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-xl);
+  overflow: hidden;
+}
+
+.collapseHeader {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xxl);
+  height: var(--header-height);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  background-color: var(--bg-primary);
+  gap: var(--spacing-sm);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-normal);
+}
+
+.collapseHeader:hover {
+  background-color: var(--bg-secondary);
+}
+
+.collapseHeaderExpanded {
+  border-bottom-color: var(--border-color);
+}
+
+.collapseIcon {
+  transition: transform var(--transition-normal);
+  color: var(--color-text-medium-black);
+  flex-shrink: 0;
+}
+
+.collapseIconExpanded {
+  transform: rotate(90deg);
+}
+
+.collapseContent {
+  padding: var(--spacing-lg) var(--spacing-xxl);
+}
+
+.noBoldFont {
+  font-weight: normal;
+}
+
+.textLink {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.textLink:hover {
+  color: var(--color-primary-hover);
+}
+
+.textLinkDisabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.divider {
+  display: inline-block;
+  color: var(--border-color);
+  margin: 0 var(--spacing-sm);
+}
+
+.questionIcon {
+  display: inline-flex;
+  color: var(--color-text-tertiary);
+  margin-left: var(--spacing-xs);
+  cursor: help;
+}
+
+.checkboxWrapper {
+  font-weight: normal;
+}
+
+.versionSelector {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 var(--spacing-xxl);
+  height: 80px;
+  margin: 0 0 var(--spacing-xxl) 0;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-sm);
+}
+
+.versionLabel {
+  border: 1px solid var(--border-color);
+  line-height: var(--line-height-xl);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--color-text-disabled);
+  padding: 0 var(--spacing-sm);
+  color: var(--color-text-medium-black);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  margin-right: -1px;
+}
+
+.versionSelect {
+  width: 520px;
+}
+
+.infoIcon {
+  color: var(--color-text-tertiary);
+  cursor: help;
+}
+
+/* Empty state */
+.emptyParams {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+/* Alert styles */
+.debugAlert {
+  margin-bottom: var(--spacing-lg);
+}
+
+.changedAlert {
+  margin-bottom: var(--spacing-md);
+}
+
+.paramSetDiffTips {
+  padding: var(--spacing-md);
+  list-style: disc;
+  margin: var(--spacing-sm) 0 0 0;
+}
+
+.paramSetDiffTips li {
+  list-style: disc;
+  margin-left: var(--spacing-lg);
+}
+
+/* Pipeline preview section */
+.pipelinePreviewSection {
+  min-height: 200px;
+  overflow: visible;
+  background: var(--bg-tertiary);
+  padding: var(--spacing-lg);
+}
+
+/* Form styles - original single column */
+.paramFormItem {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+  gap: var(--spacing-lg);
+}
+
+.paramLabel {
+  width: 200px;
+  flex-shrink: 0;
+  padding-top: var(--spacing-sm);
+  word-break: break-all;
+}
+
+.paramLabelText {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.paramDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-xs);
+}
+
+.paramValue {
+  flex: 1;
+  min-width: 0;
+}
+
+.paramValueChanged {
+  background-color: var(--bg-warning-light);
+}
+
+/* Header actions */
+.headerActions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: var(--spacing-sm);
+}
+
+.headerActionsInline {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-lg);
+  gap: var(--spacing-md);
+  font-weight: normal;
+}
+
+/* Runtime info styles */
+.runtimeInfoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xxl);
+}
+
+.runtimeInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.runtimeInfoLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.runtimeInfoSelect {
+  width: 100%;
+}
+
+.runtimeInfoDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+}
+
+.requiredMark {
+  color: var(--color-danger);
+  margin-left: var(--spacing-xs);
+}
+
+/* Preset select */
+.presetSelect {
+  width: 140px;
+}
+
+/* Param group styles - same as devops-pipeline renderSortCategoryParams */
+.paramGroup {
+  margin-bottom: var(--spacing-xl);
+}
+
+.paramGroup details {
+  width: 100%;
+}
+
+.paramGroup details summary {
+  list-style: none;
+}
+
+.paramGroup details summary::-webkit-details-marker {
+  display: none;
+}
+
+.paramGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  height: 28px;
+  background: var(--bg-hover);
+  border-radius: var(--border-radius);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-medium-black);
+  font-weight: 700;
+}
+
+.paramGroupHeader:hover {
+  background-color: #e1e3e9;
+}
+
+/* Arrow icon rotation based on open state */
+.paramGroup details:not([open]) .paramGroupHeader svg {
+  transform: rotate(-90deg);
+}
+
+.paramGroup details[open] .paramGroupHeader svg {
+  transform: rotate(0deg);
+}
+
+.groupIcon {
+  font-size: 10px;
+  transition: transform var(--transition-normal);
+  color: var(--color-text-medium-black);
+  flex-shrink: 0;
+}
+
+.groupIconExpanded {
+  transform: rotate(90deg);
+}
+
+.paramGroupContent {
+  padding: var(--spacing-lg) var(--spacing-lg) 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  grid-gap: 0 var(--spacing-xxl);
+}
+
+/* Hide content when details is closed */
+.paramGroup details:not([open]) .paramGroupContent {
+  display: none;
+}
+
+/* Two-column param form item */
+.paramFormItemHalf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.paramFormItemHalf .paramLabel {
+  width: auto;
+  padding-top: 0;
+}
+
+.paramInputWrapper {
+  width: 100%;
+}
+
+.fullWidthSelect {
+  width: 100%;
+}
+
+.optionLabel {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+/* Textarea wrapper */
+.textareaWrapper {
+  position: relative;
+}
+
+.charCount {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* File input wrapper */
+.fileInputWrapper {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.fileInputWrapper input {
+  flex: 1;
+}
+
+/* Atoms count text */
+.atomsCountText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: normal;
+}
+
+/* Node option styles */
+.nodeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.nodeName {
+  color: var(--color-text-primary);
+}
+
+.nodeIp {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.nodeOffline {
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-left: var(--spacing-xs);
+}
+
+/* Validation error styles */
+.paramInvalid {
+  animation: shake 0.3s ease-in-out;
+}
+
+.paramInvalid .paramLabelText,
+.paramInvalid .runtimeInfoLabel {
+  color: var(--color-danger);
+}
+
+.inputInvalid {
+  border-color: var(--color-danger) !important;
+  background-color: rgba(234, 54, 54, 0.05);
+}
+
+.inputInvalid:focus {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 2px rgba(234, 54, 54, 0.2);
+}
+
+/* Override bkui-vue input/select error styles */
+:global(.bk-input.inputInvalid),
+:global(.bk-select.inputInvalid .bk-select-trigger) {
+  border-color: var(--color-danger) !important;
+  background-color: rgba(234, 54, 54, 0.05);
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-4px);
+  }
+  40%, 80% {
+    transform: translateX(4px);
+  }
+}

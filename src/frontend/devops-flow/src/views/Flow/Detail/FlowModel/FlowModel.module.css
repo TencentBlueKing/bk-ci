@@ -1,0 +1,20 @@
+.flowModel {
+  padding: var(--spacing-lg);
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.uiModeWrapper {
+  padding: 0 var(--spacing-lg);
+}
+
+/* modelContent样式已移动到layout.module.css中的flexDetailContent */
+
+.codeEditorWrapper {
+  height: 100%;
+  width: 100%;
+  border: 1px solid #dcdee5;
+  border-radius: 2px;
+  overflow: hidden;
+}
