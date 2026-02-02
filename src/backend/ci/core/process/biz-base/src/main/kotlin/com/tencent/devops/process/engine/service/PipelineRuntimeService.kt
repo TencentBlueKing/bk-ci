@@ -195,7 +195,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineArtifactQualityService: PipelineArtifactQualityService,
-    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
+    private val pipelineTriggerResourceService: PipelineTriggerResourceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -445,6 +446,8 @@ class PipelineRuntimeService @Autowired constructor(
         )
         val result = mutableListOf<BuildHistory>()
         var prevBuildVersion: Int? = null
+        // 提取通用触发事件标识
+        val triggerEventInfo = pipelineTriggerResourceService.getTriggerEventInfo(list)
         list.reversed().forEach { buildInfo ->
             val artifactQuality = pipelineArtifactQualityService.buildArtifactQuality(
                 userId = userId,
@@ -456,7 +459,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildInfo = buildInfo,
                     currentTimestamp = currentTimestamp,
                     artifactQuality = artifactQuality,
-                    prevBuildVersion = prevBuildVersion
+                    prevBuildVersion = prevBuildVersion,
+                    triggerEventInfo = triggerEventInfo
                 )
             )
             prevBuildVersion = buildInfo.version
@@ -599,18 +603,23 @@ class PipelineRuntimeService @Autowired constructor(
         buildInfo: BuildInfo,
         currentTimestamp: Long,
         artifactQuality: Map<String, List<ArtifactQualityMetadataAnalytics>>? = null,
-        prevBuildVersion: Int? = null
+        prevBuildVersion: Int? = null,
+        triggerEventInfo: Map<String, String> = mapOf()
     ): BuildHistory {
         return with(buildInfo) {
             val startType = StartType.toStartType(trigger)
             BuildHistory(
                 id = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(
-                    trigger,
-                    channelCode,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ),
+                trigger = if (trigger == StartType.TRIGGER_EVENT.name) { // 通用事件触发需根据事件类型匹配
+                    triggerEventInfo[triggerEventType] ?: ""
+                } else { // 基础触发
+                    StartType.toReadableString(
+                        trigger,
+                        channelCode,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                },
                 buildNum = buildNum,
                 pipelineVersion = version,
                 pipelineVersionName = versionName,

@@ -383,6 +383,23 @@ class PipelineModelTaskDao {
         }
     }
 
+    /**
+     * 根据原子标识，获取使用该原子的项目个数
+     */
+    fun getProjectCountByAtomCode(dslContext: DSLContext, atomCode: String): Long {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = mutableListOf<Condition>()
+            val tpi = TPipelineInfo.T_PIPELINE_INFO
+            condition.add(ATOM_CODE.eq(atomCode))
+            condition.add(tpi.CHANNEL.notEqual(ChannelCode.AM.name))
+            return dslContext.select(DSL.countDistinct(PROJECT_ID))
+                    .from(this)
+                    .join(tpi)
+                    .on(PIPELINE_ID.eq(tpi.PIPELINE_ID).and(PROJECT_ID.eq(tpi.PROJECT_ID)))
+                    .where(condition)
+                    .fetchOne(0, Long::class.java)!!
+        }
+    }
 
     fun selectPipelineAtomVersions(
         dslContext: DSLContext,

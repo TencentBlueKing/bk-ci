@@ -72,7 +72,9 @@ data class StoreInfoQuery(
     @get:Schema(title = "页码", required = true)
     val page: Int,
     @get:Schema(title = "每页数量", required = true)
-    val pageSize: Int
+    val pageSize: Int,
+    @get:Schema(title = "归属应用标识", required = true)
+    val ownerStoreCode: String? = null
 ) {
     fun validate() {
         // 检查 projectCode 是否为空

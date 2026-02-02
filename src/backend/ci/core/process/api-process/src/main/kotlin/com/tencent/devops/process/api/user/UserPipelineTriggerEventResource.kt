@@ -78,7 +78,10 @@ interface UserPipelineTriggerEventResource {
         userId: String,
         @Parameter(description = "代码库类型,为空则返回所有事件类型", required = false)
         @QueryParam("scmType")
-        scmType: ScmType?
+        scmType: ScmType?,
+        @Parameter(description = "流水线渠道")
+        @HeaderParam("x-devops-channel")
+        channelCode: String?
     ): Result<List<IdValue>>
 
     @Operation(summary = "获取流水线触发事件列表")

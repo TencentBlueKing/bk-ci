@@ -61,6 +61,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_TRIGGER_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -146,7 +147,9 @@ data class StartBuildContext(
     // 重试插件所属的stageId
     val retryTaskInStageId: String? = null,
     // 重试插件对应的containerId
-    val retryTaskInContainerId: String? = null
+    val retryTaskInContainerId: String? = null,
+    // 触发事件标识
+    val triggerEventType: String? = null
 ) {
     val watcher: Watcher = Watcher("startBuild-$buildId")
 
@@ -311,7 +314,7 @@ data class StartBuildContext(
             } else {
                 Triple(ActionType.START, 1, false)
             }
-
+            val startType = StartType.valueOf(params[PIPELINE_START_TYPE]!!)
             return StartBuildContext(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -326,7 +329,7 @@ data class StartBuildContext(
                 retryStartTaskId = retryStartTaskId,
                 userId = params[PIPELINE_START_USER_ID]!!,
                 triggerUser = params[PIPELINE_START_USER_NAME]!!,
-                startType = StartType.valueOf(params[PIPELINE_START_TYPE]!!),
+                startType = startType,
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID],
                 channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
@@ -360,7 +363,10 @@ data class StartBuildContext(
                 yamlVersion = yamlVersion,
                 retryOnRunningBuild = retryOnRunningBuild,
                 retryTaskInStageId = params[PIPELINE_RETRY_TASK_IN_STAGE_ID],
-                retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID]
+                retryTaskInContainerId = params[PIPELINE_RETRY_TASK_IN_CONTAINER_ID],
+                triggerEventType = params[PIPELINE_TRIGGER_EVENT_TYPE]?.let {
+                    it.ifBlank { startType.name }
+                } ?: startType.name
             )
         }
 

@@ -2842,7 +2842,7 @@ class PipelineBuildFacadeService(
         val triggerContainer = model.getTriggerContainer()
         // 检查触发器是否存在
         val checkTriggerResult = forceTrigger || when (startType) {
-            StartType.WEB_HOOK -> {
+            StartType.WEB_HOOK, StartType.TRIGGER_EVENT -> {
                 triggerContainer.elements.find { it.id == startParameters[PIPELINE_START_TASK_ID] }
             }
 
@@ -2868,7 +2868,7 @@ class PipelineBuildFacadeService(
                 params = arrayOf(resource.versionName ?: "")
             )
         }
-        if (startType == StartType.WEB_HOOK) {
+        if (startType == StartType.WEB_HOOK || startType == StartType.TRIGGER_EVENT) {
             val replayEventId = pipelineTriggerEventService.getTriggerDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,

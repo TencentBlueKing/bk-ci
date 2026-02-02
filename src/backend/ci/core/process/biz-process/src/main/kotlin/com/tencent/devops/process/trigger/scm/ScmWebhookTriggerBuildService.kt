@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.webhook.WebhookStartPipelineRequest
 import com.tencent.devops.process.service.pipeline.PipelineYamlVersionResolver
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
+import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
@@ -72,7 +73,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class WebhookTriggerBuildService @Autowired constructor(
+class ScmWebhookTriggerBuildService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookTriggerMatcher: WebhookTriggerMatcher,
@@ -243,9 +244,9 @@ class WebhookTriggerBuildService @Autowired constructor(
                 pipelineTriggerMeasureService.recordTaskExecutionTime(
                     name = MeasureConstant.PIPELINE_SCM_WEBHOOK_EXECUTE_TIME,
                     tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
-                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
-                        .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
-                        .toList(),
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
+                            .toList(),
                     timeConsumingMills = timeConsumingMills
                 )
             }
@@ -278,14 +279,14 @@ class WebhookTriggerBuildService @Autowired constructor(
             ) ?: run {
                 logger.info(
                     "[PAC_PIPELINE]|trigger yaml pipeline not found pipeline version|$eventId|" +
-                        "$projectId|$repoHashId|$filePath|$blobId"
+                            "$projectId|$repoHashId|$filePath|$blobId"
                 )
                 return
             }
             logger.info(
                 "[PAC_PIPELINE]|find yaml pipeline trigger version|$eventId|" +
-                    "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
-                    "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
+                        "$projectId|$repoHashId|$filePath|$ref|$blobId|" +
+                        "${pipelineYamlVersion.pipelineId}|${pipelineYamlVersion.version}"
             )
             trigger(
                 projectId = projectId,
@@ -379,7 +380,7 @@ class WebhookTriggerBuildService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(WebhookTriggerBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(ScmWebhookTriggerBuildService::class.java)
         private const val SCM_WEBHOOK_TRIGGER_MAX_COUNT_DEFAULT = 100
         private const val DEFAULT_DELAY = 1000
     }

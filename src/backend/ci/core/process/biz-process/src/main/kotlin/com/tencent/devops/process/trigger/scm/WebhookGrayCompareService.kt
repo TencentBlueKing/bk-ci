@@ -49,7 +49,8 @@ import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsR
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.trigger.WebhookTriggerService
+import com.tencent.devops.process.trigger.WebhookTriggerBuildService
+import com.tencent.devops.process.trigger.enums.MatchStatus
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -71,7 +72,7 @@ import java.util.concurrent.LinkedBlockingQueue
 @Service
 class WebhookGrayCompareService @Autowired constructor(
     private val client: Client,
-    private val webhookTriggerService: WebhookTriggerService,
+    private val webhookTriggerBuildService: WebhookTriggerBuildService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineYamlService: PipelineYamlService,
@@ -215,7 +216,7 @@ class WebhookGrayCompareService @Autowired constructor(
         scmType: ScmType,
         matcher: ScmWebhookMatcher
     ): Map<String, Map<String, Any>> {
-        val yamlPipelineIds = webhookTriggerService.getYamlPipelineIds(matcher, scmType)
+        val yamlPipelineIds = webhookTriggerBuildService.getYamlPipelineIds(matcher, scmType)
         val triggerPipelines = pipelineWebhookService.getTriggerPipelines(
             name = matcher.getRepoName(),
             repositoryType = scmType,

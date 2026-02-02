@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
@@ -72,16 +73,22 @@ class UserBuildParametersResourceImpl @Autowired constructor(
         }.toMap()
     }
 
-    override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return Result(TriggerBuildParamUtils.getBasicBuildParams())
+    override fun getCommonBuildParams(
+        userId: String,
+        channelCode: ChannelCode?
+    ): Result<List<BuildEnvParameters>> {
+        return Result(TriggerBuildParamUtils.getBasicBuildParams(channelCode))
     }
 
-    override fun getCommonParams(userId: String): Result<List<BuildParameterGroup>> {
+    override fun getCommonParams(
+        userId: String,
+        channelCode: ChannelCode?
+    ): Result<List<BuildParameterGroup>> {
         return Result(
             listOf(
                 BuildParameterGroup(
                     name = TriggerBuildParamUtils.getBasicParamName(),
-                    params = TriggerBuildParamUtils.getBasicBuildParams().map {
+                    params = TriggerBuildParamUtils.getBasicBuildParams(channelCode).map {
                         it.copy(name = paramToContext[it.name] ?: it.name)
                     }.sortedBy { it.name }
                 ),

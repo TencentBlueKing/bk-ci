@@ -71,7 +71,15 @@ enum class PipelineTriggerType {
 
     // 远程触发
     @Schema(title = "远程触发")
-    REMOTE;
+    REMOTE,
+
+    // 远程触发
+    @Schema(title = "远程触发")
+    TRIGGER_EVENT;
+
+    fun toScmType(): ScmType? {
+        return toScmType(name)
+    }
 
     companion object {
         // 通用触发类型
@@ -120,5 +128,7 @@ enum class PipelineTriggerType {
                 triggerType
             )
         }
+
+        fun parse(triggerType: String) = PipelineTriggerType.values().find { it.name == triggerType }
     }
 }
