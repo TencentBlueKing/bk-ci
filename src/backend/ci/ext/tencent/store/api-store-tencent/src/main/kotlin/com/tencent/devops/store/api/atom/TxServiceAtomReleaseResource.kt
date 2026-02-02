@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
@@ -65,4 +66,19 @@ interface TxServiceAtomReleaseResource {
         @Parameter(description = "插件重新构建请求报文体", required = true)
         atomRebuildRequest: AtomRebuildRequest
     ): Result<Boolean>
+
+    @Operation(summary = "获取插件代码库ID列表")
+    @GET
+    @Path("/desk/atom/repository/ids")
+    fun getAtomRepositoryId(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<String>>
 }

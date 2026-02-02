@@ -98,7 +98,7 @@
                     <atom-checkbox
                         name="required"
                         :text="$t('editPage.showOnExec')"
-                        :desc="$t('newui.pipelineParam.buildParamTips')"
+                        :desc="requiredTips"
                         :disabled="disabled"
                         :value="param.required"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
@@ -112,6 +112,17 @@
                         :value="param.valueNotEmpty"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
+                    <atom-checkbox
+                        v-if="!!templateId"
+                        name="asInstanceInput"
+                        class="ml10"
+                        v-show="param.required"
+                        :disabled="disabled"
+                        :desc="$t('editPage.instanceRequiredTips')"
+                        :text="$t('editPage.instanceRequired')"
+                        :value="param.asInstanceInput"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
                 </div>
                 <div class="param-checkbox-row">
                     <atom-checkbox
@@ -120,6 +131,17 @@
                         :text="$t('editPage.readOnlyOnRun')"
                         :desc="$t('newui.pipelineParam.readOnlyTips')"
                         :value="param.readOnly"
+                        :handle-change="(name, value) => handleUpdateParam(name, value)"
+                    />
+                </div>
+                <div class="param-checkbox-row">
+                    <atom-checkbox
+                        name="sensitive"
+                        :disabled="disabled"
+                        :text="$t('editPage.sensitive')"
+                        :desc="sensitiveTips"
+                        :custom-tip="true"
+                        :value="param.sensitive"
                         :handle-change="(name, value) => handleUpdateParam(name, value)"
                     />
                 </div>
@@ -243,6 +265,9 @@
             typeLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constType') : this.$t('editPage.paramsType')
             },
+            sensitiveTips () {
+                return Array(4).fill(0).map((_, i) => this.$t(`editPage.sensitiveTips${i + 1}`))
+            },
             paramsList () {
                 const list = PARAM_LIST.map(item => {
                     return {
@@ -288,6 +313,14 @@
                         }))
                     }
                 }
+            },
+            templateId () {
+                return this.$route.params.templateId
+            },
+            requiredTips () {
+                return this.templateId
+                    ? this.$t('editPage.templateBuildParamTips')
+                    : this.$t('newui.pipelineParam.buildParamTips')
             }
         },
         created () {
@@ -346,8 +379,8 @@
         line-height: 20px;
     }
     .neccessary-checkbox {
-        margin-left: 24px;
+        margin-left: 15px;
         border-left: 1px solid #D8D8D8;
-        padding-left: 24px;
+        padding-left: 15px;
     }
 </style>

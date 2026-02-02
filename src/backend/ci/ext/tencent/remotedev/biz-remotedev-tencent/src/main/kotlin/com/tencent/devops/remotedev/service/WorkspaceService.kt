@@ -76,6 +76,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.interfaces.ServiceStartCloudInterface
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceAgentResource
@@ -165,7 +166,8 @@ class WorkspaceService @Autowired constructor(
     private val startCloudClient: StartCloudClient,
     private val windowsGpuResourceDao: WindowsGpuResourceDao,
     private val whiteListService: WhiteListService,
-    private val whiteListDao: WhiteListDao
+    private val whiteListDao: WhiteListDao,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao
 ) {
     @Value("\${remoteDev.projectMonitorUrl:}")
     val projectMonitorUrl = ""
@@ -269,6 +271,11 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf("We're sorry but you don't have permission to modify $workspaceName property")
             )
         }
+        // 保存修改前的值用于操作记录
+        val oldDisplayName = ws.displayName
+        val oldRemark = ws.remark
+        val oldLabels = ws.labels
+
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.modifyWorkspaceProperty(
@@ -278,6 +285,50 @@ class WorkspaceService @Autowired constructor(
                 workspaceProperty = workspaceProperty
             )
         }
+        
+        // 在事务外添加操作记录
+        if (workspaceProperty.displayName != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_DISPLAY_NAME),
+                    oldDisplayName,
+                    workspaceProperty.displayName
+                )
+            )
+        }
+        
+        if (workspaceProperty.remark != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_REMARK),
+                    oldRemark,
+                    workspaceProperty.remark
+                )
+            )
+        }
+        
+        if (workspaceProperty.labels != null) {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = ws.workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SYSTEM_CHANGES,
+                actionMessage = String.format(
+                    workspaceCommon.getOpHistory(OpHistoryCopyWriting.MODIFY_LABELS),
+                    oldLabels.toString(),
+                    workspaceProperty.labels.toString()
+                )
+            )
+        }
+        
         return true
     }
 
@@ -681,7 +732,7 @@ class WorkspaceService @Autowired constructor(
                     remark = it.remark,
                     labels = it.labels,
                     createTime = it.createTime.timestamp(),
-                    imageId = detail?.imageId ?: "",
+                    imageId = cdsInfo[detail?.hostIp]?.image ?: "",
                     recordEnabled = !allWindows[it.workspaceName]?.enableRecordUser.isNullOrBlank(),
                     vmName = allWindows[it.workspaceName]?.vmName,
                     nodeIp = cdsInfo[detail?.hostIp]?.node ?: ""
@@ -694,6 +745,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceList4WeSec(
         projectId: String? = null,
         ip: String? = null,
+        envId: String? = null,
         hasDepartmentsInfo: Boolean? = null,
         hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
@@ -711,13 +763,23 @@ class WorkspaceService @Autowired constructor(
         val viewers = mutableMapOf<String, MutableList<String>>()
         val projectGameIds = mutableMapOf<String, Int>()
 
+        // 如果提供了envId，通过envId查询workspaceName
+        val actualWorkspaceName = if (!envId.isNullOrBlank()) {
+            dispatchWorkspaceDao.getWorkspaceNameByEnvId(
+                envId = envId,
+                dslContext = dslContext
+            ) ?: workspaceName
+        } else {
+            workspaceName
+        }
+
         val result = workspaceJoinDao.fetchWindowsWorkspacesSimple(
             dslContext = dslContext,
             projectId = projectId,
             sip = ip,
             businessLineName = businessLineName,
             owner = ownerName,
-            workspaceName = workspaceName,
+            workspaceName = actualWorkspaceName,
             notStatus = notStatus
         )
 
@@ -1196,14 +1258,12 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             // 优化：如果当前后台记录的用户，跟进入云桌面人不一致，提示有人在用
-            /*
             cgsStatus.userInfos?.firstOrNull()?.takeIf { it.account != userId }?.let {
                 throw ErrorCodeException(
                     errorCode = ErrorCodeEnum.WORKSPACE_LOGGED_IN.errorCode,
                     params = arrayOf(workspace.hostIp ?: workspaceName)
                 )
             }
-             */
             return startCloudWorkspaceDetail(userId, workspace)
         }
         if (envId != null) {
@@ -1424,7 +1484,8 @@ class WorkspaceService @Autowired constructor(
             cdsMesh = whiteListService.checkInCdsMeshWhiteList(workspace.projectId, workspace.workspaceName),
             cdsDomain = whiteListService.getCdsDomain(workspace.projectId, workspace.workspaceName),
             zoneConfig = zone,
-            winConfig = allConfig[workspace.winConfigId?.toLong()]
+            winConfig = allConfig[workspace.winConfigId?.toLong()],
+            enableRecord = workspace.enableRecord
         )
     }
 

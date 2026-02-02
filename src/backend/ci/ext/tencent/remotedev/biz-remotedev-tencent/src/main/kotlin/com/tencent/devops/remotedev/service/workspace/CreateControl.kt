@@ -698,8 +698,8 @@ class CreateControl @Autowired constructor(
             if (bak) {
                 // 备份windows config
                 workspaceWindowsDao.bakWindowsConfig(dslContext, copy.workspaceName, bakName)
-                // 备份分享信息
-                workspaceSharedDao.bakWorkspaceShareInfo(dslContext, copy.workspaceName, bakName)
+                // 备份并迁移分享信息
+                workspaceSharedDao.bakAndTransferWorkspaceShareInfo(dslContext, copy.workspaceName, bakName)
                 workspaceDao.bakWorkspace(
                     dslContext = dslContext,
                     workspaceName = copy.workspaceName,
@@ -782,7 +782,7 @@ class CreateControl @Autowired constructor(
         )
 
         // 如果是克隆场景，异步克隆 bksec 安全策略
-        if (copy != null) {
+        if (copy != null && !bak) {
             workspaceCommon.cloneBkSecPolicy(
                 oldWorkspaceName = copy.workspaceName,
                 newWorkspaceName = ws.workspaceName

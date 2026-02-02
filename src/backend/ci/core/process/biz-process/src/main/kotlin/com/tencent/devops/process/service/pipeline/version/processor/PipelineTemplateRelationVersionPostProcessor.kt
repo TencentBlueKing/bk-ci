@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
@@ -79,22 +80,28 @@ class PipelineTemplateRelationVersionPostProcessor @Autowired constructor(
                 pipelineId = pipelineId
             )
         )
+        // 历史原因,如果是研发商店安装的模版,T_TEMPLATE_PIPELINE中的version存储的是原模版的version
+        val templateVersion = if (templateInstanceBasicInfo!!.templateMode == TemplateType.CONSTRAINT) {
+            templateInstanceBasicInfo.templateSrcTemplateVersion!!
+        } else {
+            templateInstanceBasicInfo.templateVersion
+        }
         if (pipelineTemplateRelated == null) {
             pipelineTemplateRelatedService.createRelation(
                 userId = userId,
                 projectId = pipelineBasicInfo.projectId,
                 pipelineId = pipelineBasicInfo.pipelineId,
-                templateId = templateInstanceBasicInfo!!.templateId,
+                templateId = templateInstanceBasicInfo.templateId,
                 instanceType = templateInstanceBasicInfo.instanceType.type,
                 buildNo = pipelineModelBasicInfo.buildNo,
                 param = pipelineModelBasicInfo.param,
-                fixTemplateVersion = templateInstanceBasicInfo.templateVersion
+                fixTemplateVersion = templateVersion
             )
         } else {
             templatePipelineDao.update(
                 dslContext = transactionContext,
                 projectId = pipelineBasicInfo.projectId,
-                templateVersion = templateInstanceBasicInfo!!.templateVersion,
+                templateVersion = templateVersion,
                 versionName = templateInstanceBasicInfo.templateVersionName ?: "",
                 userId = userId,
                 instance = TemplateInstanceUpdate(

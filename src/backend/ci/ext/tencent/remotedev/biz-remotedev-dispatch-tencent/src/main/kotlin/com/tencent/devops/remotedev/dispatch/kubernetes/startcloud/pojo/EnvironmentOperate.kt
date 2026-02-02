@@ -17,12 +17,14 @@ data class EnvironmentOperate(
     val zoneId: String? = null,
     val machineType: String? = null,
     val formatDataDisk: Boolean? = null,
+    val resetDataDisk: Boolean? = null,
     val size: String? = null,
     val live: Boolean? = null,
     val imageName: String? = null,
     val tolerations: List<Toleration>? = null,
     val nodeSelector: Map<String, String>? = null,
-    val force: Boolean = false
+    val force: Boolean = false,
+    val delaySeconds: Int? = null
 ) : EnvironmentOperateInf(uid)
 
 /**

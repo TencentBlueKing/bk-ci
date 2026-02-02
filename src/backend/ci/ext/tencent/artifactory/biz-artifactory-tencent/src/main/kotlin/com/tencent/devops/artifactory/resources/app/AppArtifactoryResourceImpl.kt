@@ -201,6 +201,13 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
+        val projectManagers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+            token = tokenService.getSystemToken(),
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            group = BkAuthGroup.MANAGER
+        ).data
         val fileDetail = try {
             bkRepoService.show(userId, projectId, artifactoryType, path)
         } catch (e: Exception) {
@@ -212,47 +219,54 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                     params = arrayOf(path)
                 )
             } else {
+                logger.info("This user is not a project member, user:$userId , project:$projectId")
                 throw ErrorCodeException(
                     statusCode = 403,
-                    errorCode = GRANT_DOWNLOAD_PERMISSION
+                    errorCode = GRANT_DOWNLOAD_PERMISSION,
+                    params = arrayOf(projectManagers.let {
+                        it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
+                    }.joinToString(","))
                 )
             }
         }
         val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
+        if (artifactoryType == ArtifactoryType.PIPELINE && pipelineId.isNotBlank()) {
+            val hasViewPerm = pipelineService.hasPermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+            if (!hasViewPerm) {
+                logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+                val pipelineManagers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = projectId,
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    resourceCode = pipelineId,
+                    group = BkAuthGroup.RESOURCE_MANAGER
+                ).data
+                val notifier = if (!pipelineManagers.isNullOrEmpty()) {
+                    pipelineManagers
+                } else {
+                    projectManagers
+                }
+                logger.debug("The list of people who need to be notified is {}", notifier)
+                throw ErrorCodeException(
+                    statusCode = 403,
+                    errorCode = GRANT_PIPELINE_PERMISSION,
+                    params = arrayOf(notifier.let {
+                        it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
+                    }.joinToString(","))
+                )
+            }
+        }
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
         } else {
             null
         }
-
-        if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
-            var resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                token = tokenService.getSystemToken()!!,
-                projectCode = projectId,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = pipelineId,
-                group = BkAuthGroup.RESOURCE_MANAGER
-            ).data
-            if (resourceGroupMembers.isNullOrEmpty()) {
-                resourceGroupMembers = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
-                    token = tokenService.getSystemToken()!!,
-                    projectCode = projectId,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectId,
-                    group = BkAuthGroup.MANAGER
-                ).data
-            }
-            throw ErrorCodeException(
-                statusCode = 403,
-                errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(resourceGroupMembers.let {
-                    it?.subList(0, it.size.coerceAtMost(3)) ?: emptyList()
-                }.joinToString(","))
-            )
-        }
-
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
         return Result(

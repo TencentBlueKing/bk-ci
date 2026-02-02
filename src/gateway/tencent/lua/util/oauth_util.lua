@@ -17,85 +17,101 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 _M = {}
 
-local cjson = require("cjson")
-
 function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
-    if user_cache_value == nil then
-        --- 初始化HTTP连接
-        local httpc = http.new()
-        --- 开始连接
-        httpc:set_timeout(3000)
-        httpc:connect(config.oauth.ip, config.oauth.port)
 
-        --- 组装请求body
-        local requestBody = {
-            env_name = config.oauth.env,
-            app_code = config.oauth.app_code,
-            app_secret = config.oauth.app_secret,
-            grant_type = "authorization_code",
-            id_provider = "bk_login_ied",
-            bk_ticket = bk_ticket
-        }
-
-        --- 转换请求内容
-        local requestBodyJson = json.encode(requestBody)
-        if requestBodyJson == nil then
-            ngx.log(ngx.ERR, "failed to encode auth/token request body: ", logUtil:dump(requestBody))
-            ngx.exit(500)
-            return
-        end
-
-        --- 发送请求
-        -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
-        local url = config.oauth.url
-        local res, err = httpc:request({
-            path = url,
-            method = "POST",
-            headers = {
-                ["Host"] = config.oauth.host,
-                ["Accept"] = "application/json",
-                ["Content-Type"] = "application/json"
-            },
-            body = requestBodyJson
-        })
-        --- 判断是否出错了
-        if not res then
-            ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
+    --- 命中缓存
+    if user_cache_value then
+        local cached_result = json.decode(user_cache_value)
+        if cached_result == nil then
+            -- JSON解析失败，删除损坏的缓存，继续走正常请求流程
+            ngx.log(ngx.WARN, "failed to decode cached value, removing cache")
+            user_cache:delete(bk_ticket)
+        elseif cached_result.code == 0 then
+            return cached_result.data
+        else
+            -- 缓存的是鉴权失败结果
+            ngx.log(ngx.WARN, "cached invalid get_ticket, bk_ticket: ", bk_ticket)
             ngx.exit(401)
             return
         end
-        --- 获取所有回复
-        local responseBody = res:read_body()
-        --- 判断返回的状态码是否是200
-        if res.status ~= 200 then
-            ngx.log(ngx.ERR, "failed to request get_ticket, status: ", res.status, " , responseBody : ", responseBody)
-            ngx.exit(401)
-            return
-        end
-        --- 设置HTTP保持连接
-        httpc:set_keepalive(60000, 5)
-        --- 转换JSON的返回数据为TABLE
-        local result = json.decode(responseBody)
-        --- 判断JSON转换是否成功
-        if result == nil then
-            ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
-            ngx.exit(500)
-            return
-        end
-
-        --- 判断返回码:Q!
-        if result.code ~= 0 then
-            ngx.log(ngx.WARN, "invalid get_ticket: ", result.message, " , bk_ticket : ", bk_ticket)
-            ngx.exit(401)
-            return
-        end
-        user_cache:set(bk_ticket, responseBody, 180)
-        return result.data
-    else
-        return json.decode(user_cache_value).data
     end
+
+
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    --- 开始连接
+    httpc:set_timeout(3000)
+    httpc:connect(config.oauth.ip, config.oauth.port)
+
+    --- 组装请求body
+    local requestBody = {
+        env_name = config.oauth.env,
+        app_code = config.oauth.app_code,
+        app_secret = config.oauth.app_secret,
+        grant_type = "authorization_code",
+        id_provider = "bk_login_ied",
+        bk_ticket = bk_ticket
+    }
+
+    --- 转换请求内容
+    local requestBodyJson = json.encode(requestBody)
+    if requestBodyJson == nil then
+        ngx.log(ngx.ERR, "failed to encode auth/token request body: ", logUtil:dump(requestBody))
+        ngx.exit(500)
+        return
+    end
+
+    --- 发送请求
+    -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
+    local url = config.oauth.url
+    local res, err = httpc:request({
+        path = url,
+        method = "POST",
+        headers = {
+            ["Host"] = config.oauth.host,
+            ["Accept"] = "application/json",
+            ["Content-Type"] = "application/json"
+        },
+        body = requestBodyJson
+    })
+    --- 判断是否出错了
+    if not res then
+        ngx.log(ngx.ERR, "failed to request get_ticket: ", err)
+        ngx.exit(401)
+        return
+    end
+    --- 获取所有回复
+    local responseBody = res:read_body()
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request get_ticket, status: ", res.status, " , responseBody : ", responseBody)
+        ngx.exit(401)
+        return
+    end
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+    --- 判断JSON转换是否成功
+    if result == nil then
+        ngx.log(ngx.ERR, "failed to parse get_ticket response：", responseBody)
+        ngx.exit(500)
+        return
+    end
+
+    --- 缓存结果（成功和失败都缓存）
+    user_cache:set(bk_ticket, responseBody, 180)
+
+    --- 判断返回码
+    if result.code ~= 0 then
+        ngx.log(ngx.WARN, "invalid get_ticket: ", result.message, " , bk_ticket : ", bk_ticket)
+        ngx.exit(401)
+        return
+    end
+
+    return result.data
 end
 
 function _M:get_prebuild_ticket(bk_ticket)
@@ -200,12 +216,12 @@ function _M:get_prebuild_ticket(bk_ticket)
                 return
             end
 
-            red:set(red_key, cjson.encode(result.data))
+            red:set(red_key, json.encode(result.data))
             red:expire(red_key, 179 * 24 * 60 * 60) -- 缓存29天
 
             prebuild_ticket = result.data
         else
-            prebuild_ticket = cjson.decode(redRes)
+            prebuild_ticket = json.decode(redRes)
         end
 
         --- 将redis连接放回pool中

@@ -216,6 +216,7 @@
                 }
             },
             async freshList () {
+                if (!this.parsedUrl) return
                 try {
                     this.isLoading = true
                     const res = await this.$ajax.get(this.parsedUrl)

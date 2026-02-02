@@ -198,6 +198,22 @@ class PipelineTemplateResourceDao {
         }
     }
 
+    /**
+     * 统计模板版本数量
+     */
+    fun countVersions(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): Int {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         commonCondition: PipelineTemplateResourceCommonCondition
@@ -220,6 +236,21 @@ class PipelineTemplateResourceDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(VERSION.eq(version))
+                .fetchOne()?.convert()
+        }
+    }
+
+    fun getBySrcTemplateVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String,
+        srcTemplateVersion: Long
+    ): PipelineTemplateResource? {
+        return with(TPipelineTemplateResourceVersion.T_PIPELINE_TEMPLATE_RESOURCE_VERSION) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
                 .fetchOne()?.convert()
         }
     }
@@ -253,6 +284,14 @@ class PipelineTemplateResourceDao {
             ).from(this)
                 .where(buildQueryCondition(commonCondition))
                 .orderBy(SORT_WEIGHT.desc(), RELEASE_TIME.desc(), NUMBER.desc())
+                .let {
+                    if (commonCondition.page != null && commonCondition.pageSize != null) {
+                        it.offset((commonCondition.page!! - 1) * commonCondition.pageSize!!)
+                            .limit(commonCondition.pageSize)
+                    } else {
+                        it
+                    }
+                }
                 .fetch()
                 .map {
                     PipelineTemplateVersionSimple(

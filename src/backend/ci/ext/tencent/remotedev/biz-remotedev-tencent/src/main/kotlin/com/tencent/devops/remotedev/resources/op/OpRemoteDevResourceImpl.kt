@@ -86,11 +86,12 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = TencentActionId.CGS_DELETE)
-    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+    override fun deleteWorkspace(userId: String, workspaceName: String, delaySeconds: Int?): Result<Boolean> {
         return Result(
             deleteControl.deleteWorkspace4OP(
                 userId = userId,
-                workspaceName = workspaceName
+                workspaceName = workspaceName,
+                delaySeconds = delaySeconds
             )
         )
     }
@@ -98,9 +99,10 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     @AuditEntry(actionId = TencentActionId.CGS_DELETE)
     override fun batchDeleteWorkspace(
         userId: String,
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        delaySeconds: Int?
     ): Result<Map<String, Boolean>> {
-        return Result(deleteControl.batchDeleteWindowsWorkspace4OP(userId, workspaceNames))
+        return Result(deleteControl.batchDeleteWindowsWorkspace4OP(userId, workspaceNames, delaySeconds))
     }
 
     @AuditEntry(actionId = TencentActionId.CGS_STOP)

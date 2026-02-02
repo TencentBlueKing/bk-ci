@@ -47,7 +47,7 @@ interface AppExperiencePermissionResource {
         @Parameter(description = "制品类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "制品类型", required = true)
+        @Parameter(description = "制品路径", required = true)
         @QueryParam("artifactoryPath")
         artifactoryPath: String,
     ): Result<AuthApplyRedirectInfoVo?>

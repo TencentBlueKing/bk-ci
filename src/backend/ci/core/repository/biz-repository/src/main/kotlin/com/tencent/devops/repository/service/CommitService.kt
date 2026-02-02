@@ -69,7 +69,7 @@ class CommitService @Autowired constructor(
         )?.map { it.aliasName.toString() to it }?.toMap() ?: mapOf()
 
         return commits.map {
-            val repoUrl = idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
+            val repoUrl = it.url ?: idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
             CommitData(
                 type = it.type,
                 pipelineId = it.pipelineId,
@@ -99,7 +99,7 @@ class CommitService @Autowired constructor(
             CommitResponse(
                 name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoUrl ?: "unknown repo"),
                 elementId = elementId,
-                records = a.value.filter { it.commit.isNotBlank() },
+                records = a.value.filter { it.commit.isNotBlank() }.distinctBy { it.commit },
                 scmType = scmType
             )
         } ?: listOf()

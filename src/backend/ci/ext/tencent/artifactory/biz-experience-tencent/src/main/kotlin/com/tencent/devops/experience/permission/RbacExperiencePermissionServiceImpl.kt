@@ -270,8 +270,15 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         artifactoryPath: String
     ): AuthApplyRedirectInfoVo? {
         return if (artifactoryType == ArtifactoryType.PIPELINE) {
+            val manager = client.get(ServiceResourceMemberResource::class).getResourceGroupMembers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                resourceType = ResourceTypeId.PROJECT,
+                resourceCode = projectId,
+                group = BkAuthGroup.MANAGER
+            ).data?.firstOrNull() ?: return null
             val fileInfo = bkRepoClient.getFileDetail(
-                userId = user,
+                userId = manager,
                 projectId = projectId,
                 repoName = artifactoryType.toBkrepoName(),
                 path = artifactoryPath

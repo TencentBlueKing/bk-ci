@@ -469,7 +469,8 @@ class NodeService @Autowired constructor(
             dslContext, nodeEnvs.map { it.envId }.toSet()
         ).associateBy { it.envId }
         val nodeEnvsGroups = nodeEnvs.groupBy({ it.nodeId }, { envInfos[it.envId]?.envName ?: "" })
-
+        val envNodeRecordList = envNodeDao.list(dslContext, projectId, envInfos.values.map { it.envId })
+        val nodeIdMaps = envNodeRecordList.associate { it.nodeId to it.enableNode }
         return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
@@ -525,6 +526,7 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
                 tags = tagMaps[it.nodeId],
+                envEnableNode = nodeIdMaps[it.nodeId] ?: true,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
@@ -644,6 +646,7 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
+                envEnableNode = null,
                 createWorkspaceId = thirdPartyAgent?.createWorkspaceName
             )
         }
@@ -702,6 +705,7 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
+                envEnableNode = null,
                 createWorkspaceId = null
             )
         }
@@ -1038,6 +1042,7 @@ class NodeService @Autowired constructor(
                 taskId = null,
                 osType = it.osType,
                 serverId = it.serverId,
+                envEnableNode = null,
                 createWorkspaceId = null
             )
         }
