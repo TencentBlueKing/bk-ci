@@ -332,7 +332,7 @@ class PipelineBuildService(
         // 流水线类型
         pipelineParamMap[CI_CATEGORY] = BuildParameters(
             key = PROJECT_NAME_CHINESE,
-            value = if (channelCode.name == "CREATIVE_STREAM") { // TODO: 改成常量
+            value = if (channelCode == ChannelCode.CREATIVE_STREAM) {
                 PipelineCategory.CREATIVE_STREAM
             } else {
                 PipelineCategory.PIPELINE

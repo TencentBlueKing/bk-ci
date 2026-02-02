@@ -613,7 +613,7 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = triggerUser ?: startUser,
                 trigger = if (trigger == StartType.TRIGGER_EVENT.name) { // 通用事件触发需根据事件类型匹配
                     triggerEventInfo[triggerEventType] ?: ""
-                } else {// 基础触发
+                } else { // 基础触发
                     StartType.toReadableString(
                         trigger,
                         channelCode,

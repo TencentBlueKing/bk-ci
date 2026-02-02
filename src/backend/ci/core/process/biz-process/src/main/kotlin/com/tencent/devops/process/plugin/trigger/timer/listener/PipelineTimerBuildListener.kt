@@ -126,6 +126,7 @@ class PipelineTimerBuildListener @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun timerTrigger(
         event: PipelineTimerBuildEvent,
         params: Map<String, String> = emptyMap(),

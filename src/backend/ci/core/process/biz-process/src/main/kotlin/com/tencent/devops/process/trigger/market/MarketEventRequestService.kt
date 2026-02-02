@@ -10,6 +10,8 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -84,7 +86,11 @@ class MarketEventRequestService constructor(
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 // 2. 使用公共方法处理事件分发
-                handleTriggerEvent(triggerEvent, null)
+                handleTriggerEvent(
+                    triggerEvent = triggerEvent,
+                    envList = envList,
+                    pipelineId = null
+                )
             }
         }
     }
@@ -93,8 +99,15 @@ class MarketEventRequestService constructor(
         projectId: String,
         workspaceName: String,
         userId: String
-    ): List<Any>? {
-        val envList = listOf<Any>()
+    ): List<EnvData> {
+        val envList = client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
+            projectId = projectId,
+            workspaceName = workspaceName,
+            userId = userId
+        ).data ?: run {
+            logger.error("get env list failed|$projectId|$workspaceName")
+            return listOf()
+        }
         return envList
     }
 
@@ -104,7 +117,7 @@ class MarketEventRequestService constructor(
      */
     fun handleTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
-        envList: List<Any>? = null,
+        envList: List<EnvData>? = null,
         pipelineId: String? = null
     ) {
         // 1. 从triggerEvent中提取事件数据
@@ -145,16 +158,16 @@ class MarketEventRequestService constructor(
                 PipelineEventSubscriber(
                     pipelineId = it,
                     projectId = projectId,
-                    channelCode = ChannelCode.BS // TODO: 改成CREATIVE_STREAM
+                    channelCode = ChannelCode.CREATIVE_STREAM
                 )
             )
-        }?: pipelineEventSubscriptionDao.listEventSubscriber(
+        } ?: pipelineEventSubscriptionDao.listEventSubscriber(
             dslContext = dslContext,
             eventType = eventType,
             eventSource = triggerEvent.eventSource ?: "",
             eventCode = triggerEvent.eventType
         )
-        
+
         // 4. 分发CdsWebhookTriggerEvent
         triggerEnvList.forEach { env ->
             run {

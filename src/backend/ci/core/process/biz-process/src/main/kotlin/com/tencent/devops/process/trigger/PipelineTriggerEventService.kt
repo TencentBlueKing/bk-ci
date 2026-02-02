@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -436,7 +437,7 @@ class PipelineTriggerEventService @Autowired constructor(
         val requestId = MDC.get(TraceTag.BIZID)
         val replayEventId = getEventId()
         // 代码库事件回放需校验[源webhook数据]是否存
-        if(triggerType.toScmType() != null) {
+        if (triggerType.toScmType() != null) {
             val webhookRequest = client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
                 requestId = triggerEvent.requestId
             ).data ?: throw ErrorCodeException(
@@ -521,9 +522,8 @@ class PipelineTriggerEventService @Autowired constructor(
         scmType: ScmType?,
         channelCode: String?
     ): List<IdValue> {
-        return when(channelCode) {
-            // TODO: 改成常量
-            "CREATIVE_STREAM" -> {
+        return when (channelCode) {
+            ChannelCode.CREATIVE_STREAM.name -> {
                 client.get(ServiceStoreComponentResource::class).getComponentBaseInfoByCodes(
                     storeType = StoreTypeEnum.TRIGGER_EVENT,
                     storeCodes = null
