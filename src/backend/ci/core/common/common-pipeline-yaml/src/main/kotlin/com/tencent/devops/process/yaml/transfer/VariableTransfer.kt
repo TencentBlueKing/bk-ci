@@ -188,7 +188,9 @@ class VariableTransfer {
                 },
                 readonly = if (const == true) null else it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
+                asInstanceInput = if (const != true && it.required) it.asInstanceInput.nullIfDefault(true) else null,
                 const = const,
+                sensitive = it.sensitive,
                 props = if (props?.empty() == false) props else null,
                 ifCondition = it.displayCondition?.ifEmpty { null }
             )
@@ -205,6 +207,7 @@ class VariableTransfer {
             RecommendedVersion(
                 enabled = true,
                 allowModifyAtStartup = it.required,
+                asInstanceInput = it.asInstanceInput,
                 buildNo = RecommendedVersion.BuildNo(
                     it.buildNo, RecommendedVersion.Strategy.parse(it.buildNoType).alis
                 )
@@ -267,11 +270,12 @@ class VariableTransfer {
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
             check(key, variable)
+            val allowModifyAtStartup = variable.allowModifyAtStartup ?: true
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.props?.label,
-                    required = variable.allowModifyAtStartup ?: true,
+                    required = allowModifyAtStartup,
                     constant = variable.const ?: false,
                     type = type,
                     defaultValue = when {
@@ -306,7 +310,11 @@ class VariableTransfer {
                     },
                     valueNotEmpty = variable.props?.required ?: false,
                     payload = variable.props?.payload,
-                    displayCondition = variable.ifCondition ?: emptyMap()
+                    displayCondition = variable.ifCondition ?: emptyMap(),
+                    asInstanceInput = if (allowModifyAtStartup) {
+                        variable.asInstanceInput ?: true
+                    } else null,
+                    sensitive = variable.sensitive ?: false
                 )
             )
         }

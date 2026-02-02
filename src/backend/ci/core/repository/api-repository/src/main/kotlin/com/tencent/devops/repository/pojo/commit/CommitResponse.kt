@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.pojo.commit
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "提交返回模型")
@@ -35,6 +36,8 @@ data class CommitResponse(
     val name: String,
     @get:Schema(title = "插件ID")
     val elementId: String,
+    @get:Schema(title = "代码库类型")
+    val scmType: ScmType,
     @get:Schema(title = "记录")
     val records: List<CommitData>
 )

@@ -106,4 +106,15 @@ interface PermissionResourceMemberService {
         members: List<String>? = emptyList(),
         departments: List<String>? = emptyList()
     ): Boolean
+
+    /**
+     * 获取用户在项目下加入的用户组列表（未过期）
+     * @param projectCode 项目Code
+     * @param memberId 用户ID
+     * @return 用户组ID列表
+     */
+    fun getMemberGroupsInProject(
+        projectCode: String,
+        memberId: String
+    ): List<Int>
 }

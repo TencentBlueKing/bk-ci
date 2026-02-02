@@ -27,11 +27,18 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import io.swagger.v3.oas.annotations.media.Schema
+
 data class BuildNo(
     var buildNo: Int, // 用于保存编排中定义的构建号初始值
     val buildNoType: BuildNoType,
     var required: Boolean? = false,
-    var currentBuildNo: Int? = null // 用于替换当前的最新值，如果是创建流水线则不传值
+    var currentBuildNo: Int? = null, // 用于替换当前的最新值，如果是创建流水线则不传值
+    @get:Schema(
+        title = "在新增实例、以及新增变量时作用，控制实例化页面「实例入参」按钮, 当required:true时,值才生效",
+        required = false
+    )
+    var asInstanceInput: Boolean? = null
 )
 
 enum class BuildNoType {

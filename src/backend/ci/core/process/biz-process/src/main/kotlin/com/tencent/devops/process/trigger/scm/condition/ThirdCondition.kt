@@ -2,19 +2,22 @@ package com.tencent.devops.process.trigger.scm.condition
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SOURCE_WEBHOOK
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
-import com.tencent.devops.scm.api.pojo.webhook.Webhook
+import com.tencent.devops.repository.api.ServiceRepositoryWebhookResource
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 /**
  * 关键字过滤条件
  */
 class ThirdCondition(
-    private val webhook: Webhook,
+    private val client: Client,
     private val gitScmService: GitScmService,
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry?
 ) : WebhookCondition {
@@ -22,14 +25,21 @@ class ThirdCondition(
         if (context.webhookParams.enableThirdFilter != true) {
             return true
         }
-        val sourceWebhook = (webhook.outputs()[BK_REPO_SOURCE_WEBHOOK] as? String)?.takeIf {
-            it.isNotBlank()
-        } ?: return true
+        val requestId = MDC.get(TraceTag.BIZID)
+        // 原始的请求body,如果请求体不存在,则应该直接失败
+        val requestBody = requestId?.let {
+            client.get(ServiceRepositoryWebhookResource::class).getWebhookRequest(
+                requestId = it
+            ).data?.requestBody
+        } ?: run {
+            logger.info("request body not found|${context.projectId}|${context.pipelineId}|$requestId")
+            return false
+        }
         with(context.webhookParams) {
             return ThirdFilter(
                 projectId = context.projectId,
                 pipelineId = context.pipelineId,
-                event = JsonUtil.to(sourceWebhook, GitEvent::class.java),
+                event = JsonUtil.to(requestBody, GitEvent::class.java),
                 changeFiles = context.factParam.changes.toSet(),
                 enableThirdFilter = enableThirdFilter,
                 thirdUrl = thirdUrl,
@@ -39,5 +49,9 @@ class ThirdCondition(
                 eventType = context.factParam.eventType
             ).doFilter(context.response)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ThirdCondition::class.java)
     }
 }
