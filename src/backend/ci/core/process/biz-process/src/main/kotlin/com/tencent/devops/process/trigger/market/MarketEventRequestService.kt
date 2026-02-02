@@ -13,6 +13,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -35,7 +36,8 @@ class MarketEventRequestService constructor(
     private val dslContext: DSLContext,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val sampleEventDispatcher: SampleEventDispatcher,
-    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao
+    private val pipelineEventSubscriptionDao: PipelineEventSubscriptionDao,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) {
     fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
         with(event) {
@@ -115,11 +117,12 @@ class MarketEventRequestService constructor(
         }
         
         // 3. 获取事件订阅者
+        val projectId = triggerEvent.projectId ?: ""
         val subscribers = pipelineId?.let {
             listOf(
                 PipelineEventSubscriber(
                     pipelineId = it,
-                    projectId = triggerEvent.projectId ?: "",
+                    projectId = projectId,
                     channelCode = ChannelCode.BS // TODO: 改成CREATIVE_STREAM
                 )
             )
@@ -131,11 +134,23 @@ class MarketEventRequestService constructor(
         )
         
         // 4. 分发CdsWebhookTriggerEvent
-        subscribers.forEach { subscriber ->
+        subscribers.forEach subscriber@{ subscriber ->
+            val agentHashId = ""
+            // 获取权限代持人
+            val pipelineOAuthUser = getPipelineOAuthUser(
+                projectId = projectId,
+                pipelineId = subscriber.pipelineId
+            ) ?: run { return@subscriber }
+            // 获取云桌面信息
+            val cdsName = getWorkspaceInfo(
+                projectId = projectId,
+                agentHashId = agentHashId,
+                userId = pipelineOAuthUser
+            )?.first ?: ""
             sampleEventDispatcher.dispatch(
                 CdsWebhookTriggerEvent(
                     userId = userId,
-                    projectId = triggerEvent.projectId ?: "",
+                    projectId = projectId,
                     pipelineId = subscriber.pipelineId,
                     workspaceName = workspaceName,
                     cdsIp = cdsIp,
@@ -143,7 +158,8 @@ class MarketEventRequestService constructor(
                     eventId = triggerEvent.eventId ?: 0L,
                     envHashId = triggerEvent.eventSource ?: "",
                     requestTime = System.currentTimeMillis(),
-                    agentHashId = ""
+                    agentHashId = agentHashId,
+                    cdsName = cdsName
                 )
             )
         }
@@ -152,6 +168,31 @@ class MarketEventRequestService constructor(
     fun handleGenericWebhookRequestEvent(event: GenericWebhookRequestEvent) {
         // 1. 查询eventCode对应的提供者信息
         // 2. 提取事件源和事件类型
+    }
+
+    /**
+     * 获取云桌面信息
+     */
+    private fun getWorkspaceInfo(
+        projectId: String,
+        agentHashId: String,
+        userId: String
+    ): Pair<String, String>? {
+        // TODO 完善获取云桌面信息
+        return null
+    }
+
+    /**
+     * 获取云桌面信息
+     */
+    private fun getPipelineOAuthUser(
+        projectId: String,
+        pipelineId: String
+    ) = try {
+        pipelineRepositoryService.getPipelineOauthUser(projectId, pipelineId)
+    } catch (ignored: Exception) {
+        logger.warn("get pipeline oauth user failed", ignored)
+        null
     }
 
     companion object {

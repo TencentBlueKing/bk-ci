@@ -26,5 +26,7 @@ data class CdsWebhookTriggerEvent(
     @get:Schema(title = "事件请求时间", required = true)
     val requestTime: Long,
     @get:Schema(title = "agentHashId", required = true)
-    val agentHashId: String
+    val agentHashId: String,
+    @get:Schema(title = "云桌面名称", required = true)
+    val cdsName: String
 ) : IEvent()

@@ -44,6 +44,9 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
@@ -130,9 +133,9 @@ class PipelineTimerBuildListener @Autowired constructor(
     ) {
         with(event) {
             try {
-                when (channelCode) {
+                when (channelCode.name) {
                     // 此处需要修改成CREATIVE_STREAM
-                    ChannelCode.BS -> {
+                    "CREATIVE_STREAM" -> {
                         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
                             pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
                                 logger.warn("[$projectId|$pipelineId]|pipeline is null, try clean timer record[$it]")
@@ -168,11 +171,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                             } else {
                                 // 对创作环境下选中的创作节点，逐一启动
                                 creativeTaskList.forEach {
+                                    val creativeStreamParams = creativeStreamParams(
+                                        projectId = projectId,
+                                        agentHashId = it,
+                                        userId = userId
+                                    )
                                     timerTriggerPipeline(
                                         userId = userId,
                                         projectId = projectId,
                                         pipelineId = pipelineId,
-                                        params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
+                                        params = params.plus(creativeStreamParams),
                                         channelCode = channelCode,
                                         taskId = taskId
                                     )
@@ -182,11 +190,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                             // 对创作环境下所有的创作节点，逐一启动
                             val workspaceName = ""
                             getEnvNodeList(projectId, workspaceName).forEach {
+                                val creativeStreamParams = creativeStreamParams(
+                                    projectId = projectId,
+                                    agentHashId = it,
+                                    userId = userId
+                                )
                                 timerTriggerPipeline(
                                     userId = userId,
                                     projectId = projectId,
                                     pipelineId = pipelineId,
-                                    params = params.plus("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to it),
+                                    params = params.plus(creativeStreamParams),
                                     channelCode = channelCode,
                                     taskId = taskId
                                 )
@@ -442,5 +455,37 @@ class PipelineTimerBuildListener @Autowired constructor(
 //            workspaceName = workspaceName
 //        )
         return listOf()
+    }
+
+    /**
+     * 获取云桌面信息
+     */
+    private fun getWorkspaceInfo(
+        projectId: String,
+        agentHashId: String,
+        userId: String
+    ): Pair<String, String>? {
+        // TODO 完善获取云桌面信息
+        return null
+    }
+
+    private fun creativeStreamParams(
+        projectId: String,
+        agentHashId: String,
+        userId: String
+    ): Map<String, String> {
+        val cdsName = getWorkspaceInfo(
+            projectId = projectId,
+            agentHashId = agentHashId,
+            userId = userId
+        )?.first ?: ""
+        val cdsId = ""
+        val cdsIp = ""
+        return mapOf(
+            "BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to agentHashId,
+            CI_NODE_ID to cdsId,
+            CI_NODE_NAME to cdsName,
+            CI_NODE_IP to cdsIp
+        )
     }
 }

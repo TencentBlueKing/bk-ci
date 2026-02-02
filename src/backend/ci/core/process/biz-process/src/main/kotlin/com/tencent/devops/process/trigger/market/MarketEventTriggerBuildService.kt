@@ -56,6 +56,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                         PIPELINE_TRIGGER_EVENT_TYPE to eventCode, // 记录事件标识，后续构建历史页面需根据事件标识过滤构建任务
                         CI_NODE_ID to workspaceName, // 云桌面ID
                         CI_NODE_IP to cdsIp, // 云桌面IP
+                        CI_NODE_NAME to cdsName // 云桌面名称
                     )
                 )
             )
