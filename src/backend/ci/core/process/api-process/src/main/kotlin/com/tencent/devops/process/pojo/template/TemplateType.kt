@@ -29,6 +29,8 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 
 /**
  * deng
@@ -48,6 +50,14 @@ enum class TemplateType(
                 TemplateType.CONSTRAINT.name -> TemplateType.CONSTRAINT.value
                 TemplateType.PUBLIC.name -> TemplateType.PUBLIC.value
                 else -> TemplateType.CUSTOMIZE.value
+            }
+        }
+
+        fun getDisplayName(source: TemplateType): String {
+            return when (source) {
+                CONSTRAINT -> I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_MARKET_PIPELINE_TEMPLATE_NAME)
+                PUBLIC -> I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_PUBLIC_PIPELINE_TEMPLATE_NAME)
+                else -> I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_CUSTOM_PIPELINE_TEMPLATE_NAME)
             }
         }
     }

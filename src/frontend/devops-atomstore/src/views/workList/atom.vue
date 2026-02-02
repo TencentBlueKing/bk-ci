@@ -22,8 +22,6 @@
             <bk-table
                 style="margin-top: 15px;"
                 :empty-text="$t('store.暂时没有插件')"
-                :outer-border="false"
-                :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 :data="renderList"
                 :pagination="pagination"
@@ -1031,6 +1029,11 @@
 </script>
 
 <style lang="scss" scoped>
+    .g-scroll-pagination-table {
+        .bk-table {
+            height: auto;
+        }
+    }
     .info-circle-icon {
         display: flex;
         align-items: center;

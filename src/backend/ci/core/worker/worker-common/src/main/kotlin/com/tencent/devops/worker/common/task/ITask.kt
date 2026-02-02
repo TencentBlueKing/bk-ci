@@ -49,6 +49,8 @@ abstract class ITask {
 
     private val monitorData = HashMap<String, Any>()
 
+    private val sensitiveKeys = mutableSetOf<String>()
+
     private var platformCode: String? = null
 
     private var platformErrorCode: Int? = null
@@ -156,12 +158,20 @@ abstract class ITask {
         return environment
     }
 
-    protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
+    fun addMonitorData(monitorDataMap: Map<String, Any>) {
         monitorData.putAll(monitorDataMap)
     }
 
     fun getMonitorData(): Map<String, Any> {
         return monitorData
+    }
+
+    protected fun addSensitiveKey(key: String) {
+        sensitiveKeys.add(key)
+    }
+
+    fun getSensitiveKeys(): Set<String> {
+        return sensitiveKeys
     }
 
     protected fun addPlatformCode(taskPlatformCode: String) {

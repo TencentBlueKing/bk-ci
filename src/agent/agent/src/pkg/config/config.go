@@ -39,6 +39,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/jaypipes/ghw"
 	"github.com/pkg/errors"
 
 	languageUtil "golang.org/x/text/language"
@@ -116,6 +117,10 @@ type AgentEnv struct {
 	WinTask string
 	// OsVersion 系统版本信息
 	OsVersion string
+	// cpu 型号信息
+	CPUProductInfo string
+	// gpu 型号信息
+	GPUProductInfo string
 }
 
 func (e *AgentEnv) GetAgentIp() string {
@@ -169,6 +174,9 @@ func LoadAgentEnv() {
 	} else {
 		GAgentEnv.OsVersion = osVersion
 	}
+	cpuInfo, gpuInfo := GetCpuAndGpuInfo()
+	GAgentEnv.CPUProductInfo = cpuInfo
+	GAgentEnv.GPUProductInfo = gpuInfo
 }
 
 // LoadAgentIp 忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP
@@ -462,6 +470,34 @@ func GetGateWay() string {
 	} else {
 		return "http://" + GAgentConfig.Gateway
 	}
+}
+
+func GetCpuAndGpuInfo() (string, string) {
+	cpu, err := ghw.CPU()
+	cpuInfoBuf := bytes.Buffer{}
+	if err != nil {
+		logs.WithError(err).Error("get cpu info error")
+	} else {
+		for _, c := range cpu.Processors {
+			cpuInfoBuf.WriteString(c.Model)
+			cpuInfoBuf.WriteString(";")
+		}
+	}
+	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
+
+	gpuInfoBuf := bytes.Buffer{}
+	gpu, err := ghw.GPU()
+	if err != nil {
+		logs.WithError(err).Error("get gpu info error")
+	} else {
+		for _, card := range gpu.GraphicsCards {
+			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
+			gpuInfoBuf.WriteString(";")
+		}
+	}
+	gpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
+	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
+	return cpuInfo, gpuInfo
 }
 
 // initCert 初始化证书

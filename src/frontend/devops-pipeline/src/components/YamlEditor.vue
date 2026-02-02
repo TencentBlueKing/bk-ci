@@ -124,6 +124,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
         async mounted () {
             this.isLoading = true
             this.monaco = await MonacoEditor.instance()
+            const oldModel = this.monaco.editor.getModel(this.monaco.Uri.parse(this.yamlUri))
+            if (oldModel) {
+                oldModel.dispose()
+            }
             this.editor = this.monaco.editor.create(this.$refs.box, {
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
                 automaticLayout: true,
@@ -163,9 +167,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
             })
         },
         beforeDestroy () {
-        this.editor?.getModel()?.dispose?.()
-        this.codeLens?.dispose?.()
-        this.editor?.dispose?.()
+            this.editor?.getModel()?.dispose?.()
+            this.codeLens?.dispose?.()
+            this.editor?.dispose?.()
         },
         methods: {
             toggleFullScreen () {
@@ -194,7 +198,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
                 this.$emit('input', value, this.editor)
             },
             format () {
-            this.editor?.getAction('editor.action.formatDocument').run()
+             this.editor?.getAction('editor.action.formatDocument').run()
             },
             highlightBlocks (blocks) {
                 if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {

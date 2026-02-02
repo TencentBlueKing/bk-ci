@@ -36,6 +36,7 @@ import java.time.LocalDateTime
 
 @Repository
 class AgentPipelineRefDao {
+    @Suppress("UNUSED")
     fun list(dslContext: DSLContext, projectId: String, pipelineId: String): List<TAgentPipelineRefRecord> {
         with(TAgentPipelineRef.T_AGENT_PIPELINE_REF) {
             return dslContext.selectFrom(this)
@@ -54,6 +55,16 @@ class AgentPipelineRefDao {
         }
     }
 
+    fun deletePipelineRef(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TAgentPipelineRef.T_AGENT_PIPELINE_REF) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    @Suppress("UNUSED")
     fun batchDelete(dslContext: DSLContext, ids: List<Long>) {
         if (ids.isEmpty()) {
             return
