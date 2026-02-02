@@ -1,5 +1,6 @@
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.environment.model.NodeTags
 import com.tencent.devops.environment.pojo.NodeTag
 import com.tencent.devops.environment.pojo.NodeTagCanUpdateType
 import com.tencent.devops.environment.pojo.NodeTagValue
@@ -340,7 +341,7 @@ class NodeTagDao {
         dslContext: DSLContext,
         projectId: String,
         nodeTypeList: List<String>?
-    ): List<TNodeTagsRecord> {
+    ): List<NodeTags> {
         with(TNodeTags.T_NODE_TAGS) {
             val dsl = dslContext.select().from(this)
             if (!nodeTypeList.isNullOrEmpty()) {
@@ -348,7 +349,7 @@ class NodeTagDao {
                     .and(TNode.T_NODE.NODE_TYPE.`in`(nodeTypeList))
             }
             return dsl.where(PROJECT_ID.eq(projectId)).fetch().map {
-                TNodeTagsRecord(
+                NodeTags(
                     it[NODE_ID],
                     it[TAG_VALUE_ID],
                     it[TAG_KEY_ID],
