@@ -115,6 +115,7 @@ class MarketEventRequestService constructor(
      * 处理PipelineTriggerEvent并分发CdsWebhookTriggerEvent
      * 用于处理研发商店事件的公共逻辑
      */
+    @SuppressWarnings("NestedBlockDepth")
     fun handleTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
         envList: List<EnvData>? = null,
