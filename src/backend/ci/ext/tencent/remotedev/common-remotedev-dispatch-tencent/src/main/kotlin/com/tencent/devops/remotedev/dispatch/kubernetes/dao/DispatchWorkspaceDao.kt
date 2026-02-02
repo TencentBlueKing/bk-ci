@@ -118,7 +118,8 @@ class DispatchWorkspaceDao {
             return dslContext.select(WORKSPACE_NAME)
                 .from(this)
                 .where(ENVIRONMENT_UID.eq(envId))
-                .fetchAny()?.value1()
+                .orderBy(ID.desc()).limit(1)
+                .fetchOne()?.value1()
         }
     }
 }
