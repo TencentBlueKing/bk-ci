@@ -1227,7 +1227,10 @@ class PipelineTemplateInstanceService @Autowired constructor(
             channelCode = channelCode,
             checkPermission = true,
             checkTemplate = false,
-            description = "回滚自模板实例化任务，基于版本[$versionName]"
+            description = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION,
+                params = arrayOf(versionName)
+            )
         )
 
         // 回滚模板版本关系
