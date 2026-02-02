@@ -501,7 +501,7 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 "referVersion: $referVersion, groupName: $groupName, version: $version")
 
         try {
-            // 先查询变量组引用关系，确认该资源确实引用了该变量组
+            // 先查询变量组引用关系，获取变量组版本信息
             val groupReferInfo = publicVarGroupReferInfoDao.getVarGroupReferInfo(
                 dslContext = dslContext,
                 projectId = projectId,
@@ -511,37 +511,35 @@ class PublicVarGroupReferQueryService @Autowired constructor(
                 groupName = groupName
             )
 
-            if (groupReferInfo == null) {
-                logger.info("No var group refer found for referId: $referId, groupName: $groupName")
-                return emptyList()
-            }
-
             // 查询变量组中的所有变量详细信息
             val groupVars = publicVarDao.listVarByGroupName(
                 dslContext = dslContext,
                 projectId = projectId,
                 groupName = groupName,
-                version = groupReferInfo.version
+                version = groupReferInfo?.version ?: -1
             )
 
             if (groupVars.isEmpty()) {
                 return emptyList()
             }
 
-            // 从PublicVarReferInfoDao查询当前资源实际引用的变量，统计每个变量的引用次数
-            // 当 version 为 null 时，使用 -1 查询（表示不限定变量组版本）
-            val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
-                dslContext = dslContext,
-                projectId = projectId,
-                referId = referId,
-                referType = referType,
-                referVersion = referVersion,
-                groupName = groupName,
-                version = version ?: -1
-            )
-            val referCountMap = varReferInfos
-                .groupBy { it.varName }
-                .mapValues { it.value.size }
+            // groupReferInfo为空时不查询引用数，直接返回变量列表
+            val referCountMap = if (groupReferInfo == null) {
+                emptyMap()
+            } else {
+                // 从PublicVarReferInfoDao查询当前资源实际引用的变量，统计每个变量的引用次数
+                val varReferInfos = publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    referId = referId,
+                    referType = referType,
+                    referVersion = referVersion,
+                    groupName = groupName,
+                    version = version ?: -1
+                )
+                varReferInfos.groupBy { it.varName }.mapValues { it.value.size }
+            }
+
             return publicVarService.convertVarPOsToPublicVarDOs(
                 varPOs = groupVars,
                 referCountMap = referCountMap,
