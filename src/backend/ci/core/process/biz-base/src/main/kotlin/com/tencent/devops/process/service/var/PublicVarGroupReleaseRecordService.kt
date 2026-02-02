@@ -70,7 +70,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 批量添加公共变量组发布记录
-     * 
      * @param dslContext 数据库上下文
      * @param publicVarGroupReleaseDTO 发布记录DTO
      */
@@ -81,7 +80,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         val userId = publicVarGroupReleaseDTO.userId
         val oldVarPOs = publicVarGroupReleaseDTO.oldVarPOs
         val newVarPOs = publicVarGroupReleaseDTO.newVarPOs
-        
+
         // 验证并提取公共参数
         val (projectId, groupName) = extractCommonParams(oldVarPOs, newVarPOs)
         val oldVersion = oldVarPOs.firstOrNull()?.version
@@ -100,7 +99,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             groupName = groupName,
             version = newVersion
         )
-        
+
         // 生成变更记录
         val releaseRecords = generateVarChangeRecords(
             VarChangeRecordRequest(
@@ -113,20 +112,20 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 versionDesc = publicVarGroupReleaseDTO.versionDesc
             )
         )
-        
+
         // 如果没有变更记录，直接返回
         if (releaseRecords.isEmpty()) {
             logger.info("No changes detected for group: $groupName, version: ${publicVarGroupReleaseDTO.version}")
             return
         }
-        
+
         // 批量生成ID并转换为PO
         val records = convertReleaseRecordsToPO(
             releaseRecords = releaseRecords,
             projectId = projectId,
             userId = userId
         )
-        
+
         // 批量插入数据库
         pipelinePublicVarGroupReleaseRecordDao.batchInsert(dslContext, records)
     }
@@ -150,14 +149,14 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("projectId")
             )
-        
+
         val groupName = newVarPOs.firstOrNull()?.groupName
             ?: oldVarPOs.firstOrNull()?.groupName
             ?: throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
                 params = arrayOf("groupName")
             )
-        
+
         return Pair(projectId, groupName)
     }
 
@@ -178,7 +177,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         // 批量生成ID
         val segmentIds = client.get(ServiceAllocIdResource::class)
             .batchGenerateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_RELEASE_RECORD", releaseRecords.size).data
-        
+
         if (segmentIds.isNullOrEmpty() || segmentIds.size != releaseRecords.size) {
             logger.warn("Failed to generate segment IDs for release records, " +
                     "expected: ${releaseRecords.size}, actual: ${segmentIds?.size ?: 0}")
@@ -187,7 +186,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
                 params = arrayOf("Failed to generate segment IDs")
             )
         }
-        
+
         val currentTime = LocalDateTime.now()
         return releaseRecords.mapIndexed { index, releaseRecord ->
             ResourcePublicVarGroupReleaseRecordPO(
@@ -596,7 +595,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
     /**
      * 将PublicVarPO转换为PublicVarDO
      * 将数据库实体对象转换为业务对象，包括解析buildFormProperty JSON字符串和批量查询引用计数
-     * 
      * @param varPOs 数据库实体对象列表
      * @param projectId 项目ID
      * @param groupName 变量组名称

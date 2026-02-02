@@ -43,4 +43,3 @@ data class PipelinePublicVarGroupDO(
     @get:Schema(title = "更新时间")
     var updateTime: LocalDateTime
 )
-

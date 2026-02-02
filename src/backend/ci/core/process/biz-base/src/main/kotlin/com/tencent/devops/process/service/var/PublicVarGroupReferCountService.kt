@@ -59,9 +59,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 事务执行模板方法
-     * 
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
-     * 
      * @param operation 要执行的业务操作
      * @return 操作结果
      */
@@ -77,9 +75,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
     /**
      * 批量删除引用并更新引用计数
      * 同时删除变量组引用记录和变量引用记录
-     * 
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
-     * 
      * @param projectId 项目ID（引用记录所在的当前项目）
      * @param referId 引用ID
      * @param referType 引用类型
@@ -163,7 +159,6 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 增加引用计数（增量更新）
-     * 
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -220,7 +215,6 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 减少引用计数（增量更新，确保不会变为负数）
-     * 
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -275,9 +269,7 @@ class PublicVarGroupReferCountService @Autowired constructor(
 
     /**
      * 批量更新引用和计数
-     * 
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarGroupReferManageService）已经提供了锁保护。
-     * 
      * @param projectId 当前项目ID（用于删除记录）
      * @param changeInfos 变量组版本变化信息列表
      */

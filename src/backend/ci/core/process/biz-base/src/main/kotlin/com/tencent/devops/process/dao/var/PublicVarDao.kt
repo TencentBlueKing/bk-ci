@@ -47,7 +47,7 @@ class PublicVarDao {
     ) {
         with(TResourcePublicVar.T_RESOURCE_PUBLIC_VAR) {
             if (publicVarGroupPOs.isEmpty()) return
-            
+
             dslContext.insertInto(
                 this,
                 ID,
@@ -216,5 +216,4 @@ class PublicVarDao {
                 .execute()
         }
     }
-
 }

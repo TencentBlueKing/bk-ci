@@ -384,5 +384,4 @@ class PublicVarGroupDao {
                 .execute()
         }
     }
-
 }

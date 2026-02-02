@@ -82,7 +82,7 @@ class ModelHandleServiceImpl @Autowired constructor(
                     varRefDetails = varRefDetails
                 )
             )
-            
+
             logger.info("Variable references update completed for resource: $resourceId")
         } catch (ignored: Throwable) {
             logger.warn("Error while detecting variable references for resource: $resourceId", ignored)
@@ -96,7 +96,7 @@ class ModelHandleServiceImpl @Autowired constructor(
         resourceType: String,
         resourceVersion: Int
     ): Model? {
-        
+
         var retryCount = 0
         var model: Model?
 
@@ -123,7 +123,7 @@ class ModelHandleServiceImpl @Autowired constructor(
 
                 else -> null
             }
-            
+
             model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) } as? Model
             
             if (model != null) {
@@ -132,14 +132,14 @@ class ModelHandleServiceImpl @Autowired constructor(
                 }
                 return model
             }
-            
+
             retryCount++
             if (retryCount < MAX_RETRY_TIMES) {
                 logger.warn("Failed to get resource model, retrying ($retryCount/$MAX_RETRY_TIMES): $resourceId")
                 Thread.sleep(RETRY_INTERVAL_MILLIS)
             }
         }
-        
+
         logger.warn("Failed to get resource model after $MAX_RETRY_TIMES retries: $resourceId")
         return null
     }

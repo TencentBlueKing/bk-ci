@@ -266,7 +266,7 @@ class PipelineTemplateResourceDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(TEMPLATE_ID.eq(templateId))
             conditions.add(PROJECT_ID.eq(projectId))
-            
+
             if (version != null) {
                 conditions.add(VERSION.eq(version))
             } else {
@@ -285,11 +285,11 @@ class PipelineTemplateResourceDao {
             val query = dslContext.select(MODEL)
                 .from(this)
                 .where(conditions)
-            
+
             if (version == null) {
                 query.orderBy(VERSION.desc()).limit(1)
             }
-            
+
             query.fetchAny(0, String::class.java)
         }
     }

@@ -982,11 +982,11 @@ object ModelVarRefUtils {
 
     private fun extractCustomConditionVariablesFromString(text: String): Set<String> {
         if (text.isEmpty()) return emptySet()
-        
+
         // 先移除注释行，避免解析注释中的变量引用
         val cleanedText = removeCommentLines(text)
         if (cleanedText.isEmpty()) return emptySet()
-        
+
         val variables = mutableSetOf<String>()
         // 匹配不带$的variables.xxx格式，匹配 variables.xxx，确保它是独立的单词（前面是边界或空格，后面是边界或空格）
         val plainPattern = Pattern.compile("(?:^|[^\\w.])(variables\\.(\\S+))(?=$|[^\\w.])")

@@ -521,5 +521,4 @@ class PublicVarGroupReferInfoDao {
             .drop((page - 1) * pageSize)
             .take(pageSize)
     }
-
 }

@@ -111,7 +111,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
         }
         val pipelineId = model.pipelineId
         val templateId = model.templateId
-        
+
         // 确定引用ID和引用类型
         val (referId, referType) = when {
             !pipelineId.isNullOrBlank() -> pipelineId to PublicVerGroupReferenceTypeEnum.PIPELINE
@@ -121,7 +121,7 @@ class ModelDeserializer : JsonDeserializer<Model>() {
                 return
             }
         }
-        
+
         // 根据服务名称选择处理方式
         val params = model.getTriggerContainer().params
         model.getTriggerContainer().params = if (modelHandleService != null) {

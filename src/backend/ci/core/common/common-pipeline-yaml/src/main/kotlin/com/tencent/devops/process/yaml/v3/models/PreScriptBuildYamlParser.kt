@@ -134,7 +134,7 @@ data class PreScriptBuildYamlParser(
                 }.mapKeys { entry ->
                     entry.key.toString()
                 }
-                
+
                 if (regularVariables.isNotEmpty()) {
                     this.variables = regularVariables.mapValues { parseVariableValue(value = it.value) }
                 } else {
