@@ -283,7 +283,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val url = buildUrl("$weworkHost/cgi-bin/webhook/upload_media?key=$robotKey&type=$mediaType")
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart("media", tempFile.name, tempFile.asRequestBody(mediaType.toMediaType()))
+            .addFormDataPart("media", tempFile.name, tempFile.asRequestBody(OCTET_STREAM_MEDIA_TYPE))
             .build()
         val request = Request.Builder().url(url).post(requestBody).build()
 
@@ -448,5 +448,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
         private const val FILE_MAX_SIZE = 20 * 1024 * 1024L
         private const val FILE_MAX_SIZE_MB = 20
         private val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
+        private val OCTET_STREAM_MEDIA_TYPE = "application/octet-stream".toMediaType()
     }
 }
