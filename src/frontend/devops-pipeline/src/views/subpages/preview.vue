@@ -135,7 +135,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
-                        :all-pipeline-param-values="getExecuteParams(pipelineId)"
+                        :all-pipeline-param-values="allPipelineParamValues"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -193,6 +193,7 @@
                             ref="constParamsForm"
                             disabled
                             :param-values="constantValues"
+                            :all-pipeline-param-values="allPipelineParamValues"
                             :params="constantParams"
                             sort-category
                         />
@@ -222,6 +223,7 @@
                             ref="otherParamsForm"
                             disabled
                             :param-values="otherValues"
+                            :all-pipeline-param-values="allPipelineParamValues"
                             :params="otherParams"
                             sort-category
                         >
@@ -427,6 +429,15 @@
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
             },
+            allPipelineParamValues () {
+                return {
+                    ...this.paramsValues,
+                    ...this.versionParamValues,
+                    ...this.buildValues,
+                    ...this.constantValues,
+                    ...this.otherValues
+                }
+            }
         },
         watch: {
             executeVersion: {
