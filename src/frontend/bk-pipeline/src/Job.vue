@@ -267,16 +267,19 @@ export default {
                     ...resetContainerProps,
                     containerId: `c-${hashID()}`,
                     jobId: `job_${randomString(3)}`,
-                    elements: copyContainer.elements.map((element) => ({
-                        ...element,
-                        id: `e-${hashID()}`,
-                    })),
+                    // 使用深拷贝确保每个 element 的嵌套对象都是独立的
+                    elements: copyContainer.elements.map((element) =>
+                        JSON.parse(JSON.stringify({
+                            ...element,
+                            id: `e-${hashID()}`,
+                        }))
+                    ),
                     jobControlOption: copyContainer.jobControlOption
-                        ? {
+                        ? JSON.parse(JSON.stringify({
                             ...copyContainer.jobControlOption,
                             dependOnType: "ID",
                             dependOnId: [],
-                        }
+                        }))
                         : undefined,
                 }
                 this.$emit(COPY_EVENT_NAME, {
