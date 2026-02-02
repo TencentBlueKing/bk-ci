@@ -58,6 +58,7 @@ object NotifyMessageCode {
     const val ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL = "2111010" // 通知服务：发送媒体消息失败
     const val ERROR_NOTIFY_IMAGE_SIZE_EXCEED = "2111011" // 通知服务：图片大小超过限制，最大不能超过{0}MB
     const val ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED = "2111012" // 通知服务：图片格式不支持，仅支持{0}格式
+    const val ERROR_NOTIFY_FILE_SIZE_EXCEED = "2111013" // 通知服务：文件大小超过限制，最大不能超过{0}MB
 
     const val BK_CONTROL_MESSAGE_LENGTH = "bkControlMessageLength" // ...(消息长度超{0} 已截断,请控制消息长度)
     const val BK_LINE_BREAKS_WILL_ESCAPED = "bkLineBreaksWillEscaped" // (注意: 换行会被转义为\\n)
