@@ -49,7 +49,6 @@ import com.tencent.devops.process.permission.template.PipelineTemplatePermission
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.pipeline.version.PipelineTemplateInstanceReq
-import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCloneReq
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceStatus
 import com.tencent.devops.process.pojo.template.TemplateOperationMessage

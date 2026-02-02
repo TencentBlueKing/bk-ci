@@ -31,15 +31,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
-import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
-import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCloneReq
-import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpPipelineVersionResourceImpl @Autowired constructor(
-    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
-    private val pipelineVersionManager: PipelineVersionManager
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService
 ) : OpPipelineVersionResource {
 
     override fun asyncBatchUpdateReferFlag(
@@ -54,27 +50,6 @@ class OpPipelineVersionResourceImpl @Autowired constructor(
                 routerTag = routerTag,
                 projectId = projectId,
                 queryUnknownRelatedFlag = queryUnknownRelatedFlag
-            )
-        )
-    }
-
-    override fun cloneVersion(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        sourceVersion: Int,
-        description: String?
-    ): Result<DeployPipelineResult> {
-        val cloneReq = PipelineVersionCloneReq(
-            sourceVersion = sourceVersion,
-            description = description
-        )
-        return Result(
-            pipelineVersionManager.deployPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                request = cloneReq
             )
         )
     }
