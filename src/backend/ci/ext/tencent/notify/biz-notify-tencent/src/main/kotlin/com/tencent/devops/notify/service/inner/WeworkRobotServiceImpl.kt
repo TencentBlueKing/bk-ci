@@ -93,6 +93,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
+    @Value("\${wework.imageMaxSizeMb:2}")
+    private var imageMaxSizeMb: Int = 2
+
+    @Value("\${wework.fileMaxSizeMb:20}")
+    private var fileMaxSizeMb: Int = 20
+
+    @Value("\${wework.supportedImageFormats:.jpg,.png}")
+    private lateinit var supportedImageFormatsConfig: String
+
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         weworkNotifyMediaMessage.mediaInputStream.use {
             validateMediaMessage(weworkNotifyMediaMessage)
@@ -147,15 +156,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
             }
             WeworkMediaType.file -> {
                 val mediaId = uploadMediaToRobotFromStreamWithValidation(message)
-                val sendRequest = message.receivers.map { chatid ->
+                val fileContent = MediaContent(mediaId = mediaId)
+                buildAndSendMessages(message.receivers) { chatid ->
                     WeworkRobotSingleFileMessage(
                         chatid = chatid,
                         postId = null,
-                        file = MediaContent(mediaId = mediaId),
+                        file = fileContent,
                         visibleToUser = null
                     )
                 }
-                doSendRequest(sendRequest)
             }
             else -> {
                 throw ErrorCodeException(
@@ -174,15 +183,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
             val md5Hash = writeStreamToFileWithMd5(message.mediaInputStream, tempFile)
             validateImageSize(tempFile.length())
             val base64Content = Base64.getEncoder().encodeToString(tempFile.readBytes())
-            val sendRequest = message.receivers.map { chatid ->
+            val imageContent = ImageContent(base64 = base64Content, md5 = md5Hash)
+            buildAndSendMessages(message.receivers) { chatid ->
                 WeworkRobotSingleImageMessage(
                     chatid = chatid,
                     postId = null,
-                    image = ImageContent(base64 = base64Content, md5 = md5Hash),
+                    image = imageContent,
                     visibleToUser = null
                 )
             }
-            doSendRequest(sendRequest)
         }
     }
 
@@ -227,26 +236,45 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 校验图片格式：仅支持JPG/PNG
+     * 构造并发送消息请求
+     */
+    private fun <T : WeweokRobotBaseMessage> buildAndSendMessages(
+        receivers: Collection<String>,
+        messageBuilder: (chatid: String) -> T
+    ) {
+        val requests = receivers.map { messageBuilder(it) }
+        doSendRequest(requests)
+    }
+
+    /**
+     * 获取支持的图片格式列表
+     */
+    private fun getSupportedImageFormats(): List<String> =
+        supportedImageFormatsConfig.split(",").map { it.trim().lowercase() }
+
+    /**
+     * 校验图片格式
      */
     private fun validateImageFormat(fileName: String) {
         val lowerName = fileName.lowercase()
-        if (!SUPPORTED_IMAGE_FORMATS.any { lowerName.endsWith(it) }) {
+        val formats = getSupportedImageFormats()
+        if (!formats.any { lowerName.endsWith(it) }) {
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED,
-                params = arrayOf(SUPPORTED_IMAGE_FORMATS.joinToString(", ") { it.removePrefix(".").uppercase() })
+                params = arrayOf(formats.joinToString(", ") { it.removePrefix(".").uppercase() })
             )
         }
     }
 
     /**
-     * 校验图片大小：不超过2MB
+     * 校验图片大小
      */
     private fun validateImageSize(fileSize: Long) {
-        if (fileSize > IMAGE_MAX_SIZE) {
+        val maxSize = imageMaxSizeMb * 1024 * 1024L
+        if (fileSize > maxSize) {
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_IMAGE_SIZE_EXCEED,
-                params = arrayOf(IMAGE_MAX_SIZE_MB.toString())
+                params = arrayOf(imageMaxSizeMb.toString())
             )
         }
     }
@@ -265,13 +293,14 @@ class WeworkRobotServiceImpl @Autowired constructor(
     }
 
     /**
-     * 校验文件大小：不超过20MB
+     * 校验文件大小
      */
     private fun validateFileSize(fileSize: Long) {
-        if (fileSize > FILE_MAX_SIZE) {
+        val maxSize = fileMaxSizeMb * 1024 * 1024L
+        if (fileSize > maxSize) {
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_FILE_SIZE_EXCEED,
-                params = arrayOf(FILE_MAX_SIZE_MB.toString())
+                params = arrayOf(fileMaxSizeMb.toString())
             )
         }
     }
@@ -443,11 +472,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
         private const val WEWORK_MAX_SIZE = 4000
         private const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
-        private const val IMAGE_MAX_SIZE = 2 * 1024 * 1024L
-        private const val IMAGE_MAX_SIZE_MB = 2
-        private const val FILE_MAX_SIZE = 20 * 1024 * 1024L
-        private const val FILE_MAX_SIZE_MB = 20
-        private val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
         private val OCTET_STREAM_MEDIA_TYPE = "application/octet-stream".toMediaType()
     }
 }
