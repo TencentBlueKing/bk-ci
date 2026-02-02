@@ -417,7 +417,8 @@ class DevCloudMacosService @Autowired constructor(
     ): DevCloudMacosVmDebugLoginResponse? {
         val url = "$devCloudUrl$apiPath"
         val body = ObjectMapper().writeValueAsString(debugLoginRequest)
-        logger.info("MacOS VM debug login $operationType request - taskId: ${debugLoginRequest.taskId}, creator: $creator, body: $body")
+        logger.info("MacOS VM debug login $operationType request - $url taskId: ${debugLoginRequest.taskId}, " +
+                "creator: $creator, body: $body")
         
         val request = Request.Builder()
             .url(toIdcUrl(url))
