@@ -251,21 +251,18 @@ const updatePipeline = (model, params) => {
   
   // Determine if model is a stage or container by checking for containers array
   const isStage = Array.isArray(model.containers);
-  
-  // Get unique identifier for matching
-  const modelId = model.id || model.containerId;
-  
+
   let newStages;
   if (isStage) {
     // model is a stage - find by id and replace with updated version
     newStages = props.pipeline.stages.map(stage => 
-      (stage.id === modelId) ? model : stage
+      (stage.id === model.id) ? model : stage
     );
   } else {
     // model is a container - find by containerId and update it in the correct stage
     newStages = props.pipeline.stages.map(stage => {
       const containerIndex = stage.containers?.findIndex(
-        c => (c.containerId === modelId || c.id === modelId)
+        c => (c.containerId === model.containerId)
       );
       if (containerIndex !== -1 && containerIndex !== undefined) {
         const newContainers = stage.containers.map((c, idx) => 
