@@ -1,0 +1,206 @@
+/**
+ * LogHeader Component Styles
+ * 日志面板头部组件样式
+ */
+
+/* === Header === */
+.logHead {
+  background-color: var(--log-bg-dark-tertiary);
+  line-height: var(--log-header-height);
+  padding: 5px var(--spacing-xl);
+  border-bottom: 1px solid var(--log-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--log-text-dark);
+  position: relative;
+  flex: 0 0 auto;
+  border-top-left-radius: var(--border-radius-large);
+  border-top-right-radius: var(--border-radius-large);
+}
+
+.logTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  max-width: 20%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* === Tabs === */
+.headTab {
+  font-size: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.headTab .tabItem {
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  font-weight: normal;
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--log-text-dark-secondary);
+  background: var(--log-bg-dark-hover);
+  transition: var(--transition-all);
+}
+
+.headTab .tabItem:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.headTab .tabItem:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+.headTab .tabItem.active {
+  color: var(--log-text-dark);
+  background: var(--log-bg-dark-active);
+}
+
+.headTab .tabItem:hover {
+  color: var(--log-text-dark);
+}
+
+/* === Log Tools === */
+.logTools {
+  position: absolute;
+  right: var(--spacing-xxl);
+  top: 13px;
+  display: flex;
+  align-items: center;
+  line-height: var(--log-tool-height);
+  user-select: none;
+  background: none;
+  gap: var(--spacing-sm);
+}
+
+/* === Search Bar === */
+.logSearchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.logSearchInput {
+  width: 200px;
+  height: var(--log-tool-height);
+  border: 0;
+}
+
+.logSearchInput {
+    :global(.bk-input--text) {
+        background-color: var(--log-bg-dark-hover) !important;
+        color: var(--log-text-dark) !important;
+        height: var(--log-tool-height) !important;
+        font-size: var(--font-size-xs) !important;
+    }
+}
+
+.logSearchNav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.logSearchNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: var(--log-tool-height);
+  background: transparent;
+  border: none;
+  color: var(--log-text-dark-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  transition: var(--transition-all);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.logSearchNavBtn:hover:not(:disabled) {
+  color: var(--log-text-dark);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logSearchNavBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.logSearchCount {
+  font-size: var(--font-size-xs);
+  color: var(--bg-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* === More Button === */
+.logMoreBtnWrapper {
+  position: relative;
+}
+
+.logMoreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--log-tool-height);
+  height: var(--log-tool-height);
+  cursor: pointer;
+  color: var(--bg-primary);
+  transition: color var(--transition-normal);
+  border-radius: var(--border-radius-large);
+}
+
+.logMoreBtn:hover {
+  color: var(--log-text-dark);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logMoreMenu {
+  position: absolute;
+  top: calc(100% + var(--spacing-xs));
+  right: 0;
+  background: var(--log-bg-dark-active);
+  border-radius: var(--border-radius-large);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.logMoreButton {
+  display: flex;
+  align-items: center;
+  padding: 10px var(--spacing-lg);
+  font-size: var(--font-size-xs);
+  color: var(--log-text-dark);
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+  white-space: nowrap;
+}
+
+.logMoreButton:hover {
+  background: #5a5f6c;
+}
+
+/* === Close Button === */
+.closeBtn {
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--log-text-dark-secondary);
+  transition: color var(--transition-normal);
+}
+
+.closeBtn:hover {
+  color: var(--log-text-dark);
+}
+

@@ -129,7 +129,8 @@
 </template>
 
 <script>
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import { isObject } from '../utils/util'
     import AtomPropertyPanel from './AtomPropertyPanel'
@@ -297,7 +298,8 @@
                 'addContainer',
                 'addStage',
                 'setPipelineEditing',
-                'toggleStageReviewPanel'
+                'toggleStageReviewPanel',
+                'setPipelineWithoutTrigger'
             ]),
             handleAddStage ({ stageIndex, isParallel, isFinally }) {
                 if (this.pipelineEditable) {
@@ -331,10 +333,58 @@
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)
             },
-            handlePipelineChange (pipeline) {
+            handlePipelineChange (changedObject) {
                 if (!this.editable) return
-                console.log('11111, handlePipelineChange')
-                this.setPipelineEditing(true)
+                            
+                const updatedPipeline = this.buildUpdatedPipeline(changedObject)
+                if (updatedPipeline) {
+                    this.setPipelineWithoutTrigger(updatedPipeline)
+                    this.setPipelineEditing(true)
+                }
+            },
+            
+            buildUpdatedPipeline (changedObject) {
+                const currentStages = this.pipeline.stages
+                
+                // Stage operations (copy/delete/drag)
+                if (changedObject?.stages && Array.isArray(changedObject.stages)) {
+                    return { ...this.pipeline, stages: changedObject.stages }
+                }
+                
+                // Job operations (copy/delete)
+                if (changedObject?.containers && Array.isArray(changedObject.containers)) {
+                    const stageIndex = currentStages.findIndex(s => s.id === changedObject.id)
+                    if (stageIndex === -1) return null
+                    
+                    
+                    return { ...this.pipeline, stages: [
+                        ...currentStages.slice(0, stageIndex),
+                        changedObject,
+                        ...currentStages.slice(stageIndex + 1)
+                    ] }
+                }
+                
+                // Atom operations (copy/delete)
+                if (changedObject?.elements && Array.isArray(changedObject.elements)) {
+                    const { containerId } = changedObject
+                    let found = false
+                    const newStages = currentStages.map(stage => {
+                        if (!stage?.containers || found) return stage
+                        const containerIndex = stage.containers.findIndex(c => c.containerId === containerId)
+                        if (containerIndex === -1) return stage
+                        
+                        found = true
+                        return { ...stage, containers: [
+                            ...stage.containers.slice(0, containerIndex),
+                            changedObject,
+                            ...stage.containers.slice(containerIndex + 1)
+                        ] }
+                    })
+                    
+                    return found ? { ...this.pipeline, stages: newStages } : null
+                }
+                
+                return null
             },
             resetInsertStageState () {
                 this.setInsertStageState({

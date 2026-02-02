@@ -1,0 +1,37 @@
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 2px 4px;
+  border-radius: 100%;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  pointer-events: auto;
+}
+
+.trigger:hover {
+  background: var(--bg-hover-active);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-tertiary);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.menuIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-secondary);
+}
+

@@ -1,0 +1,295 @@
+.flowTable {
+  height: calc(100% - 56px);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* 名称链接样式 */
+.nameLink {
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.nameLink:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* 内容区域容器 */
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background-color: var(--bg-secondary);
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+/* 标题 */
+.title {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* 新建流程 */
+.newFlow {
+  min-width: 120px;
+}
+
+.newFlow:hover {
+  color: var(--color-primary);
+}
+
+/* 搜索框 */
+.searchBox {
+  display: flex;
+  align-items: center;
+  margin-left: 20%;
+  padding: var(--spacing-md) 0;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+/* 搜索输入框 */
+.searchInput {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchInput :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
+/* 修复 search-select 组件获得焦点时的抖动问题 */
+.searchInput :global(.bk-search-select-container) {
+  /* 预留滚动条空间，避免滚动条出现时导致布局抖动 */
+  scrollbar-gutter: stable !important;
+  /* 确保宽度维持，即使没有 placeholder 也能保持宽度 */
+  width: 100% !important;
+  min-width: 200px !important;
+  /* 平滑过渡，包括高度变化，避免抖动 */
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    height var(--transition-normal) !important;
+  background-color: var(--bg-primary);
+}
+
+/* 排序按钮 */
+.iconSortButton {
+  width: 32px;
+  height: 32px;
+  line-height: 26px;
+  margin-left: var(--spacing-sm);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--color-text-disabled);
+  border-radius: var(--border-radius);
+  text-align: center;
+  cursor: pointer;
+}
+
+.iconSortButton:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+/* 排序图标 */
+.sortIcon,
+.sortItemIcon {
+  color: #c7c9d0;
+}
+
+.sortItemIcon {
+  margin-left: var(--spacing-xs);
+}
+
+/* 排序项 */
+.sortItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+}
+
+.sortItem:hover,
+.sortItem.active {
+  color: var(--color-primary);
+  background-color: var(--bg-active);
+}
+
+/* 表格容器 */
+.tableContainer {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+  min-height: 0;
+}
+
+/* 空状态 */
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 56px);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* 表格创作流组 */
+.tagList,
+.popoverTagList {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  margin: 2px 0;
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.tagList .tag {
+  max-width: 270px;
+}
+
+.popoverTagList .tag {
+  max-width: 228px;
+}
+
+/* 表格最近执行 */
+.lastExecHeader {
+  display: flex;
+  align-items: center;
+}
+
+.switchExec {
+  margin-left: 10px;
+  line-height: var(--spacing-md);
+  color: var(--color-primary);
+  border-left: 1px solid var(--color-text-disabled);
+}
+
+.switchExec svg {
+  vertical-align: middle;
+  margin: 0 10px;
+}
+
+.latestExecCell {
+  display: flex;
+  align-items: center;
+  margin: 9px 0;
+  width: 100%;
+}
+
+.execDesc {
+  color: var(--color-text-tertiary);
+  display: inline-block;
+}
+
+.execDesc svg {
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.flowExecMsg {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-sm);
+  margin-left: var(--spacing-md);
+  overflow: hidden;
+}
+
+.flowExecMsgTitle {
+  flex: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: normal;
+}
+
+.flowCellLink {
+  color: var(--color-primary);
+  cursor: pointer;
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+  &[disabled] {
+    cursor: not-allowed;
+    color: #7b7d8a;
+  }
+}
+
+.line {
+  width: 10px;
+  text-align: center;
+  line-height: 1;
+  height: var(--line-height-xs);
+}
+
+.lastBuildMsg {
+  color: var(--color-text-secondary);
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.latestStageStatus {
+  line-height: 1;
+}
+
+.flowExecMsgDesc {
+  display: grid;
+  column-gap: var(--spacing-lg);
+  grid-template-columns: auto auto auto;
+  > span {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    > span {
+      min-width: 0;
+      margin-left: 6px;
+    }
+  }
+}
+
+.columnTime {
+  display: flex;
+  flex-direction: column;
+  span {
+    line-height: 1.5;
+  }
+}
+
+.runningText {
+  color: var(--color-primary);
+}
+
+.iconStarBtn {
+  position: relative;
+  font-size: var(--font-size-sm) !important;
+  z-index: 999;
+  display: none;
+}
+
+.isCollect {
+  display: block
+}

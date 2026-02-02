@@ -1,0 +1,29 @@
+.exception {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.tips {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.clearBtn {
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+}
+
+.exceptionCont {
+  :global(.bk-exception-img) {
+    margin-top: var(--spacing-xl) !important;
+    width: 320px !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+  
+  :global(.bk-exception-footer) {
+    margin-top: -12px !important;
+    margin-bottom: 68px !important;
+  }
+}

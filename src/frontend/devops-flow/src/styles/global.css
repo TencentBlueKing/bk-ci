@@ -1,0 +1,228 @@
+/* 全局样式重置和基础样式 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background-color: var(--bg-secondary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 设置 html 最小宽度，小于 1024px 时显示横向滚动条，但不显示纵向滚动条 */
+html {
+  min-width: 1024px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  max-height: 100vh;
+}
+
+/* 设置 body 最小宽度，小于 1024px 时显示横向滚动条，但不显示纵向滚动条 */
+body {
+  min-width: 1024px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  max-height: 100vh;
+  position: relative;
+}
+
+.devops-flow-app {
+  width: 100%;
+  min-width: 1024px;
+  height: 100%;
+  max-height: 100vh;
+  display: flex;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 链接样式 */
+a {
+  color: var(--color-primary);
+  text-decoration: none !important;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* 按钮重置 */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+/* 输入框重置 */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* 列表重置 */
+ul,
+ol {
+  list-style: none;
+}
+
+/* 图片样式 */
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* 清除浮动 */
+.clearfix::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* 省略号 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis-2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.text-ellipsis-3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+svg {
+  vertical-align: middle !important;
+}
+
+.spinIcon {
+  animation: loading 0.8s linear infinite;
+}
+
+@keyframes loading {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hourglass-queue {
+  animation: hourglassSpin;
+  animation-delay: 0.5s, 0.5s;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+/* Property Panel 样式 - 用于 StagePropertyPanel, JobPropertyPanel, AtomPropertyPanel */
+/* 侧边栏容器：从header下方开始，贴着底部 */
+/* .bkci-property-panel {
+  position: fixed !important;
+  top: 52px !important;
+  bottom: 0 !important;
+  z-index: 2016 !important;
+} */
+
+/* 遮罩层：从header下方开始，贴着底部 */
+.bkci-property-panel .bk-sideslider-mask,
+.bkci-property-panel .bk-modal-mask {
+  top: 52px !important;
+  bottom: 0 !important;
+  height: calc(100vh - 52px) !important;
+}
+
+/* 实际控制侧边栏位置的元素 */
+.bkci-property-panel .bk-sideslider-wrapper,
+.bkci-property-panel .bk-modal-wrapper {
+  top: 52px !important;
+  bottom: 0 !important;
+  right: 0;
+  transition: right 0.3s ease;
+}
+
+/* 侧边栏内容区域：使用flex布局，内容区域可滚动，footer跟随内容 */
+.bkci-property-panel .bk-modal-body {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Header 不收缩 */
+.bkci-property-panel .bk-modal-header {
+  flex-shrink: 0 !important;
+}
+
+
+
+/* 确保内容区域可以自然增长 */
+.bkci-property-panel .stagePanelContent,
+.bkci-property-panel .jobPanelContent {
+  min-height: 0 !important;
+}
+
+/* Footer 不收缩，自然跟随在内容后面 */
+.bkci-property-panel .bk-modal-footer {
+  flex-shrink: 0 !important;
+}
+
+/* 变量面板打开时，侧边栏右侧留出空间 */
+.bkci-property-panel.with-variable-open .bk-sideslider-wrapper,
+.bkci-property-panel.with-variable-open .bk-modal-wrapper {
+  right: 480px;
+}

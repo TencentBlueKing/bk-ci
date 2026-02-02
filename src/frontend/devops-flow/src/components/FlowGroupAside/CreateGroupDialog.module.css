@@ -1,0 +1,35 @@
+.dialogContent {
+  padding: var(--spacing-lg);
+}
+
+.formItem {
+  margin-bottom: var(--spacing-xl);
+}
+
+.formItem:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.required {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+.radio {
+  margin-right: var(--spacing-xl);
+}
+
+.dialogFooter {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-start;
+}
+

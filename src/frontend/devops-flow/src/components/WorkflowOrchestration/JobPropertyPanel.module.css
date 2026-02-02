@@ -1,0 +1,28 @@
+/* Job Property Panel 样式 */
+
+/* 注意：样式已移至 global.css 中的 .bkci-property-panel 类 */
+
+.jobPanelContent {
+  padding: var(--spacing-xl) var(--spacing-xxl);
+  height: calc(100% - var(--footer-height));
+  overflow-y: auto;
+}
+
+.jobPanelFooter {
+  display: flex;
+  width: 100%;
+  gap: var(--spacing-sm);
+  justify-content: flex-start;
+}
+
+.fieldTips {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-sm);
+}
+
+.collapseTitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}

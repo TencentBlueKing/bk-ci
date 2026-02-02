@@ -1,0 +1,27 @@
+.actions {
+  span {
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+  }
+
+  .newLabel {
+    padding-right: var(--spacing-md);
+    border-right: 1px solid var(--border-color);
+  }
+
+  .refresh {
+    padding-left: 6px;
+    svg {
+      margin: 5px;
+    }
+  }
+}
+
+.labelContent {
+  display: grid;
+  grid-gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: 2px;
+}

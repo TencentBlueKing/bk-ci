@@ -1,0 +1,105 @@
+.flowSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+}
+
+.flowName {
+  color: var(--color-text-primary);
+  font-weight: 500;
+  max-width: 222px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  line-height: 18px;
+}
+
+.flowName.clickable {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.flowName.clickable:hover {
+  color: var(--color-primary);
+}
+
+.exchangeIcon {
+  background-color: var(--bg-hover);
+  color: var(--color-text-tertiary);
+  padding: 2px;
+  border-radius: var(--border-radius);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.exchangeIcon:hover {
+  background-color: var(--bg-hover-active);
+  color: var(--color-primary);
+}
+
+.flowSelectorPopover {
+  width: 240px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.flowListWrapper {
+  flex: 1;
+  overflow: hidden;  
+  padding: var(--spacing-sm) 0;
+}
+
+.flowList {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.flowItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.flowItem:hover {
+  background-color: var(--bg-hover);
+}
+
+.flowItemActive {
+  background-color: var(--bg-primary-light);
+  color: var(--color-primary);
+}
+
+.flowItemActive:hover {
+  background-color: var(--bg-primary-light);
+}
+
+.flowItemName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+}
+
+.checkIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-left: var(--spacing-xs);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}

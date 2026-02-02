@@ -26,7 +26,7 @@
     import eventBus from '@/utils/eventBus'
     import { Component, Watch } from 'vue-property-decorator'
     @Component
-    export default class ExtensionAdiePanel extends Vue {
+        export default class ExtensionAdiePanel extends Vue {
         src: string = ''
         show: boolean = false
         options: object | null = null

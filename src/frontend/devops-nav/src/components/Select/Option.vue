@@ -21,7 +21,7 @@
     @Component({
         name: 'devops-option'
     })
-    export default class DevopsOption extends Vue {
+        export default class DevopsOption extends Vue {
         @Prop({ required: true })
         id: string | number
 
