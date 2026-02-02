@@ -258,10 +258,10 @@ class WeworkRobotServiceImpl @Autowired constructor(
     private fun validateImageFormat(fileName: String) {
         val lowerName = fileName.lowercase()
         val formats = getSupportedImageFormats()
-        if (!formats.any { lowerName.endsWith(it) }) {
+        if (!formats.any { lowerName.endsWith(".$it") }) {
             throw ErrorCodeException(
                 errorCode = ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED,
-                params = arrayOf(formats.joinToString(", ") { it.removePrefix(".").uppercase() })
+                params = arrayOf(formats.joinToString(", ") { it.uppercase() })
             )
         }
     }
