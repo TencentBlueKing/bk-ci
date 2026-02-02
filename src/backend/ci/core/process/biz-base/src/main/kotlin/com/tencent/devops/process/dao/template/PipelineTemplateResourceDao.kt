@@ -281,7 +281,7 @@ class PipelineTemplateResourceDao {
                     )
                 }
             }
-            
+
             val query = dslContext.select(MODEL)
                 .from(this)
                 .where(conditions)

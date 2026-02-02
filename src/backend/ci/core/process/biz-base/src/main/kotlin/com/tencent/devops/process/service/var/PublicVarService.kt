@@ -117,11 +117,11 @@ class PublicVarService @Autowired constructor(
                 updateTime = LocalDateTime.now()
             )
         }
-        
+
         // 批量保存和发布记录（在事务中执行查询和保存）
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            
+
             // 获取前一个版本号（处理版本不连续和第一个版本的情况）
             val previousVersion = publicVarGroupDao.getPreviousVersion(
                 dslContext = transactionContext,
@@ -129,7 +129,7 @@ class PublicVarService @Autowired constructor(
                 groupName = groupName,
                 currentVersion = publicVarDTO.version
             )
-            
+
             // 如果存在前一个版本，则查询前一个版本的变量；否则返回空列表
             val oldVarPOs = if (previousVersion != null) {
                 publicVarDao.listVarByGroupName(
@@ -141,9 +141,9 @@ class PublicVarService @Autowired constructor(
             } else {
                 emptyList()
             }
-            
+
             publicVarDao.batchSave(dslContext = transactionContext, publicVarGroupPOs = publicVarPOs)
-            
+
             publicVarGroupReleaseRecordService.batchAddPublicVarGroupReleaseRecord(
                 dslContext = transactionContext,
                 publicVarGroupReleaseDTO = PublicVarGroupReleaseDTO(
@@ -156,7 +156,6 @@ class PublicVarService @Autowired constructor(
                     oldVarPOs = oldVarPOs
                 )
             )
-
         }
         return true
     }
@@ -195,7 +194,6 @@ class PublicVarService @Autowired constructor(
 
     /**
      * 将PublicVarPO列表转换为PublicVarDO列表，并批量查询引用计数
-     * 
      * @param varPOs 变量PO列表
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -462,7 +460,7 @@ class PublicVarService @Autowired constructor(
             if (varName in pipelineVarNames) {
                 return@forEach
             }
-            
+
             val pos = positionInfoMap[varName] ?: return@forEach
             val newVar = newVarMap[varName] ?: return@forEach
 
@@ -585,7 +583,6 @@ class PublicVarService @Autowired constructor(
 
     /**
      * 批量获取变量
-     * 
      * @param projectId 项目ID
      * @param groupToVersion 变量组名 -> 版本号
      * @return 变量组名 -> 变量 BuildFormProperty 列表

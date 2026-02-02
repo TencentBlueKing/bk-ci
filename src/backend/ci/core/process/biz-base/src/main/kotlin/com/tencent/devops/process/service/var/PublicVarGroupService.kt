@@ -102,7 +102,6 @@ class PublicVarGroupService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PublicVarGroupService::class.java)
-        
         // 正则表达式常量
         private val GROUP_NAME_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9_]{2,31}$")
         private val VAR_NAME_REGEX = Regex("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$")
@@ -308,7 +307,7 @@ class PublicVarGroupService @Autowired constructor(
         } else {
             emptyMap()
         }
-        
+
         val records = groupPOs.map { po ->
             val actualReferCount = referCountMap[po.groupName] ?: 0
             val dynamicVersionReferCount = dynamicVersionReferCountMap[po.groupName] ?: 0
@@ -488,7 +487,7 @@ class PublicVarGroupService @Autowired constructor(
 
         val (latestGroupRecord, latestVarPOs) = dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            
+
             // 获取数据库中最新版本的变量组信息
             val groupRecord = publicVarGroupDao.getRecordByGroupName(
                 dslContext = context,

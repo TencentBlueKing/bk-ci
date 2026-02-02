@@ -181,7 +181,6 @@ class RbacPublicVarGroupPermissionService constructor(
             resourceName = name
         )
     }
-    
 
     override fun deleteResource(projectId: String, groupName: String) {
         authResourceApi.deleteResource(

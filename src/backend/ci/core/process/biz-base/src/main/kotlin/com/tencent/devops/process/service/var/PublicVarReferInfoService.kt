@@ -113,12 +113,10 @@ class PublicVarReferInfoService @Autowired constructor(
      * 处理资源的变量引用关系（带锁保护的公共方法）
      * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
      * 使用资源级分布式锁保护整个操作流程，包括引用关系处理和引用计数更新
-     * 
      * 线程安全说明：
      * - 使用资源级分布式锁：RESOURCE_VAR_REFER_LOCK:$projectId:$resourceType:$resourceId:$resourceVersion
      * - 锁保护范围：整个操作流程（事务处理 + 计数更新）
      * - 所有内部方法调用（包括 cleanupRemovedVarGroupReferences）都在此锁保护下执行
-     * 
      * @param request 变量引用请求DTO（带锁版本）
      */
     fun handleResourceVarReferencesWithLock(request: VarReferenceRequestWithLock) {
@@ -182,7 +180,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 实际处理资源的变量引用关系（内部方法）
-     * 
      * 线程安全说明：
      * - 该方法在 handleResourceVarReferencesWithLock 的资源级锁保护下执行
      * - 该方法在事务中执行，调用 cleanupRemovedVarGroupReferences 等方法
@@ -198,7 +195,7 @@ class PublicVarReferInfoService @Autowired constructor(
         model: Model,
         varRefDetails: List<VarRefDetail>
     ): VarReferenceUpdateResult {
-        
+
         // 删除历史引用记录
         varRefDetailDao.deleteByResourceId(
             dslContext = context,
@@ -234,7 +231,7 @@ class PublicVarReferInfoService @Autowired constructor(
                 varsNeedRecalculate = varsNeedRecalculate
             )
         }
-        
+
         // 查询已存在的引用记录
         val existingGroupKeys = publicVarReferInfoDao.listVarGroupsByReferIdAndVersion(
             dslContext = context,
@@ -249,7 +246,7 @@ class PublicVarReferInfoService @Autowired constructor(
             .filter { it.varGroupName.isNullOrBlank() }
             .map { it.id }
             .toSet()
-        
+
         // 构建公共变量映射和被引用变量集合
         val referencedVarNames = varRefDetails.map { it.varName }.toSet()
         val publicVarMap = buildPublicVarMap(model)
@@ -327,7 +324,6 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 清理不在Model中的变量组引用
      * 对比数据库中的引用记录与Model中的变量组，删除已不存在的引用
-     * 
      * @param queryParams 资源引用查询参数
      * @param modelVarGroups Model中的变量组列表
      * @param existingGroupKeys 数据库中已存在的变量组键集合
@@ -365,7 +361,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 批量查询最新版本号
-     * 
      * @param queryParams 资源引用查询参数
      * @param modelVarGroups Model中的变量组列表
      * @return 变量组名称到最新版本号的映射
@@ -391,18 +386,15 @@ class PublicVarReferInfoService @Autowired constructor(
                 projectId = queryParams.projectId,
                 groupName = groupName
             )
-            
             if (version != null) {
                 result[groupName] = version
             }
         }
-
         return result
     }
 
     /**
      * 批量查询已存在的变量名
-     * 
      * @param queryParams 资源引用查询参数
      * @return Map<PublicGroupKey, Set<varName>>
      */
@@ -422,7 +414,6 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 计算并执行删除操作
      * 删除引用记录后，收集需要更新计数的变量信息
-     * 
      * @param context 数据库上下文
      * @param varGroupContext 变量组处理上下文
      * @return 需要重新计算计数的变量信息集合
@@ -472,14 +463,12 @@ class PublicVarReferInfoService @Autowired constructor(
                 }
             }
         }
-
         return varsNeedUpdateCount
     }
 
     /**
      * 计算变量组的差异信息（公共方法）
      * 提取公共逻辑，避免代码重复
-     * 
      * @param varGroupContext 变量组处理上下文
      * @param groupKey 变量组键
      * @param groupName 变量组名称
@@ -497,7 +486,7 @@ class PublicVarReferInfoService @Autowired constructor(
             referencedVarNames = varGroupContext.referencedVarNames,
             pipelineVarNames = varGroupContext.pipelineVarNames
         )
-        
+
         if (referencedVarNameSet.isEmpty()) {
             return null
         }
@@ -513,7 +502,6 @@ class PublicVarReferInfoService @Autowired constructor(
 
     /**
      * 计算需要新增的变量引用记录
-     * 
      * @param context 变量组处理上下文
      * @return 新增的变量引用记录列表
      */
@@ -608,7 +596,6 @@ class PublicVarReferInfoService @Autowired constructor(
     /**
      * 清理已移除的变量组引用
      * 删除引用记录后，收集需要重新计算引用计数的变量信息
-     * 
      * 线程安全说明：
      * - 该方法在事务中执行，只负责删除引用记录和收集需要重算的变量信息
      * - 该方法不提供锁保护，必须由外层调用方提供锁保护
@@ -618,7 +605,6 @@ class PublicVarReferInfoService @Autowired constructor(
      * cleanupRemovedVarGroupReferences
      * - 因此该方法在资源级锁保护下执行，是线程安全的
      * - 注意：如果未来在其他地方调用此方法，必须确保外层提供适当的锁保护
-     * 
      * @param request 清理请求DTO
      * @return 需要重新计算引用计数的变量信息集合
      */
@@ -629,7 +615,7 @@ class PublicVarReferInfoService @Autowired constructor(
         val referType = request.referType
         val resourceVersion = request.resourceVersion
         val groupsToCleanup = request.groupsToCleanup
-        
+
         // 收集需要重新计算引用计数的变量信息
         val varsNeedRecalculate = mutableSetOf<VarCountUpdateInfo>()
 
@@ -662,7 +648,7 @@ class PublicVarReferInfoService @Autowired constructor(
             }.distinctBy { 
                 "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"
             }
-            
+
             varsNeedRecalculate.addAll(uniqueVars)
 
             // 删除所有引用记录（在当前事务中完成）
@@ -673,7 +659,7 @@ class PublicVarReferInfoService @Autowired constructor(
                 referType = referType,
                 referVersion = resourceVersion
             )
-            
+
         } else {
             // 按固定顺序处理，避免死锁
             val sortedGroups = groupsToCleanup.sortedWith(
@@ -684,7 +670,7 @@ class PublicVarReferInfoService @Autowired constructor(
             sortedGroups.forEach { groupKey ->
                 val groupName = groupKey.groupName
                 val version = groupKey.getVersionForDb()
-                
+
                 // 查询需要删除的引用记录，用于收集需要重算的变量信息
                 val records = publicVarReferInfoDao.listVarReferInfoByReferIdAndVersion(
                     dslContext = context,
@@ -695,7 +681,7 @@ class PublicVarReferInfoService @Autowired constructor(
                     groupName = groupName,
                     version = version
                 )
-                
+
                 if (records.isNotEmpty()) {
                     // 收集需要重算的变量
                     // 按变量去重，避免重复计算
@@ -709,9 +695,9 @@ class PublicVarReferInfoService @Autowired constructor(
                     }.distinctBy { 
                         "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"
                     }
-                    
+
                     varsNeedRecalculate.addAll(uniqueVars)
-                    
+
                     // 删除引用记录（在事务中执行，确保原子性）
                     publicVarReferInfoDao.deleteByReferIdAndGroup(
                         dslContext = context,

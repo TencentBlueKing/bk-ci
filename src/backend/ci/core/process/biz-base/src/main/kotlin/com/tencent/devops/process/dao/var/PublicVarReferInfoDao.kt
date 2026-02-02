@@ -262,17 +262,17 @@ class PublicVarReferInfoDao {
                 .and(REFER_ID.eq(referId))
                 .and(REFER_TYPE.eq(referType.name))
                 .and(REFER_VERSION.eq(referVersion))
-            
+
             // 添加可选的 groupName 条件
             if (groupName != null) {
                 conditions = conditions.and(GROUP_NAME.eq(groupName))
             }
-            
+
             // 添加可选的 version 条件
             if (version != null) {
                 conditions = conditions.and(VERSION.eq(version))
             }
-            
+
             return conditions.fetch()
                 .map {
                     ResourcePublicVarReferPO(

@@ -132,7 +132,6 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 从变量PO列表中提取公共参数（projectId和groupName）
-     * 
      * @param oldVarPOs 旧版本变量PO列表
      * @param newVarPOs 新版本变量PO列表
      * @return Pair<projectId, groupName>

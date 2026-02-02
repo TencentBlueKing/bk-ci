@@ -45,7 +45,6 @@ import java.time.LocalDateTime
 /**
  * 公共变量引用计数服务
  * 提供变量级别的引用计数更新机制
- * 
  * 注意：该类不提供锁保护，锁保护由外层（PublicVarReferInfoService）统一控制。
  */
 @Service
@@ -118,7 +117,6 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 增加引用计数（增量更新）
-     * 
      * @param context 数据库上下文
      * @param projectId 项目ID
      * @param groupName 变量组名称
@@ -196,9 +194,7 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 重新计算引用计数（无锁版本）
-     * 
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarReferInfoService）已经提供了锁保护。
-     * 
      * @param projectId 项目ID
      * @param groupName 变量组名称
      * @param varName 变量名称
@@ -278,9 +274,7 @@ class PublicVarReferCountService @Autowired constructor(
 
     /**
      * 更新变量维度的引用计数（无锁版本）
-     * 
      * 注意：该方法不提供锁保护，因为通常由外层（PublicVarReferInfoService）已经提供了锁保护。
-     * 
      * @param referRecordsToAdd 需要新增的引用记录列表
      * @param varsNeedRecalculate 需要重新计算计数的变量信息集合
      */

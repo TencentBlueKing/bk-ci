@@ -125,7 +125,7 @@ class ModelHandleServiceImpl @Autowired constructor(
             }
 
             model = modelString?.let { JsonUtil.to(it, ITemplateModel::class.java) } as? Model
-            
+
             if (model != null) {
                 if (retryCount > 0) {
                     logger.info("Successfully got resource model after $retryCount retries: $resourceId")
