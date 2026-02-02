@@ -102,7 +102,9 @@ class AppPipelineResourceImpl @Autowired constructor(
         debug: Boolean?,
         triggerAlias: List<String>?,
         triggerBranch: List<String>?,
-        triggerUser: List<String>?
+        triggerUser: List<String>?,
+        triggerEventTypes: List<String>?,
+        triggerNodeHashIds: List<String>?
     ): Result<Page<AppPipelineHistory>> {
         return Result(
             appPipelineService.listPipelineHistory(
@@ -117,7 +119,9 @@ class AppPipelineResourceImpl @Autowired constructor(
                 debug = debug,
                 triggerAlias = triggerAlias,
                 triggerBranch = triggerBranch,
-                triggerUser = triggerUser
+                triggerUser = triggerUser,
+                triggerEventTypes = triggerEventTypes,
+                triggerNodeHashIds = triggerNodeHashIds
             )
         )
     }

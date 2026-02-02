@@ -151,7 +151,13 @@ interface AppPipelineResource {
         triggerBranch: List<String>?,
         @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
-        triggerUser: List<String>? = null
+        triggerUser: List<String>? = null,
+        @Parameter(description = "触发事件", required = false)
+        @QueryParam("triggerEventTypes")
+        triggerEventTypes: List<String>? = null,
+        @Parameter(description = "触发节点HashId", required = false)
+        @QueryParam("triggerNodeHashIds")
+        triggerNodeHashIds: List<String>? = null
     ): Result<Page<AppPipelineHistory>>
 
     @Operation(summary = "获取流水线构建中的查询条件-分支")
