@@ -830,21 +830,26 @@ class EnvService @Autowired constructor(
         createdUser: String?,
         nodeStatus: NodeStatus?
     ): Page<NodeBaseInfo> {
-        val envIds = envHashIds?.map { HashUtil.decodeIdToLong(it) }
-            ?: if (envName != null) {
-                val rEnvId = envDao.getByEnvName(dslContext, projectId, envName)?.envId
-                if (rEnvId != null) {
-                    listOf(rEnvId)
-                } else {
-                    val res = mutableListOf<Long>()
-                    if (envName == AllCreateNodeEnv.name()) {
-                        res.add(AllCreateNodeEnv.ENV_ID)
-                    }
-                    res
-                }
+        val envIds = envHashIds?.map {
+            if (it.trim() == AllCreateNodeEnv.hashId()) {
+                AllCreateNodeEnv.ENV_ID
             } else {
-                emptyList()
+                HashUtil.decodeIdToLong(it)
             }
+        } ?: if (envName != null) {
+            val rEnvId = envDao.getByEnvName(dslContext, projectId, envName)?.envId
+            if (rEnvId != null) {
+                listOf(rEnvId)
+            } else {
+                val res = mutableListOf<Long>()
+                if (envName == AllCreateNodeEnv.name()) {
+                    res.add(AllCreateNodeEnv.ENV_ID)
+                }
+                res
+            }
+        } else {
+            emptyList()
+        }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }.toMutableList()
         // 去掉内置环境
