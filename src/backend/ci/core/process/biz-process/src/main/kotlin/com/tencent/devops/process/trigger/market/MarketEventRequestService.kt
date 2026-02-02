@@ -10,7 +10,6 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -42,13 +41,17 @@ class MarketEventRequestService constructor(
     fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
-            val envList = client.get(ServiceEnvironmentResource::class).listRawByEnvNames(
+            val envList = fetchAllNodeEnvList(
                 projectId = projectId,
-                envNames = listOf(workspaceName),
+                workspaceName = workspaceName,
                 userId = userId
-            ).data ?: run {
-                logger.error("get env list failed|$projectId|$workspaceName")
-                return
+            ).let {
+                if (it.isNullOrEmpty()) {
+                    logger.warn("get env list failed|$projectId|$workspaceName")
+                    return
+                } else {
+                    it
+                }
             }
             val eventDesc = I18Variable(
                 code = BK_REMOTE_DEV_TRIGGER_DESC,
@@ -57,7 +60,7 @@ class MarketEventRequestService constructor(
             val requestId = MDC.get(TraceTag.BIZID)
             envList.forEach { env ->
                 val eventId = pipelineTriggerEventService.getEventId()
-                val envHashId = env.envHashId
+                val envHashId = ""
                 val triggerEvent = PipelineTriggerEvent(
                     projectId = projectId,
                     eventId = eventId,
@@ -86,17 +89,30 @@ class MarketEventRequestService constructor(
         }
     }
 
+    private fun fetchAllNodeEnvList(
+        projectId: String,
+        workspaceName: String,
+        userId: String
+    ): List<Any>? {
+        val envList = listOf<Any>()
+        return envList
+    }
+
     /**
      * 处理PipelineTriggerEvent并分发CdsWebhookTriggerEvent
      * 用于处理研发商店事件的公共逻辑
      */
-    fun handleTriggerEvent(triggerEvent: PipelineTriggerEvent, pipelineId: String?) {
+    fun handleTriggerEvent(
+        triggerEvent: PipelineTriggerEvent,
+        envList: List<Any>? = null,
+        pipelineId: String? = null
+    ) {
         // 1. 从triggerEvent中提取事件数据
         val eventBody = triggerEvent.eventBody as? GenericWebhookEventBody ?: run {
             logger.info("triggerEvent eventBody is not GenericWebhookEventBody, skip event handling")
             return
         }
-        
+
         // 2. 从headers中提取必要信息
         val headers = eventBody.headers ?: emptyMap()
         val workspaceName = headers[AUTH_HEADER_WORKSPACE_NAME] ?: run {
@@ -115,7 +131,13 @@ class MarketEventRequestService constructor(
             logger.info("userId not found in headers, skip event handling")
             return
         }
-        
+
+        val triggerEnvList = envList ?: fetchAllNodeEnvList(
+            projectId = triggerEvent.projectId ?: "",
+            workspaceName = workspaceName,
+            userId = userId
+        ) ?: listOf()
+
         // 3. 获取事件订阅者
         val projectId = triggerEvent.projectId ?: ""
         val subscribers = pipelineId?.let {
@@ -134,34 +156,38 @@ class MarketEventRequestService constructor(
         )
         
         // 4. 分发CdsWebhookTriggerEvent
-        subscribers.forEach subscriber@{ subscriber ->
-            val agentHashId = ""
-            // 获取权限代持人
-            val pipelineOAuthUser = getPipelineOAuthUser(
-                projectId = projectId,
-                pipelineId = subscriber.pipelineId
-            ) ?: run { return@subscriber }
-            // 获取云桌面信息
-            val cdsName = getWorkspaceInfo(
-                projectId = projectId,
-                agentHashId = agentHashId,
-                userId = pipelineOAuthUser
-            )?.first ?: ""
-            sampleEventDispatcher.dispatch(
-                CdsWebhookTriggerEvent(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = subscriber.pipelineId,
-                    workspaceName = workspaceName,
-                    cdsIp = cdsIp,
-                    eventCode = triggerEvent.eventType,
-                    eventId = triggerEvent.eventId ?: 0L,
-                    envHashId = triggerEvent.eventSource ?: "",
-                    requestTime = System.currentTimeMillis(),
-                    agentHashId = agentHashId,
-                    cdsName = cdsName
-                )
-            )
+        triggerEnvList.forEach { env ->
+            run {
+                subscribers.forEach subscriber@{ subscriber ->
+                    val agentHashId = ""
+                    // 获取权限代持人
+                    val pipelineOAuthUser = getPipelineOAuthUser(
+                        projectId = projectId,
+                        pipelineId = subscriber.pipelineId
+                    ) ?: run { return@subscriber }
+                    // 获取云桌面信息
+                    val cdsName = getWorkspaceInfo(
+                        projectId = projectId,
+                        agentHashId = agentHashId,
+                        userId = pipelineOAuthUser
+                    )?.first ?: ""
+                    sampleEventDispatcher.dispatch(
+                        CdsWebhookTriggerEvent(
+                            userId = userId,
+                            projectId = projectId,
+                            pipelineId = subscriber.pipelineId,
+                            workspaceName = workspaceName,
+                            cdsIp = cdsIp,
+                            eventCode = triggerEvent.eventType,
+                            eventId = triggerEvent.eventId ?: 0L,
+                            envHashId = triggerEvent.eventSource ?: "",
+                            requestTime = System.currentTimeMillis(),
+                            agentHashId = agentHashId,
+                            cdsName = cdsName
+                        )
+                    )
+                }
+            }
         }
     }
 
