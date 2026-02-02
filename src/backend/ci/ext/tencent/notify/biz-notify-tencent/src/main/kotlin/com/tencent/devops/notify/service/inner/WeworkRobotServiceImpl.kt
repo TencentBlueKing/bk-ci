@@ -38,6 +38,8 @@ import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED
+import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_IMAGE_SIZE_EXCEED
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED
@@ -60,7 +62,6 @@ import com.tencent.devops.notify.service.WeworkService
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.Optional
@@ -139,42 +140,30 @@ class WeworkRobotServiceImpl @Autowired constructor(
      */
     private fun sendMediaMessageByChatId(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val mediaType = weworkNotifyMediaMessage.mediaType
-        val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
         val inputStream = weworkNotifyMediaMessage.mediaInputStream
 
         when (mediaType) {
             WeworkMediaType.image -> {
-                // 图片消息：流式计算base64和md5，避免内存溢出
-                val (base64Content, md5Hash) = processImageStream(inputStream)
-                weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                    sendRequest.add(
-                        WeworkRobotSingleImageMessage(
-                            chatid = chatid,
-                            postId = null,
-                            image = ImageContent(base64 = base64Content, md5 = md5Hash),
-                            visibleToUser = null
-                        )
-                    )
-                }
+                // 图片消息：流式写入临时文件，完成大小校验、base64/md5计算和消息发送
+                processImageWithTempFile(weworkNotifyMediaMessage)
             }
             WeworkMediaType.file -> {
-                // 文件消息：流式写入临时文件后上传，避免内存溢出
+                // 文件消息：流式写入临时文件后上传
                 val mediaId = uploadMediaToRobotFromStream(
                     inputStream = inputStream,
                     fileName = weworkNotifyMediaMessage.mediaName,
                     mediaType = mediaType.name,
                     key = robotKey
                 )
-                weworkNotifyMediaMessage.receivers.forEach { chatid ->
-                    sendRequest.add(
-                        WeworkRobotSingleFileMessage(
-                            chatid = chatid,
-                            postId = null,
-                            file = MediaContent(mediaId = mediaId),
-                            visibleToUser = null
-                        )
+                val sendRequest = weworkNotifyMediaMessage.receivers.map { chatid ->
+                    WeworkRobotSingleFileMessage(
+                        chatid = chatid,
+                        postId = null,
+                        file = MediaContent(mediaId = mediaId),
+                        visibleToUser = null
                     )
                 }
+                doSendRequest(sendRequest)
             }
             else -> {
                 logger.warn("unsupported media type for chatid send: $mediaType")
@@ -184,20 +173,77 @@ class WeworkRobotServiceImpl @Autowired constructor(
                 )
             }
         }
-
-        // 发送请求
-        doSendRequest(sendRequest)
     }
 
     /**
-     * 流式处理图片：同时计算base64和md5，避免内存溢出
+     * 处理图片消息：流式写入临时文件，一次性完成大小校验、base64/md5计算和消息发送
      */
-    private fun processImageStream(inputStream: InputStream): Pair<String, String> {
-        val md = MessageDigest.getInstance("MD5")
-        val digestInputStream = DigestInputStream(inputStream, md)
-        val base64Content = Base64.getEncoder().encodeToString(digestInputStream.readBytes())
-        val md5Hash = md.digest().joinToString("") { "%02x".format(it) }
-        return Pair(base64Content, md5Hash)
+    private fun processImageWithTempFile(message: WeworkNotifyMediaMessage) {
+        val tempDir = Files.createTempDirectory(WEWORK_UPLOAD_TEMP_PREFIX).toFile()
+        val tempFile = File(tempDir, message.mediaName)
+        try {
+            // 流式写入临时文件，同时计算md5
+            val md = MessageDigest.getInstance("MD5")
+            tempFile.outputStream().use { output ->
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                var bytesRead: Int
+                while (message.mediaInputStream.read(buffer).also { bytesRead = it } != -1) {
+                    output.write(buffer, 0, bytesRead)
+                    md.update(buffer, 0, bytesRead)
+                }
+            }
+            val md5Hash = md.digest().joinToString("") { "%02x".format(it) }
+
+            // 更新消息大小并校验图片
+            message.mediaSize = tempFile.length()
+            validateImageMessage(message)
+
+            // 读取临时文件内容并计算base64
+            val base64Content = Base64.getEncoder().encodeToString(tempFile.readBytes())
+
+            // 构建消息并发送
+            val sendRequest = message.receivers.map { chatid ->
+                WeworkRobotSingleImageMessage(
+                    chatid = chatid,
+                    postId = null,
+                    image = ImageContent(base64 = base64Content, md5 = md5Hash),
+                    visibleToUser = null
+                )
+            }
+            doSendRequest(sendRequest)
+        } finally {
+            cleanupTempDir(tempDir)
+        }
+    }
+
+    /**
+     * 清理临时目录及其内容
+     */
+    private fun cleanupTempDir(tempDir: File) {
+        kotlin.runCatching {
+            if (tempDir.exists() && !tempDir.deleteRecursively()) {
+                logger.warn("failed to delete temp dir: ${tempDir.absolutePath}")
+            }
+        }.onFailure { e -> logger.warn("failed to clean temp files", e) }
+    }
+
+    /**
+     * 校验图片消息：图片大小不超过2MB，格式仅支持JPG/PNG
+     */
+    private fun validateImageMessage(message: WeworkNotifyMediaMessage) {
+        if (message.mediaSize > IMAGE_MAX_SIZE) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NOTIFY_IMAGE_SIZE_EXCEED,
+                params = arrayOf((IMAGE_MAX_SIZE / 1024 / 1024).toString())
+            )
+        }
+        val fileName = message.mediaName.lowercase()
+        if (!SUPPORTED_IMAGE_FORMATS.any { fileName.endsWith(it) }) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED,
+                params = arrayOf(SUPPORTED_IMAGE_FORMATS.joinToString(", ") { it.uppercase() })
+            )
+        }
     }
 
     /**
@@ -393,5 +439,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
         const val WEWORK_MAX_SIZE = 4000
         const val WEWORK_UPLOAD_TEMP_PREFIX = "wework_upload_"
+        const val IMAGE_MAX_SIZE = 2 * 1024 * 1024L
+        val SUPPORTED_IMAGE_FORMATS = listOf(".jpg", ".png")
     }
 }
