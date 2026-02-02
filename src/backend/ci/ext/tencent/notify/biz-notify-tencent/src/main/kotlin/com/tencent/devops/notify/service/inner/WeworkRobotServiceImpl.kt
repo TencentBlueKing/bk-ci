@@ -93,13 +93,13 @@ class WeworkRobotServiceImpl @Autowired constructor(
     @Value("\${wework.robotKey}")
     lateinit var robotKey: String
 
-    @Value("\${wework.imageMaxSizeMb:2}")
+    @Value("\${wework.image-max-size-in-mb:2}")
     private var imageMaxSizeMb: Int = 2
 
-    @Value("\${wework.fileMaxSizeMb:20}")
+    @Value("\${wework.file-max-size-in-mb:20}")
     private var fileMaxSizeMb: Int = 20
 
-    @Value("\${wework.supportedImageFormats:.jpg,.png}")
+    @Value("\${wework.supported-image-formats:.jpg,.png}")
     private lateinit var supportedImageFormatsConfig: String
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
