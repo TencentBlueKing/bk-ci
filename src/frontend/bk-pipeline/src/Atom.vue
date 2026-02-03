@@ -109,7 +109,7 @@
         <Logo v-if="atom.isError" class="atom-invalid-icon" name="exclamation-triangle-shape" />
       </template>
       <span v-if="reactiveData.canSkipElement" @click.stop="">
-        <bk-checkbox class="atom-canskip-checkbox" :model-value="atom.canElementSkip" @change="handleAtomSkipChange"
+      <bk-checkbox class="atom-canskip-checkbox" :value="atom.canElementSkip" :model-value="atom.canElementSkip" @change="handleAtomSkipChange"
           :disabled="isSkip" />
       </span>
     </template>
