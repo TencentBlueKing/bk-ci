@@ -426,11 +426,12 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     return@all false
                 }
                 val beforePipelineParams = beforePipelineParamMap[releaseInfo.pipelineId]?.param
-                isAllParamValueEqualToDefault(
+                val exceptionParamCnt = countAllParamValueEqualToDefault(
                     templateParams = templateParams,
                     instanceParams = instanceParams,
                     beforeInstanceParams = beforePipelineParams ?: emptyList()
                 )
+                exceptionParamCnt > 0
             }
         if (isAllParamsResetToDefault) {
             logger.warn(
@@ -450,34 +451,19 @@ class PipelineTemplateInstanceService @Autowired constructor(
      * @param instanceParams 实例化参数
      * @param beforeInstanceParams 实例化前参数
      */
-    private fun isAllParamValueEqualToDefault(
+    private fun countAllParamValueEqualToDefault(
         templateParams: List<BuildFormProperty>,
         instanceParams: List<BuildFormProperty>,
         beforeInstanceParams: List<BuildFormProperty>
-    ): Boolean {
+    ): Int {
         val templateParamMap = templateParams.associateBy { it.id }
         val instanceParamMap = instanceParams.associateBy { it.id }
-        return beforeInstanceParams.all { beforeInstanceParam ->
-            val templateParam = templateParamMap[beforeInstanceParam.id] ?: return@all true
-            val instanceParam = instanceParamMap[beforeInstanceParam.id] ?: return@all true
-            isParamValueEqualToDefault(
-                templateParam = templateParam,
-                instanceParam = instanceParam,
-                beforeInstanceParam = beforeInstanceParam
-            )
+        return beforeInstanceParams.count { beforeInstanceParam ->
+            val instanceParam = instanceParamMap[beforeInstanceParam.id] ?: return@count false
+            val templateParam = templateParamMap[beforeInstanceParam.id] ?: return@count false
+            beforeInstanceParam.defaultValue != instanceParam.defaultValue &&
+                    instanceParam.defaultValue == templateParam.defaultValue
         }
-    }
-
-    /**
-     * 如果实例化前的值和实例化后的值不相同,并且实例化后的值和模板默认值相同,则返回true
-     */
-    private fun isParamValueEqualToDefault(
-        templateParam: BuildFormProperty,
-        instanceParam: BuildFormProperty,
-        beforeInstanceParam: BuildFormProperty
-    ): Boolean {
-        return beforeInstanceParam.defaultValue != instanceParam.defaultValue &&
-                instanceParam.defaultValue == templateParam.defaultValue
     }
 
     fun translateInstanceException(
