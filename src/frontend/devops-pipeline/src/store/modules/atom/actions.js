@@ -267,7 +267,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW', editMode, draftVersion  }) {
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW', draftVersion  }) {
         const query = {
             source
         }
@@ -276,9 +276,6 @@ export default {
         }
         if (draftVersion !== undefined && draftVersion !== null) {
             query.draftVersion = encodeURIComponent(draftVersion)
-        }
-        if (editMode) {
-            query.editMode = true
         }
         const url = `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version ?? ''}`
         return request.get(url, {
