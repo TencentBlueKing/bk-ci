@@ -20,7 +20,7 @@ import com.tencent.devops.process.trigger.event.CdsWebhookTriggerEvent
 import com.tencent.devops.process.trigger.event.GenericWebhookTriggerEvent
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerContext
 import com.tencent.devops.process.trigger.scm.listener.WebhookTriggerManager
-import com.tencent.devops.process.utils.BK_CI_CREATIVE_STREAM_NODE_AGENT_ID
+import com.tencent.devops.process.utils.NODE_AGENT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TRIGGER_EVENT_USER_ID
 import jakarta.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -154,7 +154,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
      */
     private fun CdsWebhookTriggerEvent.startParams(): Map<String, String> {
         return mutableMapOf(
-            BK_CI_CREATIVE_STREAM_NODE_AGENT_ID to this.agentHashId,
+            NODE_AGENT_ID to this.agentHashId,
             PIPELINE_START_TRIGGER_EVENT_USER_ID to userId, // 触发用户
             PIPELINE_TRIGGER_EVENT_TYPE to eventCode, // 记录事件标识，后续构建历史页面需根据事件标识过滤构建任务
             CI_NODE_ID to workspaceName, // 云桌面ID (ins-xxx)

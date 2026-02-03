@@ -134,10 +134,6 @@ const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时
 const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
 const val PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG = "BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG" // "流水线变量校验失败是否继续执行"
 
-/**
- * 创作流相关
- */
-const val BK_CI_CREATIVE_STREAM_NODE_AGENT_ID ="BK_CI_CREATIVE_STREAM_NODE_AGENT_ID"
 
 /**
  * 自定义触发材料
@@ -243,6 +239,8 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
+
+const val NODE_AGENT_ID = "BK_CI_NODE_AGENT_ID"
 
 /**
  * 保存流水线编排的最大个数
