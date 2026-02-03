@@ -27,12 +27,16 @@
 
 package com.tencent.devops.process.api.template.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
@@ -78,4 +82,34 @@ interface OpPipelineTemplateResource {
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
+
+    @Operation(summary = "回滚模板实例化任务")
+    @POST
+    @Path("/projects/{projectId}/instances/{baseId}/rollback")
+    fun rollbackTemplateInstances(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "实例任务ID", required = true)
+        @PathParam("baseId")
+        baseId: String
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "回滚单个模板实例项")
+    @POST
+    @Path("/projects/{projectId}/instanceItems/{itemId}/rollback")
+    fun rollbackTemplateInstanceByItemId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "实例项ID", required = true)
+        @PathParam("itemId")
+        itemId: String
+    ): Result<TemplateOperationRet>
 }

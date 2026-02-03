@@ -725,4 +725,7 @@ object ProcessMessageCode {
 
     // 创作流节点描述
     const val BK_CREATIVE_STREAM_NODE_DESC = "bkCreativeStreamNodeDesc"
+
+    // 回滚自模板实例化任务，基于版本[xxx]
+    const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
 }

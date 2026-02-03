@@ -202,6 +202,7 @@ class PipelineTemplateInstanceListener @Autowired constructor(
         )
         val instanceCreateReq = PipelineTemplateInstanceReq(
             projectId = projectId,
+            baseId = baseId,
             templateId = instanceBase.templateId,
             templateVersion = instanceBase.templateVersion,
             templateRefType = instanceBase.templateRefType,
