@@ -331,16 +331,17 @@ class PipelineTemplateInstanceService @Autowired constructor(
             templateId = templateId,
             version = version
         )
+        val instances = request.instanceReleaseInfos
+        val baseId = UUIDUtil.generate()
         validateInstanceParamsBeforeUpdate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
             version = version,
             templateResource = templateResource,
-            instanceReleaseInfos = request.instanceReleaseInfos
+            instanceReleaseInfos = request.instanceReleaseInfos,
+            baseId = baseId
         )
-        val instances = request.instanceReleaseInfos
-        val baseId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templateInstanceBaseDao.createTemplateInstanceBase(
@@ -395,7 +396,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         templateId: String,
         version: Long,
         instanceReleaseInfos: List<PipelineTemplateInstanceReleaseInfo>,
-        templateResource: PipelineTemplateResource
+        templateResource: PipelineTemplateResource,
+        baseId: String
     ) {
         val pipelineIds = instanceReleaseInfos.mapNotNull { releaseInfo ->
             releaseInfo.pipelineId.takeIf { it.isNotBlank() }
@@ -434,8 +436,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             }
         if (isModifyParamsResetToDefault) {
             logger.warn(
-                "instance params reset to template defaults|$projectId|$userId|$templateId|$version|" +
-                        pipelineIds.joinToString(",")
+                "instance params reset to template defaults|$projectId|$userId|$templateId|$version|$baseId"
             )
         }
     }
