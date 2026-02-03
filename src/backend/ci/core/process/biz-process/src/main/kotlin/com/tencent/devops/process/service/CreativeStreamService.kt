@@ -75,7 +75,7 @@ class CreativeStreamService constructor(
     fun creativeStreamParams(
         projectId: String,
         agentHashId: String,
-        userId: String? = null
+        userId: String
     ): Map<String, String> {
         val params = mutableMapOf(BK_CI_CREATIVE_STREAM_NODE_AGENT_ID to agentHashId)
         getWorkspaceInfo(
@@ -98,7 +98,7 @@ class CreativeStreamService constructor(
     open fun getWorkspaceInfo(
         projectId: String,
         agentHashId: String,
-        userId: String? = null
+        userId: String
     ): WorkspaceBaseInfo? = null
 
     /**
@@ -107,7 +107,7 @@ class CreativeStreamService constructor(
     open fun getWorkspaceInfoByName(
         projectId: String,
         workspaceName: String,
-        userId: String? = null
+        userId: String
     ): WorkspaceBaseInfo? = null
 
     fun getEnvNodeList(

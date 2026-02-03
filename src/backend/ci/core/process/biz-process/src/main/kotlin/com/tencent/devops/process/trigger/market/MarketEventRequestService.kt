@@ -11,6 +11,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
+import com.tencent.devops.process.pojo.WorkspaceBaseInfo
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
 import com.tencent.devops.process.pojo.trigger.PipelineEventSubscriber
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -143,10 +144,25 @@ class MarketEventRequestService constructor(
         )
 
         // 根据名称（ins-xxx）获取云桌面信息
-        val workspaceBaseInfo = creativeStreamService.getWorkspaceInfoByName(
-            projectId = projectId,
-            workspaceName = workspaceName
-        )
+        var workspaceBaseInfo: WorkspaceBaseInfo? = null
+        workspaceBaseInfo = subscribers.asSequence().mapNotNull { subscriber ->
+            val pipelineOAuthUser = creativeStreamService.getPipelineOAuthUser(
+                projectId = subscriber.projectId,
+                pipelineId = subscriber.pipelineId
+            )
+            if (pipelineOAuthUser.isNullOrBlank()) {
+                null
+            } else {
+                creativeStreamService.getWorkspaceInfoByName(
+                    projectId = projectId,
+                    workspaceName = workspaceName,
+                    userId = pipelineOAuthUser
+                )
+            }
+        }.firstOrNull()
+        if (workspaceBaseInfo == null) {
+            logger.warn("cannot find workspace base info")
+        }
         // 4. 分发CdsWebhookTriggerEvent
         triggerEnvList.forEach { env ->
             run {
