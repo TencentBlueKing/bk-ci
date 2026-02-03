@@ -83,7 +83,7 @@ class CreativeStreamService constructor(
             agentHashId = agentHashId,
             userId = userId
         )?.let {
-            params[CI_NODE_ID] = it.resourceId ?: ""
+            params[CI_NODE_ID] = it.workspaceName ?: ""
             params[CI_NODE_NAME] = it.workspaceName
             params[CI_NODE_IP] = it.innerIp ?: ""
         }
