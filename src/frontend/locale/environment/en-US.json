@@ -486,5 +486,6 @@
     "creativeResource": "Creative Flow Resources",
     "pipelineResource": "Pipeline Resource",
     "relatedCreativeFlow": "Related Creative Flow",
-    "workspace": "Workspace"
+    "workspace": "Workspace",
+    "enableTitle": "Start/Stop"
 }
