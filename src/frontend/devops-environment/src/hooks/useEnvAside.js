@@ -58,14 +58,14 @@ export default function useEnvAside () {
                 ...(envName.value ? { envName: envName.value } : {}),
                 ...(isCreateResType.value ? { createMode: true } : {})
             }
-            let res = await proxy.$store.dispatch('environment/requestEnvList', {
+            const res = await proxy.$store.dispatch('environment/requestEnvList', {
                 projectId: projectId.value,
                 params
             })
             // 如果是 CREATE 类型，过滤掉第一个数据
-            if (isCreateResType.value && res.length > 0) {
-                res = res.slice(1)
-            }
+            // if (isCreateResType.value && res.length > 0) {
+            //     res = res.slice(1)
+            // }
             envList.value = res
             proxy.$store.commit('environment/setEnvList', res)
             
