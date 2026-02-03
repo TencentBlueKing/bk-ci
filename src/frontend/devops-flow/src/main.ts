@@ -77,7 +77,8 @@ const app = createApp({
     // 将 i18n 挂载到全局属性
      window.addEventListener('change::$currentProjectId', (e: Event) => { // 蓝盾选择项目时切换
         const data = (e as CustomEvent).detail
-        if (route.params.projectId !== data.currentProjectId) {
+        console.log('data', data, route.params)
+        if (data.currentProjectId && route.params.projectId !== data.currentProjectId) {
             router.push({
                 name: ROUTE_NAMES.FLOW_LIST,
                 params: {
