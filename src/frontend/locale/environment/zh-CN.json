@@ -664,5 +664,6 @@
     "creativeResource": "创作流资源",
     "pipelineResource": "流水线资源",
     "relatedCreativeFlow": "关联的创作流",
-    "workspace": "工作空间"
+    "workspace": "工作空间",
+    "enableTitle": "启/停"
 }
