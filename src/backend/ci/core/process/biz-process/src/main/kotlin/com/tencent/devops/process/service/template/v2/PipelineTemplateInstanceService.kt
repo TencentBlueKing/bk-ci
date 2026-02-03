@@ -459,7 +459,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         return beforeInstanceParams.filter { beforeInstanceParam ->
             val instanceParam = instanceParamMap[beforeInstanceParam.id]
             val templateParam = templateParamMap[beforeInstanceParam.id]
-            instanceParam != null && templateParam == null &&
+            instanceParam != null && templateParam != null &&
                     beforeInstanceParam.defaultValue != instanceParam.defaultValue
         }.all { beforeInstanceParam ->
             val instanceParam = instanceParamMap[beforeInstanceParam.id]
