@@ -477,5 +477,6 @@
     "offlineDuration": "オフライン時間",
     "nodeUsage": "ノード用途",
     "buildAgent": "ビルドAgent",
-    "filterNodeBy": "{0}などでフィルタリングします"
+    "filterNodeBy": "{0}などでフィルタリングします",
+    "enableTitle": "スタート/ストップ"
 }

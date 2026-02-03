@@ -59,7 +59,7 @@
                 width="40"
             />
             <bk-table-column
-                :label="$t('environment.nodeInfo.hostName')"
+                :label="$t('environment.nodeInfo.displayName')"
                 fixed="left"
                 prop="displayName"
                 width="280"
@@ -144,28 +144,35 @@
             <bk-table-column
                 :label="$t('environment.operateUser')"
                 prop="createdUser"
-                width="180"
+                width="200"
             />
             <bk-table-column
                 :label="$t('environment.operateTime')"
                 prop="operateTime"
-                width="180"
+                width="200"
             />
-
+            <bk-table-column
+                :label="$t('environment.enableTitle')"
+                prop="operate"
+                fixed="right"
+                min-width="80"
+            >
+                <template slot-scope="{ row }">
+                    <bk-switcher
+                        v-model="row.envEnableNode"
+                        size="small"
+                        theme="primary"
+                        @change="(value) => handleToggleEnableNode(row, value)"
+                    />
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :label="$t('environment.operation')"
                 prop="operate"
                 fixed="right"
-                min-width="150"
+                min-width="100"
             >
                 <template slot-scope="{ row }">
-                    <bk-button
-                        theme="primary"
-                        text
-                        @click="handleToggleEnableNode(row)"
-                    >
-                        {{ row.envEnableNode ? $t('environment.Disable') : $t('environment.Enable') }}
-                    </bk-button>
                     <bk-button
                         theme="primary"
                         text
@@ -237,7 +244,7 @@
             const resType = computed(() => proxy.$route.params.resType)
             const searchList = computed(() => ([
                 {
-                    name: proxy.$t('environment.nodeInfo.hostName'),
+                    name: proxy.$t('environment.nodeInfo.displayName'),
                     id: 'displayName',
                     default: true
                 },
@@ -397,12 +404,11 @@
             }
 
             // 启用/停用节点
-            const handleToggleEnableNode = async (row) => {
+            const handleToggleEnableNode = async (row, value) => {
                 try {
-                    const enableNode = !row.envEnableNode
-                    await toggleEnableNode(row.nodeHashId, enableNode)
+                    await toggleEnableNode(row.nodeHashId, value)
                     proxy.$bkMessage({
-                        message: enableNode ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess'),
+                        message: value ? proxy.$t('environment.enableSuccess') : proxy.$t('environment.disableSuccess'),
                         theme: 'success'
                     })
                     fetchData()
