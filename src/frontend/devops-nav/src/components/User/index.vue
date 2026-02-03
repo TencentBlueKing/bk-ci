@@ -49,7 +49,7 @@
             clickoutside
         }
     })
-    export default class User extends Vue {
+        export default class User extends Vue {
         @Prop()
         username: string
 

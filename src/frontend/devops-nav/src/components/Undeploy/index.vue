@@ -33,7 +33,7 @@
     import { Component, Prop } from 'vue-property-decorator'
 
     @Component()
-    export default class Undeploy extends Vue {
+        export default class Undeploy extends Vue {
         @Prop({ default: false })
         isInPopup: boolean
 

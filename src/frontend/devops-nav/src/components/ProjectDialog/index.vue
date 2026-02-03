@@ -106,7 +106,7 @@
     } from '@/utils/permission'
 
     @Component
-    export default class ProjectDialog extends Vue {
+        export default class ProjectDialog extends Vue {
         @Prop({ default: false })
         initShowDialog: boolean
 

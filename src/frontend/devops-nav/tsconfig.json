@@ -1,34 +1,24 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist/",
-        "sourceMap": true,
-        "strict": true,
-        "jsx": "preserve",
-        "noImplicitReturns": true,
-        "experimentalDecorators": true,
-        "strictPropertyInitialization": false,
-        "strictNullChecks": false,
-        "allowJs": true,
-        "noImplicitAny": false,
-        "skipLibCheck": true,
-        "module": "esnext",
-        "target": "es5",
-        "lib": [
-            "dom",
-            "es2017",
-            "ESNext"
-        ],
-        "types": [
-            "node",
-            "webpack-env"
-        ],
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ]
-        }
-    },
-    "include": [
-        "./src/**/*"
-    ]
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "strict": true,
+    "jsx": "preserve",
+    "noImplicitReturns": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "strictNullChecks": false,
+    "allowJs": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "module": "esnext",
+    "target": "es5",
+    "lib": ["dom", "es2017", "ESNext"],
+    "types": ["node", "webpack-env"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["./src/**/*"]
 }
