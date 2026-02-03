@@ -567,6 +567,33 @@ class EnvService @Autowired constructor(
         envHashId: String,
         checkPermission: Boolean
     ): EnvWithPermission {
+        // 创作流特供
+        if (envHashId == AllCreateNodeEnv.hashId()) {
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                    params = arrayOf(envHashId)
+                )
+            }
+            return EnvWithPermission(
+                envHashId = envHashId,
+                name = AllCreateNodeEnv.name(),
+                desc = AllCreateNodeEnv.name(),
+                envType = EnvType.CREATE.name, // 兼容性代码
+                envNodeType = EnvNodeType.NODE.name,
+                nodeCount = null,
+                tags = null,
+                envVars = null,
+                createdUser = "",
+                createdTime = 0,
+                updatedUser = "",
+                updatedTime = 0,
+                canEdit = false,
+                canDelete = false,
+                canUse = null,
+                projectName = client.get(ServiceProjectResource::class).get(projectId).data?.projectName
+            )
+        }
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (checkPermission && !environmentPermissionService.checkEnvPermission(
                 userId = userId,
