@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       }),
-      !isDev && renameHtmlPlugin('frontend#flow#index.html'),
+      !isDev && renameHtmlPlugin(`frontend#${PUBLIC_PATH}#index.html`),
     ].filter(Boolean),
     
     resolve: {
