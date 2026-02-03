@@ -1,6 +1,6 @@
 export const jumpUrlPre = 'https://bkmonitor.woa.com/grafana/dashboard?'
 
-export const jumpUrlPostBuildResource = `${window.BK_PAAS_PRIVATE_URL}/console/environment`
+export const jumpUrlPostBuildResource = `${WEB_URL_PREFIX}/environment`
 /**
  * 生成完整跳转URL
  * @param {string} urlParams - URL参数字符串
@@ -194,6 +194,18 @@ export const urlMap = {
 
     goMonitorBoard: goMonitorBoard,
 
-
-
 }
+
+export const warnTypeMap = {
+    RECOVERED: '已恢复',
+    CLOSED: '已关闭',
+    ABNORMAL: '未恢复',
+}
+
+export const warnServiceMap = {
+    BKCI_AGENT: '第三方构建机',
+    BKCI_PIPELINE: '流水线',
+    BKCI_REPO: '制品库',
+}
+
+export const serviceType =['BKCI_AGENT','BKCI_PIPELINE','BKCI_REPO']

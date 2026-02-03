@@ -3,6 +3,7 @@
         <div
             ref="chartRef"
             class="stacked-bar-chart"
+            v-bkloading="{ isLoading: loading }"
         >
         </div>
     </div>
@@ -25,6 +26,10 @@
             height: {
                 type: String,
                 default: '300px'
+            },
+            loading: {
+                type: Boolean,
+                default: false
             }
         },
         setup (props) {

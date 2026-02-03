@@ -107,8 +107,10 @@
             const initChart = () => {
                 if (!chartRef.value) return
 
-                // 初始化图表
-                chartInstance = echarts.init(chartRef.value)
+                // 如果图表已存在，只更新配置，不重新初始化
+                if (!chartInstance) {
+                    chartInstance = echarts.init(chartRef.value)
+                }
 
                 const option = {
                     tooltip: {
@@ -214,6 +216,11 @@
                 }
 
                 chartInstance.setOption(option)
+            }
+            
+            // 绑定事件监听器（只在初始化时调用一次）
+            const bindEvents = () => {
+                if (!chartInstance) return
 
                 // 监听点击事件
                 chartInstance.on('click', (params) => {
@@ -256,9 +263,26 @@
                 () => [props.data, props.centerText, props.centerSubText],
                 () => {
                     if (chartInstance) {
+                        console.log(props.data,'props.data')
+                        
+                        // 清除之前的选中状态
+                        if (selectedIndex.value >= 0) {
+                            chartInstance.dispatchAction({
+                                type: 'unselect',
+                                seriesIndex: 0,
+                                dataIndex: selectedIndex.value
+                            })
+                        }
+                        
+                        // 重置选中状态
                         selectedIndex.value = -1
                         selectedItem.value = null
+                        
+                        // 更新图表数据
                         initChart()
+                        
+                        // 通知父组件选中状态已清除
+                        emit('update:selectedItem', null)
                     }
                 },
                 { deep: true }
@@ -273,6 +297,7 @@
 
             onMounted(() => {
                 initChart()
+                bindEvents()
                 window.addEventListener('resize', handleResize)
             })
 

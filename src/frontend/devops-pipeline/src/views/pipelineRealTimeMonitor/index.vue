@@ -46,7 +46,7 @@
         />
         
         <!-- 告警模块（已注释，保留结构） -->
-        <!-- <AlertsSection /> -->
+        <AlertsSection :time-range="timeRange" />
     </div>
 </template>
 
