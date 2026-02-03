@@ -25,12 +25,13 @@
                 />
                 <aside class="template-edit-right-aside">
                     <DraftManager
+                        ref="draftManager"
                         v-model="isConflictDraft"
-                        :draft-list="draftList"
                         :laster-draft-info="lasterDraftInfo"
-                        :current-edit-yaml="currentEditYaml"
-                        :draft-yaml="draftYaml"
-                        @diff="handleDiff"
+                        :release-version="releaseVersion"
+                        :project-id="projectId"
+                        :unique-id="templateId"
+                        :is-template="true"
                         @rollback="handleRollback"
                         @continue-save-draft="continueSaveDraft"
                         @go-pipeline-model="goPipelineModel"
@@ -73,6 +74,7 @@
     } from '@/utils/permission'
     import {
         convertMStoStringByRule,
+        convertTime,
         showPipelineCheckMsg
     } from '@/utils/util'
     import Edit from '@/views/subpages/edit'
@@ -92,11 +94,8 @@
             return {
                 isLoading: true,
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                draftList: [],
                 lasterDraftInfo: null,
                 isConflictDraft: false,
-                currentEditYaml: '', // 当前编辑的 YAML 内容
-                draftYaml: '' // 选中的草稿的 YAML 内容
             }
         },
         computed: {
@@ -129,6 +128,9 @@
             },
             templateId () {
                 return this.$route.params.templateId
+            },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion ?? ''
             },
             currentVersionId () {
                 return this.$route.params?.version ?? this.pipelineInfo?.version
@@ -166,7 +168,6 @@
         mounted () {
             this.requestQualityAtom()
             this.requestMatchTemplateRules()
-            this.getDraftList()
         },
         beforeDestroy () {
             this.setPipeline(null)
@@ -189,7 +190,7 @@
                 'updateContainer'
             ]),
             ...mapActions({
-                getTemplateDraftVersion: 'common/getTemplateDraftVersion',
+                rollbackTemplateVersion: 'templates/rollbackTemplateVersion',
                 getTemplateDraftStatus: 'common/getTemplateDraftStatus'
             }),
             requestTemplateByVersion (version = this.currentVersionId) {
@@ -206,21 +207,6 @@
                     })
                 }
             },
-            async getDraftList () {
-                try {
-                    const res = await this.getTemplateDraftVersion({
-                        projectId: this.projectId,
-                        templateId : this.templateId,
-                        version: this.pipelineInfo?.version
-                    })
-                    this.draftList = res
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
             // 构建 model 对象
             buildModel () {
                 return Object.assign({}, this.pipeline, {
@@ -231,46 +217,52 @@
                     ]
                 })
             },
-            async handleDiff (draftVersion) {
-                try {
-                    const pipeline = this.buildModel()
-                    
-                    const [newDraftInfo, draftInfo] = await Promise.all([
-                        // 获取当前编辑的yaml数据
-                        this.transfer({
-                            projectId: this.projectId,
-                            pipelineId: this.templateId,
-                            actionType: 'FULL_MODEL2YAML',
-                            modelAndSetting: {
-                                model: pipeline,
-                                setting: this.pipelineSetting
-                            }
-                        }),
-                        // 获取选中草稿的yaml数据
-                        this.fetchTemplateByVersion({
-                            projectId: this.projectId,
-                            templateId: this.templateId,
-                            version: this.pipelineInfo?.version,
-                            draftVersion
-                        })
-                    ])
-                    
-                    this.currentEditYaml = newDraftInfo.newYaml
-                    this.draftYaml = draftInfo?.yamlPreview?.yaml
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
-            handleRollback (item) {
+            async handleRollback (item) {
                 this.$bkInfo({
                     maskClose: false,
+                    confirmLoading: true,
                     title: this.$t('confirmRollbackToThisHistory'),
-                    subTitle: this.$t('historyRollback', [item.updater, item.updateTime]),
-                    confirmFn: () => {
-                        // TODO 调用回滚接口
+                    subTitle: this.$t('historyRollback', [item.updater, convertTime(item.updateTime)]),
+                    confirmFn: async () => {
+                        try {
+                            const res = await this.rollbackTemplateVersion({
+                                projectId: this.projectId,
+                                templateId: this.templateId,
+                                version: item.version,
+                                draftVersion: item.draftVersion
+                            })
+                            
+                            if (res?.version) {
+                                // 重新获取模板摘要信息
+                                await this.requestTemplateSummary(this.$route.params)
+                                // 刷新草稿列表（通过子组件）
+                                if (this.$refs.draftManager) {
+                                    await this.$refs.draftManager.refresh()
+                                }
+                                // 获取回滚后的模板完整数据并更新到 store
+                                await this.requestPipeline({
+                                    projectId: this.projectId,
+                                    templateId: this.templateId,
+                                    version: res.version
+                                })
+                                
+                                // 跳转到编辑页面
+                                this.$router.replace({
+                                    name: 'templateEdit',
+                                    params: {
+                                        ...this.$route.params,
+                                        version: res.version
+                                    },
+                                })
+                                return true
+                            }
+                        } catch (error) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: error.message ?? error
+                            })
+                            return false
+                        }
                     }
                 })
             },
@@ -292,7 +284,7 @@
                     showPipelineCheckMsg(this.$bkMessage, e.message, this.$createElement)
                 } else {
                     this.$showTips({
-                        message: err.message || err,
+                        message: e.message || e,
                         theme: 'error'
                     })
                 }
@@ -329,6 +321,7 @@
                                 templateSetting: this.pipelineSetting
                             }),
                         baseVersion: this.pipelineInfo?.baseVersion,
+                        baseDraftVersion: this.pipelineInfo?.draftVersion,
                         type: this.pipelineInfo?.type
                     })
                     if (data) {
@@ -347,7 +340,10 @@
                                 version: data.version
                             }
                         })
-
+                        // 刷新草稿列表（通过子组件）
+                        if (this.$refs.draftManager) {
+                            await this.$refs.draftManager.refresh()
+                        }
                         result = true
                     } else {
                         this.$showTips({
@@ -381,6 +377,10 @@
                 const draftStatus = await this.getTemplateDraftStatus({
                     projectId: this.projectId,
                     templateId: this.templateId,
+                    ...(this.pipelineInfo?.draftVersion ? {
+                        version: this.pipelineInfo?.version,
+                        baseDraftVersion: this.pipelineInfo?.draftVersion,
+                    } : {}),
                     actionType: 'SAVE'
                 })
                 this.lasterDraftInfo = draftStatus

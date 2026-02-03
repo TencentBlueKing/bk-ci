@@ -10,13 +10,15 @@
                 @click="handleShowDraftList"
             >
                 <span>{{ $t("lastSaveTime") }}：</span>
-                {{ draftList[0]?.updater }} {{ formatTime(draftList[0]?.updateTime) }}
+                {{ formatTime(draftList[0]?.updateTime) }} {{ draftList[0]?.updater }}
                 <i :class="['bk-icon', `icon-angle-${isShowDraftList ? 'up' : 'down'}`]" />
             </p>
 
             <ul
+                ref="draftListRef"
                 class="draft-list"
                 v-if="isShowDraftList"
+                @scroll="handleScroll"
             >
                 <li>
                     <i class="bk-icon icon-info-circle tips-icon" />
@@ -28,21 +30,22 @@
                     :class="['draft-item', item.draftVersion === draftList[0]?.draftVersion ? 'draft-item-active' : '']"
                 >
                     <p>
-                        <span class="version-name">{{ $t('basedOn', [item.baseVersion]) }}</span>
-                        <span class="update-info">{{ item.updater }} {{ formatTime(item.updateTime) }}</span>
+                        <span class="update-info">{{ formatTime(item.updateTime) }} {{ item.updater }}</span>
+                        <span class="version-name">{{ $t('basedOn', [item.baseVersionName]) }}</span>
                     </p>
                     <span
                         v-if="index !== 0"
                         class="options"
                     >
                         <VersionDiffEntry
-                            style="cursor: pointer;"
+                            :class="['diff-button',{
+                                'develop-txt-disabled': !hasDraftPipeline
+                            }]"
                             :text="true"
-                            :base-yaml="currentEditYaml"
-                            :draft-yaml="draftYaml"
-                            :draft-info="item"
-                            @click.native.stop="handleDiff(item.draftVersion)"
-                            class="diff-button"
+                            :disabled="!hasDraftPipeline"
+                            :version="releaseVersion"
+                            :latest-version="item.version"
+                            :draft-version="item.draftVersion"
                         >
                             <Logo
                                 name="diff"
@@ -63,6 +66,12 @@
                         v-else
                         class="update-tip"
                     >{{ $t('lastSaveTime') }}</span>
+                </li>
+                <li
+                    v-if="loading"
+                    v-bkloading="{ isLoading: loading }"
+                    class="loading-item"
+                >
                 </li>
             </ul>
         </div>
@@ -93,13 +102,14 @@
                     <span>{{ formatTime(conflictDraftInfo?.updateTime) }}</span>
 
                     <VersionDiffEntry
-                        style="cursor: pointer;"
+                        :class="['diff-button',{
+                            'develop-txt-disabled': !hasDraftPipeline
+                        }]"
                         :text="true"
-                        :base-yaml="currentEditYaml"
-                        :draft-yaml="draftYaml"
-                        :draft-info="conflictDraftInfo"
-                        @click.native.stop="handleDiff(conflictDraftInfo?.draftVersion)"
-                        class="diff-button"
+                        :disabled="!hasDraftPipeline"
+                        :version="releaseVersion"
+                        :latest-version="conflictDraftInfo.version"
+                        :draft-version="conflictDraftInfo.draftVersion"
                     >
                         <Logo
                             name="diff"
@@ -148,7 +158,7 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry.vue'
@@ -160,41 +170,54 @@
             Logo
         },
         props: {
-            // 草稿列表
-            draftList: {
-                type: Array,
-                default: () => []
-            },
             // 最新草稿信息
             lasterDraftInfo: {
                 type: Object,
                 default: () => ({})
             },
-            // 当前编辑的YAML
-            currentEditYaml: {
-                type: String,
-                default: ''
-            },
-            // 草稿YAML
-            draftYaml: {
-                type: String,
-                default: ''
-            },
             // 是否显示冲突对话框
             value: {
+                type: Boolean,
+                default: false
+            },
+            // 当前流水线最新版本
+            releaseVersion: {
+                type: Number,
+                request: true
+            },
+            // 项目ID
+            projectId: {
+                type: String,
+                required: true
+            },
+            // 流水线ID或模板ID
+            uniqueId: {
+                type: String,
+                required: true
+            },
+            // 是否为模板
+            isTemplate: {
                 type: Boolean,
                 default: false
             }
         },
         data () {
             return {
-                isShowDraftList: false
+                isShowDraftList: false,
+                draftList: [],
+                loading: false,
+                currentPage: 1,
+                pageSize: 10,
+                hasMore: true
             }
         },
         computed: {
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
             ]),
+            hasDraftPipeline () {
+                return (this.pipelineInfo?.version !== this.pipelineInfo?.releaseVersion) ?? false
+            },
             // 冲突状态相关的computed
             isConflictStatus () {
                 return this.lasterDraftInfo?.status === 'CONFLICT'
@@ -241,6 +264,16 @@
                 return ''
             }
         },
+        watch: {
+            'pipelineInfo.version': {
+                handler (newVal, oldVal) {
+                    if (newVal && newVal !== oldVal) {
+                        this.resetAndFetch()
+                    }
+                },
+                immediate: true
+            }
+        },
         mounted () {
             // 监听全局点击事件
             document.addEventListener('click', this.handleGlobalClick)
@@ -250,11 +283,70 @@
             document.removeEventListener('click', this.handleGlobalClick)
         },
         methods: {
+            ...mapActions({
+                getDraftVersion: 'common/getDraftVersion',
+                getTemplateDraftVersion: 'common/getTemplateDraftVersion'
+            }),
             formatTime (value) {
                 return convertTime(value)
             },
-            handleShowDraftList () {
+            async handleShowDraftList () {
                 this.isShowDraftList = !this.isShowDraftList
+            },
+            // 重置并重新获取数据
+            async resetAndFetch () {
+                this.currentPage = 1
+                this.hasMore = true
+                this.draftList = []
+                await this.loadDraftList()
+            },
+            // 加载草稿列表
+            async loadDraftList (isLoadMore = false) {
+                if (this.loading || (!isLoadMore && !this.hasMore)) {
+                    return
+                }
+
+                try {
+                    this.loading = true
+                    const params = {
+                        projectId: this.projectId,
+                        [this.isTemplate ? 'templateId' : 'pipelineId']: this.uniqueId,
+                        version: this.pipelineInfo?.version,
+                        page: this.currentPage,
+                        pageSize: this.pageSize
+                    }
+
+                    const action = this.isTemplate ? this.getTemplateDraftVersion : this.getDraftVersion
+                    const res = await action(params)
+
+                    const newRecords = res.records || []
+                    
+                    if (isLoadMore) {
+                        this.draftList = [...this.draftList, ...newRecords]
+                    } else {
+                        this.draftList = newRecords
+                    }
+
+                    // 判断是否还有更多数据
+                    this.hasMore = newRecords.length === this.pageSize && this.draftList.length < (res.count || 0)
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
+                } finally {
+                    this.loading = false
+                }
+            },
+            // 滚动加载
+            handleScroll (event) {
+                const { scrollTop, scrollHeight, clientHeight } = event.target
+                const threshold = 50 // 距离底部50px时触发加载
+                
+                if (scrollHeight - scrollTop - clientHeight < threshold && this.hasMore && !this.loading) {
+                    this.currentPage++
+                    this.loadDraftList(true)
+                }
             },
             handleGlobalClick (event) {
                 // 检查点击的元素是否在特定的CSS类中
@@ -263,16 +355,15 @@
                     || event.target.closest('.bk-dialog')
                     || event.target.closest('.last-save-time')
                     || event.target.closest('.draft-list')
+                    || event.target.closest('.bk-select-dropdown-content')
 
                 if (this.isShowDraftList && !isInExcludedElement) {
                     this.isShowDraftList = false
                 }
             },
-            handleDiff (draftVersion) {
-                this.$emit('diff', draftVersion)
-            },
             handleRollback (item) {
                 this.$emit('rollback', item)
+                this.isShowDraftList = false
             },
             handleContinueSaveDraft () {
                 this.$emit('continue-save-draft')
@@ -280,6 +371,10 @@
             goPipelineModel () {
                 this.$emit('go-pipeline-model')
             },
+            // 供父组件调用的刷新方法
+            async refresh () {
+                await this.resetAndFetch()
+            }
         }
     }
 </script>
@@ -305,6 +400,8 @@
             left: 50%;
             transform: translateX(-50%);
             width: 388px;
+            max-height: 350px;
+            overflow-y: auto;
             background-color: #fff;
             border: 1px solid #DCDEE5;
             box-shadow: 0 2px 6px 0 #0000001a;
@@ -341,10 +438,10 @@
                 background: #E1ECFF;
                 .update-info {
                     color: #3A84FF;
+                    margin-right: 4px;
                 }
             }
             .options {
-                // visibility: hidden;
                 .rollback-icon {
                     transform: rotate(180deg);
                 }
@@ -354,6 +451,14 @@
                 background: #FDEED8;
                 border-radius: 2px;
                 color: #E38B02;
+            }
+            .loading-item {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #979BA5;
+                font-size: 12px;
+                height: 36px;
             }
         }
     }
@@ -387,6 +492,7 @@
             color: #b4b4b7;
         }
         .diff-button {
+            cursor: pointer;
             margin-left: 16px;
         }
     }
@@ -398,5 +504,9 @@
         color: #4d4f56;
         font-size: 14px;
     }
+}
+.develop-txt-disabled {
+    cursor: not-allowed;
+    color: #c4c6cc;
 }
 </style>

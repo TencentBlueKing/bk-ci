@@ -19,12 +19,13 @@
         />
         <aside class="pipeline-edit-right-aside">
             <DraftManager
+                ref="draftManager"
                 v-model="isConflictDraft"
-                :draft-list="draftList"
                 :laster-draft-info="lasterDraftInfo"
-                :current-edit-yaml="currentEditYaml"
-                :draft-yaml="draftYaml"
-                @diff="handleDiff"
+                :release-version="releaseVersion"
+                :project-id="projectId"
+                :unique-id="pipelineId"
+                :is-template="false"
                 @rollback="handleRollback"
                 @continue-save-draft="continueSaveDraft"
                 @go-pipeline-model="goPipelineModel"
@@ -122,11 +123,8 @@
         },
         data () {
             return {
-                draftList: [],
                 lasterDraftInfo: null,
                 isConflictDraft: false,
-                currentEditYaml: '', // 当前编辑的 YAML 内容
-                draftYaml: '' // 选中的草稿的 YAML 内容
             }
         },
         computed: {
@@ -162,6 +160,9 @@
             },
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
+            },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion ?? ''
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
@@ -204,13 +205,10 @@
                 immediate: true
             }
         },
-        mounted () {
-            this.getDraftList()
-        },
         methods: {
             ...mapActions({
-                getDraftVersion: 'common/getDraftVersion',
                 getDraftStatus: 'common/getDraftStatus',
+                rollbackPipelineVersion: 'pipelines/rollbackPipelineVersion',
                 updatePipelineMode: 'updatePipelineMode'
             }),
             ...mapActions('atom', [
@@ -218,25 +216,10 @@
                 'saveDraftPipeline',
                 'setSaveStatus',
                 'requestPipelineSummary',
+                'requestPipeline',
                 'transfer',
-                'fetchPipelineByVersion',
                 'updateContainer'
             ]),
-            async getDraftList () {
-                try {
-                    const res = await this.getDraftVersion({
-                        projectId: this.projectId,
-                        pipelineId: this.pipelineId,
-                        version: this.pipelineInfo?.version
-                    })
-                    this.draftList = res
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
             // 构建 modelAndSetting 对象
             buildModelAndSetting () {
                 const pipeline = Object.assign({}, this.pipeline, {
@@ -258,42 +241,52 @@
                     })
                 }
             },
-            async handleDiff (draftVersion) {
-                try {
-                    const modelAndSetting = this.buildModelAndSetting()
-                    const [newDraftInfo, draftInfo] = await Promise.all([
-                        // 获取当前编辑的yaml数据
-                        this.transfer({
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId,
-                            actionType: 'FULL_MODEL2YAML',
-                            modelAndSetting
-                        }),
-                        // 获取选中草稿的yaml数据
-                        this.fetchPipelineByVersion({
-                            projectId: this.projectId,
-                            pipelineId: this.pipelineId,
-                            version: this.pipelineInfo?.version,
-                            draftVersion
-                        })
-                    ])
-                    
-                    this.currentEditYaml = newDraftInfo.newYaml
-                    this.draftYaml = draftInfo?.yamlPreview?.yaml
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
-            handleRollback (item) {
+            async handleRollback (item) {
                 this.$bkInfo({
                     maskClose: false,
+                    confirmLoading: true,
                     title: this.$t('confirmRollbackToThisHistory'),
-                    subTitle: this.$t('historyRollback', [item.updater, item.updateTime]),
-                    confirmFn: () => {
-                        // TODO 调用回滚接口
+                    subTitle: this.$t('historyRollback', [item.updater, convertTime(item.updateTime)]),
+                    confirmFn: async () => {
+                        try {
+                            const res = await this.rollbackPipelineVersion({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                version: item.version,
+                                draftVersion: item.draftVersion
+                            })
+                            
+                            if (res?.version) {
+                                // 重新获取流水线摘要信息
+                                await this.requestPipelineSummary(this.$route.params)
+                                // 刷新草稿列表（通过子组件）
+                                if (this.$refs.draftManager) {
+                                    await this.$refs.draftManager.refresh()
+                                }
+                                // 获取回滚后的流水线完整数据并更新到 store
+                                await this.requestPipeline({
+                                    projectId: this.projectId,
+                                    pipelineId: this.pipelineId,
+                                    version: res.version
+                                })
+                                
+                                // 跳转到编辑页面
+                                this.$router.replace({
+                                    name: 'pipelinesEdit',
+                                    params: {
+                                        ...this.$route.params,
+                                        version: res.version
+                                    },
+                                })
+                                return true
+                            }
+                        } catch (error) {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: error.message ?? error
+                            })
+                            return false
+                        }
                     }
                 })
             },
@@ -379,7 +372,10 @@
                         version
                     }
                 })
-                await this.getDraftList()
+                // 刷新草稿列表（通过子组件）
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
                 this.$bkMessage({
                     theme: 'success',
                     message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
@@ -405,6 +401,10 @@
                     const draftStatus = await this.getDraftStatus({
                         projectId: this.projectId,
                         pipelineId: this.pipelineId,
+                        ...(this.pipelineInfo?.draftVersion ? {
+                            version: this.pipelineInfo?.version,
+                            baseDraftVersion: this.pipelineInfo?.draftVersion,
+                        } : {}),
                         actionType: 'SAVE'
                     })
                     this.lasterDraftInfo = draftStatus

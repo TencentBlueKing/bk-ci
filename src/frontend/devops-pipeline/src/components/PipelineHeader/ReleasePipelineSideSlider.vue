@@ -75,7 +75,7 @@
                     >
                         <template slot="title">
                             <i18n path="template.draftPublished">
-                                <span>{{ draftStatus?.draft?.baseVersionName || draftStatus?.draft?.baseVersion }}</span>
+                                <span>{{ draftStatus?.draft?.baseVersionName }}</span>
                                 <span class="red-tip">{{ $t('Earlier') }}</span>
                                 <span>{{ draftStatus?.release?.versionName }}</span>
                             </i18n>
@@ -859,11 +859,15 @@
                     const params = {
                         projectId: this.$route.params.projectId,
                         actionType: 'RELEASE',
+                        ...(this.pipelineInfo?.draftVersion ? {
+                            version: this.pipelineInfo?.version,
+                            baseDraftVersion: this.pipelineInfo?.draftVersion,
+                        } : {}),
                         ...(this.isTemplate ? { templateId: this.$route.params.templateId } : { pipelineId: this.$route.params.pipelineId })
                     }
                     const res = await request(params)
                     this.draftStatus = res
-                } catch (e) {
+                } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message ?? error
