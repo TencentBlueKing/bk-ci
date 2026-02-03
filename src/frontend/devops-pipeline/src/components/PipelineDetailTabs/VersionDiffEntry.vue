@@ -237,7 +237,8 @@
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
                         ...(draftVersion ? {draftVersion} : {}),
-                        archiveFlag: this.archiveFlag
+                        archiveFlag: this.archiveFlag,
+                        source: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml

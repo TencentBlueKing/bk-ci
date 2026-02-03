@@ -239,7 +239,7 @@
                     id: 'description'
                 }, {
                     name: this.isTemplate ? this.$t('template.lastModifiedBy') : this.$t('audit.operator'),
-                    id: 'creator'
+                    id: 'updater'
                 }]
             },
             filterQuery () {

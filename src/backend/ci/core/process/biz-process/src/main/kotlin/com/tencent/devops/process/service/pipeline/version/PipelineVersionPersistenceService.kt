@@ -499,7 +499,8 @@ class PipelineVersionPersistenceService @Autowired constructor(
      */
     fun releaseYamlFile(
         context: PipelineVersionCreateContext,
-        resourceOnlyVersion: PipelineResourceOnlyVersion
+        resourceOnlyVersion: PipelineResourceOnlyVersion,
+        source: PipelineYamlFileReleaseReqSource
     ): PipelineYamlFileReleaseResult {
         with(context) {
             val yamlFileReleaseReq = PipelineYamlFileReleaseReq(
@@ -516,7 +517,7 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     ?: "update template ${pipelineBasicInfo.pipelineName}",
                 targetAction = targetAction!!,
                 targetBranch = branchName,
-                source = PipelineYamlFileReleaseReqSource.TEMPLATE_INSTANCE,
+                source = source,
                 templateName = templateInstanceBasicInfo?.templateName
             )
             val yamlFileReleaseResult = pipelineYamlFacadeService.releaseYamlFile(
