@@ -18,7 +18,7 @@
                 @click.stop="handleCopyContainer" name="clipboard" size="16" />
             <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
             <span @click.stop v-if="reactiveData.canSkipElement">
-                <bk-checkbox class="atom-canskip-checkbox" :model-value="container.runContainer"
+                <bk-checkbox class="atom-canskip-checkbox" :value="container.runContainer" :model-value="container.runContainer"
                     @change="handleContainerRunChange" :disabled="disabled"></bk-checkbox>
             </span>
             <Logo v-if="
@@ -305,8 +305,9 @@ export default {
         handleContainerRunChange(value) {
             const newElements = this.container.elements.map((element) => ({
                 ...element,
-                canElementSkip: value,
+                canElementSkip: value
             }))
+            
             this.handleChange({
                 ...this.container,
                 elements: newElements,
