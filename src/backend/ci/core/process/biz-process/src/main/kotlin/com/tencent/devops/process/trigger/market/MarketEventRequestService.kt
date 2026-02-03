@@ -142,16 +142,16 @@ class MarketEventRequestService constructor(
             eventCode = triggerEvent.eventType
         )
 
+        // 根据名称（ins-xxx）获取云桌面信息
+        val workspaceBaseInfo = creativeStreamService.getWorkspaceInfoByName(
+            projectId = projectId,
+            workspaceName = workspaceName
+        )
         // 4. 分发CdsWebhookTriggerEvent
         triggerEnvList.forEach { env ->
             run {
                 subscribers.forEach subscriber@{ subscriber ->
                     val agentHashId = env.agentHashId
-                    // 获取云桌面信息
-                    val workspaceBaseInfo = creativeStreamService.getWorkspaceInfo(
-                        projectId = projectId,
-                        agentHashId = agentHashId
-                    )
                     sampleEventDispatcher.dispatch(
                         CdsWebhookTriggerEvent(
                             userId = userId,
@@ -164,7 +164,7 @@ class MarketEventRequestService constructor(
                             envHashId = triggerEvent.eventSource ?: "",
                             requestTime = System.currentTimeMillis(),
                             agentHashId = agentHashId,
-                            cdsName = workspaceBaseInfo?.workspaceName ?: ""
+                            cdsName = workspaceBaseInfo?.displayName ?: ""
                         )
                     )
                 }

@@ -9,6 +9,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.dao.PipelineEventSubscriptionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.WorkspaceBaseInfo
+import com.tencent.devops.process.utils.BK_CI_CREATIVE_STREAM_NODE_AGENT_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -76,7 +77,7 @@ class CreativeStreamService constructor(
         agentHashId: String,
         userId: String? = null
     ): Map<String, String> {
-        val params = mutableMapOf("BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to agentHashId)
+        val params = mutableMapOf(BK_CI_CREATIVE_STREAM_NODE_AGENT_ID to agentHashId)
         getWorkspaceInfo(
             projectId = projectId,
             agentHashId = agentHashId,
@@ -97,6 +98,15 @@ class CreativeStreamService constructor(
     open fun getWorkspaceInfo(
         projectId: String,
         agentHashId: String,
+        userId: String? = null
+    ): WorkspaceBaseInfo? = null
+
+    /**
+     * 获取云桌面信息
+     */
+    open fun getWorkspaceInfoByName(
+        projectId: String,
+        workspaceName: String,
         userId: String? = null
     ): WorkspaceBaseInfo? = null
 

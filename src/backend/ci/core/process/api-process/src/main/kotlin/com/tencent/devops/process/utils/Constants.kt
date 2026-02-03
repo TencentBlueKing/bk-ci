@@ -135,6 +135,11 @@ const val PIPELINE_DIALECT = "BK_CI_PIPELINE_DIALECT" // 流水线语法风格
 const val PIPELINE_FAIL_IF_VARIABLE_INVALID_FLAG = "BK_CI_FAIL_IF_VARIABLE_INVALID_FLAG" // "流水线变量校验失败是否继续执行"
 
 /**
+ * 创作流相关
+ */
+const val BK_CI_CREATIVE_STREAM_NODE_AGENT_ID ="BK_CI_CREATIVE_STREAM_NODE_AGENT_ID"
+
+/**
  * 自定义触发材料
  */
 const val BK_CI_MATERIAL_ID = "BK_CI_MATERIAL_ID" // 触发材料ID
