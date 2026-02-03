@@ -418,7 +418,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         }
         val templateModel = templateResource.model as Model
         val templateParams = templateModel.getTriggerContainer().params
-        val isAllParamsResetToDefault = instanceReleaseInfos
+        val isModifyParamsResetToDefault = instanceReleaseInfos
             .filter { it.pipelineId.isNotBlank() }
             .all { releaseInfo ->
                 val instanceParams = releaseInfo.param
@@ -426,43 +426,45 @@ class PipelineTemplateInstanceService @Autowired constructor(
                     return@all false
                 }
                 val beforePipelineParams = beforePipelineParamMap[releaseInfo.pipelineId]?.param
-                val exceptionParamCnt = countAllParamValueEqualToDefault(
+                isModifyParamValueEqualToDefault(
                     templateParams = templateParams,
                     instanceParams = instanceParams,
                     beforeInstanceParams = beforePipelineParams ?: emptyList()
                 )
-                exceptionParamCnt > 0
             }
-        if (isAllParamsResetToDefault) {
+        if (isModifyParamsResetToDefault) {
             logger.warn(
                 "instance params reset to template defaults|$projectId|$userId|$templateId|$version|" +
                         pipelineIds.joinToString(",")
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_ALL_PARAM_RESET_DEFAULT_VALUE
             )
         }
     }
 
     /**
-     * 检查实例化流水线参数是否全部重置为模板默认值
+     * 检查实例化流水线修改的参数是否全部重置为模板默认值
      *
      * @param templateParams 模板参数
      * @param instanceParams 实例化参数
      * @param beforeInstanceParams 实例化前参数
      */
-    private fun countAllParamValueEqualToDefault(
+    private fun isModifyParamValueEqualToDefault(
         templateParams: List<BuildFormProperty>,
         instanceParams: List<BuildFormProperty>,
         beforeInstanceParams: List<BuildFormProperty>
-    ): Int {
+    ): Boolean {
         val templateParamMap = templateParams.associateBy { it.id }
         val instanceParamMap = instanceParams.associateBy { it.id }
-        return beforeInstanceParams.count { beforeInstanceParam ->
-            val instanceParam = instanceParamMap[beforeInstanceParam.id] ?: return@count false
-            val templateParam = templateParamMap[beforeInstanceParam.id] ?: return@count false
-            beforeInstanceParam.defaultValue != instanceParam.defaultValue &&
-                    instanceParam.defaultValue == templateParam.defaultValue
+        return beforeInstanceParams.all { beforeInstanceParam ->
+            val instanceParam = instanceParamMap[beforeInstanceParam.id]
+            val templateParam = templateParamMap[beforeInstanceParam.id]
+            // 值没有修改,直接跳过
+            val skipCheck = instanceParam == null || templateParam == null ||
+                    beforeInstanceParam.defaultValue == instanceParam.defaultValue
+            if (skipCheck) {
+                return@all false
+            }
+            // 值修改了,检查是否重置为模板默认值
+            return instanceParam.defaultValue == templateParam.defaultValue
         }
     }
 

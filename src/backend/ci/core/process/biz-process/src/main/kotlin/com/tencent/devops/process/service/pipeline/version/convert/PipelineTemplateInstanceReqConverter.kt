@@ -97,6 +97,12 @@ class PipelineTemplateInstanceReqConverter(
     ): PipelineVersionCreateContext {
         request as PipelineTemplateInstanceReq
         with(request) {
+            if (request.overrideTemplateField == null) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("overrideTemplateField")
+                )
+            }
             if (enablePac) {
                 if (targetAction == null) {
                     throw ErrorCodeException(
