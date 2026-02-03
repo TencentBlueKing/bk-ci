@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -44,9 +43,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.constant.MeasureConstant.NAME_PIPELINE_CRON_EXECUTE_DELAY
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_IP
-import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_NAME
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_IS_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_BRANCH_NOT_FOUND
@@ -63,6 +59,7 @@ import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerType
+import com.tencent.devops.process.service.CreativeStreamService
 import com.tencent.devops.process.trigger.PipelineTriggerMeasureService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.trigger.PipelineTriggerEventService
@@ -88,7 +85,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     private val triggerEventService: PipelineTriggerEventService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineTriggerMeasureService: PipelineTriggerMeasureService,
-    private val client: Client
+    private val creativeStreamService: CreativeStreamService
 ) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
@@ -134,78 +131,12 @@ class PipelineTimerBuildListener @Autowired constructor(
     ) {
         with(event) {
             try {
-                when (channelCode.name) {
-                    // 此处需要修改成CREATIVE_STREAM
-                    "CREATIVE_STREAM" -> {
-                        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
-                            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
-                                logger.warn("[$projectId|$pipelineId]|pipeline is null, try clean timer record[$it]")
-                            }
-                            return
-                        }
-                        // 查找触发器
-                        val triggerElement = model.getTriggerContainer().elements
-                                .find { it.id == taskId && it is MarketEventAtomElement } ?: run {
-                            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
-                                logger.warn(
-                                    "[$projectId|$pipelineId|$taskId]|timer task not found, " +
-                                            "try clean timer record[$it]"
-                                )
-                            }
-                        }
-                        triggerElement as MarketEventAtomElement
-                        val input = triggerElement.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
-                        val startType = input[KEY_START_TASK_TYPE]
-                        if (startType == "CREATIVE_TASK") {
-                            val creativeTaskList = input[KEY_CREATIVE_TASK_LIST] as List<String>? ?: listOf()
-                            if (creativeTaskList.isEmpty()) {
-                                saveTriggerEvent(
-                                    projectId = projectId,
-                                    userId = event.userId,
-                                    pipelineId = pipelineId,
-                                    reasonDetail = PipelineTriggerFailedMsg(
-                                        JsonUtil.toJson(
-                                            I18nUtil.getCodeLanMessage(BK_CREATIVE_STREAM_START_TASK_IS_EMPTY)
-                                        )
-                                    )
-                                )
-                            } else {
-                                // 对创作环境下选中的创作节点，逐一启动
-                                creativeTaskList.forEach {
-                                    val creativeStreamParams = creativeStreamParams(
-                                        projectId = projectId,
-                                        agentHashId = it,
-                                        userId = userId
-                                    )
-                                    timerTriggerPipeline(
-                                        userId = userId,
-                                        projectId = projectId,
-                                        pipelineId = pipelineId,
-                                        params = params.plus(creativeStreamParams),
-                                        channelCode = channelCode,
-                                        taskId = taskId
-                                    )
-                                }
-                            }
-                        } else {
-                            // 对创作环境下所有的创作节点，逐一启动
-                            val workspaceName = ""
-                            getEnvNodeList(projectId, workspaceName).forEach {
-                                val creativeStreamParams = creativeStreamParams(
-                                    projectId = projectId,
-                                    agentHashId = it,
-                                    userId = userId
-                                )
-                                timerTriggerPipeline(
-                                    userId = userId,
-                                    projectId = projectId,
-                                    pipelineId = pipelineId,
-                                    params = params.plus(creativeStreamParams),
-                                    channelCode = channelCode,
-                                    taskId = taskId
-                                )
-                            }
-                        }
+                when (channelCode) {
+                    ChannelCode.CREATIVE_STREAM -> {
+                        event.creativeStreamTimer(
+                            params = params,
+                            taskId = taskId
+                        )
                     }
 
                     else -> {
@@ -223,6 +154,92 @@ class PipelineTimerBuildListener @Autowired constructor(
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
+            }
+        }
+    }
+
+    /**
+     * 创作流定时触发
+     */
+    private fun PipelineTimerBuildEvent.creativeStreamTimer(
+        params: Map<String, String> = emptyMap(),
+        taskId: String
+    ) {
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: run {
+            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                logger.warn("[$projectId|$pipelineId]|pipeline is null, try clean timer record[$it]")
+            }
+            return
+        }
+        // 查找触发器
+        val triggerElement = model.getTriggerContainer().elements
+                .find { it.id == taskId && it is MarketEventAtomElement } ?: run {
+            pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                logger.warn(
+                    "creative stream[$projectId|$pipelineId|$taskId]|timer task not found, " +
+                            "try clean timer record[$it]"
+                )
+            }
+        }
+        triggerElement as MarketEventAtomElement
+        val input = triggerElement.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
+        val startType = input[KEY_START_TASK_TYPE]
+        if (startType == "CREATIVE_TASK") {
+            val creativeTaskList = input[KEY_CREATIVE_TASK_LIST] as List<String>? ?: listOf()
+            if (creativeTaskList.isEmpty()) {
+                // 启动节点为空
+                saveTriggerEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    reasonDetail = PipelineTriggerFailedMsg(
+                        JsonUtil.toJson(
+                            I18nUtil.getCodeLanMessage(BK_CREATIVE_STREAM_START_TASK_IS_EMPTY)
+                        )
+                    )
+                )
+            } else {
+                // 对创作环境下选中的创作节点，逐一启动
+                creativeTaskList.forEach {
+                    val creativeStreamParams = creativeStreamService.creativeStreamParams(
+                        projectId = projectId,
+                        agentHashId = it,
+                        userId = userId
+                    )
+                    timerTriggerPipeline(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        params = params.plus(creativeStreamParams),
+                        channelCode = channelCode,
+                        taskId = taskId
+                    )
+                }
+            }
+        } else {
+            // 对创作环境下所有的创作节点，逐一启动
+            val envHashId = pipelineRepositoryService.getSetting(
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.envHashId ?: ""
+            creativeStreamService.getEnvNodeList(
+                projectId = projectId,
+                envHashId = envHashId,
+                userId = userId
+            ).forEach {
+                val creativeStreamParams = creativeStreamService.creativeStreamParams(
+                    projectId = projectId,
+                    agentHashId = it,
+                    userId = userId
+                )
+                timerTriggerPipeline(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    params = params.plus(creativeStreamParams),
+                    channelCode = channelCode,
+                    taskId = taskId
+                )
             }
         }
     }
@@ -444,49 +461,6 @@ class PipelineTimerBuildListener @Autowired constructor(
         triggerEventService.saveEvent(
             triggerEvent = triggerEventBuilder.build(),
             triggerDetail = triggerDetailBuilder.build()
-        )
-    }
-
-    fun getEnvNodeList(
-        projectId: String,
-        workspaceName: String
-    ): List<String> {
-//        client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
-//            projectId = projectId,
-//            workspaceName = workspaceName
-//        )
-        return listOf()
-    }
-
-    /**
-     * 获取云桌面信息
-     */
-    private fun getWorkspaceInfo(
-        projectId: String,
-        agentHashId: String,
-        userId: String
-    ): Pair<String, String>? {
-        // TODO 完善获取云桌面信息
-        return null
-    }
-
-    private fun creativeStreamParams(
-        projectId: String,
-        agentHashId: String,
-        userId: String
-    ): Map<String, String> {
-        val cdsName = getWorkspaceInfo(
-            projectId = projectId,
-            agentHashId = agentHashId,
-            userId = userId
-        )?.first ?: ""
-        val cdsId = ""
-        val cdsIp = ""
-        return mapOf(
-            "BK_CI_CREATIVE_STREAM_NODE_AGENT_ID" to agentHashId,
-            CI_NODE_ID to cdsId,
-            CI_NODE_NAME to cdsName,
-            CI_NODE_IP to cdsIp
         )
     }
 }
