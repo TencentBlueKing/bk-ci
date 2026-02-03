@@ -10,6 +10,21 @@ import { createHtmlPlugin } from 'vite-plugin-html';
 // Production public path
 const PUBLIC_PATH = 'creative-stream';
 
+// Custom plugin to rename HTML file after build
+function renameHtmlPlugin(newFilename: string) {
+  return {
+    name: 'rename-html',
+    closeBundle() {
+      const outDir = path.resolve(__dirname, `../frontend/${PUBLIC_PATH}`);
+      const oldPath = path.join(outDir, 'index.html');
+      const newPath = path.join(outDir, newFilename);
+      if (fs.existsSync(oldPath)) {
+        fs.renameSync(oldPath, newPath);
+      }
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development';
 
@@ -29,7 +44,8 @@ export default defineConfig(({ mode }) => {
           },
         },
       }),
-    ],
+      !isDev && renameHtmlPlugin(`frontend#${PUBLIC_PATH}#index.html`),
+    ].filter(Boolean),
     
     resolve: {
       alias: {
