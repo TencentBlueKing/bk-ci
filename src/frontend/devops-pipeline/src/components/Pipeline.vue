@@ -334,56 +334,28 @@
                 return getStage(pipeline.stages, stageIndex)
             },
             handlePipelineChange (changedObject) {
-                if (!this.editable) return
-                            
                 const updatedPipeline = this.buildUpdatedPipeline(changedObject)
-                if (updatedPipeline) {
+                if (!updatedPipeline) return
+                
+                // 预览模式：只允许修改 skip 状态，通过 emit 事件让父组件处理
+                if (this.isPreview && this.canSkipElement) {
+                    this.$emit('change', updatedPipeline)
+                    return
+                }
+                
+                // 编辑模式：更新 store 中的 pipeline
+                if (this.editable) {
                     this.setPipelineWithoutTrigger(updatedPipeline)
                     this.setPipelineEditing(true)
                 }
             },
             
             buildUpdatedPipeline (changedObject) {
-                const currentStages = this.pipeline.stages
-                
-                // Stage operations (copy/delete/drag)
+                // bk-pipeline 的 emitPipelineChange 总是传递完整的 pipeline 对象
+                // 直接使用传入的 pipeline 数据即可
                 if (changedObject?.stages && Array.isArray(changedObject.stages)) {
-                    return { ...this.pipeline, stages: changedObject.stages }
+                    return changedObject
                 }
-                
-                // Job operations (copy/delete)
-                if (changedObject?.containers && Array.isArray(changedObject.containers)) {
-                    const stageIndex = currentStages.findIndex(s => s.id === changedObject.id)
-                    if (stageIndex === -1) return null
-                    
-                    
-                    return { ...this.pipeline, stages: [
-                        ...currentStages.slice(0, stageIndex),
-                        changedObject,
-                        ...currentStages.slice(stageIndex + 1)
-                    ] }
-                }
-                
-                // Atom operations (copy/delete)
-                if (changedObject?.elements && Array.isArray(changedObject.elements)) {
-                    const { containerId } = changedObject
-                    let found = false
-                    const newStages = currentStages.map(stage => {
-                        if (!stage?.containers || found) return stage
-                        const containerIndex = stage.containers.findIndex(c => c.containerId === containerId)
-                        if (containerIndex === -1) return stage
-                        
-                        found = true
-                        return { ...stage, containers: [
-                            ...stage.containers.slice(0, containerIndex),
-                            changedObject,
-                            ...stage.containers.slice(containerIndex + 1)
-                        ] }
-                    })
-                    
-                    return found ? { ...this.pipeline, stages: newStages } : null
-                }
-                
                 return null
             },
             resetInsertStageState () {

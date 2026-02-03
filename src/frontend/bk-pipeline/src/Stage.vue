@@ -35,6 +35,7 @@
       >
         <bk-checkbox
           class="atom-canskip-checkbox"
+          :value="stage.runStage"
           :model-value="stage.runStage"
           @change="handleStageRun"
           :disabled="stageDisabled"
