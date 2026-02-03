@@ -571,6 +571,7 @@ class ThirdPartyAgentDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(AGENT_TYPE.eq(AgentType.CREATE.name))
+                .and(STATUS.`in`(AgentStatus.IMPORT_OK.status, AgentStatus.IMPORT_EXCEPTION.status))
                 .fetch()
         }
     }
