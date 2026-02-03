@@ -29,6 +29,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.op.OpAuthResourceTypeConfigResource
 import com.tencent.devops.auth.pojo.request.ActionCreateRequest
+import com.tencent.devops.auth.pojo.request.FullResourceTypeConfigCreateRequest
 import com.tencent.devops.auth.pojo.request.ProjectGroupConfigUpdateRequest
 import com.tencent.devops.auth.pojo.request.ResourceGroupConfigCreateRequest
 import com.tencent.devops.auth.pojo.request.ResourceTypeCreateRequest
@@ -148,15 +149,13 @@ class OpAuthResourceTypeConfigResourceImpl @Autowired constructor(
     // ==================== 便捷接口：一键创建完整资源类型配置 ====================
 
     override fun createFullResourceTypeConfig(
-        resourceTypeRequest: ResourceTypeCreateRequest,
-        actionRequests: List<ActionCreateRequest>,
-        groupConfigRequests: List<ResourceGroupConfigCreateRequest>
+        request: FullResourceTypeConfigCreateRequest
     ): Result<Boolean> {
         return Result(
             authResourceTypeConfigService.createFullResourceTypeConfig(
-                resourceTypeRequest,
-                actionRequests,
-                groupConfigRequests
+                request.resourceType,
+                request.actions,
+                request.groupConfigs
             )
         )
     }

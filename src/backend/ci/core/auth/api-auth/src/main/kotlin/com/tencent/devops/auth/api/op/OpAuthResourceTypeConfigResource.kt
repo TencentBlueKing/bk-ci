@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.op
 
 import com.tencent.devops.auth.pojo.request.ActionCreateRequest
+import com.tencent.devops.auth.pojo.request.FullResourceTypeConfigCreateRequest
 import com.tencent.devops.auth.pojo.request.ProjectGroupConfigUpdateRequest
 import com.tencent.devops.auth.pojo.request.ResourceGroupConfigCreateRequest
 import com.tencent.devops.auth.pojo.request.ResourceTypeCreateRequest
@@ -244,13 +245,7 @@ interface OpAuthResourceTypeConfigResource {
     @Path("/resourceTypes/full")
     @Operation(summary = "一键创建完整资源类型配置（资源类型+操作+用户组配置）")
     fun createFullResourceTypeConfig(
-        @Parameter(description = "资源类型创建请求", required = true)
-        resourceTypeRequest: ResourceTypeCreateRequest,
-        @Parameter(description = "操作创建请求列表", required = true)
-        @QueryParam("actions")
-        actionRequests: List<ActionCreateRequest>,
-        @Parameter(description = "用户组配置创建请求列表", required = true)
-        @QueryParam("groupConfigs")
-        groupConfigRequests: List<ResourceGroupConfigCreateRequest>
+        @Parameter(description = "完整资源类型配置创建请求", required = true)
+        request: FullResourceTypeConfigCreateRequest
     ): Result<Boolean>
 }
