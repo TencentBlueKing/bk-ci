@@ -59,24 +59,25 @@
     "prettier": "3.6.2",
     "typescript": "~5.9.0",
     "vite": "^7.1.11",
+    "vite-plugin-html": "^3.2.2",
     "vite-plugin-vue-devtools": "^8.0.3",
     "vitest": "^3.2.4",
     "vue-draggable-plus": "^0.6.0",
     "vue-tsc": "^3.1.1"
   },
   "nx": {
-        "targets": {
-            "public:master": {
-                "inputs": [
-                    "{workspaceRoot}/locale/flow/*.json",
-                    "{workspaceRoot}/locale/index.js",
-                    "{projectRoot}"
-                ],
-                "outputs": [
-                    "{workspaceRoot}/frontend/creative-stream",
-                    "{workspaceRoot}/frontend/entry's/creative-stream.json"
-                ]
-            }
-        }
+    "targets": {
+      "public:master": {
+        "inputs": [
+          "{workspaceRoot}/locale/flow/*.json",
+          "{workspaceRoot}/locale/index.js",
+          "{projectRoot}"
+        ],
+        "outputs": [
+          "{workspaceRoot}/frontend/creative-stream",
+          "{workspaceRoot}/frontend/entry's/creative-stream.json"
+        ]
+      }
     }
+  }
 }
