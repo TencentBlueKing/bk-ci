@@ -82,8 +82,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { randomString } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
-
-    const MAX_FILE_SIZE_MB = 500
+    import { MAX_FILE_SIZE_MB } from '@/utils/pipelineConst'
 
     export default {
         components: {
