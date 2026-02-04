@@ -58,7 +58,8 @@
                         >
                             <Logo
                                 name="refresh"
-                                size="14"
+                                size="12"
+                                style="transform: scaleX(-1) rotate(90deg);"
                             />
                         </span>
                     </span>
@@ -442,8 +443,11 @@
                 }
             }
             .options {
+                display: flex;
+                align-items: center;
                 .rollback-icon {
-                    transform: rotate(180deg);
+                    line-height: 22px;
+                    color: #979BA5;
                 }
             }
             .update-tip {

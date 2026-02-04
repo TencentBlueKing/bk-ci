@@ -905,7 +905,9 @@
                             ]
                             : []
                         ),
-                        this.getLastDraftStatus(),
+                        ...(!this.isTemplateInstanceMode ? [
+                            this.getLastDraftStatus()
+                        ]: []),
                         this.prefetchReleaseVersion(this.prefetchParams)
                     ])
 
