@@ -375,15 +375,13 @@ export function useFlowModel() {
    */
   const handleAddJob = (payload: AddStageEventPayload & { jobType?: string }) => {
     const { stageIndex, jobType = 'create' } = payload
-    const stage = flowModel.value?.stages[stageIndex]
+    const stage = flowModel.value?.stages[stageIndex + 1]
     if (!stage) return
-    const containerIndex = stage.containers?.length || 0
+    const containerIndex = stage.containers?.length || 0    
     
     // 根据 jobType 设置 @type 和 classType
     const containerType = jobType === 'cloud' ? 'normal' : 'vmBuild'
     const newContainer = createDefaultContainer(containerIndex, {
-      name: `Job-${containerIndex + 1}`,
-      jobId: `job-${randomString(4)}`,
       '@type': containerType,
       classType: containerType,
       ...(containerType === 'vmBuild' ? {
