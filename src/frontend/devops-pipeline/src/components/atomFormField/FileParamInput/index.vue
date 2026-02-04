@@ -131,7 +131,7 @@
         },
         data () {
             return {
-                MAX_FILE_SIZE_MB,
+                directory: '',
                 directory: '',
                 fileName: ''
             }
