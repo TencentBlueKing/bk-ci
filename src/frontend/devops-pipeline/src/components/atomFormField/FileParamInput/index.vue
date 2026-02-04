@@ -132,7 +132,6 @@
         data () {
             return {
                 directory: '',
-                directory: '',
                 fileName: ''
             }
         },
