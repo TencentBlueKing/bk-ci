@@ -999,13 +999,9 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     try {
-                        if (this.releasing) return
-                        this.releasing = true
                         await this.$refs?.releaseForm?.validate?.()
-                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) {
-                            this.releasing = false
-                            return
-                        }
+                        if (this.releasing || (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath)))) return
+                        this.releasing = true
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)

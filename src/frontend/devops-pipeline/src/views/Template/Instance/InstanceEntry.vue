@@ -267,8 +267,11 @@
                     ...value
                 }
             })
-            proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
-            proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            releaseSideSlider.value?.resetReleasing?.()
+            proxy.$nextTick(() => {
+                proxy.$store.commit(`templates/${SET_RELEASE_BASE_ID}`, res.data)
+                proxy.$store.commit(`templates/${SET_RELEASE_ING}`, true)
+            })
         } catch (e) {
             proxy.$showTips({
                 theme: 'error',
