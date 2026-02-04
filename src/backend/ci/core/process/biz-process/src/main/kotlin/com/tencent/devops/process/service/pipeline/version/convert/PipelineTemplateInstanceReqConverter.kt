@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
@@ -62,6 +63,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -71,6 +73,7 @@ import java.time.LocalDateTime
  */
 @Service
 class PipelineTemplateInstanceReqConverter(
+    private val dslContext: DSLContext,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
@@ -82,6 +85,7 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
+    private val templatePipelineDao: TemplatePipelineDao,
     private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
@@ -301,8 +305,17 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineDialect = pipelineDialect
             )
 
+            // 获取变更前的模板版本（事务开始前获取，确保数据准确）
+            val beforeTemplateVersion = templatePipelineDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
+            )?.version
+
             val templateInstanceBasicInfo = PipelineTemplateInstanceBasicInfo(
                 templateId = templateId,
+                baseId = baseId,
                 templateName = templateInfo.name,
                 templateVersion = templateVersion,
                 templateVersionName = templateResource.versionName,
@@ -313,7 +326,8 @@ class PipelineTemplateInstanceReqConverter(
                 templateSrcTemplateVersion = templateResource.srcTemplateVersion,
                 instanceModel = instanceModel,
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
-                refType = templateRefType
+                refType = templateRefType,
+                beforeTemplateVersion = beforeTemplateVersion
             )
 
             // 对实例化参数进行校验
