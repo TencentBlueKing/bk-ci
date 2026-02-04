@@ -137,9 +137,9 @@ export default {
     getDefaultVersion: state => atomCode => {
         try {
             const atom = state.atomMap[atomCode]
-            return atom.defaultVersion || '1.*'
+            return atom.defaultVersion || DEFAULT_VERSION
         } catch (error) {
-            return '1.*'
+            return DEFAULT_VERSION
         }
     },
     getContainerModalByType: state => type => {
