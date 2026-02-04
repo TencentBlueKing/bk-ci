@@ -75,12 +75,26 @@ const i18n = createI18n({
 const app = createApp({
   setup() {
     const uiStore = useUIStore()
+    console.log(router.currentRoute.value, 'router.currentRoute.value')
+    // 初始化时从当前路由获取 projectId
+    const initProjectId = router.currentRoute.value.params.projectId as string | undefined
+    if (initProjectId) {
+      uiStore.setCurrentProjectId(initProjectId)
+    }
+
+    // 路由变化时同步更新 store 中的 projectId
+    router.afterEach((to) => {
+      const projectId = to.params.projectId as string | undefined
+      if (projectId && uiStore.currentProjectId !== projectId) {
+        uiStore.setCurrentProjectId(projectId)
+      }
+    })
 
     // 蓝盾选择项目时切换
     window.addEventListener('change::$currentProjectId', (e: Event) => {
       const data = (e as CustomEvent).detail
       const newProjectId = data.currentProjectId
-
+      console.log(newProjectId, 'newProjectId', uiStore.currentProjectId)
       // 检查项目 ID 是否变化
       if (newProjectId && uiStore.currentProjectId !== newProjectId) {
         // 更新 store 中的项目 ID
