@@ -46,7 +46,7 @@
             v-if="!flex"
             class="upload-tips"
         >
-            {{ $t('sizeLimit', [100]) }}
+            {{ $t('sizeLimit', [500]) }}
         </div>
         <div
             :class="{
@@ -57,6 +57,7 @@
             <file-upload
                 name="fileName"
                 :file-path="value"
+                :size="500"
                 @handle-change="uploadPathFromFileName"
             />
         </div>
