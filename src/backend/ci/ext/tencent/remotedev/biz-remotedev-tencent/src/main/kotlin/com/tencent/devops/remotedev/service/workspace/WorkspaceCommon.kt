@@ -824,10 +824,10 @@ class WorkspaceCommon @Autowired constructor(
             val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
             val newParam = mutableMapOf<String, String>()
             newParam["job_ip_list"] = ip
-            newParam["projectId"] = ip
-            newParam["workspaceName"] = ip
-            newParam["userId"] = ip
-            newParam["zoneType"] = ip
+            newParam["projectId"] = projectId
+            newParam["workspaceName"] = workspaceName
+            newParam["userId"] = user
+            newParam["zoneType"] = zoneType
 
             AsyncExecute.dispatch(
                 streamBridge,
