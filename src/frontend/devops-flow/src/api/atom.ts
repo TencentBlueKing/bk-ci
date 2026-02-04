@@ -24,6 +24,7 @@ export interface AtomItem {
   disabled: boolean
   recommendFlag?: boolean
   version?: string
+  defaultVersion?: string // 插件的默认版本
   os?: string[]
   score?: number
   recentExecuteNum?: number

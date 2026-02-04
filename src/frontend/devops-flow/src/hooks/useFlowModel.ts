@@ -147,10 +147,24 @@ export function useFlowModel() {
       ...stage,
     }
     if (flowModel.value) {
+      let insertIndex = stageIndex
+      
+      // 如果是 Finally Stage，确保添加到最后
+      if (newStage.finally) {
+        insertIndex = flowModel.value.stages.length
+      } else if (hasFinallyStage.value) {
+        // 如果已经有 Finally Stage，确保普通 Stage 不会插入到 Finally Stage 之后
+        // Finally Stage 的位置是 stages.length - 1
+        const finallyStageIndex = flowModel.value.stages.length - 1
+        if (insertIndex >= finallyStageIndex) {
+          insertIndex = finallyStageIndex // 插入到 Finally Stage 之前
+        }
+      }
+      
       flowModel.value.stages = [
-        ...flowModel.value.stages.slice(0, stageIndex),
+        ...flowModel.value.stages.slice(0, insertIndex),
         newStage,
-        ...flowModel.value.stages.slice(stageIndex),
+        ...flowModel.value.stages.slice(insertIndex),
       ]
       emitChange()
     }
@@ -279,15 +293,36 @@ export function useFlowModel() {
     }
   }
 
+  // 计算属性：是否已有 Finally Stage
+  const hasFinallyStage = computed(() => {
+    if (!flowModel.value?.stages || flowModel.value.stages.length <= 1) {
+      return false
+    }
+    // 最后一个 Stage（排除 trigger stage）是否是 finally stage
+    const lastStage = flowModel.value.stages[flowModel.value.stages.length - 1]
+    return lastStage?.finally === true
+  })
+
   /**
    * 处理添加 Stage (打开面板)
+   * @param payload.isFinally - 是否是 Finally Stage
    */
-  const handleAddStage = ({ stageIndex, isParallel }: AddStageEventPayload) => {
+  const handleAddStage = ({ stageIndex, isParallel, isFinally }: AddStageEventPayload & { isFinally?: boolean }) => {
     if (isParallel) {
       handleAddJob({ stageIndex })
       return
     }
-    const newStage = createDefaultStage(stageIndex, { name: `Stage-${stageIndex + 1}`, containers: [
+
+    // 如果已经有 Finally Stage，不允许再添加 Finally Stage
+    if (hasFinallyStage.value && isFinally) {
+      console.warn('Already has a Finally Stage, cannot add another one')
+      return
+    }
+
+    const newStage = createDefaultStage(stageIndex, { 
+      name: isFinally ? 'Final' : `Stage-${stageIndex + 1}`,
+      finally: isFinally || false,
+      containers: [
         createDefaultContainer(1, { name: 'Job1', dispatchType: {
           buildType: 'CREATE_AGENT_ENV',
           value: '${{variables.BK_CI_NODE_AGENT_ID}}',
@@ -518,6 +553,7 @@ export function useFlowModel() {
     flowModel,
     flowModelWithoutTriggerStage,
     hasFlowStages,
+    hasFinallyStage,
     triggerEvents,
     yamlContent,
     loading,
