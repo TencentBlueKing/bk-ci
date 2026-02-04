@@ -999,11 +999,17 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     try {
+                        if (this.releasing) return
+                        this.releasing = true
                         await this.$refs?.releaseForm?.validate?.()
-                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
+                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) {
+                            this.releasing = false
+                            return
+                        }
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
                         console.error(e)
+                        this.releasing = false
                     }
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
@@ -1305,6 +1311,9 @@
             },
             cancelRelease () {
                 this.$emit('input', false)
+            },
+            resetReleasing () {
+                this.releasing = false
             },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
