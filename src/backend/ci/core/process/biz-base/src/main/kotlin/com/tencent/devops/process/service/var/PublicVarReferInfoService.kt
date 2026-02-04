@@ -570,9 +570,9 @@ class PublicVarReferInfoService @Autowired constructor(
         existingVars: Set<String>
     ): com.tencent.devops.process.pojo.`var`.VarGroupDiffResult {
         return com.tencent.devops.process.pojo.`var`.VarGroupDiffResult(
-            varsToRemove = existingVars - referencedVars,  // 存在但不再被引用的变量
-            varsToUpdate = existingVars.intersect(referencedVars),  // 继续被引用的变量（保持不变）
-            varsToAdd = referencedVars - existingVars  // 新增被引用的变量
+            varsToRemove = existingVars - referencedVars, // 存在但不再被引用的变量
+            varsToUpdate = existingVars.intersect(referencedVars), // 继续被引用的变量（保持不变）
+            varsToAdd = referencedVars - existingVars // 新增被引用的变量
         )
     }
 

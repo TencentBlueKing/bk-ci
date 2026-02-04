@@ -321,10 +321,10 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
             val varName = contentMap[PublicVarDO::varName.name]?.toString() ?: return
             val type = contentMap[TYPE]?.toString() ?: PublicVarTypeEnum.VARIABLE.name
 
-            val key = "${operate}_${type}"
+            val key = "${operate}_$type"
             varMap.getOrPut(key) { mutableListOf() }.add(varName)
         } catch (e: Exception) {
-            logger.warn("Failed to parse content: ${record.content}", e)
+            logger.warn("Failed to parse content: $record.content", e)
         }
     }
 
