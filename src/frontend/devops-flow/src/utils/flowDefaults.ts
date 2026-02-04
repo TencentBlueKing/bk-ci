@@ -55,10 +55,10 @@ export function createDefaultStage(index: number, partial?: Partial<Stage>): Sta
  */
 export function createDefaultContainer(index: number, partial?: Partial<Container>): Container {
   return {
-    jobId: '',
+    jobId: `job-${randomString(4)}`,
     '@type': 'vmBuild',
     id: `container-${randomString(4)}`,
-    name: `Job-${index}`,
+    name: `Job-${index + 1}`,
     elements: [],
     containerId: `container-${randomString(4)}`,
     containerHashId: '',
