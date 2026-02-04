@@ -1,6 +1,8 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NODE_ID
@@ -84,10 +86,39 @@ class CreativeStreamService constructor(
             userId = userId
         )?.let {
             params[CI_NODE_ID] = it.workspaceName ?: ""
-            params[CI_NODE_NAME] = it.workspaceName
+            params[CI_NODE_NAME] = it.displayName ?: ""
             params[CI_NODE_IP] = it.innerIp ?: ""
         }
         return params
+    }
+
+    fun creativeStreamBuildParameters(
+        projectId: String,
+        pipelineId: String,
+        paramMap: MutableMap<String, BuildParameters>,
+        userId: String
+    ): Map<String, BuildParameters> {
+        val startBuildParameters = mutableMapOf<String, BuildParameters>()
+        paramMap[NODE_AGENT_ID]?.let {
+            val value = it.value.toString()
+            if (value.isBlank()) return@let
+            creativeStreamParams(
+                projectId = projectId,
+                agentHashId = value,
+                userId = pipelineRepositoryService.getPipelineOauthUser(
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ) ?: userId
+            ).mapValues { entry ->
+                startBuildParameters[entry.key] = BuildParameters(
+                    key = entry.key,
+                    value = entry.value,
+                    readOnly = true,
+                    valueType = BuildFormPropertyType.STRING
+                )
+            }
+        }
+        return startBuildParameters
     }
 
     /**

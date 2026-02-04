@@ -146,6 +146,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.CreativeStreamService
 import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -203,7 +204,8 @@ class PipelineBuildFacadeService(
     private val pipelineBuildRetryService: PipelineBuildRetryService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
-    private val pipelineTriggerEventService: PipelineTriggerEventService
+    private val pipelineTriggerEventService: PipelineTriggerEventService,
+    private val createStreamService: CreativeStreamService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -520,6 +522,16 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId
             )?.let {
                 paramMap.putAll(it)
+            }
+            // 创作流流水线填充基础变量
+            if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                val creativeParam = createStreamService.creativeStreamBuildParameters(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    paramMap = paramMap,
+                    userId = userId
+                )
+                paramMap.putAll(creativeParam)
             }
 
             return pipelineBuildService.startPipeline(
