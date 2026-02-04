@@ -46,7 +46,7 @@
             v-if="!flex"
             class="upload-tips"
         >
-            {{ $t('sizeLimit', [500]) }}
+            {{ $t('sizeLimit', [MAX_FILE_SIZE_MB]) }}
         </div>
         <div
             :class="{
@@ -57,7 +57,7 @@
             <file-upload
                 name="fileName"
                 :file-path="value"
-                :size="500"
+                :size="MAX_FILE_SIZE_MB"
                 @handle-change="uploadPathFromFileName"
             />
         </div>
@@ -82,6 +82,8 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import { randomString } from '@/utils/util'
     import atomFieldMixin from '../atomFieldMixin'
+
+    const MAX_FILE_SIZE_MB = 500
 
     export default {
         components: {
@@ -130,6 +132,7 @@
         },
         data () {
             return {
+                MAX_FILE_SIZE_MB,
                 directory: '',
                 fileName: ''
             }
