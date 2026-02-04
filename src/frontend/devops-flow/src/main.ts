@@ -20,10 +20,11 @@ import './styles/variables.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
-import { RouterView, useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
 import { FLOW_GROUP_TYPES } from './constants/flowGroup'
 import { ROUTE_NAMES } from './constants/routes'
 import { vPerm } from './directives/perm'
+import { useUIStore } from './stores'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -73,20 +74,27 @@ const i18n = createI18n({
 
 const app = createApp({
   setup() {
-    // 将 i18n 挂载到全局属性
-     window.addEventListener('change::$currentProjectId', (e: Event) => { // 蓝盾选择项目时切换
-        const route = useRoute()
-        const data = (e as CustomEvent).detail
-        console.log('data', data, route.params)
-        if (data.currentProjectId && route.params.projectId !== data.currentProjectId) {
-            router.push({
-                name: ROUTE_NAMES.FLOW_LIST,
-                params: {
-                    projectId: data.currentProjectId,
-                    groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
-                },
-            })
-        }
+    const uiStore = useUIStore()
+
+    // 蓝盾选择项目时切换
+    window.addEventListener('change::$currentProjectId', (e: Event) => {
+      const data = (e as CustomEvent).detail
+      const newProjectId = data.currentProjectId
+
+      // 检查项目 ID 是否变化
+      if (newProjectId && uiStore.currentProjectId !== newProjectId) {
+        // 更新 store 中的项目 ID
+        uiStore.setCurrentProjectId(newProjectId)
+
+        // 切换到流程列表页
+        router.push({
+          name: ROUTE_NAMES.FLOW_LIST,
+          params: {
+            projectId: newProjectId,
+            groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
+          },
+        })
+      }
     })
 
     window.addEventListener('order::backHome', () => { // 蓝盾选择项目时切换
