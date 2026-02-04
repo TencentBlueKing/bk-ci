@@ -378,7 +378,7 @@ class PublicVarReferInfoService @Autowired constructor(
         }
 
         val result = mutableMapOf<String, Int>()
-        
+
         groupsNeedLatestVersion.forEach { groupName ->
             // 使用当前项目ID查询版本
             val version = publicVarGroupDao.getLatestVersionByGroupName(
@@ -645,7 +645,7 @@ class PublicVarReferInfoService @Autowired constructor(
                     varName = record.varName,
                     version = record.version ?: -1
                 )
-            }.distinctBy { 
+            }.distinctBy {
                 "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"
             }
 
@@ -659,7 +659,6 @@ class PublicVarReferInfoService @Autowired constructor(
                 referType = referType,
                 referVersion = resourceVersion
             )
-
         } else {
             // 按固定顺序处理，避免死锁
             val sortedGroups = groupsToCleanup.sortedWith(
@@ -692,7 +691,7 @@ class PublicVarReferInfoService @Autowired constructor(
                             varName = record.varName,
                             version = record.version ?: -1
                         )
-                    }.distinctBy { 
+                    }.distinctBy {
                         "${it.projectId}:${it.groupName}:${it.varName}:${it.version}"
                     }
 

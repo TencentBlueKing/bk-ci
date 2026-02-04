@@ -142,7 +142,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
         newVarPOs: List<PublicVarPO>
     ): Pair<String, String> {
         // 优先从newVarPOs获取，如果为空则从oldVarPOs获取
-        val projectId = newVarPOs.firstOrNull()?.projectId 
+        val projectId = newVarPOs.firstOrNull()?.projectId
             ?: oldVarPOs.firstOrNull()?.projectId
             ?: throw ErrorCodeException(
                 errorCode = ERROR_INVALID_PARAM_,
@@ -161,7 +161,7 @@ class PublicVarGroupReleaseRecordService @Autowired constructor(
 
     /**
      * 将发布记录DO转换为PO，并批量生成ID
-     * 
+     *
      * @param releaseRecords 发布记录DO列表
      * @param projectId 项目ID
      * @param userId 用户ID
