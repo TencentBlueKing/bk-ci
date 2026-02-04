@@ -95,16 +95,15 @@ class CreativeStreamService constructor(
     fun creativeStreamBuildParameters(
         projectId: String,
         pipelineId: String,
-        paramMap: MutableMap<String, BuildParameters>,
+        paramMap: Map<String, String>,
         userId: String
     ): Map<String, BuildParameters> {
         val startBuildParameters = mutableMapOf<String, BuildParameters>()
         paramMap[NODE_AGENT_ID]?.let {
-            val value = it.value.toString()
-            if (value.isBlank()) return@let
+            if (it.isBlank()) return@let
             creativeStreamParams(
                 projectId = projectId,
-                agentHashId = value,
+                agentHashId = it,
                 userId = pipelineRepositoryService.getPipelineOauthUser(
                     projectId = projectId,
                     pipelineId = pipelineId

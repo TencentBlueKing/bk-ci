@@ -528,7 +528,7 @@ class PipelineBuildFacadeService(
                 val creativeParam = createStreamService.creativeStreamBuildParameters(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    paramMap = paramMap,
+                    paramMap = values,
                     userId = userId
                 )
                 paramMap.putAll(creativeParam)
