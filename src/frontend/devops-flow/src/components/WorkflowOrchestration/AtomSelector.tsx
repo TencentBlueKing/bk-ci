@@ -184,23 +184,25 @@ export default defineComponent({
       }
     }
 
-    async function handleSelectAtom(atomCode: string) {
+    async function handleSelectAtom(atom: AtomItem) {
       try {
         isSelectingAtom.value = true
+        const { atomCode, defaultVersion: atomDefaultVersion } = atom
 
-        // 1. 获取版本列表
-        const versionList = await atomVersion.loadVersionList(atomCode)
+        // 1. 优先使用插件自带的 defaultVersion，如果没有则从版本列表获取
+        let version = atomDefaultVersion
+        if (!version) {
+          const versionList = await atomVersion.loadVersionList(atomCode)
+          version = atomVersion.getDefaultVersion(versionList)
+        }
 
-        // 2. 选择默认版本
-        const defaultVersion = atomVersion.getDefaultVersion(versionList)
+        // 2. 获取插件配置
+        const atomModal = await atomVersion.loadAtomModal(atomCode, version)
 
-        // 3. 获取插件配置
-        const atomModal = await atomVersion.loadAtomModal(atomCode, defaultVersion)
-
-        // 4. 发送选择事件，包含版本和配置信息
+        // 3. 发送选择事件，包含版本和配置信息
         emit('select', {
           atomCode,
-          version: defaultVersion,
+          version,
           atomModal,
           stageIndex: props.stageIndex,
           containerIndex: props.containerIndex,
