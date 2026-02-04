@@ -73,9 +73,9 @@ const i18n = createI18n({
 
 const app = createApp({
   setup() {
-    const route = useRoute()
     // 将 i18n 挂载到全局属性
      window.addEventListener('change::$currentProjectId', (e: Event) => { // 蓝盾选择项目时切换
+        const route = useRoute()
         const data = (e as CustomEvent).detail
         console.log('data', data, route.params)
         if (data.currentProjectId && route.params.projectId !== data.currentProjectId) {
