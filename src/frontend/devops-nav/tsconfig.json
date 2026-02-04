@@ -12,12 +12,14 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "module": "esnext",
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": false,
     "target": "es5",
-    "lib": ["dom", "es2017", "ESNext"],
-    "types": ["node", "webpack-env"],
+    "lib": ["es2015", "dom", "ES2018.Promise", "ESNext"],
     "baseUrl": ".",
+    "types": ["node", "webpack-env"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["./src/**/*"]
