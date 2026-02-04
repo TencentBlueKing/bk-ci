@@ -87,9 +87,7 @@ class CreativeStreamService constructor(
             params[CI_NODE_NAME] = it.workspaceName
             params[CI_NODE_IP] = it.innerIp ?: ""
         }
-        return mutableMapOf(
-            NODE_AGENT_ID to agentHashId
-        )
+        return params
     }
 
     /**
