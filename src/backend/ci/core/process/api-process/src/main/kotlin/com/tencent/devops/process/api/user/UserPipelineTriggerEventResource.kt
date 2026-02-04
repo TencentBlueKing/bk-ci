@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_CHANNEL
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
@@ -80,7 +81,7 @@ interface UserPipelineTriggerEventResource {
         @QueryParam("scmType")
         scmType: ScmType?,
         @Parameter(description = "流水线渠道")
-        @HeaderParam("x-devops-channel")
+        @HeaderParam(AUTH_HEADER_CHANNEL)
         channelCode: String?
     ): Result<List<IdValue>>
 
