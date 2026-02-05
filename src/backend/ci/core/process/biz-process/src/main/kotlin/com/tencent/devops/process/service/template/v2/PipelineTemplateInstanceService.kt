@@ -114,7 +114,6 @@ class PipelineTemplateInstanceService @Autowired constructor(
     private val permissionService: PipelineTemplatePermissionService,
     private val client: Client,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineTemplateGenerator: PipelineTemplateGenerator,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val pipelineInfoService: PipelineInfoService,
     private val pipelineModelParser: PipelineModelParser,
@@ -511,7 +510,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
         }
     }
 
-    fun list(
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    fun listTemplateInstances(
         userId: String,
         projectId: String,
         templateId: String,
