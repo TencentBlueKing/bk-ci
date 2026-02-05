@@ -75,12 +75,14 @@ const i18n = createI18n({
 const app = createApp({
   setup() {
     const uiStore = useUIStore()
-    console.log(router.currentRoute.value, 'router.currentRoute.value')
-    // 初始化时从当前路由获取 projectId
-    const initProjectId = router.currentRoute.value.params.projectId as string | undefined
-    if (initProjectId) {
-      uiStore.setCurrentProjectId(initProjectId)
-    }
+
+    // 等待路由初始化完成后，从路由获取 projectId
+    router.isReady().then(() => {
+      const initProjectId = router.currentRoute.value.params.projectId as string | undefined
+      if (initProjectId && !uiStore.currentProjectId) {
+        uiStore.setCurrentProjectId(initProjectId)
+      }
+    })
 
     // 路由变化时同步更新 store 中的 projectId
     router.afterEach((to) => {
@@ -94,13 +96,18 @@ const app = createApp({
     window.addEventListener('change::$currentProjectId', (e: Event) => {
       const data = (e as CustomEvent).detail
       const newProjectId = data.currentProjectId
-      console.log(newProjectId, 'newProjectId', uiStore.currentProjectId)
-      // 检查项目 ID 是否变化
-      if (newProjectId && uiStore.currentProjectId !== newProjectId) {
-        // 更新 store 中的项目 ID
-        uiStore.setCurrentProjectId(newProjectId)
 
-        // 切换到流程列表页
+      if (!newProjectId) return
+
+      // 首次加载时，store 为空，仅设置 projectId，不跳转
+      if (!uiStore.currentProjectId) {
+        uiStore.setCurrentProjectId(newProjectId)
+        return
+      }
+
+      // 项目 ID 变化时，更新 store 并跳转到流程列表
+      if (uiStore.currentProjectId !== newProjectId) {
+        uiStore.setCurrentProjectId(newProjectId)
         router.push({
           name: ROUTE_NAMES.FLOW_LIST,
           params: {
