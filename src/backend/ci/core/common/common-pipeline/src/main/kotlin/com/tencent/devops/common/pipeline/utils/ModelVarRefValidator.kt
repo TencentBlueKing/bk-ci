@@ -35,7 +35,7 @@ import java.util.regex.Pattern
 /**
  * 模型变量引用表达式校验器
  *
- * 规范：只允许双大括号 ${{xxx}}；表达式前缀必须是 [variables.|stages.|jobs.|steps.]
+ * 规范：只允许双大括号 ${{xxx}}；表达式前缀必须是 [variables.|stages.|jobs.|steps.|ci.]
  * 渠道：仅当 ChannelCode 为 CREATIVE_STREAM 时执行规范性校验；报错信息逻辑收敛在本类内。
  */
 object ModelVarRefValidator {
@@ -45,7 +45,8 @@ object ModelVarRefValidator {
         "variables.",
         "stages.",
         "jobs.",
-        "steps."
+        "steps.",
+        "ci."
     )
 
     /** 解析 positionPath：model(.stages[i])?(.containers[j])?(.elements[k])?.?suffix，stages/containers/elements 均可为空 */

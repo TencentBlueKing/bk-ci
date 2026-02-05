@@ -70,10 +70,10 @@ class PipelineVersionValidator @Autowired constructor(
         // 检查model中表达式是否合法
         val invalidRefs = ModelVarRefValidator.getInvalidRefs(model, projectId)
         if (invalidRefs.isNotEmpty()) {
+            val invalidRefsMsg = ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs)
             throw ErrorCodeException(
                 errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
-                params = arrayOf(ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs))
-            )
+                params = arrayOf(invalidRefsMsg)            )
         }
         val nameExist = pipelineRepositoryService.isPipelineExist(
             projectId = projectId,

@@ -72,9 +72,8 @@ object MessageUtil {
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
             message = resourceBundle.getString(messageCode)
-            if (null != params) {
+            if (!message.isNullOrBlank() && !params.isNullOrEmpty()) {
                 val mf = MessageFormat(message)
-                // 根据参数动态替换状态码描述里的占位符
                 message = mf.format(params)
             }
         } catch (ignored: Throwable) {
