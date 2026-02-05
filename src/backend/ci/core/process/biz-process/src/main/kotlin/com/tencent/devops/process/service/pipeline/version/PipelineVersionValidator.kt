@@ -73,7 +73,8 @@ class PipelineVersionValidator @Autowired constructor(
             val invalidRefsMsg = ModelVarRefValidator.formatInvalidRefsMessage(invalidRefs)
             throw ErrorCodeException(
                 errorCode = ERROR_PIPELINE_MODEL_VAR_REF_INVALID,
-                params = arrayOf(invalidRefsMsg)            )
+                params = arrayOf(invalidRefsMsg)
+            )
         }
         val nameExist = pipelineRepositoryService.isPipelineExist(
             projectId = projectId,
