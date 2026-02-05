@@ -131,7 +131,6 @@
         },
         data () {
             return {
-                MAX_FILE_SIZE_MB,
                 directory: '',
                 fileName: ''
             }
@@ -153,6 +152,9 @@
                 },
                 immediate: true
             }
+        },
+        created () {
+            this.MAX_FILE_SIZE_MB = MAX_FILE_SIZE_MB
         },
         methods: {
             updatePath (name, value, newFile = false) {
