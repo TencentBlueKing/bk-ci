@@ -45,6 +45,7 @@ object RepoUtils {
     const val REPORT_REPO = "report"
     const val LOG_REPO = "log"
     const val IMAGE_REPO = "image"
+    const val CREATIVE_REPO = "creative"
 
     fun getRepoByType(repoType: ArtifactoryType): String {
         return when (repoType) {
@@ -52,6 +53,7 @@ object RepoUtils {
             ArtifactoryType.CUSTOM_DIR -> CUSTOM_REPO
             ArtifactoryType.IMAGE -> IMAGE_REPO
             ArtifactoryType.REPORT -> REPORT_REPO
+            ArtifactoryType.CREATIVE -> CREATIVE_REPO
         }
     }
 
@@ -60,6 +62,7 @@ object RepoUtils {
             PIPELINE_REPO -> ArtifactoryType.PIPELINE
             CUSTOM_REPO -> ArtifactoryType.CUSTOM_DIR
             IMAGE_REPO -> ArtifactoryType.IMAGE
+            CREATIVE_REPO -> ArtifactoryType.CREATIVE
             else -> throw IllegalArgumentException("invalid repo: $repo")
         }
     }
