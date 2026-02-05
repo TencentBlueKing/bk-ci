@@ -1135,21 +1135,31 @@ class PipelineTemplateInstanceService @Autowired constructor(
             version = pipelineVersion
         ).modelAndSetting
 
-        // 根据当前流水线model,生成实例化model
         val overrideTemplateField = pipelineModelAndSetting.model.overrideTemplateField
             ?: TemplateInstanceField.initFromTrigger(model = templateModel)
+        // 模版常量和只读变量不能被自定义,需要移出
+        val notOverrideParamIds = templateModel.getTriggerContainer().params
+            .filter { it.constant != true && it.required }.map { it.id }
+            .toSet()
+        val overrideParamIds = overrideTemplateField.paramIds?.toMutableList()
+        overrideParamIds?.removeAll(notOverrideParamIds)
+        val newOverrideTemplateField = overrideTemplateField.copy(
+            paramIds = overrideParamIds
+        )
+
+        // 根据当前流水线model,生成实例化model
         val instanceModel = getInstanceModel(
             pipelineModel = pipelineModelAndSetting.model,
             templateResource = templateResource,
             pipelineInfo = pipelineInfo,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = newOverrideTemplateField
         )
         val instanceSetting = getInstanceSetting(
             projectId = projectId,
             pipelineInfo = pipelineInfo,
             templateResource = templateResource,
             useTemplateSettings = useTemplateSettings,
-            overrideTemplateField = overrideTemplateField
+            overrideTemplateField = newOverrideTemplateField
         )
 
         pipelineModelAndSetting.model.template = null
