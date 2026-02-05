@@ -110,6 +110,7 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
+import com.tencent.devops.process.service.`var`.PublicVarGroupService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.strategy.context.UserPipelinePermissionCheckContext
 import com.tencent.devops.process.strategy.factory.UserPipelinePermissionCheckStrategyFactory
@@ -121,14 +122,6 @@ import com.tencent.devops.store.api.template.ServiceTemplateResource
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.StreamingOutput
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.slf4j.MDC
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.stereotype.Service
 import java.io.File
 import java.io.FileInputStream
 import java.net.URLEncoder
@@ -137,6 +130,14 @@ import java.util.LinkedList
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -163,7 +164,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineAuthorizationService: PipelineAuthorizationService,
     private val auditService: AuditService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineTemplateResourceService: PipelineTemplateResourceService
+    private val pipelineTemplateResourceService: PipelineTemplateResourceService,
+    private val publicVarGroupService: PublicVarGroupService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -603,10 +605,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.stop()
 
             var pipelineId: String? = null
+            val triggerContainer = model.getTriggerContainer()
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.getTriggerContainer()
                     PipelineUtils.instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -708,6 +710,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = pipelineId,
                     userId = userId
                 )
+
                 ActionAuditContext.current()
                     .addInstanceInfo(pipelineId, model.name, null, null)
                 success = true
@@ -1583,7 +1586,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
-            model.latestVersion = pipelineInfo.version
             val defaultTagId by lazy { stageTagService.getDefaultStageTag().data?.id } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id

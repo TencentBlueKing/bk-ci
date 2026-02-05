@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
@@ -60,6 +61,7 @@ import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenera
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -83,7 +85,8 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
@@ -265,6 +268,15 @@ class PipelineTemplateInstanceReqConverter(
                 triggerConfigs = overrideTemplateTriggerConfigs,
                 overrideTemplateField = overrideTemplateField,
                 template = pipelineModelRef.template
+            )
+
+            // 处理跨项目变量组引用，展开变量组中的变量到params
+            publicVarGroupReferManageService.handleCrossProjectVarGroup(
+                projectId = projectId,
+                referId = templateId,
+                referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                referVersion = templateVersion.toInt(),
+                model = instanceModel
             )
 
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(

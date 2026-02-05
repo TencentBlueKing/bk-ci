@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.db.pojo.ARCHIVE_SHARDING_DSL_CONTEXT
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -67,6 +68,8 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.pojo.TemplatePath
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.ElementTransfer
@@ -108,7 +111,8 @@ class PipelineTransferYamlService @Autowired constructor(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val client: Client,
     private val yamlSchemaCheck: CodeSchemaCheck,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     companion object {
@@ -318,6 +322,20 @@ class PipelineTransferYamlService @Autowired constructor(
             aspectWrapper = PipelineTransferAspectWrapper(aspects)
         )
         val model = modelTransfer.yaml2Model(input)
+        pipelineInfo?.let {
+            publicVarGroupReferManageService.handleVarGroupReferByVersionName(
+                PublicVarGroupReferDTO(
+                    userId = userId,
+                    projectId = projectId,
+                    model = model,
+                    referId = pipelineInfo.pipelineId,
+                    referType = PublicVerGroupReferenceTypeEnum.PIPELINE,
+                    referName = model.name,
+                    referVersion = pipelineInfo.version,
+                    referVersionName = pipelineInfo.versionName
+                )
+            )
+        }
         val setting = modelTransfer.yaml2Setting(input)
 
         logger.info(watcher.toString())

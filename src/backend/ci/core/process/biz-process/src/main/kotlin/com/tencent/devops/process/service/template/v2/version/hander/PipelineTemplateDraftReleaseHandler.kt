@@ -44,6 +44,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenc
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,7 +61,8 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
     private val redisOperation: RedisOperation,
-    @Lazy private val pipelineYamlFacadeService: PipelineYamlFacadeService
+    @Lazy private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
     override fun support(context: PipelineTemplateVersionCreateContext) =
         context.versionAction == PipelineVersionAction.RELEASE_DRAFT

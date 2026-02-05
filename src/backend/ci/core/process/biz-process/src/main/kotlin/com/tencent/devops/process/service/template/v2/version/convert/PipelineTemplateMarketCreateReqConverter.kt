@@ -30,7 +30,9 @@ package com.tencent.devops.process.service.template.v2.version.convert
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -45,6 +47,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -59,7 +62,8 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
     private val client: Client,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineTemplateSettingService: PipelineTemplateSettingService
+    private val pipelineTemplateSettingService: PipelineTemplateSettingService,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionReqConverter {
 
     override fun support(request: PipelineTemplateVersionReq): Boolean {
@@ -167,6 +171,17 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 creator = userId,
                 status = VersionStatus.RELEASED
             )
+
+            // 处理跨项目变量组引用，展开变量组中的变量到params
+            (pTemplateResourceWithoutVersion.model as? Model)?.let { model ->
+                publicVarGroupReferManageService.handleCrossProjectVarGroup(
+                    projectId = marketTemplateProjectId,
+                    referId = marketTemplateId,
+                    referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                    referVersion = finalMarketTemplateVersion.toInt(),
+                    model = model
+                )
+            }
 
             return PipelineTemplateVersionCreateContext(
                 userId = userId,

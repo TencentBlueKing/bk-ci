@@ -39,6 +39,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelLock
 import com.tencent.devops.process.service.template.v2.PipelineTemplatePersistenceService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,7 +52,8 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplatePersistenceService: PipelineTemplatePersistenceService,
     private val pipelineTemplateGenerator: PipelineTemplateGenerator,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) : PipelineTemplateVersionCreateHandler {
 
     override fun support(context: PipelineTemplateVersionCreateContext): Boolean {
@@ -95,6 +97,7 @@ class PipelineTemplateReleaseCreateHandler @Autowired constructor(
         } else {
             createReleaseVersion()
         }
+
         return DeployTemplateResult(
             projectId = projectId,
             userId = userId,

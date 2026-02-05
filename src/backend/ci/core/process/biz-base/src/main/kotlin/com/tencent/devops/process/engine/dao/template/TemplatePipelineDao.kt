@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_TEMPLATE_ID
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -51,7 +52,6 @@ import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("Unused", "LongParameterList", "TooManyFunctions")
 @Repository
@@ -206,7 +206,12 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Result<Record3<String, String, Long>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = templateIds,
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
             return dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 TEMPLATE_ID.`as`(KEY_TEMPLATE_ID),
@@ -242,8 +247,35 @@ class TemplatePipelineDao {
         deleteFlag: Boolean? = null
     ): Int {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = templateIds,
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
             return dslContext.select(DSL.count(PIPELINE_ID)).from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByTemplateByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        instanceType: String,
+        templateId: String,
+        version: Long,
+        deleteFlag: Boolean? = null
+    ): Int {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(
+                projectId = projectId,
+                templateIds = listOf(templateId),
+                instanceType = instanceType,
+                deleteFlag = deleteFlag
+            )
+            conditions.add(VERSION.eq(version))
+            return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }

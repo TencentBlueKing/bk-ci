@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
+import com.tencent.devops.common.pipeline.enums.PublicVerGroupReferenceTypeEnum
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.constant.PipelineTemplateConstant
@@ -49,16 +50,18 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceUpdateInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingUpdateInfo
+import com.tencent.devops.process.pojo.`var`.dto.PublicVarGroupReferDTO
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.process.service.template.v2.version.processor.PTemplateVersionCreatePostProcessor
+import com.tencent.devops.process.service.`var`.PublicVarGroupReferManageService
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 负责流水线模版持久化业务逻辑
@@ -75,7 +78,8 @@ class PipelineTemplatePersistenceService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val versionCreatePostProcessors: List<PTemplateVersionCreatePostProcessor>,
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
-    private val pipelineYamlVersionDao: PipelineYamlVersionDao
+    private val pipelineYamlVersionDao: PipelineYamlVersionDao,
+    private val publicVarGroupReferManageService: PublicVarGroupReferManageService
 ) {
 
     /**
@@ -314,6 +318,21 @@ class PipelineTemplatePersistenceService @Autowired constructor(
                 pipelineTemplateResource = pipelineTemplateResource,
                 pipelineTemplateSetting = pipelineTemplateSetting
             )
+
+            (pTemplateResourceWithoutVersion.model as? Model)?.let {
+                publicVarGroupReferManageService.handleVarGroupReferBus(
+                    PublicVarGroupReferDTO(
+                        userId = userId,
+                        projectId = projectId,
+                        model = it,
+                        referId = templateId,
+                        referType = PublicVerGroupReferenceTypeEnum.TEMPLATE,
+                        referName = pipelineTemplateInfo.name,
+                        referVersion = pipelineTemplateResource.version.toInt(),
+                        referVersionName = pipelineTemplateResource.versionName ?: ""
+                    )
+                )
+            }
         }
     }
 
