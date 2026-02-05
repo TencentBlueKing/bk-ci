@@ -333,6 +333,15 @@ class PipelineTemplateInstanceService @Autowired constructor(
         )
         val instances = request.instanceReleaseInfos
         val baseId = UUIDUtil.generate()
+        validateInstanceParamsBeforeUpdate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            templateResource = templateResource,
+            instanceReleaseInfos = request.instanceReleaseInfos,
+            baseId = baseId
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templateInstanceBaseDao.createTemplateInstanceBase(
@@ -379,6 +388,86 @@ class PipelineTemplateInstanceService @Autowired constructor(
             )
         )
         return baseId
+    }
+
+    private fun validateInstanceParamsBeforeUpdate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        instanceReleaseInfos: List<PipelineTemplateInstanceReleaseInfo>,
+        templateResource: PipelineTemplateResource,
+        baseId: String
+    ) {
+        val pipelineIds = instanceReleaseInfos.mapNotNull { releaseInfo ->
+            releaseInfo.pipelineId.takeIf { it.isNotBlank() }
+        }.toSet()
+        if (pipelineIds.isEmpty()) {
+            return
+        }
+        // 实例化前流水线参数
+        val beforePipelineParamMap = listTemplateInstancesParams(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            pipelineIds = pipelineIds
+        )
+        if (templateResource.model !is Model) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_TYPE_MODEL_TYPE_NOT_MATCH
+            )
+        }
+        val templateModel = templateResource.model as Model
+        val templateParams = templateModel.getTriggerContainer().params
+        val isModifyParamsResetToDefault = instanceReleaseInfos
+            .filter { it.pipelineId.isNotBlank() }
+            .all { releaseInfo ->
+                val instanceParams = releaseInfo.param
+                if (instanceParams.isNullOrEmpty()) {
+                    return@all false
+                }
+                val beforePipelineParams = beforePipelineParamMap[releaseInfo.pipelineId]?.param
+                isModifyParamValueEqualToDefault(
+                    templateParams = templateParams,
+                    instanceParams = instanceParams,
+                    beforeInstanceParams = beforePipelineParams ?: emptyList()
+                )
+            }
+        if (isModifyParamsResetToDefault) {
+            logger.warn(
+                "instance params reset to template defaults|$projectId|$userId|$templateId|$version|$baseId"
+            )
+        }
+    }
+
+    /**
+     * 检查实例化流水线修改的参数是否全部重置为模板默认值
+     *
+     * @param templateParams 模板参数
+     * @param instanceParams 实例化参数
+     * @param beforeInstanceParams 实例化前参数
+     */
+    private fun isModifyParamValueEqualToDefault(
+        templateParams: List<BuildFormProperty>,
+        instanceParams: List<BuildFormProperty>,
+        beforeInstanceParams: List<BuildFormProperty>
+    ): Boolean {
+        val templateParamMap = templateParams.associateBy { it.id }
+        val instanceParamMap = instanceParams.associateBy { it.id }
+
+        // 值改了,检查是否重置为模板默认值
+        return beforeInstanceParams.filter { beforeInstanceParam ->
+            val instanceParam = instanceParamMap[beforeInstanceParam.id]
+            val templateParam = templateParamMap[beforeInstanceParam.id]
+            instanceParam != null && templateParam != null &&
+                    beforeInstanceParam.defaultValue != instanceParam.defaultValue
+        }.all { beforeInstanceParam ->
+            val instanceParam = instanceParamMap[beforeInstanceParam.id]
+            val templateParam = templateParamMap[beforeInstanceParam.id]
+            // 值修改了,检查是否重置为模板默认值
+            return instanceParam!!.defaultValue == templateParam!!.defaultValue
+        }
     }
 
     fun translateInstanceException(

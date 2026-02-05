@@ -245,6 +245,7 @@ class WebhookTriggerBuildService @Autowired constructor(
                     tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
                         .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, isYaml.toString())
                         .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "false")
+                        .and(MeasureConstant.TAG_SCM_WEBHOOK_SCM_CODE, repository.scmCode)
                         .toList(),
                     timeConsumingMills = timeConsumingMills
                 )
