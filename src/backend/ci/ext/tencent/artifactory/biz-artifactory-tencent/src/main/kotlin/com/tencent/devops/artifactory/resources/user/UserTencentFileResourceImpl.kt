@@ -57,7 +57,7 @@ class UserTencentFileResourceImpl @Autowired constructor(
         disposition: FormDataContentDisposition
     ): Result<String> {
         checkParam(userId, projectId, path)
-        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 100)
+        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 500)
         return Result(data = "true") // 内部要返回true, 否则前端会报错
     }
 

@@ -153,7 +153,8 @@ class WechatWorkCallbackService @Autowired constructor(
         userName = wechatWorkService.getUserNameByUserId(userId)
 
         // 处理msgid,个人会话，群会发并@，click事件
-        if ((receiverType == ReceiverType.group && mentionType != "0") || receiverType == ReceiverType.single || (callbackElement.msgType == MsgType.Event && EventType.valueOf(
+        if ((receiverType == ReceiverType.group && mentionType != "0") || receiverType == ReceiverType.single ||
+            (callbackElement.msgType == MsgType.Event && EventType.valueOf(
                 (callbackElement.msgElement.elementIterator("Event").next() as Element).text
             ) == EventType.click)
         ) {
