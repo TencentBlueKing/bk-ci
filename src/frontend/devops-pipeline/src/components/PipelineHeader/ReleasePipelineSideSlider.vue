@@ -287,7 +287,7 @@
                                                                     @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
                                                                 />
                                                                 <i
-                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
+                                                                    v-if="!/\.ya?ml$/.test(item?.filePath) || !item?.filePath"
                                                                     class="bk-icon icon-exclamation-circle-shape tooltips-icon"
                                                                     v-bk-tooltips="$t('yamlFilePathErrorTip')"
                                                                 />
@@ -1036,11 +1036,23 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     try {
+                        if (this.releasing) return
                         await this.$refs?.releaseForm?.validate?.()
-                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
+                        if (this.releaseParams.enablePac) {
+                            const invalidInstances = this.instanceList.filter(i => !i.filePath || !/\.ya?ml$/.test(i.filePath))
+                            if (invalidInstances.length > 0) {
+                                const names = invalidInstances.map(i => i.pipelineName).join('、')
+                                throw new Error(this.$t('template.yamlFilePathInvalidTip', [names]))
+                            }
+                        }
+                        this.releasing = true
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
-                        console.error(e)
+                        if (e.state === 'error') {
+                            e.message = e.content
+                        }
+                        this.errorHandler(e)
+                        this.releasing = false
                     }
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
@@ -1342,6 +1354,9 @@
             },
             cancelRelease () {
                 this.$emit('input', false)
+            },
+            resetReleasing () {
+                this.releasing = false
             },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
