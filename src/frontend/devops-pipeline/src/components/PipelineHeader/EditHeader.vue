@@ -27,6 +27,7 @@
                 :unique-id="pipelineId"
                 :is-template="false"
                 @rollback="handleRollback"
+                @new-draft="handleNewDraft"
                 @continue-save-draft="continueSaveDraft"
                 @go-pipeline-model="goPipelineModel"
             />
@@ -265,6 +266,7 @@
                                 }
                                 // 获取回滚后的流水线完整数据并更新到 store
                                 await this.requestPipeline({
+                                    source: 'EDIT',
                                     projectId: this.projectId,
                                     pipelineId: this.pipelineId,
                                     version: res.version
@@ -394,6 +396,22 @@
                     this.isConflictDraft = false
                     this.setSaveStatus(false)
                 }
+            },
+
+            async handleNewDraft () {
+                this.isConflictDraft = false
+                // 重新获取流水线摘要信息
+                await this.requestPipelineSummary(this.$route.params)
+                // 刷新草稿列表（通过子组件）
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
+                await this.requestPipeline({
+                    source: 'EDIT',
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    version: this.pipelineInfo?.version
+                })
             },
 
             async saveDraft () {

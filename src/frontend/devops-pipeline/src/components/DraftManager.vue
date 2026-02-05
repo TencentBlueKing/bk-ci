@@ -59,7 +59,7 @@
                             <Logo
                                 name="refresh"
                                 size="12"
-                                style="transform: scaleX(-1) rotate(90deg);"
+                                style="transform: scaleX(-1) rotate(35deg);"
                             />
                         </span>
                     </span>
@@ -140,6 +140,7 @@
             <footer slot="footer">
                 <bk-button
                     theme="primary"
+                    :loading="saveStatus"
                     @click="handleContinueSaveDraft"
                 >
                     {{ primaryButtonText }}
@@ -215,6 +216,7 @@
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
+                'saveStatus'
             ]),
             hasDraftPipeline () {
                 return (this.pipelineInfo?.version !== this.pipelineInfo?.releaseVersion) ?? false
@@ -367,6 +369,13 @@
                 this.isShowDraftList = false
             },
             handleContinueSaveDraft () {
+                // 已发布状态：跳转到编辑页面
+                if (this.isPublishedStatus) {
+                    this.$emit('new-draft')
+                    return
+                }
+                
+                // 冲突状态：触发父组件的保存草稿逻辑，覆盖冲突的草稿
                 this.$emit('continue-save-draft')
             },
             goPipelineModel () {
@@ -400,7 +409,7 @@
             top: 22px;
             left: 50%;
             transform: translateX(-50%);
-            width: 388px;
+            width: 450px;
             max-height: 350px;
             overflow-y: auto;
             background-color: #fff;
@@ -445,9 +454,11 @@
             .options {
                 display: flex;
                 align-items: center;
+                margin-top: 2px;
                 .rollback-icon {
                     line-height: 22px;
                     color: #979BA5;
+                    margin-left: 12px;
                 }
             }
             .update-tip {

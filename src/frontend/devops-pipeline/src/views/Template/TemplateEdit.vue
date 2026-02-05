@@ -243,6 +243,7 @@
                                 await this.requestPipeline({
                                     projectId: this.projectId,
                                     templateId: this.templateId,
+                                    source: 'EDIT',
                                     version: res.version
                                 })
                                 
