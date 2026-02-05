@@ -41,6 +41,12 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     }
   }
 
+  function reset() {
+    flowInfo.value = null
+    flowVersionList.value = []
+    loading.value = false
+  }
+
   function initFlowInfo() {
     getFlowInfo()
     getFlowVersionList()
@@ -53,5 +59,6 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
 
     getFlowInfo,
     initFlowInfo,
+    reset   
   }
 })

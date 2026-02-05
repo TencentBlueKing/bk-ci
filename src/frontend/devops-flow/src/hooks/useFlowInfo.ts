@@ -1,6 +1,6 @@
 import { useFlowInfoStore } from '@/stores/flowInfoStore';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { VERSION_STATUS_ENUM } from '../utils/flowConst';
 
@@ -17,6 +17,9 @@ export function useFlowInfo() {
     store.initFlowInfo()
   })
 
+  onBeforeUnmount(() => {
+    store.reset()
+  })
   watch(
     () => route.params.flowId,
     (newFlowId) => {

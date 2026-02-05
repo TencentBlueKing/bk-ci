@@ -1,5 +1,5 @@
 import { JobCategory, JobType, type AtomClassify, type AtomItem } from '@/api/atom'
-import type { Container } from '@/api/flowModel'
+import type { Container, Element } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomManager } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
@@ -38,9 +38,8 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
-    atomIndex: {
-      type: Number,
-      default: 0,
+    atom: {
+      type: Object as PropType<Element>,
     },
   },
   emits: ['update:visible', 'select', 'close'],
@@ -71,11 +70,10 @@ export default defineComponent({
     // ========== Computed ==========
     
     const currentAtomCode = computed(() => {
-      const element = props.container?.elements?.[props.atomIndex]
-      if (element) {
+      if (props.atom) {
         // 如果是第三方插件，使用 atomCode，否则使用 @type
-        const isThird = element.atomCode && element['@type'] !== element.atomCode
-        return (isThird ? element.atomCode : element['@type']) || ''
+        const isThird = props.atom.atomCode && props.atom['@type'] !== props.atom.atomCode
+        return (isThird ? props.atom.atomCode : props.atom['@type']) || ''
       }
       return ''
     })
@@ -136,21 +134,21 @@ export default defineComponent({
       async (visible) => {
         if (visible) {
           // 获取分类列表
-          await atomManager.fetchClassifyList()
+            await Promise.all([
+                atomManager.fetchClassifyList(),
+                loadAtomList(true)
+            ])
 
-          // 根据当前选中的插件设置分类
-          const currentAtom = atomList.value.find((atom) => atom.atomCode === currentAtomCode.value)
-          if (currentAtom) {
-            classifyCode.value = currentAtom.classifyCode || classifyList.value[0] || 'all'
-          } else {
-            classifyCode.value = classifyList.value[0] || 'all'
-          }
+            const currentAtom = atomList.value.find((atom) => atom.atomCode === currentAtomCode.value)
+            
+            if (currentAtom) {
+                classifyCode.value = currentAtom.classifyCode || classifyList.value[0] || 'all'
+            } else {
+                classifyCode.value = classifyList.value[0] || 'all'
+            }
 
-          activeAtomCode.value = currentAtomCode.value
-          searchKey.value = ''
-
-          // 加载插件列表
-          loadAtomList(true)
+            activeAtomCode.value = currentAtomCode.value
+            searchKey.value = ''
         }
       },
     )
@@ -204,9 +202,6 @@ export default defineComponent({
           atomCode,
           version,
           atomModal,
-          stageIndex: props.stageIndex,
-          containerIndex: props.containerIndex,
-          atomIndex: props.atomIndex,
         })
 
         handleClose()

@@ -8,7 +8,7 @@ import { useUIStore } from '@/stores/ui'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
 import { Exception, Loading } from 'bkui-vue'
-import { defineComponent, ref, watch } from 'vue'
+import { defineComponent, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import sharedStyles from '../shared.module.css'
 import styles from './index.module.css'
@@ -46,6 +46,7 @@ export default defineComponent({
       handleStageConfirm,
       handleStageChange,
       handleJobConfirm,
+      reset,
     } = useFlowModel()
     const uiStore = useUIStore()
 
@@ -120,6 +121,11 @@ export default defineComponent({
       },
     )
 
+    onBeforeUnmount(() => {
+      // reset flow model
+      reset()
+    })
+
     // ========== Functions ==========
     function renderEmptyState() {
       return (
@@ -188,6 +194,7 @@ export default defineComponent({
         <AtomSelector
           v-model:visible={isAtomSelectorVisible.value}
           container={editingElementContainer.value ?? undefined}
+          atom={editingElement.value ?? undefined}
           onSelect={handleAtomSelect}
         />
       </Loading>
