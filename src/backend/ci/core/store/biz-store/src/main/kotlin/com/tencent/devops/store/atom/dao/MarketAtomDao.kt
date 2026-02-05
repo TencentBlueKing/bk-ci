@@ -48,6 +48,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -472,7 +473,7 @@ class MarketAtomDao : AtomBaseDao() {
         val currentRecord = getAtomRecordById(dslContext, id)
         
         // 从 serviceScopeConfigs 构建 jobTypeMap
-        val serviceScopeConfigs = marketAtomUpdateRequest.toServiceScopeConfigs()
+        val serviceScopeConfigs: List<ServiceScopeConfig> = marketAtomUpdateRequest.toServiceScopeConfigs()
         val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
         
         // 构建 CLASSIFY_ID_MAP（支持多服务范围）
@@ -521,6 +522,12 @@ class MarketAtomDao : AtomBaseDao() {
             jobTypeValue?.let {
                 baseStep.set(JOB_TYPE, it)
             }
+            // 更新 SERVICE_SCOPE（服务范围列表 JSON）
+            val serviceScopeJson = JsonUtil.toJson(
+                serviceScopeConfigs.map { it.serviceScope.name },
+                formatted = false
+            )
+            baseStep.set(SERVICE_SCOPE, serviceScopeJson)
             baseStep.where(ID.eq(id)).execute()
         }
     }
@@ -537,7 +544,7 @@ class MarketAtomDao : AtomBaseDao() {
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
         classifyCode: String?,
-        serviceScopeConfigs: List<*>?,
+        serviceScopeConfigs: List<ServiceScopeConfig>?,
         currentClassifyIdMap: String?
     ): Map<String, String>? {
         if (classifyCode.isNullOrEmpty() || serviceScopeConfigs.isNullOrEmpty()) {
@@ -558,39 +565,18 @@ class MarketAtomDao : AtomBaseDao() {
         // 为每个服务范围查询对应的分类ID
         val classifyIdMap = existingMap.toMutableMap()
         for (config in serviceScopeConfigs) {
-            // 从配置中提取服务范围名称
-            val serviceScopeName = when {
-                config is Map<*, *> -> {
-                    // 尝试多种可能的 key 名称
-                    (config["serviceScope"] as? String)
-                        ?: (config["service_scope"] as? String)
-                        ?: (config["scope"] as? String)
-                }
-                config is String -> config
-                else -> null
-            } ?: continue
-            
-            // 尝试解析为 ServiceScopeEnum
-            val serviceScope = try {
-                ServiceScopeEnum.valueOf(serviceScopeName.uppercase())
-            } catch (e: Exception) {
-                // 如果无法解析，跳过该服务范围
-                continue
-            }
-            
-            // 查询该服务范围对应的分类ID
+            val serviceScope = config.serviceScope
             val classifyId = getClassifyIdByCode(
                 dslContext = dslContext,
                 classifyCode = classifyCode,
                 serviceScope = serviceScope
             )
-            
             classifyId?.let {
                 classifyIdMap[serviceScope.name] = it
             }
         }
         
-        return if (classifyIdMap.isNotEmpty()) classifyIdMap else null
+        return classifyIdMap.ifEmpty { null }
     }
 
     fun upgradeMarketAtom(
@@ -610,10 +596,14 @@ class MarketAtomDao : AtomBaseDao() {
             serviceScope = ServiceScopeEnum.PIPELINE
         )
         
-        // 从 serviceScopeConfigs 构建 jobTypeMap
-        val serviceScopeConfigs = atomRequest.toServiceScopeConfigs()
+        // 从 serviceScopeConfigs 构建 jobTypeMap 和 SERVICE_SCOPE
+        val serviceScopeConfigs: List<ServiceScopeConfig> = atomRequest.toServiceScopeConfigs()
         val currentJobType = atomRecord.jobType  // 使用旧记录的 jobType 作为默认值
         val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, currentJobType)
+        val serviceScopeJson = JsonUtil.toJson(
+            serviceScopeConfigs.map { it.serviceScope.name },
+            formatted = false
+        )
         
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
@@ -656,7 +646,7 @@ class MarketAtomDao : AtomBaseDao() {
                     id,
                     atomRequest.name,
                     atomRecord.atomCode,
-                    atomRecord.serviceScope,
+                    serviceScopeJson,
                     // 使用构建的 jobTypeMap（支持多服务范围）
                     jobTypeValue ?: currentJobType,
                     JsonUtil.toJson(atomRequest.os, formatted = false),

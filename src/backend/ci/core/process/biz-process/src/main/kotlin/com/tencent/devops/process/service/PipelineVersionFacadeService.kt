@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.dialect.PipelineDialectType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -392,6 +393,10 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = request.templateVersion
             ).template
         }
+        val channelCode = ChannelCode.getRequestChannelCode()
+        request.pipelineDialect?.takeIf { channelCode == ChannelCode.CREATIVE_STREAM }?.let {
+            request.pipelineDialect = PipelineDialectType.CONSTRAINED.name
+        }
         val pipelineAsCodeSettings = PipelineAsCodeSettings.initDialect(
             inheritedDialect = request.inheritedDialect,
             pipelineDialect = request.pipelineDialect
@@ -400,7 +405,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = "",
             pipelineName = request.pipelineName,
-            channelCode = ChannelCode.getRequestChannelCode()
+            channelCode = channelCode
         ).copy(
             pipelineAsCodeSettings = pipelineAsCodeSettings,
             labels = request.labels,

@@ -762,14 +762,19 @@ object ModelVarRefUtils {
     private fun getCachedFields(clazz: Class<*>): List<java.lang.reflect.Field> {
         return fieldCache.get(clazz) {
             val fields = mutableListOf<java.lang.reflect.Field>()
+            val addedNames = mutableSetOf<String>()
             var currentClass: Class<*>? = clazz
 
-            // 向上遍历继承层次，获取所有父类的字段
+            // 向上遍历继承层次，获取所有父类的字段（子类优先）
+            // 若子类 override 了父类同名属性，只保留子类字段，避免同一逻辑属性被解析两次导致重复 VarRefDetail
             while (currentClass != null && currentClass != Any::class.java) {
-                // 只添加非静态字段，静态字段通常不包含业务数据
                 currentClass.declaredFields
                     .filter { !java.lang.reflect.Modifier.isStatic(it.modifiers) }
-                    .forEach { fields.add(it) }
+                    .filter { !addedNames.contains(it.name) }
+                    .forEach {
+                        addedNames.add(it.name)
+                        fields.add(it)
+                    }
                 currentClass = currentClass.superclass
             }
             fields

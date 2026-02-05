@@ -35,7 +35,7 @@ import java.util.regex.Pattern
 /**
  * 模型变量引用表达式校验器
  *
- * 规范：只允许双大括号 ${{xxx}}；表达式前缀必须是 [variables.|stages.|jobs.|steps.]
+ * 规范：只允许双大括号 ${{xxx}}；表达式前缀必须是 [variables.|stages.|jobs.|steps.|ci.]
  * 渠道：仅当 ChannelCode 为 CREATIVE_STREAM 时执行规范性校验；报错信息逻辑收敛在本类内。
  */
 object ModelVarRefValidator {
@@ -45,7 +45,8 @@ object ModelVarRefValidator {
         "variables.",
         "stages.",
         "jobs.",
-        "steps."
+        "steps.",
+        "ci."
     )
 
     /** 解析 positionPath：model(.stages[i])?(.containers[j])?(.elements[k])?.?suffix，stages/containers/elements 均可为空 */
@@ -91,22 +92,23 @@ object ModelVarRefValidator {
         if (invalidRefs.isEmpty()) return ""
         return invalidRefs.joinToString("; ") { ref ->
             val (indexPart, fieldName) = parsePositionPath(ref.positionPath)
-            val taskName = ref.taskName?.takeIf { it.isNotBlank() } ?: "-"
+            val taskName = ref.taskName?.takeIf { it.isNotBlank() } ?: ""
             val field = fieldName.ifBlank { "-" }
-            if (indexPart == "-") "$taskName:$field" else "[$indexPart]$taskName:$field"
+            val prefix = if (indexPart == "-") "" else "[$indexPart]"
+            if (taskName.isBlank()) "${prefix}:$field" else "${prefix}$taskName:$field"
         }
     }
 
     /**
      * 解析 positionPath（如 model.stages[0].containers[0].elements[0].customCondition 或 model.triggerContainer.params），
-     * 返回 (下标展示串, 字段名)。stages、containers、elements 解析规则一致，均可选；有则下标加 1 用 "-" 拼接；均无则 "-"。
+     * 返回 (下标展示串, 字段名)。stage 保持 0 起始；container、element 有则下标加 1 用 "-" 拼接；均无则 "-"。
      */
     private fun parsePositionPath(positionPath: String): Pair<String, String> {
         val m = POSITION_PATH_PATTERN.matcher(positionPath)
         if (!m.matches()) {
             return "-" to positionPath.trim()
         }
-        val stageIdx = m.group(1)?.toInt()?.plus(1)
+        val stageIdx = m.group(1)?.toInt()
         val containerIdx = m.group(2)?.toInt()?.plus(1)
         val elementIdx = m.group(3)?.toInt()?.plus(1)
         val indexPart = buildList {

@@ -274,7 +274,11 @@ object AtomUtils {
         require(serviceScope.contains(requiredScope)) {
             ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                params = arrayOf(atomName)
+                params = arrayOf(atomName),
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                    params = arrayOf(atomName)
+                ),
             )
         }
     }
