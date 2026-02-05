@@ -455,18 +455,22 @@ class PipelineTemplateInstanceService @Autowired constructor(
     ): Boolean {
         val templateParamMap = templateParams.associateBy { it.id }
         val instanceParamMap = instanceParams.associateBy { it.id }
-
-        // 值改了,检查是否重置为模板默认值
-        return beforeInstanceParams.filter { beforeInstanceParam ->
+        val modifyParams = beforeInstanceParams.filter { beforeInstanceParam ->
             val instanceParam = instanceParamMap[beforeInstanceParam.id]
             val templateParam = templateParamMap[beforeInstanceParam.id]
             instanceParam != null && templateParam != null &&
                     beforeInstanceParam.defaultValue != instanceParam.defaultValue
-        }.all { beforeInstanceParam ->
-            val instanceParam = instanceParamMap[beforeInstanceParam.id]
-            val templateParam = templateParamMap[beforeInstanceParam.id]
-            // 值修改了,检查是否重置为模板默认值
-            return instanceParam!!.defaultValue == templateParam!!.defaultValue
+        }
+        return if (modifyParams.isEmpty()) {
+            // 值都没有修改
+            false
+        } else {
+            modifyParams.all { beforeInstanceParam ->
+                val instanceParam = instanceParamMap[beforeInstanceParam.id]
+                val templateParam = templateParamMap[beforeInstanceParam.id]
+                // 值修改了,检查是否重置为模板默认值
+                return instanceParam!!.defaultValue == templateParam!!.defaultValue
+            }
         }
     }
 
