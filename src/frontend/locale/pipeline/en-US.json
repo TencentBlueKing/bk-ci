@@ -693,6 +693,7 @@
     "setTimeCron": "Set timing rule",
     "templatePipelineRollbackNotAllowedTips": "Stock version, does not support one click rollback",
     "resetBuildNoConfirmMessage": "A total of {0} pipeline(s) will have their [Build Number] field automatically reset to the baseline value after the official release. Please note! If you do not need to reset, please uncheck [Reset to baseline value immediately after releasing the official version].",
+    "yamlFilePathInvalidTip": "The YAML file path for the following pipelines is empty or invalid (must end with .yml or .yaml): {0}",
     "propertyUpdate": {
       "constName": "Constant Name",
       "constAlias": "Constant Alias",
