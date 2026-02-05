@@ -33,6 +33,7 @@
                         :unique-id="templateId"
                         :is-template="true"
                         @rollback="handleRollback"
+                        @new-draft="handleNewDraft"
                         @continue-save-draft="continueSaveDraft"
                         @go-pipeline-model="goPipelineModel"
                     />
@@ -372,6 +373,22 @@
                     this.saveStatus = false
                     this.isConflictDraft = false
                 }
+            },
+
+            async handleNewDraft () {
+                this.isConflictDraft = false
+                // 重新获取流水线摘要信息
+                await this.requestTemplateSummary(this.$route.params)
+                // 刷新草稿列表（通过子组件）
+                if (this.$refs.draftManager) {
+                    await this.$refs.draftManager.refresh()
+                }
+                await this.requestPipeline({
+                    source: 'EDIT',
+                    projectId: this.projectId,
+                    templateId: this.templateId,
+                    version: this.pipelineInfo?.version
+                })
             },
 
             async saveTemplateDraft () {
