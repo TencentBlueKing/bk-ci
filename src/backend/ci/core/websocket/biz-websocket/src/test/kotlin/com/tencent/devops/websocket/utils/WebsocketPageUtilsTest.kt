@@ -58,7 +58,8 @@ class WebsocketPageUtilsTest {
     @Test
     fun creativeStreamFullPaths_normalizeToExpectedKeys() {
         val executeDetailFull =
-            "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/execute/b-468e702beb4246489721a680201191b4/execute-detail?executeCount=2"
+            "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/execute/" +
+                    "b-468e702beb4246489721a680201191b4/execute-detail?executeCount=2"
         val detailFull =
             "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/detail/1/execution-record"
         val listFull =
