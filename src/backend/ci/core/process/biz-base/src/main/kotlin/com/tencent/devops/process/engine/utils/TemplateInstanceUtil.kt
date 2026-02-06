@@ -85,6 +85,7 @@ object TemplateInstanceUtil {
             instanceFromTemplate = true,
             staticViews = staticViews,
             templateId = templateResource.templateId,
+            srcTemplateId = templateResource.srcTemplateId,
             template = template,
             overrideTemplateField = overrideTemplateField
         )
