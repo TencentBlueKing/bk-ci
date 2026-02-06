@@ -206,13 +206,14 @@ class PipelineVersionPersistenceService @Autowired constructor(
                         }
                     }
                     pipelineSetting.maxPipelineResNum?.let {
-                        pipelineResourceVersionDao.deleteEarlyVersion(
+                        val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             currentVersion = pipelineResourceVersion.version,
                             maxPipelineResNum = it
                         )
+                        logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
                     }
                     postProcessInTransactionVersionCreate(
                         transactionContext = transactionContext,
@@ -415,13 +416,14 @@ class PipelineVersionPersistenceService @Autowired constructor(
                     setting = pipelineSetting
                 )
                 pipelineSetting.maxPipelineResNum?.let {
-                    pipelineResourceVersionDao.deleteEarlyVersion(
+                    val deleteVersionCnt = pipelineResourceVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         currentVersion = pipelineResourceVersion.version,
                         maxPipelineResNum = it
                     )
+                    logger.info("delete early version|$projectId|$pipelineId|$deleteVersionCnt")
                 }
                 postProcessInTransactionVersionCreate(
                     transactionContext = transactionContext,

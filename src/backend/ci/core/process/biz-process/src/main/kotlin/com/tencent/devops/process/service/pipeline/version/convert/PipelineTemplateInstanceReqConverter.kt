@@ -274,24 +274,6 @@ class PipelineTemplateInstanceReqConverter(
                 template = pipelineModelRef.template
             )
 
-            // 检查用户是否有插件的使用权限
-            if (instanceModel.srcTemplateId != null) {
-                val validateRet = client.get(ServiceTemplateResource::class)
-                    .validateUserTemplateComponentVisibleDept(
-                        userId = userId,
-                        templateCode = instanceModel.srcTemplateId as String,
-                        projectCode = projectId
-                    )
-                if (validateRet.isNotOk()) {
-                    throw OperationException(
-                        validateRet.message ?: MessageUtil.getMessageByLocale(
-                            ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
-                            I18nUtil.getLanguage(userId)
-                        )
-                    )
-                }
-            }
-
             val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
                 projectId = projectId,
                 pipelineId = newPipelineId,
