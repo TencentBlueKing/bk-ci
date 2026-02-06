@@ -400,12 +400,15 @@ object TemplateInstanceUtil {
         }
         return when (triggerElement) {
             is TimerTriggerElement -> {
-                triggerElement.copy(
+                val newTimeTrigger = triggerElement.copy(
                     advanceExpression = triggerConfig.cron ?: triggerElement.advanceExpression,
                     startParams = triggerConfig.variables?.let {
                         JsonUtil.toJson(it, false)
                     } ?: triggerElement.startParams
                 )
+                // 因为TimerTriggerElement是data class对象,copy时不会复制父类的属性,所以需要重新赋值
+                newTimeTrigger.additionalOptions = triggerElement.additionalOptions
+                newTimeTrigger
             }
 
             else -> triggerElement
