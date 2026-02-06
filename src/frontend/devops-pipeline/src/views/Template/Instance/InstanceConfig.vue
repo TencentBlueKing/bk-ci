@@ -258,7 +258,7 @@
                             </div>
                         </section>
                     </template>
-    
+
                     <template v-if="curInstance?.triggerConfigs?.length">
                         <section class="params-content-item">
                             <header
@@ -409,7 +409,7 @@
                         ...curTemplateDetail.value.buildNo,
                         isRequiredParam: curTemplateDetail.value.buildNo.required && curTemplateDetail.value.buildNo.asInstanceInput
                     } : undefined,
-                    triggerConfigs: curTemplateDetail.value.triggerConfigs ?? [],
+                    triggerConfigs: curTemplateDetail.value.triggerConfigs?.filter(i => !!i.stepId) ?? [],
                     resetBuildNo: false,
                     buildNoChanged: false
                 }
