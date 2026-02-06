@@ -54,6 +54,7 @@ data class TriggerOn(
     var issue: IssueRule? = null,
     var review: ReviewRule? = null,
     var note: NoteRule? = null,
+    var group: GroupRule? = null,
     @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,

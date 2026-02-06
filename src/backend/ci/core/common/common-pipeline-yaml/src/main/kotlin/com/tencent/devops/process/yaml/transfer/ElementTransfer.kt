@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -335,9 +336,23 @@ class ElementTransfer @Autowired(required = false) constructor(
                 elements = scmSvnElement,
                 projectId = projectId,
                 aspectWrapper = aspectWrapper,
-                defaultName = "SVN"
+                defaultName = "ScmSvn"
             )
             res.putAll(gitTrigger.groupBy { ScmType.SCM_SVN })
+        }
+
+        val gitGroupElement = fix[CodeGitGroupWebHookTriggerElement.classType]?.map {
+            aspectWrapper.setModelElement4Model(it, PipelineTransferAspectWrapper.AspectType.BEFORE)
+            WebHookTriggerElementChanger(it as CodeGitGroupWebHookTriggerElement)
+        }
+        if (!gitGroupElement.isNullOrEmpty()) {
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = gitGroupElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "GitGroup"
+            )
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
         return res
     }

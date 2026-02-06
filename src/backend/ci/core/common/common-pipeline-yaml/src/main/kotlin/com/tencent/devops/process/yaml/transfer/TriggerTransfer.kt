@@ -35,6 +35,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerData
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGroupWebHookTriggerInput
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -203,6 +206,26 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(note.enable).apply {
                     version = "2.*"
+                }
+            )
+        }
+
+        triggerOn.group?.let { group ->
+            elementQueue.add(
+                CodeGitGroupWebHookTriggerElement(
+                    stepId = group.id,
+                    name = group.name ?: "Git代码库组事件触发",
+                    data = CodeGitGroupWebHookTriggerData(
+                        CodeGitGroupWebHookTriggerInput(
+                            includeUsers = group.users?.join(),
+                            excludeUsers = group.usersIgnore?.join(),
+                            includeRepoNames = group.repoNames?.join(),
+                            excludeRepoNames = group.repoNamesIgnore?.join(),
+                            includeRepoGroupAction = group.actions
+                        )
+                    )
+                ).checkTriggerElementEnable(group.enable).apply {
+                    version = "1.*"
                 }
             )
         }
