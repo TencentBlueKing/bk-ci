@@ -1139,7 +1139,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             ?: TemplateInstanceField.initFromTrigger(model = templateModel)
         // 模版常量和只读变量不能被自定义,需要移出
         val notOverrideParamIds = templateModel.getTriggerContainer().params
-            .filter { it.constant != true && it.required }.map { it.id }
+            .filter { it.constant == true || !it.required }.map { it.id }
             .toSet()
         val overrideParamIds = overrideTemplateField.paramIds?.toMutableList()
         overrideParamIds?.removeAll(notOverrideParamIds)
@@ -1308,7 +1308,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
         ) ?: throw CustomMessageException("instance item not found for itemId: $itemId")
 
         if (item.status != TemplateInstanceStatus.SUCCESS) {
-            throw CustomMessageException("实例项状态为[${item.status}]，只有成功的实例项才能回滚")
+            throw CustomMessageException(
+                "instance status[${item.status}], only successful instance items can be rolled back"
+            )
         }
 
         val instanceBase = templateInstanceBaseDao.getTemplateInstanceBase(
@@ -1350,7 +1352,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         templateId: String
     ) {
         val beforeVersion = item.beforePipelineVersion
-            ?: throw CustomMessageException("流水线[${item.pipelineName}]没有可回滚的前置版本")
+            ?: throw CustomMessageException("pipeline[${item.pipelineName}] has no previous version to rollback")
         val pipelineId = item.pipelineId
         // 回滚流水线版本
         val versionName = pipelineRepositoryService.getPipelineResourceVersion(
@@ -1427,9 +1429,9 @@ class PipelineTemplateInstanceService @Autowired constructor(
         val failureResults = results.filter { !it.success }
 
         val message = when {
-            failureResults.isEmpty() -> "回滚成功"
-            isBatch && successResults.isNotEmpty() -> "部分流水线回滚失败"
-            else -> "回滚失败"
+            failureResults.isEmpty() -> "Rollback succeeded"
+            isBatch && successResults.isNotEmpty() -> "Some pipelines failed to rollback"
+            else -> "Rollback failed"
         }
 
         return TemplateOperationRet(
