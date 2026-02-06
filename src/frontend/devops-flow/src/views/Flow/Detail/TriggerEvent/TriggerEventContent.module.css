@@ -19,6 +19,14 @@
     font-size: 12px;
     color: var(--color-text-primary);
   }
+
+  :global(.bk-table-body tr) {
+    cursor: pointer;
+  }
+
+  :global(.bk-table-body tr:hover) {
+    background-color: var(--bg-hover, #f5f7fa);
+  }
 }
 
 .eventCell {

@@ -85,7 +85,7 @@ export default defineComponent({
           <div class={styles.paramLabel}>
             <span class={styles.paramLabelText}>
               {param.id}
-              {param.required && <span class={styles.requiredMark}>*</span>}
+              {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
             </span>
           </div>
           <div class={styles.paramInputWrapper}>
@@ -147,7 +147,7 @@ export default defineComponent({
           <div class={styles.paramLabel}>
             <div class={styles.paramLabelText}>
               {param.label || param.id}
-              {param.required && <span class={styles.requiredMark}>*</span>}
+              {param.valueNotEmpty && <span class={styles.requiredMark}>*</span>}
             </div>
             {param.desc && <div class={styles.paramDesc}>{param.desc}</div>}
           </div>

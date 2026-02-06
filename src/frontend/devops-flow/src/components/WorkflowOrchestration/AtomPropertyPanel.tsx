@@ -19,6 +19,10 @@ export default defineComponent({
       type: Object as PropType<Element | null>,
       default: null,
     },
+    editable: {
+      type: Boolean,
+      default: true,
+    },
   },
   emits: ['update:visible', 'chooseAtom', 'updateAtom'],
   setup(props, { emit }) {
@@ -95,6 +99,7 @@ export default defineComponent({
       <Sideslider
         isShow={props.visible}
         width={640}
+        transfer
         onClosed={handleClose}
         class={['bkci-property-panel', isVariablePanelOpen.value && 'with-variable-open']}
       >
@@ -102,7 +107,7 @@ export default defineComponent({
           header: () => (
             <div class={sharedStyles.propertyPanelHeader}>
               <div class={sharedStyles.atomNameEdit}>
-                {nameEditing.value ? (
+                {props.editable && nameEditing.value ? (
                   <Input
                     value={getAtomName()}
                     maxlength={30}
@@ -119,7 +124,7 @@ export default defineComponent({
                         ? getAtomName()
                         : t('flow.orchestration.waitingSelectAtom')}
                     </p>
-                    {isAtomSelected.value && (
+                    {props.editable && isAtomSelected.value && (
                       <span class={sharedStyles.editIcon} onClick={handleEditIconClick}>
                         <SvgIcon name="edit" size={16} />
                       </span>
@@ -132,8 +137,8 @@ export default defineComponent({
           default: () => (
             <AtomPropertyContent
               element={props.currentElement}
-              editable={true}
-              showAtomSelector={true}
+              editable={props.editable}
+              showAtomSelector={props.editable}
               showStepIdField={true}
               showVersionSelector={true}
               showCustomEnvSection={true}

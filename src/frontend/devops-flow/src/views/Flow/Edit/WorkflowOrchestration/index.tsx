@@ -46,7 +46,6 @@ export default defineComponent({
       handleStageConfirm,
       handleStageChange,
       handleJobConfirm,
-      reset,
     } = useFlowModel()
     const uiStore = useUIStore()
 
@@ -120,11 +119,6 @@ export default defineComponent({
         }
       },
     )
-
-    onBeforeUnmount(() => {
-      // reset flow model
-      reset()
-    })
 
     // ========== Functions ==========
     function renderEmptyState() {

@@ -18,6 +18,7 @@ interface TriggerEvent {
   version: string
   enabled: boolean
   type: string
+  element: Element // 原始 Element 数据
 }
 
 export default defineComponent({
@@ -79,6 +80,7 @@ export default defineComponent({
           version: element.version || '1 latest',
           enabled,
           type,
+          element, // 保留原始 Element 数据
         }
       })
     })

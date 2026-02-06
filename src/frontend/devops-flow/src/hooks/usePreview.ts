@@ -403,9 +403,9 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   const validateRequiredParams = (): string[] => {
     const emptyRequiredParams: string[] = []
     
-    // Check params (required input parameters)
+    // Check params (only valueNotEmpty params are required during execution)
     store.paramList.forEach(param => {
-      if (param.required) {
+      if (param.valueNotEmpty) {
         const value = store.paramsValues[param.id]
         // Check if value is empty (undefined, null, empty string)
         if (value === undefined || value === null || value === '') {
@@ -417,7 +417,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     // Check version params if visible
     if (store.isVisibleVersion) {
       store.versionParamList.forEach(param => {
-        if (param.required) {
+        if (param.valueNotEmpty) {
           const value = store.versionParamValues[param.id]
           if (value === undefined || value === null || value === '') {
             emptyRequiredParams.push(param.id)

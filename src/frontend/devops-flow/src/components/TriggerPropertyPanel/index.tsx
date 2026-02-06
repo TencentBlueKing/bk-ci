@@ -33,6 +33,10 @@ export default defineComponent({
       type: Object as PropType<Element | null>,
       default: null,
     },
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['update:visible', 'save'],
   setup(props, { emit }) {
@@ -179,6 +183,7 @@ export default defineComponent({
             <FormItem>
               <Checkbox
                 modelValue={localElement.value?.canElementSkip ?? false}
+                disabled={props.readonly}
                 onChange={(val: boolean) => handleManualFieldChange('canElementSkip', val)}
               >
                 {t('flow.triggerPanel.manualAllowSkip')}
@@ -187,6 +192,7 @@ export default defineComponent({
             <FormItem>
               <Checkbox
                 modelValue={localElement.value?.useLatestParameters ?? false}
+                disabled={props.readonly}
                 onChange={(val: boolean) => handleManualFieldChange('useLatestParameters', val)}
               >
                 {t('flow.triggerPanel.manualReuseParams')}
@@ -252,6 +258,7 @@ export default defineComponent({
               atomValue={atomValue.value}
               element={localElement.value}
               displayMode={DISPLAY_MODE.TRIGGER}
+              disabled={props.readonly}
               onChange={handleAtomFormChange}
             />
           </div>
@@ -266,11 +273,13 @@ export default defineComponent({
         return <div class={styles.emptyState}>{t('flow.triggerPanel.emptyState')}</div>
       }
 
+      const isDisabled = isLoadingModal.value || props.readonly
+
       return (
         <div class={styles.panelBody}>
           <div class={styles.fieldGroup}>
             {/* Step ID 和版本选择 - 一行两列布局 */}
-            <div class={[styles.stepIdAndVersionRow, isLoadingModal.value && styles.disabled]}>
+            <div class={[styles.stepIdAndVersionRow, isDisabled && styles.disabled]}>
               {/* Step ID 列 */}
               <div class={styles.stepIdColumn}>
                 <div class={styles.labelWithIcon}>
@@ -284,7 +293,7 @@ export default defineComponent({
                 <Input
                   modelValue={localElement.value?.stepId || ''}
                   placeholder={t('flow.orchestration.stepIdPlaceholder')}
-                  disabled={isLoadingModal.value}
+                  disabled={isDisabled}
                   onChange={handleStepIdChange}
                   class={styles.stepIdInput}
                 />
@@ -296,7 +305,7 @@ export default defineComponent({
                 <Select
                   modelValue={localElement.value.version || '1.latest'}
                   list={versionOptions.value}
-                  disabled={isLoadingModal.value}
+                  disabled={isDisabled}
                   onChange={handleVersionChange}
                 />
               </div>
@@ -309,12 +318,12 @@ export default defineComponent({
     }
 
     return () => (
-      <Sideslider isShow={props.visible} width={560} onClosed={handleClose}>
+      <Sideslider isShow={props.visible} width={560} transfer onClosed={handleClose}>
         {{
           header: () => (
             <div class={styles.header}>
               <div class={styles.nameEdit}>
-                {nameEditing.value ? (
+                {!props.readonly && nameEditing.value ? (
                   <Input
                     modelValue={editingName.value}
                     maxlength={30}
@@ -329,18 +338,20 @@ export default defineComponent({
                     <p class={styles.nameText} title={getTriggerName()}>
                       {getTriggerName()}
                     </p>
-                    <span class={styles.editIcon} onClick={handleEditIconClick}>
-                      <SvgIcon name="edit" size={16} />
-                    </span>
+                    {!props.readonly && (
+                      <span class={styles.editIcon} onClick={handleEditIconClick}>
+                        <SvgIcon name="edit" size={16} />
+                      </span>
+                    )}
                   </>
                 )}
               </div>
-              <div class={[styles.enableToggle, isLoadingModal.value && styles.disabled]}>
+              <div class={[styles.enableToggle, (isLoadingModal.value || props.readonly) && styles.disabled]}>
                 <Switcher
                   size="small"
                   theme="primary"
                   modelValue={localElement.value?.additionalOptions?.enable ?? true}
-                  disabled={isLoadingModal.value}
+                  disabled={isLoadingModal.value || props.readonly}
                   onChange={handleEnableChange}
                 />
                 <span>{t('flow.triggerPanel.enabledLabel')}</span>
@@ -348,7 +359,7 @@ export default defineComponent({
             </div>
           ),
           default: () => <div class={styles.content}>{renderContent()}</div>,
-          footer: () => (
+          footer: () => props.readonly ? null : (
             <div class={styles.footer}>
               <Button 
                 theme="primary" 

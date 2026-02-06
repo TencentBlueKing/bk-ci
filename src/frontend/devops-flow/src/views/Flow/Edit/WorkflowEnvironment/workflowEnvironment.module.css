@@ -1,0 +1,10 @@
+.workflowEnvironment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  .jumpIcon {
+    margin-right: var(--spacing-xs);
+    
+  }
+}
