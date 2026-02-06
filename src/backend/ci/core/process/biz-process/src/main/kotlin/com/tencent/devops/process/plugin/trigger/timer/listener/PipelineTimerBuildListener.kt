@@ -54,6 +54,7 @@ import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEv
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventBuilder
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
@@ -195,10 +196,8 @@ class PipelineTimerBuildListener @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     pipelineId = pipelineId,
-                    reasonDetail = PipelineTriggerFailedMsg(
-                        JsonUtil.toJson(
-                            I18nUtil.getCodeLanMessage(BK_CREATIVE_STREAM_START_TASK_IS_EMPTY)
-                        )
+                    reasonDetail = PipelineTriggerFailedErrorCode(
+                        BK_CREATIVE_STREAM_START_TASK_IS_EMPTY
                     )
                 )
             } else {
