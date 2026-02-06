@@ -172,12 +172,15 @@ class PipelineTimerBuildListener @Autowired constructor(
             return
         }
         // 查找触发器
-        val triggerElement = model.getTriggerContainer().elements
-                .find { it.id == taskId && it is MarketEventAtomElement } ?: run {
+        val triggerElement = model.getTriggerContainer()
+                .elements
+                .find { it.id == taskId && it is MarketEventAtomElement }
+        if (triggerElement == null || !triggerElement.elementEnabled()) {
             pipelineTimerService.deleteTimer(projectId, pipelineId, userId, taskId).let {
+                // 无效触发器
                 logger.warn(
-                    "creative stream[$projectId|$pipelineId|$taskId]|timer task not found, " +
-                            "try clean timer record[$it]"
+                    "creative stream[$projectId|$pipelineId|$taskId]|Invalid timer task|" +
+                            "${triggerElement?.elementEnabled()}, try clean timer record[$it]"
                 )
             }
         }

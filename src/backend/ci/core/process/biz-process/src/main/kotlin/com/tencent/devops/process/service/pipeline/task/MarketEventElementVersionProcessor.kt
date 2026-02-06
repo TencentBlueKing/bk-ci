@@ -122,6 +122,10 @@ class MarketEventElementVersionProcessor @Autowired constructor(
             BK_STORE_CREATIVE_STREAM_TIMER_TRIGGER -> {
                 logger.info("$projectId|$pipelineId|save timer trigger")
                 val inputMap = element.data[KEY_INPUT] as Map<String, Any>
+                if (!element.elementEnabled()) {
+                    logger.warn("skip|[${element.id}] timer trigger is disabled")
+                    return
+                }
                 val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION] as String?
                 if (advanceExpression.isNullOrEmpty()) {
                     throw ErrorCodeException(
