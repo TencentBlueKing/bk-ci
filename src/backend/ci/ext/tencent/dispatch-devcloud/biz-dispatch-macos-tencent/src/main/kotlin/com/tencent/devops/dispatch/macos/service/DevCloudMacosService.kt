@@ -386,7 +386,7 @@ class DevCloudMacosService @Autowired constructor(
         return executeDebugLoginRequest(
             creator = creator,
             debugLoginRequest = debugLoginRequest,
-            apiPath = "/mac/vm/open/debuglogin",
+            apiPath = "/api/mac/vm/open/debuglogin",
             operationType = "open"
         )
     }
@@ -401,7 +401,7 @@ class DevCloudMacosService @Autowired constructor(
         return executeDebugLoginRequest(
             creator = creator,
             debugLoginRequest = debugLoginRequest,
-            apiPath = "/mac/vm/close/debuglogin",
+            apiPath = "/api/mac/vm/close/debuglogin",
             operationType = "close"
         )
     }
