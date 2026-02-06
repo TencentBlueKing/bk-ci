@@ -49,7 +49,8 @@ abstract class RecordPageBuild : IPath {
     }
 
     private fun defaultRecordPath(info: BuildPageInfo): String = if (info.executeCount != null) {
-        "/console/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}/executeDetail/${info.executeCount}"
+        "/console/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}/executeDetail/" +
+                "${info.executeCount}"
     } else {
         "/console/pipeline/${info.projectId}/${info.pipelineId}/detail/${info.buildId}/executeDetail"
     }
