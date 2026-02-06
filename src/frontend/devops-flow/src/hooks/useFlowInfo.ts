@@ -17,9 +17,11 @@ export function useFlowInfo() {
     store.initFlowInfo()
   })
 
-  onBeforeUnmount(() => {
+  
+  function reset() {
     store.reset()
-  })
+  }
+  
   watch(
     () => route.params.flowId,
     (newFlowId) => {
@@ -29,5 +31,5 @@ export function useFlowInfo() {
     }
   )
 
-  return { flowInfo, flowVersionList, releasedVersionList, loading }
+  return { flowInfo, flowVersionList, releasedVersionList, loading, reset }
 }

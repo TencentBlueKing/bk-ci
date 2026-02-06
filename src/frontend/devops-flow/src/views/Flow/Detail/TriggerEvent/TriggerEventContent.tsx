@@ -1,8 +1,10 @@
-import { defineComponent, computed, type PropType } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { Table, Button } from 'bkui-vue'
-import styles from './TriggerEventContent.module.css'
+import type { Element } from '@/api/flowModel'
+import TriggerPropertyPanel from '@/components/TriggerPropertyPanel'
+import { Button, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
+import { computed, defineComponent, ref, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
+import styles from './TriggerEventContent.module.css'
 
 interface TriggerEvent {
   name: string
@@ -10,6 +12,7 @@ interface TriggerEvent {
   version: string
   enabled: boolean
   type: string
+  element: Element // 原始 Element 数据
 }
 
 export default defineComponent({
@@ -17,11 +20,15 @@ export default defineComponent({
   props: {
     triggerEvents: {
       type: Array as PropType<TriggerEvent[]>,
-      default: '',
+      default: () => [],
     },
   },
   setup(props) {
     const { t } = useI18n()
+
+    // 侧边栏状态
+    const sidebarVisible = ref(false)
+    const selectedElement = ref<Element | null>(null)
 
     // 表格列定义
     const columns = computed(() => [
@@ -49,6 +56,18 @@ export default defineComponent({
       },
     ])
 
+    // 处理行点击
+    const handleRowClick = (event: Event, row: TriggerEvent) => {
+      selectedElement.value = row.element
+      sidebarVisible.value = true
+    }
+
+    // 关闭侧边栏
+    const handleCloseSidebar = () => {
+      sidebarVisible.value = false
+      selectedElement.value = null
+    }
+
     return () => (
       <div class={styles.triggerEventContent}>
         <Table
@@ -56,6 +75,13 @@ export default defineComponent({
           columns={columns.value as Column[]}
           data={props.triggerEvents}
           class={styles.table}
+          onRowClick={handleRowClick}
+        />
+        <TriggerPropertyPanel
+          visible={sidebarVisible.value}
+          element={selectedElement.value}
+          readonly={true}
+          onUpdate:visible={handleCloseSidebar}
         />
       </div>
     )

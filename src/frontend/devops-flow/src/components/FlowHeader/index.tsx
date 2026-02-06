@@ -7,7 +7,7 @@ import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
 import { Button, Message, Select, Tag } from 'bkui-vue'
 import type { PropType } from 'vue'
-import { computed, defineComponent, h, ref, watch } from 'vue'
+import { computed, defineComponent, h, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import ExtMenu from '../ExtMenu'
@@ -146,6 +146,10 @@ export const FlowHeader = defineComponent({
     const currentVersion = computed(() => {
       console.log('props.versionList:', props.versionList.find((v) => v.version === selectedVersion.value))
       return props.versionList.find((v) => v.version === selectedVersion.value)
+    })
+
+    onBeforeUnmount(() => {
+        flowInfoStore.reset()
     })
 
     const renderTag = () => {

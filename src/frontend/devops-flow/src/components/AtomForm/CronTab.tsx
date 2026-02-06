@@ -2,6 +2,7 @@ import CronTab from '@blueking/crontab'
 import '@blueking/crontab/vue3/vue3.css'
 import { computed, defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
+import styles from './CronTab.module.css'
 
 export default defineComponent({
   name: 'CronTab',
@@ -45,11 +46,13 @@ export default defineComponent({
     }
 
     return () => (
-      <CronTab
-        modelValue={cron.value}
-        onUpdate:modelValue={handleCronChange}
-        local={cronLocale.value}
-      />
+      <div class={props.disabled ? styles.cronDisabled : ''}>
+        <CronTab
+          modelValue={cron.value}
+          onUpdate:modelValue={handleCronChange}
+          local={cronLocale.value}
+        />
+      </div>
     )
   },
 })

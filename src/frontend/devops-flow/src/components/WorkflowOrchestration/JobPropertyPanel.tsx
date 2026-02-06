@@ -132,6 +132,7 @@ export default defineComponent({
                 isShow={props.modelValue}
                 width={640}
                 quick-close
+                transfer
                 onUpdate:isShow={(val: boolean) => emit('update:modelValue', val)}
                 class={['bkci-property-panel', isVariablePanelOpen.value && 'with-variable-open']}
                 beforeClose={beforeClose}
