@@ -155,6 +155,15 @@ class PipelineTimerBuildListener @Autowired constructor(
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
+                // 保存触发失败事件
+                saveTriggerEvent(
+                    projectId = projectId,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    reasonDetail = PipelineTriggerFailedMsg(
+                        ignored.message ?: ""
+                    )
+                )
             }
         }
     }
