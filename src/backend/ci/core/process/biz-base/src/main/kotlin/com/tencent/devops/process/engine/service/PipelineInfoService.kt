@@ -40,13 +40,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineInfoService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val redisOperation: RedisOperation
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
-
-    fun getPipelineName(projectId: String, pipelineId: String): String? {
-        return pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)?.pipelineName
-    }
 
     fun getPipelineInfo(projectId: String, pipelineId: String): PipelineInfo? {
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)

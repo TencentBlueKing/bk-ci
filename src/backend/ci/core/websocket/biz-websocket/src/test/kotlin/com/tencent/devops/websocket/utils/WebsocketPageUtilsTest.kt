@@ -50,4 +50,34 @@ class WebsocketPageUtilsTest {
             "/console/pipeline/project-1/p-xxx/history/pipeline/3", page3
         )
     }
+
+    /**
+     * creative-stream 完整路径：buildNormalPage 的 key 须与 PagePathStrategy.build() 产出一致，
+     * 否则 changePage 注册与 push 查找对不上。
+     */
+    @Test
+    fun creativeStreamFullPaths_normalizeToExpectedKeys() {
+        val executeDetailFull =
+            "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/execute/b-468e702beb4246489721a680201191b4/execute-detail?executeCount=2"
+        val detailFull =
+            "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/detail/1/execution-record"
+        val listFull =
+            "/console/creative-stream/remotedev-debug/list/allPipeline?sortType=LAST_EXEC_TIME&collation=asc"
+
+        Assertions.assertEquals(
+            executeDetailFull,
+            WebsocketPageUtils.buildNormalPage(executeDetailFull),
+            "execute-detail 用完整路径注册和推送，不截断"
+        )
+        Assertions.assertEquals(
+            "/console/creative-stream/remotedev-debug/flow/p-e484593041b747f0a61281b63d72feb3/detail",
+            WebsocketPageUtils.buildNormalPage(detailFull),
+            "detail 只保留 .../detail 作为 key"
+        )
+        Assertions.assertEquals(
+            "/console/creative-stream/remotedev-debug/list",
+            WebsocketPageUtils.buildNormalPage(listFull),
+            "list 只保留 .../list 作为 key"
+        )
+    }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.expression.EvalExpress
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.VarRefDetail
@@ -35,19 +36,18 @@ import java.util.regex.Pattern
 /**
  * 模型变量引用表达式校验器
  *
- * 规范：只允许双大括号 ${{xxx}}；表达式前缀必须是 [variables.|stages.|jobs.|steps.|ci.]
+ * 规范：
+ * - 单花括号：表达式内容不得以 [allowedPrefixes] 中任一前缀开头；
+ * - 双花括号：表达式内容只允许以 [allowedPrefixes] 中任一前缀开头。
  * 渠道：仅当 ChannelCode 为 CREATIVE_STREAM 时执行规范性校验；报错信息逻辑收敛在本类内。
  */
 object ModelVarRefValidator {
 
-    /** 默认允许的前缀（仅允许双大括号且前缀在此列表中），易扩展：新增前缀即可 */
-    private val DEFAULT_ALLOWED_PREFIXES: List<String> = listOf(
-        "variables.",
-        "stages.",
-        "jobs.",
-        "steps.",
-        "ci."
-    )
+    /**
+     * 默认允许的前缀集合，与 [EvalExpress.contextPrefix] 保持一致，保证校验规则与表达式求值可用上下文一致。
+     * 若需扩展前缀，应在 EvalExpress 中修改 contextPrefix，此处自动同步。
+     */
+    private val DEFAULT_ALLOWED_PREFIXES: List<String> = EvalExpress.contextPrefix
 
     /** 解析 positionPath：model(.stages[i])?(.containers[j])?(.elements[k])?.?suffix，stages/containers/elements 均可为空 */
     private val POSITION_PATH_PATTERN = Pattern.compile(
@@ -72,13 +72,15 @@ object ModelVarRefValidator {
     }
 
     /**
-     * 判断单条引用是否合规：双大括号 且 前缀在允许列表中。
+     * 判断单条引用是否合规：
+     * - 单花括号：varName 不得以 allowedPrefixes 中任一前缀开头；
+     * - 双花括号：varName 必须以 allowedPrefixes 中任一前缀开头。
      */
     @JvmStatic
     fun isValidRef(ref: VarRefDetail, allowedPrefixes: List<String> = DEFAULT_ALLOWED_PREFIXES): Boolean {
-        if (!ref.isDoubleBrace) return false
         val name = ref.varName.trim()
-        return allowedPrefixes.any { name.startsWith(it) }
+        val startsWithAllowed = allowedPrefixes.any { name.startsWith(it) }
+        return ref.isDoubleBrace == startsWithAllowed
     }
 
     /**
