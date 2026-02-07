@@ -828,7 +828,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             filePath = yamlPipelineMap[pipelineId]?.filePath,
             triggerElements = pipelineModel.getTriggerContainer().elements,
             overrideTemplateField =
-                pipelineModel.overrideTemplateField ?: TemplateInstanceField.initFromTrigger(model = templateModel)
+                pipelineModel.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(model = templateModel)
         )
     }
 
@@ -842,7 +842,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         pipelineId2Name: Map<String, String>,
         yamlPipelineMap: Map<String, PipelineYamlInfo>
     ): Pair<String, TemplateInstanceParams> {
-        val overrideTemplateField = TemplateInstanceField.initFromTrigger(model = templateModel)
+        val overrideTemplateField = TemplateInstanceField.initFromTemplate(model = templateModel)
         val instanceTriggerContainer = pipelineModel.getTriggerContainer()
         val instanceParams = TemplateInstanceUtil.mergeTemplateOptions(
             projectId = projectId,
@@ -895,7 +895,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
             params = triggerContainer.params
         )
         // 返回给前端,哪些字段流水线可以自定义
-        val overrideTemplateField = TemplateInstanceField.initFromTrigger(
+        val overrideTemplateField = TemplateInstanceField.initFromTemplate(
             model = templateModel
         )
         return TemplateInstanceParams(
@@ -1136,7 +1136,7 @@ class PipelineTemplateInstanceService @Autowired constructor(
         ).modelAndSetting
 
         val overrideTemplateField = pipelineModelAndSetting.model.overrideTemplateField
-            ?: TemplateInstanceField.initFromTrigger(model = templateModel)
+            ?: TemplateInstanceField.initFromTemplate(model = templateModel)
         // 模版常量和只读变量不能被自定义,需要移出
         val notOverrideParamIds = templateModel.getTriggerContainer().params
             .filter { it.constant == true || !it.required }.map { it.id }
