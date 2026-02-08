@@ -328,7 +328,7 @@ class PipelineTemplateResourceService @Autowired constructor(
         )
     }
 
-    fun count(
+    fun countTemplateDraftVersion(
         projectId: String,
         templateId: String,
         version: Long

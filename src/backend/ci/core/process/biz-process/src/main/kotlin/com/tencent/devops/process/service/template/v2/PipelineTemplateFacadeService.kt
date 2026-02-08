@@ -1863,7 +1863,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val count = pipelineTemplateResourceService.count(
+        val count = pipelineTemplateResourceService.countTemplateDraftVersion(
             projectId = projectId,
             templateId = templateId,
             version = version
