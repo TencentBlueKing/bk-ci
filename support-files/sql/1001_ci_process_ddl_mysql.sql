@@ -1489,8 +1489,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_MIGRATION` (
     PRIMARY KEY (`PROJECT_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='模板迁移记录表';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION`
-(
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION` (
     `ID`               bigint(11)                               NOT NULL COMMENT '主键',
     `PROJECT_ID`       varchar(64)                              not null comment '项目ID',
     `PIPELINE_ID`      varchar(64)                              not null comment '流水线ID',
@@ -1518,8 +1517,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_PARAM_COMBINATION_DETAIL`
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `COMBINATION_ID`, `VAR_NAME`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线启动参数组合值详情';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION`
-(
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION` (
     `PROJECT_ID`      varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '项目ID',
     `PIPELINE_ID`     varchar(34)                                           NOT NULL COMMENT '流水线ID',
     `VERSION`         int(11)                                               NOT NULL DEFAULT '1' COMMENT '版本号',
@@ -1536,11 +1534,10 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION`
     `UPDATE_TIME`     timestamp                                             NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
 ) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COMMENT ='流水线草稿资源版本表';
+    DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿资源版本表';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION`
-(
-    `PROJECT_ID`                         varchar(64)            DEFAULT NULL COMMENT '项目ID',
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION` (
+    `PROJECT_ID`                         varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin           NOT NULL COMMENT '项目ID',
     `PIPELINE_ID`                        varchar(34)   NOT NULL COMMENT '流水线ID',
     `VERSION`                            int(11)       NOT NULL DEFAULT '1' COMMENT '版本号',
     `DRAFT_VERSION`          int(11)                                               NOT NULL DEFAULT '1' COMMENT '草稿版本',
@@ -1575,12 +1572,11 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_SETTING_DRAFT_VERSION`
     `MAX_CON_RUNNING_QUEUE_SIZE`         int(11)                DEFAULT NULL COMMENT '并发构建数量限制,值为-1时表示取系统默认值。',
     `FAIL_IF_VARIABLE_INVALID`           bit(1)                 DEFAULT NULL COMMENT '是否配置流水线变量值超长时终止执行',
     `BUILD_CANCEL_POLICY`                varchar(32)            DEFAULT 'EXECUTE_PERMISSION' COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消',
-    PRIMARY KEY (`ID`),
-    UNIQUE KEY `UNI_PROJECT_PIPELINE_VERSION` (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
+    PRIMARY KEY (`PROJECT_ID`, `PIPELINE_ID`, `VERSION`, `DRAFT_VERSION`)
 ) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COMMENT ='流水线草稿基础配置版本表';
+    DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='流水线草稿基础配置版本表';
 
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION`(
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_RESOURCE_DRAFT_VERSION` (
     `PROJECT_ID`              varchar(64) NOT NULL COMMENT '项目ID',
     `TEMPLATE_ID`             varchar(34) NOT NULL COMMENT '模板ID',
     `VERSION`                 bigint(20)  NOT NULL COMMENT '模板版本号',
@@ -1628,7 +1624,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_TEMPLATE_SETTING_DRAFT_VERSION`(
     `CREATED_TIME`                   datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`                    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`PROJECT_ID`, `TEMPLATE_ID`, `SETTING_VERSION`, `DRAFT_VERSION`)
- ) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='模板基础配置草稿版本表';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT ='模板基础配置草稿版本表';
 
 SET FOREIGN_KEY_CHECKS = 1;
