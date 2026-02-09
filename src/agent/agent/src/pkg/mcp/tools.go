@@ -29,6 +29,7 @@ package mcp
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -36,35 +37,54 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/ThinkInAIXYZ/go-mcp/protocol"
+	"github.com/ThinkInAIXYZ/go-mcp/server"
 )
 
-// RegisterAllTools 注册所有 MCP 工具到 server
-func RegisterAllTools(s *Server) {
-	s.RegisterTool(listRunningBuildsToolDef(), handleListRunningBuilds)
-	s.RegisterTool(getRecentErrorLogsToolDef(), handleGetRecentErrorLogs)
-}
+const (
+	serverName    = "bk-ci-agent"
+	serverVersion = "1.0.0"
+)
 
-// ---- Tool 1: list_running_builds ----
-
-func listRunningBuildsToolDef() ToolDefinition {
-	return ToolDefinition{
-		Name:        "list_running_builds",
-		Description: "获取当前 Agent 上所有正在运行的构建任务及其进程树信息，用于排查进程阻塞、资源占用等问题",
-		InputSchema: map[string]interface{}{
-			"type":       "object",
-			"properties": map[string]interface{}{},
-		},
+// serverInfo 返回 MCP Server 元信息
+func serverInfo() protocol.Implementation {
+	return protocol.Implementation{
+		Name:    serverName,
+		Version: serverVersion,
 	}
 }
 
-func handleListRunningBuilds(_ map[string]interface{}) (string, error) {
+// registerAllTools 注册所有 MCP 工具到 server
+func registerAllTools(s *server.Server) {
+	// Tool 1: list_running_builds
+	listBuildsTool := protocol.NewToolWithRawSchema(
+		"list_running_builds",
+		"获取当前 Agent 上所有正在运行的构建任务及其进程树信息，用于排查进程阻塞、资源占用等问题",
+		[]byte(`{"type":"object","properties":{}}`),
+	)
+	s.RegisterTool(listBuildsTool, handleListRunningBuilds)
+
+	// Tool 2: get_recent_error_logs
+	getLogsTool := protocol.NewToolWithRawSchema(
+		"get_recent_error_logs",
+		"获取 Agent 近期的错误日志（ERROR/WARN级别），用于分析 Agent 运行异常、构建失败等问题",
+		[]byte(`{"type":"object","properties":{"lines":{"type":"integer","description":"返回的最大日志行数，默认100"},"level":{"type":"string","description":"日志级别过滤: error 只返回 ERROR, warn 返回 ERROR+WARN, all 返回所有。默认 error","enum":["error","warn","all"]}}}`),
+	)
+	s.RegisterTool(getLogsTool, handleGetRecentErrorLogs)
+
+	logs.Infof("mcp server registered 2 tools")
+}
+
+// handleListRunningBuilds 处理 list_running_builds 工具调用
+func handleListRunningBuilds(_ context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
 	builds := job.GBuildManager.GetInstancesWithPid()
 	dockerBuilds := job.GBuildDockerManager.GetInstances()
 
 	if len(builds) == 0 && len(dockerBuilds) == 0 {
-		return "当前没有正在运行的构建任务", nil
+		return newTextResult("当前没有正在运行的构建任务"), nil
 	}
 
 	var sb strings.Builder
@@ -96,45 +116,31 @@ func handleListRunningBuilds(_ map[string]interface{}) (string, error) {
 		sb.WriteString("\n")
 	}
 
-	return sb.String(), nil
+	return newTextResult(sb.String()), nil
 }
 
-// ---- Tool 2: get_recent_error_logs ----
-
-func getRecentErrorLogsToolDef() ToolDefinition {
-	return ToolDefinition{
-		Name:        "get_recent_error_logs",
-		Description: "获取 Agent 近期的错误日志（ERROR/WARN级别），用于分析 Agent 运行异常、构建失败等问题",
-		InputSchema: map[string]interface{}{
-			"type": "object",
-			"properties": map[string]interface{}{
-				"lines": map[string]interface{}{
-					"type":        "integer",
-					"description": "返回的最大日志行数，默认100",
-				},
-				"level": map[string]interface{}{
-					"type":        "string",
-					"description": "日志级别过滤: error 只返回 ERROR, warn 返回 ERROR+WARN, all 返回所有。默认 error",
-					"enum":        []string{"error", "warn", "all"},
-				},
-			},
-		},
-	}
-}
-
-func handleGetRecentErrorLogs(args map[string]interface{}) (string, error) {
-	maxLines := parseIntArg(args, "lines", 100)
+// handleGetRecentErrorLogs 处理 get_recent_error_logs 工具调用
+func handleGetRecentErrorLogs(_ context.Context, req *protocol.CallToolRequest) (*protocol.CallToolResult, error) {
+	maxLines := 100
 	level := "error"
-	if v, ok := args["level"]; ok {
-		if s, ok := v.(string); ok && s != "" {
-			level = s
+
+	if req.Arguments != nil {
+		if v, ok := req.Arguments["lines"]; ok {
+			if f, ok := v.(float64); ok {
+				maxLines = int(f)
+			}
+		}
+		if v, ok := req.Arguments["level"]; ok {
+			if s, ok := v.(string); ok && s != "" {
+				level = s
+			}
 		}
 	}
 
 	logFile := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	lines, err := tailFile(logFile, maxLines*10)
 	if err != nil {
-		return fmt.Sprintf("读取日志文件失败: %v", err), nil
+		return newTextResult(fmt.Sprintf("读取日志文件失败: %v", err)), nil
 	}
 
 	var filtered []string
@@ -149,7 +155,7 @@ func handleGetRecentErrorLogs(args map[string]interface{}) (string, error) {
 	}
 
 	if len(filtered) == 0 {
-		return fmt.Sprintf("近期没有匹配的日志（级别: %s）", level), nil
+		return newTextResult(fmt.Sprintf("近期没有匹配的日志（级别: %s）", level)), nil
 	}
 
 	var sb strings.Builder
@@ -160,7 +166,19 @@ func handleGetRecentErrorLogs(args map[string]interface{}) (string, error) {
 		sb.WriteString(line)
 		sb.WriteString("\n")
 	}
-	return sb.String(), nil
+	return newTextResult(sb.String()), nil
+}
+
+// newTextResult 创建文本类型的 MCP 工具结果
+func newTextResult(text string) *protocol.CallToolResult {
+	return &protocol.CallToolResult{
+		Content: []protocol.Content{
+			&protocol.TextContent{
+				Type: "text",
+				Text: text,
+			},
+		},
+	}
 }
 
 // matchLogLevel 判断日志行是否匹配指定级别

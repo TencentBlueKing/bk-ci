@@ -51,6 +51,8 @@ const (
 	// DevopsAgentEnableProcessTree 如果设为true 则在构建期间定时将进程树上报到后台日志（DEBUG级别）
 	DevopsAgentEnableProcessTree = "DEVOPS_AGENT_ENABLE_PROCESS_TREE"
 
-	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，通过 stdio 暴露 agent 信息给外部 AI 工具
+	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，
+	// 通过 Streamable HTTP (127.0.0.1 随机端口) 暴露 agent 信息给外部 AI 工具，
+	// 端口号写入工作目录下的 .mcp_port 文件
 	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
 )

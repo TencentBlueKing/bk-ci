@@ -84,7 +84,7 @@ func Run(isDebug bool) {
 	initModules()
 
 	// 启动 MCP Server 协程（如果通过环境变量启用）
-	// MCP 使用 stdio 与外部 AI 工具通信，agent 日志已配置为纯文件输出不会污染 stdio
+	// MCP 使用 Streamable HTTP 在 127.0.0.1 随机端口监听，端口号写入 .mcp_port 文件
 	mcp.StartIfEnabled()
 
 	for {
