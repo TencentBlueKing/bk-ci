@@ -267,8 +267,10 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag }) {
-        const query = {}
+    fetchPipelineByVersion ({ commit }, { projectId, pipelineId, version, archiveFlag, source = 'VIEW' }) {
+        const query = {
+            source
+        }
         if (archiveFlag !== undefined && archiveFlag !== null) {
             query.archiveFlag = encodeURIComponent(archiveFlag)
         }
@@ -777,7 +779,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestPipelineExecDetailByBuildNum: async ({ commit, dispatch }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
+    requestPipelineExecDetailByBuildNum: async ({ commit }, { projectId, buildNum, pipelineId, version, archiveFlag }) => {
         try {
             let url = `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/record/${buildNum}`
             if (archiveFlag !== undefined && archiveFlag !== null) {

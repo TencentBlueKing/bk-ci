@@ -198,7 +198,8 @@ export default {
             if (this.isGit) {
                 bindData.remoteMethod = this.handleSearchCodeLib
             }
-            if (this.isScmConfig) {
+            
+            if (this.isScmGit) {
                 bindData.remoteMethod = this.handleSearchScmCodeLib
             }
             return bindData

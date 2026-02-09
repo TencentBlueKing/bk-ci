@@ -107,6 +107,68 @@ BEGIN
         ADD COLUMN `RESOURCE_ID` varchar(64) not null comment '资源ID, 流水线ID/模版ID',
         ADD COLUMN `RESOURCE_TYPE`  varchar(32) default 'PIPELINE' not null comment '资源类型,流水线/模版';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_SETTING
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_SETTING_VERSION
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_SETTING_VERSION'
+                    AND COLUMN_NAME = 'BUILD_CANCEL_POLICY') THEN
+        ALTER TABLE T_PIPELINE_TEMPLATE_SETTING_VERSION
+            ADD COLUMN `BUILD_CANCEL_POLICY` varchar(32) DEFAULT 'EXECUTE_PERMISSION'
+            COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
+    END IF;
+
+    -- 为 T_PIPELINE_BUILD_VAR 表添加 SENSITIVE 字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'SENSITIVE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD COLUMN `SENSITIVE` bit(1) DEFAULT NULL COMMENT '是否敏感';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TEMPLATE_MIGRATION'
+                    AND COLUMN_NAME = 'VALIDATION_DISCREPANCIES') THEN
+    ALTER TABLE `T_PIPELINE_TEMPLATE_MIGRATION`
+        ADD COLUMN `VALIDATION_DISCREPANCIES` mediumtext COMMENT '验证差异详情(JSON)';
+    END IF;
+
+    -- 为 T_TEMPLATE_INSTANCE_ITEM 表添加流水线版本字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_ITEM'
+                    AND COLUMN_NAME = 'BEFORE_PIPELINE_VERSION') THEN
+        ALTER TABLE `T_TEMPLATE_INSTANCE_ITEM`
+            ADD COLUMN `BEFORE_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新前流水线版本',
+            ADD COLUMN `AFTER_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新后流水线版本',
+            ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
+            ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
+    END IF;
 COMMIT;
 
 END <CI_UBF>

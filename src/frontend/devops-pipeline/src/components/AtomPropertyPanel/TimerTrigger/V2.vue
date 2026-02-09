@@ -11,12 +11,13 @@
             >
                 <component
                     :is="obj.component"
-                    v-bind="obj"
+                    v-validate.initial="Object.assign({}, { crontabArrayRule: obj.required && obj.component === 'timer-cron-tab' })"
                     :name="key"
                     :value="element[key]"
                     :element="element"
                     :disabled="disabled || !checkCanOverride(obj)"
                     :handle-change="handleChange"
+                    v-bind="obj"
                 />
             </form-field>
         </template>
@@ -39,6 +40,18 @@
         computed: {
             disabled () {
                 return this.element?.disabled ?? false
+            }
+        },
+        watch: {
+            element: {
+                handler (newVal, oldVal) {
+                    this.$nextTick(() => {
+                        if (this.$validator) {
+                            this.$validator.validateAll()
+                        }
+                    })
+                },
+                deep: true
             }
         },
         methods: {

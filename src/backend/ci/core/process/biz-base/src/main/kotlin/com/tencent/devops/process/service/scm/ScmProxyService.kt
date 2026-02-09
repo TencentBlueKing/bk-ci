@@ -997,6 +997,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         CodeEventType.TAG_PUSH -> ScmEventType.TAG
         CodeEventType.ISSUES -> ScmEventType.ISSUE
         CodeEventType.POST_COMMIT -> ScmEventType.POST_COMMIT
+        CodeEventType.NOTE -> ScmEventType.NOTE
+        CodeEventType.REVIEW -> ScmEventType.PULL_REQUEST_REVIEW
         else -> throw IllegalArgumentException("unknown code event type: $this")
     }
 

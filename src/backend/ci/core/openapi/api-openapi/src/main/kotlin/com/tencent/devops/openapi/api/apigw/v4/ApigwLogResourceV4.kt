@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.openapi.BkApigwApi
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -96,6 +97,12 @@ interface ApigwLogResourceV4 {
         @Parameter(description = "对应stepId", required = false)
         @QueryParam("stepId")
         stepId: String?,
+        @Parameter(description = "查询结果是否倒序，默认false", required = false)
+        @QueryParam("reverse")
+        reverse: Boolean? = false,
+        @Parameter(description = "过滤日志级别", required = false)
+        @QueryParam("logType")
+        logType: LogType? = null,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false

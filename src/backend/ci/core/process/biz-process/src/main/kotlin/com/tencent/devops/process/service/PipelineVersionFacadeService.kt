@@ -57,6 +57,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
@@ -70,6 +71,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionManager
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
@@ -92,7 +94,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val templateFacadeService: TemplateFacadeService,
     private val scmProxyService: ScmProxyService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineVersionManager: PipelineVersionManager
+    private val pipelineVersionManager: PipelineVersionManager,
+    private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
 ) {
 
     companion object {
@@ -192,6 +195,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineRecentUseService.record(userId, projectId, pipelineId)
             pipelineYamlFacadeService.yamlExistInDefaultBranch(projectId, pipelineId)
         }
+        // 获取当前最新版本的设置
+        val pipelineSetting = pipelineRepositoryService.getSetting(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         return PipelineDetail(
             pipelineId = detailInfo.pipelineId,
             pipelineName = detailInfo.pipelineName,
@@ -221,7 +229,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo,
             yamlExist = yamlExist,
-            locked = detailInfo.locked
+            locked = detailInfo.locked,
+            buildCancelPolicy = pipelineSetting?.buildCancelPolicy
         )
     }
 
@@ -448,7 +457,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): PipelineVersionWithModel {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = projectId,
@@ -482,13 +492,21 @@ class PipelineVersionFacadeService @Autowired constructor(
             archiveFlag = archiveFlag
         )
         val model = pipelineInfoFacadeService.getFixedModel(
-            model = resource.model,
+            resource = resource,
             projectId = projectId,
             pipelineId = pipelineId,
             userId = userId,
             pipelineInfo = pipelineInfo,
             archiveFlag = archiveFlag
         )
+
+        // 在正常查看/对比编排时需要对敏感字段加密，只有编辑场景且有编辑权限时不加密。
+        val isEncryptParamsValue = source != PipelineGetVersionSource.EDIT || !editPermission
+        if (isEncryptParamsValue) {
+            resource.model.encryptParamsValue()
+            model.encryptParamsValue()
+        }
+
         /* 兼容存量数据 */
         model.desc = setting.desc
         // 后端主动填充前端展示的标签名称
@@ -505,13 +523,20 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
         val (yamlSupported, yamlPreview, msg) = try {
+            // 如果是查看版本对比,如果是实例化流水线,需要展示完整的yaml内容
+            val yamlResource = if (source == PipelineGetVersionSource.COMPARE && resource.model.template != null) {
+                resource.copy(model = model.copy(template = null))
+            } else {
+                resource
+            }
             val response = transferService.buildPreview(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                resource = resource,
+                resource = yamlResource,
                 editPermission = editPermission,
-                archiveFlag = archiveFlag
+                archiveFlag = archiveFlag,
+                isEncryptParamsValue = isEncryptParamsValue
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
@@ -756,15 +781,29 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
             params = arrayOf(version.toString())
         )
+        val isPipelineInstanceFromTemplate = pipelineTemplateRelatedService.isPipelineInstanceFromTemplate(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        // 存量的实例化版本，不支持一键回滚
+        if (isPipelineInstanceFromTemplate && targetVersion.model.template == null) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ROLLBACK
+            )
+        }
+        // 补全模型信息
+        val fixedModel = pipelineInfoFacadeService.getFixedModel(
+            resource = targetVersion,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            pipelineInfo = pipelineInfo
+        )
         val resource = pipelineRepositoryService.rollbackDraftFromVersion(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            targetVersion = targetVersion.copy(
-                model = pipelineInfoFacadeService.getFixedModel(
-                    targetVersion.model, projectId, pipelineId, userId, pipelineInfo
-                )
-            )
+            targetVersion = targetVersion.copy(model = fixedModel)
         )
         return PipelineVersionSimple(
             pipelineId = pipelineId,
@@ -786,6 +825,41 @@ class PipelineVersionFacadeService @Autowired constructor(
             description = resource.description,
             yamlVersion = resource.yamlVersion
         )
+    }
+
+    fun canRollbackFromVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Boolean {
+        // 如果没有关联模版,可以回滚
+        pipelineTemplateRelatedService.get(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return true
+        val pipelineResource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
+        )
+        // 如果是新版的模版,已经保存模版的信息,可以回滚
+        if (pipelineResource.model.template != null) {
+            return true
+        }
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+            params = arrayOf(pipelineId)
+        )
+        // 如果是旧版的模版,没有保存模版的信息,需要流水线是最新版本才能回滚
+        return pipelineInfo.version == version
     }
 
     fun deletePipelineVersion(

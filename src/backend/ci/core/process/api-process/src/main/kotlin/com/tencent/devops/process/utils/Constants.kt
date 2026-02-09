@@ -68,6 +68,7 @@ const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
 const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "pipeline.build.id"
+const val PIPELINE_BUILD_DEBUG = "ci.debug"
 const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "pipeline.job.id"
 const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "pipeline.task.id"
 const val PIPELINE_TURBO_TASK_ID = "BK_CI_TURBO_ID" // "turbo.task.id"
@@ -214,7 +215,7 @@ const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
-const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 50
 
 /**
  * 流水线设置-Stage内最大分裂后Job数量-最大值

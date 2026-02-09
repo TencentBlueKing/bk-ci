@@ -44,6 +44,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -123,6 +124,9 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
 
     @Autowired
     lateinit var marketTemplatePublishedService: MarketTemplatePublishedService
+
+    @Autowired
+    lateinit var storeMemberService: StoreMemberService
 
     private val logger = LoggerFactory.getLogger(TemplateReleaseServiceImpl::class.java)
 
@@ -432,7 +436,6 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
 
         return request.run {
             val isInitialRelease = marketTemplateDao.countByCode(dslContext, templateCode) == 0
-
             checkWhenReleaseTemplate(
                 isInitialRelease = isInitialRelease,
                 userId = userId,
@@ -591,6 +594,18 @@ abstract class TemplateReleaseServiceImpl : TemplateReleaseService {
                             data = false,
                             language = I18nUtil.getLanguage(userId)
                         ).message
+                    )
+                }
+            } else {
+                val check = storeMemberService.isStoreMember(
+                    userId = userId,
+                    storeCode = templateCode,
+                    storeType = StoreTypeEnum.TEMPLATE.type.toByte()
+                )
+                if (!check) {
+                    throw ErrorCodeException(
+                        errorCode = GET_INFO_NO_PERMISSION,
+                        params = arrayOf(templateCode)
                     )
                 }
             }

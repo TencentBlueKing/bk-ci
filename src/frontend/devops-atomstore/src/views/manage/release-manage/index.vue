@@ -10,6 +10,7 @@
                 class="release-show"
                 :detail="detail"
                 :version-list="versionList"
+                :has-promission="hasPromission"
                 :pagination="pagination"
                 @pageChanged="pageChanged"
                 @pageLimitChanged="pageLimitChanged"
@@ -33,6 +34,7 @@
 
         data () {
             return {
+                hasPromission: false,
                 isLoading: true,
                 versionList: [],
                 pagination: {
@@ -50,6 +52,9 @@
         },
 
         created () {
+            if (this.$route.params.type === 'template') {
+                this.getTemplateUserValidate()
+            }
             this.getVersionList()
         },
 
@@ -57,8 +62,21 @@
             ...mapActions('store', [
                 'requestVersionList',
                 'requestImageVersionList',
+                'templateUserValidate',
                 'requestTemplateReleasedList'
             ]),
+
+            async getTemplateUserValidate () {
+                try {
+                    const res = await this.templateUserValidate({
+                        templateCode: this.$route.params.code
+                    })
+                    this.hasPromission = res
+                } catch (err) {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }
+            },
+
             pageLimitChanged (currentLimit, prevLimit) {
                 if (currentLimit === this.pagination.limit) return
 

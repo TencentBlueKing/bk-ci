@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.PipelineVersionWithModel
 import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.enums.PipelineGetVersionSource
 import com.tencent.devops.common.pipeline.pojo.BuildNoUpdateReq
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
@@ -162,7 +163,10 @@ interface UserPipelineVersionResource {
         version: Int,
         @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        @Parameter(description = "请求来源", required = false)
+        @QueryParam("source")
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
@@ -341,6 +345,24 @@ interface UserPipelineVersionResource {
         @QueryParam("version")
         version: Int
     ): Result<PipelineVersionSimple>
+
+    @Operation(summary = "判断是否能回滚到指定的版本")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/canRollback")
+    fun canRollbackFromVersion(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "回回滚目标版本", required = true)
+        @QueryParam("version")
+        version: Int
+    ): Result<Boolean>
 
     @Operation(summary = "导出流水线模板")
     @GET

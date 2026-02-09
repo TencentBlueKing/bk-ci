@@ -2625,6 +2625,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2653,6 +2658,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2680,6 +2690,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -2710,6 +2725,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2738,6 +2758,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -2768,6 +2793,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2796,6 +2826,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -2826,6 +2861,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2854,6 +2894,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -2884,6 +2929,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2912,6 +2962,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -2942,6 +2997,11 @@
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
                 "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
               }
             ]
           }
@@ -2970,6 +3030,11 @@
               {
                 "system_id": "bk_ci_rbac",
                 "id": "cgs_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -3318,6 +3383,375 @@
           "project_visit",
           "pipeline_template_list",
           "pipeline_template_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_create",
+        "name": "创建云桌面组",
+        "name_en": "cgs group create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_edit",
+        "name": "编辑云桌面组",
+        "name_en": "cgs group edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_group_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_view",
+        "name": "查看云桌面组",
+        "name_en": "cgs group view",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_group_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_delete",
+        "name": "删除云桌面组",
+        "name_en": "cgs group delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_group_list"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_list",
+        "name": "云桌面组列表",
+        "name_en": "cgs group list",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_add-remove",
+        "name": "添加/移出云桌面",
+        "name_en": "add or remove cgs from group",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_group_list",
+          "cgs_group_manage"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cgs_group_manage",
+        "name": "云桌面组权限管理",
+        "name_en": "cgs group manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cgs_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cgs_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cgs_group_list",
+          "cgs_group_view"
+        ],
+        "hidden": true,
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_create",
+        "name": "新增公共变量组",
+        "name_en": "variable create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_edit",
+        "name": "编辑公共变量组",
+        "name_en": "variable edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "public_variable",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "public_variable_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "public_variable_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_list",
+        "name": "公共变量组列表",
+        "name_en": "variable list",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "public_variable",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "public_variable_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_view",
+        "name": "查看公共变量组",
+        "name_en": "variable view",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "public_variable",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "public_variable_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "public_variable_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_delete",
+        "name": "删除公共变量组",
+        "name_en": "variable delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "public_variable",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "public_variable_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "public_variable_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "public_variable_use",
+        "name": "使用公共变量组",
+        "name_en": "variable use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "public_variable",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "public_variable_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "public_variable_list"
         ],
         "version": 1
       }

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import io.swagger.v3.oas.annotations.media.Schema
@@ -40,13 +42,20 @@ data class TemplateInstanceTriggerConfig(
 
     val cron: List<String>? = null,
     @get:Schema(title = "触发器配置启动时启动的变量,目前仅定时触发支持")
-    val variables: Map<String, Any>? = null
+    val variables: List<TemplateVariable>? = null
 ) {
     constructor(element: Element) : this(
         stepId = element.stepId,
         disabled = !element.elementEnabled(),
         cron = if (element is TimerTriggerElement) {
             element.advanceExpression
+        } else {
+            null
+        },
+        variables = if (element is TimerTriggerElement) {
+            element.startParams?.let {
+                JsonUtil.to(it, object : TypeReference<List<TemplateVariable>>() {})
+            }
         } else {
             null
         }

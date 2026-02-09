@@ -5,9 +5,11 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.toLocalDateTimeOrDefault
+import com.tencent.devops.common.pipeline.pojo.setting.BuildCancelPolicy
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.model.process.tables.TPipelineTemplateSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineTemplateSettingVersionRecord
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateSettingCommonCondition
@@ -49,6 +51,7 @@ class PipelineTemplateSettingDao {
                 RUN_LOCK_TYPE,
                 MAX_CON_RUNNING_QUEUE_SIZE,
                 FAIL_IF_VARIABLE_INVALID,
+                BUILD_CANCEL_POLICY,
                 CREATOR,
                 UPDATER,
                 CREATED_TIME,
@@ -71,6 +74,7 @@ class PipelineTemplateSettingDao {
                 PipelineRunLockType.toValue(record.runLockType),
                 record.maxConRunningQueueSize ?: 50,
                 record.failIfVariableInvalid,
+                record.buildCancelPolicy.value,
                 record.creator,
                 record.updater,
                 record.createdTime.toLocalDateTimeOrDefault(),
@@ -90,6 +94,7 @@ class PipelineTemplateSettingDao {
                 .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(record.runLockType))
                 .set(MAX_CON_RUNNING_QUEUE_SIZE, record.maxConRunningQueueSize)
                 .set(FAIL_IF_VARIABLE_INVALID, record.failIfVariableInvalid)
+                .set(BUILD_CANCEL_POLICY, record.buildCancelPolicy.value)
                 .set(UPDATER, record.updater)
                 .set(UPDATE_TIME, record.updateTime.toLocalDateTimeOrDefault())
                 .execute()
@@ -115,6 +120,7 @@ class PipelineTemplateSettingDao {
                     record.runLockType?.let { set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(record.runLockType)) }
                     record.maxConRunningQueueSize?.let { set(MAX_CON_RUNNING_QUEUE_SIZE, it) }
                     record.failIfVariableInvalid?.let { set(FAIL_IF_VARIABLE_INVALID, it) }
+                    record.buildCancelPolicy?.let { set(BUILD_CANCEL_POLICY, it.value) }
                     if (!record.successSubscriptionList.isNullOrEmpty()) {
                         set(SUCCESS_SUBSCRIPTION, JsonUtil.toJson(record.successSubscriptionList!!, false))
                     }
@@ -271,6 +277,8 @@ class PipelineTemplateSettingDao {
             pipelineAsCodeSettings = this.pipelineAsCodeSettings?.let { self ->
                 JsonUtil.to(self, PipelineAsCodeSettings::class.java)
             },
+            buildCancelPolicy = BuildCancelPolicy.parse(this.buildCancelPolicy),
+            maxPipelineResNum = PIPELINE_RES_NUM_MIN,
             creator = creator,
             updater = updater
         )
