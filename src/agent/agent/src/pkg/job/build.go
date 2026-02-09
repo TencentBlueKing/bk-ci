@@ -95,44 +95,55 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	// 在执行任务先获取锁，防止与其他操作产生干扰
-	BuildTotalManager.Lock.Lock()
+	buildType := acquireBuildSlot(buildInfo)
+	if buildType == buildTypeNone {
+		return
+	}
 
-	// 拿到锁后再判断一次当前是否可以执行任务，防止出现并发问题
+	// 接取任务后判断国际化是否需要切换语言
+	i18n.CheckLocalizer()
+
+	switch buildType {
+	case buildTypeDocker:
+		runDockerBuild(buildInfo)
+	case buildTypeNormal:
+		if err := runBuild(buildInfo); err != nil {
+			logs.WithError(err).Error("start build failed")
+		}
+	}
+}
+
+type buildSlotType int
+
+const (
+	buildTypeNone   buildSlotType = iota
+	buildTypeDocker
+	buildTypeNormal
+)
+
+// acquireBuildSlot 在锁保护下判断并发数并注册构建实例，返回构建类型。
+// 该函数返回时锁一定已释放，避免手动多路径 Unlock 导致的遗漏风险。
+func acquireBuildSlot(buildInfo *api.ThirdPartyBuildInfo) buildSlotType {
+	BuildTotalManager.Lock.Lock()
+	defer BuildTotalManager.Lock.Unlock()
+
 	dockerCanRun, normalCanRun := CheckParallelTaskCount()
 
 	if buildInfo.DockerBuildInfo != nil && dockerCanRun {
-		// 接取job任务之后才可以解除总任务锁解锁
 		GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
 			ProjectId: buildInfo.ProjectId,
 			BuildId:   buildInfo.BuildId,
 			VmSeqId:   buildInfo.VmSeqId,
 		})
-		BuildTotalManager.Lock.Unlock()
-
-		// 接取任务后判断国际化是否需要切换语言
-		i18n.CheckLocalizer()
-
-		runDockerBuild(buildInfo)
-		return
+		return buildTypeDocker
 	}
 
 	if !normalCanRun {
-		BuildTotalManager.Lock.Unlock()
-		return
+		return buildTypeNone
 	}
 
-	// 接取任务之后解锁
 	GBuildManager.AddPreInstance(buildInfo.BuildId)
-	BuildTotalManager.Lock.Unlock()
-
-	// 接取任务后判断国际化是否需要切换语言
-	i18n.CheckLocalizer()
-
-	err := runBuild(buildInfo)
-	if err != nil {
-		logs.WithError(err).Error("start build failed")
-	}
+	return buildTypeNormal
 }
 
 // CheckParallelTaskCount checkParallelTaskCount 检查当前运行的最大任务数

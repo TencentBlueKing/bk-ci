@@ -43,6 +43,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/imagedebug"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/pipeline"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
@@ -81,6 +82,10 @@ func Run(isDebug bool) {
 	go cron.CleanDebugContainer()
 
 	initModules()
+
+	// 启动 MCP Server 协程（如果通过环境变量启用）
+	// MCP 使用 stdio 与外部 AI 工具通信，agent 日志已配置为纯文件输出不会污染 stdio
+	mcp.StartIfEnabled()
 
 	for {
 		doAsk()
@@ -151,23 +156,35 @@ func doAsk() {
 
 func doAgentJob(enable api.AskEnable, resp *api.AskResp) {
 	if resp.Heart != nil {
-		go agentHeartbeat(resp.Heart)
+		safeGo("agentHeartbeat", func() { agentHeartbeat(resp.Heart) })
 	}
 
 	hasBuild := (enable.Build != api.NoneBuildType) && (resp.Build != nil)
 	if hasBuild {
-		go job.DoBuild(resp.Build)
+		safeGo("DoBuild", func() { job.DoBuild(resp.Build) })
 	}
 
 	if enable.Upgrade && resp.Upgrade != nil {
-		go upgrade.AgentUpgrade(resp.Upgrade, hasBuild)
+		safeGo("AgentUpgrade", func() { upgrade.AgentUpgrade(resp.Upgrade, hasBuild) })
 	}
 
 	if enable.Pipeline && resp.Pipeline != nil {
-		go pipeline.RunPipeline(resp.Pipeline)
+		safeGo("RunPipeline", func() { pipeline.RunPipeline(resp.Pipeline) })
 	}
 
 	if enable.DockerDebug && resp.Debug != nil {
-		go imagedebug.DoImageDebug(resp.Debug)
+		safeGo("DoImageDebug", func() { imagedebug.DoImageDebug(resp.Debug) })
 	}
+}
+
+// safeGo 在独立 goroutine 中执行 fn，捕获 panic 防止崩溃整个进程
+func safeGo(name string, fn func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Errorf("goroutine [%s] panic recovered: %v", name, r)
+			}
+		}()
+		fn()
+	}()
 }

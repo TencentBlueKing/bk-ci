@@ -82,6 +82,11 @@ func postProcessTreeLog(message string, buildInfo *api.ThirdPartyBuildInfo) {
 	}
 }
 
+// GetProcessTreeText 递归获取指定进程及其子进程的进程树文本（导出供 MCP 等模块调用）
+func GetProcessTreeText(pid int32, indent int) string {
+	return getProcessTree(pid, indent)
+}
+
 // getProcessTree 递归获取指定进程及其子进程的进程树
 func getProcessTree(pid int32, indent int) string {
 	p, err := process.NewProcess(pid)

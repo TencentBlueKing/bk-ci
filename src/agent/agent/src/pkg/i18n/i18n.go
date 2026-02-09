@@ -50,12 +50,10 @@ type localizerType struct {
 	localizers   map[language.Tag]*i18n.Localizer
 }
 
-func (l *localizerType) getLocalizer() *i18n.Localizer {
-	l.rwLock.RLock()
-	defer l.rwLock.RUnlock()
+// getLocalizerLocked 获取当前 localizer，调用方必须已持有 rwLock（读锁或写锁）
+func (l *localizerType) getLocalizerLocked() *i18n.Localizer {
 	local, ok := l.localizers[l.nowLocalizer]
 	if !ok {
-		// 未找到对应的本地化时默认使用中文
 		logs.Warnf("not found nowLocalizer %s", l.nowLocalizer.String())
 		return l.localizers[defaultLocalTag]
 	}
@@ -85,14 +83,15 @@ func InitAgentI18n() {
 
 func Localize(messageId string, templateData map[string]interface{}) string {
 	localizer.rwLock.RLock()
-	defer localizer.rwLock.RUnlock()
+	nowLocalizer := localizer.getLocalizerLocked()
+	localizer.rwLock.RUnlock()
 
-	nowLocalizer := localizer.getLocalizer()
 	if nowLocalizer == nil {
 		logs.Error("Localize nowLocalizer is nil")
 		return ""
 	}
 
+	// Localize 调用在锁外执行，i18n.Localizer 本身是只读安全的
 	translation, err := nowLocalizer.Localize(&i18n.LocalizeConfig{
 		MessageID:    messageId,
 		TemplateData: templateData,

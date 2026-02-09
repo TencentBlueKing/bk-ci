@@ -25,32 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package constant
+package mcp
 
-import "os"
+import (
+	"os"
 
-const (
-	DaemonExitCode = 88
-
-	// DevopsAgentEnableNewConsole 如果设为true 则windows启动进程时使用 newConsole
-	DevopsAgentEnableNewConsole = "DEVOPS_AGENT_ENABLE_NEW_CONSOLE"
-	// DevopsAgentEnableExitGroup 启动Agent杀掉构建进程组的兜底逻辑
-	DevopsAgentEnableExitGroup = "DEVOPS_AGENT_ENABLE_EXIT_GROUP"
-	// DevopsAgentDockerCapAdd 启动docker时的capadd参数，为空则不添加
-	DevopsAgentDockerCapAdd = "DEVOPS_AGENT_DOCKER_CAP_ADD"
-
-	// CommonFileModePerm 公共文件权限
-	CommonFileModePerm os.FileMode = 0644
-
-	// WinCommandNewConsole windwos启动进程时打开新的console窗口
-	WinCommandNewConsole = 0x00000010
-
-	// DevopsAgentTimeoutExitTime 设置一个次数，达到超时次数 Agent 进程退出
-	DevopsAgentTimeoutExitTime = "DEVOPS_AGENT_TIMEOUT_EXIT_TIME"
-
-	// DevopsAgentEnableProcessTree 如果设为true 则在构建期间定时将进程树上报到后台日志（DEBUG级别）
-	DevopsAgentEnableProcessTree = "DEVOPS_AGENT_ENABLE_PROCESS_TREE"
-
-	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，通过 stdio 暴露 agent 信息给外部 AI 工具
-	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 )
+
+// StartIfEnabled 检查环境变量开关，如果启用则在独立协程中启动 MCP Server。
+// MCP Server 通过 stdin/stdout 与外部 AI 工具进行 JSON-RPC 2.0 通信，
+// 因此调用方必须确保 agent 日志不写入 stdout。
+// 该函数非阻塞，立即返回。
+func StartIfEnabled() {
+	if !envs.FetchEnvAndCheck(constant.DevopsAgentEnableMCP, "true") {
+		logs.Info("mcp server disabled (DEVOPS_AGENT_ENABLE_MCP != true)")
+		return
+	}
+
+	logs.Info("mcp server enabled, starting in background goroutine")
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logs.Errorf("mcp server panic recovered: %v", r)
+			}
+		}()
+
+		server := NewServer(os.Stdin, os.Stdout)
+		RegisterAllTools(server)
+
+		logs.Infof("mcp server registered %d tools, listening on stdio", len(server.tools))
+		server.Serve()
+
+		logs.Info("mcp server exited (stdin closed)")
+	}()
+}

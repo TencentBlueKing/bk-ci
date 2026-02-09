@@ -80,6 +80,18 @@ func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	return result
 }
 
+// GetInstancesWithPid 获取所有运行中的构建实例，返回 pid -> buildInfo 的映射
+func (b *buildManager) GetInstancesWithPid() map[int]*api.ThirdPartyBuildInfo {
+	result := make(map[int]*api.ThirdPartyBuildInfo)
+	b.instances.Range(func(key, value interface{}) bool {
+		pid := key.(int)
+		info := value.(*api.ThirdPartyBuildInfo)
+		result[pid] = info
+		return true
+	})
+	return result
+}
+
 func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInfo) {
 	bytes, _ := json.Marshal(buildInfo)
 	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))

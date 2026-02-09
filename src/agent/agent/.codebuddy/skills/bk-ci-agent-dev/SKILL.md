@@ -21,7 +21,7 @@ description: 蓝鲸CI Agent（Go语言）项目开发迭代指南。包含项目
 ## 项目概览
 
 ```
-d:\projects\bk-ci-agent\src\agent\agent\
+src/agent/agent/
 ├── src/
 │   ├── cmd/                    # 入口程序（4个可执行文件）
 │   │   ├── agent/main.go       # Agent 主程序
@@ -38,13 +38,14 @@ d:\projects\bk-ci-agent\src\agent\agent\
 │   │   ├── upgrader/           # upgrader进程逻辑
 │   │   ├── installer/          # installer进程逻辑
 │   │   ├── imagedebug/         # Docker镜像调试
+│   │   ├── mcp/                # MCP Server（纯标准库实现，随 agent 协程运行）
 │   │   ├── pipeline/           # 流水线引擎(实验性)
 │   │   ├── envs/               # 环境变量管理
 │   │   ├── cron/               # 定时任务
 │   │   ├── collector/          # 系统信息采集(Telegraf)
 │   │   ├── exiterror/          # 结构化退出错误
 │   │   ├── i18n/               # 国际化
-│   │   ├── constant/           # 常量(内外版差异)
+│   │   ├── constant/           # 常量(内外版差异+环境变量开关)
 │   │   └── util/               # 工具包
 │   │       ├── command/        # 命令执行与用户切换
 │   │       ├── fileutil/       # 文件操作
@@ -69,16 +70,20 @@ d:\projects\bk-ci-agent\src\agent\agent\
 agent.Run()
   ├─ 初始化: config加载 → 环境变量 → TLS证书 → 定时任务
   ├─ 启动 heartbeat goroutine (每30秒)
+  ├─ mcp.StartIfEnabled()  // 检查环境变量，启用则在 goroutine 中启动 MCP Server（占用 stdio）
   └─ 主循环 (每5秒):
-       api.GetBuild() → 根据返回类型分发:
-         ├─ BuildInfo     → job.DoBuild()      // 执行构建
-         ├─ UpgradeItem   → upgrade.AgentUpgrade()  // 升级
-         ├─ PipelineData  → pipeline.Run()     // 流水线
-         └─ ImageDebugInfo→ imagedebug.DoDebug()   // 镜像调试
+       api.Ask() → 解析响应 → doAgentJob():
+         ├─ HeartInfo   → safeGo(agentHeartbeat)     // 心跳
+         ├─ BuildInfo   → safeGo(job.DoBuild)         // 执行构建
+         ├─ UpgradeItem → safeGo(upgrade.AgentUpgrade) // 升级
+         ├─ PipelineData→ safeGo(pipeline.RunPipeline) // 流水线
+         └─ DebugInfo   → safeGo(imagedebug.DoDebug)   // 镜像调试
 ```
 
+**safeGo**: 所有异步任务通过 `safeGo(name, fn)` 启动，内含 `defer recover()` 防止 panic 崩溃进程。
+
 **关键文件**:
-- `agent.go` — 主循环、初始化、Ask轮询
+- `agent.go` — 主循环、初始化、Ask轮询、safeGo、MCP启动
 - `ask.go` — 处理轮询返回的不同任务类型
 - `heartbeat.go` — 心跳上报(Agent状态、版本、系统信息)
 
@@ -108,23 +113,25 @@ agent.Run()
 #### 二进制构建流程:
 ```
 DoBuild(buildInfo)
-  → BuildTotalManager.Lock.Lock()     // 全局互斥
-  → CheckParallelTaskCount()          // 检查并行数
-  → GBuildManager.AddPreInstance()    // 记录预构建
-  → Unlock
-  → runBuild()                        // goroutine执行
-       → 检查 worker-agent.jar 存在
-       → 创建 build_tmp/{buildId}_{vmSeqId}/ 目录
-       → 预写 build_msg.log("BuilderProcessWasKilled")
-       → doBuild() [平台特定]
-            Unix:  写启动Shell脚本 → exec /bin/bash → java -jar worker-agent.jar
-            Windows: 直接 java -jar worker-agent.jar
-       → logProcessTree() goroutine 启动(需环境变量DEVOPS_AGENT_ENABLE_PROCESS_TREE=true，每30秒上报进程树到后台DEBUG日志)
-       → cmd.Wait() 等待完成
-       → context.Cancel() 停止进程树监控
-       → 读取 build_msg.log (异常消息)
-       → api.WorkerBuildFinish() 上报
-       → 清理临时文件
+  → acquireBuildSlot()               // 子函数，内部 Lock + defer Unlock
+       → CheckParallelTaskCount()    // 检查并行数
+       → 返回 buildTypeDocker/buildTypeNormal/buildTypeNone
+  → i18n.CheckLocalizer()           // 接取任务后检查语言
+  → switch buildType:
+       docker → runDockerBuild()
+       normal → runBuild()
+            → 检查 worker-agent.jar 存在
+            → 创建 build_tmp/{buildId}_{vmSeqId}/ 目录
+            → 预写 build_msg.log("BuilderProcessWasKilled")
+            → doBuild() [平台特定]
+                 Unix:  写启动Shell脚本 → exec /bin/bash → java -jar worker-agent.jar
+                 Windows: 直接 java -jar worker-agent.jar
+            → logProcessTree() goroutine 启动(需环境变量DEVOPS_AGENT_ENABLE_PROCESS_TREE=true)
+            → cmd.Wait() 等待完成
+            → context.Cancel() 停止进程树监控
+            → 读取 build_msg.log (异常消息)
+            → api.WorkerBuildFinish() 上报
+            → 清理临时文件
 ```
 
 #### Docker构建流程:
@@ -277,20 +284,72 @@ logs.WithErrorNoStack(err).Error("context")  // 不打印堆栈
 ### 并发控制模式
 
 ```go
-// 1. 全局互斥锁 — 构建任务接取
-job.BuildTotalManager.Lock.Lock()
-defer job.BuildTotalManager.Lock.Unlock()
+// 1. safeGo — 所有异步任务统一使用，防止 panic 崩溃进程
+safeGo("taskName", func() { doSomething() })
 
-// 2. 原子计数 — 错误累计
+// 2. 全局互斥锁 — 构建任务接取（通过 acquireBuildSlot 子函数，defer Unlock）
+func acquireBuildSlot(buildInfo) buildSlotType {
+    BuildTotalManager.Lock.Lock()
+    defer BuildTotalManager.Lock.Unlock()
+    // ...判断并发数并注册实例
+    return buildTypeDocker / buildTypeNormal / buildTypeNone
+}
+
+// 3. 原子计数 — 错误累计
 var counter atomic.Int32
 counter.Add(1)
 
-// 3. sync.Map — 并发安全的构建实例管理
+// 4. sync.Map — 并发安全的构建实例管理
 manager.instances.Store(buildId, instance)
 
-// 4. EventBus — 带缓冲channel的发布订阅
+// 5. EventBus — 带缓冲channel的发布订阅（全非阻塞 select 防竞争）
 config.GAgentConfig.EventBus.Publish("IpEvent", data)
+
+// 6. i18n RWMutex — Localize() 单次 RLock，getLocalizerLocked() 不再自行加锁
+//    避免嵌套读锁导致写锁等待时死锁
 ```
+
+**并发注意事项**:
+- 锁操作务必使用 `defer Unlock()`，禁止手动多路径 Unlock
+- 新增 goroutine 使用 `safeGo()` 包装，确保 panic 不会崩溃进程
+- `i18n.Localize()` 只加一次 RLock，内部 `getLocalizerLocked()` 不再加锁
+- EventBus `Publish` 使用全非阻塞 select 模式，丢弃和写入分两步各用 select 防止并发竞争
+
+### MCP Server (`pkg/mcp/`)
+
+MCP (Model Context Protocol) Server 作为 agent 主进程的一个协程运行，通过 stdio 与外部 AI 工具进行 JSON-RPC 2.0 通信。
+
+**架构设计**:
+- 纯标准库实现，不依赖任何第三方库，保持 go 1.19 兼容
+- 通过环境变量 `DEVOPS_AGENT_ENABLE_MCP=true` 启用
+- 在 `agent.Run()` 中 `initModules()` 之后、主循环之前调用 `mcp.StartIfEnabled()`
+- 启用后 stdio 专属 MCP 通信，agent 日志全部走文件（`logs.Init` 的 `logStd=false`）
+
+**提供的 MCP Tool**:
+| Tool | 说明 |
+|------|------|
+| `list_running_builds` | 获取所有运行中构建任务及其进程树（普通构建+Docker构建） |
+| `get_recent_error_logs` | 获取近期错误日志，支持 `level`(error/warn/all) 和 `lines` 参数 |
+
+**关键文件**:
+- `entry.go` — `StartIfEnabled()` 入口，检查环境变量后在 goroutine 中启动
+- `server.go` — JSON-RPC 2.0 Server 实现（逐行读取 stdin，处理 initialize/tools/list/tools/call）
+- `tools.go` — Tool 定义与 handler 实现
+
+**扩展新 Tool**:
+```go
+// 1. 在 tools.go 中定义 ToolDefinition + handler
+func newToolDef() ToolDefinition { ... }
+func handleNewTool(args map[string]interface{}) (string, error) { ... }
+
+// 2. 在 RegisterAllTools() 中注册
+s.RegisterTool(newToolDef(), handleNewTool)
+```
+
+**导出接口**（供 MCP tool 查询 agent 内部状态）:
+- `job.GBuildManager.GetInstancesWithPid()` — 返回 `map[int]*ThirdPartyBuildInfo`（pid → 构建信息）
+- `job.GBuildDockerManager.GetInstances()` — 返回 Docker 构建实例列表
+- `job.GetProcessTreeText(pid, indent)` — 获取指定 PID 的进程树文本
 
 ### 新增功能检查清单
 
@@ -301,6 +360,10 @@ config.GAgentConfig.EventBus.Publish("IpEvent", data)
 - [ ] 是否需要定时执行？在 `cron/cron.go` 的 `InitCron()` 注册
 - [ ] 是否涉及Docker？确保只在Linux编译(`//go:build linux || darwin`对应)
 - [ ] 是否需要国际化？在 `i18n/` 添加翻译
+- [ ] 新增 goroutine 是否使用了 `safeGo()` 包装？
+- [ ] 锁操作是否使用了 `defer Unlock()`？禁止手动多路径 Unlock
+- [ ] 是否需要通过 MCP 暴露新信息？在 `mcp/tools.go` 新增 Tool
+- [ ] 新增环境变量开关？在 `constant/constant.go` 添加常量
 
 ## 构建与测试
 
@@ -440,6 +503,18 @@ bin/
 5. **升级问题**: 检查 `tmp/` 目录下载的文件和MD5
 6. **Windows服务问题**: 使用 `wintask` 包检测启动方式
 7. **进程阻塞排查**: 设置环境变量 `DEVOPS_AGENT_ENABLE_PROCESS_TREE=true` 后，构建期间每30秒将完整进程树(PID/进程名/状态/运行时长/命令行)以DEBUG级别上报到后台构建日志，可在流水线日志中查看
+8. **MCP调试**: 设置 `DEVOPS_AGENT_ENABLE_MCP=true`，agent 启动后 MCP Server 协程会在 stdio 上监听 JSON-RPC 2.0 请求。可通过 AI 工具（如 Claude Desktop）配置 agent 为 MCP Server 进行交互式调试
+
+## 环境变量开关
+
+| 环境变量 | 默认 | 说明 |
+|---------|------|------|
+| `DEVOPS_AGENT_ENABLE_NEW_CONSOLE` | false | Windows 启动进程时使用 newConsole |
+| `DEVOPS_AGENT_ENABLE_EXIT_GROUP` | false | 启动杀掉构建进程组的兜底逻辑 |
+| `DEVOPS_AGENT_DOCKER_CAP_ADD` | 空 | Docker启动时的capadd参数 |
+| `DEVOPS_AGENT_TIMEOUT_EXIT_TIME` | 空 | 超时次数阈值，达到后Agent进程退出 |
+| `DEVOPS_AGENT_ENABLE_PROCESS_TREE` | false | 构建期间定时上报进程树到后台日志 |
+| `DEVOPS_AGENT_ENABLE_MCP` | false | 随 agent 主进程启动 MCP Server 协程 |
 
 ## 注意事项
 
