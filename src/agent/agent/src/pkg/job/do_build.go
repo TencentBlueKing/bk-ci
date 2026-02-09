@@ -49,8 +49,8 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 func doBuild(

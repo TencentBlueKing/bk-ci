@@ -34,7 +34,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 func RunCommand(command string, args []string, workDir string, envMap map[string]string) (output []byte, err error) {

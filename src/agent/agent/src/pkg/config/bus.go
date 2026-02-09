@@ -3,7 +3,7 @@ package config
 import (
 	"sync"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 type DataEvent struct {

@@ -37,7 +37,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 )
 
 const (
