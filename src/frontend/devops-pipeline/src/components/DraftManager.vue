@@ -107,10 +107,13 @@
                             'develop-txt-disabled': !hasDraftPipeline
                         }]"
                         :text="true"
+                        :can-switch-version="false"
                         :disabled="!hasDraftPipeline"
-                        :version="releaseVersion"
-                        :latest-version="conflictDraftInfo.version"
+                        :version="conflictDraftInfo?.version"
+                        :show-button="false"
                         :draft-version="conflictDraftInfo.draftVersion"
+                        :current-editing-data="currentEditingData"
+                        :diff-mode="'CONFLICT'"
                     >
                         <Logo
                             name="diff"
@@ -123,6 +126,24 @@
                     <span>{{ publishedInfo?.updater }} </span>
                     <span class="label"> {{ $t('publishTime') }}: </span>
                     <span>{{ formatTime(publishedInfo?.updateTime) }}</span>
+
+                    <VersionDiffEntry
+                        :class="['diff-button',{
+                            'develop-txt-disabled': !hasDraftPipeline
+                        }]"
+                        :text="true"
+                        :can-switch-version="false"
+                        :show-button="false"
+                        :disabled="!hasDraftPipeline"
+                        :version="11"
+                        :current-editing-data="currentEditingData"
+                        :diff-mode="'PUBLISHED'"
+                    >
+                        <Logo
+                            name="diff"
+                            size="14"
+                        />
+                    </VersionDiffEntry>
                 </div>
 
                 <p class="conflict-draft-tips">
@@ -201,6 +222,11 @@
             isTemplate: {
                 type: Boolean,
                 default: false
+            },
+            // 当前正在编辑的数据（用于对比）
+            currentEditingData: {
+                type: Object,
+                default: null
             }
         },
         data () {

@@ -26,6 +26,7 @@
                 :project-id="projectId"
                 :unique-id="pipelineId"
                 :is-template="false"
+                :current-editing-data="currentEditingData"
                 @rollback="handleRollback"
                 @new-draft="handleNewDraft"
                 @continue-save-draft="continueSaveDraft"
@@ -194,6 +195,12 @@
             },
             isPipelineNameReady () {
                 return this.pipelineSetting?.pipelineId === this.$route.params.pipelineId
+            },
+            currentEditingData () {
+                if (!this.pipeline || !this.pipeline.stages) {
+                    return null
+                }
+                return this.buildModelAndSetting()
             }
         },
         watch: {
@@ -218,7 +225,6 @@
                 'setSaveStatus',
                 'requestPipelineSummary',
                 'requestPipeline',
-                'transfer',
                 'updateContainer'
             ]),
             // 构建 modelAndSetting 对象

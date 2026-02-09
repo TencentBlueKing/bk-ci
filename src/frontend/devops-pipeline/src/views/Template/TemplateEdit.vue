@@ -32,6 +32,7 @@
                         :project-id="projectId"
                         :unique-id="templateId"
                         :is-template="true"
+                        :current-editing-data="currentEditingData"
                         @rollback="handleRollback"
                         @new-draft="handleNewDraft"
                         @continue-save-draft="continueSaveDraft"
@@ -147,6 +148,16 @@
                     return this.$t('editPage.draftVersion', [this.getDraftBaseVersionName])
                 }
                 return this.versionName
+            },
+            currentEditingData () {
+                if (!this.pipeline || !this.pipeline.stages) {
+                    return null
+                }
+                const model = this.buildModel()
+                return {
+                    model,
+                    templateSetting: this.pipelineSetting
+                }
             }
         },
         watch: {
@@ -186,7 +197,6 @@
                 'setAtomEditing',
                 'requestTemplateSummary',
                 'requestPipeline',
-                'transfer',
                 'fetchTemplateByVersion',
                 'updateContainer'
             ]),

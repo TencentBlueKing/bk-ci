@@ -57,6 +57,7 @@
                         </bk-tag>
                     </p>
                     <VersionSelector
+                        v-else
                         ext-cls="dark-theme-select-trigger"
                         ext-popover-cls="dark-theme-select-menu"
                         :editable="canSwitchVersion"
@@ -67,7 +68,7 @@
                         @change="diffActiveVersion"
                         v-bind="baseVersionSelectorConf"
                     />
-                    <div class="latest-version-selector-right-part">
+                    <p class="latest-version-selector-right-part">
                         <span v-if="instanceCompareWithTemplate">{{ $t('template.template') }}</span>
                         <VersionSelector
                             ext-cls="dark-theme-select-trigger"
@@ -80,7 +81,7 @@
                             @change="diffCurrentVersion"
                             v-bind="versionSelectorConf"
                         />
-                    </div>
+                    </p>
                     <bk-checkbox
                         v-if="instanceCompareWithTemplate"
                         class="use-template-settings-checkbox"
@@ -170,7 +171,17 @@
                 type: Boolean,
                 default: false
             },
-            
+            // 当前正在编辑的数据（用于对比）
+            currentEditingData: {
+                type: Object,
+                default: null
+            },
+            // 差异对比模式：CONFLICT（冲突）或 PUBLISHED（已发布）
+            diffMode: {
+                type: String,
+                default: null,
+                validator: (value) => !value || ['CONFLICT', 'PUBLISHED'].includes(value)
+            }
         },
         data () {
             return {
@@ -215,6 +226,7 @@
             ...mapActions('atom', [
                 'fetchPipelineByVersion',
                 'fetchTemplateByVersion',
+                'canSwitchToYaml',
                 'compareYamlWithTemplate'
             ]),
             ...mapActions('templates', ['requestVersionCompare']),
@@ -253,13 +265,69 @@
                     return ''
                 }
             },
+            // 获取当前正在编辑的内容的 YAML
+            async fetchCurrentEditingYaml () {
+                try {
+                    if (!this.currentEditingData) {
+                        return
+                    }
+                    
+                    // 调用 canSwitchToYaml 接口将当前编辑中的 modelAndSetting 转换为 YAML
+                    const res = await this.canSwitchToYaml({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.uniqueId,
+                        actionType: 'FULL_MODEL2YAML',
+                        modelAndSetting: this.currentEditingData
+                    })
+                    
+                    if (res?.newYaml) {
+                        return res.newYaml
+                    }
+                    
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                    return
+                }
+            },
             async initDiff () {
+                this.showVersionDiffDialog = true
+                this.isLoadYaml = true
+                
+                // 处理特殊的差异对比模式（CONFLICT 或 PUBLISHED）
+                if (this.diffMode && this.currentEditingData) {
+                    if (this.diffMode === 'CONFLICT') {
+                        // 冲突状态：对比最后保存的草稿 vs 当前编辑内容
+                        this.activeVersion = this.version
+                        
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.version, this.draftVersion || undefined),
+                            this.fetchCurrentEditingYaml()
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    } else if (this.diffMode === 'PUBLISHED') {
+                        // 已发布状态：对比最新发布版本 vs 当前编辑内容
+                        this.activeVersion = this.version
+                        
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.version),
+                            this.fetchCurrentEditingYaml()
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    }
+                    this.isLoadYaml = false
+                    return
+                }
+                
+                // 原有逻辑：正常的版本对比
                 this.activeVersion = this.version
                 // 如果存在 draftVersion，传递父草稿版本号，VersionSelector 会自动选中最新的子草稿
                 this.currentVersion = this.draftVersion || this.latestVersion
-                this.showVersionDiffDialog = true
 
-                this.isLoadYaml = true
                 if (this.instanceCompareWithTemplate) {
                     const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
                         projectId: this.$route.params.projectId,
@@ -295,11 +363,9 @@
                 }
             },
             async diffCurrentVersion (versionId, versionData) {
-                // versionId 是唯一标识（草稿时为 "draft-1"，发布时为版本号）
                 if (versionId !== this.currentVersion) {
                     this.currentVersion = versionId
                     this.isLoadYaml = true
-                    // 如果是草稿，传递 initialVersion 和 draftVersion；否则只传 versionId
                     const version = versionData.isDraftVersion ? versionData.initialVersion : versionId
                     this.currentYaml = await this.fetchPipelineYaml(version, versionData.draftVersion || undefined)
                     this.isLoadYaml = false
