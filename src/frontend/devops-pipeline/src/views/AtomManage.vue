@@ -147,7 +147,7 @@
             <bk-sideslider
                 :is-show.sync="detailObj.showSlide"
                 :title="detailObj.detail.name"
-                :width="644"
+                :width="700"
                 :quick-close="true"
             >
                 <section
