@@ -119,7 +119,9 @@ DoBuild(buildInfo)
        → doBuild() [平台特定]
             Unix:  写启动Shell脚本 → exec /bin/bash → java -jar worker-agent.jar
             Windows: 直接 java -jar worker-agent.jar
+       → logProcessTree() goroutine 启动(需环境变量DEVOPS_AGENT_ENABLE_PROCESS_TREE=true，每30秒上报进程树到后台DEBUG日志)
        → cmd.Wait() 等待完成
+       → context.Cancel() 停止进程树监控
        → 读取 build_msg.log (异常消息)
        → api.WorkerBuildFinish() 上报
        → 清理临时文件
@@ -147,6 +149,8 @@ runDockerBuild(buildInfo)
 - `build_manager.go` — BuildManager管理并发构建实例
 - `do_build.go` — Unix平台doBuild()实现
 - `do_build_win.go` — Windows平台doBuild()实现
+- `process_tree.go` — Unix平台进程树监控(gopsutil/v3, 通过API上报DEBUG日志)
+- `process_tree_win.go` — Windows平台进程树监控(gopsutil/v3, 通过API上报DEBUG日志)
 
 ### 配置系统 (`pkg/config/`)
 
@@ -337,7 +341,7 @@ go test ./...
 |------|------|------|---------|
 | `docker/docker` | v24.0.9 | Docker API客户端 | 与telegraf版本绑定 |
 | `influxdata/telegraf` | v1.24.4 | 系统指标采集 | 有版本限制，不可随意升级 |
-| `shirou/gopsutil/v3` | v3.22.9 | 系统信息获取 | 与telegraf绑定 |
+| `shirou/gopsutil/v3` | v3.22.9 | 系统信息获取+进程树监控 | 与telegraf绑定,同时用于构建进程树打印 |
 | `pkg/errors` | v0.9.1 | 错误包装 | 项目统一使用 |
 | `go-ini/ini` | v1.67.0 | 配置文件解析 | .agent.properties |
 | `nicksnyder/go-i18n/v2` | v2.4.1 | 国际化 | |
@@ -435,11 +439,13 @@ bin/
 4. **HTTP通信调试**: 日志中搜索请求URL和响应状态码
 5. **升级问题**: 检查 `tmp/` 目录下载的文件和MD5
 6. **Windows服务问题**: 使用 `wintask` 包检测启动方式
+7. **进程阻塞排查**: 设置环境变量 `DEVOPS_AGENT_ENABLE_PROCESS_TREE=true` 后，构建期间每30秒将完整进程树(PID/进程名/状态/运行时长/命令行)以DEBUG级别上报到后台构建日志，可在流水线日志中查看
 
 ## 注意事项
 
-1. **`unsafe.Pointer` 使用**: `process_exit_group_win.go` 中通过 unsafe 读取 `os.Process` 内部字段，Go版本升级时需验证内存布局
-2. **Telegraf版本锁定**: `go.mod` 中注释说明了 telegraf/gopsutil/docker 版本绑定关系，不可独立升级
-3. **环境变量优先级**: API配置变量 > 系统环境变量
-4. **构建成功等待**: 构建成功后会 `time.Sleep(8*time.Second)` 等待日志写入
-5. **MD5缓存**: Docker Init文件的MD5有缓存机制，避免每次心跳重新计算
+1. **Go版本锁定**: `go.mod` 中 `go 1.19` 不可随意升级。引入新依赖时必须确认其最低Go版本要求兼容1.19。**禁止**使用 `go mod tidy`（Go 1.21+工具链会自动将go指令升级到1.21），应使用 `GOFLAGS=-mod=mod go build` 来自动更新 go.mod，或通过 gvm 切换到 Go 1.19 后再执行 `go mod tidy`
+2. **`unsafe.Pointer` 使用**: `process_exit_group_win.go` 中通过 unsafe 读取 `os.Process` 内部字段，Go版本升级时需验证内存布局
+3. **Telegraf版本锁定**: `go.mod` 中注释说明了 telegraf/gopsutil/docker 版本绑定关系，不可独立升级
+4. **环境变量优先级**: API配置变量 > 系统环境变量
+5. **构建成功等待**: 构建成功后会 `time.Sleep(8*time.Second)` 等待日志写入
+6. **MD5缓存**: Docker Init文件的MD5有缓存机制，避免每次心跳重新计算

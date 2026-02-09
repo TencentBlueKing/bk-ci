@@ -47,4 +47,7 @@ const (
 
 	// DevopsAgentTimeoutExitTime 设置一个次数，达到超时次数 Agent 进程退出
 	DevopsAgentTimeoutExitTime = "DEVOPS_AGENT_TIMEOUT_EXIT_TIME"
+
+	// DevopsAgentEnableProcessTree 如果设为true 则在构建期间定时将进程树上报到后台日志（DEBUG级别）
+	DevopsAgentEnableProcessTree = "DEVOPS_AGENT_ENABLE_PROCESS_TREE"
 )
