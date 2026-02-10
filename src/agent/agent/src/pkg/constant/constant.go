@@ -52,7 +52,8 @@ const (
 	DevopsAgentEnableProcessTree = "DEVOPS_AGENT_ENABLE_PROCESS_TREE"
 
 	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，
-	// 通过 Streamable HTTP (127.0.0.1 随机端口) 暴露 agent 信息给外部 AI 工具，
-	// 端口号写入工作目录下的 .mcp_port 文件
+	// 通过 Streamable HTTP (127.0.0.1) 暴露 agent 信息给外部 AI 工具，
+	// 端口号持久化到 .agent.properties 的 devops.mcp.server.port，
+	// 支持通过后台心跳环境变量动态启停
 	DevopsAgentEnableMCP = "DEVOPS_AGENT_ENABLE_MCP"
 )

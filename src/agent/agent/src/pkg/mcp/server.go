@@ -29,7 +29,7 @@
 // 该 server 提供工具：查看运行中的构建任务及其进程树、获取近期错误日志。
 //
 // MCP Server 作为 agent 主进程的一个协程运行，支持通过环境变量 DEVOPS_AGENT_ENABLE_MCP 动态启停。
-// 开启后在 127.0.0.1 上随机端口监听 Streamable HTTP，端口号写入 .mcp_port 文件。
+// 开启后在 127.0.0.1 上监听 Streamable HTTP，端口号持久化到 .agent.properties 的 devops.mcp.server.port。
 //
 // 使用第三方库 github.com/ThinkInAIXYZ/go-mcp 实现 MCP 协议。
 package mcp
@@ -38,44 +38,62 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 	"github.com/ThinkInAIXYZ/go-mcp/transport"
 )
 
 const (
-	mcpPortFileName = ".mcp_port"
-	mcpEndpoint     = "/mcp"
+	mcpEndpoint = "/mcp"
 )
 
+// resolvePort 确定 MCP Server 监听端口。
+// 如果配置中已有端口号且可用，则直接使用；否则随机分配一个新端口并写回配置。
+func resolvePort() (int, error) {
+	cfgPort := config.GAgentConfig.McpServerPort
+
+	if cfgPort <= 0 {
+		// 配置中无端口，随机分配并持久化
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return 0, fmt.Errorf("listen on random port failed: %v", err)
+		}
+		port := listener.Addr().(*net.TCPAddr).Port
+		listener.Close()
+
+		config.GAgentConfig.McpServerPort = port
+		if err := config.GAgentConfig.SaveConfig(); err != nil {
+			logs.Warnf("mcp server save port to config failed: %v", err)
+		}
+		logs.Infof("mcp server allocated random port %d, saved to .agent.properties", port)
+		return port, nil
+	}
+
+	// 配置中已有端口，检查是否可用
+	addr := fmt.Sprintf("127.0.0.1:%d", cfgPort)
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return 0, fmt.Errorf("mcp server configured port %d unavailable: %v", cfgPort, err)
+	}
+	listener.Close()
+	logs.Infof("mcp server reusing configured port %d", cfgPort)
+	return cfgPort, nil
+}
+
 // startServer 创建并启动 MCP Server，使用 Streamable HTTP 传输。
-// 在 127.0.0.1 上随机分配端口监听，端口号写入工作目录下的 .mcp_port 文件。
+// 端口从 .agent.properties 读取（首次自动分配），端口不可用时返回错误不做重试。
 // 通过 entry.go 中的 stopFunc 注入 Shutdown 回调，支持外部停止。
 // 该函数阻塞直到 server 退出。
 func startServer() error {
-	// 随机分配可用端口
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	port, err := resolvePort()
 	if err != nil {
-		return fmt.Errorf("listen on random port failed: %v", err)
+		return err
 	}
-	port := listener.Addr().(*net.TCPAddr).Port
-	// 立即关闭 listener，让 go-mcp transport 自己绑定这个端口
-	listener.Close()
 
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
-
-	// 将端口号写入文件，供 MCP 客户端读取
-	portFilePath := filepath.Join(systemutil.GetWorkDir(), mcpPortFileName)
-	if err := os.WriteFile(portFilePath, []byte(strconv.Itoa(port)), 0644); err != nil {
-		return fmt.Errorf("write mcp port file failed: %v", err)
-	}
-	logs.Infof("mcp server port %d written to %s", port, portFilePath)
 
 	// 创建 Streamable HTTP 传输
 	t := transport.NewStreamableHTTPServerTransport(addr,
@@ -87,7 +105,6 @@ func startServer() error {
 		server.WithServerInfo(serverInfo()),
 	)
 	if err != nil {
-		os.Remove(portFilePath)
 		return fmt.Errorf("create mcp server failed: %v", err)
 	}
 
@@ -109,11 +126,8 @@ func startServer() error {
 
 	// 阻塞运行
 	if err := mcpServer.Run(); err != nil {
-		os.Remove(portFilePath)
 		return fmt.Errorf("mcp server run failed: %v", err)
 	}
 
-	// server 退出后清理端口文件
-	os.Remove(portFilePath)
 	return nil
 }

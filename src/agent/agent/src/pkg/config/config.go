@@ -79,6 +79,7 @@ const (
 	KeyLanguage            = "devops.language"
 	KeyImageDebugPortRange = "devops.imagedebug.portrange"
 	KeyEnablePipeline      = "devops.pipeline.enable"
+	KeyMcpServerPort       = "devops.mcp.server.port"
 )
 
 // AgentConfig Agent 配置
@@ -105,6 +106,7 @@ type AgentConfig struct {
 	Language                string
 	ImageDebugPortRange     string
 	EnablePipeline          bool
+	McpServerPort           int
 }
 
 // AgentEnv Agent 环境配置
@@ -334,6 +336,8 @@ func LoadAgentConfig() error {
 
 	enablePipeline := conf.Section("").Key(KeyEnablePipeline).MustBool(false)
 
+	mcpServerPort := conf.Section("").Key(KeyMcpServerPort).MustInt(0)
+
 	// -----------
 
 	GAgentConfig.Gateway = landunGateway
@@ -402,6 +406,10 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.EnablePipeline = enablePipeline
 	logs.Info("EnablePipeline: ", GAgentConfig.EnablePipeline)
+
+	GAgentConfig.McpServerPort = mcpServerPort
+	logs.Info("McpServerPort: ", GAgentConfig.McpServerPort)
+
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -438,6 +446,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 	content.WriteString(KeyImageDebugPortRange + "=" + GAgentConfig.ImageDebugPortRange + "\n")
 	content.WriteString(KeyEnablePipeline + "=" + strconv.FormatBool(GAgentConfig.EnablePipeline) + "\n")
+	content.WriteString(KeyMcpServerPort + "=" + strconv.Itoa(GAgentConfig.McpServerPort) + "\n")
 
 	err := exitcode.WriteFileWithCheck(filePath, content.Bytes(), 0666)
 	if err != nil {
