@@ -4,13 +4,43 @@
         v-bkloading="{ isLoading: !nodeDetailLoaded }"
     >
         <header class="node-info-header">
-            <section>
-                <span
-                    v-bk-overflow-tips
-                    class="node-name"
-                >
-                    {{ currentNode?.displayName || '--' }}
-                </span>
+            <section class="node-info-left">
+                <template v-if="isEditingName">
+                    <bk-input
+                        ref="nameInputRef"
+                        v-model="editingDisplayName"
+                        class="name-edit-input"
+                        :class="{ 'is-error': nameError }"
+                        :maxlength="30"
+                        @enter="handleSaveName"
+                    />
+                    <template v-if="!isSavingName">
+                        <i
+                            class="bk-icon icon-check-line edit-action-icon save"
+                            @click="handleSaveName"
+                        />
+                        <i
+                            class="bk-icon icon-close-line-2 edit-action-icon cancel"
+                            @click="handleCancelEdit"
+                        />
+                    </template>
+                    <i
+                        v-else
+                        class="bk-icon icon-circle-2-1 edit-action-icon loading"
+                    />
+                </template>
+                <template v-else>
+                    <span
+                        v-bk-overflow-tips
+                        class="node-name"
+                    >
+                        {{ currentNode?.displayName || '--' }}
+                    </span>
+                    <i
+                        class="bk-icon icon-edit-line name-edit-icon"
+                        @click="handleStartEditName"
+                    />
+                </template>
                 <span
                     class="node-os"
                 >
@@ -70,7 +100,7 @@
 </template>
 
 <script>
-    import { ref, watch, computed, onMounted } from 'vue'
+    import { ref, watch, computed, onMounted, nextTick } from 'vue'
     import useInstance from '@/hooks/useInstance'
     import useNodeDetail from '@/hooks/useNodeDetail'
     import Overview from './components/Overview.vue'
@@ -94,6 +124,13 @@
                 fetchNodeDetail,
                 nodeDetailLoaded
             } = useNodeDetail()
+            
+            // 编辑名称相关状态
+            const isEditingName = ref(false)
+            const editingDisplayName = ref('')
+            const isSavingName = ref(false)
+            const nameError = ref(false)
+            const nameInputRef = ref(null)
             
             // 从路由查询参数中获取初始 tab，如果没有则默认为 'overview'
             const initialTab = proxy.$route.query.tabName || 'overview'
@@ -246,6 +283,65 @@
                 await fetchNodeDetail()
             }
             
+            const handleStartEditName = () => {
+                editingDisplayName.value = currentNode.value?.displayName || ''
+                isEditingName.value = true
+                nameError.value = false
+                nextTick(() => {
+                    nameInputRef.value?.focus?.()
+                })
+            }
+            
+            const handleCancelEdit = () => {
+                isEditingName.value = false
+                editingDisplayName.value = ''
+                nameError.value = false
+            }
+            
+            const handleSaveName = async () => {
+                if (isSavingName.value) return
+                const displayName = editingDisplayName.value.trim()
+                if (!displayName) {
+                    nameError.value = true
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: proxy.$t('environment.nodeInfo.enterDisplayName')
+                    })
+                    return
+                }
+                
+                if (displayName === currentNode.value?.displayName) {
+                    handleCancelEdit()
+                    return
+                }
+                
+                isSavingName.value = true
+                try {
+                    await proxy.$store.dispatch('environment/updateDisplayName', {
+                        projectId: proxy.$route.params.projectId,
+                        nodeHashId: proxy.$route.query?.nodeHashId,
+                        params: { displayName }
+                    })
+                    
+                    proxy.$bkMessage({
+                        theme: 'success',
+                        message: proxy.$t('environment.successfullyModified')
+                    })
+                    
+                    // 更新本地数据
+                    currentNode.value.displayName = displayName
+                    handleCancelEdit()
+                } catch (e) {
+                    console.error('更新节点名称失败:', e)
+                    proxy.$bkMessage({
+                        theme: 'error',
+                        message: e.message || proxy.$t('environment.updateFailed')
+                    })
+                } finally {
+                    isSavingName.value = false
+                }
+            }
+            
             return {
                 renderComponent,
                 currentNode,
@@ -256,7 +352,16 @@
                 nodeStatusDisplayName,
                 nodeStatusClass,
                 handleReinstallAgent,
-                handleRefresh
+                handleRefresh,
+                // 编辑名称相关
+                isEditingName,
+                editingDisplayName,
+                isSavingName,
+                nameError,
+                nameInputRef,
+                handleStartEditName,
+                handleCancelEdit,
+                handleSaveName
             }
         }
     }
@@ -277,6 +382,10 @@
     line-height: 48px;
     background: #FAFBFD;
     padding: 0 24px;
+    .node-info-left {
+        display: flex;
+        align-items: center;
+    }
     .node-name {
         font-weight: 700;
         font-size: 14px;
@@ -285,7 +394,51 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         color: #63656E;
-        margin-right: 16px;
+        margin-right: 8px;
+    }
+    .name-edit-icon {
+        font-size: 14px;
+        color: #979BA5;
+        cursor: pointer;
+        &:hover {
+            color: #3A84FF;
+        }
+    }
+    .name-edit-input {
+        width: 200px;
+        &.is-error {
+            .bk-form-input {
+                border-color: #EA3636;
+            }
+        }
+        .bk-form-input {
+            height: 26px;
+            font-size: 14px;
+        }
+    }
+    .edit-action-icon {
+        font-size: 16px;
+        cursor: pointer;
+        margin-left: 8px;
+        &.save {
+            color: #2DCB56;
+            &:hover {
+                color: #45E35F;
+            }
+        }
+        &.cancel {
+            color: #979BA5;
+            &:hover {
+                color: #63656E;
+            }
+        }
+        &.loading {
+            color: #3A84FF;
+            animation: spin 1s linear infinite;
+        }
+    }
+    .node-os {
+        margin-left: 24px;
     }
     .node-os,
     .node-ip {
@@ -309,6 +462,15 @@
         margin-left: 10px;
         color: #3A84FF;
         cursor: pointer;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
     }
 }
 .node-content-main {

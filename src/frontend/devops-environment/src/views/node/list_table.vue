@@ -1391,7 +1391,8 @@
 
     .node-item-content {
         position: absolute;
-        top: 6px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
         width: 90%;
         margin-right: 12px;
@@ -1415,7 +1416,8 @@
             margin-left: 10px;
             position: absolute;
             right: 11px;
-            top: 7px;
+            top: 50%;
+            transform: translateY(-50%);
             .edit-base {
                 cursor: pointer;
             }
