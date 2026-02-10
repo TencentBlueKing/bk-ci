@@ -515,8 +515,7 @@
     import EmptyTableStatus from '@/components/empty-table-status'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
-    import { ENV_ACTIVE_NODE_TYPE, ALLNODE } from '@/store/constants'
-    import { t } from '../../../../bk-permission/src/utils/locale'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
 
     export default {
         components: {
@@ -1142,7 +1141,8 @@
 
       .node-item-content {
           position: absolute;
-          top: 20px;
+          top: 50%;
+          transform: translateY(-50%);
           display: flex;
           width: 90%;
           margin-right: 12px;
@@ -1166,7 +1166,8 @@
               margin-left: 10px;
               position: absolute;
               right: 11px;
-              top: 7px;
+              top: 50%;
+              transform: translateY(-50%);
               .edit-base {
                   cursor: pointer;
               }
