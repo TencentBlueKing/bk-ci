@@ -144,7 +144,7 @@
                             >
                                 <i
                                     class="devops-icon icon-edit"
-                                    v-if="!isEditNodeStatus"
+                                    v-if="showEditIcon"
                                     @click="editNodeName(props.row)"
                                 ></i>
                             </span>
@@ -666,8 +666,8 @@
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import EmptyTableStatus from '@/components/empty-table-status'
     import StatusIcon from '@/components/status-icon.vue'
-    import { ALLNODE, ENV_ACTIVE_NODE_TYPE } from '@/store/constants'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
@@ -857,6 +857,9 @@
             },
             isCreateResType () {
                 return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            showEditIcon () {
+                return !this.isEditNodeStatus && !this.isCreateResType
             }
         },
         watch: {
@@ -1400,7 +1403,8 @@
 
     .node-item-content {
         position: absolute;
-        top: 6px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
         width: 90%;
         margin-right: 12px;
@@ -1424,7 +1428,8 @@
             margin-left: 10px;
             position: absolute;
             right: 11px;
-            top: 7px;
+            top: 50%;
+            transform: translateY(-50%);
             .edit-base {
                 cursor: pointer;
             }
