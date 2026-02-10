@@ -83,9 +83,10 @@ func Run(isDebug bool) {
 
 	initModules()
 
-	// 启动 MCP Server 协程（如果通过环境变量启用）
+	// 首次检查并启动 MCP Server（如果通过环境变量启用）
 	// MCP 使用 Streamable HTTP 在 127.0.0.1 随机端口监听，端口号写入 .mcp_port 文件
-	mcp.StartIfEnabled()
+	// 后续通过心跳环境变量变化动态启停
+	mcp.SyncState()
 
 	for {
 		doAsk()

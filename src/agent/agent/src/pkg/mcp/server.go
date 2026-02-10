@@ -28,19 +28,20 @@
 // Package mcp 实现了 MCP (Model Context Protocol) server，使用 Streamable HTTP 传输进行通信。
 // 该 server 提供工具：查看运行中的构建任务及其进程树、获取近期错误日志。
 //
-// MCP Server 作为 agent 主进程的一个协程运行，随 agent 启动。
-// 通过环境变量 DEVOPS_AGENT_ENABLE_MCP=true 开启。
+// MCP Server 作为 agent 主进程的一个协程运行，支持通过环境变量 DEVOPS_AGENT_ENABLE_MCP 动态启停。
 // 开启后在 127.0.0.1 上随机端口监听 Streamable HTTP，端口号写入 .mcp_port 文件。
 //
 // 使用第三方库 github.com/ThinkInAIXYZ/go-mcp 实现 MCP 协议。
 package mcp
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
@@ -55,6 +56,7 @@ const (
 
 // startServer 创建并启动 MCP Server，使用 Streamable HTTP 传输。
 // 在 127.0.0.1 上随机分配端口监听，端口号写入工作目录下的 .mcp_port 文件。
+// 通过 entry.go 中的 stopFunc 注入 Shutdown 回调，支持外部停止。
 // 该函数阻塞直到 server 退出。
 func startServer() error {
 	// 随机分配可用端口
@@ -88,6 +90,17 @@ func startServer() error {
 		os.Remove(portFilePath)
 		return fmt.Errorf("create mcp server failed: %v", err)
 	}
+
+	// 注册 Shutdown 回调，供 SyncState 调用以停止 server
+	mu.Lock()
+	stopFunc = func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := mcpServer.Shutdown(ctx); err != nil {
+			logs.Errorf("mcp server shutdown error: %v", err)
+		}
+	}
+	mu.Unlock()
 
 	// 注册所有工具
 	registerAllTools(mcpServer)

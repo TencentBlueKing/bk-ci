@@ -33,6 +33,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/mcp"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
@@ -103,6 +104,9 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 			}
 		}
 	}
+
+	// 根据环境变量动态启停 MCP Server
+	mcp.SyncState()
 
 	/*
 	   忽略一些在Windows机器上VPN代理软件所产生的虚拟网卡（有Mac地址）的IP，一般这类IP

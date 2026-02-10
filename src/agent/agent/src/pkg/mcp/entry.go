@@ -28,35 +28,57 @@
 package mcp
 
 import (
+	"sync"
+
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 )
 
-// StartIfEnabled 检查环境变量开关，如果启用则在独立协程中启动 MCP Server。
-// MCP Server 通过 Streamable HTTP 在 127.0.0.1 随机端口上监听，
-// 端口号写入工作目录下的 .mcp_port 文件，供 MCP 客户端（如 CodeBuddy）读取。
-// 该函数非阻塞，立即返回。即使端口监听失败也不会阻塞主进程。
-func StartIfEnabled() {
-	if !envs.FetchEnvAndCheck(constant.DevopsAgentEnableMCP, "true") {
-		logs.Info("mcp server disabled (DEVOPS_AGENT_ENABLE_MCP != true)")
-		return
-	}
+var (
+	// mu 保护 running 状态和 stopFunc 的并发访问
+	mu      sync.Mutex
+	running bool
+	// stopFunc 用于停止当前运行的 MCP Server，由 startServer 设置
+	stopFunc func()
+)
 
-	logs.Info("mcp server enabled, starting in background goroutine")
+// SyncState 根据当前环境变量状态动态启停 MCP Server。
+// 每次心跳更新环境变量后应调用此函数，它会检测 DEVOPS_AGENT_ENABLE_MCP 的变化并相应启停服务。
+// 该函数是并发安全的。
+func SyncState() {
+	enabled := envs.FetchEnvAndCheck(constant.DevopsAgentEnableMCP, "true")
 
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				logs.Errorf("mcp server panic recovered: %v", r)
+	mu.Lock()
+	defer mu.Unlock()
+
+	if enabled && !running {
+		// 需要启动
+		logs.Info("mcp server enabled, starting in background goroutine")
+		running = true
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logs.Errorf("mcp server panic recovered: %v", r)
+				}
+				mu.Lock()
+				running = false
+				stopFunc = nil
+				mu.Unlock()
+			}()
+
+			if err := startServer(); err != nil {
+				logs.Errorf("mcp server start failed: %v", err)
+				return
 			}
+			logs.Info("mcp server exited")
 		}()
-
-		if err := startServer(); err != nil {
-			logs.Errorf("mcp server start failed: %v", err)
-			return
+	} else if !enabled && running {
+		// 需要停止
+		logs.Info("mcp server disabled, stopping")
+		if stopFunc != nil {
+			stopFunc()
 		}
-
-		logs.Info("mcp server exited")
-	}()
+		// running 会在 goroutine 的 defer 中被设为 false
+	}
 }
