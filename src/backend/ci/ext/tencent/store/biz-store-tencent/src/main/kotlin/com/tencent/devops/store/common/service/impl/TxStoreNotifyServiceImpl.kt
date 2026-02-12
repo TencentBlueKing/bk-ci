@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
@@ -102,6 +103,25 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("sendNotifyResult is:$sendNotifyResult")
+        return Result(true)
+    }
+
+    override fun sendNotifyMessageToWeworkGroup(
+        templateCode: String,
+        weworkGroupIds: Set<String>,
+        titleParams: Map<String, String>?,
+        bodyParams: Map<String, String>?
+    ): Result<Boolean> {
+        logger.info("sendNotifyMessageToWeworkGroup params:[$templateCode|$weworkGroupIds|$titleParams|$bodyParams]")
+        val request = SendNotifyMessageTemplateToWeworkGroupRequest(
+            templateCode = templateCode,
+            weworkGroupIds = weworkGroupIds,
+            titleParams = titleParams,
+            bodyParams = bodyParams
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageToWeworkGroup(request)
+        logger.info("sendNotifyMessageToWeworkGroup result is:$sendNotifyResult")
         return Result(true)
     }
 
