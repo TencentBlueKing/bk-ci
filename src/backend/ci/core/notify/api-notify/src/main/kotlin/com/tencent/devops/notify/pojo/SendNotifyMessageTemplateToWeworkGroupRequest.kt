@@ -24,40 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo
 
-package com.tencent.devops.store.common.service.impl
+import io.swagger.v3.oas.annotations.media.Schema
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.common.service.StoreNotifyService
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
-import org.springframework.beans.factory.annotation.Autowired
-
-class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
-
-    override fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?,
-        cc: MutableSet<String>?,
-        bcc: MutableSet<String>?
-    ): Result<Boolean> {
-        // 开源版暂不支持消息服务
-        return Result(true)
-    }
-
-    override fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum) {
-        // 开源版暂不支持消息服务
-    }
-
-    override fun sendNotifyMessageToWeworkGroup(
-        templateCode: String,
-        weworkGroupIds: Set<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?
-    ): Result<Boolean> {
-        // 开源版暂不支持消息服务
-        return Result(true)
-    }
-}
+@Schema(title = "使用模板发送消息到指定企业微信群请求报文体")
+data class SendNotifyMessageTemplateToWeworkGroupRequest(
+    @get:Schema(title = "通知模板代码", required = true)
+    val templateCode: String,
+    @get:Schema(title = "企业微信群ID列表", required = true)
+    val weworkGroupIds: Set<String>,
+    @get:Schema(title = "标题动态参数", required = false)
+    val titleParams: Map<String, String>? = null,
+    @get:Schema(title = "内容动态参数", required = false)
+    val bodyParams: Map<String, String>? = null,
+    @get:Schema(title = "需要@的人员列表", required = false)
+    val mentionUsers: Set<String>? = null
+)

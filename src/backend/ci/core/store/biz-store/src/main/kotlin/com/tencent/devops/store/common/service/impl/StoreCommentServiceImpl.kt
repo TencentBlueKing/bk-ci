@@ -36,23 +36,23 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentRecord
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.COMMENT_UPDATE_NO_PERMISSION
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
-import com.tencent.devops.store.pojo.common.STORE_COMMENT_NOTIFY_TEMPLATE
-import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
-import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.COMMENT_UPDATE_NO_PERMISSION
+import com.tencent.devops.store.pojo.common.STORE_COMMENT_NOTIFY_TEMPLATE
+import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -89,6 +89,9 @@ class StoreCommentServiceImpl @Autowired constructor(
 
     @Value("\${store.commentNotifyAdmin}")
     private lateinit var commentNotifyAdmin: String
+
+//    @Value("\${store.commentNotifyWeworkGroupIds:}")
+    private var commentNotifyWeworkGroupIds: String = ""
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
         logger.info("getStoreComment params:[$userId|$commentId]")
@@ -262,6 +265,17 @@ class StoreCommentServiceImpl @Autowired constructor(
             receivers = receivers.toMutableSet(),
             bodyParams = bodyParams
         )
+        // 发送评论通知到企业微信群
+        if (commentNotifyWeworkGroupIds.isNotBlank()) {
+            val weworkGroupIds = commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
+            if (weworkGroupIds.isNotEmpty()) {
+                storeNotifyService.sendNotifyMessageToWeworkGroup(
+                    templateCode = STORE_COMMENT_NOTIFY_TEMPLATE,
+                    weworkGroupIds = weworkGroupIds,
+                    bodyParams = bodyParams
+                )
+            }
+        }
     }
 
     private fun validateScore(score: Int): Boolean {

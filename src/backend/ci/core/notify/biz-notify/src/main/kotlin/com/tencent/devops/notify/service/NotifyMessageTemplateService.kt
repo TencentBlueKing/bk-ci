@@ -33,6 +33,7 @@ import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 
 @Suppress("ALL")
@@ -113,4 +114,11 @@ interface NotifyMessageTemplateService {
      * @param getNotifyMessageByTemplate 使用模板发送消息通知请求报文体
      */
     fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?>
+
+    /**
+     * 使用模板发送消息到指定企业微信群
+     */
+    fun sendNotifyMessageToWeworkGroup(
+        request: SendNotifyMessageTemplateToWeworkGroupRequest
+    ): Result<Boolean>
 }
