@@ -654,6 +654,12 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 }
             }
 
+        // 提取固定版本的变量组（不记录位置信息，只创建引用记录）
+        val fixedPublicVarGroups = params
+            .filter { !it.varGroupName.isNullOrBlank() && it.varGroupVersion != null }
+            .groupBy { PublicGroupKey(it.varGroupName!!, it.varGroupVersion) }
+            .keys
+
         val resourcePublicVarGroupReferPOS = mutableListOf<ResourcePublicVarGroupReferPO>()
 
         if (dynamicPublicVarWithPositions.isNotEmpty()) {
@@ -670,11 +676,22 @@ class PublicVarGroupReferManageService @Autowired constructor(
                 }
             }
 
-            // 批量生成ID并保存
+            // 批量生成ID并保存动态版本引用记录
             resourcePublicVarGroupReferPOS.addAll(
                 createReferRecords(
                     publicVarGroupReferDTO = publicVarGroupReferDTO,
                     dynamicPublicVarWithPositions = dynamicPublicVarWithPositions
+                )
+            )
+        }
+
+        // 为固定版本变量组创建引用记录（不包含位置信息）
+        if (fixedPublicVarGroups.isNotEmpty()) {
+            val fixedVarGroupMap = fixedPublicVarGroups.associateWith { emptyList<PublicVarPositionPO>() }
+            resourcePublicVarGroupReferPOS.addAll(
+                createReferRecords(
+                    publicVarGroupReferDTO = publicVarGroupReferDTO,
+                    dynamicPublicVarWithPositions = fixedVarGroupMap
                 )
             )
         }
