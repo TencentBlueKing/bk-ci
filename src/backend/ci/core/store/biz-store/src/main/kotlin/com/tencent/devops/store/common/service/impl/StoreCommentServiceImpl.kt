@@ -90,7 +90,7 @@ class StoreCommentServiceImpl @Autowired constructor(
     @Value("\${store.commentNotifyAdmin}")
     private lateinit var commentNotifyAdmin: String
 
-//    @Value("\${store.commentNotifyWeworkGroupIds:}")
+    @Value("\${store.commentNotifyWeworkGroupIds:}")
     private var commentNotifyWeworkGroupIds: String = ""
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
