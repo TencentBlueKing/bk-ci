@@ -83,13 +83,6 @@
                                 <div class="node-content">
                                     <div class="node-main-info">
                                         <span class="node-name">{{ node.displayName }}</span>
-                                        <!-- <span
-                                            class="node-status"
-                                            :class="`status-${node.status?.toLowerCase()}`"
-                                        >
-                                            <i class="bk-icon icon-circle"></i>
-                                            {{ node.statusText || '正常' }}
-                                        </span> -->
                                     </div>
                                     <div class="node-sub-info">
                                         <span class="node-ip">{{ node.ip }}</span>
@@ -101,6 +94,13 @@
                                         </span> -->
                                     </div>
                                 </div>
+                                <span
+                                    class="node-status-indicator"
+                                    :class="node.nodeStatus === 'ABNORMAL' ? 'status-abnormal' : 'status-normal'"
+                                >
+                                    <i class="status-dot"></i>
+                                    {{ $t(`environment.nodeStatusMap.${node.nodeStatus || 'NORMAL'}`) }}
+                                </span>
                             </div>
     
                             <!-- 加载更多 -->
@@ -276,6 +276,11 @@
                                     </span> -->
                                 </div>
                             </div>
+                            <i
+                                v-if="!node.isDelete"
+                                class="bk-icon icon-delete delete-icon"
+                                @click="handleRemoveSelectedNode(node)"
+                            />
                         </div>
                     </div>
                     
@@ -552,6 +557,23 @@
                     .map(node => ({ ...node, isDelete: true }))
             }
 
+            // 移除已选中的节点
+            const handleRemoveSelectedNode = (node) => {
+                const index = selectedNodesList.value.findIndex(item => item.nodeHashId === node.nodeHashId)
+                if (index > -1) {
+                    const existingNode = selectedNodesList.value[index]
+                    // 检查是否是原有节点
+                    const isOriginalNode = currentNodeIds.value.has(node.nodeHashId)
+                    if (isOriginalNode) {
+                        // 原有节点标记为删除
+                        selectedNodesList.value.splice(index, 1, { ...existingNode, isDelete: true })
+                    } else {
+                        // 新增的节点直接移除
+                        selectedNodesList.value.splice(index, 1)
+                    }
+                }
+            }
+
             // 加载更多数据
             const loadMore = async () => {
                 if (isLoadingMore.value || !hasMore.value) return
@@ -770,6 +792,7 @@
                 handleNodeClick,
                 handleToggleSelectAll,
                 handleClearSelection,
+                handleRemoveSelectedNode,
                 handleScroll,
                 handleSearch,
                 handleCloseDialog,
@@ -858,13 +881,14 @@
                     
                     .node-item {
                         display: flex;
-                        align-items: flex-start;
+                        align-items: center;
                         cursor: pointer;
                         padding: 8px 0;
                         transition: background-color 0.2s;
                         .node-content {
                             flex: 1;
                             padding-left: 8px;
+                            min-width: 0;
                             
                             .node-main-info {
                                 display: flex;
@@ -925,6 +949,51 @@
                                         content: '|';
                                         margin-right: 8px;
                                         color: #DCDEE5;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        .node-status-indicator {
+                            display: flex;
+                            align-items: center;
+                            font-size: 12px;
+                            flex-shrink: 0;
+                            margin-left: 8px;
+                            color: #63656E;
+                            
+                            .status-dot {
+                                width: 13px;
+                                height: 13px;
+                                border-radius: 50%;
+                                margin-right: 6px;
+                                position: relative;
+                                
+                                &::after {
+                                    content: '';
+                                    position: absolute;
+                                    top: 3px;
+                                    left: 3px;
+                                    width: 7px;
+                                    height: 7px;
+                                    border-radius: 50%;
+                                }
+                            }
+                            
+                            &.status-normal {
+                                .status-dot {
+                                    background: rgba(45, 203, 86, 0.16);
+                                    &::after {
+                                        background: #2DCB56;
+                                    }
+                                }
+                            }
+                            
+                            &.status-abnormal {
+                                .status-dot {
+                                    background: rgba(234, 54, 54, 0.16);
+                                    &::after {
+                                        background: #EA3636;
                                     }
                                 }
                             }
@@ -1047,6 +1116,17 @@
                         background: white;
                         border-radius: 2px;
                         transition: opacity 0.2s;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        
+                        &:hover {
+                            background: #F5F7FA;
+                            
+                            .delete-icon {
+                                opacity: 1;
+                            }
+                        }
                         
                         &.is-deleted {
                             .node-info {
@@ -1062,6 +1142,9 @@
                         }
                         
                         .node-info {
+                            flex: 1;
+                            min-width: 0;
+                            
                             .node-name {
                                 height: 32px;
                                 font-size: 14px;
@@ -1092,6 +1175,19 @@
                                         color: #DCDEE5;
                                     }
                                 }
+                            }
+                        }
+                        
+                        .delete-icon {
+                            flex-shrink: 0;
+                            font-size: 16px;
+                            color: #3A84FF;
+                            cursor: pointer;
+                            opacity: 0;
+                            transition: opacity 0.2s;
+                            
+                            &:hover {
+                                color: #699DF4;
                             }
                         }
                     }

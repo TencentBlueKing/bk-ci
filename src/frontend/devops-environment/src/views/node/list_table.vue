@@ -1168,6 +1168,7 @@
               right: 11px;
               top: 50%;
               transform: translateY(-50%);
+              color: #3A84FF;
               .edit-base {
                   cursor: pointer;
               }
