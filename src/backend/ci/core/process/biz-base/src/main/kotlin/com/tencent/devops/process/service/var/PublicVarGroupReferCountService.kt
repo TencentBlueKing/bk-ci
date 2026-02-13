@@ -172,31 +172,26 @@ class PublicVarGroupReferCountService @Autowired constructor(
         version: Int,
         countChange: Int
     ) {
-        val currentTime = LocalDateTime.now()
-
-        // 检查是否存在该版本的概要信息
-        val existingSummary = publicVarGroupVersionSummaryDao.getByGroupNameAndVersion(
+        // Try increment first to avoid check-then-act race condition
+        val updatedRows = publicVarGroupVersionSummaryDao.incrementReferCount(
             dslContext = context,
             projectId = projectId,
             groupName = groupName,
-            version = version
+            version = version,
+            countChange = countChange,
+            modifier = SYSTEM
         )
 
-        if (existingSummary != null) {
-            // 使用增量更新
-            publicVarGroupVersionSummaryDao.incrementReferCount(
-                dslContext = context,
-                projectId = projectId,
-                groupName = groupName,
-                version = version,
-                countChange = countChange,
-                modifier = SYSTEM
-            )
-        } else {
-            // 创建新的版本概要记录
+        if (updatedRows == 0) {
+            // Record does not exist, create a new one
+            val currentTime = LocalDateTime.now()
+            val id = client.get(ServiceAllocIdResource::class)
+                .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY").data
+                ?: throw IllegalStateException(
+                    "Failed to generate segment id for version summary"
+                )
             val summaryPO = PublicVarGroupVersionSummaryPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY").data ?: 0,
+                id = id,
                 projectId = projectId,
                 groupName = groupName,
                 version = version,

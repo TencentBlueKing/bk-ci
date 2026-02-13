@@ -148,28 +148,6 @@ class PublicVarGroupReferInfoDao {
             )
         })
 
-    /**
-     * 根据引用ID删除所有引用记录
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param referId 引用ID
-     * @param referType 引用类型
-     */
-    fun deleteByReferId(
-        dslContext: DSLContext,
-        projectId: String,
-        referId: String,
-        referType: PublicVerGroupReferenceTypeEnum
-    ) {
-        with(TResourcePublicVarGroupReferInfo.T_RESOURCE_PUBLIC_VAR_GROUP_REFER_INFO) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REFER_ID.eq(referId))
-                .and(REFER_TYPE.eq(referType.name))
-                .execute()
-        }
-    }
-
     fun deleteByReferId(
         dslContext: DSLContext,
         projectId: String,

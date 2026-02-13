@@ -94,30 +94,6 @@ class PublicVarGroupVersionSummaryDao {
     }
 
     /**
-     * 获取变量组的引用计数（指定版本）
-     * @param dslContext 数据库上下文
-     * @param projectId 项目ID
-     * @param groupName 变量组名称
-     * @param version 版本号（-1表示动态版本）
-     * @return 引用计数
-     */
-    fun getReferCount(
-        dslContext: DSLContext,
-        projectId: String,
-        groupName: String,
-        version: Int
-    ): Int {
-        with(TResourcePublicVarGroupVersionSummary.T_RESOURCE_PUBLIC_VAR_GROUP_VERSION_SUMMARY) {
-            return dslContext.select(REFER_COUNT)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(GROUP_NAME.eq(groupName))
-                .and(VERSION.eq(version))
-                .fetchOne(0, Int::class.java) ?: 0
-        }
-    }
-
-    /**
      * 获取变量组所有版本的引用计数总和（固定版本 + 动态版本）
      * @param dslContext 数据库上下文
      * @param projectId 项目ID
