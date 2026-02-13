@@ -271,13 +271,6 @@
                             >
                                 {{ $t(`environment.nodeStatusMap.${props.row.nodeStatus}`) || props.row.nodeStatus }}
                             </span>
-                            <div
-                                class="install-agent"
-                                v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
-                                @click="installAgent(props.row)"
-                            >
-                                {{ `（${$t('environment.install')}Agent）` }}
-                            </div>
                             <span v-if="props.row.agentVersion">
                                 ({{ props.row.agentVersion }})
                             </span>
@@ -361,6 +354,23 @@
                     <template slot-scope="props">
                         <template v-if="props.row.canUse">
                             <div class="table-node-item node-item-handler">
+                                <span
+                                    class="install-agent mr10"
+                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                    v-perm="{
+                                        hasPermission: props.row.canEdit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    @click="installAgent(props.row)"
+                                >
+                                    {{ `${$t('environment.reinstallAgent')}` }}
+                                </span>
                                 <span
                                     v-if="['THIRDPARTY'].includes(props.row.nodeType)"
                                     v-perm="{
