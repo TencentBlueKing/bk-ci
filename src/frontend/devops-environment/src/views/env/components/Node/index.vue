@@ -199,6 +199,7 @@
     import useInstance from '@/hooks/useInstance'
     import usePagination from '@/hooks/usePagination'
     import useEnvDetail from '@/hooks/useEnvDetail'
+    import useEnvAside from '@/hooks/useEnvAside'
     import useRelatedNodes from '@/hooks/useRelatedNodes'
     import RelatedNodesDialog from '@/components/RelatedNodesDialog.vue'
     import SearchSelect from '@blueking/search-select'
@@ -223,6 +224,9 @@
             const  {
                 handleShowRelatedNodes
             } = useRelatedNodes()
+            const {
+                fetchEnvList
+            } = useEnvAside()
             const {
                 projectId,
                 envHashId,
@@ -341,6 +345,7 @@
                 resetPage()
                 fetchData()
                 fetchEnvDetail()
+                fetchEnvList()
                 proxy.$bkMessage({
                     theme: 'success',
                     message: proxy.$t('environment.successfullySaved')
@@ -375,6 +380,7 @@
                     })
                     resetPage()
                     fetchData()
+                    fetchEnvList()
                 } catch (err) {
                     console.error('删除节点失败:', err)
                 }
