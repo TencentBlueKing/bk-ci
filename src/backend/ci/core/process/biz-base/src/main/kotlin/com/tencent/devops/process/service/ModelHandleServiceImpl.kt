@@ -13,7 +13,7 @@ import com.tencent.devops.process.dao.template.PipelineTemplateResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.service.`var`.PublicVarReferInfoService
 import com.tencent.devops.process.service.`var`.PublicVarService
-import com.tencent.devops.process.service.`var`.VarReferenceRequestWithLock
+import com.tencent.devops.process.pojo.`var`.VarReferenceRequestWithLock
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

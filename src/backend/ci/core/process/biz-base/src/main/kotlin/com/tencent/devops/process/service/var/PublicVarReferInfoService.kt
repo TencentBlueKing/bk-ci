@@ -41,9 +41,12 @@ import com.tencent.devops.process.dao.`var`.PublicVarGroupDao
 import com.tencent.devops.process.dao.`var`.PublicVarReferInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.pojo.`var`.CleanupVarGroupReferenceRequest
 import com.tencent.devops.process.pojo.`var`.PublicGroupKey
+import com.tencent.devops.process.pojo.`var`.ResourceReferenceQueryParams
 import com.tencent.devops.process.pojo.`var`.VarCountUpdateInfo
 import com.tencent.devops.process.pojo.`var`.VarGroupProcessContext
+import com.tencent.devops.process.pojo.`var`.VarReferenceRequestWithLock
 import com.tencent.devops.process.pojo.`var`.VarReferenceUpdateResult
 import com.tencent.devops.process.pojo.`var`.po.ResourcePublicVarReferPO
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -53,44 +56,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
-/**
- * 带锁的变量引用请求DTO
- * 用于封装 handleResourceVarReferencesWithLock 方法的参数
- */
-data class VarReferenceRequestWithLock(
-    val userId: String,
-    val projectId: String,
-    val resourceId: String,
-    val resourceType: String,
-    val resourceVersion: Int,
-    val model: Model,
-    val varRefDetails: List<VarRefDetail>
-)
-
-/**
- * 清理变量组引用请求DTO
- */
-data class CleanupVarGroupReferenceRequest(
-    val context: DSLContext,
-    val projectId: String,
-    val resourceId: String,
-    val referType: PublicVerGroupReferenceTypeEnum,
-    val resourceVersion: Int,
-    val groupsToCleanup: Set<PublicGroupKey>? = null
-)
-
-/**
- * 资源引用查询参数DTO
- * 用于封装资源引用相关的查询参数
- */
-data class ResourceReferenceQueryParams(
-    val context: DSLContext,
-    val projectId: String,
-    val resourceId: String,
-    val referType: PublicVerGroupReferenceTypeEnum,
-    val resourceVersion: Int
-)
 
 @Service
 class PublicVarReferInfoService @Autowired constructor(
@@ -331,12 +296,11 @@ class PublicVarReferInfoService @Autowired constructor(
      */
     private fun cleanupObsoleteGroupReferences(
         queryParams: ResourceReferenceQueryParams,
-        modelVarGroups: List<*>,
+        modelVarGroups: List<PublicVarGroupRef>,
         existingGroupKeys: Set<PublicGroupKey>
     ): Set<VarCountUpdateInfo> {
         // 将Model中的变量组转换为PublicGroupKey集合
         val modelGroupKeys = modelVarGroups
-            .map { it as com.tencent.devops.common.pipeline.pojo.PublicVarGroupRef }
             .map { PublicGroupKey(it.groupName, it.version) }
             .toSet()
 
@@ -377,20 +341,11 @@ class PublicVarReferInfoService @Autowired constructor(
             return emptyMap()
         }
 
-        val result = mutableMapOf<String, Int>()
-
-        groupsNeedLatestVersion.forEach { groupName ->
-            // 使用当前项目ID查询版本
-            val version = publicVarGroupDao.getLatestVersionByGroupName(
-                dslContext = dslContext,
-                projectId = queryParams.projectId,
-                groupName = groupName
-            )
-            if (version != null) {
-                result[groupName] = version
-            }
-        }
-        return result
+        return publicVarGroupDao.getLatestVersionsByGroupNames(
+            dslContext = queryParams.context,
+            projectId = queryParams.projectId,
+            groupNames = groupsNeedLatestVersion
+        )
     }
 
     /**
@@ -608,7 +563,7 @@ class PublicVarReferInfoService @Autowired constructor(
      * @param request 清理请求DTO
      * @return 需要重新计算引用计数的变量信息集合
      */
-    fun cleanupRemovedVarGroupReferences(request: CleanupVarGroupReferenceRequest): Set<VarCountUpdateInfo> {
+    private fun cleanupRemovedVarGroupReferences(request: CleanupVarGroupReferenceRequest): Set<VarCountUpdateInfo> {
         val context = request.context
         val projectId = request.projectId
         val resourceId = request.resourceId
