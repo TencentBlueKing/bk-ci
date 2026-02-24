@@ -74,7 +74,7 @@
       "invalidFlowJson": "非法的创作流JSON文件",
       "import": "导入",
       "workspace": "工作空间",
-      "workSpaceDesc": "默认为<Agent安装目录>/workspace/<创作流 ID>/",
+      "workSpaceDesc": "默认为<Agent安装目录>/workspace/{0}/",
       "previewDetailsAfterEnvironmentSelection": "选择创作环境后可预览详情",
       "environmentRequired": "创作环境不能为空",
       "creationNode": "创作节点",
@@ -190,6 +190,10 @@
       "rebuild": "重新执行",
       "retrySuccess": "已触发重新执行",
       "retryFailed": "重新执行失败",
+      "noExecutionRecord": "暂无执行记录",
+      "noExecutionRecordDesc1": "定义创作流后即可手动触发一次执行任务。",
+      "noExecutionRecordDesc2": "系统将为每次执行分配一个唯一 ID，所有执行记录都会展示在这里。",
+      "executeNow": "立即执行",
       "expand": "展开",
       "collapse": "收起",
       "selectStartTimeRange": "选择开始时间范围",
@@ -820,6 +824,18 @@
     },
     "edit": {
       "draftVersion": "草稿 (基于 {0})"
+    },
+    "versionHistory": {
+      "title": "版本列表",
+      "versionName": "版本号",
+      "description": "版本描述",
+      "creator": "创建人",
+      "createTime": "创建时间",
+      "updater": "更新人",
+      "updateTime": "更新时间",
+      "viewAll": "查看全部",
+      "searchPlaceholder": "搜索版本号",
+      "noData": "暂无版本记录"
     },
     "release": {
       "releaseFlow": "发布创作流",

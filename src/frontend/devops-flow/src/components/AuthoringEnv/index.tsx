@@ -112,7 +112,7 @@ export default defineComponent({
                         </div>
                         <div class={styles.envItem}>
                             <p class={styles.envItemTit}>{t('flow.content.workspace')}</p>
-                            <div>{t('flow.content.workSpaceDesc')}</div>
+                            <div>{t('flow.content.workSpaceDesc', [envHashId.value])}</div>
                         </div>
                     </Loading>
                 ) : (

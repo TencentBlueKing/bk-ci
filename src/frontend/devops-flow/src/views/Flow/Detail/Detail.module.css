@@ -53,6 +53,16 @@
   font-weight: 500;
 }
 
+.menuItemDisabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.menuItemDisabled:hover {
+  color: var(--color-text-disabled);
+  background-color: transparent;
+}
+
 .subMenu {
   display: flex;
   flex-direction: column;

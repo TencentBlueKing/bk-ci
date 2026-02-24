@@ -29,6 +29,7 @@ export default defineComponent({
             projectId: route.params.projectId as string,
             flowId: route.params.flowId as string,
             autoLoadNodes: true,
+            autoLoadEnvList: true,
         })
 
         // Use flow config code hook for Code mode

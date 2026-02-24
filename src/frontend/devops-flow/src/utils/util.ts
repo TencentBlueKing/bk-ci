@@ -215,9 +215,8 @@ export function generateRandomId(options: RandomIdOptions = {}): string {
  * 生成随机字符串
  * @param len 随机字符串长度
  * @returns
- * @deprecated Use generateRandomId instead
  */
-export function randomString(len: number) {
+export function randomLenString(len: number) {
   return generateRandomId({ length: len, type: 'safe' })
 }
 

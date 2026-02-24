@@ -41,6 +41,22 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     }
   }
 
+  /**
+   * Fetch paginated version list (for version history side slider and dropdown scroll-load)
+   */
+  async function fetchPaginatedVersionList(params: {
+    page: number
+    pageSize: number
+    versionName?: string
+  }) {
+    const res = await apiFlowInfo.getFlowVersionList({
+      projectId: projectId.value,
+      flowId: flowId.value,
+      ...params,
+    })
+    return res
+  }
+
   function reset() {
     flowInfo.value = null
     flowVersionList.value = []
@@ -58,6 +74,8 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     loading,
 
     getFlowInfo,
+    getFlowVersionList,
+    fetchPaginatedVersionList,
     initFlowInfo,
     reset   
   }

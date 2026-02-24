@@ -1,3 +1,4 @@
+import { fetchAtomVersionList, type AtomVersion } from '@/api/atom'
 import {
   fetchTriggerList,
   fetchTriggerModal,
@@ -28,6 +29,14 @@ interface TriggerModalCache {
   }
 }
 
+interface TriggerVersionCache {
+  [atomCode: string]: {
+    data: AtomVersion[]
+    loading: boolean
+    timestamp: number
+  }
+}
+
 /**
  * 触发器数据管理 Hook
  * 提供触发器分类和触发器列表的缓存管理
@@ -38,6 +47,7 @@ export const useTriggerManager = () => {
   const isLoadingTypes = ref(false)
   const triggerCacheMap = reactive<TriggerCacheMap>({})
   const modalCacheMap = reactive<TriggerModalCache>({})
+  const versionCacheMap = reactive<TriggerVersionCache>({})
 
   // 缓存过期时间（10分钟）
   const CACHE_EXPIRE_TIME = 10 * 60 * 1000
@@ -236,6 +246,49 @@ export const useTriggerManager = () => {
   }
 
   /**
+   * 获取触发器版本列表（复用插件版本接口）
+   */
+  const fetchVersionList = async (projectCode: string, atomCode: string): Promise<AtomVersion[]> => {
+    if (!atomCode || !projectCode) return []
+
+    const cacheKey = `${projectCode}_${atomCode}`
+    if (!versionCacheMap[cacheKey]) {
+      versionCacheMap[cacheKey] = { data: [], loading: false, timestamp: 0 }
+    }
+
+    const cache = versionCacheMap[cacheKey]
+
+    if (cache.data.length > 0 && Date.now() - cache.timestamp < CACHE_EXPIRE_TIME) {
+      return cache.data
+    }
+
+    if (cache.loading) {
+      return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (!cache.loading) {
+            clearInterval(checkInterval)
+            resolve(cache.data)
+          }
+        }, 50)
+      })
+    }
+
+    cache.loading = true
+
+    try {
+      const result = await fetchAtomVersionList({ projectCode, atomCode })
+      cache.data = result || []
+      cache.timestamp = Date.now()
+      return cache.data
+    } catch (error) {
+      console.error(`Failed to fetch version list for ${atomCode}:`, error)
+      return []
+    } finally {
+      cache.loading = false
+    }
+  }
+
+  /**
    * 检查是否正在加载列表
    */
   const isLoadingList = (params: {
@@ -299,6 +352,7 @@ export const useTriggerManager = () => {
     fetchTypeList,
     fetchList,
     fetchModal,
+    fetchVersionList,
     isLoadingList,
     isLoadingModal,
     getCachedModal,

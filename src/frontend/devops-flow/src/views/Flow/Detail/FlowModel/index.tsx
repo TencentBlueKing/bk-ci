@@ -23,7 +23,13 @@ import BkPipeline from 'bkui-pipeline/vue3'
 
 export default defineComponent({
   name: 'FlowModel',
-  setup(props, { emit }) {
+  props: {
+    visibleVariablePanel: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  setup(props) {
     const { t } = useI18n()
     const route = useRoute()
     const modeStore = useModeStore()
@@ -36,8 +42,6 @@ export default defineComponent({
       yamlContent,
       loading,
       isFlowEmpty,
-      flowModel,
-      flowSetting,
     } = useFlowModel()
 
     // ========== 侧边栏状态 ==========
@@ -174,12 +178,12 @@ export default defineComponent({
         />
 
         {/* 变量面板 - 只读 */}
-        <VariablePanel
+        {props.visibleVariablePanel && <VariablePanel
           v-model={isVariablePanelOpen.value}
           flowId={flowId}
           editable={false}
           onToggle={(isOpen: boolean) => uiStore.setVariablePanelOpen(isOpen)}
-        />
+        />}
       </div>
     )
   },

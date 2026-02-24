@@ -13,7 +13,7 @@ import {
   createDefaultElement,
   createDefaultStage,
 } from '@/utils/flowDefaults'
-import { randomString } from '@/utils/util'
+import { randomLenString } from '@/utils/util'
 import type { AddAtomEventPayload, AddStageEventPayload, ClickEventPayload } from 'bkui-pipeline'
 import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
@@ -474,7 +474,7 @@ export function useFlowModel() {
       const outputObj = getAtomOutputObj(atomProps.output || {})
 
       element = createDefaultElement(elementIndex, {
-        id: preVerEle?.id || `element-${randomString(4)}`,
+        id: preVerEle?.id || `element-${randomLenString(4)}`,
         '@type':
           atomModal.classType && atomModal.classType !== atomCode ? atomModal.classType : atomCode,
         atomCode,
@@ -501,7 +501,7 @@ export function useFlowModel() {
         ...diffRes.atomValue,
       }
       element = createDefaultElement(elementIndex, {
-        id: preVerEle?.id || `element-${randomString(4)}`,
+        id: preVerEle?.id || `element-${randomLenString(4)}`,
         '@type':
           atomModal.classType && atomModal.classType !== atomCode ? atomModal.classType : atomCode,
         atomCode,

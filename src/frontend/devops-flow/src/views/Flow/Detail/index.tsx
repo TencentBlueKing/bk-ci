@@ -11,6 +11,16 @@ import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import styles from './Detail.module.css'
 
+const RELEASE_ONLY_TABS = new Set([
+    FLOW_DETAIL_TABS.EXECUTION_RECORD,
+    FLOW_DETAIL_TABS.TRIGGER_RECORD,
+    FLOW_DETAIL_TABS.PERMISSION_SETTINGS,
+    FLOW_DETAIL_TABS.PERMISSION_DELEGATION,
+    FLOW_DETAIL_TABS.OPERATION_LOG,
+])
+
+const DEFAULT_NON_RELEASE_TAB = FLOW_DETAIL_TABS.WORKFLOW_ORCHESTRATION
+
 export default defineComponent({
     name: 'FlowDetail',
     setup() {
@@ -23,6 +33,10 @@ export default defineComponent({
         const { flowInfo, flowVersionList, loading } = useFlowInfo()
         const store = useFlowModelStore()
         const executionRecordStore = useExecutionRecordStore()
+
+        const isReleaseVersion = computed(() => {
+            return Number(version.value) === flowInfo.value?.releaseVersion
+        })
 
         /**
          * Check if the flow only has draft version (no released version)
@@ -37,7 +51,6 @@ export default defineComponent({
             () => flowInfo.value?.latestVersionStatus,
             (status) => {
                 if (status === VERSION_STATUS_ENUM.COMMITTING) {
-                    // Only draft version exists, redirect to edit page
                     router.replace({
                         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
                         params: {
@@ -49,6 +62,20 @@ export default defineComponent({
                 }
             },
             { immediate: true }
+        )
+
+        // 非正式版本停留在受限 tab 时，自动跳转到配置 tab
+        // watch releaseVersion 而非 isReleaseVersion，确保 flowInfo 从空加载到有值时也能触发
+        watch(
+            [() => flowInfo.value?.releaseVersion, version],
+            ([releaseVersion, ver]) => {
+                if (releaseVersion != null && Number(ver) !== releaseVersion && RELEASE_ONLY_TABS.has(currentTab.value)) {
+                    router.replace({
+                        name: DEFAULT_NON_RELEASE_TAB,
+                        params: { flowId: flowId.value, version: ver },
+                    })
+                }
+            },
         )
 
         // 监听路由参数变化，重新加载 FlowModel
@@ -65,16 +92,20 @@ export default defineComponent({
             store.loadFlowModel(projectId.value, flowId.value, version.value)
         })
 
-        // Clear execution record store when leaving the FlowDetail page
-        // This ensures that when switching to a different flow, the old records are cleared
         onUnmounted(() => {
             executionRecordStore.reset()
         })
 
-        const handleVersionChange = (version: number) => {
+        const handleVersionChange = (newVersion: number) => {
+            const isNewVersionRelease = newVersion === flowInfo.value?.releaseVersion
+            const currentOnRestrictedTab = RELEASE_ONLY_TABS.has(currentTab.value)
+            const targetTab = (!isNewVersionRelease && currentOnRestrictedTab)
+                ? DEFAULT_NON_RELEASE_TAB
+                : currentTab.value
+
             router.push({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
-                params: { flowId: flowId.value, version },
+                name: targetTab,
+                params: { flowId: flowId.value, version: newVersion },
             })
         }
 
@@ -92,24 +123,18 @@ export default defineComponent({
             })
         }
 
-        // 从路由名称获取当前 tab（直接使用路由名称）
         const currentTab = computed(() => {
             const routeName = route.name as string
-            // 如果路由名称在 FLOW_DETAIL_TABS 中，直接返回
             if (isValidFlowDetailTab(routeName as string)) {
                 return routeName
             }
             return FLOW_DETAIL_TABS.EXECUTION_RECORD
         })
 
-        // 菜单分组配置 - 根据 FLOW_DETAIL_TABS 自动生成
-
-        // 根据 FLOW_DETAIL_TABS 生成菜单数据
-        // key 和 label 都使用 routeName，label 通过国际化转换
         const menuItems = [
             {
                 title: t('flow.content.executionInfo'),
-                tabs: [FLOW_DETAIL_TABS.EXECUTION_RECORD, FLOW_DETAIL_TABS.TRIGGER_RECORD,],
+                tabs: [FLOW_DETAIL_TABS.EXECUTION_RECORD, FLOW_DETAIL_TABS.TRIGGER_RECORD],
             },
             {
                 title: t('flow.content.workflowConfig'),
@@ -131,11 +156,8 @@ export default defineComponent({
             },
         ]
 
-        // 处理菜单点击 - 跳转到对应的子路由
-        // 由于 FLOW_DETAIL_TABS 的值就是路由名称，所以可以直接使用
         const handleMenuClick = (key: string) => {
             if (!isValidFlowDetailTab(key)) {
-                // 如果 tab 不合法，重定向到默认 tab
                 router.push({
                     name: FLOW_DETAIL_TABS.EXECUTION_RECORD,
                     params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
@@ -143,15 +165,17 @@ export default defineComponent({
                 return
             }
 
-            // key 就是路由名称，直接使用
+            if (!isReleaseVersion.value && RELEASE_ONLY_TABS.has(key)) {
+                return
+            }
+
             router.push({
                 name: key,
-                params: { flowId: flowId.value, version: flowInfo.value?.releaseVersion },
+                params: { flowId: flowId.value, version: version.value },
             })
         }
 
         return () => {
-            // Don't render if only draft version (will redirect)
             if (isOnlyDraftVersion.value) {
                 return null
             }
@@ -174,18 +198,23 @@ export default defineComponent({
                                         <>
                                             <div class={styles.menuCategory}>{item.title}</div>
                                             <div class={styles.subMenu}>
-                                                {item.tabs.map((child) => (
-                                                    <button
-                                                        key={child}
-                                                        class={[
-                                                            styles.menuItem,
-                                                            currentTab.value === child && styles.menuItemActive,
-                                                        ]}
-                                                        onClick={() => handleMenuClick(child)}
-                                                    >
-                                                        {t(`flow.content.${child}`)}
-                                                    </button>
-                                                ))}
+                                                {item.tabs.map((child) => {
+                                                    const disabled = !isReleaseVersion.value && RELEASE_ONLY_TABS.has(child)
+                                                    return (
+                                                        <button
+                                                            key={child}
+                                                            class={[
+                                                                styles.menuItem,
+                                                                currentTab.value === child && styles.menuItemActive,
+                                                                disabled && styles.menuItemDisabled,
+                                                            ]}
+                                                            disabled={disabled}
+                                                            onClick={() => handleMenuClick(child)}
+                                                        >
+                                                            {t(`flow.content.${child}`)}
+                                                        </button>
+                                                    )
+                                                })}
                                             </div>
                                         </>
                                     )}

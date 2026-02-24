@@ -25,20 +25,33 @@ export async function fetchFlowInfo({
 }
 
 /**
- * Get flow version list
- * Falls back to mock data on API failure when ENABLE_MOCK_FALLBACK is true
+ * Get flow version list with pagination and search support
  */
 export async function getFlowVersionList({
   projectId,
   flowId,
+  page,
+  pageSize,
+  versionName,
 }: {
   projectId: string
   flowId: string
+  page?: number
+  pageSize?: number
+  versionName?: string
 }): Promise<ResponseWithRecords<FlowVersion>> {
-   const res = await get<ResponseWithRecords<FlowVersion>>(
-      `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions`
-    )
-    return res
+  const params: Record<string, string> = {}
+  if (page !== undefined) params.page = String(page)
+  if (pageSize !== undefined) params.pageSize = String(pageSize)
+  if (versionName) params.versionName = versionName
+
+  const query = Object.keys(params).length
+    ? `?${new URLSearchParams(params).toString()}`
+    : ''
+  const res = await get<ResponseWithRecords<FlowVersion>>(
+    `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions${query}`,
+  )
+  return res
 }
 
 /**

@@ -184,7 +184,7 @@ export default defineComponent({
 
     function renderDynamicComponent() {
       const TargetComponent = configComponentMap[templateInfoData.value.activeMenuItem]
-      return TargetComponent ? <TargetComponent /> : null
+      return TargetComponent ? <TargetComponent visibleVariablePanel={false} /> : null
     }
 
     function changeConfig(name: string) {

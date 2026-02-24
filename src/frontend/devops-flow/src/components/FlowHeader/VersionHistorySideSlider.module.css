@@ -1,0 +1,38 @@
+.versionHistory {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.versionHistoryHeader {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.searchInput {
+  width: 360px;
+}
+
+.versionHistoryContent {
+  flex: 1;
+  overflow: hidden;
+}
+
+.versionNameCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.versionNameCell > span {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 14px;
+}
+
+.activeVersionName .checkIcon {
+  color: var(--color-success) !important;
+}
