@@ -33,6 +33,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.trigger.event.ScmWebhookTriggerEvent
 import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoResourceType
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
@@ -84,7 +85,8 @@ class PipelineWebHookEventListener @Autowired constructor(
                 projectId = repository.projectId!!,
                 repositoryHashId = repository.repoHashId!!,
                 eventType = webhook.eventType,
-                repoResourceType = RepoResourceType.REPOSITORY // todo: sdk完善后，根据事件类型匹配代码库资源类型
+                repoResourceType = (repository as? CodeGitRepository)?.repoResourceType
+                    ?: RepoResourceType.REPOSITORY // todo: sdk完善后，根据事件类型匹配代码库资源类型
             )
         }
 

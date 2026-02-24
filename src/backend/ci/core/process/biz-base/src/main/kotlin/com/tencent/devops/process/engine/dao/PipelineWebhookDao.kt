@@ -376,6 +376,39 @@ class PipelineWebhookDao {
         }
     }
 
+    fun listEmptyResource(
+        dslContext: DSLContext,
+        projectId: String?,
+        limit: Int,
+        offset: Int
+    ) = with(T_PIPELINE_WEBHOOK) {
+        val conditions = mutableListOf(REPO_RESOURCE_TYPE.isNull).let {
+            if (projectId.isNullOrBlank()) {
+                it.add(PROJECT_ID.eq(projectId))
+            }
+            it
+        }
+        dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(PROJECT_ID, PIPELINE_ID, TASK_ID)
+                .limit(offset, limit)
+                .fetch()
+    }
+
+    fun updateEmptyResource(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ) = with(T_PIPELINE_WEBHOOK) {
+        dslContext.update(this)
+                .set(REPO_RESOURCE_TYPE, RepoResourceType.REPOSITORY.name)
+                .where(
+                    PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)).and(TASK_ID.eq(taskId))
+                )
+                .execute()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineWebhookDao::class.java)
     }
