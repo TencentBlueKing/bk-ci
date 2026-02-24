@@ -383,7 +383,7 @@ class PipelineWebhookDao {
         offset: Int
     ) = with(T_PIPELINE_WEBHOOK) {
         val conditions = mutableListOf(REPO_RESOURCE_TYPE.isNull).let {
-            if (projectId.isNullOrBlank()) {
+            if (!projectId.isNullOrBlank()) {
                 it.add(PROJECT_ID.eq(projectId))
             }
             it
