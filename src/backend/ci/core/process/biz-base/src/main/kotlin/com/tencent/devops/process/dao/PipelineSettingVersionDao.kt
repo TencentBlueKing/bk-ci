@@ -284,7 +284,8 @@ class PipelineSettingVersionDao {
                         JsonUtil.to(self, PipelineAsCodeSettings::class.java)
                     },
                     failIfVariableInvalid = t.failIfVariableInvalid,
-                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy)
+                    buildCancelPolicy = BuildCancelPolicy.parse(t.buildCancelPolicy),
+                    envHashId = t.envHashId
                 )
             }
         }
