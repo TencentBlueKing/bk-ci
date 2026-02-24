@@ -153,6 +153,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
                 settingInfo.failIfVariableInvalid = ve.failIfVariableInvalid
                 settingInfo.buildCancelPolicy = ve.buildCancelPolicy ?: settingInfo.buildCancelPolicy
+                settingInfo.envHashId = ve.envHashId
             }
             // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
             if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
