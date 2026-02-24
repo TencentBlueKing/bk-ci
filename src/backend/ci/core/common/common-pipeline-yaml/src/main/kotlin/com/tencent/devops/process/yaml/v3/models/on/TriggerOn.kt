@@ -121,6 +121,7 @@ data class TriggerOn(
         issue = issue,
         review = review,
         note = note,
+        group = group,
         // todo
         repoHook = null,
         manual = simpleManual(),
@@ -152,6 +153,7 @@ interface IPreTriggerOn : YamlVersionParser {
     val issue: IssueRule?
     val review: ReviewRule?
     val note: NoteRule?
+    val group: GroupRule?
     val repoHook: List<Any>?
     val manual: Any?
     val openapi: String?
@@ -177,6 +179,7 @@ data class PreTriggerOn(
     override val issue: IssueRule? = null,
     override val review: ReviewRule? = null,
     override val note: NoteRule? = null,
+    override val group: GroupRule? = null,
     @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
