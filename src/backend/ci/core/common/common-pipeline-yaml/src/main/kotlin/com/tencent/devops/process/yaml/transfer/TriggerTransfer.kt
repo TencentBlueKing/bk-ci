@@ -65,6 +65,7 @@ import com.tencent.devops.process.yaml.transfer.pojo.WebHookTriggerElementChange
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
 import com.tencent.devops.process.yaml.v3.models.on.CustomFilter
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
+import com.tencent.devops.process.yaml.v3.models.on.GroupRule
 import com.tencent.devops.process.yaml.v3.models.on.IssueRule
 import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.NoteRule
@@ -364,6 +365,18 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         }
                     },
                     comment = git.includeNoteComment?.disjoin()
+                )
+
+
+                CodeEventType.GROUP -> nowExist.group = GroupRule(
+                    id = git.id,
+                    name = git.name.nullIfDefault(defaultName),
+                    enable = git.enable.nullIfDefault(true),
+                    actions = git.includeRepoGroupAction,
+                    repoNames = git.includeRepos,
+                    repoNamesIgnore = git.excludeRepos,
+                    users = git.includeUsers,
+                    usersIgnore = git.excludeUsers
                 )
 
                 CodeEventType.POST_COMMIT -> nowExist.push = PushRule(
