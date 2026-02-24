@@ -9,7 +9,7 @@ import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import { useExecutionRecordStore } from '@/stores/executionRecord'
 import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
-import { Button, DatePicker, Input, Loading, Message, Popover, Table } from 'bkui-vue'
+import { Button, DatePicker, Exception, Input, Loading, Message, Popover, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
 import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -171,6 +171,17 @@ export default defineComponent({
       return searchData.value.map((item) => item.name).join('/')
     })
 
+    const hasActiveFilters = computed(() => {
+      return searchValue.value.length > 0 || dateRange.value !== null
+    })
+
+    const showEmptyState = computed(() => {
+      return !loading.value
+        && tableData.value.length === 0
+        && pagination.value.count === 0
+        && !hasActiveFilters.value
+    })
+
     const allTableColumns = computed(() => {
       return EXECUTION_RECORD_COLUMNS.map(col => {
         const baseColumn: any = {
@@ -305,6 +316,16 @@ export default defineComponent({
     }
 
     // 事件处理函数
+    const handleExecuteNow = () => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_PREVIEW,
+        params: {
+          projectId: projectId.value,
+          flowId: flowId.value,
+        },
+      })
+    }
+
     const handleSettingChange = (settings: { checked: string[] }) => {
       selectedColumnKeys.value = settings.checked
       tableSettings.value.checked = settings.checked
@@ -644,47 +665,70 @@ export default defineComponent({
       
     return () => (
       <div class={styles.executionRecord}>
-        {/* 筛选区域 */}
-        <div class={styles.filterBar}>
-          <div class={styles.filterLeft}>
-            <DatePicker
-              type="daterange"
-              placeholder={t('flow.content.selectStartTimeRange')}
-              v-model={dateRange.value}
-              class={styles.datePicker}
-              clearable
-              onClear={handleDateClear}
-            />
+        {showEmptyState.value ? (
+          <div class={styles.emptyState}>
+            <Exception type="empty">
+              {{
+                default: () => (
+                  <>
+                    <div class={styles.emptyTitle}>{t('flow.content.noExecutionRecord')}</div>
+                    <div class={styles.emptyDescBox}>
+                      <p class={styles.emptyDescText}>{t('flow.content.noExecutionRecordDesc1')}</p>
+                      <p class={styles.emptyDescText}>{t('flow.content.noExecutionRecordDesc2')}</p>
+                    </div>
+                    <Button theme="primary" onClick={handleExecuteNow}>
+                      {t('flow.content.executeNow')}
+                    </Button>
+                  </>
+                ),
+              }}
+            </Exception>
           </div>
-          <div class={styles.filterRight}>
-            <SearchSelect
-              modelValue={searchValue.value}
-              data={searchData.value}
-              unique-select
-              placeholder={searchPlaceHolder.value}
-              class={styles.searchInput}
-              getMenuList={getMenuList}
-              onUpdate:modelValue={handleSearchChange}
-              onSearch={handleSearch}
-            />
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* 筛选区域 */}
+            <div class={styles.filterBar}>
+              <div class={styles.filterLeft}>
+                <DatePicker
+                  type="daterange"
+                  placeholder={t('flow.content.selectStartTimeRange')}
+                  v-model={dateRange.value}
+                  class={styles.datePicker}
+                  clearable
+                  onClear={handleDateClear}
+                />
+              </div>
+              <div class={styles.filterRight}>
+                <SearchSelect
+                  modelValue={searchValue.value}
+                  data={searchData.value}
+                  unique-select
+                  placeholder={searchPlaceHolder.value}
+                  class={styles.searchInput}
+                  getMenuList={getMenuList}
+                  onUpdate:modelValue={handleSearchChange}
+                  onSearch={handleSearch}
+                />
+              </div>
+            </div>
 
-        {/* Table area */}
-        <Loading class={styles.tableWrapper} loading={loading.value} mode="spin" theme="primary" size="small">
-          <Table
-            data={tableData.value}
-            columns={tableColumns.value as Column[]}
-            class={styles.table}
-            settings={tableSettings.value}
-            pagination={pagination.value}
-            border="outer"
-            remotePagination
-            onPageValueChange={handlePageChange}
-            onPageLimitChange={handleLimitChange}
-            onSettingChange={handleSettingChange}
-          />
-        </Loading>
+            {/* Table area */}
+            <Loading class={styles.tableWrapper} loading={loading.value} mode="spin" theme="primary" size="small">
+              <Table
+                data={tableData.value}
+                columns={tableColumns.value as Column[]}
+                class={styles.table}
+                settings={tableSettings.value}
+                pagination={pagination.value}
+                border="outer"
+                remotePagination
+                onPageValueChange={handlePageChange}
+                onPageLimitChange={handleLimitChange}
+                onSettingChange={handleSettingChange}
+              />
+            </Loading>
+          </>
+        )}
       </div>
     )
   },

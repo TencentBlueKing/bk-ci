@@ -6,7 +6,6 @@ import { computed, defineComponent, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TriggerEventCard from './TriggerEventCard'
 import styles from './TriggerEventSelector.module.css'
-import { DEFAULT_VERSION } from '@/hooks/useAtomVersion'
 
 export default defineComponent({
     name: 'TriggerEventSelector',
@@ -94,10 +93,6 @@ export default defineComponent({
         const handleSelectEvent = async (trigger: TriggerBaseItem) => {
             try {
                 selectingAtomCode.value = trigger.atomCode
-
-                const version = trigger.version || DEFAULT_VERSION
-
-
 
                 // 发送选择事件，包含触发器基础信息和配置详情
                 emit('select', trigger)

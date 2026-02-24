@@ -32,6 +32,8 @@ export interface TriggerBaseItem {
   recommendFlag?: boolean
   installed?: boolean
   defaultFlag?: boolean
+  defaultVersion?: string
+  ownerStoreCode: string
 }
 
 /**
@@ -92,7 +94,7 @@ export function fetchTriggerList(params: FetchTriggerListParams = {}): Promise<F
 
 /**
  * 获取触发器详情配置
- * @param sourceCode 来源代码
+ * @param ownerStoreCode 来源代码
  * @param atomCode 插件代码
  * @param version 版本号
  * @returns 触发器配置详情

@@ -17,8 +17,7 @@ export default defineComponent({
   setup() {
     const { t } = useI18n()
     const route = useRoute()
-    const flowId = route.params.flowId as string
-    const projectCode = route.params.projectId as string
+    const projectCode = computed(() => route.params.projectId as string)
     const flowModel = useFlowModel()
     const isTriggerPanelVisible = ref(false)
     const editingTriggerIndex = ref<number | null>(null)
@@ -72,11 +71,6 @@ export default defineComponent({
         ...trigger, 
         '@type': 'marketEvent'
       })
-
-      // 设置启用状态
-      if (newElement.additionalOptions) {
-        newElement.additionalOptions.enable = true
-      }
 
       openTriggerPanel(newElement, nextIndex, true)
       triggerEventSelectorPopoverRef.value?.hide()
@@ -228,7 +222,7 @@ export default defineComponent({
                   </Button>
                 ),
                 content: () => (
-                  <TriggerEventSelector projectCode={projectCode} onSelect={handleSelectEvent} />
+                  <TriggerEventSelector projectCode={projectCode.value} onSelect={handleSelectEvent} />
                 ),
               }}
             </Popover>

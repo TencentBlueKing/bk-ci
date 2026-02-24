@@ -190,6 +190,10 @@
       "rebuild": "Rebuild",
       "retrySuccess": "Rebuild triggered",
       "retryFailed": "Rebuild failed",
+      "noExecutionRecord": "No Execution Records",
+      "noExecutionRecordDesc1": "After defining a flow, you can manually trigger an execution.",
+      "noExecutionRecordDesc2": "A unique ID will be assigned for each execution, and all records will be displayed here.",
+      "executeNow": "Execute Now",
       "expand": "Expand",
       "collapse": "Collapse",
       "selectStartTimeRange": "Select Start Time Range",
@@ -823,6 +827,18 @@
     },
     "edit": {
       "draftVersion": "Draft (based on {0})"
+    },
+    "versionHistory": {
+      "title": "Version List",
+      "versionName": "Version",
+      "description": "Description",
+      "creator": "Creator",
+      "createTime": "Create Time",
+      "updater": "Updater",
+      "updateTime": "Update Time",
+      "viewAll": "View All",
+      "searchPlaceholder": "Search version",
+      "noData": "No version records"
     },
     "release": {
       "releaseFlow": "Release Flow",

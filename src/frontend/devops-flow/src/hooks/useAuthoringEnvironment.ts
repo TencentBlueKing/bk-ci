@@ -182,7 +182,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   // ============ Lifecycle ============
   
   onMounted(async () => {
-    // Auto load environment list if enabled
+    // Auto load environment list if enabled 
     if (autoLoadEnvList && projectId.value) {
       loadEnvList()
     }

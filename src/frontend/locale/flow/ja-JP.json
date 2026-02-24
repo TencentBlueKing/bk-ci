@@ -190,6 +190,10 @@
       "rebuild": "再実行",
       "retrySuccess": "再実行がトリガーされました",
       "retryFailed": "再実行に失敗しました",
+      "noExecutionRecord": "実行記録がありません",
+      "noExecutionRecordDesc1": "フローを定義した後、手動で実行をトリガーできます。",
+      "noExecutionRecordDesc2": "各実行にはユニーク ID が割り当てられ、すべての実行記録がここに表示されます。",
+      "executeNow": "今すぐ実行",
       "expand": "展開",
       "collapse": "折りたたむ",
       "selectStartTimeRange": "開始時間範囲を選択",
@@ -810,6 +814,18 @@
     },
     "edit": {
       "draftVersion": "下書き ({0} に基づく)"
+    },
+    "versionHistory": {
+      "title": "バージョン一覧",
+      "versionName": "バージョン番号",
+      "description": "説明",
+      "creator": "作成者",
+      "createTime": "作成日時",
+      "updater": "更新者",
+      "updateTime": "更新日時",
+      "viewAll": "すべて表示",
+      "searchPlaceholder": "バージョンを検索",
+      "noData": "バージョン記録がありません"
     },
     "release": {
       "releaseFlow": "フローをリリース",

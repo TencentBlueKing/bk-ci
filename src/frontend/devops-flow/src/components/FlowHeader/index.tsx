@@ -5,16 +5,18 @@ import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
-import { Button, Message, Select, Tag } from 'bkui-vue'
+import { Button, Loading, Message, Select, Tag } from 'bkui-vue'
 import type { PropType } from 'vue'
-import { computed, defineComponent, h, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import ExtMenu from '../ExtMenu'
 import { SvgIcon } from '../SvgIcon'
 import { ExportFlowDialog } from './ExportFlowDialog'
 import FlowSelector from './FlowSelector'
+import { VersionHistorySideSlider } from './VersionHistorySideSlider'
 import styles from './index.module.css'
+import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
 
 const { Option } = Select
 
@@ -54,6 +56,7 @@ export const FlowHeader = defineComponent({
     const router = useRouter()
     const route = useRoute()
     const selectedVersion = ref(Number(route.params.version))
+    const isSelectorOpen = ref(false)
     const { showDeleteConfirm } = useDeleteConfirm()
     const flowInfoStore = useFlowInfoStore()
 
@@ -69,6 +72,72 @@ export const FlowHeader = defineComponent({
 
     // 对话框显示状态
     const showExportDialog = ref(false)
+
+    // Version dropdown pagination state
+    const dropdownVersionList = ref<FlowVersion[]>([])
+    const dropdownLoading = ref(false)
+    const searchKeyword = ref('')
+    const dropdownHasNext = ref(true)
+    const dropdownPage = ref(1)
+    const dropdownPageSize = 15
+    const bottomLoadingOptions = ref({ size: 'small' as const, isLoading: false })
+    const showVersionHistory = ref(false)
+    const versionSelectorRef = ref<InstanceType<typeof Select> | null>(null)
+
+    async function loadDropdownVersions(page?: number) {
+      try {
+        const nextPage = page ?? dropdownPage.value + 1
+        if (nextPage > 1 && !dropdownHasNext.value) return
+        if (nextPage === 1) {
+          dropdownLoading.value = true
+        } else {
+          bottomLoadingOptions.value.isLoading = true
+        }
+        const res = await flowInfoStore.fetchPaginatedVersionList({
+          page: nextPage,
+          pageSize: dropdownPageSize,
+          versionName: searchKeyword.value || undefined,
+        })
+        dropdownPage.value = res.page ?? nextPage
+        dropdownHasNext.value = (res.total ?? 0) > nextPage * dropdownPageSize
+        if (nextPage === 1) {
+          dropdownVersionList.value = res.records
+        } else {
+          dropdownVersionList.value.push(...res.records)
+        }
+      } catch (error) {
+        console.error('Failed to load dropdown versions:', error)
+      } finally {
+        dropdownLoading.value = false
+        bottomLoadingOptions.value.isLoading = false
+      }
+    }
+
+    function handleSearchVersion(keyword: string) {
+      searchKeyword.value = keyword
+      nextTick(() => {
+        dropdownHasNext.value = true
+        loadDropdownVersions(1)
+      })
+    }
+
+    function handleScrollEnd() {
+      loadDropdownVersions()
+    }
+
+    function handleSelectorToggle(isOpen: boolean) {
+      isSelectorOpen.value = isOpen
+      if (isOpen) {
+        dropdownHasNext.value = true
+        searchKeyword.value = ''
+        loadDropdownVersions(1)
+      }
+    }
+
+    function handleShowAllVersions() {
+      versionSelectorRef.value?.hidePopover()
+      showVersionHistory.value = true
+    }
 
     const flowList = {
       name: 'flowList',
@@ -144,8 +213,16 @@ export const FlowHeader = defineComponent({
     ])
 
     const currentVersion = computed(() => {
-      console.log('props.versionList:', props.versionList.find((v) => v.version === selectedVersion.value))
       return props.versionList.find((v) => v.version === selectedVersion.value)
+        ?? dropdownVersionList.value.find((v) => v.version === selectedVersion.value)
+    })
+
+    const visibleVersionList = computed(() => {
+      return dropdownVersionList.value.filter((v) => v.status === VERSION_STATUS_ENUM.RELEASED)
+    })
+
+    onMounted(() => {
+        loadDropdownVersions(1)
     })
 
     onBeforeUnmount(() => {
@@ -182,9 +259,18 @@ export const FlowHeader = defineComponent({
               ),
               'version-selector': () => (
                 <Select
+                  ref={versionSelectorRef}
                   v-model={selectedVersion.value}
                   onChange={props.onVersionChange}
                   class={styles.versionSelector}
+                  filterable
+                  remoteMethod={handleSearchVersion}
+                  onScroll-end={handleScrollEnd}
+                  scrollLoading={bottomLoadingOptions.value.isLoading}
+                  loading={dropdownLoading.value}
+                  clearable={false}
+                  popoverMinWidth={320}
+                  onToggle={handleSelectorToggle}
                 >
                   {{
                     trigger: () => (
@@ -192,11 +278,15 @@ export const FlowHeader = defineComponent({
                         {renderCheckIcon(currentVersion.value?.isLatest)}
                         {currentVersion.value?.versionName || '--'}
                         {currentVersion.value?.isLatest && renderTag()}
-                        <SvgIcon name="angle-down" class={styles.versionSelectToggleIcon} />
+                        {
+                            dropdownLoading.value && visibleVersionList.value.length === 0 ? 
+                            <Loading loading={true} size="mini" mode="spin" class={styles.versionSelectToggleIcon} /> :
+                            <SvgIcon name="angle-down" class={[styles.versionSelectToggleIcon, isSelectorOpen.value && styles.versionSelectToggleIconOpen]} />
+                        }
                       </span>
                     ),
-                    default: () =>
-                      props.versionList.map((version) => (
+                    default: () => {
+                      return visibleVersionList.value.map((version) => (
                         <Option
                           key={version.version}
                           value={version.version}
@@ -208,7 +298,14 @@ export const FlowHeader = defineComponent({
                             {version.isLatest && renderTag()}
                           </div>
                         </Option>
-                      )),
+                      ))
+                    },
+                    extension: () => (
+                      <div class={styles.viewAllEntry} onClick={handleShowAllVersions}>
+                        <SvgIcon name="jump" size={12} />
+                        {t('flow.versionHistory.viewAll')}
+                      </div>
+                    ),
                   }}
                 </Select>
               ),
@@ -229,6 +326,12 @@ export const FlowHeader = defineComponent({
             v-model:isShow={showExportDialog.value}
             flowId={flowId.value}
             flowName={flowName.value}
+          />
+
+          {/* 版本历史侧滑 */}
+          <VersionHistorySideSlider
+            v-model:isShow={showVersionHistory.value}
+            currentVersion={selectedVersion.value}
           />
         </>
       )

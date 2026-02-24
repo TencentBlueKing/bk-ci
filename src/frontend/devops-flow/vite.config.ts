@@ -37,9 +37,9 @@ export default defineConfig(({ mode }) => {
       createHtmlPlugin({
         inject: {
           data: {
-            IAM_URL_PREFIX: isDev ? '' : '__BK_CI_IAM_URL_PREFIX__',
-            PUBLIC_PATH_PREFIX: isDev ? '' : '__BK_CI_PUBLIC_PATH__',
-            ICON_COOL_PREFIX: isDev ? '' : '',
+            IAM_URL_PREFIX: isDev ? '//iam-dev.woa.com' : '__BK_CI_IAM_URL_PREFIX__',
+            PUBLIC_PATH_PREFIX: isDev ? '//dev.devops.woa.com' : '__BK_CI_PUBLIC_PATH__',
+            ICON_COOL_PREFIX: isDev ? '//radosgw.open.woa.com/bkicon-default-9/ci-flow-0.0.1/fonts' : '',
             // Add more variables here as needed
           },
         },
@@ -47,6 +47,19 @@ export default defineConfig(({ mode }) => {
       !isDev && renameHtmlPlugin(`frontend#${PUBLIC_PATH}#index.html`),
     ].filter(Boolean),
     
+    server: {
+        https: {
+            key: fs.readFileSync(path.resolve(__dirname, './local.devops.woa.com+3-key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, './local.devops.woa.com+3.pem')),
+        },
+        proxy: {
+            '/ms': {
+                target: 'https://dev.devops.woa.com',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/ms/, ''),
+            }
+        }
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
