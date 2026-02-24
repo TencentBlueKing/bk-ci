@@ -265,7 +265,8 @@ object AtomUtils {
      * 检查插件在当前渠道下的服务范围是否允许使用，不满足时抛出 [ErrorCodeException]。
      */
     private fun checkAtomServiceScopeForChannel(atomRunInfo: AtomRunInfo, atomName: String) {
-        val serviceScope = atomRunInfo.serviceScope ?: return
+        val serviceScope = atomRunInfo.serviceScope
+        if (serviceScope.isNullOrEmpty()) return
         val channelCode = ChannelCode.getRequestChannelCode()
         val requiredScope = when (channelCode) {
             ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
