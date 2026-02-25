@@ -87,6 +87,7 @@ class PipelineDraftSaveReqConverter(
             logger.info(
                 "Start to convert draft release request|$projectId|$pipelineId|$version|$storageType|$baseVersion"
             )
+            // 注意: 如果是实例化的流水线,modelAndSetting中的model不含stage字段,只有模版引用信息
             val (modelAndSetting, yamlWithVersion) = if (storageType == PipelineStorageType.YAML) {
                 if (yaml.isNullOrEmpty()) {
                     throw IllegalArgumentException("yaml can not be empty")
@@ -184,7 +185,7 @@ class PipelineDraftSaveReqConverter(
             val templateTrigger = templateModel.getTriggerContainer()
             val pipelineTrigger = model.getTriggerContainer()
             val overrideTemplateField =
-                model.overrideTemplateField ?: TemplateInstanceField.initFromTrigger(templateModel)
+                model.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(templateModel)
 
             // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
             val triggerConfigs = TemplateInstanceUtil.getTriggerConfigs(
@@ -246,7 +247,7 @@ class PipelineDraftSaveReqConverter(
             val templateTrigger = templateModel.getTriggerContainer()
             val triggerContainer = model.getTriggerContainer()
             val overrideTemplateField =
-                model.overrideTemplateField ?: TemplateInstanceField.initFromTrigger(templateModel)
+                model.overrideTemplateField ?: TemplateInstanceField.initFromTemplate(templateModel)
 
             // 前端传过来的是所有的触发器,triggerConfigs只需要保留流水线自定义的
             val triggerConfigs = TemplateInstanceUtil.getTriggerConfigs(
