@@ -439,7 +439,8 @@ class PipelineTemplateInstanceService @Autowired constructor(
             }
         if (isModifyParamsResetToDefault) {
             logger.warn(
-                "instance params reset to template defaults|$projectId|$userId|$templateId|$version|$baseId"
+                "instance params reset to template defaults|" +
+                        "$projectId|$userId|$templateId|$version|$baseId|${instanceReleaseInfos.size}"
             )
         }
     }
