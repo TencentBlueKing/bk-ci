@@ -36,8 +36,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.enums.WeworkReceiverType
-import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
@@ -59,9 +57,7 @@ import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
 import com.tencent.devops.notify.service.notifier.INotifier
 import com.tencent.devops.notify.service.notifier.NotifierUtils
@@ -85,8 +81,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val commonNotifyMessageTemplateDao: CommonNotifyMessageTemplateDao,
     private val redisOperation: RedisOperation,
     private val messageTemplateDao: MessageTemplateDao,
-    private val commonConfig: CommonConfig,
-    private val weworkService: WeworkService
+    private val commonConfig: CommonConfig
 ) : NotifyMessageTemplateService {
 
     companion object {
@@ -674,41 +669,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     override fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean> {
         // TODO("core暂无实现,需要支持时添加")
-        return Result(true)
-    }
-
-    override fun sendNotifyMessageToWeworkGroup(
-        request: SendNotifyMessageTemplateToWeworkGroupRequest
-    ): Result<Boolean> {
-        val templateCode = request.templateCode
-        // 查出消息模板
-        val commonNotifyMessageTemplateRecord =
-            commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
-                ?: return I18nUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(templateCode),
-                    data = false
-                )
-        val weworkTplRecord = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
-            dslContext = dslContext,
-            commonTemplateId = commonNotifyMessageTemplateRecord.id
-        ) ?: return I18nUtil.generateResponseDataObject(
-            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-            params = arrayOf(templateCode),
-            data = false
-        )
-        // 替换模板中的动态参数
-        val title = NotifierUtils.replaceContentParams(request.titleParams, weworkTplRecord.title)
-        val body = NotifierUtils.replaceContentParams(request.bodyParams, weworkTplRecord.body)
-        val content = title + "\n\n" + body
-        // 构建企业微信文本消息并发送
-        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
-            receivers = request.weworkGroupIds,
-            receiverType = WeworkReceiverType.single,
-            textType = WeworkTextType.text,
-            message = content
-        )
-        weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
     }
 

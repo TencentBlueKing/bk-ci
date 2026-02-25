@@ -270,6 +270,7 @@ class StoreCommentServiceImpl @Autowired constructor(
             val weworkGroupIds = commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
             if (weworkGroupIds.isNotEmpty()) {
                 storeNotifyService.sendNotifyMessageToWeworkGroup(
+                    userId = userId,
                     templateCode = STORE_COMMENT_NOTIFY_TEMPLATE,
                     weworkGroupIds = weworkGroupIds,
                     bodyParams = bodyParams

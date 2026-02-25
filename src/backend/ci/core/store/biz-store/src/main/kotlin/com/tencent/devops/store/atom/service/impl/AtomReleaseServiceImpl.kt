@@ -1552,6 +1552,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
                 if (weworkGroupIds.isNotEmpty()) {
                     storeNotifyService.sendNotifyMessageToWeworkGroup(
+                        userId = userId,
                         templateCode = ATOM_RELEASE_TO_BE_AUDIT_TEMPLATE,
                         weworkGroupIds = weworkGroupIds,
                         bodyParams = bodyParams
