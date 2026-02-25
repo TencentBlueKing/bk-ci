@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
@@ -107,20 +107,23 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
     }
 
     override fun sendNotifyMessageToWeworkGroup(
+        userId: String,
         templateCode: String,
         weworkGroupIds: Set<String>,
         titleParams: Map<String, String>?,
         bodyParams: Map<String, String>?
     ): Result<Boolean> {
-        logger.info("sendNotifyMessageToWeworkGroup params:[$templateCode|$weworkGroupIds|$titleParams|$bodyParams]")
-        val request = SendNotifyMessageTemplateToWeworkGroupRequest(
+        val mergedBodyParams = bodyParams?.toMutableMap() ?: mutableMapOf()
+        mergedBodyParams[NotifyUtils.WEWORK_GROUP_KEY] = weworkGroupIds.joinToString(",")
+        val request = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            weworkGroupIds = weworkGroupIds,
+            receivers = mutableSetOf(userId),
+            notifyType = mutableSetOf("WEWORK_GROUP"),
             titleParams = titleParams,
-            bodyParams = bodyParams
+            bodyParams = mergedBodyParams
         )
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageToWeworkGroup(request)
+            .sendNotifyMessageByTemplate(request)
         logger.info("sendNotifyMessageToWeworkGroup result is:$sendNotifyResult")
         return Result(true)
     }
