@@ -57,6 +57,7 @@ interface StoreNotifyService {
      * 使用模板发送消息到指定企业微信群
      */
     fun sendNotifyMessageToWeworkGroup(
+        userId: String,
         templateCode: String,
         weworkGroupIds: Set<String>,
         titleParams: Map<String, String>? = null,

@@ -33,7 +33,6 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import com.tencent.devops.notify.service.NotifyMessageTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,12 +48,6 @@ class ServiceNotifyMessageTemplateResourceImpl @Autowired constructor(
 
     override fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?> {
         return notifyMessageTemplateService.getNotifyMessageByTemplate(request)
-    }
-
-    override fun sendNotifyMessageToWeworkGroup(
-        request: SendNotifyMessageTemplateToWeworkGroupRequest
-    ): Result<Boolean> {
-        return notifyMessageTemplateService.sendNotifyMessageToWeworkGroup(request)
     }
 
     @BkCheckBlackListInterface

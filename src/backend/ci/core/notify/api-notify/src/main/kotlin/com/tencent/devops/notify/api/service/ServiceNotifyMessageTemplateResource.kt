@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateToWeworkGroupRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -61,14 +60,6 @@ interface ServiceNotifyMessageTemplateResource {
         @Parameter(description = "使用模板获取消息内容请求", required = true)
         request: NotifyMessageContextRequest
     ): Result<NotifyContext?>
-
-    @Operation(summary = "使用模板发送消息到指定企业微信群")
-    @POST
-    @Path("/sendToWeworkGroup")
-    fun sendNotifyMessageToWeworkGroup(
-        @Parameter(description = "使用模板发送消息到指定企业微信群请求报文体", required = true)
-        request: SendNotifyMessageTemplateToWeworkGroupRequest
-    ): Result<Boolean>
 
     /**
      * 使用模板取消消息通知
