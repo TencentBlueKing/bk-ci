@@ -18,7 +18,7 @@ export const EditHeader = defineComponent({
   props: {
     loading: {
       type: Boolean,
-      default: false
+      default: false,
     },
   },
   setup(props) {
@@ -50,7 +50,9 @@ export const EditHeader = defineComponent({
     const currentVersionName = computed(() => {
       if (flowInfo.value?.canDebug) {
         // Draft version: show "Draft (based on VX)"
-        return t('flow.edit.draftVersion', [flowInfo.value?.baseVersionName || baseVersionName.value])
+        return t('flow.edit.draftVersion', [
+          flowInfo.value?.baseVersionName || baseVersionName.value,
+        ])
       }
       // Released version: show version name directly
       return flowInfo.value?.versionName || baseVersionName.value
@@ -59,12 +61,12 @@ export const EditHeader = defineComponent({
     const handleCancel = () => {
       // 如果只有草稿版本（没有正式发布版本），跳转到列表页
       if (flowInfo.value?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING) {
-          router.push({
-            name: ROUTE_NAMES.FLOW_LIST,
-            params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS }
-          })
-          return
-        }
+        router.push({
+          name: ROUTE_NAMES.FLOW_LIST,
+          params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+        })
+        return
+      }
       // 否则跳转到创作流详情页
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
@@ -161,7 +163,11 @@ export const EditHeader = defineComponent({
 
     return () => (
       <>
-        <CommonHeader loading={props.loading} workflowName={workflowName.value} onWorkflowNameClick={handleCancel}>
+        <CommonHeader
+          loading={props.loading}
+          workflowName={workflowName.value}
+          onWorkflowNameClick={handleCancel}
+        >
           {{
             'workflow-selector': () => (
               <FlowSelector

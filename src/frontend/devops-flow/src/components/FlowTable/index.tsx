@@ -110,7 +110,7 @@ export const FlowTable = defineComponent({
       loadContentDataWithGroupId,
       initSearchFromQuery,
     } = useFlowListData(styles as Styles)
-    
+
     onMounted(async () => {
       updateQuery()
     })
@@ -125,7 +125,7 @@ export const FlowTable = defineComponent({
             searchValue.value = []
             updateQuery(true)
           }
-          
+
           labelsGroup.value = await getProjectTagList()
           initSearchFromQuery()
           loadContentData(newGroupId)
@@ -133,12 +133,15 @@ export const FlowTable = defineComponent({
       },
       { immediate: true },
     )
-    
-    watch(() => projectId.value, () => {
-      nextTick(() => {
-        loadContentData(props.groupId)
-      })
-    })
+
+    watch(
+      () => projectId.value,
+      () => {
+        nextTick(() => {
+          loadContentData(props.groupId)
+        })
+      },
+    )
 
     watch([currentSortType, currentCollation], () => {
       loadContentData(props.groupId)
@@ -417,92 +420,92 @@ export const FlowTable = defineComponent({
       const column = [
         ...(!isRecycleBin.value
           ? [
-              {
-                fixed: 'left',
-                minWidth: 30,
-                render: ({ row }: { row: ContentTableItem }) => renderCollect(row),
-              },
-              {
-                label: t('flow.content.name'),
-                field: 'pipelineName',
-                fixed: 'left',
-                minWidth: 192,
-                sort: sortConfig(FLOW_SORT_FILED.flowName),
-                render: ({ row }: { row: ContentTableItem }) => renderFlowName(row),
-              },
-              {
-                label: t('flow.content.groupName'),
-                field: 'viewNames',
-                minWidth: 280,
-                render: ({ row }: { row: ContentTableItem }) => renderTags(row),
-              },
-              {
-                label: renderLastExecLabel(),
-                field: 'latestBuildStatus',
-                minWidth: 300,
-                render: ({ row }: { row: ContentTableItem }) => renderLastExec(row),
-              },
-              {
-                label: t('flow.content.executionTime'),
-                field: 'latestBuildStartDate',
-                minWidth: 154,
-                render: ({ row }: { row: ContentTableItem }) => renderLatestBuildStartDate(row),
-                sort: sortConfig(FLOW_SORT_FILED.latestBuildStartDate),
-              },
-              {
-                label: t('flow.content.lastModify'),
-                field: 'updateTime',
-                minWidth: 154,
-                render: ({ row }: { row: ContentTableItem }) => renderLastModify(row),
-                sort: sortConfig(FLOW_SORT_FILED.updateTime),
-              },
-              {
-                label: t('flow.content.creator'),
-                field: 'creator',
-                minWidth: 100,
-                render: ({ row }: { row: ContentTableItem }) => (
-                  <>{!row.delete ? <span>{row.creator}</span> : null}</>
-                ),
-              },
-              {
-                label: t('flow.content.createTime'),
-                field: 'createDate',
-                minWidth: 154,
-                sort: sortConfig(FLOW_SORT_FILED.createDate),
-                render: ({ row }: { row: ContentTableItem }) => (
-                  <>{!row.delete ? <span>{row.createDate}</span> : null}</>
-                ),
-              },
-            ]
+            {
+              fixed: 'left',
+              minWidth: 30,
+              render: ({ row }: { row: ContentTableItem }) => renderCollect(row),
+            },
+            {
+              label: t('flow.content.name'),
+              field: 'pipelineName',
+              fixed: 'left',
+              minWidth: 192,
+              sort: sortConfig(FLOW_SORT_FILED.flowName),
+              render: ({ row }: { row: ContentTableItem }) => renderFlowName(row),
+            },
+            {
+              label: t('flow.content.groupName'),
+              field: 'viewNames',
+              minWidth: 280,
+              render: ({ row }: { row: ContentTableItem }) => renderTags(row),
+            },
+            {
+              label: renderLastExecLabel(),
+              field: 'latestBuildStatus',
+              minWidth: 300,
+              render: ({ row }: { row: ContentTableItem }) => renderLastExec(row),
+            },
+            {
+              label: t('flow.content.executionTime'),
+              field: 'latestBuildStartDate',
+              minWidth: 154,
+              render: ({ row }: { row: ContentTableItem }) => renderLatestBuildStartDate(row),
+              sort: sortConfig(FLOW_SORT_FILED.latestBuildStartDate),
+            },
+            {
+              label: t('flow.content.lastModify'),
+              field: 'updateTime',
+              minWidth: 154,
+              render: ({ row }: { row: ContentTableItem }) => renderLastModify(row),
+              sort: sortConfig(FLOW_SORT_FILED.updateTime),
+            },
+            {
+              label: t('flow.content.creator'),
+              field: 'creator',
+              minWidth: 100,
+              render: ({ row }: { row: ContentTableItem }) => (
+                <>{!row.delete ? <span>{row.creator}</span> : null}</>
+              ),
+            },
+            {
+              label: t('flow.content.createTime'),
+              field: 'createDate',
+              minWidth: 154,
+              sort: sortConfig(FLOW_SORT_FILED.createDate),
+              render: ({ row }: { row: ContentTableItem }) => (
+                <>{!row.delete ? <span>{row.createDate}</span> : null}</>
+              ),
+            },
+          ]
           : [
-              {
-                label: t('flow.content.name'),
-                field: 'name',
-                fixed: 'left',
-                minWidth: 192,
-                sort: sortConfig(FLOW_SORT_FILED.flowName),
-              },
-              {
-                label: t('flow.content.createTime'),
-                field: 'createDate',
-                minWidth: 154,
-                sort: sortConfig(FLOW_SORT_FILED.createDate),
-              },
-              {
-                label: t('flow.restore.deleter'),
-                field: 'lastModifyUser',
-                minWidth: 100,
-              },
-              {
-                label: t('flow.restore.deleteTime'),
-                field: 'updateTime',
-                minWidth: 154,
-                sort: sortConfig(FLOW_SORT_FILED.updateTime),
-                render: ({ row }: { row: ContentTableItem }) => (
-                  <>{!row.delete ? <span>{row.updateDate}</span> : null}</>
-                ),
-              },
-            ]),
+            {
+              label: t('flow.content.name'),
+              field: 'name',
+              fixed: 'left',
+              minWidth: 192,
+              sort: sortConfig(FLOW_SORT_FILED.flowName),
+            },
+            {
+              label: t('flow.content.createTime'),
+              field: 'createDate',
+              minWidth: 154,
+              sort: sortConfig(FLOW_SORT_FILED.createDate),
+            },
+            {
+              label: t('flow.restore.deleter'),
+              field: 'lastModifyUser',
+              minWidth: 100,
+            },
+            {
+              label: t('flow.restore.deleteTime'),
+              field: 'updateTime',
+              minWidth: 154,
+              sort: sortConfig(FLOW_SORT_FILED.updateTime),
+              render: ({ row }: { row: ContentTableItem }) => (
+                <>{!row.delete ? <span>{row.updateDate}</span> : null}</>
+              ),
+            },
+          ]),
         {
           label: t('flow.content.actions'),
           field: 'actions',
@@ -532,7 +535,7 @@ export const FlowTable = defineComponent({
 
     // 处理删除操作
     function handleDeleteAction(data: any) {
-      const objectName = data?.name || data?.pipelineId
+      const objectName = data?.pipelineName || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${t('flow.content.confirmDeleteFlow')}\n${t('flow.content.operationObject')}: `,
@@ -566,7 +569,7 @@ export const FlowTable = defineComponent({
     // 处理启用/禁用操作
     function handleEnableAction(data: any) {
       const isEnable = data?.lock
-      const objectName = data?.name || data?.pipelineId
+      const objectName = data?.pipelineName || data?.pipelineId
       showDeleteConfirm({
         message: () => [
           `${!isEnable ? t('flow.content.confirmDisableFlow') : t('flow.content.confirmEnableFlow')}\n${t('flow.content.operationObject')}: `,
@@ -663,38 +666,36 @@ export const FlowTable = defineComponent({
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.toolbar}>
-            {
-              !isRecycleBin.value && (
-                <Dropdown
-                  trigger="click"
-                  popover-options={{
-                    clickContentAutoHide: true,
-                  }}
-                >
-                  {{
-                    default: () => (
-                      <Button theme="primary">
-                        <SvgIcon name="add-small" size={22} />
-                        {t('flow.content.newFlow')}
-                      </Button>
-                    ),
-                    content: () => (
-                      <Dropdown.DropdownMenu>
-                        {newFlowList.value.map((item) => (
-                          <Dropdown.DropdownItem
-                            key={item.text}
-                            onClick={item.handler}
-                            class={styles.newFlow}
-                          >
-                            {item.text}
-                          </Dropdown.DropdownItem>
-                        ))}
-                      </Dropdown.DropdownMenu>
-                    ),
-                  }}
-                </Dropdown>
-              )
-            }
+            {!isRecycleBin.value && (
+              <Dropdown
+                trigger="click"
+                popover-options={{
+                  clickContentAutoHide: true,
+                }}
+              >
+                {{
+                  default: () => (
+                    <Button theme="primary">
+                      <SvgIcon name="add-small" size={22} />
+                      {t('flow.content.newFlow')}
+                    </Button>
+                  ),
+                  content: () => (
+                    <Dropdown.DropdownMenu>
+                      {newFlowList.value.map((item) => (
+                        <Dropdown.DropdownItem
+                          key={item.text}
+                          onClick={item.handler}
+                          class={styles.newFlow}
+                        >
+                          {item.text}
+                        </Dropdown.DropdownItem>
+                      ))}
+                    </Dropdown.DropdownMenu>
+                  ),
+                }}
+              </Dropdown>
+            )}
             {/* <Button>{t('flow.content.batchManage')}</Button> */}
             <div class={styles.searchBox}>
               <SearchSelect

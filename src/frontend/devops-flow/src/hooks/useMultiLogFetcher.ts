@@ -63,8 +63,8 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
   const initPluginStates = (plugins: PluginInfo[]) => {
     // Clear existing data first
     clearAllLogs()
-    
-    pluginStates.value = plugins.map(plugin => ({
+
+    pluginStates.value = plugins.map((plugin) => ({
       id: plugin.id,
       name: plugin.name,
       status: plugin.status,
@@ -80,8 +80,8 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Update plugin statuses (when container data changes)
   const updatePluginStatuses = (plugins: PluginInfo[]) => {
-    plugins.forEach(plugin => {
-      const state = pluginStates.value.find(s => s.id === plugin.id)
+    plugins.forEach((plugin) => {
+      const state = pluginStates.value.find((s) => s.id === plugin.id)
       if (state) {
         state.status = plugin.status
         state.name = plugin.name
@@ -91,7 +91,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Fetch log for a specific plugin using core function
   const fetchLog = async (pluginId: string, postData: LogPostData) => {
-    const state = pluginStates.value.find(s => s.id === pluginId)
+    const state = pluginStates.value.find((s) => s.id === pluginId)
     if (!state) return
 
     const currentHashId = generateHashId()
@@ -127,14 +127,14 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
     if (shouldContinuePolling(result)) {
       timeIds.value[pluginId] = setTimeout(
         () => fetchLog(pluginId, postData),
-        getNextPollDelay(result)
+        getNextPollDelay(result),
       )
     }
   }
 
   // Start loading log for a specific plugin
   const loadPluginLog = (pluginId: string) => {
-    const state = pluginStates.value.find(s => s.id === pluginId)
+    const state = pluginStates.value.find((s) => s.id === pluginId)
     if (!state) return
 
     state.loading = true
@@ -159,7 +159,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Toggle plugin expand/collapse
   const togglePlugin = (pluginId: string) => {
-    const state = pluginStates.value.find(s => s.id === pluginId)
+    const state = pluginStates.value.find((s) => s.id === pluginId)
     if (!state) return
 
     state.expanded = !state.expanded
@@ -171,7 +171,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Expand all plugins
   const expandAll = () => {
-    pluginStates.value.forEach(state => {
+    pluginStates.value.forEach((state) => {
       if (!state.expanded) {
         state.expanded = true
         if (state.logs.length === 0 && !state.loading) {
@@ -183,7 +183,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Collapse all plugins
   const collapseAll = () => {
-    pluginStates.value.forEach(state => {
+    pluginStates.value.forEach((state) => {
       state.expanded = false
     })
   }
@@ -194,7 +194,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
       clearTimeout(timeIds.value[pluginId])
       delete timeIds.value[pluginId]
     }
-    
+
     const postData = logPostData.value[pluginId]
     if (postData?.hashId) {
       clearIds.value.push(postData.hashId)
@@ -204,19 +204,19 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
   // Clear all logs and stop all polling
   const clearAllLogs = () => {
     // Stop all timers
-    Object.values(timeIds.value).forEach(id => clearTimeout(id))
+    Object.values(timeIds.value).forEach((id) => clearTimeout(id))
     timeIds.value = {}
-    
+
     // Mark all current requests as cancelled
-    Object.values(logPostData.value).forEach(postData => {
+    Object.values(logPostData.value).forEach((postData) => {
       if (postData.hashId) {
         clearIds.value.push(postData.hashId)
       }
     })
     logPostData.value = {}
-    
+
     // Reset all plugin states
-    pluginStates.value.forEach(state => {
+    pluginStates.value.forEach((state) => {
       state.logs = []
       state.lineNo = 0
       state.expanded = false
@@ -242,7 +242,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
 
   // Reload all expanded plugins' logs
   const reloadExpandedLogs = () => {
-    pluginStates.value.forEach(state => {
+    pluginStates.value.forEach((state) => {
       if (state.expanded) {
         stopPluginPolling(state.id)
         loadPluginLog(state.id)
@@ -260,7 +260,7 @@ export function useMultiLogFetcher(options: MultiLogFetcherOptions) {
   const toggleDebug = () => {
     options.debug = !options.debug
     // Reload all expanded plugins
-    pluginStates.value.forEach(state => {
+    pluginStates.value.forEach((state) => {
       if (state.expanded) {
         stopPluginPolling(state.id)
         state.logs = []

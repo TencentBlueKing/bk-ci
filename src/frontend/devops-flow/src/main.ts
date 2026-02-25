@@ -118,10 +118,11 @@ const app = createApp({
       }
     })
 
-    window.addEventListener('order::backHome', () => { // 蓝盾选择项目时切换
-        router.push({
-            name: ROUTE_NAMES.FLOW_LIST,
-        })
+    window.addEventListener('order::backHome', () => {
+      // 蓝盾选择项目时切换
+      router.push({
+        name: ROUTE_NAMES.FLOW_LIST,
+      })
     })
 
     // window.globalVue.$on('order::syncLocale', (locale: ) => {

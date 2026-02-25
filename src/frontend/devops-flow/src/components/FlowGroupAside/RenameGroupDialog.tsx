@@ -1,7 +1,7 @@
-import { defineComponent, reactive, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Dialog, Input, Message } from 'bkui-vue';
-import styles from './CreateGroupDialog.module.css';
+import { defineComponent, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Dialog, Input, Message } from 'bkui-vue'
+import styles from './CreateGroupDialog.module.css'
 
 interface Props {
   isShow: boolean
@@ -32,38 +32,44 @@ export const RenameGroupDialog = defineComponent({
   },
   emits: ['update:isShow', 'confirm'],
   setup(props: Props, { emit }) {
-    const { t } = useI18n();
+    const { t } = useI18n()
     const group = reactive({
       name: props.currentName,
-    });
+    })
 
-    watch(() => props.currentName, (newVal) => {
-      group.name = newVal;
-    });
+    watch(
+      () => props.currentName,
+      (newVal) => {
+        group.name = newVal
+      },
+    )
 
-    watch(() => props.isShow, (newVal) => {
-      if (newVal) {
-        group.name = props.currentName;
-      }
-    });
+    watch(
+      () => props.isShow,
+      (newVal) => {
+        if (newVal) {
+          group.name = props.currentName
+        }
+      },
+    )
 
     const resetForm = () => {
-      group.name = props.currentName;
-    };
+      group.name = props.currentName
+    }
 
     const handleClose = () => {
-      emit('update:isShow', false);
-      resetForm();
-    };
+      emit('update:isShow', false)
+      resetForm()
+    }
 
     const handleConfirm = () => {
       if (!group.name.trim()) {
-        Message({ theme: 'error', message: t('flow.dialog.renameGroup.groupNameRequired') });
-        return;
+        Message({ theme: 'error', message: t('flow.dialog.renameGroup.groupNameRequired') })
+        return
       }
-      emit('confirm', { id: props.groupId, name: group.name.trim() });
-      handleClose();
-    };
+      emit('confirm', { id: props.groupId, name: group.name.trim() })
+      handleClose()
+    }
 
     return () => (
       <Dialog
@@ -79,9 +85,7 @@ export const RenameGroupDialog = defineComponent({
           default: () => (
             <div class={styles.dialogContent}>
               <div class={styles.formItem}>
-                <label class={styles.label}>
-                  {t('flow.dialog.renameGroup.groupName')}
-                </label>
+                <label class={styles.label}>{t('flow.dialog.renameGroup.groupName')}</label>
                 <Input
                   v-model={group.name}
                   placeholder={t('flow.dialog.renameGroup.groupNamePlaceholder')}
@@ -92,7 +96,6 @@ export const RenameGroupDialog = defineComponent({
           ),
         }}
       </Dialog>
-    );
+    )
   },
-});
-
+})

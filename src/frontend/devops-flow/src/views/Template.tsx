@@ -4,7 +4,6 @@ import { FlowGroupAside } from '../components/FlowGroupAside'
 import styles from '@/styles/layout.module.css'
 
 export default defineComponent({
-  name: 'Template',
   setup() {
     const { t } = useI18n()
 

@@ -28,12 +28,13 @@ export default defineComponent({
     const flowId = route.params.flowId as string
 
     // Use flow config code hook for Code mode
-    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting, flowModel } = useFlowConfigCode({
-      projectId,
-      flowId,
-      version: route.params.version as string,
-      section: 'notice',
-    })
+    const { loading, yamlContent, sectionHighlight, isEmpty, flowSetting, flowModel } =
+      useFlowConfigCode({
+        projectId,
+        flowId,
+        version: route.params.version as string,
+        section: 'notice',
+      })
 
     return () => (
       <div class={layoutStyles.detailContainerWithRightPadding}>

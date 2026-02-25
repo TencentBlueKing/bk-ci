@@ -5,7 +5,7 @@ import { get } from '@/utils/http'
  * ====================================
  * Authoring Environment API Module
  * ====================================
- * 
+ *
  * This module centralizes all APIs related to authoring environments.
  * Including: environment list, node list, etc.
  */
@@ -145,14 +145,14 @@ export interface FetchNodeListParams {
  * @returns Promise<AuthoringEnvItem[]>
  */
 export async function fetchAuthoringEnvList(
-  params: FetchEnvListParams
+  params: FetchEnvListParams,
 ): Promise<AuthoringEnvItem[]> {
   const { projectId, envType = 'CREATE' } = params
   try {
     const res = await get<AuthoringEnvItem[]>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}?envType=${envType}`
+      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}?envType=${envType}`,
     )
-    
+
     return res
   } catch (error) {
     console.error('Failed to fetch authoring environment list:', error)
@@ -166,14 +166,13 @@ export async function fetchAuthoringEnvList(
  * @returns Promise<AuthoringNodeResponse>
  */
 export async function fetchAuthoringNodeList(
-  params: FetchNodeListParams
+  params: FetchNodeListParams,
 ): Promise<AuthoringNodeResponse> {
   const { projectId, envHashId } = params
-  
+
   try {
-    
     const res = await get<AuthoringNodeResponse>(
-      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}/${envHashId}/listNodesNew`
+      `${ENVIRONMENT_API_URL_PREFIX}/user/environment/${projectId}/${envHashId}/listNodesNew`,
     )
     return res
   } catch (error) {
@@ -199,4 +198,3 @@ export function convertToCreationNode(node: AuthoringNodeItem): CreationNode {
     envEnableNode: node.envEnableNode,
   }
 }
-

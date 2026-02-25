@@ -53,10 +53,7 @@ export const useTriggerManager = () => {
   const CACHE_EXPIRE_TIME = 10 * 60 * 1000
 
   // 生成缓存键
-  const generateCacheKey = (params: {
-    ownerStoreCode?: string
-    keyword?: string
-  }) => {
+  const generateCacheKey = (params: { ownerStoreCode?: string; keyword?: string }) => {
     const { ownerStoreCode = '', keyword = '' } = params
     return `trigger_${ownerStoreCode}_${keyword}`
   }
@@ -97,13 +94,15 @@ export const useTriggerManager = () => {
   /**
    * 获取触发器列表
    */
-  const fetchList = async (params: {
-    ownerStoreCode?: string
-    keyword?: string
-    page?: number
-    pageSize?: number
-    forceRefresh?: boolean
-  } = {}): Promise<{
+  const fetchList = async (
+    params: {
+      ownerStoreCode?: string
+      keyword?: string
+      page?: number
+      pageSize?: number
+      forceRefresh?: boolean
+    } = {},
+  ): Promise<{
     records: TriggerBaseItem[]
     hasMore: boolean
     page: number
@@ -248,7 +247,10 @@ export const useTriggerManager = () => {
   /**
    * 获取触发器版本列表（复用插件版本接口）
    */
-  const fetchVersionList = async (projectCode: string, atomCode: string): Promise<AtomVersion[]> => {
+  const fetchVersionList = async (
+    projectCode: string,
+    atomCode: string,
+  ): Promise<AtomVersion[]> => {
     if (!atomCode || !projectCode) return []
 
     const cacheKey = `${projectCode}_${atomCode}`
@@ -291,10 +293,12 @@ export const useTriggerManager = () => {
   /**
    * 检查是否正在加载列表
    */
-  const isLoadingList = (params: {
-    classifyCode?: string
-    keyword?: string
-  } = {}) => {
+  const isLoadingList = (
+    params: {
+      classifyCode?: string
+      keyword?: string
+    } = {},
+  ) => {
     const cacheKey = generateCacheKey(params)
     return triggerCacheMap[cacheKey]?.loading || false
   }
@@ -318,10 +322,7 @@ export const useTriggerManager = () => {
   /**
    * 清除指定缓存
    */
-  const clearCache = (params?: {
-    classifyCode?: string
-    keyword?: string
-  }) => {
+  const clearCache = (params?: { classifyCode?: string; keyword?: string }) => {
     if (params) {
       const cacheKey = generateCacheKey(params)
       delete triggerCacheMap[cacheKey]
@@ -336,10 +337,12 @@ export const useTriggerManager = () => {
   /**
    * 刷新数据
    */
-  const refreshData = async (params: {
-    classifyCode?: string
-    keyword?: string
-  } = {}) => {
+  const refreshData = async (
+    params: {
+      classifyCode?: string
+      keyword?: string
+    } = {},
+  ) => {
     return await fetchList({ ...params, forceRefresh: true })
   }
 

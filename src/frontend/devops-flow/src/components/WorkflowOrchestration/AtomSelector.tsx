@@ -4,14 +4,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { useAtomManager } from '@/hooks/useAtomManager'
 import { useAtomVersion } from '@/hooks/useAtomVersion'
 import { Exception, Input, Loading, Message, Tab } from 'bkui-vue'
-import {
-  Transition,
-  computed,
-  defineComponent,
-  ref,
-  watch,
-  type PropType
-} from 'vue'
+import { Transition, computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import AtomCard from './AtomCard'
@@ -47,12 +40,12 @@ export default defineComponent({
     // ========== Hooks ==========
     const { t } = useI18n()
     const route = useRoute()
-    const projectCode = computed(() => route.params.projectId as string)    
+    const projectCode = computed(() => route.params.projectId as string)
     const atomManager = useAtomManager({
       category: JobCategory.TASK,
     })
     const atomVersion = useAtomVersion({
-      projectCode: projectCode.value
+      projectCode: projectCode.value,
     })
 
     // ========== Refs ==========
@@ -68,7 +61,7 @@ export default defineComponent({
     const hasMore = ref(true)
 
     // ========== Computed ==========
-    
+
     const currentAtomCode = computed(() => {
       if (props.atom) {
         // 如果是第三方插件，使用 atomCode，否则使用 @type
@@ -134,21 +127,18 @@ export default defineComponent({
       async (visible) => {
         if (visible) {
           // 获取分类列表
-            await Promise.all([
-                atomManager.fetchClassifyList(),
-                loadAtomList(true)
-            ])
+          await Promise.all([atomManager.fetchClassifyList(), loadAtomList(true)])
 
-            const currentAtom = atomList.value.find((atom) => atom.atomCode === currentAtomCode.value)
-            
-            if (currentAtom) {
-                classifyCode.value = currentAtom.classifyCode || classifyList.value[0] || 'all'
-            } else {
-                classifyCode.value = classifyList.value[0] || 'all'
-            }
+          const currentAtom = atomList.value.find((atom) => atom.atomCode === currentAtomCode.value)
 
-            activeAtomCode.value = currentAtomCode.value
-            searchKey.value = ''
+          if (currentAtom) {
+            classifyCode.value = currentAtom.classifyCode || classifyList.value[0] || 'all'
+          } else {
+            classifyCode.value = classifyList.value[0] || 'all'
+          }
+
+          activeAtomCode.value = currentAtomCode.value
+          searchKey.value = ''
         }
       },
     )

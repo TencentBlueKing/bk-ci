@@ -64,7 +64,6 @@ export interface BuildRecord {
   [key: string]: any
 }
 
-
 /**
  * API response from /process/api/user/builds/{projectId}/{pipelineId}/history/new
  */
@@ -154,23 +153,24 @@ export interface ExecutionRecordListResponse {
  */
 function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionRecord {
   // Convert stage status to StageSteps format
-  const stageStatus = record.stageStatus?.map((stage, index) => {
-    const originalStatus = stage.status || 'UNKNOWN'
-    const statusCls = originalStatus
-    const icon = statusIconMap[originalStatus as keyof typeof statusIconMap] || 'circle'
-    
-    return {
-      stageId: stage.stageId || `stage-${index}`,
-      name: stage.name,
-      status: originalStatus,
-      statusCls,
-      showMsg: stage.showMsg,
-      icon
-    }
-  }) || []
+  const stageStatus =
+    record.stageStatus?.map((stage, index) => {
+      const originalStatus = stage.status || 'UNKNOWN'
+      const statusCls = originalStatus
+      const icon = statusIconMap[originalStatus as keyof typeof statusIconMap] || 'circle'
+
+      return {
+        stageId: stage.stageId || `stage-${index}`,
+        name: stage.name,
+        status: originalStatus,
+        statusCls,
+        showMsg: stage.showMsg,
+        icon,
+      }
+    }) || []
 
   // Get error code from errorInfoList
-  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''  
+  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''
   const triggerAndUser = `${record.trigger}/${record.userId}`
 
   return {
@@ -191,7 +191,6 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
   }
 }
 
-
 /**
  * Get execution records from API
  * API: GET /process/api/user/builds/{projectId}/{pipelineId}/history/new
@@ -205,23 +204,23 @@ export async function getExecutionRecords(
   const queryParams = new URLSearchParams()
   queryParams.append('page', String(page))
   queryParams.append('pageSize', String(pageSize))
-  
+
   if (debug) {
     queryParams.append('debug', 'true')
   }
-  
+
   // Add filter parameters
   // 状态
   if (filterParams.status?.length) {
-    filterParams.status.forEach(s => queryParams.append('status', s))
+    filterParams.status.forEach((s) => queryParams.append('status', s))
   }
   // 触发方式
   if (filterParams.triggerMethod?.length) {
-    filterParams.triggerMethod.forEach(m => queryParams.append('triggerMethod', m))
+    filterParams.triggerMethod.forEach((m) => queryParams.append('triggerMethod', m))
   }
   // 触发事件
   if (filterParams.triggerEvent?.length) {
-    filterParams.triggerEvent.forEach(e => queryParams.append('triggerEvent', e))
+    filterParams.triggerEvent.forEach((e) => queryParams.append('triggerEvent', e))
   }
   // 触发人
   if (filterParams.triggerUser) {
@@ -246,7 +245,7 @@ export async function getExecutionRecords(
   try {
     const response = await get<BuildHistoryResponse>(
       `/process/api/user/builds/${projectId}/${pipelineId}/history/new`,
-      { params: Object.fromEntries(queryParams) }
+      { params: Object.fromEntries(queryParams) },
     )
 
     // Convert API records to display format
@@ -373,10 +372,9 @@ export async function updateBuildRemark(
   remark: string,
 ): Promise<boolean> {
   try {
-    await post(
-      `/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
-      { remark }
-    )
+    await post(`/process/api/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`, {
+      remark,
+    })
     return true
   } catch (error) {
     console.error('Failed to update build remark:', error)

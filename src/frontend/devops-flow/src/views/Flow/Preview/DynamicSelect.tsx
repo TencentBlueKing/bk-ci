@@ -50,11 +50,11 @@ export default defineComponent({
     const normalizeOptions = (
       rawData: unknown[],
       paramId: string,
-      paramName: string
+      paramName: string,
     ): OptionItem[] => {
       return rawData
-        .filter((item): item is Record<string, unknown> =>
-          item !== null && typeof item === 'object'
+        .filter(
+          (item): item is Record<string, unknown> => item !== null && typeof item === 'object',
         )
         .map((item) => ({
           ...item,
@@ -95,7 +95,7 @@ export default defineComponent({
      */
     const loadStaticOptions = () => {
       const staticOptions = props.param.options || []
-      options.value = staticOptions.map(opt => ({
+      options.value = staticOptions.map((opt) => ({
         value: opt.id,
         label: opt.name,
       }))
@@ -119,7 +119,7 @@ export default defineComponent({
       () => {
         initOptions()
       },
-      { deep: true }
+      { deep: true },
     )
 
     onMounted(() => {
@@ -140,7 +140,7 @@ export default defineComponent({
         class={[styles.fullWidthSelect, props.isInvalid && styles.inputInvalid]}
         onChange={handleChange}
       >
-        {options.value.map(opt => (
+        {options.value.map((opt) => (
           <Select.Option key={opt.value} value={opt.value} label={opt.label}>
             {/* Show label as main text, show value in parentheses if different */}
             <span>{opt.label}</span>

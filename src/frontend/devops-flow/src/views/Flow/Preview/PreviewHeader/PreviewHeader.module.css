@@ -1,118 +1,118 @@
 /* PreviewHeader Styles - Using CSS variables from variables.css */
 
 .previewHeader {
-    display: flex;
-    width: 100%;
-    height: 52px;
-    align-items: center;
-    justify-content: center;
-    padding: 0 var(--spacing-xxl);
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid var(--border-color);
+  display: flex;
+  width: 100%;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-xxl);
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Version selector wrapper */
 .versionSelectorWrapper {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
 
-    margin-left: var(--spacing-sm);
+  margin-left: var(--spacing-sm);
 }
 
 .versionLabel {
-    font-size: var(--font-size-xs);
-    background-color: var(--bg-tertiary);
-    border-right: 1px solid var(--border-color);
-    line-height: var(--line-height-xl);
-    padding: 0 var(--spacing-sm);
-    color: var(--color-text-medium-black);
-    border-radius: var(--border-radius) 0 0 var(--border-radius);
-    margin-right: -1px;
-    white-space: nowrap;
+  font-size: var(--font-size-xs);
+  background-color: var(--bg-tertiary);
+  border-right: 1px solid var(--border-color);
+  line-height: var(--line-height-xl);
+  padding: 0 var(--spacing-sm);
+  color: var(--color-text-medium-black);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  margin-right: -1px;
+  white-space: nowrap;
 }
 
 .versionSelector {
-    min-width: 180px;
+  min-width: 180px;
 }
 
 .versionSelector :global(.bk-input) {
-    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
 }
 
 .versionTrigger {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-size: var(--font-size-xs);
-    background-color: var(--bg-hover);
-    line-height: var(--line-height-xl);
-    padding: 0 var(--spacing-sm);
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  background-color: var(--bg-hover);
+  line-height: var(--line-height-xl);
+  padding: 0 var(--spacing-sm);
+  cursor: pointer;
 }
 
 .versionText {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .versionSelectToggleIcon {
-    margin-left: auto;
-    transition: transform var(--transition-slow) ease-in-out;
-    transform: rotate(-90deg);
-    flex-shrink: 0;
+  margin-left: auto;
+  transition: transform var(--transition-slow) ease-in-out;
+  transform: rotate(-90deg);
+  flex-shrink: 0;
 }
 
 :global(.popover-show) .versionSelectToggleIcon {
-    transform: rotate(0) !important;
+  transform: rotate(0) !important;
 }
 
 .checkIcon {
-    flex-shrink: 0;
-    color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
 }
 
 .latestCheckIcon {
-    color: var(--color-success) !important;
+  color: var(--color-success) !important;
 }
 
 .versionOption {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .versionOption:active {
-    background-color: var(--bg-hover-active);
+  background-color: var(--bg-hover-active);
 }
 
 .tag {
-    margin: 0;
-    font-size: var(--font-size-xs);
-    flex-shrink: 0;
+  margin: 0;
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
 }
 
 /* Execution title in breadcrumb */
 .executionTitle {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 /* Loading spinner */
 .spinIcon {
-    font-size: var(--icon-size-xl);
-    animation: spin 1s linear infinite;
+  font-size: var(--icon-size-xl);
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
+  from {
+    transform: rotate(0deg);
+  }
 
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }

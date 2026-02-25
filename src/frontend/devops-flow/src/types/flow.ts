@@ -453,7 +453,7 @@ export interface TemplateInfo {
   templateName: string
   version: number
   versionName: string
-  instanceType:  'FREEDOM' | 'CONSTRAINT'
+  instanceType: 'FREEDOM' | 'CONSTRAINT'
   desc: string
 }
 
@@ -572,7 +572,6 @@ export interface FlowVersion {
   isLatest: boolean // 是否最新版本
   [key: string]: unknown
 }
-
 
 export interface ModelAndSetting {
   model: FlowModel

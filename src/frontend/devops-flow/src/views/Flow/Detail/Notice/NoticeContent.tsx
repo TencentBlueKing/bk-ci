@@ -50,11 +50,7 @@ export default defineComponent({
     ])
 
     return () => (
-      <NotificationList
-        notifyList={notifyList.value}
-        editable={false}
-        defaultActiveIndex={[1]}
-      />
+      <NotificationList notifyList={notifyList.value} editable={false} defaultActiveIndex={[1]} />
     )
   },
 })

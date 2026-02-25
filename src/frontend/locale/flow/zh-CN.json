@@ -27,7 +27,7 @@
       "reset": "清空",
       "true": "是",
       "false": "否",
-      "pleaseSelect": "请选择"
+      "pleaseSelect": "请选择创作节点"
     },
     "sidebar": {
       "myFlows": "我的创作流",
@@ -42,6 +42,7 @@
       "deleter": "删除人",
       "deleteTime": "删除时间",
       "restoreSuc": "恢复成功",
+      "restoreFail": "恢复失败",
       "restoreFlowConfirm": "确定恢复创作流【{0}】"
     },
     "content": {
@@ -61,8 +62,8 @@
       "execute": "执行",
       "nonManual": "非手动",
       "disabled": "已禁用",
-      "pipelineLockTips": "流水线已禁用，任何方式都不可触发流水线",
-      "pipelineManualDisable": "该流水线未配置手动触发",
+      "pipelineLockTips": "创作流已禁用，任何方式都不可触发创作流",
+      "pipelineManualDisable": "该创作流未配置手动触发",
       "orderByAlpha": "按名称A-Z",
       "orderByCreateTime": "按创建时间",
       "orderByUpdateTime": "按修改时间",
@@ -117,7 +118,7 @@
       "publish": "发布",
       "edit": "编辑",
       "addToTooltip": "添加到组",
-      "confirmDeleteFlow": "确认删除创作流？此操作不可撤销。",
+      "confirmDeleteFlow": "确认删除创作流？",
       "operationObject": "操作对象",
       "enableOrDisable": "禁用或启用",
       "confirmDisableFlow": "确认禁用创作流？",
@@ -555,7 +556,7 @@
         "groupName": "创作流组名称",
         "groupNamePlaceholder": "请输入创作流组名称",
         "groupNameRequired": "创作流组名称不能为空",
-        "addPipelineGroupSuc": "创建流水线组成功",
+        "addPipelineGroupSuc": "创建创作流组成功",
         "visibilityScope": "可见范围",
         "personalVisible": "个人可见",
         "projectVisible": "项目可见"
@@ -630,7 +631,7 @@
       "deleteGroupConfirm": "确定要删除该标签组吗？",
       "deleteTagConfirm": "确定要删除该标签吗？",
       "emptyTitle": "创建一个标签分组",
-      "desc": "为流水线分配合理的标签有助于快速定位和管理流水线，请了解以下约束:",
+      "desc": "为创作流分配合理的标签有助于快速定位和管理创作流，请了解以下约束:",
       "contentOne": "1. 一个项目下最多可以添加10个分组",
       "contentTwo": "2. 一个分组下最多可以添加12个标签"
     },

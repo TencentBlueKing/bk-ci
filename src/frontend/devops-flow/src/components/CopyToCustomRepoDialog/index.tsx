@@ -156,9 +156,14 @@ export default defineComponent({
           message = (
             <p>
               {t('flow.execute.copyToCustomSuc', [props.artifact.name, activeFolder.value])}
-              <Link target="_blank" theme="primary" href={repoUrl} class={styles.copyToCustomSucMessage}>
+              <Link
+                target="_blank"
+                theme="primary"
+                href={repoUrl}
+                class={styles.copyToCustomSucMessage}
+              >
                 <span class={styles.goDistLink}>
-                  <SvgIcon name="jump" size={12} class={styles.copyToCustomSucIcon}/>
+                  <SvgIcon name="jump" size={12} class={styles.copyToCustomSucIcon} />
                   {t('flow.execute.goDistFolder')}
                 </span>
               </Link>

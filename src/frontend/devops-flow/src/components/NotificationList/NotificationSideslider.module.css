@@ -6,68 +6,68 @@
  */
 
 .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding-right: var(--spacing-lg);
-    /* 16px */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: var(--spacing-lg);
+  /* 16px */
 }
 
 .title {
-    font-size: var(--font-size-md);
-    /* 16px */
-    font-weight: 600;
-    color: var(--color-text-primary);
-    /* #313238 */
+  font-size: var(--font-size-md);
+  /* 16px */
+  font-weight: 600;
+  color: var(--color-text-primary);
+  /* #313238 */
 }
 
 .content {
-    padding: var(--spacing-xl) var(--spacing-xxl);
-    /* 20px 24px */
-    height: calc(100vh - 120px);
-    overflow-y: auto;
+  padding: var(--spacing-xl) var(--spacing-xxl);
+  /* 20px 24px */
+  height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .typeCheckboxGroup {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-lg);
-    /* 16px */
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  /* 16px */
 
-    :global(.bk-checkbox) {
-        margin-left: 0;
-    }
+  :global(.bk-checkbox) {
+    margin-left: 0;
+  }
 }
 
 .switchRow {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    /* 8px */
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  /* 8px */
 }
 
 .switchLabel {
-    font-size: var(--font-size-xs);
-    /* 12px */
-    color: var(--color-text-secondary);
-    /* #63656e */
+  font-size: var(--font-size-xs);
+  /* 12px */
+  color: var(--color-text-secondary);
+  /* #63656e */
 }
 
 .fieldTip {
-    margin-top: var(--spacing-xs);
-    /* 4px */
-    font-size: var(--font-size-xs);
-    /* 12px */
-    color: var(--color-text-tertiary);
-    /* #979ba5 */
+  margin-top: var(--spacing-xs);
+  /* 4px */
+  font-size: var(--font-size-xs);
+  /* 12px */
+  color: var(--color-text-tertiary);
+  /* #979ba5 */
 }
 
 .footer {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    /* 8px */
-    padding: 0 var(--spacing-xxl);
-    /* 0 24px */
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  /* 8px */
+  padding: 0 var(--spacing-xxl);
+  /* 0 24px */
 }

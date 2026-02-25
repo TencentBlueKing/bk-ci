@@ -53,27 +53,32 @@ export const useFlowModelStore = defineStore('flowModel', () => {
    * @param version 版本号（可选）
    * @param forceReload 是否强制重新加载（默认 false）
    */
-  async function loadFlowModel(projectId: string, flowId: string, version?: string, forceReload = false) {
+  async function loadFlowModel(
+    projectId: string,
+    flowId: string,
+    version?: string,
+    forceReload = false,
+  ) {
     // Skip if already loading
     if (loading.value) return
 
     const versionStr = version || ''
-    
+
     // Skip if data already exists for this flowId + version and not forcing reload
     // This prevents tab switching from overwriting edited data
     const isSameFlow = currentFlowId.value === flowId && currentVersion.value === versionStr
     if (!forceReload && isSameFlow && flowModel.value !== null) {
       return
     }
-    
+
     loading.value = true
     hasError.value = false
     currentFlowId.value = flowId
     currentVersion.value = versionStr
     try {
       const model = await getFlowModel(projectId, flowId, version)
-      flowModel.value = model.modelAndSetting.model
-      flowSetting.value = model.modelAndSetting.setting
+      flowModel.value = model.modelAndSetting?.model
+      flowSetting.value = model.modelAndSetting?.setting
       yamlContent.value = model.yamlPreview?.yaml || ''
       if (!model.yamlSupported) {
         modeStore.setMode(UI_MODE)
@@ -134,7 +139,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
     try {
       const modelCopy = JSON.parse(JSON.stringify(flowModel.value))
-      
+
       // 为每个 stage 的每个 container 添加 dispatchType 并删除 baseOS
       modelCopy.stages?.forEach((stage: any) => {
         stage.containers?.forEach((container: any) => {

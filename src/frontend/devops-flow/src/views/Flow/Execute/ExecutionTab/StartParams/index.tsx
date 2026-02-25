@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Loading, Button, Sideslider } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
-import { allVersionKeyList } from "@/utils/flowConst";
+import { allVersionKeyList } from '@/utils/flowConst'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import { type BuildParamItem, type BuildParamProperty } from '@/api/executeDetail'
 import styles from './StartParams.module.css'

@@ -83,7 +83,7 @@ export default defineComponent({
                 theme: 'success',
                 message: t('flow.execute.apkSignSuccess', [props.name]),
               })
-  
+
               window.location.href = url2
             }
             signingMap.value.delete(props.path)
@@ -153,7 +153,12 @@ export default defineComponent({
                       />
                     </span>
                   ) : (
-                    <Button text onClick={downLoadFile} disabled={btnDisabled.value} theme="primary">
+                    <Button
+                      text
+                      onClick={downLoadFile}
+                      disabled={btnDisabled.value}
+                      theme="primary"
+                    >
                       {t('flow.execute.download')}
                     </Button>
                   )}
@@ -161,7 +166,9 @@ export default defineComponent({
               ),
               content: () => (
                 <p>
-                  {disabled.value ? t('flow.execute.downloadDisabledTips') : t('flow.execute.noDownloadPermTips')}
+                  {disabled.value
+                    ? t('flow.execute.downloadDisabledTips')
+                    : t('flow.execute.noDownloadPermTips')}
                 </p>
               ),
             }}
@@ -175,10 +182,14 @@ export default defineComponent({
                     <SvgIcon name="circle-2-1" class="spinIcon" />
                     {t('flow.execute.needSignTips', [props.name])}
                   </b>
-                  <span class={styles.signingDurationTips}>{t('flow.execute.apkSignDurationTips')}</span>
+                  <span class={styles.signingDurationTips}>
+                    {t('flow.execute.apkSignDurationTips')}
+                  </span>
                 </>
               ),
-              footer: () => <Button onClick={cancelDownloading}>{t('flow.execute.downloadLater')}</Button>,
+              footer: () => (
+                <Button onClick={cancelDownloading}>{t('flow.execute.downloadLater')}</Button>
+              ),
             }}
           </Dialog>
         </>

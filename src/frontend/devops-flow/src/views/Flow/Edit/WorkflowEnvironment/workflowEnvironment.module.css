@@ -5,6 +5,5 @@
   align-items: flex-start;
   .jumpIcon {
     margin-right: var(--spacing-xs);
-    
   }
 }

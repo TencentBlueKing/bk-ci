@@ -109,10 +109,7 @@ export function useLogSearch(options: UseLogSearchOptions) {
 
   // 检查指定索引的日志是否是当前激活的匹配项
   const isActiveMatch = (index: number): boolean => {
-    return (
-      searchMatches.value.length > 0 &&
-      searchMatches.value[currentMatchIndex.value] === index
-    )
+    return searchMatches.value.length > 0 && searchMatches.value[currentMatchIndex.value] === index
   }
 
   // 监听搜索关键词变化
@@ -148,4 +145,3 @@ export function useLogSearch(options: UseLogSearchOptions) {
     isActiveMatch,
   }
 }
-

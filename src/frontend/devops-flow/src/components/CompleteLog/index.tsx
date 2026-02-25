@@ -35,7 +35,7 @@ export default defineComponent({
     const currentExe = ref(props.executeCount)
     const showTime = ref(true)
     const showMoreMenu = ref(false)
-    
+
     // 使用 useLogFetcher hook
     const {
       state: logState,

@@ -1,12 +1,12 @@
 import axios from 'axios'
-import type { AxiosError, AxiosInstance, AxiosRequestHeaders, InternalAxiosRequestConfig } from 'axios'
-import { API_BASE_URL, HTTP_TIMEOUT } from './config'
 import type {
-  HttpRequestConfig,
-  HttpResponse,
-  HttpResponseEnvelope,
-  RequestMeta,
-} from './types'
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestHeaders,
+  InternalAxiosRequestConfig,
+} from 'axios'
+import { API_BASE_URL, HTTP_TIMEOUT } from './config'
+import type { HttpRequestConfig, HttpResponse, HttpResponseEnvelope, RequestMeta } from './types'
 import { retryRequest } from './retry'
 import { handleHttpError, HttpError } from './error'
 import { useAuthStore } from '@/stores/auth'
@@ -58,12 +58,7 @@ httpInstance.interceptors.response.use(
     const envelope = response.data
 
     // 统一处理 {status: number, data: any, message: string} 格式的响应
-    if (
-      typeof envelope === 'object' &&
-      envelope &&
-      'status' in envelope &&
-      'data' in envelope
-    ) {
+    if (typeof envelope === 'object' && envelope && 'status' in envelope && 'data' in envelope) {
       // status === 0 表示成功，直接返回 data
       if (envelope.status === 0) {
         return envelope.data
@@ -87,12 +82,7 @@ httpInstance.interceptors.response.use(
     }
 
     // 兼容旧的 code 字段格式
-    if (
-      typeof envelope === 'object' &&
-      envelope &&
-      'code' in envelope &&
-      'data' in envelope
-    ) {
+    if (typeof envelope === 'object' && envelope && 'code' in envelope && 'data' in envelope) {
       const legacyEnvelope = envelope as { code: number; data: unknown; message?: string }
 
       if (legacyEnvelope.code === 0) {

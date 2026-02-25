@@ -3,11 +3,15 @@ import { useI18n } from 'vue-i18n'
 import { Dialog, Loading, Form, Input, Select, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import FlowLableSelector from '@/components/FlowLableSelector'
-import { type CopyFlowParams, type DynamicParamLables, type MatchDynamicViewParams } from '@/api/flowContentList'
+import {
+  type CopyFlowParams,
+  type DynamicParamLables,
+  type MatchDynamicViewParams,
+} from '@/api/flowContentList'
 import { useFlowGroupData } from '@/hooks/useFlowGroupData'
 import { useFlowListData } from '@/hooks/useFlowListData'
 import styles from './CopyFlowPopup.module.css'
-import { useRoute } from "vue-router";
+import { useRoute } from 'vue-router'
 
 interface FormFieldConfig {
   property: keyof CopyFlowParams
@@ -30,7 +34,7 @@ export default defineComponent({
     },
     data: {
       type: Object,
-      default: () => {},
+      default: () => { },
     },
     loading: {
       type: Boolean,
@@ -101,30 +105,31 @@ export default defineComponent({
           placeholder: t('flow.dialog.copyCreation.desc'),
         },
       },
-      {
-        property: 'labels',
-        label: t('flow.dialog.copyCreation.labels'),
-        component: 'Custom',
-      },
-      {
-        property: 'dynamicGroup',
-        label: t('flow.dialog.copyCreation.dynamicFlowGroup'),
-        component: 'Select',
-        props: {
-          disabled: true,
-          multiple: true,
-          loading: dynamicLoading.value,
-          placeholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
-        },
-      },
-      {
-        property: 'staticView',
-        label: t('flow.dialog.copyCreation.staticFlowGroup'),
-        component: 'Select',
-        props: {
-          multiple: true,
-        },
-      },
+      // TODO: 暂时注释掉标签、动态创作流组、静态创作流组，后续需要时再启用
+      // {
+      //   property: 'labels',
+      //   label: t('flow.dialog.copyCreation.labels'),
+      //   component: 'Custom',
+      // },
+      // {
+      //   property: 'dynamicGroup',
+      //   label: t('flow.dialog.copyCreation.dynamicFlowGroup'),
+      //   component: 'Select',
+      //   props: {
+      //     disabled: true,
+      //     multiple: true,
+      //     loading: dynamicLoading.value,
+      //     placeholder: t('flow.dialog.copyCreation.dynamicMatchPlaceholder'),
+      //   },
+      // },
+      // {
+      //   property: 'staticView',
+      //   label: t('flow.dialog.copyCreation.staticFlowGroup'),
+      //   component: 'Select',
+      //   props: {
+      //     multiple: true,
+      //   },
+      // },
     ])
 
     watch(
@@ -138,7 +143,7 @@ export default defineComponent({
       },
       {
         immediate: true,
-      }
+      },
     )
 
     async function getDynamicGroup(labelIds: DynamicParamLables[]) {
@@ -151,7 +156,7 @@ export default defineComponent({
         const res = await getMatchDynamicData(params)
         formData.value.dynamicGroup = res
       } catch (error: any) {
-        Message({  theme: 'error', message: error.message || error })
+        Message({ theme: 'error', message: error.message || error })
       } finally {
         dynamicLoading.value = false
       }
@@ -159,7 +164,7 @@ export default defineComponent({
 
     const onClose = () => {
       formData.value = initFormData()
-      currentLabelMap.value = {}  // 清空保存的标签映射
+      currentLabelMap.value = {} // 清空保存的标签映射
       emit('update:isShow', false)
     }
 
@@ -168,7 +173,10 @@ export default defineComponent({
     }
 
     const handleAddLabel = () => {
-      window.open(`${window.location.origin}/creative-stream/${route.params.projectId}/group`, '_blank')
+      window.open(
+        `${window.location.origin}/creative-stream/${route.params.projectId}/group`,
+        '_blank',
+      )
     }
 
     async function handleRefresh() {
@@ -177,18 +185,19 @@ export default defineComponent({
       try {
         const res = await getProjectTagList()
         tagGroupList.value = res
-        
+
         // 如果有已选择的标签，使用当前选择的标签；否则使用空数组
-        const currentLabels = Object.keys(currentLabelMap.value).length > 0
-          ? Object.entries(currentLabelMap.value).map(([groupId, labelIds]) => ({
+        const currentLabels =
+          Object.keys(currentLabelMap.value).length > 0
+            ? Object.entries(currentLabelMap.value).map(([groupId, labelIds]) => ({
               groupId,
-              labelIds
+              labelIds,
             }))
-          : res.map(item => ({ groupId: item.id, labelIds: [] }))
-        
+            : res.map((item) => ({ groupId: item.id, labelIds: [] }))
+
         getDynamicGroup(currentLabels)
       } catch (error: any) {
-        Message({  theme: 'error', message: error.message || error })
+        Message({ theme: 'error', message: error.message || error })
       } finally {
         tagsLoading.value = false
       }
@@ -197,15 +206,15 @@ export default defineComponent({
     const updateDynamicGroup = (labelMap: Record<string, string[]>) => {
       // 保存当前选中的标签映射
       currentLabelMap.value = labelMap
-      
+
       // 将 labelMap 转换为 labels 数组格式
       const labels = Object.values(labelMap).flat()
       formData.value.labels = labels
-      
+
       // 构建动态分组查询参数
       const params: DynamicParamLables[] = Object.entries(labelMap).map(([groupId, labelIds]) => ({
         groupId,
-        labelIds
+        labelIds,
       }))
       getDynamicGroup(params)
     }
@@ -251,15 +260,15 @@ export default defineComponent({
             <Select v-model={formData.value[field.property]} {...field.props}>
               {field.property === 'dynamicGroup'
                 ? dynamicGroupList.value.map((i: any) => (
-                    <Select.Option key={i.id} id={i.id} name={i.name}></Select.Option>
-                  ))
+                  <Select.Option key={i.id} id={i.id} name={i.name}></Select.Option>
+                ))
                 : staticViewList.value.map((item: any) => (
-                    <Select.Group key={item.id} label={item.groupName} collapsible>
-                      {item.children.map((flow: any) => (
-                        <Select.Option key={flow.id} id={flow.id} name={flow.name}></Select.Option>
-                      ))}
-                    </Select.Group>
-                  ))}
+                  <Select.Group key={item.id} label={item.groupName} collapsible>
+                    {item.children.map((flow: any) => (
+                      <Select.Option key={flow.id} id={flow.id} name={flow.name}></Select.Option>
+                    ))}
+                  </Select.Group>
+                ))}
             </Select>
           </Form.FormItem>
         )
@@ -279,6 +288,7 @@ export default defineComponent({
         quick-close={false}
         class={styles.copyFlowPopup}
         isLoading={props.loading}
+        zIndex={1000}
         onClosed={onClose}
         onHidden={onClose}
         onConfirm={onConfirm}

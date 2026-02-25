@@ -1,20 +1,20 @@
-import { defineComponent, ref, type PropType } from 'vue';
-import { Dropdown } from 'bkui-vue';
-import { SvgIcon } from '../SvgIcon';
-import styles from './GroupActionMenu.module.css';
+import { defineComponent, ref, type PropType } from 'vue'
+import { Dropdown } from 'bkui-vue'
+import { SvgIcon } from '../SvgIcon'
+import styles from './GroupActionMenu.module.css'
 
-const { DropdownMenu, DropdownItem } = Dropdown;
+const { DropdownMenu, DropdownItem } = Dropdown
 
 interface Operation {
-  id: string;
-  label: string;
-  icon?: string;
-  disabled?: boolean;
+  id: string
+  label: string
+  icon?: string
+  disabled?: boolean
 }
 
 interface Props {
-  operations: Operation[];
-  onOperationClick: (operationId: string) => void;
+  operations: Operation[]
+  onOperationClick: (operationId: string) => void
 }
 
 export const GroupActionMenu = defineComponent({
@@ -31,19 +31,18 @@ export const GroupActionMenu = defineComponent({
   },
   setup(props: Props) {
     const handleClick = (e: MouseEvent, operationId: string) => {
-
-      props.onOperationClick(operationId);
-    };
+      props.onOperationClick(operationId)
+    }
 
     const popoverOptions = ref({
       clickContentAutoHide: true,
       hideIgnoreReference: true,
-      boundary: 'body'
-    });
+      boundary: 'body',
+    })
 
     const stopPropagation = (e: MouseEvent) => {
-      e.stopPropagation();
-    };
+      e.stopPropagation()
+    }
 
     return () => (
       <Dropdown
@@ -60,7 +59,7 @@ export const GroupActionMenu = defineComponent({
           ),
           content: () => (
             <DropdownMenu>
-              {props.operations.map(operation => (
+              {props.operations.map((operation) => (
                 <DropdownItem
                   key={operation.id}
                   onClick={(e: MouseEvent) => handleClick(e, operation.id)}
@@ -76,6 +75,6 @@ export const GroupActionMenu = defineComponent({
           ),
         }}
       </Dropdown>
-    );
+    )
   },
-});
+})

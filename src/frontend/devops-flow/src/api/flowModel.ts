@@ -1,6 +1,6 @@
 /**
  * 创作流模型相关 API
- * 
+ *
  * NOTE: Core types (Stage, Container, Element, etc.) are defined in @/types/flow.ts
  * and re-exported here for backward compatibility.
  */
@@ -10,11 +10,21 @@ import type { FlowModel, FlowSettings } from '../types/flow'
 
 // Re-export types from types/flow.ts for backward compatibility
 export type {
-  AdditionalOptions, CheckConfig, Container, CustomVariable,
-  DispatchType, Element, FlowModel,
-  FlowSettings, JobControlOption,
+  AdditionalOptions,
+  CheckConfig,
+  Container,
+  CustomVariable,
+  DispatchType,
+  Element,
+  FlowModel,
+  FlowSettings,
+  JobControlOption,
   MatrixControlOption,
-  MutexGroup, Param, Stage, StageControlOption, Subscription
+  MutexGroup,
+  Param,
+  Stage,
+  StageControlOption,
+  Subscription,
 } from '../types/flow'
 
 export interface FlowModelAndSetting {
@@ -44,11 +54,15 @@ export interface YamlPreview {
  * @param flowId 创作流 ID
  * @param version 版本号（可选）
  */
-export async function getFlowModel(projectId: string, flowId: string, version?: string): Promise<FlowModelAndSetting> {
-  const response = await get<FlowModelAndSetting>(`/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions/${version}`);
-  return response;
-
-  
+export async function getFlowModel(
+  projectId: string,
+  flowId: string,
+  version?: string,
+): Promise<FlowModelAndSetting> {
+  const response = await get<FlowModelAndSetting>(
+    `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions/${version}`,
+  )
+  return response
 }
 
 /**

@@ -15,9 +15,8 @@ const { Option } = Select
  * Find latest version from version list (pure function)
  */
 const findLatestVersion = (versions: FlowVersion[]): FlowVersion | undefined => {
-  return versions.find(v => v.isLatest)
+  return versions.find((v) => v.isLatest)
 }
-
 
 // ============================================
 // 3. Component Definition
@@ -37,7 +36,7 @@ export default defineComponent({
     flowName: {
       type: String,
       default: '',
-    }
+    },
   },
   emits: ['execute', 'versionChange'],
   setup(props, { emit }) {
@@ -66,12 +65,10 @@ export default defineComponent({
     // ----------------------------------------
     // Computed (Derived from Props)
     // ----------------------------------------
-    const isDebugMode = computed(() =>
-      Object.prototype.hasOwnProperty.call(route.query, 'debug')
-    )
+    const isDebugMode = computed(() => Object.prototype.hasOwnProperty.call(route.query, 'debug'))
 
     const currentVersionOption = computed(() =>
-      releasedVersionList.value.find(v => v.version === selectedVersion.value)
+      releasedVersionList.value.find((v) => v.version === selectedVersion.value),
     )
 
     // ----------------------------------------
@@ -91,7 +88,7 @@ export default defineComponent({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: {
           ...route.params,
-          version: flowInfo.value?.releaseVersion
+          version: flowInfo.value?.releaseVersion,
         },
       })
     }
@@ -104,7 +101,7 @@ export default defineComponent({
     // ----------------------------------------
     // Render Functions (Pure View Logic)
     // ----------------------------------------
-    
+
     const renderTag = () => (
       <Tag theme="success" size="small" class={styles.tag}>
         {t('flow.content.latest')}
@@ -112,10 +109,7 @@ export default defineComponent({
     )
 
     const renderCheckIcon = (isLatest = false) => (
-      <SvgIcon
-        name="check-circle"
-        class={[styles.checkIcon, isLatest && styles.latestCheckIcon]}
-      />
+      <SvgIcon name="check-circle" class={[styles.checkIcon, isLatest && styles.latestCheckIcon]} />
     )
 
     const renderVersionSelector = () => {
@@ -141,7 +135,7 @@ export default defineComponent({
                 </span>
               ),
               default: () =>
-                releasedVersionList.value.map(version => (
+                releasedVersionList.value.map((version) => (
                   <Option key={version.version} value={version.version} label={version.versionName}>
                     <div class={styles.versionOption}>
                       {renderCheckIcon(version.isLatest)}
@@ -184,19 +178,23 @@ export default defineComponent({
     // ----------------------------------------
     // Watchers
     // ----------------------------------------
-    
+
     // Initialize selected version when version list is loaded
-    watch(releasedVersionList, (list) => {
-      if (list.length > 0 && selectedVersion.value === undefined) {
-        // Set selected version from route or latest
-        if (routeVersion.value) {
-          selectedVersion.value = routeVersion.value
-        } else {
-          const latestVersion = findLatestVersion(list)
-          selectedVersion.value = latestVersion?.version ?? list[0]?.version
+    watch(
+      releasedVersionList,
+      (list) => {
+        if (list.length > 0 && selectedVersion.value === undefined) {
+          // Set selected version from route or latest
+          if (routeVersion.value) {
+            selectedVersion.value = routeVersion.value
+          } else {
+            const latestVersion = findLatestVersion(list)
+            selectedVersion.value = latestVersion?.version ?? list[0]?.version
+          }
         }
-      }
-    }, { immediate: true })
+      },
+      { immediate: true },
+    )
 
     // ----------------------------------------
     // Main Render

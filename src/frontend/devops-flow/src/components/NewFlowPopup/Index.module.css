@@ -15,8 +15,8 @@
 .newFlowPopup {
   :global(.bk-step:not(.current):not(.done) .bk-step-indicator) {
     color: var(--color-text-medium-black);
-    background-color: #EAEBF0;
-    border-color: #EAEBF0;
+    background-color: #eaebf0;
+    border-color: #eaebf0;
   }
 
   :global(.bk-step.done .bk-step-indicator) {
@@ -33,7 +33,7 @@
   :global(.bk-modal-content) {
     padding: var(--spacing-xl);
     padding-bottom: 0;
-    background: var(--bg-secondary); 
+    background: var(--bg-secondary);
   }
 }
 

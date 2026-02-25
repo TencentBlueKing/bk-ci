@@ -72,9 +72,10 @@ export default defineComponent({
     const isTriggerStage = computed(() => props.stage?.containers?.[0]?.['@type'] === 'trigger')
     const isFinallyStage = computed(() => props.stage?.finally === true)
     const showCustomVariables = computed(() =>
-      [StageRunCondition.CUSTOM_VARIABLE_MATCH, StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN].includes(
-        formData.value.runCondition as StageRunCondition,
-      ),
+      [
+        StageRunCondition.CUSTOM_VARIABLE_MATCH,
+        StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+      ].includes(formData.value.runCondition as StageRunCondition),
     )
     const showCustomCondition = computed(
       () => formData.value.runCondition === StageRunCondition.CUSTOM_CONDITION_MATCH,
@@ -97,7 +98,7 @@ export default defineComponent({
         name: formData.value.name,
         fastKill: formData.value.fastKill,
         stageControlOption: {
-          ...(props.stage.stageControlOption || {}),
+          ...props.stage.stageControlOption,
           enable: formData.value.enable,
           runCondition: formData.value.runCondition,
           customVariables: formData.value.customVariables,

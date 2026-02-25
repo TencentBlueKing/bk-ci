@@ -14,7 +14,7 @@ import { useRoute } from 'vue-router'
 import styles from './Outputs.module.css'
 
 export default defineComponent({
-  // eslint-disable-next-line vue/multi-word-component-names
+   
   name: 'Outputs',
   setup() {
     const { t } = useI18n()

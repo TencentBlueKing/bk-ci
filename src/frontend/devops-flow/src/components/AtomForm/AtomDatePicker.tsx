@@ -6,28 +6,30 @@ export default defineComponent({
   props: {
     value: {
       type: [String, Number, Date, Array],
-      default: ''
+      default: '',
     },
     name: {
       type: String,
-      required: true
+      required: true,
     },
     type: {
-      type: String as PropType<'date' | 'daterange' | 'datetime' | 'datetimerange' | 'month' | 'year'>,
-      default: 'date'
+      type: String as PropType<
+        'date' | 'daterange' | 'datetime' | 'datetimerange' | 'month' | 'year'
+      >,
+      default: 'date',
     },
     placeholder: {
       type: String,
-      default: ''
+      default: '',
     },
     disabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     handleChange: {
       type: Function,
-      default: () => () => {}
-    }
+      default: () => () => {},
+    },
   },
   emits: ['change', 'update:value'],
   setup(props, { emit }) {
@@ -46,5 +48,5 @@ export default defineComponent({
         onChange={handleChange}
       />
     )
-  }
+  },
 })

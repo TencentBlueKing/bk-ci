@@ -5,8 +5,7 @@ declare global {
 }
 
 class MonacoEditor {
-  static monaco?: typeof import('monaco-editor');
-
+  static monaco?: typeof import('monaco-editor')
 
   static async instance() {
     if (!this.monaco) {
@@ -42,9 +41,9 @@ class MonacoEditor {
       schemas: [
         {
           fileMatch: ['*.yml', '*.yaml'],
-          uri: window.BKCI_YAML_SCHEMA_URI || ''
-        }
-      ]
+          uri: window.BKCI_YAML_SCHEMA_URI || '',
+        },
+      ],
     })
 
     // Define custom theme for code editor
@@ -55,15 +54,15 @@ class MonacoEditor {
         { token: 'comment', foreground: '6A9955' },
         { token: 'keyword', foreground: '569CD6' },
         { token: 'string', foreground: 'CE9178' },
-        { token: 'number', foreground: 'B5CEA8' }
+        { token: 'number', foreground: 'B5CEA8' },
       ],
       colors: {
         'editor.background': '#1E1E1E',
         'editor.foreground': '#D4D4D4',
         'editorLineNumber.foreground': '#858585',
         'editor.selectionBackground': '#264F78',
-        'editor.inactiveSelectionBackground': '#3A3D41'
-      }
+        'editor.inactiveSelectionBackground': '#3A3D41',
+      },
     })
 
     // Set theme

@@ -6,15 +6,15 @@ import {
   type CreateContentParams,
   type GetStoreTemplatesParams,
   type StoreTemplateItem,
-  type TemplateObject
-} from '@/api/flowContentList';
+  type TemplateObject,
+} from '@/api/flowContentList'
 import { useFlowModel } from '@/hooks/useFlowModel'
-import { templateTypeEnum } from "@/utils/flowConst";
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { templateTypeEnum } from '@/utils/flowConst'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 
-import { Message } from 'bkui-vue';
+import { Message } from 'bkui-vue'
 
 /**
  * 创作流创建流程状态管理
@@ -24,14 +24,14 @@ import { Message } from 'bkui-vue';
 export const useNewFlowStore = defineStore('newFlow', () => {
   const route = useRoute()
 
-    const { updateFlowModel, updateFlowSetting } = useFlowModel()
+  const { updateFlowModel, updateFlowSetting } = useFlowModel()
   // ============ Core State ============
-  
+
   /**
    * Current step in the creation flow
    */
   const currentStep = ref(1)
-  
+
   /**
    * Form data for creating a new flow
    */
@@ -48,29 +48,29 @@ export const useNewFlowStore = defineStore('newFlow', () => {
       activeMenuItem: 'flowModel',
     },
   })
-  
+
   /**
    * Loading state for creating flow
    */
   const isLoading = ref(false)
 
   // ============ Template State ============
-  
+
   /**
    * Project template list
    */
   const projectModelList = ref<TemplateObject[]>([])
-  
+
   /**
    * Store template list
    */
   const storeModelList = ref<StoreTemplateItem[]>([])
-  
+
   /**
    * Loading state for project templates
    */
   const projectModelLoading = ref(false)
-  
+
   /**
    * Loading state for store templates
    */
@@ -108,7 +108,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
           }
           updateFlowModel(flowModel)
           updateFlowSetting({
-            envHashId: formData.value.baseInfo.envHashId, 
+            envHashId: formData.value.baseInfo.envHashId,
             pipelineName: formData.value.baseInfo.pipelineName,
             desc: formData.value.baseInfo.pipelineDesc || '',
           })
@@ -218,7 +218,7 @@ export const useNewFlowStore = defineStore('newFlow', () => {
     currentStep,
     formData,
     isLoading,
-    
+
     // Template State
     projectModelList,
     storeModelList,
@@ -228,12 +228,12 @@ export const useNewFlowStore = defineStore('newFlow', () => {
     // Template Actions
     fetchProjectTemplates,
     fetchStoreTemplates,
-    
+
     // Form Actions
     resetForm,
     updateBaseInfo,
     updateTemplateInfo,
-    
+
     // Flow Creation
     createNewFlow,
   }

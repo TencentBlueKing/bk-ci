@@ -1,5 +1,5 @@
-import type { Container, Element, Stage } from '@/api/flowModel';
-import { randomLenString } from '@/utils/util';
+import type { Container, Element, Stage } from '@/api/flowModel'
+import { randomLenString } from '@/utils/util'
 
 export enum AtomRunCondition {
   PRE_TASK_SUCCESS = 'PRE_TASK_SUCCESS',

@@ -15,10 +15,10 @@ export type ExecuteInfo = {
 export function useExecuteDetail() {
   const store = useExecuteDetailStore()
   const { loading, executeDetail, flowInfo } = storeToRefs(store)
-  
+
   // 计算执行详情的相关状态
   const isRunningOrNot = computed(() => isRunning(executeDetail.value?.status))
-  
+
   const isLatestBuild = computed(
     () =>
       executeDetail.value?.buildNum === executeDetail.value?.latestBuildNum &&

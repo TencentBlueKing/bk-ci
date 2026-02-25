@@ -24,15 +24,10 @@ export default defineComponent({
     const formRef = ref()
     const baseInfoData = ref({ ...props.modelValue })
 
-    const {
-      envSelectList,
-      envListLoading,      
-      nodeList,
-      nodeListLoading,
-      goEnvironment,
-    } = useAuthoringEnvironment({
-      autoLoadEnvList: true,
-    })
+    const { envSelectList, envListLoading, nodeList, nodeListLoading, goEnvironment } =
+      useAuthoringEnvironment({
+        autoLoadEnvList: true,
+      })
 
     expose({
       formRef,
@@ -92,20 +87,20 @@ export default defineComponent({
           </p>
           <Form.FormItem property="envHashId" required>
             {{
-              error:() => t('flow.content.environmentRequired'),
+              error: () => t('flow.content.environmentRequired'),
               default: () => (
                 <>
-                <AuthoringEnv
-                  isEdit={true}
-                  envLoading={envListLoading.value}
-                  modelValue={baseInfoData.value.envHashId}
-                  onUpdate:modelValue={updateAuthoringEnv}
-                  envList={envSelectList.value}
-                  nodeLoading={nodeListLoading.value}
-                  nodeList={nodeList.value}
-                />
+                  <AuthoringEnv
+                    isEdit={true}
+                    envLoading={envListLoading.value}
+                    modelValue={baseInfoData.value.envHashId}
+                    onUpdate:modelValue={updateAuthoringEnv}
+                    envList={envSelectList.value}
+                    nodeLoading={nodeListLoading.value}
+                    nodeList={nodeList.value}
+                  />
                 </>
-              )
+              ),
             }}
           </Form.FormItem>
         </div>

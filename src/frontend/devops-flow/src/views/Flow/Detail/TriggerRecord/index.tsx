@@ -80,7 +80,10 @@ export default defineComponent({
                     />
                   </header>
 
-                  <div class={styles.triggerRecordScrollContainer} style={list.length ? {}: {'align-items': 'center'}}>
+                  <div
+                    class={styles.triggerRecordScrollContainer}
+                    style={list.length ? {} : { 'align-items': 'center' }}
+                  >
                     {list.length === 0 ? (
                       <EmptyTableStatus
                         class={styles.emptyStatus}

@@ -4,7 +4,16 @@
  * 参考 @blueking/log 的 bk-log 组件实现
  */
 import type { LogItem } from '@/api/log'
-import { computed, defineComponent, nextTick, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue'
+import {
+  computed,
+  defineComponent,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+  type PropType,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './LogViewer.module.css'
 
@@ -97,12 +106,12 @@ export default defineComponent({
       const scrollTop = container.scrollTop
       const scrollHeight = container.scrollHeight
       const clientHeight = container.clientHeight
-      
+
       // 如果用户手动向上滚动，则禁用自动滚动
       if (scrollTop < lastScrollTop.value) {
         return false
       }
-      
+
       // 如果接近底部（距离底部小于 50px），则启用自动滚动
       return scrollHeight - scrollTop - clientHeight < 50
     }
@@ -134,7 +143,7 @@ export default defineComponent({
       if (!logContentRef.value) return
       const container = logContentRef.value
       lastScrollTop.value = container.scrollTop
-      
+
       // 如果用户滚动到底部，重新启用自动滚动
       const scrollHeight = container.scrollHeight
       const clientHeight = container.clientHeight
@@ -160,16 +169,11 @@ export default defineComponent({
             isActiveMatch && styles.highlightedActive,
           ]}
         >
-          {props.showLineNumber && (
-            <span class={styles.lineNumber}>{log.lineNo}</span>
-          )}
+          {props.showLineNumber && <span class={styles.lineNumber}>{log.lineNo}</span>}
           {props.showTimestamp && (
             <span class={styles.timestamp}>{formatTimestamp(log.timestamp)}</span>
           )}
-          <span
-            class={styles.message}
-            innerHTML={highlightKeyword(log.message)}
-          />
+          <span class={styles.message} innerHTML={highlightKeyword(log.message)} />
         </div>
       )
     }
@@ -202,22 +206,14 @@ export default defineComponent({
     const renderError = () => {
       if (!props.error) return null
 
-      return (
-        <div class={styles.errorMessage}>
-          {props.error || t('flow.log.logErr')}
-        </div>
-      )
+      return <div class={styles.errorMessage}>{props.error || t('flow.log.logErr')}</div>
     }
 
     // 渲染空状态
     const renderEmpty = () => {
       if (props.loading || props.error || props.logs.length > 0) return null
 
-      return (
-        <div class={styles.emptyMessage}>
-          {t('flow.log.noLog')}
-        </div>
-      )
+      return <div class={styles.emptyMessage}>{t('flow.log.noLog')}</div>
     }
 
     onMounted(() => {
@@ -234,20 +230,17 @@ export default defineComponent({
 
     return () => (
       <div class={styles.logViewer}>
-        <div
-          ref={logContentRef}
-          class={styles.logContent}
-        >
+        <div ref={logContentRef} class={styles.logContent}>
           {renderLoading()}
           {renderError()}
           {renderEmpty()}
-          
+
           {props.logs.length > 0 && (
             <div class={styles.logLines}>
               {props.logs.map((log, index) => renderLogLine(log, index))}
             </div>
           )}
-          
+
           {renderLoadingMore()}
         </div>
       </div>

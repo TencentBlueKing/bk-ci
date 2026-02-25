@@ -75,7 +75,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #4D4F56;
+  color: #4d4f56;
 
   > p > span > a {
     color: #3a84ff;
@@ -92,7 +92,7 @@
   align-items: center;
   grid-gap: 10px;
   overflow: hidden;
-  color: #4D4F56;
+  color: #4d4f56;
 
   > em {
     flex: 1;

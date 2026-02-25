@@ -46,7 +46,7 @@ interface UsePreviewReturn {
   checkAll: Ref<boolean>
   selectedNode: Ref<string>
   runMessage: Ref<string>
-  
+
   // Validation state
   invalidParams: Ref<Set<string>>
   isNodeInvalid: Ref<boolean>
@@ -93,15 +93,15 @@ interface UsePreviewReturn {
  */
 export const groupParamsByCategory = (
   list: StartupProperty[],
-  notGroupedKey = '未分组'
+  notGroupedKey = '未分组',
 ): Record<string, StartupProperty[]> => {
   if (!list.length) return {}
-  
+
   return list.reduce<Record<string, StartupProperty[]>>((acc, item) => {
     const categoryKey = item.category || notGroupedKey
     return {
       ...acc,
-      [categoryKey]: [...(acc[categoryKey] || []), item]
+      [categoryKey]: [...(acc[categoryKey] || []), item],
     }
   }, {})
 }
@@ -112,26 +112,35 @@ export const groupParamsByCategory = (
 export const calculateAtomsCount = (stages: unknown[] | undefined): AtomsCount => {
   if (!stages) return { selected: 0, total: 0 }
 
-  return stages.reduce<AtomsCount>((acc, stage: any) => {
-    const containers = stage.containers || []
-    const stageCount = containers.reduce((containerAcc: AtomsCount, container: any) => {
-      const elements = container.elements || []
-      const elementCount = elements.reduce((elemAcc: AtomsCount, element: any) => ({
-        total: elemAcc.total + 1,
-        selected: elemAcc.selected + (element.canElementSkip !== false ? 1 : 0)
-      }), { selected: 0, total: 0 })
-      
-      return {
-        total: containerAcc.total + elementCount.total,
-        selected: containerAcc.selected + elementCount.selected
-      }
-    }, { selected: 0, total: 0 })
+  return stages.reduce<AtomsCount>(
+    (acc, stage: any) => {
+      const containers = stage.containers || []
+      const stageCount = containers.reduce(
+        (containerAcc: AtomsCount, container: any) => {
+          const elements = container.elements || []
+          const elementCount = elements.reduce(
+            (elemAcc: AtomsCount, element: any) => ({
+              total: elemAcc.total + 1,
+              selected: elemAcc.selected + (element.canElementSkip !== false ? 1 : 0),
+            }),
+            { selected: 0, total: 0 },
+          )
 
-    return {
-      total: acc.total + stageCount.total,
-      selected: acc.selected + stageCount.selected
-    }
-  }, { selected: 0, total: 0 })
+          return {
+            total: containerAcc.total + elementCount.total,
+            selected: containerAcc.selected + elementCount.selected,
+          }
+        },
+        { selected: 0, total: 0 },
+      )
+
+      return {
+        total: acc.total + stageCount.total,
+        selected: acc.selected + stageCount.selected,
+      }
+    },
+    { selected: 0, total: 0 },
+  )
 }
 
 /**
@@ -156,10 +165,7 @@ export const toggleSetItem = <T>(set: Set<T>, item: T): Set<T> => {
  * Encapsulates all preview business logic with immutable data flow
  */
 export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn => {
-  const {
-    autoLoad = true,
-    defaultExpandedSections = [1, 2, 3, 4, 5]
-  } = options
+  const { autoLoad = true, defaultExpandedSections = [1, 2, 3, 4, 5] } = options
 
   // ----------------------------------------
   // 3.1 Dependencies
@@ -178,15 +184,11 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     const v = route.params.version
     return v ? Number(v) : undefined
   })
-  const isDebugMode = computed(() => 
-    Object.prototype.hasOwnProperty.call(route.query, 'debug')
-  )
+  const isDebugMode = computed(() => Object.prototype.hasOwnProperty.call(route.query, 'debug'))
 
-  const canExecute = computed(() =>
-    store.atomicFlowInfo.value?.permissions?.canExecute ?? true
-  )
-  const flowName = computed(() =>
-    store.atomicPipelineModel.value?.modelAndSetting.model.name as string ?? '--'
+  const canExecute = computed(() => store.atomicFlowInfo.value?.permissions?.canExecute ?? true)
+  const flowName = computed(
+    () => (store.atomicPipelineModel.value?.modelAndSetting.model.name as string) ?? '--',
   )
 
   // ----------------------------------------
@@ -196,7 +198,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   const checkAll = ref(true)
   const selectedNode = ref()
   const runMessage = ref('')
-  
+
   // Validation state - track invalid params for highlighting
   const invalidParams = ref<Set<string>>(new Set())
   const isNodeInvalid = ref(false)
@@ -211,38 +213,24 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   /** Authoring nodes loading state */
   const authoringNodesLoading = computed(() => store.authoringNodesLoading)
 
-  const groupedParams = computed(() => 
-    groupParamsByCategory(store.paramList, '未分组入参')
-  )
+  const groupedParams = computed(() => groupParamsByCategory(store.paramList, '未分组入参'))
 
-  const groupedConstants = computed(() => 
-    groupParamsByCategory(store.constantParams, '未分组常量')
-  )
+  const groupedConstants = computed(() => groupParamsByCategory(store.constantParams, '未分组常量'))
 
-  const groupedOtherParams = computed(() => 
-    groupParamsByCategory(store.otherParams, '未分组变量')
-  )
+  const groupedOtherParams = computed(() => groupParamsByCategory(store.otherParams, '未分组变量'))
 
-  const hasGroupedParams = computed(() => 
-    Object.keys(groupedParams.value).length > 0
-  )
+  const hasGroupedParams = computed(() => Object.keys(groupedParams.value).length > 0)
 
-  const hasGroupedConstants = computed(() => 
-    Object.keys(groupedConstants.value).length > 0
-  )
+  const hasGroupedConstants = computed(() => Object.keys(groupedConstants.value).length > 0)
 
-  const hasGroupedOtherParams = computed(() => 
-    Object.keys(groupedOtherParams.value).length > 0
-  )
+  const hasGroupedOtherParams = computed(() => Object.keys(groupedOtherParams.value).length > 0)
 
-  const selectedAtomsCount = computed(() => 
-    calculateAtomsCount(store.pipelineModel?.stages)
-  )
+  const selectedAtomsCount = computed(() => calculateAtomsCount(store.pipelineModel?.stages))
 
   // ----------------------------------------
   // 3.5 UI Actions (Pure, No Side Effects)
   // ----------------------------------------
-  
+
   /**
    * Toggle section collapse state (immutable)
    */
@@ -260,7 +248,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   // ----------------------------------------
   // 3.6 Store Actions (Delegated to Store)
   // ----------------------------------------
-  
+
   /**
    * Handle param value change
    */
@@ -304,12 +292,12 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
    */
   const handleResetDefault = (e?: Event): void => {
     e?.stopPropagation()
-    
+
     // Reset each param to its default value (immutable updates via store)
-    store.paramList.forEach(param => {
+    store.paramList.forEach((param) => {
       store.updateParamValue('params', param.id, param.defaultValue)
     })
-    
+
     Message({
       theme: 'success',
       message: t('flow.preview.resetSuccess'),
@@ -338,7 +326,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   // ----------------------------------------
   // 3.7 Data Fetching (Async Actions)
   // ----------------------------------------
-  
+
   /**
    * Load preview data from API
    */
@@ -360,8 +348,10 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
           message: t('flow.preview.cannotManualStartup'),
         })
       }
-      
-      await loadAuthoringNodes(store.atomicPipelineModel.value?.modelAndSetting?.setting?.envHashId ?? '')
+
+      await loadAuthoringNodes(
+        store.atomicPipelineModel.value?.modelAndSetting?.setting?.envHashId ?? '',
+      )
     } catch (error: unknown) {
       console.error('Failed to load preview data:', error)
       Message({
@@ -377,7 +367,6 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
    */
   const loadAuthoringNodes = async (envHashId: string): Promise<void> => {
     try {
-     
       await store.loadAuthoringNodes({
         projectId: projectId.value,
         envHashId,
@@ -385,7 +374,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
 
       // Set first available node as default selected
       const availableNodes = store.authoringNodes.filter(
-        (node: AuthoringNodeItem) => node.agentStatus && node.envEnableNode
+        (node: AuthoringNodeItem) => node.agentStatus && node.envEnableNode,
       )
       if (availableNodes.length > 0 && !selectedNode.value) {
         selectedNode.value = availableNodes[0]!.agentHashId
@@ -402,9 +391,9 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
    */
   const validateRequiredParams = (): string[] => {
     const emptyRequiredParams: string[] = []
-    
+
     // Check params (only valueNotEmpty params are required during execution)
-    store.paramList.forEach(param => {
+    store.paramList.forEach((param) => {
       if (param.valueNotEmpty) {
         const value = store.paramsValues[param.id]
         // Check if value is empty (undefined, null, empty string)
@@ -413,10 +402,10 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
         }
       }
     })
-    
+
     // Check version params if visible
     if (store.isVisibleVersion) {
-      store.versionParamList.forEach(param => {
+      store.versionParamList.forEach((param) => {
         if (param.valueNotEmpty) {
           const value = store.versionParamValues[param.id]
           if (value === undefined || value === null || value === '') {
@@ -425,7 +414,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
         }
       })
     }
-    
+
     return emptyRequiredParams
   }
 
@@ -469,10 +458,10 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
 
     try {
       const skipAtoms = store.canElementSkip ? store.getSkippedAtoms() : {}
-      
+
       // Get pipelineId from flowInfo, fallback to flowId if not available
       const pipelineId = store.flowInfo?.pipelineId || flowId.value
-      
+
       const result = await store.executePipeline({
         projectId: projectId.value,
         pipelineId,
@@ -515,7 +504,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   // ----------------------------------------
   // 3.8 Lifecycle & Watchers
   // ----------------------------------------
-  
+
   // Watch version change to reload data
   watch(version, () => {
     if (autoLoad) {
@@ -547,7 +536,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
   // ----------------------------------------
   return {
     // Route params
-    projectId, 
+    projectId,
     flowId,
     version,
     isDebugMode,
@@ -559,7 +548,7 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
     checkAll,
     selectedNode,
     runMessage,
-    
+
     // Validation state
     invalidParams,
     isNodeInvalid,
@@ -600,4 +589,3 @@ export const usePreview = (options: UsePreviewOptions = {}): UsePreviewReturn =>
 
 // Export types
 export type { AtomsCount, UsePreviewOptions, UsePreviewReturn }
-

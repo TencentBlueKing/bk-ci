@@ -1,4 +1,10 @@
-import { prefetchReleaseVersion, releaseFlowVersion, type PrefetchVersionInfo, type ReleaseParams, type ReleaseResponse } from '@/api/release'
+import {
+  prefetchReleaseVersion,
+  releaseFlowVersion,
+  type PrefetchVersionInfo,
+  type ReleaseParams,
+  type ReleaseResponse,
+} from '@/api/release'
 import { SvgIcon } from '@/components/SvgIcon'
 import { Button, Dialog, Form, Input, Loading, Message, Sideslider } from 'bkui-vue'
 import { computed, defineComponent, ref, watch } from 'vue'

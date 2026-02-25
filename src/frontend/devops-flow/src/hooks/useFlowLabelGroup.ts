@@ -13,7 +13,7 @@ export function useFlowLabelGroup() {
   const { t } = useI18n()
   const route = useRoute()
   const store = useFlowLabelGroupStore()
-  
+
   // 使用 storeToRefs 确保响应式
   const {
     loading,

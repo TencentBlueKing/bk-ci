@@ -104,7 +104,7 @@ export function convertMillSec(ms: number | undefined | null, full: boolean = fa
     prezero(minutes),
     prezero(seconds),
   ].filter(Boolean)
-  
+
   return `${dayStr} ${timeParts.join(':')}${full ? '' : millseconds}`.trim()
 }
 
@@ -232,14 +232,14 @@ export function hashID(): string {
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number,
-  immediate: boolean = false
+  immediate: boolean = false,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null
 
-  return function(this: any, ...args: Parameters<T>) {
+  return function (this: any, ...args: Parameters<T>) {
     const context = this
 
-    const later = function() {
+    const later = function () {
       timeout = null
       if (!immediate) func.apply(context, args)
     }

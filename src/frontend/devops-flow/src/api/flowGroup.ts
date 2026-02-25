@@ -93,7 +93,9 @@ export async function createFlowGroup(
  */
 export async function deleteFlowGroup(projectId: string, viewId: string): Promise<boolean> {
   try {
-    const res = await del<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`)
+    const res = await del<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`,
+    )
     return res
   } catch (error) {
     throw error
@@ -103,9 +105,16 @@ export async function deleteFlowGroup(projectId: string, viewId: string): Promis
 /**
  * 重命名创作流组
  */
-export async function renameFlowGroup(projectId: string, viewId: string, params: EditGroupParams,): Promise<boolean> {
+export async function renameFlowGroup(
+  projectId: string,
+  viewId: string,
+  params: EditGroupParams,
+): Promise<boolean> {
   try {
-    const res = await put<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`, params)
+    const res = await put<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}`,
+      params,
+    )
     return res
   } catch (error) {
     throw error
@@ -115,9 +124,16 @@ export async function renameFlowGroup(projectId: string, viewId: string, params:
 /**
  * 置顶创作流组
  */
-export async function pinFlowGroup(projectId: string, viewId: string, enabled: boolean): Promise<boolean> {
+export async function pinFlowGroup(
+  projectId: string,
+  viewId: string,
+  enabled: boolean,
+): Promise<boolean> {
   try {
-    const res = await post<boolean>(`${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/top`, {enabled})
+    const res = await post<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/views/${viewId}/top`,
+      { enabled },
+    )
     return res
   } catch (error) {
     throw error

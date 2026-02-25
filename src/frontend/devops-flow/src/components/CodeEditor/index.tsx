@@ -1,4 +1,12 @@
-import { defineComponent, ref, watch, onMounted, onBeforeUnmount, nextTick, type PropType } from 'vue'
+import {
+  defineComponent,
+  ref,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+  type PropType,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import MonacoEditor from '@/utils/monacoEditor'
 import styles from './CodeEditor.module.css'
@@ -46,40 +54,40 @@ export default defineComponent({
   props: {
     modelValue: {
       type: String as PropType<CodeEditorProps['modelValue']>,
-      default: ''
+      default: '',
     },
     readOnly: {
       type: Boolean as PropType<CodeEditorProps['readOnly']>,
-      default: false
+      default: false,
     },
     language: {
       type: String as PropType<CodeEditorProps['language']>,
-      default: 'yaml'
+      default: 'yaml',
     },
     height: {
       type: String as PropType<CodeEditorProps['height']>,
-      default: '100%'
+      default: '100%',
     },
     width: {
       type: String as PropType<CodeEditorProps['width']>,
-      default: '100%'
+      default: '100%',
     },
     hasError: {
       type: Boolean as PropType<CodeEditorProps['hasError']>,
-      default: false
+      default: false,
     },
     fileUri: {
       type: String as PropType<CodeEditorProps['fileUri']>,
-      default: 'flow.yml'
+      default: 'flow.yml',
     },
     highlightRanges: {
       type: Array as PropType<CodeEditorProps['highlightRanges']>,
-      default: () => []
+      default: () => [],
     },
     codeLensTitle: {
       type: String as PropType<CodeEditorProps['codeLensTitle']>,
-      default: 'Plugin'
-    }
+      default: 'Plugin',
+    },
   },
   emits: ['update:modelValue', 'change', 'update:hasError', 'step-click'],
   setup(props, { emit }) {
@@ -91,13 +99,14 @@ export default defineComponent({
 
     let monaco: typeof import('monaco-editor') | null = null
     let editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null
-    let decorationsCollection: import('monaco-editor').editor.IEditorDecorationsCollection | null = null
+    let decorationsCollection: import('monaco-editor').editor.IEditorDecorationsCollection | null =
+      null
     let codeLensDisposable: import('monaco-editor').IDisposable | null = null
     let scheduleUpdateCodeLens: ((e?: any) => void) | null = null
 
     const style = {
       height: props.height,
-      width: props.width
+      width: props.width,
     }
 
     // Initialize Monaco Editor
@@ -112,7 +121,7 @@ export default defineComponent({
         const model = monaco.editor.createModel(
           props.modelValue,
           props.language,
-          monaco.Uri.parse(props.fileUri)
+          monaco.Uri.parse(props.fileUri),
         )
 
         editor = monaco.editor.create(editorRef.value, {
@@ -120,10 +129,10 @@ export default defineComponent({
           automaticLayout: true,
           formatOnPaste: true,
           unicodeHighlight: {
-            ambiguousCharacters: false
+            ambiguousCharacters: false,
           },
           minimap: {
-            enabled: false
+            enabled: false,
           },
           readOnly: props.readOnly,
           scrollBeyondLastLine: false,
@@ -132,14 +141,14 @@ export default defineComponent({
           roundedSelection: false,
           scrollbar: {
             verticalScrollbarSize: 10,
-            horizontalScrollbarSize: 10
-          }
+            horizontalScrollbarSize: 10,
+          },
         })
 
         // Listen to marker changes (errors/warnings)
         monaco.editor.onDidChangeMarkers(() => {
           errorList.value = monaco!.editor.getModelMarkers({
-            resource: monaco!.Uri.parse(props.fileUri)
+            resource: monaco!.Uri.parse(props.fileUri),
           })
           emit('update:hasError', errorList.value.length > 0)
         })
@@ -191,18 +200,21 @@ export default defineComponent({
             startMark.line + 1,
             startMark.column,
             endMark.line,
-            endMark.column
+            endMark.column,
           ),
           options: {
             isWholeLine: true,
             className: 'code-highlight-block',
-            marginClassName: 'code-highlight-block'
-          }
+            marginClassName: 'code-highlight-block',
+          },
         }))
 
         decorationsCollection?.clear()
         decorationsCollection = editor.createDecorationsCollection(ranges)
-        editor.revealRangeInCenterIfOutsideViewport(ranges[0]!.range, monaco.editor.ScrollType.Smooth)
+        editor.revealRangeInCenterIfOutsideViewport(
+          ranges[0]!.range,
+          monaco.editor.ScrollType.Smooth,
+        )
       } else {
         decorationsCollection?.clear()
       }
@@ -237,28 +249,30 @@ export default defineComponent({
               }
               containerIndex++
               if (Array.isArray(pair.value.items)) {
-                steps.push(...pair.value.items.map((item: any, index: number) => {
-                  const startPos = lineCounter.linePos(item.range[0])
-                  const endPos = lineCounter.linePos(item.range[1])
-                  return {
-                    pos: startPos,
-                    range: new monaco!.Range(
-                      startPos.line,
-                      startPos.col,
-                      endPos.line,
-                      endPos.col
-                    ),
-                    editingElementPos: {
-                      stageIndex,
-                      containerIndex,
-                      elementIndex: index
+                steps.push(
+                  ...pair.value.items.map((item: any, index: number) => {
+                    const startPos = lineCounter.linePos(item.range[0])
+                    const endPos = lineCounter.linePos(item.range[1])
+                    return {
+                      pos: startPos,
+                      range: new monaco!.Range(
+                        startPos.line,
+                        startPos.col,
+                        endPos.line,
+                        endPos.col,
+                      ),
+                      editingElementPos: {
+                        stageIndex,
+                        containerIndex,
+                        elementIndex: index,
+                      },
                     }
-                  }
-                }))
+                  }),
+                )
                 return YAML.visit.SKIP
               }
             }
-          }
+          },
         })
         return steps
       } catch (error) {
@@ -280,7 +294,10 @@ export default defineComponent({
     }
 
     // Get jobs by position
-    const getJobsByPos = (doc: any, { stageIndex, containerIndex }: Omit<EditingElementPos, 'elementIndex'>): any => {
+    const getJobsByPos = (
+      doc: any,
+      { stageIndex, containerIndex }: Omit<EditingElementPos, 'elementIndex'>,
+    ): any => {
       try {
         if (doc.stages?.[stageIndex] || doc.jobs) {
           const jobs = doc.stages?.[stageIndex]
@@ -303,8 +320,8 @@ export default defineComponent({
           emit('step-click', editingElementPos, {
             ...atom,
             with: {
-              script: atom.run
-            }
+              script: atom.run,
+            },
           })
         } else {
           emit('step-click', editingElementPos, atom)
@@ -319,7 +336,7 @@ export default defineComponent({
           onDidChange: (cb) => {
             scheduleUpdateCodeLens = cb
             return {
-              dispose: () => {}
+              dispose: () => {},
             }
           },
           provideCodeLenses: () => {
@@ -330,19 +347,24 @@ export default defineComponent({
                   startLineNumber: item.pos.line,
                   endLineNumber: item.pos.line,
                   startColumn: item.pos.col,
-                  endColumn: item.pos.col
+                  endColumn: item.pos.col,
                 },
                 id: String(index),
                 command: {
-                  id: editor!.addCommand(0, () => {
-                    handleCodeLensClick(item)
-                  }, '') || '',
-                  title: props.codeLensTitle
-                }
+                  id:
+                    editor!.addCommand(
+                      0,
+                      () => {
+                        handleCodeLensClick(item)
+                      },
+                      '',
+                    ) || '',
+                  title: props.codeLensTitle,
+                },
               })),
-              dispose: () => {}
+              dispose: () => {},
             }
-          }
+          },
         })
       } else {
         editor?.updateOptions?.({ codeLens: false })
@@ -350,7 +372,10 @@ export default defineComponent({
     }
 
     // Insert fragment at position
-    const insertFragmentAtPos = (text: string, { stageIndex, containerIndex, elementIndex }: EditingElementPos) => {
+    const insertFragmentAtPos = (
+      text: string,
+      { stageIndex, containerIndex, elementIndex }: EditingElementPos,
+    ) => {
       try {
         const doc = YAML.parse(props.modelValue || '')
         const jobs = getJobsByPos(doc, { stageIndex, containerIndex })
@@ -371,39 +396,52 @@ export default defineComponent({
       format,
       insertFragmentAtPos,
       getAtomByPos,
-      highlightBlocks
+      highlightBlocks,
     }
 
     // Watch for value changes from parent
-    watch(() => props.modelValue, (newValue) => {
-      if (monaco && !codeLensDisposable && !props.readOnly) {
-        registerCodeLensProvider()
-      }
-      if (editor && newValue !== editor.getValue()) {
-        editor.setValue(newValue)
-      }
-    })
+    watch(
+      () => props.modelValue,
+      (newValue) => {
+        if (monaco && !codeLensDisposable && !props.readOnly) {
+          registerCodeLensProvider()
+        }
+        if (editor && newValue !== editor.getValue()) {
+          editor.setValue(newValue)
+        }
+      },
+    )
 
     // Watch for readOnly changes
-    watch(() => props.readOnly, (val) => {
-      editor?.updateOptions({ readOnly: val })
-    })
+    watch(
+      () => props.readOnly,
+      (val) => {
+        editor?.updateOptions({ readOnly: val })
+      },
+    )
 
     // Watch for highlightRanges changes
-    watch(() => props.highlightRanges, (ranges) => {
-      highlightBlocks(ranges || [])
-    }, { deep: true })
+    watch(
+      () => props.highlightRanges,
+      (ranges) => {
+        highlightBlocks(ranges || [])
+      },
+      { deep: true },
+    )
 
     // Watch for readOnly changes
-    watch(() => !props.readOnly, (show) => {
-      if (show && monaco && editor) {
-        registerCodeLensProvider()
-      } else {
-        codeLensDisposable?.dispose()
-        codeLensDisposable = null
-        editor?.updateOptions?.({ codeLens: false })
-      }
-    })
+    watch(
+      () => !props.readOnly,
+      (show) => {
+        if (show && monaco && editor) {
+          registerCodeLensProvider()
+        } else {
+          codeLensDisposable?.dispose()
+          codeLensDisposable = null
+          editor?.updateOptions?.({ codeLens: false })
+        }
+      },
+    )
 
     onMounted(() => {
       nextTick(() => {
@@ -420,18 +458,12 @@ export default defineComponent({
 
     return () => (
       <div class={[styles.codeEditor, fullScreen.value && styles.fullScreen]} style={style}>
-        {isLoading.value && (
-          <Loading class={styles.codeEditorLoading}  />
-        )}
+        {isLoading.value && <Loading class={styles.codeEditorLoading} />}
 
         {!props.readOnly && (
           <div class={styles.toolbar}>
             <span onClick={format} title={t('format')}>
-              <SvgIcon
-                name="format"
-                size={26}
-                class={styles.toolbarIcon}
-              />
+              <SvgIcon name="format" size={26} class={styles.toolbarIcon} />
             </span>
             <span onClick={toggleFullScreen}>
               <SvgIcon
@@ -462,5 +494,5 @@ export default defineComponent({
         )}
       </div>
     )
-  }
+  },
 })

@@ -10,7 +10,15 @@ import StatusIcon from '@/components/StatusIcon'
 import { JobPropertyContent } from '@/components/WorkflowOrchestration'
 import { useMultiLogFetcher, type PluginInfo } from '@/hooks/useMultiLogFetcher'
 import type { Container, ExecuteDetailData, Stage, StatusType } from '@/types/flow'
-import { computed, defineComponent, nextTick, onBeforeUnmount, ref, watch, type PropType } from 'vue'
+import {
+  computed,
+  defineComponent,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  watch,
+  type PropType,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { SvgIcon } from '../SvgIcon'
@@ -68,7 +76,7 @@ export default defineComponent({
           name: 'Set up job',
           status: (props.container?.startVMStatus as string) || 'QUEUE',
         },
-        ...elements.map(el => ({
+        ...elements.map((el) => ({
           id: el.id,
           name: el.name,
           status: el.status || 'QUEUE',
@@ -291,7 +299,13 @@ export default defineComponent({
 
       return (
         <article class={styles.logHome}>
-          <section class={[styles.logMain, activeTab.value === DETAIL_TAB.LOG ? styles.blackTheme : styles.whiteTheme, styles.overHidden]}>
+          <section
+            class={[
+              styles.logMain,
+              activeTab.value === DETAIL_TAB.LOG ? styles.blackTheme : styles.whiteTheme,
+              styles.overHidden,
+            ]}
+          >
             <LogHeader
               title={containerName.value}
               status={containerStatus.value}

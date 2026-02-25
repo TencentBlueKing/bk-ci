@@ -71,7 +71,7 @@ export default defineComponent({
       props.notifyList.map((item) => ({
         ...item,
         displayName: `${item.name} (${item.notifications.length})`,
-      }))
+      })),
     )
 
     // Format notification types for display
@@ -118,7 +118,7 @@ export default defineComponent({
     const renderNotificationCard = (
       notification: Subscription,
       notifyType: string,
-      index: number
+      index: number,
     ) => (
       <Card showHeader={false} class={styles.notificationCard}>
         {props.editable && (
@@ -148,9 +148,7 @@ export default defineComponent({
         <div class={styles.notificationInfo}>
           <div class={styles.infoRow}>
             <span class={styles.infoLabel}>{t('flow.content.noticeType')}</span>
-            <span class={styles.infoValue}>
-              {formatNotificationTypes(notification.types)}
-            </span>
+            <span class={styles.infoValue}>{formatNotificationTypes(notification.types)}</span>
           </div>
           <div class={styles.infoRow}>
             <span class={styles.infoLabel}>{t('flow.content.noticeGroup')}</span>
@@ -202,7 +200,7 @@ export default defineComponent({
                 {notify.notifications.length > 0 ? (
                   <div class={styles.notificationItems}>
                     {notify.notifications.map((notification, index) =>
-                      renderNotificationCard(notification, notify.type, index)
+                      renderNotificationCard(notification, notify.type, index),
                     )}
                   </div>
                 ) : (

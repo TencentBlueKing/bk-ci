@@ -49,21 +49,23 @@ export default defineComponent({
       })
     }
 
-
-
     return () => (
       <div class={styles.variableItem}>
         <div class={styles.variableInfo}>
           <div class={styles.variableHeader}>
-            <span class={styles.variableId}>{props.variable.name ?? props.variable.id ?? '--'}</span>
+            <span class={styles.variableId}>
+              {props.variable.name ?? props.variable.id ?? '--'}
+            </span>
           </div>
-          {props.variable.desc && (
-            <div class={styles.variableDesc}>{props.variable.desc}</div>
-          )}
+          {props.variable.desc && <div class={styles.variableDesc}>{props.variable.desc}</div>}
         </div>
 
         <div class={styles.variableActions}>
-          <span class={styles.actionItem} onClick={handleCopy} title={t('flow.variable.copyReference')}>
+          <span
+            class={styles.actionItem}
+            onClick={handleCopy}
+            title={t('flow.variable.copyReference')}
+          >
             <SvgIcon name="copy" />
           </span>
         </div>

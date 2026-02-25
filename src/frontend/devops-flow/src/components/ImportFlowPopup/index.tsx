@@ -120,7 +120,7 @@ export default defineComponent({
           if (data?.modelAndSetting?.model) {
             importedData.value.pipeline = data.modelAndSetting.model
             importedData.value.pipelineWithoutTrigger = {
-              ...(data?.modelAndSetting?.model ?? {}),
+              ...data?.modelAndSetting?.model,
               stages: data?.modelAndSetting?.model.stages.slice(1),
             }
             importedData.value.pipelineSetting = data?.modelAndSetting?.setting

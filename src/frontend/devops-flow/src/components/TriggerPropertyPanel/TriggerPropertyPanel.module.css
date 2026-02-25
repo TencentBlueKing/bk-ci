@@ -76,7 +76,7 @@
 }
 
 .manualForm {
-  padding: 0 var(--spacing-lg)
+  padding: 0 var(--spacing-lg);
 }
 
 .loadingContainer {

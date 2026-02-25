@@ -21,8 +21,7 @@ export interface RequestMeta {
   skipAuth?: boolean
 }
 
-export interface HttpRequestConfig<TData = unknown>
-  extends AxiosRequestConfig<TData> {
+export interface HttpRequestConfig<TData = unknown> extends AxiosRequestConfig<TData> {
   meta?: RequestMeta
 }
 

@@ -34,9 +34,7 @@ export function createThrottledPromise<T>(
   const now = Date.now()
   const last = throttleTimestamps.get(key) || 0
   if (now - last < interval) {
-    return Promise.reject(
-      new Error('Request is throttled, please try again later.'),
-    )
+    return Promise.reject(new Error('Request is throttled, please try again later.'))
   }
   throttleTimestamps.set(key, now)
   return executor()

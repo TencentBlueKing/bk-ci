@@ -14,7 +14,7 @@
 }
 
 .constantWidthNum {
-  font-family: "Microsoft Yahei";
+  font-family: 'Microsoft Yahei';
 }
 
 .pipelineExecSummary {
@@ -88,7 +88,7 @@
 
 .pipelineExecTimelineItem:before {
   position: absolute;
-  content: "";
+  content: '';
   left: 0;
   top: var(--spacing-xs);
   width: 9px;
@@ -151,7 +151,7 @@
 }
 
 .hideSkipPipelineTask:after {
-  content: "";
+  content: '';
   position: absolute;
   width: 1px;
   height: var(--line-height-xs);

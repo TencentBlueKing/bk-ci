@@ -46,7 +46,7 @@ export default defineComponent({
     // Handle copy variable reference
     const handleCopy = (event: Event) => {
       event.stopPropagation() // 阻止事件冒泡
-      const reference = `\$\{\{variables.${props.variable.id}\}\}`
+      const reference = `$\{{variables.${props.variable.id}}}`
       navigator.clipboard.writeText(reference).then(() => {
         Message({ theme: 'success', message: 'Variable reference copied to clipboard' })
         emit('copy', reference)

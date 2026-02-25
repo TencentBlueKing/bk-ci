@@ -314,9 +314,7 @@ export default defineComponent({
                 )}
               </div>
               <div class="flex-1">
-                <div class={styles.templateName}>
-                  {template.name}
-                </div>
+                <div class={styles.templateName}>{template.name}</div>
                 <div class={styles.templateDesc}>{template.desc || '--'}</div>
               </div>
             </div>

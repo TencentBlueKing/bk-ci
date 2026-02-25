@@ -3,11 +3,11 @@
  * Main permission management view with GroupAside and IamIframe
  */
 
-import { defineComponent, type PropType, ref } from 'vue';
-import GroupAside from '../GroupAside';
-import IamIframe from '../IamIframe';
-import type { GroupInfo, ResourceType } from '../types';
-import styles from './index.module.css';
+import { defineComponent, type PropType, ref } from 'vue'
+import GroupAside from '../GroupAside'
+import IamIframe from '../IamIframe'
+import type { GroupInfo, ResourceType } from '../types'
+import styles from './index.module.css'
 
 export default defineComponent({
   name: 'PermissionManage',
@@ -60,41 +60,41 @@ export default defineComponent({
   emits: ['close-manage'],
 
   setup(props, { emit }) {
-    const path = ref('');
-    const tabName = ref('member');
+    const path = ref('')
+    const tabName = ref('member')
 
     /**
      * Handle group detail tab change from IAM iframe
      */
     const handleChangeGroupDetailTab = (tab: string) => {
       if (tab) {
-        tabName.value = tab;
+        tabName.value = tab
       }
-    };
+    }
 
     /**
      * Handle group selection
      * Build iframe path with groupId, role_id and tab parameters
      */
     const handleChooseGroup = (group: GroupInfo) => {
-      const roleId = group.managerId || '';
-      const tab = tabName.value || 'member';
-      path.value = `user-group-detail/${group.groupId}?role_id=${roleId}&tab=${tab}`;
-    };
+      const roleId = group.managerId || ''
+      const tab = tabName.value || 'member'
+      path.value = `user-group-detail/${group.groupId}?role_id=${roleId}&tab=${tab}`
+    }
 
     /**
      * Handle create group
      */
     const handleCreateGroup = () => {
-      path.value = 'create-user-group';
-    };
+      path.value = 'create-user-group'
+    }
 
     /**
      * Handle close permission management
      */
     const handleCloseManage = () => {
-      emit('close-manage');
-    };
+      emit('close-manage')
+    }
 
     return () => (
       <section class={styles.permissionManage}>
@@ -112,6 +112,6 @@ export default defineComponent({
         />
         {path.value && <IamIframe path={path.value} />}
       </section>
-    );
+    )
   },
-});
+})

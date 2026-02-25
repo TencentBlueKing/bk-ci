@@ -471,7 +471,12 @@ export default defineComponent({
                     </div>
 
                     <div class={styles.listContent}>
-                      <Collapse v-model={expandedPanels.value} accordion={false} list={variableCategories.value} useBlockTheme>
+                      <Collapse
+                        v-model={expandedPanels.value}
+                        accordion={false}
+                        list={variableCategories.value}
+                        useBlockTheme
+                      >
                         {{
                           title: (item: CategoryItem) => (
                             <div class={styles.collapseHeader}>

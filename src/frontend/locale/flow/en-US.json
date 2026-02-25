@@ -27,7 +27,7 @@
       "reset": "Clear",
       "true": "Yes",
       "false": "No",
-      "pleaseSelect": "Please select"
+      "pleaseSelect": "Please select a creation node"
     },
     "sidebar": {
       "myFlows": "My Creation Flows",
@@ -42,6 +42,7 @@
       "deleter": "Deleted By",
       "deleteTime": "Deletion Time",
       "restoreSuc": "Restoration successful",
+      "restoreFail": "Restore failed",
       "restoreFlowConfirm": "Confirm restore of creation flow \"{0}\""
     },
     "content": {
@@ -63,7 +64,7 @@
       "nonManual": "Non-manual",
       "disabled": "Disabled",
       "pipelineLockTips": "The creation flow is disabled and cannot be triggered in any way",
-      "pipelineManualDisable": "This pipeline is not configured for manual triggering",
+      "pipelineManualDisable": "This creation flow is not configured for manual triggering",
       "orderByAlpha": "Order by Name A-Z",
       "orderByCreateTime": "Order by Creation Time",
       "orderByUpdateTime": "Order by Update Time",
@@ -118,7 +119,7 @@
       "publish": "Publish",
       "edit": "Edit",
       "addToTooltip": "Add to Group",
-      "confirmDeleteFlow": "Confirm delete creation flow? This action cannot be undone.",
+      "confirmDeleteFlow": "Confirm delete creation flow?",
       "operationObject": "Operation Object",
       "enableOrDisable": "Disable or Enable",
       "confirmDisableFlow": "Confirm disable creation flow?",
@@ -557,7 +558,7 @@
         "groupName": "Creation Flow Group Name",
         "groupNamePlaceholder": "Please enter creation flow group name",
         "groupNameRequired": "Creation flow group name cannot be empty",
-        "addPipelineGroupSuc": "Pipeline group created successfully",
+        "addPipelineGroupSuc": "Creation flow group created successfully",
         "visibilityScope": "Visibility Scope",
         "personalVisible": "Personal Visible",
         "projectVisible": "Project Visible"
@@ -633,7 +634,7 @@
       "deleteGroupConfirm": "Are you sure you want to delete this label group?",
       "deleteTagConfirm": "Are you sure you want to delete this label?",
       "emptyTitle": "Create a Label Group",
-      "desc": "Assigning reasonable labels to pipelines helps in quickly locating and managing pipelines. Please be aware of the following constraints:",
+      "desc": "Assigning reasonable labels to creation flows helps in quickly locating and managing creation flows. Please be aware of the following constraints:",
       "contentOne": "1. Up to 10 groups can be added under a single project",
       "contentTwo": "2. Up to 12 labels can be added under a single group"
     },

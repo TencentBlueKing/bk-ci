@@ -1,17 +1,17 @@
-import { type CreateContentParams } from '@/api/flowContentList';
-import { templateTypeEnum } from "@/utils/flowConst";
-import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { type CreateContentParams } from '@/api/flowContentList'
+import { templateTypeEnum } from '@/utils/flowConst'
+import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-import { ROUTE_NAMES } from '@/constants/routes';
-import { useNewFlowStore } from '@/stores/createFlowStore';
-import { Message } from 'bkui-vue';
-import { useRoute, useRouter } from "vue-router";
+import { ROUTE_NAMES } from '@/constants/routes'
+import { useNewFlowStore } from '@/stores/createFlowStore'
+import { Message } from 'bkui-vue'
+import { useRoute, useRouter } from 'vue-router'
 
 /**
  * NewFlowPopup component business logic hook
- * 
+ *
  * Note: Authoring environment state is managed separately through useAuthoringEnvironment hook.
  * Components that need environment management should use that hook directly.
  */
@@ -20,7 +20,7 @@ export function useNewFlow() {
   const router = useRouter()
   const route = useRoute()
   const store = useNewFlowStore()
-  
+
   // Store state refs
   const {
     currentStep,
@@ -93,21 +93,25 @@ export function useNewFlow() {
   async function handleConfirm(): Promise<void> {
     const isValid = await validateCurrentStep()
     if (!isValid) return
-    
+
     try {
       const params: CreateContentParams = {
         projectId: route.params.projectId as string,
         ...formData.value.baseInfo,
         templateId: formData.value.templateInfo.activeTemplate.templateId!,
         templateVersion: formData.value.templateInfo.activeTemplate.version!,
-        ...formData.value.templateInfo.cloneTemplateSet.reduce((result, item) => {
-          result[item] = true
-          return result
-        }, {} as Record<string, boolean>),
+        ...formData.value.templateInfo.cloneTemplateSet.reduce(
+          (result, item) => {
+            result[item] = true
+            return result
+          },
+          {} as Record<string, boolean>,
+        ),
         instanceType: formData.value.templateInfo.currentModel,
-        emptyTemplate: formData.value.templateInfo.activeTemplate.templateType === templateTypeEnum.PUBLIC,
+        emptyTemplate:
+          formData.value.templateInfo.activeTemplate.templateType === templateTypeEnum.PUBLIC,
       }
-  
+
       const res = await store.createNewFlow(params)
       if (res) {
         router.push({
@@ -117,7 +121,7 @@ export function useNewFlow() {
         store.resetForm()
       }
     } catch (error: any) {
-       Message({
+      Message({
         message: error.message || error || t('flow.content.createFailed'),
         theme: 'error',
       })
@@ -144,7 +148,7 @@ export function useNewFlow() {
     handleNextStep,
     handlePrevStep,
     handleConfirm,
-    
+
     // Store actions
     resetForm: store.resetForm,
     updateBaseInfo: store.updateBaseInfo,

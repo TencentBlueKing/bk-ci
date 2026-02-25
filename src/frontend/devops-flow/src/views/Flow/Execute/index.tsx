@@ -14,22 +14,22 @@ import styles from './FlowExecuteDetail.module.css'
  */
 function shouldPollForStatus(status: string | undefined): boolean {
   if (!status) return false
-  
+
   // Terminal states - no need to poll
   const terminalStates = [
-    'SUCCEED',           // Success (final)
-    'FAILED',            // Failed (final)
-    'CANCELED',          // Canceled (final)
-    'TERMINATE',         // Terminated (final)
-    'REVIEW_ABORT',      // Review rejected (final)
+    'SUCCEED', // Success (final)
+    'FAILED', // Failed (final)
+    'CANCELED', // Canceled (final)
+    'TERMINATE', // Terminated (final)
+    'REVIEW_ABORT', // Review rejected (final)
     'HEARTBEAT_TIMEOUT', // Heartbeat timeout (final)
-    'UNEXEC',            // Never executed (final)
-    'SKIP',              // Skipped (final)
-    'QUALITY_CHECK_FAIL',// Quality check failed (final)
-    'QUEUE_TIMEOUT',     // Queue timeout (final)
-    'EXEC_TIMEOUT',      // Execution timeout (final)
-    'STAGE_SUCCESS',     // Stage success (final)
-    'QUOTA_FAILED',      // Quota failed (final)
+    'UNEXEC', // Never executed (final)
+    'SKIP', // Skipped (final)
+    'QUALITY_CHECK_FAIL', // Quality check failed (final)
+    'QUEUE_TIMEOUT', // Queue timeout (final)
+    'EXEC_TIMEOUT', // Execution timeout (final)
+    'STAGE_SUCCESS', // Stage success (final)
+    'QUOTA_FAILED', // Quota failed (final)
   ]
 
   return !terminalStates.includes(status)
@@ -40,13 +40,8 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     // Get execution history detail data (from store, globally unique)
-    const {
-      executeDetail,
-      loading,
-      executeInfo,
-      initExecuteDetail,
-      silentRefreshExecuteDetail,
-    } = useExecuteDetail()
+    const { executeDetail, loading, executeInfo, initExecuteDetail, silentRefreshExecuteDetail } =
+      useExecuteDetail()
 
     const showContent = computed(() => !loading.value && !!executeDetail.value)
 
@@ -61,10 +56,13 @@ export default defineComponent({
       async () => {
         // Silently refresh execute detail data (only record API, no loading)
         const result = await silentRefreshExecuteDetail()
-        
+
         // Check if we should stop polling based on new status
         if (result && !shouldPollForStatus(result.status)) {
-          console.log('[ExecutionDetail] Execution finished, stopping polling. Status:', result.status)
+          console.log(
+            '[ExecutionDetail] Execution finished, stopping polling. Status:',
+            result.status,
+          )
           stopPolling()
         }
       },
@@ -81,23 +79,26 @@ export default defineComponent({
 
     // Watch loading state to detect when initial data has been loaded
     // Start polling after first successful data fetch only if status requires it
-    watch(
-      loading,
-      (isLoading, wasLoading) => {
-        // Detect transition from loading to not loading (data fetch completed)
-        if (wasLoading && !isLoading && !hasInitialDataLoaded.value && executeDetail.value) {
-          hasInitialDataLoaded.value = true
-          
-          // Only start polling if current status requires it
-          if (shouldPollForStatus(executeDetail.value.status)) {
-            startPolling()
-            console.log('[ExecutionDetail] Initial data loaded, starting polling. Status:', executeDetail.value.status)
-          } else {
-            console.log('[ExecutionDetail] Initial data loaded, no polling needed. Status:', executeDetail.value.status)
-          }
+    watch(loading, (isLoading, wasLoading) => {
+      // Detect transition from loading to not loading (data fetch completed)
+      if (wasLoading && !isLoading && !hasInitialDataLoaded.value && executeDetail.value) {
+        hasInitialDataLoaded.value = true
+
+        // Only start polling if current status requires it
+        if (shouldPollForStatus(executeDetail.value.status)) {
+          startPolling()
+          console.log(
+            '[ExecutionDetail] Initial data loaded, starting polling. Status:',
+            executeDetail.value.status,
+          )
+        } else {
+          console.log(
+            '[ExecutionDetail] Initial data loaded, no polling needed. Status:',
+            executeDetail.value.status,
+          )
         }
-      },
-    )
+      }
+    })
 
     // Watch route changes to reset polling state
     watch(

@@ -208,8 +208,6 @@ svg {
   flex-shrink: 0 !important;
 }
 
-
-
 /* 确保内容区域可以自然增长 */
 .bkci-property-panel .stagePanelContent,
 .bkci-property-panel .jobPanelContent {

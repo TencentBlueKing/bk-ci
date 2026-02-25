@@ -243,10 +243,10 @@ export default defineComponent({
         <div class={styles.logTools}>
           {/* 搜索栏 */}
           {props.showSearchBar && renderSearchBar()}
-          
+
           {/* 更多按钮 */}
           {renderMoreButton()}
-          
+
           {/* 自定义内容 slot */}
           {slots.tools?.()}
         </div>
@@ -254,4 +254,3 @@ export default defineComponent({
     )
   },
 })
-

@@ -10,4 +10,4 @@ export const DETAIL_TAB = {
 } as const
 
 // Tab 类型的 TypeScript 类型
-export type DetailTabType = typeof DETAIL_TAB[keyof typeof DETAIL_TAB]
+export type DetailTabType = (typeof DETAIL_TAB)[keyof typeof DETAIL_TAB]

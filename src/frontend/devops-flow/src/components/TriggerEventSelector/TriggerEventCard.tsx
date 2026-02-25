@@ -25,7 +25,7 @@ export default defineComponent({
     // 获取事件图标名称
     const eventAtomLogo = computed(() => {
       // 根据atomCode或classifyCode返回对应的图标
-     
+
       return 'placeholder'
     })
 

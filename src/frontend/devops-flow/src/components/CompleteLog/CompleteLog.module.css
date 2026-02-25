@@ -24,7 +24,8 @@
   margin: var(--spacing-lg);
   border-radius: var(--border-radius-large);
   transition-property: transform, opacity;
-  transition: transform var(--transition-normal) cubic-bezier(0.165, 0.84, 0.44, 1),
+  transition:
+    transform var(--transition-normal) cubic-bezier(0.165, 0.84, 0.44, 1),
     opacity var(--transition-fast) cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
@@ -328,4 +329,3 @@
 .levelDebug {
   color: var(--log-color-debug);
 }
-

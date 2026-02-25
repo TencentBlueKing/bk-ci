@@ -33,7 +33,7 @@ export default defineComponent({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: {
           flowId: flowId.value,
-          version: flowInfo.value?.releaseVersion
+          version: flowInfo.value?.releaseVersion,
         },
       })
     }
@@ -159,11 +159,11 @@ export default defineComponent({
     const handleEdit = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
-        params: { flowId: 
-          flowId.value,
+        params: {
+          flowId: flowId.value,
           version: flowInfo.value?.version,
           projectId: projectId.value,
-         },
+        },
       })
     }
 
@@ -171,7 +171,7 @@ export default defineComponent({
     const handleExecute = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_PREVIEW,
-        params: { 
+        params: {
           flowId: flowId.value,
           version: flowInfo.value?.version,
           projectId: projectId.value,

@@ -6,7 +6,7 @@ import {
   requestStartupInfo,
   type AuthoringNodeItem,
   type StartupInfo,
-  type StartupProperty
+  type StartupProperty,
 } from '@/api/preview'
 import type { Container, Element, FlowInfo, FlowModel, Stage } from '@/types/flow'
 import { allVersionKeyList } from '@/utils/flowConst'
@@ -54,14 +54,14 @@ const isShallowEqual = (a: unknown, b: unknown): boolean => {
   if (a === b) return true
   if (typeof a !== typeof b) return false
   if (typeof a !== 'object' || a === null || b === null) return false
-  
+
   const objA = a as Record<string, unknown>
   const objB = b as Record<string, unknown>
   const keysA = Object.keys(objA)
   const keysB = Object.keys(objB)
-  
+
   if (keysA.length !== keysB.length) return false
-  return keysA.every(key => objA[key] === objB[key])
+  return keysA.every((key) => objA[key] === objB[key])
 }
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
@@ -71,12 +71,15 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
 const createParamsValuesMap = (
   paramList: StartupProperty[],
   key: 'value' | 'defaultValue' = 'value',
-  existingValues?: ParamsRecord
+  existingValues?: ParamsRecord,
 ): ParamsRecord => {
-  return paramList.reduce<ParamsRecord>((acc, param) => ({
-    ...acc,
-    [param.id]: existingValues?.[param.id] ?? param[key]
-  }), {})
+  return paramList.reduce<ParamsRecord>(
+    (acc, param) => ({
+      ...acc,
+      [param.id]: existingValues?.[param.id] ?? param[key],
+    }),
+    {},
+  )
 }
 
 // ============================================
@@ -87,29 +90,29 @@ export const usePreviewStore = defineStore('preview', () => {
   // ----------------------------------------
   // Atomic Data Layer
   // ----------------------------------------
-  
+
   const atomicStartupInfo = shallowRef<AtomicState<StartupInfo | null>>({
     value: null,
     loading: false,
-    error: null
+    error: null,
   })
 
   const atomicPipelineModel = shallowRef<AtomicState<FlowModelAndSetting | null>>({
     value: null,
     loading: false,
-    error: null
+    error: null,
   })
 
   const atomicFlowInfo = shallowRef<AtomicState<FlowInfo | null>>({
     value: null,
     loading: false,
-    error: null
+    error: null,
   })
 
   const atomicAuthoringNodes = shallowRef<AtomicState<AuthoringNodeItem[]>>({
     value: [],
     loading: false,
-    error: null
+    error: null,
   })
 
   // User-modified param values
@@ -130,27 +133,29 @@ export const usePreviewStore = defineStore('preview', () => {
   // Computed Data Layer
   // ----------------------------------------
 
-  const loading = computed(() => 
-    atomicStartupInfo.value.loading || 
-    atomicPipelineModel.value.loading || 
-    atomicFlowInfo.value.loading
+  const loading = computed(
+    () =>
+      atomicStartupInfo.value.loading ||
+      atomicPipelineModel.value.loading ||
+      atomicFlowInfo.value.loading,
   )
 
-  const error = computed(() => 
-    atomicStartupInfo.value.error || 
-    atomicPipelineModel.value.error || 
-    atomicFlowInfo.value.error
+  const error = computed(
+    () =>
+      atomicStartupInfo.value.error ||
+      atomicPipelineModel.value.error ||
+      atomicFlowInfo.value.error,
   )
 
   const startupInfo = computed(() => atomicStartupInfo.value.value)
   const rawPipelineModel = computed(() => atomicPipelineModel.value.value)
-  
+
   const pipelineModel = computed(() => {
     const rawModel = rawPipelineModel.value?.modelAndSetting.model
     if (!rawModel) return null
     return {
       ...rawModel,
-      stages: stagesWithSkipState.value.length > 0 ? stagesWithSkipState.value : rawModel.stages
+      stages: stagesWithSkipState.value.length > 0 ? stagesWithSkipState.value : rawModel.stages,
     }
   })
 
@@ -163,51 +168,67 @@ export const usePreviewStore = defineStore('preview', () => {
   const useLastParams = computed(() => startupInfo.value?.useLatestParameters ?? false)
   const buildNo = computed(() => userBuildNo.value)
   const isVisibleVersion = computed(() => userBuildNo.value.required ?? false)
-  const paramValueKey = computed<'value' | 'defaultValue'>(() => useLastParams.value ? 'value' : 'defaultValue')
+  const paramValueKey = computed<'value' | 'defaultValue'>(() =>
+    useLastParams.value ? 'value' : 'defaultValue',
+  )
 
   // Helper to create label
-  const createLabel = (id: string, name?: string) => name ? `${id}(${name})` : id
+  const createLabel = (id: string, name?: string) => (name ? `${id}(${name})` : id)
 
   const paramList = computed<ProcessedProperty[]>(() => {
     const properties = startupInfo.value?.properties ?? []
     return properties
-      .filter(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
-      .map(p => ({
+      .filter(
+        (p) =>
+          !p.constant &&
+          p.required &&
+          !allVersionKeyList.includes(p.id) &&
+          p.propertyType !== 'BUILD',
+      )
+      .map((p) => ({
         ...p,
-        isChanged: isPlainObject(p.defaultValue) ? !isShallowEqual(p.defaultValue, p.value) : p.defaultValue !== p.value,
+        isChanged: isPlainObject(p.defaultValue)
+          ? !isShallowEqual(p.defaultValue, p.value)
+          : p.defaultValue !== p.value,
         readOnly: false,
-        label: createLabel(p.id, p.name)
+        label: createLabel(p.id, p.name),
       }))
   })
 
   const versionParamList = computed<ProcessedProperty[]>(() => {
     const properties = startupInfo.value?.properties ?? []
     return properties
-      .filter(p => allVersionKeyList.includes(p.id))
-      .map(p => ({ ...p, isChanged: p.defaultValue !== p.value }))
+      .filter((p) => allVersionKeyList.includes(p.id))
+      .map((p) => ({ ...p, isChanged: p.defaultValue !== p.value }))
   })
 
   const buildList = computed<ProcessedProperty[]>(() => {
     const properties = startupInfo.value?.properties ?? []
-    return properties.filter(p => p.propertyType === 'BUILD')
+    return properties.filter((p) => p.propertyType === 'BUILD')
   })
 
   const constantParams = computed<ProcessedProperty[]>(() => {
     const properties = startupInfo.value?.properties ?? []
     return properties
-      .filter(p => p.constant)
-      .map(p => ({ ...p, label: createLabel(p.id, p.name) }))
+      .filter((p) => p.constant)
+      .map((p) => ({ ...p, label: createLabel(p.id, p.name) }))
   })
 
   const otherParams = computed<ProcessedProperty[]>(() => {
     const properties = startupInfo.value?.properties ?? []
     return properties
-      .filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
-      .map(p => ({ ...p, label: createLabel(p.id, p.name) }))
+      .filter(
+        (p) =>
+          !p.constant &&
+          !p.required &&
+          !allVersionKeyList.includes(p.id) &&
+          p.propertyType !== 'BUILD',
+      )
+      .map((p) => ({ ...p, label: createLabel(p.id, p.name) }))
   })
 
   const hasPipelineParams = computed(() => {
-    return isVisibleVersion.value 
+    return isVisibleVersion.value
       ? paramList.value.length + versionParamList.value.length > 0
       : paramList.value.length > 0
   })
@@ -219,49 +240,54 @@ export const usePreviewStore = defineStore('preview', () => {
   })
 
   const pipelineParams = computed<ProcessedProperty[]>(() => {
-    return isVisibleVersion.value ? [...paramList.value, ...versionParamList.value] : paramList.value
+    return isVisibleVersion.value
+      ? [...paramList.value, ...versionParamList.value]
+      : paramList.value
   })
 
   const paramsValues = computed(() => ({
     ...createParamsValuesMap(paramList.value, paramValueKey.value),
-    ...userParamsValues.value
+    ...userParamsValues.value,
   }))
 
   const versionParamValues = computed(() => ({
     ...createParamsValuesMap(versionParamList.value, paramValueKey.value),
-    ...userVersionParamValues.value
+    ...userVersionParamValues.value,
   }))
 
   const buildValues = computed(() => ({
     ...createParamsValuesMap(buildList.value, paramValueKey.value),
-    ...userBuildValues.value
+    ...userBuildValues.value,
   }))
 
   const constantValues = computed(() => ({
     ...createParamsValuesMap(constantParams.value, paramValueKey.value),
-    ...userConstantValues.value
+    ...userConstantValues.value,
   }))
 
   const otherValues = computed(() => ({
     ...createParamsValuesMap(otherParams.value, paramValueKey.value),
-    ...userOtherValues.value
+    ...userOtherValues.value,
   }))
 
   // Extract all elements from stages
   const allElements = computed(() => {
-    return stagesWithSkipState.value.flatMap(stage =>
-      (stage.containers ?? []).flatMap(container => container.elements ?? [])
+    return stagesWithSkipState.value.flatMap((stage) =>
+      (stage.containers ?? []).flatMap((container) => container.elements ?? []),
     )
   })
 
   // Build skipped atoms record
   const skippedAtoms = computed<SkipAtomsRecord>(() => {
     return allElements.value
-      .filter(el => !(el as Element & { canElementSkip?: boolean }).canElementSkip)
-      .reduce<SkipAtomsRecord>((acc, el) => ({
-        ...acc,
-        [`devops_container_condition_skip_atoms_${el.id}`]: true
-      }), {})
+      .filter((el) => !(el as Element & { canElementSkip?: boolean }).canElementSkip)
+      .reduce<SkipAtomsRecord>(
+        (acc, el) => ({
+          ...acc,
+          [`devops_container_condition_skip_atoms_${el.id}`]: true,
+        }),
+        {},
+      )
   })
 
   // ----------------------------------------
@@ -269,8 +295,9 @@ export const usePreviewStore = defineStore('preview', () => {
   // ----------------------------------------
 
   const transformStagesWithSkipProp = (stages: Stage[], checkedTotal: boolean): Stage[] => {
-    return stages.map(stage => {
-      const stageDisabled = (stage.stageControlOption as { enable?: boolean } | undefined)?.enable === false
+    return stages.map((stage) => {
+      const stageDisabled =
+        (stage.stageControlOption as { enable?: boolean } | undefined)?.enable === false
       const runStage = !stageDisabled && checkedTotal
 
       const containers = stage.containers?.map((container: Container) => {
@@ -297,39 +324,62 @@ export const usePreviewStore = defineStore('preview', () => {
     }
 
     const key = info.useLatestParameters ? 'value' : 'defaultValue'
-    
-    const filterParams = (predicate: (p: StartupProperty) => boolean) => 
+
+    const filterParams = (predicate: (p: StartupProperty) => boolean) =>
       info.properties.filter(predicate)
 
     userParamsValues.value = createParamsValuesMap(
-      filterParams(p => !p.constant && p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD'),
-      key, existingValues
+      filterParams(
+        (p) =>
+          !p.constant &&
+          p.required &&
+          !allVersionKeyList.includes(p.id) &&
+          p.propertyType !== 'BUILD',
+      ),
+      key,
+      existingValues,
     )
-    
+
     userVersionParamValues.value = createParamsValuesMap(
-      filterParams(p => allVersionKeyList.includes(p.id)),
-      key, existingValues
+      filterParams((p) => allVersionKeyList.includes(p.id)),
+      key,
+      existingValues,
     )
-    
+
     userBuildValues.value = createParamsValuesMap(
-      filterParams(p => p.propertyType === 'BUILD'),
-      key, existingValues
+      filterParams((p) => p.propertyType === 'BUILD'),
+      key,
+      existingValues,
     )
-    
+
     userConstantValues.value = createParamsValuesMap(
-      filterParams(p => p.constant),
-      key, existingValues
+      filterParams((p) => p.constant),
+      key,
+      existingValues,
     )
-    
+
     userOtherValues.value = createParamsValuesMap(
-      filterParams(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD'),
-      key, existingValues
+      filterParams(
+        (p) =>
+          !p.constant &&
+          !p.required &&
+          !allVersionKeyList.includes(p.id) &&
+          p.propertyType !== 'BUILD',
+      ),
+      key,
+      existingValues,
     )
 
     return true
   }
 
-  const loadAuthoringNodes = async ({ projectId, envHashId }: { projectId: string; envHashId: string }) => {
+  const loadAuthoringNodes = async ({
+    projectId,
+    envHashId,
+  }: {
+    projectId: string
+    envHashId: string
+  }) => {
     atomicAuthoringNodes.value = { ...atomicAuthoringNodes.value, loading: true, error: null }
 
     try {
@@ -362,7 +412,7 @@ export const usePreviewStore = defineStore('preview', () => {
       const [infoRes, pipelineRes, flowInfoRes] = await Promise.all([
         requestStartupInfo({ projectId, flowId, version }),
         getFlowModel(projectId, flowId, version?.toString()),
-        fetchFlowInfo({ projectId, flowId })
+        fetchFlowInfo({ projectId, flowId }),
       ])
 
       atomicStartupInfo.value = { value: infoRes, loading: false, error: null }
@@ -371,12 +421,15 @@ export const usePreviewStore = defineStore('preview', () => {
       if (pipelineRes?.modelAndSetting?.model) {
         const processedModel: FlowModel = {
           ...pipelineRes.modelAndSetting.model,
-          stages: pipelineRes.modelAndSetting.model.stages.slice(1)
+          stages: pipelineRes.modelAndSetting.model.stages.slice(1),
         }
         atomicPipelineModel.value = {
-          value: { ...pipelineRes, modelAndSetting: { ...pipelineRes.modelAndSetting, model: processedModel } },
+          value: {
+            ...pipelineRes,
+            modelAndSetting: { ...pipelineRes.modelAndSetting, model: processedModel },
+          },
           loading: false,
-          error: null
+          error: null,
         }
         stagesWithSkipState.value = transformStagesWithSkipProp(processedModel.stages, true)
       } else {
@@ -391,7 +444,7 @@ export const usePreviewStore = defineStore('preview', () => {
       atomicPipelineModel.value = { ...atomicPipelineModel.value, loading: false, error }
       atomicFlowInfo.value = { ...atomicFlowInfo.value, loading: false, error }
       console.error('Failed to load preview data:', error)
-      throw error
+      throw error.message || error
     }
   }
 
@@ -423,15 +476,19 @@ export const usePreviewStore = defineStore('preview', () => {
       }
 
       // Stringify object values except buildNo
-      const processedParams = Object.entries(collectedParams).reduce<ParamsRecord>((acc, [key, value]) => ({
-        ...acc,
-        [key]: key !== 'buildNo' && isPlainObject(value) ? JSON.stringify(value) : value
-      }), {})
+      const processedParams = Object.entries(collectedParams).reduce<ParamsRecord>(
+        (acc, [key, value]) => ({
+          ...acc,
+          [key]: key !== 'buildNo' && isPlainObject(value) ? JSON.stringify(value) : value,
+        }),
+        {},
+      )
 
-      const finalParams: ParamsRecord = Object.keys(userBuildNo.value).length > 0
-        ? { ...processedParams, buildNo: userBuildNo.value }
-        : processedParams
-      
+      const finalParams: ParamsRecord =
+        Object.keys(userBuildNo.value).length > 0
+          ? { ...processedParams, buildNo: userBuildNo.value }
+          : processedParams
+
       return await requestExecPipeline({
         projectId,
         pipelineId,
@@ -466,11 +523,13 @@ export const usePreviewStore = defineStore('preview', () => {
   const setPipelineSkipProp = (checkedTotal: boolean): void => {
     const rawModel = rawPipelineModel.value
     if (!rawModel?.modelAndSetting.model.stages) return
-    stagesWithSkipState.value = transformStagesWithSkipProp(rawModel.modelAndSetting.model.stages, checkedTotal)
+    stagesWithSkipState.value = transformStagesWithSkipProp(
+      rawModel.modelAndSetting.model.stages,
+      checkedTotal,
+    )
   }
 
   const updatePipelineFromChange = (newPipeline: { stages: Stage[] }): void => {
-
     if (!newPipeline?.stages) return
     // Deep clone to ensure shallowRef reactivity update detects all nested changes
     // This is necessary because Object.assign in bk-pipeline modifies objects in place
@@ -479,7 +538,9 @@ export const usePreviewStore = defineStore('preview', () => {
   }
 
   const getAllElements = (stages: Stage[]): Element[] => {
-    return stages.flatMap(stage => (stage.containers ?? []).flatMap(container => container.elements ?? []))
+    return stages.flatMap((stage) =>
+      (stage.containers ?? []).flatMap((container) => container.elements ?? []),
+    )
   }
 
   const getSkippedAtoms = (): SkipAtomsRecord => skippedAtoms.value
@@ -489,7 +550,7 @@ export const usePreviewStore = defineStore('preview', () => {
     atomicPipelineModel.value = { value: null, loading: false, error: null }
     atomicFlowInfo.value = { value: null, loading: false, error: null }
     atomicAuthoringNodes.value = { value: [], loading: false, error: null }
-    
+
     userParamsValues.value = {}
     userVersionParamValues.value = {}
     userBuildValues.value = {}
@@ -569,5 +630,5 @@ export type {
   ParamCategory,
   ParamsRecord,
   ProcessedProperty,
-  SkipAtomsRecord
+  SkipAtomsRecord,
 }

@@ -130,7 +130,7 @@
   transform: translateX(-60px);
   width: 120px;
   height: var(--spacing-lg);
-  background: #EAEBF0;
+  background: #eaebf0;
   border-radius: 0 0 2px 2px;
   text-align: center;
   line-height: var(--spacing-sm);

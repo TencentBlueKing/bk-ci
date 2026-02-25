@@ -38,7 +38,7 @@ export interface SelectDataConf {
  * - 'key.subKey' - nested key access
  * - 'key[0]' - array index access
  * - 'key.subKey[0].prop' - combined access
- * 
+ *
  * @param obj - Source object to extract value from
  * @param path - Dot-separated path string
  * @param defaultVal - Default value if path not found
@@ -78,21 +78,18 @@ export const getValueByPath = <T = unknown>(
 /**
  * Extract response data by path
  * Default path: 'records'
- * 
+ *
  * @param response - API response object
  * @param dataPath - Path to extract data from (e.g., 'data.records', 'records')
  * @returns Array of data or empty array
  */
-export const getResponseData = (
-  response: unknown,
-  dataPath?: string,
-): unknown[] => {
+export const getResponseData = (response: unknown, dataPath?: string): unknown[] => {
   // Direct array response
   if (Array.isArray(response)) return response
 
   // Use getValueByPath with default path 'records'
   const result = getValueByPath<unknown[]>(response, dataPath || 'records', [])
-  
+
   return Array.isArray(result) ? result : []
 }
 
@@ -217,9 +214,7 @@ export function useDataSource(options: SelectDataConf) {
    */
   const normalizeListItems = (rawData: unknown[]): ListItem[] => {
     return rawData
-      .filter((item): item is Record<string, unknown> => 
-        item !== null && typeof item === 'object'
-      )
+      .filter((item): item is Record<string, unknown> => item !== null && typeof item === 'object')
       .map((item) => ({
         ...item,
         value: item[paramId] as string | number,

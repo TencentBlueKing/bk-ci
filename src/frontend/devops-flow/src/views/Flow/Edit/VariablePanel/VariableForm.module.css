@@ -59,7 +59,7 @@
   color: var(--color-text-light-gray);
   cursor: pointer;
   font-size: var(--font-size-sm);
-  
+
   &:hover {
     color: var(--color-text-tertiary);
   }
