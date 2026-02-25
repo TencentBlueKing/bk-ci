@@ -1,5 +1,6 @@
 import * as apiFlowInfo from '@/api/flowInfo'
 import type { FlowInfo, FlowVersion } from '@/types/flow'
+import { Message } from 'bkui-vue'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -23,6 +24,7 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
       flowInfo.value = res
     } catch (error) {
       console.error('Failed to get flow info:', error)
+      Message({ theme: 'error', message: (error as Error)?.message || error })
       throw error
     } finally {
       loading.value = false

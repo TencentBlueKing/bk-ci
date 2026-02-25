@@ -5,6 +5,8 @@ import {
   disableContent,
   getContentDetail,
   getContentTableData,
+  getRecycleTableData,
+  restoreContent,
   getMatchDynamicView,
   saveAsTemplate,
   toggleFlowFavorite,
@@ -113,41 +115,57 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       released: content.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
       disabled: isDisabledPipeline(content),
       tooltips: disabledTips(content),
-      flowAction: [
-        {
-          text: content.lock ? t('flow.content.enable') : t('flow.content.disable'),
-          handler: (data: ContentTableItem) => {
-            if (enableActionCallback) {
-              enableActionCallback(data)
-            } else {
-              openActionDialog(data, DialogType.ADD_TO) // fallback
-            }
-          },
-        },
-        {
-          text: t('flow.content.addTo'),
-          handler: (data: ContentTableItem) => openActionDialog(data, DialogType.ADD_TO),
-        },
-        {
-          text: t('flow.content.copyCreationFlow'),
-          handler: (data: ContentTableItem) => openActionDialog(data, DialogType.COPY),
-        },
-        {
-          text: t('flow.content.saveAsTemplate'),
-          handler: (data: ContentTableItem) => openActionDialog(data, DialogType.SAVE_AS_TEMPLATE),
-        },
-        {
-          text: t('flow.actions.delete'),
-          handler: (data: ContentTableItem) => {
-            if (deleteActionCallback) {
-              deleteActionCallback(data)
-            } else {
-              openActionDialog(data, DialogType.ADD_TO) // fallback
-            }
-          },
-        },
-      ],
+      flowAction: getFlowActions(content, isDraft),
     }
+  }
+
+  /**
+   * 获取流水线操作菜单配置
+   */
+  function getFlowActions(content: ContentTableItem, isDraft: boolean) {
+    const actions = [
+      {
+        key: 'enable',
+        text: content.lock ? t('flow.content.enable') : t('flow.content.disable'),
+        handler: (data: ContentTableItem) => {
+          if (enableActionCallback) {
+            enableActionCallback(data)
+          } else {
+            openActionDialog(data, DialogType.ADD_TO) // fallback
+          }
+        },
+      },
+      {
+        key: 'addTo',
+        text: t('flow.content.addTo'),
+        handler: (data: ContentTableItem) => openActionDialog(data, DialogType.ADD_TO),
+      },
+      {
+        key: 'copy',
+        text: t('flow.content.copyCreationFlow'),
+        handler: (data: ContentTableItem) => openActionDialog(data, DialogType.COPY),
+      },
+      {
+        key: 'saveAsTemplate',
+        text: t('flow.content.saveAsTemplate'),
+        handler: (data: ContentTableItem) => openActionDialog(data, DialogType.SAVE_AS_TEMPLATE),
+      },
+      {
+        key: 'delete',
+        text: t('flow.actions.delete'),
+        handler: (data: ContentTableItem) => {
+          if (deleteActionCallback) {
+            deleteActionCallback(data)
+          } else {
+            openActionDialog(data, DialogType.ADD_TO) // fallback
+          }
+        },
+      },
+    ]
+
+    // 草稿状态只显示：添加至、复制创作流、删除
+    const draftActions = ['addTo', 'copy', 'delete']
+    return isDraft ? actions.filter((action) => draftActions.includes(action.key)) : actions
   }
 
   function calcProgress({
@@ -349,10 +367,12 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * 加载内容表格数据
    */
-  async function fetchFlowList(params: ContentTableParams) {
+  async function fetchFlowList(params: ContentTableParams,  isRecycleBin = false) {
     tableLoading.value = true
     try {
-      const response = await getContentTableData(params)
+      const response = isRecycleBin
+        ? await getRecycleTableData(params)
+        : await getContentTableData(params)
 
       flowTableList.value = response.records.map(processContentItem)
       pagination.value = {
@@ -367,6 +387,21 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
       throw error
     } finally {
       tableLoading.value = false
+    }
+  }
+
+  /**
+   * 获取内容详情
+   */
+  async function restoreFlow(pipelineId: string) {
+    try {
+      const res = await restoreContent({
+        pipelineId,
+        projectId: route.params.projectId as string,
+      })
+      return res
+    } catch (error) {
+      throw error
     }
   }
 
@@ -505,6 +540,7 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     loadContentDetail,
     removeContent,
     confirmEnableAction,
+    restoreFlow,
     copyContentItem,
     saveContentAsTemplate,
     addContentToFlowGroup,

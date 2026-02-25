@@ -77,8 +77,8 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     currentVersion.value = versionStr
     try {
       const model = await getFlowModel(projectId, flowId, version)
-      flowModel.value = model.modelAndSetting.model
-      flowSetting.value = model.modelAndSetting.setting
+      flowModel.value = model.modelAndSetting?.model
+      flowSetting.value = model.modelAndSetting?.setting
       yamlContent.value = model.yamlPreview?.yaml || ''
       if (!model.yamlSupported) {
         modeStore.setMode(UI_MODE)

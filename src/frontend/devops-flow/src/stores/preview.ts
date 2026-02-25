@@ -444,7 +444,7 @@ export const usePreviewStore = defineStore('preview', () => {
       atomicPipelineModel.value = { ...atomicPipelineModel.value, loading: false, error }
       atomicFlowInfo.value = { ...atomicFlowInfo.value, loading: false, error }
       console.error('Failed to load preview data:', error)
-      throw error
+      throw error.message || error
     }
   }
 

@@ -27,7 +27,7 @@
       "reset": "クリア",
       "true": "はい",
       "false": "いいえ",
-      "pleaseSelect": "選択してください"
+      "pleaseSelect": "作成ノードを選択してください"
     },
     "sidebar": {
       "myFlows": "自分の作成フロー",
@@ -42,6 +42,7 @@
       "deleter": "削除者",
       "deleteTime": "削除時間",
       "restoreSuc": "復元成功",
+      "restoreFail": "復元失敗",
       "restoreFlowConfirm": "作成フロー「{0}」を復元してよろしいですか？"
     },
     "content": {
@@ -62,7 +63,7 @@
       "nonManual": "手動以外",
       "disabled": "無効",
       "pipelineLockTips": "作成フローは無効化されており、いかなる方法でもトリガーできません",
-      "pipelineManualDisable": "このパイプラインは手動トリガーの設定がされていません",
+      "pipelineManualDisable": "この作成フローは手動トリガーの設定がされていません",
       "orderByAlpha": "名前順 A-Z",
       "orderByCreateTime": "作成時間順",
       "orderByUpdateTime": "更新時間順",
@@ -117,7 +118,7 @@
       "publish": "公開",
       "edit": "編集",
       "addToTooltip": "グループに追加",
-      "confirmDeleteFlow": "作成フローを削除してもよろしいですか？この操作は元に戻せません。",
+      "confirmDeleteFlow": "作成フローを削除してもよろしいですか？",
       "operationObject": "操作オブジェクト",
       "enableOrDisable": "無効にするか有効にするか",
       "confirmDisableFlow": "作成フローを無効にしてもよろしいですか？",
@@ -544,7 +545,7 @@
         "groupName": "作成フローグループ名",
         "groupNamePlaceholder": "作成フローグループ名を入力してください",
         "groupNameRequired": "作成フローグループ名は空にできません",
-        "addPipelineGroupSuc": "パイプライングループが正常に作成されました",
+        "addPipelineGroupSuc": "作成フローグループが正常に作成されました",
         "visibilityScope": "可視範囲",
         "personalVisible": "個人に見える",
         "projectVisible": "プロジェクトに見える"
@@ -620,7 +621,7 @@
       "deleteGroupConfirm": "このラベルグループを削除してもよろしいですか？",
       "deleteTagConfirm": "このラベルを削除してもよろしいですか？",
       "emptyTitle": "ラベルグループを作成",
-      "desc": "パイプラインに合理的なラベルを割り当てることで、パイプラインを迅速に特定し管理するのに役立ちます。次の制約について知ってください：",
+      "desc": "作成フローに合理的なラベルを割り当てることで、作成フローを迅速に特定し管理するのに役立ちます。次の制約について知ってください：",
       "contentOne": "1. 1つのプロジェクトに最大10個のグループを追加できます",
       "contentTwo": "2. 1つのグループに最大12個のラベルを追加できます"
     },

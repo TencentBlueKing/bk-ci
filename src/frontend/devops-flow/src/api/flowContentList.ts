@@ -862,3 +862,41 @@ export async function searchFlowByName(
     throw error
   }
 }
+
+/**
+ * 获取创作流回收站表格数据
+ */
+export async function getRecycleTableData(
+  params: ContentTableParams,
+): Promise<ContentTableResponse> {
+  const { projectId, ...query } = params
+  try {
+    const res = await get<ContentTableResponse>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/pipelineRecycleList`,
+      {
+        params: query,
+      },
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 恢复创作流
+ */
+export async function restoreContent(params: {
+  pipelineId: string
+  projectId: string
+}): Promise<boolean> {
+  try {
+    const { pipelineId, projectId } = params
+    const res = await put<boolean>(
+      `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/restore`,
+    )
+    return res
+  } catch (error) {
+    throw error
+  }
+}

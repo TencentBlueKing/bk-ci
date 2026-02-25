@@ -17,6 +17,13 @@ export interface Styles {
   [key: string]: string
 }
 
+interface SearchConfigItem {
+  id: string
+  name: string
+  multiple?: boolean
+  children?: Array<{ id: string; name: string; [key: string]: any }>
+}
+
 // 搜索参数的 key 列表
 const SEARCH_KEYS = ['filterByPipelineName', 'filterByCreator', 'filterByViewIds', 'filterByLabels']
 
@@ -90,12 +97,20 @@ export function useFlowListData(styles?: Styles) {
   const labelsGroup = ref<GroupResponse[]>([])
 
   // 搜索选择器的数据配置
-  const searchData = computed(() => {
+  const searchData = computed<SearchConfigItem[]>(() => {
+    const nameCondition: SearchConfigItem = {
+      id: 'filterByPipelineName',
+      name: t('flow.content.name'),
+    }
+    // 回收站只显示名称搜索
+    if (isRecycleBin.value) {
+      return [
+        nameCondition
+      ]
+    }
+
     const baseSearchConfig = [
-      {
-        id: 'filterByPipelineName',
-        name: t('flow.content.name'),
-      },
+      nameCondition,
       {
         id: 'filterByCreator',
         name: t('flow.content.creator'),
@@ -506,6 +521,12 @@ export function useFlowListData(styles?: Styles) {
       confirmText: t('flow.common.confirm'),
       onConfirm: async () => {
         // TODO 恢复创作流
+        try {
+          const res = await store.restoreFlow(row.pipelineId)
+          Message({ theme: 'error', message: t(`flow.restore.${res ? 'restoreSuc' : 'restoreFail'}`) })
+        } catch (error: any) {
+          Message({ theme: 'error', message: error?.message || error })
+        }
       },
     })
   }
