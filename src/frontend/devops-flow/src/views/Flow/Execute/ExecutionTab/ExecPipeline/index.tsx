@@ -2,7 +2,14 @@ import CompleteLog from '@/components/CompleteLog'
 import { JobDetail, PluginDetail, StageDetail } from '@/components/ExecDetail'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
-import { STATUS, type Container, type Element, type ExecutionRecord, type FlowModel, type Stage } from '@/types/flow'
+import {
+  STATUS,
+  type Container,
+  type Element,
+  type ExecutionRecord,
+  type FlowModel,
+  type Stage,
+} from '@/types/flow'
 import { isSkip } from '@/utils/flowStatus'
 import { convertMillSec, convertTime } from '@/utils/util'
 import 'bkui-pipeline/dist/bk-pipeline.css'
@@ -45,7 +52,7 @@ export default defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    
+
     // 从 store 获取执行详情数据（全局唯一）
     const { executeDetail, isRunning } = useExecuteDetail()
 
@@ -97,9 +104,7 @@ export default defineComponent({
           const containers = stage.containers
             ?.filter((container) => !isSkip(container.status))
             .map((container) => {
-              const elements = container.elements?.filter(
-                (element) => !isSkip(element.status),
-              )
+              const elements = container.elements?.filter((element) => !isSkip(element.status))
 
               // 处理矩阵组容器
               if (container.matrixGroupFlag && Array.isArray(container.groupContainers)) {
@@ -140,7 +145,9 @@ export default defineComponent({
     })
 
     const executeCount = computed(() => {
-      return route.query.executeCount ? Number(route.query.executeCount) : executeDetail.value?.executeCount ?? 1
+      return route.query.executeCount
+        ? Number(route.query.executeCount)
+        : (executeDetail.value?.executeCount ?? 1)
     })
 
     const cancelUserId = computed(() => {
@@ -167,9 +174,7 @@ export default defineComponent({
 
     // ==================== Computed: Status & Labels ====================
     const statusLabel = computed(() => {
-      return executeDetail.value?.status
-        ? t(`flow.statusMap.${executeDetail.value.status}`)
-        : ''
+      return executeDetail.value?.status ? t(`flow.statusMap.${executeDetail.value.status}`) : ''
     })
 
     // ==================== Computed: Time Information ====================
@@ -212,9 +217,11 @@ export default defineComponent({
       return ['executeCost', 'systemCost', 'waitCost'].map((key) => ({
         field: key,
         label: t(`flow.execute.${key}`),
-          value: convertMillSec(
-            executeDetail.value?.model?.timeCost?.[key as keyof typeof executeDetail.value.model.timeCost],
-          ),
+        value: convertMillSec(
+          executeDetail.value?.model?.timeCost?.[
+            key as keyof typeof executeDetail.value.model.timeCost
+          ],
+        ),
       }))
     })
 
@@ -266,11 +273,10 @@ export default defineComponent({
 
     // ==================== Methods: Pipeline Operations ====================
     const expandAllMatrix = async (expand: boolean) => {
-    
       try {
         // 使用 filteredPipeline 而不是 executeDetail.value.model，因为已经过滤了第一个stage
         const stages = filteredPipeline.value?.stages || []
-        
+
         for (let i = 0; i < stages.length; i++) {
           const stage = stages[i]
           if (!stage) continue
@@ -281,12 +287,7 @@ export default defineComponent({
               for (let k = 0; k < matrix.groupContainers.length; k++) {
                 const container = matrix.groupContainers[k]
                 if (container) {
-                  bkPipelineRef.value?.expandMatrix?.(
-                    stage.id,
-                    matrix.id,
-                    container.id,
-                    expand,
-                  )
+                  bkPipelineRef.value?.expandMatrix?.(stage.id, matrix.id, container.id, expand)
                 }
               }
             } else {
@@ -301,13 +302,19 @@ export default defineComponent({
 
     const handlePipelineClick = (args: any) => {
       console.log('Pipeline click:', args)
-      
+
       // 从 bk-pipeline 组件传来的参数格式：
       // - 点击 Atom/Element: { stageIndex, containerIndex, containerGroupIndex, elementIndex }
       // - 点击 Container/Job: { stageIndex, containerIndex, containerGroupIndex, container }
       // - 点击 Stage: { stageIndex }
-      const { stageIndex, containerIndex, containerGroupIndex, elementIndex, container: clickedContainer } = args || {}
-      
+      const {
+        stageIndex,
+        containerIndex,
+        containerGroupIndex,
+        elementIndex,
+        container: clickedContainer,
+      } = args || {}
+
       // 关闭之前打开的面板
       closeAllLogPanels()
 
@@ -323,17 +330,19 @@ export default defineComponent({
         const stage = stages[stageIndex + 1] // +1 因为过滤掉了第一个 stage
         if (stage && stage.containers) {
           let targetContainer = stage.containers[containerIndex]
-          
+
           // 处理矩阵容器组
           if (containerGroupIndex !== undefined && targetContainer?.groupContainers) {
             targetContainer = targetContainer.groupContainers[containerGroupIndex]
           }
-          
+
           if (targetContainer && targetContainer.elements) {
             const element = targetContainer.elements[elementIndex]
             if (element) {
               selectedElement.value = element as Element
-              selectedContainerId.value = (targetContainer.id || targetContainer.containerId || '') as string
+              selectedContainerId.value = (targetContainer.id ||
+                targetContainer.containerId ||
+                '') as string
               showPluginDetail.value = true
             }
           }
@@ -346,16 +355,21 @@ export default defineComponent({
         const stage = stages[stageIndex + 1]
         if (stage && stage.containers) {
           let targetContainer = clickedContainer || stage.containers[containerIndex]
-          
+
           // 处理矩阵容器组
-          if (!clickedContainer && containerGroupIndex !== undefined && stage.containers[containerIndex]?.groupContainers) {
+          if (
+            !clickedContainer &&
+            containerGroupIndex !== undefined &&
+            stage.containers[containerIndex]?.groupContainers
+          ) {
             targetContainer = stage.containers[containerIndex].groupContainers[containerGroupIndex]
           }
-          
+
           if (targetContainer) {
             selectedContainer.value = targetContainer as Container
             selectedContainerStage.value = stage
-            selectedContainerIndex.value = containerGroupIndex !== undefined ? containerGroupIndex : containerIndex
+            selectedContainerIndex.value =
+              containerGroupIndex !== undefined ? containerGroupIndex : containerIndex
             showJobDetail.value = true
           }
         }
@@ -462,9 +476,7 @@ export default defineComponent({
             <Select.Option key={item.id} id={item.id} name={item.name}>
               <div class={styles.execCountSelectOption}>
                 <span>{item.name}</span>
-                {item.timeCost && (
-                  <span class={styles.execCountTimeCost}>{item.timeCost}</span>
-                )}
+                {item.timeCost && <span class={styles.execCountTimeCost}>{item.timeCost}</span>}
                 <span class={styles.execCountSelectOptionUser}>{item.user}</span>
               </div>
             </Select.Option>
@@ -492,10 +504,7 @@ export default defineComponent({
     const renderPipelineControls = () => {
       return (
         <header class={styles.pipelineStyleSettingHeader}>
-          <Checkbox
-            v-model={hideSkipExecTask.value}
-            class={styles.hideSkipPipelineTask}
-          >
+          <Checkbox v-model={hideSkipExecTask.value} class={styles.hideSkipPipelineTask}>
             {t('flow.execute.hideSkipStep')}
           </Checkbox>
           <Checkbox

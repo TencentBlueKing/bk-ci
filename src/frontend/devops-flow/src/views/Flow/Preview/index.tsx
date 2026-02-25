@@ -23,14 +23,14 @@ export default defineComponent({
     const {
       // Route params
       isDebugMode,
-      
+
       // UI State
       checkAll,
       selectedNode,
       runMessage,
       canExecute,
       flowName,
-      
+
       // Validation state
       invalidParams,
       isNodeInvalid,
@@ -38,7 +38,7 @@ export default defineComponent({
       // Authoring nodes
       authoringNodes,
       authoringNodesLoading,
-      
+
       // Grouped params
       groupedParams,
       groupedConstants,
@@ -46,13 +46,13 @@ export default defineComponent({
       hasGroupedParams,
       hasGroupedConstants,
       hasGroupedOtherParams,
-      
+
       // Atoms count
       selectedAtomsCount,
-      
+
       // Store access
       store,
-      
+
       // Actions
       toggleSection,
       isSectionExpanded,
@@ -75,7 +75,7 @@ export default defineComponent({
       param: StartupProperty,
       type: ParamType,
       values: Record<string, unknown>,
-      disabled = false
+      disabled = false,
     ) => {
       const value = values[param.id]
       const isInvalid = invalidParams.value.has(param.id)
@@ -137,7 +137,7 @@ export default defineComponent({
       param: StartupProperty,
       type: ParamType,
       values: Record<string, unknown>,
-      disabled = false
+      disabled = false,
     ) => {
       const value = values[param.id]
       const isInvalid = invalidParams.value.has(param.id)
@@ -196,7 +196,7 @@ export default defineComponent({
       params: StartupProperty[],
       type: ParamType,
       values: Record<string, unknown>,
-      disabled = false
+      disabled = false,
     ) => (
       <div class={styles.paramGroup} key={groupName}>
         <details open>
@@ -205,7 +205,7 @@ export default defineComponent({
             <SvgIcon name="angle-down" size={10} />
           </summary>
           <div class={styles.paramGroupContent}>
-            {params.map(param => renderGroupedParamFormItem(param, type, values, disabled))}
+            {params.map((param) => renderGroupedParamFormItem(param, type, values, disabled))}
           </div>
         </details>
       </div>
@@ -217,7 +217,7 @@ export default defineComponent({
     const renderCollapseHeader = (
       sectionId: 1 | 2 | 3 | 4 | 5,
       title: string,
-      actions?: () => any
+      actions?: () => any,
     ) => (
       <header
         class={[
@@ -229,10 +229,7 @@ export default defineComponent({
         <SvgIcon
           name="right-shape"
           size={14}
-          class={[
-            styles.collapseIcon,
-            isSectionExpanded(sectionId) && styles.collapseIconExpanded,
-          ]}
+          class={[styles.collapseIcon, isSectionExpanded(sectionId) && styles.collapseIconExpanded]}
         />
         {title}
         {actions?.()}
@@ -298,9 +295,7 @@ export default defineComponent({
                         </Select.Option>
                       ))}
                     </Select>
-                    <div class={styles.runtimeInfoDesc}>
-                      {t('flow.preview.creationNodeDesc')}
-                    </div>
+                    <div class={styles.runtimeInfoDesc}>{t('flow.preview.creationNodeDesc')}</div>
                   </div>
                   {/* Run Message */}
                   <div class={styles.runtimeInfoItem}>
@@ -309,9 +304,7 @@ export default defineComponent({
                       v-model={runMessage.value}
                       placeholder={t('flow.preview.runMessagePlaceholder')}
                     />
-                    <div class={styles.runtimeInfoDesc}>
-                      {t('flow.preview.runMessageDesc')}
-                    </div>
+                    <div class={styles.runtimeInfoDesc}>{t('flow.preview.runMessageDesc')}</div>
                   </div>
                 </div>
               </div>
@@ -332,18 +325,18 @@ export default defineComponent({
                 {hasGroupedParams.value ? (
                   // Grouped params by category
                   Object.entries(groupedParams.value).map(([groupName, params]) =>
-                    renderParamGroup(groupName, params, 'params', store.paramsValues)
+                    renderParamGroup(groupName, params, 'params', store.paramsValues),
                   )
                 ) : store.hasPipelineParams ? (
                   <>
                     {/* Version params */}
                     {store.isVisibleVersion &&
-                      store.versionParamList.map(param =>
-                        renderParamFormItem(param, 'versionParam', store.versionParamValues)
+                      store.versionParamList.map((param) =>
+                        renderParamFormItem(param, 'versionParam', store.versionParamValues),
                       )}
                     {/* Regular params */}
-                    {store.paramList.map(param =>
-                      renderParamFormItem(param, 'params', store.paramsValues)
+                    {store.paramList.map((param) =>
+                      renderParamFormItem(param, 'params', store.paramsValues),
                     )}
                   </>
                 ) : (
@@ -361,17 +354,15 @@ export default defineComponent({
               {renderCollapseHeader(3, t('flow.preview.constants'))}
               {isSectionExpanded(3) && (
                 <div class={styles.collapseContent}>
-                  {hasGroupedConstants.value ? (
-                    // Grouped constants by category
-                    Object.entries(groupedConstants.value).map(([groupName, params]) =>
-                      renderParamGroup(groupName, params, 'constant', store.constantValues, true)
-                    )
-                  ) : (
-                    // Non-grouped constants
-                    store.constantParams.map(param =>
-                      renderParamFormItem(param, 'constant', store.constantValues, true)
-                    )
-                  )}
+                  {hasGroupedConstants.value
+                    ? // Grouped constants by category
+                      Object.entries(groupedConstants.value).map(([groupName, params]) =>
+                        renderParamGroup(groupName, params, 'constant', store.constantValues, true),
+                      )
+                    : // Non-grouped constants
+                      store.constantParams.map((param) =>
+                        renderParamFormItem(param, 'constant', store.constantValues, true),
+                      )}
                 </div>
               )}
             </section>
@@ -386,19 +377,24 @@ export default defineComponent({
                   {hasGroupedOtherParams.value ? (
                     // Grouped other params by category (read-only)
                     Object.entries(groupedOtherParams.value).map(([groupName, params]) =>
-                      renderParamGroup(groupName, params, 'other', store.otherValues, true)
+                      renderParamGroup(groupName, params, 'other', store.otherValues, true),
                     )
                   ) : (
                     // Non-grouped other params (read-only)
                     <>
                       {/* Version params (if not visible in build params) */}
                       {!store.isVisibleVersion &&
-                        store.versionParamList.map(param =>
-                          renderParamFormItem(param, 'versionParam', store.versionParamValues, true)
+                        store.versionParamList.map((param) =>
+                          renderParamFormItem(
+                            param,
+                            'versionParam',
+                            store.versionParamValues,
+                            true,
+                          ),
                         )}
                       {/* Other params */}
-                      {store.otherParams.map(param =>
-                        renderParamFormItem(param, 'other', store.otherValues, true)
+                      {store.otherParams.map((param) =>
+                        renderParamFormItem(param, 'other', store.otherValues, true),
                       )}
                     </>
                   )}
@@ -428,7 +424,7 @@ export default defineComponent({
                       })}
                     </span>
                   </div>
-                ) : null
+                ) : null,
             )}
             {isSectionExpanded(5) && (
               <div class={[styles.collapseContent, styles.pipelinePreviewSection]}>

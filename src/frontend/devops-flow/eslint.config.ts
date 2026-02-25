@@ -21,12 +21,12 @@ export default defineConfigWithVueTs(
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
-  
+
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-  
+
   {
     ...pluginPlaywright.configs['flat/recommended'],
     files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}'],
@@ -34,12 +34,13 @@ export default defineConfigWithVueTs(
   ...(pluginOxlint.configs['flat/recommended'] as any),
   skipFormatting,
 
-    // 自定义规则
+  // 自定义规则
   {
     name: 'app/custom-rules',
     rules: {
       // 允许使用 any 类型
       '@typescript-eslint/no-explicit-any': 'off',
+      'vue/multi-word-component-names': 'off',
     },
   },
 )

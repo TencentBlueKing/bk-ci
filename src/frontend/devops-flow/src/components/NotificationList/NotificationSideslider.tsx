@@ -69,7 +69,7 @@ export default defineComponent({
           localNotification.value = createDefaultSubscription()
         }
       },
-      { immediate: true }
+      { immediate: true },
     )
 
     // Reset when sideslider opens
@@ -83,7 +83,7 @@ export default defineComponent({
             localNotification.value = createDefaultSubscription()
           }
         }
-      }
+      },
     )
 
     // Title for sideslider
@@ -229,9 +229,7 @@ export default defineComponent({
                           modelValue={localNotification.value.wechatGroupFlag}
                           onChange={handleWechatGroupFlagChange}
                         />
-                        <span class={styles.switchLabel}>
-                          {t('flow.content.wechatGroupAtAll')}
-                        </span>
+                        <span class={styles.switchLabel}>{t('flow.content.wechatGroupAtAll')}</span>
                       </div>
                     </FormItem>
                     <FormItem>

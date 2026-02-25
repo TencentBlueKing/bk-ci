@@ -120,29 +120,26 @@ export default defineComponent({
               ),
               footer: () => (
                 <>
-                    <Button
-                      class={styles.mr10}
-                      theme="primary"
-                      loading={resetLoading.value}
-                      onClick={handleReset}
-                    >
-                      {t('flow.delegation.reset')}
-                    </Button>
-                    <Button
-                      loading={resetLoading.value}
-                      onClick={() => (showResetDialog.value = !showResetDialog.value)}
-                    >
-                      {t('flow.delegation.cancel')}
-                    </Button>
+                  <Button
+                    class={styles.mr10}
+                    theme="primary"
+                    loading={resetLoading.value}
+                    onClick={handleReset}
+                  >
+                    {t('flow.delegation.reset')}
+                  </Button>
+                  <Button
+                    loading={resetLoading.value}
+                    onClick={() => (showResetDialog.value = !showResetDialog.value)}
+                  >
+                    {t('flow.delegation.cancel')}
+                  </Button>
                 </>
               ),
             }}
           </Dialog>
 
-          <Dialog
-            class={styles.resetAuthDialog}
-            v-model:is-show={showFailedDialog.value}
-          >
+          <Dialog class={styles.resetAuthDialog} v-model:is-show={showFailedDialog.value}>
             {{
               default: () => (
                 <>
@@ -159,13 +156,13 @@ export default defineComponent({
               ),
               footer: () => (
                 <>
-                    <Button
-                      theme="primary"
-                      loading={resetLoading.value}
-                      onClick={() => (showFailedDialog.value = !showFailedDialog.value)}
-                    >
-                      {t('flow.delegation.confirm')}
-                    </Button>
+                  <Button
+                    theme="primary"
+                    loading={resetLoading.value}
+                    onClick={() => (showFailedDialog.value = !showFailedDialog.value)}
+                  >
+                    {t('flow.delegation.confirm')}
+                  </Button>
                 </>
               ),
             }}

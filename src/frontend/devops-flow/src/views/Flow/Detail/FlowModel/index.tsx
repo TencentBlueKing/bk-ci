@@ -37,12 +37,7 @@ export default defineComponent({
     const { isVariablePanelOpen } = storeToRefs(uiStore)
 
     // 使用 useFlowModel hook 管理数据
-    const {
-      flowModelWithoutTriggerStage,
-      yamlContent,
-      loading,
-      isFlowEmpty,
-    } = useFlowModel()
+    const { flowModelWithoutTriggerStage, yamlContent, loading, isFlowEmpty } = useFlowModel()
 
     // ========== 侧边栏状态 ==========
     const isStagePanelVisible = ref(false)
@@ -75,7 +70,11 @@ export default defineComponent({
       if (!stage) return
 
       // 点击插件
-      if (realElementIndex !== undefined && realElementIndex !== -1 && containerIndex !== undefined) {
+      if (
+        realElementIndex !== undefined &&
+        realElementIndex !== -1 &&
+        containerIndex !== undefined
+      ) {
         const container = stage.containers?.[containerIndex]
         const element = container?.elements?.[realElementIndex]
         if (element) {
@@ -178,12 +177,14 @@ export default defineComponent({
         />
 
         {/* 变量面板 - 只读 */}
-        {props.visibleVariablePanel && <VariablePanel
-          v-model={isVariablePanelOpen.value}
-          flowId={flowId}
-          editable={false}
-          onToggle={(isOpen: boolean) => uiStore.setVariablePanelOpen(isOpen)}
-        />}
+        {props.visibleVariablePanel && (
+          <VariablePanel
+            v-model={isVariablePanelOpen.value}
+            flowId={flowId}
+            editable={false}
+            onToggle={(isOpen: boolean) => uiStore.setVariablePanelOpen(isOpen)}
+          />
+        )}
       </div>
     )
   },

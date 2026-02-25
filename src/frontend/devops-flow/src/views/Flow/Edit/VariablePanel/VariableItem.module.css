@@ -9,7 +9,6 @@
   transition: all var(--transition-normal) ease;
   border: 1px solid var(--bg-hover);
   border-radius: var(--border-radius);
-
 }
 
 .variableItem:hover {
@@ -68,7 +67,7 @@
   }
 
   .valueLabel {
-    color: var(--color-text-secondary)
+    color: var(--color-text-secondary);
   }
 
   .valueText {
@@ -80,8 +79,6 @@
     white-space: nowrap;
   }
 }
-
-
 
 /* Drag handle styles - 优化拖拽手柄视觉效果 */
 .dragHandle {
@@ -125,7 +122,8 @@
       color: var(--color-primary);
     }
     .dangerAction:hover {
-      color: var(--color-danger);}
+      color: var(--color-danger);
+    }
   }
 }
 

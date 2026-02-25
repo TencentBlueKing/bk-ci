@@ -77,7 +77,7 @@ export default defineComponent({
     // Type map for getting type info by key
     const typeMap = computed(() => {
       const map = new Map<string, { type: string; defaultValue: string }>()
-      subParamsKeyList.value.forEach(item => {
+      subParamsKeyList.value.forEach((item) => {
         map.set(item.key, {
           type: item.type || 'text',
           defaultValue: item.value,
@@ -89,7 +89,7 @@ export default defineComponent({
     // Initialize data from value prop
     const initData = () => {
       let values: Parameter[] = []
-      
+
       if (typeof props.value === 'string') {
         try {
           values = props.value ? JSON.parse(props.value) : []
@@ -100,7 +100,7 @@ export default defineComponent({
         values = props.value
       }
 
-      parameters.value = values.map(item => {
+      parameters.value = values.map((item) => {
         const typeInfo = typeMap.value.get(item.key)
         return {
           ...item,
@@ -152,7 +152,7 @@ export default defineComponent({
       })
       isLoading.value = true
       try {
-        const response = await get<any>(finalUrl) 
+        const response = await get<any>(finalUrl)
         subParamsKeyList.value = response
       } catch (e: any) {
         Message({
@@ -166,7 +166,7 @@ export default defineComponent({
 
     // Update parameters and emit change
     const updateParameters = () => {
-      const res = parameters.value.map(parameter => ({
+      const res = parameters.value.map((parameter) => ({
         key: parameter.key,
         value: isObject(parameter.value) ? JSON.stringify(parameter.value) : parameter.value,
       }))
@@ -196,10 +196,12 @@ export default defineComponent({
       const param = parameters.value[index]
       if (!param) return
       param.key = isObject(key) ? JSON.stringify(key) : key
-      
+
       const info = typeMap.value.get(key)
       if (info?.defaultValue) {
-        param.value = isObject(info.defaultValue) ? JSON.stringify(info.defaultValue) : info.defaultValue
+        param.value = isObject(info.defaultValue)
+          ? JSON.stringify(info.defaultValue)
+          : info.defaultValue
       } else {
         param.value = ''
       }
@@ -266,57 +268,62 @@ export default defineComponent({
         </label>
         {props.desc && <div class={styles.desc}>{props.desc}</div>}
         {parameters.value.length > 0 && (
-            <ul class={styles.paramsList}>
-              {parameters.value.map((parameter, index) => (
-                <li
-                  key={`${parameter.key}-${index}`}
-                  class={styles.paramItem}
-                  title={parameter.disabled ? t('common.notParamsTip', 'This parameter is not in the list') : undefined}
-                >
-                  {parameter.hasKey ? (
-                    <Select
-                      class={styles.inputCom}
-                      modelValue={parameter.key}
-                      disabled={props.disabled}
-                      onChange={(val: string) => handleChangeKey(val, index)}
-                    >
-                      {subParamsKeyList.value.map(option => (
-                        <Option
-                          key={option.key}
-                          value={option.key}
-                          label={option.key}
-                          disabled={parameters.value.some(p => p.key === option.key && p !== parameter)}
-                        />
-                      ))}
-                    </Select>
-                  ) : (
-                    <Input
-                      class={[styles.inputCom, styles.disabledInput]}
-                      modelValue={parameter.key}
-                      disabled
-                      title={parameter.key}
-                    />
-                  )}
-                  <span class={styles.inputSeg}>=</span>
+          <ul class={styles.paramsList}>
+            {parameters.value.map((parameter, index) => (
+              <li
+                key={`${parameter.key}-${index}`}
+                class={styles.paramItem}
+                title={
+                  parameter.disabled
+                    ? t('common.notParamsTip', 'This parameter is not in the list')
+                    : undefined
+                }
+              >
+                {parameter.hasKey ? (
+                  <Select
+                    class={styles.inputCom}
+                    modelValue={parameter.key}
+                    disabled={props.disabled}
+                    onChange={(val: string) => handleChangeKey(val, index)}
+                  >
+                    {subParamsKeyList.value.map((option) => (
+                      <Option
+                        key={option.key}
+                        value={option.key}
+                        label={option.key}
+                        disabled={parameters.value.some(
+                          (p) => p.key === option.key && p !== parameter,
+                        )}
+                      />
+                    ))}
+                  </Select>
+                ) : (
                   <Input
-                    class={[styles.inputCom, parameter.disabled && styles.disabledInput]}
-                    modelValue={parameter.value}
-                    type={getInputType(parameter.type)}
-                    disabled={props.disabled || parameter.disabled}
-                    title={parameter.value}
-                    onChange={(val: string) => handleChangeValue(val, index)}
+                    class={[styles.inputCom, styles.disabledInput]}
+                    modelValue={parameter.key}
+                    disabled
+                    title={parameter.key}
                   />
-                  {!props.disabled && (
-                    <i
-                      class={`bk-icon icon-minus-circle ${styles.minusBtn}`}
-                      onClick={() => handleRemoveParam(index)}
-                    />
-                  )}
-                </li>
-              ))}
-            </ul>
+                )}
+                <span class={styles.inputSeg}>=</span>
+                <Input
+                  class={[styles.inputCom, parameter.disabled && styles.disabledInput]}
+                  modelValue={parameter.value}
+                  type={getInputType(parameter.type)}
+                  disabled={props.disabled || parameter.disabled}
+                  title={parameter.value}
+                  onChange={(val: string) => handleChangeValue(val, index)}
+                />
+                {!props.disabled && (
+                  <i
+                    class={`bk-icon icon-minus-circle ${styles.minusBtn}`}
+                    onClick={() => handleRemoveParam(index)}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
         )}
-      
       </Loading>
     )
   },

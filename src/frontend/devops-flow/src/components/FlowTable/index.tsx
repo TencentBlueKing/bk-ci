@@ -110,7 +110,7 @@ export const FlowTable = defineComponent({
       loadContentDataWithGroupId,
       initSearchFromQuery,
     } = useFlowListData(styles as Styles)
-    
+
     onMounted(async () => {
       updateQuery()
     })
@@ -125,7 +125,7 @@ export const FlowTable = defineComponent({
             searchValue.value = []
             updateQuery(true)
           }
-          
+
           labelsGroup.value = await getProjectTagList()
           initSearchFromQuery()
           loadContentData(newGroupId)
@@ -133,12 +133,15 @@ export const FlowTable = defineComponent({
       },
       { immediate: true },
     )
-    
-    watch(() => projectId.value, () => {
-      nextTick(() => {
-        loadContentData(props.groupId)
-      })
-    })
+
+    watch(
+      () => projectId.value,
+      () => {
+        nextTick(() => {
+          loadContentData(props.groupId)
+        })
+      },
+    )
 
     watch([currentSortType, currentCollation], () => {
       loadContentData(props.groupId)
@@ -663,38 +666,36 @@ export const FlowTable = defineComponent({
         </div>
         <div class={styles.tableContainer}>
           <div class={styles.toolbar}>
-            {
-              !isRecycleBin.value && (
-                <Dropdown
-                  trigger="click"
-                  popover-options={{
-                    clickContentAutoHide: true,
-                  }}
-                >
-                  {{
-                    default: () => (
-                      <Button theme="primary">
-                        <SvgIcon name="add-small" size={22} />
-                        {t('flow.content.newFlow')}
-                      </Button>
-                    ),
-                    content: () => (
-                      <Dropdown.DropdownMenu>
-                        {newFlowList.value.map((item) => (
-                          <Dropdown.DropdownItem
-                            key={item.text}
-                            onClick={item.handler}
-                            class={styles.newFlow}
-                          >
-                            {item.text}
-                          </Dropdown.DropdownItem>
-                        ))}
-                      </Dropdown.DropdownMenu>
-                    ),
-                  }}
-                </Dropdown>
-              )
-            }
+            {!isRecycleBin.value && (
+              <Dropdown
+                trigger="click"
+                popover-options={{
+                  clickContentAutoHide: true,
+                }}
+              >
+                {{
+                  default: () => (
+                    <Button theme="primary">
+                      <SvgIcon name="add-small" size={22} />
+                      {t('flow.content.newFlow')}
+                    </Button>
+                  ),
+                  content: () => (
+                    <Dropdown.DropdownMenu>
+                      {newFlowList.value.map((item) => (
+                        <Dropdown.DropdownItem
+                          key={item.text}
+                          onClick={item.handler}
+                          class={styles.newFlow}
+                        >
+                          {item.text}
+                        </Dropdown.DropdownItem>
+                      ))}
+                    </Dropdown.DropdownMenu>
+                  ),
+                }}
+              </Dropdown>
+            )}
             {/* <Button>{t('flow.content.batchManage')}</Button> */}
             <div class={styles.searchBox}>
               <SearchSelect

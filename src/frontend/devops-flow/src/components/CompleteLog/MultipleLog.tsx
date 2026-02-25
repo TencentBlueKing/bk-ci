@@ -3,12 +3,7 @@
  * 多任务日志组件 - 显示 Job 内所有插件的日志（可折叠）
  * 参考 @blueking/log 的 bkMultipleLog 组件
  */
-import {
-  buildLogDownloadUrl,
-  getAfterLog,
-  getInitLog,
-  type LogItem,
-} from '@/api/log'
+import { buildLogDownloadUrl, getAfterLog, getInitLog, type LogItem } from '@/api/log'
 import StatusIcon from '@/components/StatusIcon'
 import { LogIcon } from '@/components/LogViewer/LogIcon'
 import type { Container, StatusType } from '@/types/flow'
@@ -78,7 +73,7 @@ export default defineComponent({
     // Initialize plugin states from container elements
     const initPluginStates = () => {
       const elements = props.container?.elements || []
-      
+
       // Add "Set up job" as the first item
       const plugins = [
         {
@@ -86,14 +81,14 @@ export default defineComponent({
           name: 'Set up job',
           status: (props.container?.startVMStatus || 'QUEUE') as StatusType,
         },
-        ...elements.map(el => ({
+        ...elements.map((el) => ({
           id: el.id,
           name: el.name,
           status: (el.status || 'QUEUE') as StatusType,
         })),
       ]
 
-      pluginStates.value = plugins.map(plugin => ({
+      pluginStates.value = plugins.map((plugin) => ({
         id: plugin.id,
         name: plugin.name,
         status: plugin.status,
@@ -109,7 +104,7 @@ export default defineComponent({
 
     // Toggle plugin expand/collapse
     const togglePlugin = (pluginId: string) => {
-      const state = pluginStates.value.find(s => s.id === pluginId)
+      const state = pluginStates.value.find((s) => s.id === pluginId)
       if (!state) return
 
       state.expanded = !state.expanded
@@ -122,7 +117,7 @@ export default defineComponent({
 
     // Load plugin log
     const loadPluginLog = (pluginId: string) => {
-      const state = pluginStates.value.find(s => s.id === pluginId)
+      const state = pluginStates.value.find((s) => s.id === pluginId)
       if (!state) return
 
       state.loading = true
@@ -146,7 +141,7 @@ export default defineComponent({
 
     // Fetch log data
     const fetchLog = async (pluginId: string, postData: LogPostData) => {
-      const state = pluginStates.value.find(s => s.id === pluginId)
+      const state = pluginStates.value.find((s) => s.id === pluginId)
       if (!state) return
 
       const id = hashID()
@@ -218,17 +213,17 @@ export default defineComponent({
 
     // Clear all logs and polling
     const clearAllLogs = () => {
-      Object.values(timeIds.value).forEach(id => clearTimeout(id))
+      Object.values(timeIds.value).forEach((id) => clearTimeout(id))
       timeIds.value = {}
 
-      Object.values(logPostData.value).forEach(postData => {
+      Object.values(logPostData.value).forEach((postData) => {
         if (postData.hashId) {
           clearIds.value.push(postData.hashId)
         }
       })
       logPostData.value = {}
 
-      pluginStates.value.forEach(state => {
+      pluginStates.value.forEach((state) => {
         state.logs = []
         state.lineNo = 0
         state.expanded = false
@@ -259,13 +254,10 @@ export default defineComponent({
     )
 
     // Watch for executeCount or showDebug changes
-    watch(
-      [() => props.executeCount, () => props.showDebug],
-      () => {
-        clearAllLogs()
-        initPluginStates()
-      },
-    )
+    watch([() => props.executeCount, () => props.showDebug], () => {
+      clearAllLogs()
+      initPluginStates()
+    })
 
     onBeforeUnmount(() => {
       clearAllLogs()
@@ -330,4 +322,3 @@ export default defineComponent({
     )
   },
 })
-

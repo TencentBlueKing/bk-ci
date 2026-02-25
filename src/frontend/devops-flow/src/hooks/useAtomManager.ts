@@ -1,4 +1,11 @@
-import { fetchAtomClassify, fetchAtoms, JobCategory, JobType, type AtomClassify, type AtomItem } from '@/api/atom'
+import {
+  fetchAtomClassify,
+  fetchAtoms,
+  JobCategory,
+  JobType,
+  type AtomClassify,
+  type AtomItem,
+} from '@/api/atom'
 import { computed, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -24,9 +31,7 @@ interface UseAtomManagerOptions {
  */
 export const useAtomManager = (options: UseAtomManagerOptions) => {
   const route = useRoute()
-  const {
-    category = JobCategory.TASK
-  } = options
+  const { category = JobCategory.TASK } = options
   const projectCode = computed(() => {
     return route.params.projectId as string
   })
@@ -42,7 +47,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   // 生成缓存键
   const generateCacheKey = (params: {
     classifyId?: string
-    keyword?: string,
+    keyword?: string
     jobType?: JobType
   }) => {
     const { classifyId = '', keyword = '', jobType } = params
@@ -94,7 +99,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       jobType,
       page = 1,
       pageSize = 20,
-      forceRefresh = false
+      forceRefresh = false,
     } = params
 
     const cacheKey = generateCacheKey({ classifyId, keyword, jobType })
@@ -106,7 +111,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         hasMore: true,
         page: 0,
         timestamp: 0,
-        loading: false
+        loading: false,
       }
     }
 
@@ -117,7 +122,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       return {
         records: cache.data,
         hasMore: cache.hasMore,
-        page: cache.page
+        page: cache.page,
       }
     }
 
@@ -126,7 +131,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       return {
         records: cache.data,
         hasMore: cache.hasMore,
-        page: cache.page
+        page: cache.page,
       }
     }
 
@@ -141,7 +146,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
         os: 'WINDOWS',
         keyword,
         page,
-        pageSize
+        pageSize,
       })
 
       const records = result.records || []
@@ -163,14 +168,14 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
       return {
         records: cache.data,
         hasMore,
-        page: cache.page
+        page: cache.page,
       }
     } catch (error) {
       console.error('Failed to fetch atoms:', error)
       return {
         records: cache.data,
         hasMore: false,
-        page: cache.page
+        page: cache.page,
       }
     } finally {
       cache.loading = false
@@ -178,37 +183,37 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
   }
 
   // 获取缓存的插件列表
-  const getCachedAtomList = (params: {
-    classifyId?: string
-    keyword?: string
-    jobType?: JobType
-  } = {}): AtomItem[] => {
+  const getCachedAtomList = (
+    params: {
+      classifyId?: string
+      keyword?: string
+      jobType?: JobType
+    } = {},
+  ): AtomItem[] => {
     const cacheKey = generateCacheKey(params)
     return atomCacheMap[cacheKey]?.data || []
   }
 
   // 检查是否正在加载
-  const isLoadingAtoms = (params: {
-    classifyId?: string
-    keyword?: string,
-    jobType?: JobType
-  } = {}) => {
+  const isLoadingAtoms = (
+    params: {
+      classifyId?: string
+      keyword?: string
+      jobType?: JobType
+    } = {},
+  ) => {
     const cacheKey = generateCacheKey(params)
     return atomCacheMap[cacheKey]?.loading || false
   }
 
   // 清除指定缓存
-  const clearCache = (params?: {
-    classifyId?: string
-    keyword?: string,
-    jobType?: JobType
-  }) => {
+  const clearCache = (params?: { classifyId?: string; keyword?: string; jobType?: JobType }) => {
     if (params) {
       const cacheKey = generateCacheKey(params)
       delete atomCacheMap[cacheKey]
     } else {
       // 清除所有缓存
-      Object.keys(atomCacheMap).forEach(key => {
+      Object.keys(atomCacheMap).forEach((key) => {
         delete atomCacheMap[key]
       })
     }
@@ -216,18 +221,20 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
 
   // 清除所有缓存
   const clearAllCache = () => {
-    Object.keys(atomCacheMap).forEach(key => {
+    Object.keys(atomCacheMap).forEach((key) => {
       delete atomCacheMap[key]
     })
     classifyList.value = []
   }
 
   // 刷新数据
-  const refreshData = async (params: {
-    classifyId?: string
-    keyword?: string,
-    jobType?: JobType
-  } = {}) => {
+  const refreshData = async (
+    params: {
+      classifyId?: string
+      keyword?: string
+      jobType?: JobType
+    } = {},
+  ) => {
     return await fetchAtomList({ ...params, forceRefresh: true })
   }
 
@@ -256,7 +263,7 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
     // 计算属性
     classifyMap: computed(() => {
       const map: Record<string, AtomClassify> = {}
-      classifyList.value.forEach(item => {
+      classifyList.value.forEach((item) => {
         map[item.classifyCode] = item
       })
       return map
@@ -270,10 +277,10 @@ export const useAtomManager = (options: UseAtomManagerOptions) => {
           id: '',
           classifyCode: 'all',
           classifyName: '全部插件',
-          weight: 0
+          weight: 0,
         } as AtomClassify)
       }
       return options
-    })
+    }),
   }
 }

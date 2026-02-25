@@ -14,7 +14,7 @@ import { useRoute } from 'vue-router'
  * ====================================
  * useAuthoringEnvironment Hook
  * ====================================
- * 
+ *
  * A unified hook for components to interact with authoring environment functionality.
  * Provides a simple and consistent API for accessing and managing authoring environments.
  */
@@ -22,9 +22,11 @@ import { useRoute } from 'vue-router'
 // ============ Type Exports ============
 
 export type {
-  AuthoringEnvironment, AuthoringEnvItem,
+  AuthoringEnvironment,
+  AuthoringEnvItem,
   AuthoringNodeItem,
-  CreationNode, EnvSelectItem
+  CreationNode,
+  EnvSelectItem,
 }
 
 // ============ Hook Options ============
@@ -34,30 +36,30 @@ export interface UseAuthoringEnvironmentOptions {
    * Project ID (optional, will use route.params.projectId if not provided)
    */
   projectId?: string
-  
+
   /**
    * Flow ID (optional, will use route.params.flowId if not provided)
    */
   flowId?: string
-  
+
   /**
    * Auto load environment list on mount
    * @default false
    */
   autoLoadEnvList?: boolean
-  
+
   /**
    * Environment type for filtering
    * @default 'CREATE'
    */
   envType?: string
-  
+
   /**
    * Auto load node list when environment changes
    * @default true
    */
   autoLoadNodes?: boolean
-  
+
   /**
    * Reset store state on unmount
    * @default false
@@ -81,9 +83,9 @@ export interface UseAuthoringEnvironmentOptions {
 export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions = {}) {
   const route = useRoute()
   const store = useAuthoringEnvironmentStore()
-  
+
   // ============ Options with defaults ============
-  
+
   const {
     projectId: optionProjectId,
     flowId: optionFlowId,
@@ -91,25 +93,25 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     envType = 'CREATE',
     resetOnUnmount = false,
   } = options
-  
+
   // ============ Computed Values ============
-  
+
   /**
    * Get project ID from options or route
    */
   const projectId = computed(() => {
     return optionProjectId || (route.params.projectId as string) || ''
   })
-  
+
   /**
    * Get flow ID from options or route
    */
   const flowId = computed(() => {
     return optionFlowId || (route.params.flowId as string) || ''
   })
-  
+
   // ============ Store Refs ============
-  
+
   const {
     envList,
     nodeList,
@@ -123,15 +125,15 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   } = storeToRefs(store)
 
   const envSelectList = computed<EnvSelectItem[]>(() => {
-    return envList.value.map(env => ({
+    return envList.value.map((env) => ({
       ...env,
       value: env.envHashId,
       label: env.name,
     }))
   })
-  
+
   // ============ Methods ============
-  
+
   /**
    * Load environment list
    * @param customEnvType - Optional custom environment type
@@ -139,7 +141,7 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
   const loadEnvList = async (customEnvType?: string): Promise<void> => {
     await store.loadEnvList(projectId.value, customEnvType || envType)
   }
-  
+
   /**
    * Load node list for specified environment
    * @param envHashId - Environment envHashId
@@ -148,46 +150,45 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     await store.loadNodeList(projectId.value, envHashId)
   }
 
-  
   /**
    * Refresh environment list
    */
   const refreshEnvList = async (): Promise<void> => {
     await store.refreshEnvList(projectId.value, envType)
   }
-  
+
   /**
    * Refresh node list for current selected environment
    */
   const refreshNodeList = async (): Promise<void> => {
     await store.refreshNodeList(projectId.value)
   }
-  
+
   /**
    * Get environment by hash ID
    * @param envHashId - Environment hash ID
    * @returns Environment item or undefined
    */
   const getEnvByHashId = (envHashId: string): AuthoringEnvItem | undefined => {
-    return envList.value.find(env => env.envHashId === envHashId)
+    return envList.value.find((env) => env.envHashId === envHashId)
   }
-  
+
   /**
    * Reset all state
    */
   const resetState = (): void => {
     store.resetState()
   }
-  
+
   // ============ Lifecycle ============
-  
+
   onMounted(async () => {
-    // Auto load environment list if enabled 
+    // Auto load environment list if enabled
     if (autoLoadEnvList && projectId.value) {
       loadEnvList()
     }
   })
-  
+
   onUnmounted(() => {
     // Reset state on unmount if enabled
     if (resetOnUnmount) {
@@ -195,35 +196,35 @@ export function useAuthoringEnvironment(options: UseAuthoringEnvironmentOptions 
     }
   })
 
-   function goEnvironment(envHashId?: string) {
+  function goEnvironment(envHashId?: string) {
     let url = `${location.origin}/console/environment/${route.params.projectId}`
     if (envHashId) {
       url += `/creative/env/ALL/${envHashId}/node`
     }
     window.open(url, '_blank')
   }
-  
+
   // ============ Return ============
-  
+
   return {
     // Computed identifiers
     projectId,
     flowId,
-    
+
     // State refs
     envList,
     nodeList,
     envListLoading,
     nodeListLoading,
     errorMessage,
-    
+
     // Computed state
     envSelectList,
     creationNodes,
     isLoading,
     isEmpty,
     isNodeListEmpty,
-    
+
     // Methods
     loadEnvList,
     loadNodeList,

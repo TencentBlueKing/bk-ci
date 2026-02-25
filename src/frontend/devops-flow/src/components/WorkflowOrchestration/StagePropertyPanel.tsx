@@ -137,7 +137,10 @@ export default defineComponent({
                         {stageName.value || t('flow.orchestration.stageNamePlaceholder')}
                       </p>
                       {props.editable && (
-                        <span class={sharedStyles.editIcon} onClick={() => (nameEditing.value = true)}>
+                        <span
+                          class={sharedStyles.editIcon}
+                          onClick={() => (nameEditing.value = true)}
+                        >
                           <SvgIcon name="edit" size={16} />
                         </span>
                       )}

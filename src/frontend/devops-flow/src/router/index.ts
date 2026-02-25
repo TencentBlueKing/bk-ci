@@ -188,28 +188,28 @@ const router = createRouter({
             {
               path: '',
               redirect: (to) => ({
-                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+                name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
               }),
             },
             {
               path: 'execute-detail',
               component: () => import('../views/Flow/Execute/ExecutionTab/ExecPipeline'),
-              name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB
+              name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
             },
             {
               path: 'artifacts',
               component: () => import('../views/Flow/Execute/ExecutionTab/Outputs'),
-              name: ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS
+              name: ROUTE_NAMES.FLOW_DETAIL_ARTIFACTS,
             },
             {
               path: 'outputs',
               component: () => import('../views/Flow/Execute/ExecutionTab/Outputs'),
-              name: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS
+              name: ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
             },
             {
               path: 'start-params',
               component: () => import('../views/Flow/Execute/ExecutionTab/StartParams'),
-              name: ROUTE_NAMES.FLOW_DETAIL_START_PARAMS
+              name: ROUTE_NAMES.FLOW_DETAIL_START_PARAMS,
             },
             // 兜底路由：处理非法的 tab
             {

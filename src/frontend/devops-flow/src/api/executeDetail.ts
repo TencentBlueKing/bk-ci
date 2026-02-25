@@ -1,7 +1,4 @@
-import {
-  type FlowInfo,
-  type ExecuteDetailData
-} from '@/types/flow'
+import { type FlowInfo, type ExecuteDetailData } from '@/types/flow'
 import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { del, get, post } from '@/utils/http'
 
@@ -88,8 +85,8 @@ export function requestPipelineExecDetail({
 }): Promise<ExecuteDetailData> {
   try {
     const url = executeCount
-    ? `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record?executeCount=${executeCount}`
-    : `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`
+      ? `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record?executeCount=${executeCount}`
+      : `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/record`
 
     const res = get<ExecuteDetailData>(url)
     return res
@@ -111,7 +108,9 @@ export function requestFlowVersion({
   version: number
 }): Promise<FlowInfo> {
   try {
-    const res = get<FlowInfo>(`${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    const res = get<FlowInfo>(
+      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`,
+    )
     return res
   } catch (error) {
     throw error
@@ -134,9 +133,7 @@ export function requestTerminatePipeline({
   pipelineId: string
   buildId: string
 }): Promise<boolean> {
-  return del<boolean>(
-    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}`
-  )
+  return del<boolean>(`${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}`)
 }
 
 /**
@@ -163,11 +160,12 @@ export function retryFlow({
   failedContainer?: string
   skip?: boolean
 }): Promise<RetryPipelineResponse> {
-  const failedContainerStr = failedContainer !== undefined ? `&failedContainer=${failedContainer}` : ''
+  const failedContainerStr =
+    failedContainer !== undefined ? `&failedContainer=${failedContainer}` : ''
   const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
-  
+
   return post<RetryPipelineResponse>(
-    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/retry${queryStr}`,
   )
 }
 
@@ -190,7 +188,7 @@ export function replayFlow({
   forceTrigger?: boolean
 }): Promise<ReplayPipelineResponse> {
   return post<ReplayPipelineResponse>(
-    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/replayByBuild?forceTrigger=${forceTrigger}`,
   )
 }
 
@@ -216,10 +214,10 @@ export function requestBuildParams({
   if (archiveFlag !== undefined && archiveFlag !== null) {
     params.archiveFlag = archiveFlag
   }
-  
+
   return get<BuildParamItem[]>(
     `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`,
-    { params }
+    { params },
   )
 }
 
@@ -239,6 +237,6 @@ export function requestBuildParamCombination({
   buildId: string
 }): Promise<BuildParamProperty[]> {
   return get<BuildParamProperty[]>(
-    `${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`
+    `${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`,
   )
 }

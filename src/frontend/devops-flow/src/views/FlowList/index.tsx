@@ -34,7 +34,11 @@ export default defineComponent({
       <div class={layoutStyles.page}>
         <div class={styles.header}>
           <div class={styles.headerLeft}>
-            <img src={`${import.meta.env.BASE_URL}devops-flow-logo.svg`} alt="flow" class={styles.logo} />
+            <img
+              src={`${import.meta.env.BASE_URL}devops-flow-logo.svg`}
+              alt="flow"
+              class={styles.logo}
+            />
             <span class={styles.title}>{t('flow.title')}</span>
           </div>
           <Tab

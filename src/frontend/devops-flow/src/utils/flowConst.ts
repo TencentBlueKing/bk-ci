@@ -57,8 +57,8 @@ export function extForFile(name: string) {
 export const allVersionKeyList = ['BK_CI_MAJOR_VERSION', 'BK_CI_MINOR_VERSION', 'BK_CI_FIX_VERSION']
 
 export const templateTypeEnum = {
-    CONSTRAIN: 'CONSTRAIN',
-    FREEDOM: 'FREEDOM',
-    PUBLIC: 'PUBLIC',
-    CUSTOMIZE: 'CUSTOMIZE'
+  CONSTRAIN: 'CONSTRAIN',
+  FREEDOM: 'FREEDOM',
+  PUBLIC: 'PUBLIC',
+  CUSTOMIZE: 'CUSTOMIZE',
 }

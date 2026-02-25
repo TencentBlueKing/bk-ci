@@ -84,7 +84,6 @@ export default defineComponent({
                 <StatusIcon status={stageStatus.value} />
                 {stageName.value}
               </span>
-
             </header>
 
             <div class={styles.logContentArea}>

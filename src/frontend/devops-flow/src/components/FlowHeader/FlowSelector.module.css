@@ -47,10 +47,9 @@
   flex-direction: column;
 }
 
-
 .flowListWrapper {
   flex: 1;
-  overflow: hidden;  
+  overflow: hidden;
   padding: var(--spacing-sm) 0;
 }
 

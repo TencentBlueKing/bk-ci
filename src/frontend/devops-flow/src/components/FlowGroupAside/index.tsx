@@ -60,11 +60,14 @@ export const FlowGroupAside = defineComponent({
     // 删除确认 hook
     const { showDeleteConfirm } = useDeleteConfirm()
 
-    watch(() => projectId.value, () => {
-      nextTick(() => {
-        flowGroupData.loadAllData()
-      })
-    })
+    watch(
+      () => projectId.value,
+      () => {
+        nextTick(() => {
+          flowGroupData.loadAllData()
+        })
+      },
+    )
     /**
      * 组件挂载时加载数据
      */
@@ -104,7 +107,7 @@ export const FlowGroupAside = defineComponent({
         }
         const res = await flowGroupData.createFlowGroup(params)
         if (res.id) {
-          Message({ theme: 'success', message: t('flow.dialog.createGroup.addPipelineGroupSuc')})
+          Message({ theme: 'success', message: t('flow.dialog.createGroup.addPipelineGroupSuc') })
           flowGroupData.loadAllData()
         }
       } catch (error) {
@@ -137,11 +140,14 @@ export const FlowGroupAside = defineComponent({
         dialogLoading.value = true
         const params: EditGroupParams = {
           ...data,
-          projected: currentGroupItem.value?.projected
+          projected: currentGroupItem.value?.projected,
         }
         const res = await flowGroupData.renameFlowGroup(params)
         if (res) {
-          Message({ theme: 'success', message: t('flow.actions.rename') + t('flow.common.success') })
+          Message({
+            theme: 'success',
+            message: t('flow.actions.rename') + t('flow.common.success'),
+          })
           flowGroupData.loadAllData()
         }
       } catch (error) {

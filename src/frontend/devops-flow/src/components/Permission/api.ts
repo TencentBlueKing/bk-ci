@@ -3,19 +3,19 @@
  * API calls for permission management components
  */
 
-import { del, get, post, put } from '@/utils/http';
+import { del, get, post, put } from '@/utils/http'
 import type {
   ApplyToJoinGroupRequest,
   GroupListResponse,
   GroupMemberInfo,
   GroupPolicy,
   RenewalGroupMemberRequest,
-} from './types';
+} from './types'
 
 /**
  * Default API prefix for permission related endpoints
  */
-const DEFAULT_API_PREFIX = '/auth/api/user/auth';
+const DEFAULT_API_PREFIX = '/auth/api/user/auth'
 
 /**
  * Build the full API URL with optional custom prefix
@@ -24,9 +24,9 @@ const DEFAULT_API_PREFIX = '/auth/api/user/auth';
  * @returns Full API URL
  */
 const buildUrl = (path: string, ajaxPrefix?: string): string => {
-  const prefix = ajaxPrefix || '';
-  return `${prefix}${DEFAULT_API_PREFIX}${path}`;
-};
+  const prefix = ajaxPrefix || ''
+  return `${prefix}${DEFAULT_API_PREFIX}${path}`
+}
 
 /**
  * Check if the user has manager permission for the resource
@@ -47,8 +47,8 @@ export const hasManagerPermission = (
       `/resource/${projectCode}/${resourceType}/${resourceCode}/hasManagerPermission`,
       ajaxPrefix,
     ),
-  );
-};
+  )
+}
 
 /**
  * Check if permission management is enabled for the resource
@@ -69,8 +69,8 @@ export const isEnablePermission = (
       `/resource/${projectCode}/${resourceType}/${resourceCode}/isEnablePermission`,
       ajaxPrefix,
     ),
-  );
-};
+  )
+}
 
 /**
  * Enable permission management for the resource
@@ -86,12 +86,9 @@ export const enablePermission = (
   ajaxPrefix?: string,
 ): Promise<void> => {
   return put(
-    buildUrl(
-      `/resource/${projectCode}/${resourceType}/${resourceCode}/enable`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/${projectCode}/${resourceType}/${resourceCode}/enable`, ajaxPrefix),
+  )
+}
 
 /**
  * Disable permission management for the resource
@@ -107,12 +104,9 @@ export const disablePermission = (
   ajaxPrefix?: string,
 ): Promise<void> => {
   return put(
-    buildUrl(
-      `/resource/${projectCode}/${resourceType}/${resourceCode}/disable`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/${projectCode}/${resourceType}/${resourceCode}/disable`, ajaxPrefix),
+  )
+}
 
 /**
  * Get user group list for the resource
@@ -137,8 +131,8 @@ export const getGroupList = (
       `/resource/${projectCode}/${resourceType}/${resourceCode}/listGroup?page=${page}&pageSize=${pageSize}`,
       ajaxPrefix,
     ),
-  );
-};
+  )
+}
 
 /**
  * Get group member list for the resource
@@ -155,12 +149,9 @@ export const getGroupMemberList = (
   ajaxPrefix?: string,
 ): Promise<GroupMemberInfo[]> => {
   return get(
-    buildUrl(
-      `/resource/${projectCode}/${resourceType}/${resourceCode}/groupMember`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/${projectCode}/${resourceType}/${resourceCode}/groupMember`, ajaxPrefix),
+  )
+}
 
 /**
  * Get group policies/permissions
@@ -177,12 +168,9 @@ export const getGroupPolicies = (
   ajaxPrefix?: string,
 ): Promise<GroupPolicy[]> => {
   return get(
-    buildUrl(
-      `/resource/group/${projectCode}/${resourceType}/${groupId}/groupPolicies`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/group/${projectCode}/${resourceType}/${groupId}/groupPolicies`, ajaxPrefix),
+  )
+}
 
 /**
  * Apply to join a user group
@@ -193,8 +181,8 @@ export const applyToJoinGroup = (
   data: ApplyToJoinGroupRequest,
   ajaxPrefix?: string,
 ): Promise<void> => {
-  return post(buildUrl('/apply/applyToJoinGroup', ajaxPrefix), data);
-};
+  return post(buildUrl('/apply/applyToJoinGroup', ajaxPrefix), data)
+}
 
 /**
  * Renew group membership
@@ -217,8 +205,8 @@ export const renewGroupMembership = (
       ajaxPrefix,
     ),
     data,
-  );
-};
+  )
+}
 
 /**
  * Exit from a user group
@@ -234,12 +222,9 @@ export const exitGroup = (
   ajaxPrefix?: string,
 ): Promise<void> => {
   return del(
-    buildUrl(
-      `/resource/group/${projectCode}/${resourceType}/${groupId}/member`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/group/${projectCode}/${resourceType}/${groupId}/member`, ajaxPrefix),
+  )
+}
 
 /**
  * Delete a user group
@@ -254,13 +239,8 @@ export const deleteGroup = (
   groupId: string,
   ajaxPrefix?: string,
 ): Promise<void> => {
-  return del(
-    buildUrl(
-      `/resource/group/${projectCode}/${resourceType}/${groupId}`,
-      ajaxPrefix,
-    ),
-  );
-};
+  return del(buildUrl(`/resource/group/${projectCode}/${resourceType}/${groupId}`, ajaxPrefix))
+}
 
 /**
  * Sync group permissions with IAM
@@ -274,12 +254,9 @@ export const syncGroupPermissions = (
   ajaxPrefix?: string,
 ): Promise<void> => {
   return put(
-    buildUrl(
-      `/resource/group/sync/${projectCode}/${groupId}/syncGroupPermissions`,
-      ajaxPrefix,
-    ),
-  );
-};
+    buildUrl(`/resource/group/sync/${projectCode}/${groupId}/syncGroupPermissions`, ajaxPrefix),
+  )
+}
 
 /**
  * Sync group members with IAM
@@ -292,10 +269,5 @@ export const syncGroupMember = (
   groupId: string,
   ajaxPrefix?: string,
 ): Promise<void> => {
-  return put(
-    buildUrl(
-      `/resource/group/sync/${projectCode}/${groupId}/syncGroupMember`,
-      ajaxPrefix,
-    ),
-  );
-};
+  return put(buildUrl(`/resource/group/sync/${projectCode}/${groupId}/syncGroupMember`, ajaxPrefix))
+}

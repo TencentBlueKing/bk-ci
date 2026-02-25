@@ -5,7 +5,7 @@
  */
 export function getCookie(key: string): string {
   const cookieStr = document.cookie || ''
-  const cookieArr = cookieStr.split(';').filter(v => v)
+  const cookieArr = cookieStr.split(';').filter((v) => v)
   const cookieObj = cookieArr.reduce((res: Record<string, string>, cookieItem: string) => {
     const [key, value] = cookieItem.split('=')
     const cKey = (key || '').trim()
@@ -36,4 +36,3 @@ export function getCookies(strCookie: string = document.cookie): Record<string, 
   })
   return cookiesObj
 }
-

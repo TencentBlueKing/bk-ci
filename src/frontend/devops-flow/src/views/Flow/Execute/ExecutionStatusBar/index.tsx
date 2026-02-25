@@ -15,7 +15,7 @@ export default defineComponent({
     const { t } = useI18n()
     // 从 store 获取执行详情数据（全局唯一）
     const { executeDetail } = useExecuteDetail()
-    
+
     const summaryVisible = ref(true)
     const show = ref(false)
 
@@ -28,9 +28,9 @@ export default defineComponent({
     const statusLabel = computed(() => {
       return executeDetail.value?.status ? t(`flow.statusMap.${executeDetail.value.status}`) : ''
     })
-    
+
     const isRunningOrNot = computed(() => isRunning(executeDetail.value?.status))
-    
+
     // 格式化开始时间
     const execFormatStartTime = computed(() => {
       return convertTime(executeDetail.value?.queueTime || 0)

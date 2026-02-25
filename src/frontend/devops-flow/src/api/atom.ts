@@ -90,11 +90,11 @@ export function fetchAtoms(params: FetchAtomsParams): Promise<FetchAtomsResponse
  * 获取插件分类列表
  */
 export function fetchAtomClassify(params: { category: JobCategory }): Promise<AtomClassify[]> {
-  return get<AtomClassify[]>(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`, { 
+  return get<AtomClassify[]>(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`, {
     params: {
       ...params,
       serviceScope: 'CREATIVE_STREAM',
-    }
+    },
   })
 }
 

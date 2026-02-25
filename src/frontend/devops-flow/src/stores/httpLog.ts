@@ -32,7 +32,7 @@ export const useHttpLogStore = defineStore('httpLog', {
     addError(error: HttpLogItem['error']) {
       // For now we just log to console; you can extend this to store or report errors.
       if (error) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[HttpErrorLog]', error)
       }
     },

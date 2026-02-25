@@ -67,7 +67,7 @@ export const FlowHeader = defineComponent({
         if (newVersion) {
           selectedVersion.value = Number(newVersion)
         }
-      }
+      },
     )
 
     // 对话框显示状态
@@ -213,8 +213,10 @@ export const FlowHeader = defineComponent({
     ])
 
     const currentVersion = computed(() => {
-      return props.versionList.find((v) => v.version === selectedVersion.value)
-        ?? dropdownVersionList.value.find((v) => v.version === selectedVersion.value)
+      return (
+        props.versionList.find((v) => v.version === selectedVersion.value) ??
+        dropdownVersionList.value.find((v) => v.version === selectedVersion.value)
+      )
     })
 
     const visibleVersionList = computed(() => {
@@ -222,11 +224,11 @@ export const FlowHeader = defineComponent({
     })
 
     onMounted(() => {
-        loadDropdownVersions(1)
+      loadDropdownVersions(1)
     })
 
     onBeforeUnmount(() => {
-        flowInfoStore.reset()
+      flowInfoStore.reset()
     })
 
     const renderTag = () => {
@@ -247,93 +249,104 @@ export const FlowHeader = defineComponent({
     }
 
     return () => (
-        <>
-          <CommonHeader loading={props.loading} workflowName={props.flowInfo?.pipelineName }>
-            {{
-              'workflow-selector': () => (
-                <FlowSelector
-                  projectId={route.params.projectId as string}
-                  currentFlowId={props.flowInfo?.pipelineId || (route.params.flowId as string)}
-                  currentFlowName={props.flowInfo?.pipelineName}
-                />
-              ),
-              'version-selector': () => (
-                <Select
-                  ref={versionSelectorRef}
-                  v-model={selectedVersion.value}
-                  onChange={props.onVersionChange}
-                  class={styles.versionSelector}
-                  filterable
-                  remoteMethod={handleSearchVersion}
-                  onScroll-end={handleScrollEnd}
-                  scrollLoading={bottomLoadingOptions.value.isLoading}
-                  loading={dropdownLoading.value}
-                  clearable={false}
-                  popoverMinWidth={320}
-                  onToggle={handleSelectorToggle}
-                >
-                  {{
-                    trigger: () => (
-                      <span class={styles.versionTrigger}>
-                        {renderCheckIcon(currentVersion.value?.isLatest)}
-                        {currentVersion.value?.versionName || '--'}
-                        {currentVersion.value?.isLatest && renderTag()}
-                        {
-                            dropdownLoading.value && visibleVersionList.value.length === 0 ? 
-                            <Loading loading={true} size="mini" mode="spin" class={styles.versionSelectToggleIcon} /> :
-                            <SvgIcon name="angle-down" class={[styles.versionSelectToggleIcon, isSelectorOpen.value && styles.versionSelectToggleIconOpen]} />
-                        }
-                      </span>
-                    ),
-                    default: () => {
-                      return visibleVersionList.value.map((version) => (
-                        <Option
-                          key={version.version}
-                          value={version.version}
-                          label={version.versionName}
-                        >
-                          <div class={styles.versionOption}>
-                            {renderCheckIcon(version.isLatest)}
-                            <span>{version.versionName}</span>
-                            {version.isLatest && renderTag()}
-                          </div>
-                        </Option>
-                      ))
-                    },
-                    extension: () => (
-                      <div class={styles.viewAllEntry} onClick={handleShowAllVersions}>
-                        <SvgIcon name="jump" size={12} />
-                        {t('flow.versionHistory.viewAll')}
-                      </div>
-                    ),
-                  }}
-                </Select>
-              ),
-              actions: () => (
-                <>
-                  <Button onClick={props.onEdit}>{t('flow.content.edit')}</Button>
-                  <Button theme="primary" onClick={props.onExecute}>
-                    {t('flow.content.execute')}
-                  </Button>
-                  <ExtMenu data={props.flowInfo} config={moreActions.value} />
-                </>
-              ),
-            }}
-          </CommonHeader>
+      <>
+        <CommonHeader loading={props.loading} workflowName={props.flowInfo?.pipelineName}>
+          {{
+            'workflow-selector': () => (
+              <FlowSelector
+                projectId={route.params.projectId as string}
+                currentFlowId={props.flowInfo?.pipelineId || (route.params.flowId as string)}
+                currentFlowName={props.flowInfo?.pipelineName}
+              />
+            ),
+            'version-selector': () => (
+              <Select
+                ref={versionSelectorRef}
+                v-model={selectedVersion.value}
+                onChange={props.onVersionChange}
+                class={styles.versionSelector}
+                filterable
+                remoteMethod={handleSearchVersion}
+                onScroll-end={handleScrollEnd}
+                scrollLoading={bottomLoadingOptions.value.isLoading}
+                loading={dropdownLoading.value}
+                clearable={false}
+                popoverMinWidth={320}
+                onToggle={handleSelectorToggle}
+              >
+                {{
+                  trigger: () => (
+                    <span class={styles.versionTrigger}>
+                      {renderCheckIcon(currentVersion.value?.isLatest)}
+                      {currentVersion.value?.versionName || '--'}
+                      {currentVersion.value?.isLatest && renderTag()}
+                      {dropdownLoading.value && visibleVersionList.value.length === 0 ? (
+                        <Loading
+                          loading={true}
+                          size="mini"
+                          mode="spin"
+                          class={styles.versionSelectToggleIcon}
+                        />
+                      ) : (
+                        <SvgIcon
+                          name="angle-down"
+                          class={[
+                            styles.versionSelectToggleIcon,
+                            isSelectorOpen.value && styles.versionSelectToggleIconOpen,
+                          ]}
+                        />
+                      )}
+                    </span>
+                  ),
+                  default: () => {
+                    return visibleVersionList.value.map((version) => (
+                      <Option
+                        key={version.version}
+                        value={version.version}
+                        label={version.versionName}
+                      >
+                        <div class={styles.versionOption}>
+                          {renderCheckIcon(version.isLatest)}
+                          <span>{version.versionName}</span>
+                          {version.isLatest && renderTag()}
+                        </div>
+                      </Option>
+                    ))
+                  },
+                  extension: () => (
+                    <div class={styles.viewAllEntry} onClick={handleShowAllVersions}>
+                      <SvgIcon name="jump" size={12} />
+                      {t('flow.versionHistory.viewAll')}
+                    </div>
+                  ),
+                }}
+              </Select>
+            ),
+            actions: () => (
+              <>
+                <Button onClick={props.onEdit}>{t('flow.content.edit')}</Button>
+                <Button theme="primary" onClick={props.onExecute}>
+                  {t('flow.content.execute')}
+                </Button>
+                <ExtMenu data={props.flowInfo} config={moreActions.value} />
+              </>
+            ),
+          }}
+        </CommonHeader>
 
-          {/* 导出对话框 */}
-          <ExportFlowDialog
-            v-model:isShow={showExportDialog.value}
-            flowId={flowId.value}
-            flowName={flowName.value}
-          />
+        {/* 导出对话框 */}
+        <ExportFlowDialog
+          v-model:isShow={showExportDialog.value}
+          flowId={flowId.value}
+          flowName={flowName.value}
+        />
 
-          {/* 版本历史侧滑 */}
-          <VersionHistorySideSlider
-            v-model:isShow={showVersionHistory.value}
-            currentVersion={selectedVersion.value}
-          />
-        </>
-      )
+        {/* 版本历史侧滑 */}
+        <VersionHistorySideSlider
+          v-model:isShow={showVersionHistory.value}
+          currentVersion={selectedVersion.value}
+        />
+      </>
+    )
   },
 })

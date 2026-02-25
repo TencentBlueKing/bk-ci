@@ -96,7 +96,7 @@ export default defineComponent({
     const resolvedUrl = computed(() => {
       let url = localPayload.value.url || ''
       if (!url) return ''
-      
+
       url = url.replace(/\{([^}]+)\}/g, (_, varName) => {
         return variableValueMap.value[varName] ?? ''
       })
@@ -204,7 +204,7 @@ export default defineComponent({
       for (let i = 0; i < localOptions.value.length; i++) {
         const option = localOptions.value[i]
         if (!option) continue
-        
+
         const value = option[key]
 
         if (!value) {
@@ -232,9 +232,7 @@ export default defineComponent({
         return
       }
 
-      const existingPairs = new Set(
-        localOptions.value.map((item) => `${item.key}=${item.value}`),
-      )
+      const existingPairs = new Set(localOptions.value.map((item) => `${item.key}=${item.value}`))
 
       const newOptions = batchInput.value
         .split('\n')
@@ -243,9 +241,7 @@ export default defineComponent({
           if (!v) return null
           const equalPos = v.indexOf('=')
           const [key, value] =
-            equalPos > -1
-              ? [v.slice(0, equalPos), v.slice(equalPos + 1)]
-              : [v, v]
+            equalPos > -1 ? [v.slice(0, equalPos), v.slice(equalPos + 1)] : [v, v]
           return { key, value }
         })
         .filter((item): item is ParamOption => {
@@ -354,7 +350,10 @@ export default defineComponent({
         emitOptionsChange()
 
         if (showMessage) {
-          Message({ theme: 'success', message: t('flow.variable.fetchSuccess', { count: fetchedOptions.length }) })
+          Message({
+            theme: 'success',
+            message: t('flow.variable.fetchSuccess', { count: fetchedOptions.length }),
+          })
         }
       } catch (error) {
         console.error('Failed to fetch options from API:', error)
@@ -388,7 +387,11 @@ export default defineComponent({
 
     // 拖拽结束
     const handleDragEnd = () => {
-      if (dragIndex.value !== null && dragOverIndex.value !== null && dragIndex.value !== dragOverIndex.value) {
+      if (
+        dragIndex.value !== null &&
+        dragOverIndex.value !== null &&
+        dragIndex.value !== dragOverIndex.value
+      ) {
         const items = [...localOptions.value]
         const [draggedItem] = items.splice(dragIndex.value, 1)
         if (draggedItem) {
@@ -462,10 +465,7 @@ export default defineComponent({
             {localOptions.value.map((option, index) => (
               <div
                 key={`option-${index}`}
-                class={[
-                  styles.paramItem,
-                  dragOverIndex.value === index && styles.dragOver,
-                ]}
+                class={[styles.paramItem, dragOverIndex.value === index && styles.dragOver]}
                 draggable={!props.disabled}
                 onDragstart={() => handleDragStart(index)}
                 onDragover={(e: DragEvent) => handleDragOver(e, index)}
@@ -506,7 +506,10 @@ export default defineComponent({
                     <span class={styles.operateIcon} onClick={() => handleAddOption(index)}>
                       <SvgIcon name="add-small" size={16} />
                     </span>
-                    <span class={[styles.operateIcon, styles.deleteIcon]} onClick={() => handleRemoveOption(index)}>
+                    <span
+                      class={[styles.operateIcon, styles.deleteIcon]}
+                      onClick={() => handleRemoveOption(index)}
+                    >
                       <SvgIcon name="minus-circle" size={16} />
                     </span>
                   </div>
@@ -540,8 +543,13 @@ export default defineComponent({
                 onBlur={handleUrlBlur}
               />
               <span
-                class={[styles.refreshBtn, (props.disabled || !localPayload.value.url) && styles.disabled]}
-                onClick={() => !props.disabled && localPayload.value.url && fetchOptionsFromApi(true)}
+                class={[
+                  styles.refreshBtn,
+                  (props.disabled || !localPayload.value.url) && styles.disabled,
+                ]}
+                onClick={() =>
+                  !props.disabled && localPayload.value.url && fetchOptionsFromApi(true)
+                }
                 title={t('flow.variable.refreshOptions')}
               >
                 <SvgIcon name="refresh-line" size={16} />
@@ -552,7 +560,12 @@ export default defineComponent({
             {urlDependencies.value.length > 0 && localPayload.value.url && (
               <div class={styles.resolvedUrlPreview}>
                 <span class={styles.resolvedUrlLabel}>{t('flow.variable.resolvedUrl')}:</span>
-                <span class={[styles.resolvedUrlValue, !allDependenciesResolved.value && styles.hasUnresolved]}>
+                <span
+                  class={[
+                    styles.resolvedUrlValue,
+                    !allDependenciesResolved.value && styles.hasUnresolved,
+                  ]}
+                >
                   {resolvedUrl.value || t('flow.variable.waitingForVariables')}
                 </span>
               </div>
@@ -624,9 +637,7 @@ export default defineComponent({
               {renderOptionsList()}
             </section>
           ) : (
-            <section>
-              {renderApiConfig()}
-            </section>
+            <section>{renderApiConfig()}</section>
           )}
         </div>
       </div>

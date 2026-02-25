@@ -94,12 +94,12 @@
 }
 
 .logSearchInput {
-    :global(.bk-input--text) {
-        background-color: var(--log-bg-dark-hover) !important;
-        color: var(--log-text-dark) !important;
-        height: var(--log-tool-height) !important;
-        font-size: var(--font-size-xs) !important;
-    }
+  :global(.bk-input--text) {
+    background-color: var(--log-bg-dark-hover) !important;
+    color: var(--log-text-dark) !important;
+    height: var(--log-tool-height) !important;
+    font-size: var(--font-size-xs) !important;
+  }
 }
 
 .logSearchNav {
@@ -203,4 +203,3 @@
 .closeBtn:hover {
   color: var(--log-text-dark);
 }
-

@@ -95,9 +95,9 @@ export async function requestStartupInfo({
     params.version = version
   }
   return await get<StartupInfo>(
-      `/process/api/user/builds/${projectId}/${flowId}/manualStartupInfo`,
-      { params }
-    )
+    `/process/api/user/builds/${projectId}/${flowId}/manualStartupInfo`,
+    { params },
+  )
 }
 
 /**
@@ -118,10 +118,9 @@ export async function fetchPipelineByVersion({
     params.version = version
   }
 
-  return await get<PipelineModelResponse>(
-      `/process/api/user/pipelines/${projectId}/${flowId}`,
-      { params }
-    )
+  return await get<PipelineModelResponse>(`/process/api/user/pipelines/${projectId}/${flowId}`, {
+    params,
+  })
 }
 
 /**
@@ -177,8 +176,8 @@ export async function requestExecPipeline({
   }
 
   return await post<ExecutePipelineResponse>(
-      `/process/api/user/builds/${projectId}/${pipelineId}`,
-      params,
-      { params: query }
-    )
+    `/process/api/user/builds/${projectId}/${pipelineId}`,
+    params,
+    { params: query },
+  )
 }

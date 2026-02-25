@@ -15,7 +15,7 @@ import { useRoute } from 'vue-router'
 
 export const useExecuteDetailStore = defineStore('executeDetail', () => {
   const route = useRoute()
-  
+
   // 使用 computed 属性，自动响应路由参数变化
   const flowId = computed(() => route.params.flowId as string)
   const projectId = computed(() => route.params.projectId as string)
@@ -30,9 +30,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       projectId: projectId.value,
       buildNo: buildNo.value,
       pipelineId: flowId.value,
-      executeCount: route.query.executeCount
-        ? Number(route.query.executeCount)
-        : undefined,
+      executeCount: route.query.executeCount ? Number(route.query.executeCount) : undefined,
     }
     return await requestPipelineExecDetail(params)
   }
@@ -50,7 +48,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       // 先清空旧数据，避免显示旧数据
       executeDetail.value = null
       flowInfo.value = null
-      
+
       const [executeRes, flowInfoRes] = await Promise.all([getExecuteDetail(), getFlowInfoDetail()])
 
       executeDetail.value = executeRes
@@ -81,17 +79,17 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   /**
    * 获取指定版本号的流水线编排版本信息
    */
-  async function  fetchVersionDetail (version: number) {
-      try {
-          const result = await requestFlowVersion({
-              version,
-              projectId: projectId.value,
-              pipelineId: flowId.value,
-          })
-          return result
-      } catch (error) {
-          throw error
-      }
+  async function fetchVersionDetail(version: number) {
+    try {
+      const result = await requestFlowVersion({
+        version,
+        projectId: projectId.value,
+        pipelineId: flowId.value,
+      })
+      return result
+    } catch (error) {
+      throw error
+    }
   }
   /**
    *  终止流水线
@@ -192,10 +190,14 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
 
   /**
    * 获取启动参数及当前参数组合
-   * @param urlParams 
-   * @returns 
+   * @param urlParams
+   * @returns
    */
-  async function getStartupParams(urlParams: { projectId: string; pipelineId: string; buildId: string }) {
+  async function getStartupParams(urlParams: {
+    projectId: string
+    pipelineId: string
+    buildId: string
+  }) {
     const [buildParams, paramProperties] = await Promise.all([
       requestBuildParams(urlParams),
       requestBuildParamCombination(urlParams),

@@ -46,23 +46,15 @@ export default defineComponent({
   setup(props, { emit }) {
     const { t } = useI18n()
     // Use data source hook for API data fetching
-    const {
-      list,
-      isLoading,
-      refreshList,
-      isApiMode,
-      selectConf,
-    } = useDataSource({
+    const { list, isLoading, refreshList, isApiMode, selectConf } = useDataSource({
       ...props.optionsConf,
       options: props.list ?? props.optionsConf.options,
       atomValue: props.atomValue,
     })
 
-
-
     // Placeholder with loading state
     const displayPlaceholder = computed(() =>
-      isLoading.value ? t('common.loading', 'Loading...') : props.placeholder
+      isLoading.value ? t('common.loading', 'Loading...') : props.placeholder,
     )
 
     const handleChange = (value: string | number | Array<string | number>) => {
@@ -79,17 +71,16 @@ export default defineComponent({
     }
 
     return () => (
-        <Select
-          loading={isLoading.value}
-          modelValue={props.value}
-          disabled={props.disabled || isLoading.value}
-          placeholder={displayPlaceholder.value}
-          onChange={handleChange}
-          onToggle={handleToggleVisible}
-          list={list.value}
-          {...selectConf.value}
-        >
-        </Select>
+      <Select
+        loading={isLoading.value}
+        modelValue={props.value}
+        disabled={props.disabled || isLoading.value}
+        placeholder={displayPlaceholder.value}
+        onChange={handleChange}
+        onToggle={handleToggleVisible}
+        list={list.value}
+        {...selectConf.value}
+      ></Select>
     )
   },
 })

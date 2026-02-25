@@ -1,5 +1,9 @@
 import type { ConditionOptionItem, ExecutionRecord } from '@/api/executionRecord'
-import { getHistoryConditions, HistoryConditionType, updateBuildRemark } from '@/api/executionRecord'
+import {
+  getHistoryConditions,
+  HistoryConditionType,
+  updateBuildRemark,
+} from '@/api/executionRecord'
 import { retryFlow } from '@/api/executeDetail'
 import StageSteps from '@/components/StageSteps'
 import StatusIcon from '@/components/StatusIcon'
@@ -35,7 +39,7 @@ export const EXECUTION_RECORD_COLUMNS = [
 ] as const
 
 // Default visible columns (使用 field 值)
-const DEFAULT_COLUMN_KEYS = EXECUTION_RECORD_COLUMNS.map(col => col.field)
+const DEFAULT_COLUMN_KEYS = EXECUTION_RECORD_COLUMNS.map((col) => col.field)
 
 // Constants for Search Keys
 const SEARCH_KEY = {
@@ -53,9 +57,9 @@ const SEARCH_KEY = {
   REMARK: 'remark',
 } as const
 
-type SearchValues = { 
-  id: string;
-  name: string;
+type SearchValues = {
+  id: string
+  name: string
   values?: Array<{ id: string; name: string }>
 }[]
 
@@ -67,7 +71,7 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const store = useExecutionRecordStore()
-    
+
     const {
       records: tableData,
       pagination,
@@ -107,7 +111,7 @@ export default defineComponent({
     }
     const selectedColumnKeys = ref<string[]>(getInitialColumnKeys())
     const tableSettings = ref({
-      fields: EXECUTION_RECORD_COLUMNS.map(col => ({
+      fields: EXECUTION_RECORD_COLUMNS.map((col) => ({
         field: col.field,
         label: t(col.labelKey),
         disabled: 'disabled' in col ? col.disabled : false,
@@ -176,14 +180,16 @@ export default defineComponent({
     })
 
     const showEmptyState = computed(() => {
-      return !loading.value
-        && tableData.value.length === 0
-        && pagination.value.count === 0
-        && !hasActiveFilters.value
+      return (
+        !loading.value &&
+        tableData.value.length === 0 &&
+        pagination.value.count === 0 &&
+        !hasActiveFilters.value
+      )
     })
 
     const allTableColumns = computed(() => {
-      return EXECUTION_RECORD_COLUMNS.map(col => {
+      return EXECUTION_RECORD_COLUMNS.map((col) => {
         const baseColumn: any = {
           label: t(col.labelKey),
           field: col.field,
@@ -194,8 +200,9 @@ export default defineComponent({
           baseColumn.render = ({ row }: any) => {
             const record = row as ExecutionRecord
             const status = record.status || 'UNKNOWN'
-            const statusColor = statusColorMap[status as keyof typeof statusColorMap] || statusColorMap.UNKNOWN
-            
+            const statusColor =
+              statusColorMap[status as keyof typeof statusColorMap] || statusColorMap.UNKNOWN
+
             return (
               <span class={styles.buildNoStatus}>
                 <StatusIcon status={status as any} size={14} />
@@ -240,11 +247,11 @@ export default defineComponent({
       render: ({ row }: any) => {
         const record = row as ExecutionRecord
         const isRetrying = retryingMap.value[record.id]
-        
+
         if (!canRetry(record.status)) {
           return <span class={styles.operationDisabled}>--</span>
         }
-        
+
         return (
           <Button
             text
@@ -334,7 +341,7 @@ export default defineComponent({
 
     const handleRetry = async (row: ExecutionRecord) => {
       if (retryingMap.value[row.id]) return
-      
+
       try {
         retryingMap.value[row.id] = true
         await retryFlow({
@@ -395,7 +402,7 @@ export default defineComponent({
       refresh()
 
       const query = { ...route.query, ...params }
-      Object.keys(params).forEach(key => {
+      Object.keys(params).forEach((key) => {
         if (params[key] === undefined) {
           delete query[key]
         }
@@ -424,18 +431,13 @@ export default defineComponent({
     const handleRemarkSave = async (row: ExecutionRecord, hidePopover: () => void) => {
       const state = remarkEditState.value[row.id]
       if (!state || state.saving) return
-      
+
       const preRemark = row.remark
       try {
         if (state.tempRemark !== row.remark) {
           state.saving = true
           row.remark = state.tempRemark
-          await updateBuildRemark(
-            projectId.value,
-            flowId.value,
-            row.id,
-            state.tempRemark
-          )
+          await updateBuildRemark(projectId.value, flowId.value, row.id, state.tempRemark)
           Message({
             theme: 'success',
             message: t('flow.common.success'),
@@ -487,10 +489,7 @@ export default defineComponent({
           {{
             default: () => (
               <div class={styles.remarkCell}>
-                <span
-                  class={styles.remarkText}
-                  title={row.remark || ''}
-                >
+                <span class={styles.remarkText} title={row.remark || ''}>
                   {row.remark || '--'}
                 </span>
                 <SvgIcon name="edit" size={14} class={styles.remarkEdit} />
@@ -510,10 +509,7 @@ export default defineComponent({
                     placeholder={t('flow.content.remarkPlaceholder')}
                   />
                   <div class={styles.remarkPopoverActions}>
-                    <span
-                      class={styles.remarkPopoverCancel}
-                      onClick={() => hidePopover(row.id)}
-                    >
+                    <span class={styles.remarkPopoverCancel} onClick={() => hidePopover(row.id)}>
                       {t('flow.common.cancel')}
                     </span>
                     <span
@@ -562,7 +558,11 @@ export default defineComponent({
             })
             initialSearchValue.push({ id, name: item.name, values })
           } else {
-            initialSearchValue.push({ id, name: item.name, values: [{ id: value as string, name: value as string }] })
+            initialSearchValue.push({
+              id,
+              name: item.name,
+              values: [{ id: value as string, name: value as string }],
+            })
           }
         }
       }
@@ -584,8 +584,16 @@ export default defineComponent({
         startTimeStartTime: startTimeStartTime as string,
         endTimeEndTime: endTimeEndTime as string,
         status: Array.isArray(status) ? status : status ? [status] : undefined,
-        triggerMethod: Array.isArray(triggerMethod) ? triggerMethod : triggerMethod ? [triggerMethod] : undefined,
-        triggerEvent: Array.isArray(triggerEvent) ? triggerEvent : triggerEvent ? [triggerEvent] : undefined,
+        triggerMethod: Array.isArray(triggerMethod)
+          ? triggerMethod
+          : triggerMethod
+            ? [triggerMethod]
+            : undefined,
+        triggerEvent: Array.isArray(triggerEvent)
+          ? triggerEvent
+          : triggerEvent
+            ? [triggerEvent]
+            : undefined,
         triggerUser: triggerUser as string,
         triggerNode: triggerNode as string,
         remark: remark as string,
@@ -662,7 +670,7 @@ export default defineComponent({
       }
       router.replace({ query })
     })
-      
+
     return () => (
       <div class={styles.executionRecord}>
         {showEmptyState.value ? (
@@ -713,7 +721,13 @@ export default defineComponent({
             </div>
 
             {/* Table area */}
-            <Loading class={styles.tableWrapper} loading={loading.value} mode="spin" theme="primary" size="small">
+            <Loading
+              class={styles.tableWrapper}
+              loading={loading.value}
+              mode="spin"
+              theme="primary"
+              size="small"
+            >
               <Table
                 data={tableData.value}
                 columns={tableColumns.value as Column[]}

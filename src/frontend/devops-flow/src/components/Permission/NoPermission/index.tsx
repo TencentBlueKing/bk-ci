@@ -4,11 +4,11 @@
  * Shows either PermissionTips or GroupTable based on resource type
  */
 
-import { defineComponent, type PropType } from 'vue';
-import { RESOURCE_TYPES } from '../constants';
-import GroupTable from '../GroupTable';
-import type { ResourceType } from '../types';
-import styles from './index.module.css';
+import { defineComponent, type PropType } from 'vue'
+import { RESOURCE_TYPES } from '../constants'
+import GroupTable from '../GroupTable'
+import type { ResourceType } from '../types'
+import styles from './index.module.css'
 
 export default defineComponent({
   name: 'NoPermission',
@@ -71,7 +71,7 @@ export default defineComponent({
               <span>{props.title}</span>
             </div>
           </div>
-        );
+        )
       }
 
       return (
@@ -83,7 +83,7 @@ export default defineComponent({
             ajaxPrefix={props.ajaxPrefix}
           />
         </div>
-      );
-    };
+      )
+    }
   },
-});
+})

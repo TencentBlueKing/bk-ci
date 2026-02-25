@@ -51,7 +51,7 @@
   --line-height-md: 24px;
   --line-height-lg: 28px;
   --line-height-xl: 32px;
-  
+
   /* 布局相关变量 */
   --error-popup-min-height: 42px;
   --timeline-label-width: 60px;
@@ -119,7 +119,7 @@
   --log-color-debug: #6e7681;
   --log-color-success: #6a9955;
   --log-color-trace: #9fa8b2;
-  
+
   /* 搜索高亮颜色 */
   --log-search-highlight: #ffdd00;
   --log-search-highlight-active: #ff9500;
@@ -132,5 +132,6 @@
   --log-panel-width: 80vw;
 
   /* 日志字体 */
-  --log-font-family: 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  --log-font-family:
+    'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }

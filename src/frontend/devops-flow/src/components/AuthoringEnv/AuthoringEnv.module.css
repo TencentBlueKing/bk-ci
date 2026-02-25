@@ -21,7 +21,6 @@
 
   :global(.bk-select-trigger) {
     width: 100%;
-
   }
 
   :global(.bk-select .bk-input--text) {

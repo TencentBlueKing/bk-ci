@@ -1,9 +1,9 @@
 .executionRecord {
-    display: flex;
-    height: 100%;
-    overflow: hidden;
-    flex-direction: column;
-    padding: var(--spacing-xl);
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  padding: var(--spacing-xl);
 }
 .filterLeft {
   flex: 1;
@@ -75,7 +75,7 @@
   cursor: pointer;
   font-weight: 500;
   transition: opacity 0.2s;
-  
+
   &:hover {
     opacity: 0.8;
   }
@@ -106,7 +106,9 @@
   color: var(--text-tertiary);
   font-size: 14px;
   opacity: 0;
-  transition: opacity 0.2s, color 0.2s;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
   flex-shrink: 0;
 
   .remarkCell:hover & {
@@ -152,7 +154,9 @@
   font-size: 12px;
   padding: 5px 16px;
   border-radius: 2px;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .remarkPopoverCancel {
@@ -217,4 +221,3 @@
   font-size: 12px;
   color: var(--text-tertiary, #979ba5);
 }
-

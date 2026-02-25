@@ -1,4 +1,4 @@
-import { defineComponent, type PropType} from 'vue'
+import { defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './ArtifactQuality.module.css'
 

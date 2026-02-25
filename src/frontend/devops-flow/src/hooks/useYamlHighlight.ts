@@ -1,5 +1,5 @@
-import { computed } from 'vue';
-import { useFlowModel } from './useFlowModel';
+import { computed } from 'vue'
+import { useFlowModel } from './useFlowModel'
 
 /**
  * Flow YAML 配置区域类型
@@ -28,7 +28,7 @@ interface UseYamlHighlightOptions {
 const SECTION_PATTERNS: Record<FlowConfigSection, string[]> = {
   'authoring-env': ['# Authoring Environment Configuration', 'authoring-env:'],
   'basic-setting': ['name:', 'desc:', 'version:'],
-  'notice': ['notices:'],
+  notice: ['notices:'],
   'trigger-event': ['on:'],
   'permission-settings': ['permissions:', 'access-control:'],
   'permission-delegation': ['delegation:', 'delegates:'],
@@ -109,7 +109,7 @@ function calculateSectionHighlight(yaml: string, section: FlowConfigSection): Hi
 
 /**
  * YAML 高亮 Hook - 统一管理 Flow 配置的 YAML 代码高亮
- * 
+ *
  * @example
  * ```ts
  * const { yamlContent, getSectionHighlight } = useYamlHighlight({ flowId })
@@ -143,15 +143,14 @@ export function useYamlHighlight(options: UseYamlHighlightOptions) {
     isEmpty,
     getSectionHighlight,
     // 预设常用的高亮计算
-    authoringEnvHighlight: computed(() => calculateSectionHighlight(yamlContent.value, 'authoring-env')),
-    triggerEventHighlight: computed(() => calculateSectionHighlight(yamlContent.value, 'trigger-event')),
+    authoringEnvHighlight: computed(() =>
+      calculateSectionHighlight(yamlContent.value, 'authoring-env'),
+    ),
+    triggerEventHighlight: computed(() =>
+      calculateSectionHighlight(yamlContent.value, 'trigger-event'),
+    ),
     noticeHighlight: computed(() => calculateSectionHighlight(yamlContent.value, 'notice')),
   }
 }
 
-export type { HighlightRange, UseYamlHighlightOptions };
-
-
-
-
-
+export type { HighlightRange, UseYamlHighlightOptions }

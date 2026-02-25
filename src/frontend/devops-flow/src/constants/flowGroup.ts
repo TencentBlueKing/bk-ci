@@ -18,17 +18,16 @@ export const FLOW_GROUP_TYPES = {
   MY_CREATED: 'myPipeline',
   /** 回收站 */
   RECYCLE_BIN: 'recycleBin',
-} as const;
+} as const
 
 /**
  * 获取所有组类型值
  */
-export const getAllFlowGroupTypes = () => Object.values(FLOW_GROUP_TYPES);
+export const getAllFlowGroupTypes = () => Object.values(FLOW_GROUP_TYPES)
 
 /**
  * 检查是否为系统预定义组类型
  */
 export const isSystemFlowGroupType = (groupId: string): boolean => {
-  return Object.values(FLOW_GROUP_TYPES).includes(groupId as any);
-};
-
+  return Object.values(FLOW_GROUP_TYPES).includes(groupId as any)
+}

@@ -1,5 +1,4 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_DEVOPS_API_BASE_URL || '/ms/'
+export const API_BASE_URL = import.meta.env.VITE_DEVOPS_API_BASE_URL || '/ms/'
 
 export const HTTP_TIMEOUT = 30_000
 

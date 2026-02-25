@@ -93,13 +93,15 @@ export const VALID_FLOW_DETAIL_TABS = Object.values(FLOW_DETAIL_TABS)
 export function isValidFlowEditTab(
   tab: string,
 ): tab is (typeof FLOW_EDIT_TABS)[keyof typeof FLOW_EDIT_TABS] {
-  return VALID_FLOW_EDIT_TABS.includes(tab as typeof FLOW_EDIT_TABS[keyof typeof FLOW_EDIT_TABS])
+  return VALID_FLOW_EDIT_TABS.includes(tab as (typeof FLOW_EDIT_TABS)[keyof typeof FLOW_EDIT_TABS])
 }
 
 export function isValidFlowDetailTab(
   tab: string,
 ): tab is (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS] {
-  return VALID_FLOW_DETAIL_TABS.includes(tab as typeof FLOW_DETAIL_TABS[keyof typeof FLOW_DETAIL_TABS])
+  return VALID_FLOW_DETAIL_TABS.includes(
+    tab as (typeof FLOW_DETAIL_TABS)[keyof typeof FLOW_DETAIL_TABS],
+  )
 }
 
 export function isValidFlowExecutionDetailTab(
@@ -115,5 +117,5 @@ export function isValidFlowExecutionDetailTab(
     ROUTE_NAMES.FLOW_DETAIL_OUTPUTS,
     ROUTE_NAMES.FLOW_DETAIL_START_PARAMS,
   ]
-  return validTabs.includes(tab as typeof validTabs[number])
+  return validTabs.includes(tab as (typeof validTabs)[number])
 }

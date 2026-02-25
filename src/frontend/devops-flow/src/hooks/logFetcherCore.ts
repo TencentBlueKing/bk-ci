@@ -2,7 +2,13 @@
  * Log Fetcher Core
  * Shared core logic for log fetching, used by useLogFetcher and useMultiLogFetcher
  */
-import { getAfterLog, getInitLog, type GetLogParams, type LogItem, type LogResponse } from '@/api/log'
+import {
+  getAfterLog,
+  getInitLog,
+  type GetLogParams,
+  type LogItem,
+  type LogResponse,
+} from '@/api/log'
 import { hashID } from '@/utils/util'
 
 // Shared interface for log post data

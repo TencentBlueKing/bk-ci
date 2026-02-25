@@ -86,7 +86,9 @@ export interface FetchTriggerListResponse {
  * @param params 查询参数
  * @returns 触发器列表
  */
-export function fetchTriggerList(params: FetchTriggerListParams = {}): Promise<FetchTriggerListResponse> {
+export function fetchTriggerList(
+  params: FetchTriggerListParams = {},
+): Promise<FetchTriggerListResponse> {
   return get<FetchTriggerListResponse>(`${STORE_API_URL_PREFIX}/user/market/trigger/list`, {
     params,
   })
@@ -104,7 +106,5 @@ export function fetchTriggerModal(
   atomCode: string,
   version: string,
 ): Promise<TriggerModal> {
-  return get<TriggerModal>(
-    `${STORE_API_URL_PREFIX}/user/market/trigger/${atomCode}/${version}`,
-  )
+  return get<TriggerModal>(`${STORE_API_URL_PREFIX}/user/market/trigger/${atomCode}/${version}`)
 }

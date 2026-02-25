@@ -48,7 +48,7 @@ export default defineComponent({
           publishSubscriptionList.value = (setting as any).publishSubscriptionList || []
         }
       },
-      { immediate: true }
+      { immediate: true },
     )
 
     // Update flowSetting when notification data changes
@@ -170,7 +170,7 @@ export default defineComponent({
     }
 
     return () => (
-      <Loading loading={loading.value} class={[sharedStyles.tabContainer, sharedStyles.tabPadding]}>  
+      <Loading loading={loading.value} class={[sharedStyles.tabContainer, sharedStyles.tabPadding]}>
         <NotificationList
           notifyList={notifyList.value}
           editable={true}

@@ -3,29 +3,22 @@
  * Dialog for applying to join a user group or renewing membership
  */
 
-import { Button, Dialog, Form, Input, Message } from 'bkui-vue';
+import { Button, Dialog, Form, Input, Message } from 'bkui-vue'
+import { computed, defineComponent, type PropType, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { applyToJoinGroup, renewGroupMembership } from '../api'
 import {
-    computed,
-    defineComponent,
-    type PropType,
-    reactive,
-    ref,
-    watch,
-} from 'vue';
-import { useI18n } from 'vue-i18n';
-import { applyToJoinGroup, renewGroupMembership } from '../api';
-import {
-    APPLY_DIALOG_TYPES,
-    createTimeFilterOptions,
-    CUSTOM_TIME_RANGE,
-    MEMBER_STATUS,
-    TIME_DURATIONS,
-    TIME_TO_DAYS,
-} from '../constants';
-import type { ApplyDialogType, MemberStatus, ResourceType } from '../types';
-import styles from './index.module.css';
+  APPLY_DIALOG_TYPES,
+  createTimeFilterOptions,
+  CUSTOM_TIME_RANGE,
+  MEMBER_STATUS,
+  TIME_DURATIONS,
+  TIME_TO_DAYS,
+} from '../constants'
+import type { ApplyDialogType, MemberStatus, ResourceType } from '../types'
+import styles from './index.module.css'
 
-const { FormItem } = Form;
+const { FormItem } = Form
 
 export default defineComponent({
   name: 'ApplyDialog',
@@ -106,24 +99,24 @@ export default defineComponent({
   emits: ['cancel', 'success', 'update:isShow'],
 
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t } = useI18n()
 
-    const formRef = ref<InstanceType<typeof Form> | null>(null);
-    const isLoading = ref(false);
-    const currentActive = ref<number | 'custom'>(TIME_DURATIONS.ONE_MONTH);
-    const customTime = ref(1);
+    const formRef = ref<InstanceType<typeof Form> | null>(null)
+    const isLoading = ref(false)
+    const currentActive = ref<number | 'custom'>(TIME_DURATIONS.ONE_MONTH)
+    const customTime = ref(1)
 
     const formData = reactive({
       expireTime: 0,
       reason: '',
-    });
+    })
 
     /**
      * Time filter options for selection
      */
     const timeFilters = computed(() =>
       createTimeFilterOptions((key) => t(`flow.permission.${key}`)),
-    );
+    )
 
     /**
      * Form validation rules
@@ -133,9 +126,9 @@ export default defineComponent({
         {
           validator: () => {
             if (currentActive.value === 'custom' && customTime.value) {
-              return true;
+              return true
             }
-            return currentActive.value !== 'custom';
+            return currentActive.value !== 'custom'
           },
           message: t('flow.permission.pleaseSelectApplicationPeriod'),
           trigger: 'blur',
@@ -148,79 +141,76 @@ export default defineComponent({
           trigger: 'blur',
         },
       ],
-    }));
+    }))
 
     /**
      * Calculate new expiration days
      */
     const newExpiredDisplay = computed(() => {
       const currentExpired =
-        props.status === MEMBER_STATUS.EXPIRED
-          ? 0
-          : Number(props.expiredDisplay) || 0;
+        props.status === MEMBER_STATUS.EXPIRED ? 0 : Number(props.expiredDisplay) || 0
 
       if (currentActive.value === 'custom') {
-        return currentExpired + Number(customTime.value);
+        return currentExpired + Number(customTime.value)
       }
 
-      const days = TIME_TO_DAYS[currentActive.value as number] || 30;
-      return currentExpired + days;
-    });
+      const days = TIME_TO_DAYS[currentActive.value as number] || 30
+      return currentExpired + days
+    })
 
     /**
      * Format timestamp (add seconds to current time)
      */
     const formatTimes = (seconds: number): number => {
-      const nowTimestamp = Math.floor(Date.now() / 1000);
-      return Number(seconds) + nowTimestamp;
-    };
+      const nowTimestamp = Math.floor(Date.now() / 1000)
+      return Number(seconds) + nowTimestamp
+    }
 
     /**
      * Handle time filter button click
      */
     const handleChangeTime = (value: number) => {
-      formRef.value?.clearValidate();
-      currentActive.value = value;
-      formData.expireTime = formatTimes(value);
-    };
+      formRef.value?.clearValidate()
+      currentActive.value = value
+      formData.expireTime = formatTimes(value)
+    }
 
     /**
      * Handle custom time selection
      */
     const handleChangeCustom = () => {
-      currentActive.value = 'custom';
-    };
+      currentActive.value = 'custom'
+    }
 
     /**
      * Handle custom time input change
      */
     const handleChangeCustomTime = (value: string | number) => {
-      const numValue = Number(value);
+      const numValue = Number(value)
       if (Number.isNaN(numValue) || numValue < CUSTOM_TIME_RANGE.MIN) {
-        customTime.value = CUSTOM_TIME_RANGE.MIN;
+        customTime.value = CUSTOM_TIME_RANGE.MIN
       } else if (numValue > CUSTOM_TIME_RANGE.MAX) {
-        customTime.value = CUSTOM_TIME_RANGE.MAX;
+        customTime.value = CUSTOM_TIME_RANGE.MAX
       } else {
-        customTime.value = numValue;
+        customTime.value = numValue
       }
-    };
+    }
 
     /**
      * Get current username from window object
      */
     const getUserName = (): string => {
-      const userInfo = (window as unknown as { $userInfo?: { username?: string } })
-        .$userInfo;
-      return userInfo?.username || '';
-    };
+      const userInfo = (window as unknown as { $userInfo?: { username?: string } }).$userInfo
+      return userInfo?.username || ''
+    }
 
     /**
      * Handle apply to join group
      */
     const handleApplyGroup = async () => {
       try {
-        await formRef.value?.validate();
-        isLoading.value = true;
+        await formRef.value?.validate()
+        isLoading.value = true
 
         await applyToJoinGroup(
           {
@@ -231,36 +221,36 @@ export default defineComponent({
             projectCode: props.projectCode,
           },
           props.ajaxPrefix,
-        );
+        )
 
         Message({
           theme: 'success',
           message: t('flow.permission.applicationSuccessWaitApproval'),
-        });
+        })
 
-        emit('success');
-        handleCancel();
+        emit('success')
+        handleCancel()
       } catch (err) {
-        const error = err as { message?: string };
+        const error = err as { message?: string }
         Message({
           theme: 'error',
           message: error.message || String(err),
-        });
+        })
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     /**
      * Handle renewal of group membership
      */
     const handleRenewalGroup = async () => {
-      isLoading.value = true;
+      isLoading.value = true
 
       try {
         // Calculate expiration time based on new expired display
-        const timestamp = newExpiredDisplay.value * 24 * 3600;
-        const expiredDisplayTime = formatTimes(timestamp);
+        const timestamp = newExpiredDisplay.value * 24 * 3600
+        const expiredDisplayTime = formatTimes(timestamp)
 
         await renewGroupMembership(
           props.projectCode,
@@ -271,25 +261,25 @@ export default defineComponent({
             resourceType: props.resourceType,
           },
           props.ajaxPrefix,
-        );
+        )
 
         Message({
           theme: 'success',
           message: t('flow.permission.applicationSuccessWaitApproval'),
-        });
+        })
 
-        emit('success');
-        handleCancel();
+        emit('success')
+        handleCancel()
       } catch (err) {
-        const error = err as { message?: string };
+        const error = err as { message?: string }
         Message({
           theme: 'error',
           message: error.message || String(err),
-        });
+        })
       } finally {
-        isLoading.value = false;
+        isLoading.value = false
       }
-    };
+    }
 
     /**
      * Handle confirm button click
@@ -297,45 +287,45 @@ export default defineComponent({
     const handleConfirm = () => {
       // Calculate expiration time for custom selection
       if (currentActive.value === 'custom') {
-        const timestamp = customTime.value * 24 * 3600;
-        formData.expireTime = formatTimes(timestamp);
+        const timestamp = customTime.value * 24 * 3600
+        formData.expireTime = formatTimes(timestamp)
       }
 
       if (props.type === APPLY_DIALOG_TYPES.RENEWAL) {
-        handleRenewalGroup();
+        handleRenewalGroup()
       } else {
-        handleApplyGroup();
+        handleApplyGroup()
       }
-    };
+    }
 
     /**
      * Handle cancel/close
      */
     const handleCancel = () => {
       // Reset form state
-      customTime.value = 1;
-      formData.expireTime = formatTimes(TIME_DURATIONS.ONE_MONTH);
-      formData.reason = '';
-      currentActive.value = TIME_DURATIONS.ONE_MONTH;
+      customTime.value = 1
+      formData.expireTime = formatTimes(TIME_DURATIONS.ONE_MONTH)
+      formData.reason = ''
+      currentActive.value = TIME_DURATIONS.ONE_MONTH
 
       setTimeout(() => {
-        formRef.value?.clearValidate();
-      }, 500);
+        formRef.value?.clearValidate()
+      }, 500)
 
-      emit('cancel');
-      emit('update:isShow', false);
-    };
+      emit('cancel')
+      emit('update:isShow', false)
+    }
 
     // Initialize expireTime on mount
     watch(
       () => props.isShow,
       (visible) => {
         if (visible) {
-          formData.expireTime = formatTimes(TIME_DURATIONS.ONE_MONTH);
+          formData.expireTime = formatTimes(TIME_DURATIONS.ONE_MONTH)
         }
       },
       { immediate: true },
-    );
+    )
 
     return () => (
       <Dialog
@@ -347,11 +337,7 @@ export default defineComponent({
         v-slots={{
           footer: () => (
             <div class={styles.dialogFooter}>
-              <Button
-                theme="primary"
-                loading={isLoading.value}
-                onClick={handleConfirm}
-              >
+              <Button theme="primary" loading={isLoading.value} onClick={handleConfirm}>
                 {t('flow.permission.confirm')}
               </Button>
               <Button loading={isLoading.value} onClick={handleCancel}>
@@ -372,11 +358,7 @@ export default defineComponent({
             <span>{props.groupName}</span>
           </FormItem>
 
-          <FormItem
-            label={t('flow.permission.authorizationTerm')}
-            property="expireTime"
-            required
-          >
+          <FormItem label={t('flow.permission.authorizationTerm')} property="expireTime" required>
             <div class={styles.deadlineWrapper}>
               {Object.entries(timeFilters.value).map(([key, label]) => (
                 <Button
@@ -392,10 +374,7 @@ export default defineComponent({
               ))}
 
               {currentActive.value !== 'custom' ? (
-                <Button
-                  class={styles.deadlineBtn}
-                  onClick={handleChangeCustom}
-                >
+                <Button class={styles.deadlineBtn} onClick={handleChangeCustom}>
                   {t('flow.permission.custom')}
                 </Button>
               ) : (
@@ -408,11 +387,7 @@ export default defineComponent({
                   max={CUSTOM_TIME_RANGE.MAX}
                   onChange={handleChangeCustomTime}
                   v-slots={{
-                    suffix: () => (
-                      <span class={styles.groupText}>
-                        {t('flow.permission.days')}
-                      </span>
-                    ),
+                    suffix: () => <span class={styles.groupText}>{t('flow.permission.days')}</span>,
                   }}
                 />
               )}
@@ -423,8 +398,7 @@ export default defineComponent({
             <FormItem label={t('flow.permission.expireAt')}>
               <span class={styles.expired}>
                 {props.expiredDisplay}
-                {props.status !== MEMBER_STATUS.EXPIRED &&
-                  t('flow.permission.days')}
+                {props.status !== MEMBER_STATUS.EXPIRED && t('flow.permission.days')}
               </span>
               <span class={styles.arrowIcon}>→</span>
               <span class={styles.newExpired}>
@@ -433,21 +407,12 @@ export default defineComponent({
               </span>
             </FormItem>
           ) : (
-            <FormItem
-              label={t('flow.permission.reason')}
-              property="reason"
-              required
-            >
-              <Input
-                v-model={formData.reason}
-                type="textarea"
-                rows={3}
-                maxlength={100}
-              />
+            <FormItem label={t('flow.permission.reason')} property="reason" required>
+              <Input v-model={formData.reason} type="textarea" rows={3} maxlength={100} />
             </FormItem>
           )}
         </Form>
       </Dialog>
-    );
+    )
   },
-});
+})

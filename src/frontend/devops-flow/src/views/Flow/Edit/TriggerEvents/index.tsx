@@ -67,9 +67,9 @@ export default defineComponent({
       const nextIndex = container.elements?.length || 0
 
       // 创建新的触发事件元素
-      const newElement = createDefaultElement(nextIndex, { 
-        ...trigger, 
-        '@type': 'marketEvent'
+      const newElement = createDefaultElement(nextIndex, {
+        ...trigger,
+        '@type': 'marketEvent',
       })
 
       openTriggerPanel(newElement, nextIndex, true)
@@ -95,7 +95,7 @@ export default defineComponent({
       container.elements[index] = {
         ...element,
         additionalOptions: {
-          ...(element.additionalOptions || {}),
+          ...element.additionalOptions,
           enable: enabled,
         } as any, // 使用类型断言避免类型检查问题
       }
@@ -222,7 +222,10 @@ export default defineComponent({
                   </Button>
                 ),
                 content: () => (
-                  <TriggerEventSelector projectCode={projectCode.value} onSelect={handleSelectEvent} />
+                  <TriggerEventSelector
+                    projectCode={projectCode.value}
+                    onSelect={handleSelectEvent}
+                  />
                 ),
               }}
             </Popover>

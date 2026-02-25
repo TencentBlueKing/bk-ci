@@ -66,16 +66,19 @@ export function getInitLog(params: GetLogParams): Promise<LogResponse> {
  */
 export function getAfterLog(params: GetLogParams): Promise<LogResponse> {
   const { projectId, pipelineId, buildId, tag, jobId, executeCount, lineNo, subTag, debug } = params
-  return get<LogResponse>(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
-    params: {
-      tag,
-      jobId,
-      executeCount,
-      start: lineNo,
-      subTag,
-      debug,
+  return get<LogResponse>(
+    `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`,
+    {
+      params: {
+        tag,
+        jobId,
+        executeCount,
+        start: lineNo,
+        subTag,
+        debug,
+      },
     },
-  })
+  )
 }
 
 /**
@@ -89,12 +92,15 @@ export function getLogStatus(params: {
   executeCount: number
 }): Promise<{ status: number }> {
   const { projectId, pipelineId, buildId, tag, executeCount } = params
-  return get<{ status: number }>(`${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, {
-    params: {
-      tag,
-      executeCount,
+  return get<{ status: number }>(
+    `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`,
+    {
+      params: {
+        tag,
+        executeCount,
+      },
     },
-  })
+  )
 }
 
 /**
@@ -112,12 +118,12 @@ export function buildLogDownloadUrl(params: {
   const { projectId, pipelineId, buildId, tag, jobId, executeCount, fileName } = params
   const baseUrl = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/download`
   const queryParams = new URLSearchParams()
-  
+
   if (tag) queryParams.append('tag', tag)
   if (jobId) queryParams.append('jobId', jobId)
   if (executeCount) queryParams.append('executeCount', String(executeCount))
   if (fileName) queryParams.append('fileName', fileName)
-  
+
   const queryString = queryParams.toString()
   return queryString ? `${baseUrl}?${queryString}` : baseUrl
 }

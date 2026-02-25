@@ -2,9 +2,7 @@ import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { DEFAULT_RETRY, DEFAULT_RETRY_DELAY } from './config'
 import type { HttpRequestConfig } from './types'
 
-export async function retryRequest(
-  error: AxiosError,
-): Promise<AxiosRequestConfig | never> {
+export async function retryRequest(error: AxiosError): Promise<AxiosRequestConfig | never> {
   const config = error.config as HttpRequestConfig | undefined
   if (!config) throw error
 

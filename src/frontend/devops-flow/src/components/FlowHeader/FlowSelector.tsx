@@ -62,10 +62,7 @@ export default defineComponent({
         pipelineId: props.currentFlowId,
         pipelineName: props.currentFlowName,
       }
-      return [
-        currentFlow,
-        ...list.filter((item) => item.pipelineId !== props.currentFlowId),
-      ]
+      return [currentFlow, ...list.filter((item) => item.pipelineId !== props.currentFlowId)]
     }
 
     // 防抖搜索
@@ -144,10 +141,10 @@ export default defineComponent({
     const renderPopoverContent = () => (
       <div class={styles.flowSelectorPopover}>
         <Input
-        v-model={searchKey.value}
-        placeholder={t('flow.common.search')}
-        clearable
-        type="search"
+          v-model={searchKey.value}
+          placeholder={t('flow.common.search')}
+          clearable
+          type="search"
         />
 
         <div class={styles.flowListWrapper}>
@@ -158,9 +155,7 @@ export default defineComponent({
               </div>
             ) : (
               <div class={styles.emptyState}>
-                {searchKey.value
-                  ? t('flow.searchResultsEmpty')
-                  : t('flow.common.noData')}
+                {searchKey.value ? t('flow.searchResultsEmpty') : t('flow.common.noData')}
               </div>
             )}
           </Loading>

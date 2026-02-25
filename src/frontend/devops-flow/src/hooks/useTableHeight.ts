@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, type Ref } from 'vue';
+import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 
 /**
  * 表格高度计算hook
@@ -7,25 +7,25 @@ import { ref, onMounted, onUnmounted, type Ref } from 'vue';
  * @returns 表格最大高度
  */
 export function useTableHeight(containerRef: Ref<HTMLElement | undefined>) {
-  const maxHeight = ref<number>();
+  const maxHeight = ref<number>()
 
   function updateTableHeight() {
     if (containerRef.value) {
-      maxHeight.value = containerRef.value.offsetHeight;
+      maxHeight.value = containerRef.value.offsetHeight
     }
   }
 
   onMounted(() => {
-    updateTableHeight();
-    window.addEventListener('resize', updateTableHeight);
-  });
+    updateTableHeight()
+    window.addEventListener('resize', updateTableHeight)
+  })
 
   onUnmounted(() => {
-    window.removeEventListener('resize', updateTableHeight);
-  });
+    window.removeEventListener('resize', updateTableHeight)
+  })
 
   return {
     maxHeight,
-    updateTableHeight
-  };
+    updateTableHeight,
+  }
 }

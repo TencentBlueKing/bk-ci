@@ -77,6 +77,6 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     getFlowVersionList,
     fetchPaginatedVersionList,
     initFlowInfo,
-    reset   
+    reset,
   }
 })

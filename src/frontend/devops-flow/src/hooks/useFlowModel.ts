@@ -21,7 +21,6 @@ import { DEFAULT_VERSION } from './useAtomVersion'
 import { useEditingPos } from './useEditingPos'
 
 export function useFlowModel() {
-
   const store = useFlowModelStore()
   const atomStore = useAtomStore()
 
@@ -143,12 +142,12 @@ export function useFlowModel() {
   const addStage = (stage?: Stage) => {
     const { stageIndex } = realEditingPos.value
     const newStage = {
-      ...tempEditingObject.value as Stage,
+      ...(tempEditingObject.value as Stage),
       ...stage,
     }
     if (flowModel.value) {
       let insertIndex = stageIndex
-      
+
       // 如果是 Finally Stage，确保添加到最后
       if (newStage.finally) {
         insertIndex = flowModel.value.stages.length
@@ -160,7 +159,7 @@ export function useFlowModel() {
           insertIndex = finallyStageIndex // 插入到 Finally Stage 之前
         }
       }
-      
+
       flowModel.value.stages = [
         ...flowModel.value.stages.slice(0, insertIndex),
         newStage,
@@ -194,13 +193,10 @@ export function useFlowModel() {
 
     if (!stage.containers) stage.containers = []
     const newContainer = {
-      ...tempEditingObject.value as Container,
-      ...container
+      ...(tempEditingObject.value as Container),
+      ...container,
     }
-    stage.containers = [
-      ...stage.containers, 
-      newContainer,
-    ]
+    stage.containers = [...stage.containers, newContainer]
     emitChange()
     return newContainer
   }
@@ -307,7 +303,11 @@ export function useFlowModel() {
    * 处理添加 Stage (打开面板)
    * @param payload.isFinally - 是否是 Finally Stage
    */
-  const handleAddStage = ({ stageIndex, isParallel, isFinally }: AddStageEventPayload & { isFinally?: boolean }) => {
+  const handleAddStage = ({
+    stageIndex,
+    isParallel,
+    isFinally,
+  }: AddStageEventPayload & { isFinally?: boolean }) => {
     if (isParallel) {
       handleAddJob({ stageIndex })
       return
@@ -319,16 +319,18 @@ export function useFlowModel() {
       return
     }
 
-    const newStage = createDefaultStage(stageIndex, { 
+    const newStage = createDefaultStage(stageIndex, {
       name: isFinally ? 'Final' : `Stage-${stageIndex + 1}`,
       finally: isFinally || false,
       containers: [
-        createDefaultContainer(1, { name: 'Job1', dispatchType: {
-          buildType: 'CREATE_AGENT_ENV',
-          value: '${{variables.BK_CI_NODE_AGENT_ID}}',
-        },
-      }),
-      ]
+        createDefaultContainer(1, {
+          name: 'Job1',
+          dispatchType: {
+            buildType: 'CREATE_AGENT_ENV',
+            value: '${{variables.BK_CI_NODE_AGENT_ID}}',
+          },
+        }),
+      ],
     })
     tempEditingObject.value = newStage
     isNewStage.value = true
@@ -377,20 +379,21 @@ export function useFlowModel() {
     const { stageIndex, jobType = 'create' } = payload
     const stage = flowModel.value?.stages[stageIndex + 1]
     if (!stage) return
-    const containerIndex = stage.containers?.length || 0    
-    
+    const containerIndex = stage.containers?.length || 0
+
     // 根据 jobType 设置 @type 和 classType
     const containerType = jobType === 'cloud' ? 'normal' : 'vmBuild'
     const newContainer = createDefaultContainer(containerIndex, {
       '@type': containerType,
       classType: containerType,
-      ...(containerType === 'vmBuild' ? {
-          dispatchType: {
-            buildType: 'CREATE_AGENT_ENV',
-            value: '${{variables.BK_CI_NODE_AGENT_ID}}',
+      ...(containerType === 'vmBuild'
+        ? {
+            dispatchType: {
+              buildType: 'CREATE_AGENT_ENV',
+              value: '${{variables.BK_CI_NODE_AGENT_ID}}',
+            },
           }
-        } : {}
-      ),
+        : {}),
     })
     console.log('handleAddJob', stageIndex, containerIndex, newContainer, stage.containers.length)
     setEditingPos({ stageIndex, containerIndex: stage.containers.length })
@@ -616,7 +619,7 @@ export function useFlowModel() {
      * - Atom 复制/删除：发出 container 对象 { elements: [...], containerId: ... }
      * @param changedObject - bk-pipeline 发出的变更对象
      */
-     
+
     handlePipelineChange: (changedObject: any) => {
       if (!flowModel.value?.stages) return
 

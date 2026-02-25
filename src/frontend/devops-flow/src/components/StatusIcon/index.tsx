@@ -22,7 +22,7 @@ export default defineComponent({
     size: {
       type: [Number, String],
       default: 16,
-    }
+    },
   },
   setup(props) {
     const logoName = computed(() => {
@@ -39,7 +39,7 @@ export default defineComponent({
           isRunning.value ? 'spinIcon' : '',
           isEnqueue.value ? styles.hourglassQueue : '',
         ]}
-        style={{color: statusColorMap[props.status || STATUS.UNEXEC]}}
+        style={{ color: statusColorMap[props.status || STATUS.UNEXEC] }}
       >
         <SvgIcon name={logoName.value} size={props.size} />
       </span>

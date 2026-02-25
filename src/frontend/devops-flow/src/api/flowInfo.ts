@@ -20,8 +20,8 @@ export async function fetchFlowInfo({
   flowId: string
 }): Promise<FlowInfo> {
   return await get<FlowInfo>(
-      `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/detail`
-    )
+    `${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${flowId}/detail`,
+  )
 }
 
 /**
@@ -45,9 +45,7 @@ export async function getFlowVersionList({
   if (pageSize !== undefined) params.pageSize = String(pageSize)
   if (versionName) params.versionName = versionName
 
-  const query = Object.keys(params).length
-    ? `?${new URLSearchParams(params).toString()}`
-    : ''
+  const query = Object.keys(params).length ? `?${new URLSearchParams(params).toString()}` : ''
   const res = await get<ResponseWithRecords<FlowVersion>>(
     `/process/api/user/version/projects/${projectId}/pipelines/${flowId}/versions${query}`,
   )
@@ -69,8 +67,8 @@ export async function updateRemark({
   remark: string
 }): Promise<boolean> {
   await post(
-      `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
-      { remark }
-    )
-    return true
+    `${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/updateRemark`,
+    { remark },
+  )
+  return true
 }

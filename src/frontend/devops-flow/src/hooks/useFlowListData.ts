@@ -1,8 +1,4 @@
-import {
-  type Collation,
-  type ContentTableItem,
-  type SortType,
-} from '@/api/flowContentList'
+import { type Collation, type ContentTableItem, type SortType } from '@/api/flowContentList'
 import { type GroupResponse } from '@/api/flowLabelGroup'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { ROUTE_NAMES } from '@/constants/routes'
@@ -59,16 +55,15 @@ export function useFlowListData(styles?: Styles) {
       ORDER_ENUM.ascending,
   )
 
-
   const currentGroup = computed(() => {
     const groupId = route.params.groupId as string
-    
+
     // 先从 flowGroups 中查找
     const foundGroup = flowGroups.value.find((item) => item.id === groupId)
     if (foundGroup) {
       return foundGroup
     }
-    
+
     // 如果没找到,说明是系统分组,构建一个虚拟的 group 对象
     const systemGroupNames: Record<string, string> = {
       [FLOW_GROUP_TYPES.ALL_FLOWS]: t('flow.common.allFlows'),
@@ -76,14 +71,14 @@ export function useFlowListData(styles?: Styles) {
       [FLOW_GROUP_TYPES.MY_CREATED]: t('flow.sidebar.myCreated'),
       [FLOW_GROUP_TYPES.RECYCLE_BIN]: t('flow.sidebar.recycleBin'),
     }
-    
+
     if (systemGroupNames[groupId]) {
       return {
         id: groupId,
         name: systemGroupNames[groupId],
       }
     }
-    
+
     return undefined
   })
 

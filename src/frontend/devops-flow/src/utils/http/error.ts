@@ -72,7 +72,7 @@ export function handleHttpError(err: HttpError) {
   }
 
   if (IS_DEV) {
-    // eslint-disable-next-line no-console
+     
     console.error('[HttpError]', err)
   }
   message?.error?.('Unknown error occurred.')

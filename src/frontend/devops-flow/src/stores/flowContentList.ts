@@ -16,7 +16,7 @@ import {
   type SaveAsTemplateParams,
   type AddToFlowGroupParams,
 } from '@/api/flowContentList'
-import { getProjectGroups } from "@/api/flowLabelGroup";
+import { getProjectGroups } from '@/api/flowLabelGroup'
 import { useRoute } from 'vue-router'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { STATUS, type StageStatusInfo } from '@/types/flow'
