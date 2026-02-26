@@ -463,12 +463,13 @@ export default {
             })
         },
 
-        jumpToTemplate ({ templateId }) {
+        jumpToTemplate ({ projectId, templateId }) {
             this.$router.push({
-                name: 'templateEdit',
+                name: 'TemplateOverview',
                 params: {
+                    projectId,
                     templateId
-                }
+                },
             })
         },
         execPipeline ({ projectId, pipelineId, disabled, released, onlyBranchVersion, pipelineVersion }) {
