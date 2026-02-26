@@ -235,8 +235,8 @@ abstract class AtomBaseDao {
             // PIPELINE: 使用 CLASSIFY_ID 或 CLASSIFY_ID_MAP
             ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
         } else {
-            // 其他服务范围: 只使用 CLASSIFY_ID_MAP
-            jsonExtractField.eq(classifyId)
+            // 非 PIPELINE：优先匹配 CLASSIFY_ID_MAP，回退到 CLASSIFY_ID（兼容未填充 MAP 的数据）
+            jsonExtractField.eq(classifyId).or(ta.CLASSIFY_ID.eq(classifyId))
         }
     }
 
@@ -283,25 +283,27 @@ abstract class AtomBaseDao {
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
         val isPipeline = normalizedScope == ServiceScopeEnum.PIPELINE.name
 
+        val isJsonValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE).eq(true)
         val jobTypeMatchCondition = if (isPipeline) {
             // PIPELINE：兼容老数据（整列存 "AGENT"/"AGENT_LESS" 字符串）与 JSON 格式 $.PIPELINE
-            // 老数据下 JSON_EXTRACT(column, '$.PIPELINE') 对非 JSON 字符串返回 NULL，仅第一项 JOB_TYPE.eq(jobType) 生效
+            // 老数据是纯字符串，JSON_EXTRACT 会报错，必须用 JSON_VALID 先保护
             val jsonExtractPipeline = DSL.field(
                 "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
                 String::class.java,
                 ta.JOB_TYPE,
-                DSL.inline("$.PIPELINE")
+                DSL.inline("$.$normalizedScope")
             )
-            ta.JOB_TYPE.eq(jobType).or(jsonExtractPipeline.eq(jobType))
+            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonExtractPipeline.eq(jobType)))
         } else {
-            // 非 PIPELINE（如 CREATIVE_STREAM）：从 JOB_TYPE JSON 中取 $.CREATIVE_STREAM 等再比较
+            // 非 PIPELINE（如 CREATIVE_STREAM）：兼容纯字符串（JOB_TYPE 直接存 "CREATIVE_STREAM"）
+            // 与 JSON 格式（JOB_TYPE 存 {"CREATIVE_STREAM":"CREATIVE_STREAM","PIPELINE":"AGENT"} 等）
             val jsonExtractScope = DSL.field(
                 "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
                 String::class.java,
                 ta.JOB_TYPE,
                 DSL.inline("$.$normalizedScope")
             )
-            jsonExtractScope.eq(jobType)
+            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonExtractScope.eq(jobType)))
         }
 
         if (isPipeline && jobType == JobTypeEnum.AGENT.name) {

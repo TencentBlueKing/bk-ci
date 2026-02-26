@@ -659,14 +659,17 @@ class AtomDao : AtomBaseDao() {
 
         // 单条 SQL：三个分支 UNION ALL 后统一 COUNT，一次网络往返
         // 项目过滤已通过 EXISTS 嵌入条件，无需 JOIN T_STORE_PROJECT_REL
+        val tsstJoinCond = tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
+            .and(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+
         val defaultBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
             .where(cs.defaultConditions)
 
         val normalBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
             .where(cs.normalConditions)
 
         val unionQuery = defaultBranch.unionAll(normalBranch)
@@ -674,7 +677,7 @@ class AtomDao : AtomBaseDao() {
         if (cs.testConditions != null) {
             val testBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
                 .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-                .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+                .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
                 .where(cs.testConditions)
             unionQuery.unionAll(testBranch)
         }
@@ -731,7 +734,10 @@ class AtomDao : AtomBaseDao() {
             .from(tAtom)
             .leftJoin(tClassify).on(classifyIdField.eq(tClassify.ID))
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(
+                tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
+                    .and(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            )
     }
 
     /**
@@ -824,6 +830,7 @@ class AtomDao : AtomBaseDao() {
         conditions.add(tAtom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
         conditions.add(tAtom.DEFAULT_FLAG.eq(true))
         conditions.add(tAtom.LATEST_FLAG.eq(true))
+        conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
     }
 
@@ -922,7 +929,6 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
         }
         conditions.add(tAtom.DELETE_FLAG.eq(false))
-        conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
     }
 
