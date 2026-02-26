@@ -259,7 +259,7 @@
                     } catch (error) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: error || error.message,
+                            message: error.message,
                             zIndex: 3000
                         })
                     }
@@ -274,7 +274,7 @@
                     } catch (error) {
                         this.$bkMessage({
                             theme: 'error',
-                            message: error || error.message,
+                            message: error.message,
                             zIndex: 3000
                         })
                     }
