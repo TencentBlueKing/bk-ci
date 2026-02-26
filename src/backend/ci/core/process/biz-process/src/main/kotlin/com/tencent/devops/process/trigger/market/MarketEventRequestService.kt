@@ -1,6 +1,7 @@
 package com.tencent.devops.process.trigger.market
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_ENV_AGENT_HASH_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
@@ -9,7 +10,6 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.environment.pojo.EnvData
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_DEV_TRIGGER_DESC
 import com.tencent.devops.process.pojo.WorkspaceBaseInfo
 import com.tencent.devops.process.pojo.trigger.GenericWebhookEventBody
@@ -35,6 +35,7 @@ class MarketEventRequestService constructor(
     private val creativeStreamService: CreativeStreamService
 ) {
     fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
+        logger.info("Receive CdsWebhookRequestEvent from MQ [$event]")
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
             val envList = creativeStreamService.fetchAllNodeEnvList(
@@ -68,7 +69,8 @@ class MarketEventRequestService constructor(
                             AUTH_HEADER_WORKSPACE_NAME to workspaceName,
                             AUTH_HEADER_CDS_IP to cdsIp,
                             AUTH_HEADER_EVENT_TYPE to eventType,
-                            AUTH_HEADER_USER_ID to userId
+                            AUTH_HEADER_USER_ID to userId,
+                            AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
                         ),
                         body = event.body,
                         queryParams = mapOf()
@@ -78,7 +80,6 @@ class MarketEventRequestService constructor(
                 // 2. 使用公共方法处理事件分发
                 handleTriggerEvent(
                     triggerEvent = triggerEvent,
-                    envList = envList,
                     pipelineId = null
                 )
             }
@@ -92,7 +93,6 @@ class MarketEventRequestService constructor(
     @SuppressWarnings("NestedBlockDepth")
     fun handleTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
-        envList: List<EnvData>? = null,
         pipelineId: String? = null
     ) {
         // 1. 从triggerEvent中提取事件数据
@@ -119,13 +119,10 @@ class MarketEventRequestService constructor(
             logger.info("userId not found in headers, skip event handling")
             return
         }
-
-        // 需要触发的环境列表
-        val triggerEnvList = envList ?: creativeStreamService.fetchAllNodeEnvList(
-            projectId = triggerEvent.projectId ?: "",
-            workspaceName = workspaceName,
-            userId = userId
-        )
+        val agentHashId = headers[AUTH_HEADER_ENV_AGENT_HASH_ID] ?: run {
+            logger.info("agentHashId not found in headers, skip event handling")
+            return
+        }
 
         // 3. 获取事件订阅者
         val projectId = triggerEvent.projectId ?: ""
@@ -164,27 +161,22 @@ class MarketEventRequestService constructor(
             logger.warn("cannot find workspace base info")
         }
         // 4. 分发CdsWebhookTriggerEvent
-        triggerEnvList.forEach { env ->
-            run {
-                subscribers.forEach subscriber@{ subscriber ->
-                    val agentHashId = env.agentHashId
-                    sampleEventDispatcher.dispatch(
-                        CdsWebhookTriggerEvent(
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = subscriber.pipelineId,
-                            workspaceName = workspaceName,
-                            cdsIp = cdsIp,
-                            eventCode = triggerEvent.eventType,
-                            eventId = triggerEvent.eventId ?: 0L,
-                            envHashId = triggerEvent.eventSource ?: "",
-                            requestTime = System.currentTimeMillis(),
-                            agentHashId = agentHashId,
-                            cdsName = workspaceBaseInfo?.displayName ?: ""
-                        )
-                    )
-                }
-            }
+        subscribers.forEach subscriber@{ subscriber ->
+            sampleEventDispatcher.dispatch(
+                CdsWebhookTriggerEvent(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = subscriber.pipelineId,
+                    workspaceName = workspaceName,
+                    cdsIp = cdsIp,
+                    eventCode = triggerEvent.eventType,
+                    eventId = triggerEvent.eventId ?: 0L,
+                    envHashId = triggerEvent.eventSource ?: "",
+                    requestTime = System.currentTimeMillis(),
+                    agentHashId = agentHashId,
+                    cdsName = workspaceBaseInfo?.displayName ?: ""
+                )
+            )
         }
     }
 

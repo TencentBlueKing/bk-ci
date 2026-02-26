@@ -107,7 +107,7 @@ class MarketEventTriggerMatcher @Autowired constructor(
         val conditionLabels = eventConfig.conditions.groupBy { it.label }
         eventConfig.conditions.forEach { condition ->
             // 触发变量值
-            val eventValue = eventVariables[condition.targetField]
+            val eventValue = eventVariables[condition.targetField] ?: ""
             val input = element.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
             // 目标变量值
             val inputValue = input[condition.key()]?.let {
