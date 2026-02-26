@@ -72,21 +72,21 @@ class ProjectOperationalProductService(
     @Value("\${cros.url:}")
     private val crosUrl = ""
 
-    // bkCosts 货币化相关配置
+    // bkCosts 货币化相关配置（支持 YAML 列表格式）
     @Value("\${bk.costs.bgId:}")
-    private val costsBgId: String = ""
+    private val costsBgIds: List<String> = emptyList()
 
     @Value("\${bk.costs.businessLineId:}")
-    private val costsBusinessLineId: String = ""
+    private val costsBusinessLineIds: List<String> = emptyList()
 
     @Value("\${bk.costs.deptId:}")
-    private val costsDeptId: String = ""
+    private val costsDeptIds: List<String> = emptyList()
 
     @Value("\${bk.costs.centerId:}")
-    private val costsCenterId: String = ""
+    private val costsCenterIds: List<String> = emptyList()
 
     @Value("\${bk.costs.excludeDeptId:}")
-    private val costsExcludeDeptId: String = ""
+    private val costsExcludeDeptIds: List<String> = emptyList()
 
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
@@ -400,15 +400,12 @@ class ProjectOperationalProductService(
         deptId: String?,
         centerId: String?
     ): Boolean {
-        // 解析配置的排除部门ID列表
-        val excludeDeptIds = parseConfigIds(costsExcludeDeptId)
-
         // 如果任意传入的ID在排除列表中，则不需要货币化
         val inputIds = listOfNotNull(bgId, businessLineId, deptId, centerId)
             .map { it.trim() }
             .filter { it.isNotBlank() }
 
-        if (inputIds.any { it in excludeDeptIds }) {
+        if (inputIds.any { it in costsExcludeDeptIds }) {
             logger.info(
                 "checkNeedMonetization|excluded|bgId=$bgId|businessLineId=$businessLineId|" +
                     "deptId=$deptId|centerId=$centerId"
@@ -416,17 +413,12 @@ class ProjectOperationalProductService(
             return false
         }
 
-        // 解析配置的各级组织ID列表
-        val configBgIds = parseConfigIds(costsBgId)
-        val configBusinessLineIds = parseConfigIds(costsBusinessLineId)
-        val configDeptIds = parseConfigIds(costsDeptId)
-        val configCenterIds = parseConfigIds(costsCenterId)
-
         // 检查是否匹配配置的组织ID
-        val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in configBgIds
-        val businessLineMatch = !businessLineId.isNullOrBlank() && businessLineId.trim() in configBusinessLineIds
-        val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in configDeptIds
-        val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in configCenterIds
+        val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in costsBgIds
+        val businessLineMatch = !businessLineId.isNullOrBlank() &&
+            businessLineId.trim() in costsBusinessLineIds
+        val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in costsDeptIds
+        val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in costsCenterIds
 
         val needMonetization = bgMatch || businessLineMatch || deptMatch || centerMatch
 
@@ -437,19 +429,6 @@ class ProjectOperationalProductService(
         )
 
         return needMonetization
-    }
-
-    /**
-     * 解析逗号分隔的配置ID字符串为Set集合
-     *
-     * @param configValue 逗号分隔的配置字符串
-     * @return 去重后的ID集合
-     */
-    private fun parseConfigIds(configValue: String): Set<String> {
-        return configValue.split(",")
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .toSet()
     }
 
     /**
