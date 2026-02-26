@@ -72,6 +72,22 @@ class ProjectOperationalProductService(
     @Value("\${cros.url:}")
     private val crosUrl = ""
 
+    // bkCosts 货币化相关配置
+    @Value("\${bk.costs.bgId:}")
+    private val costsBgId: String = ""
+
+    @Value("\${bk.costs.businessLineId:}")
+    private val costsBusinessLineId: String = ""
+
+    @Value("\${bk.costs.deptId:}")
+    private val costsDeptId: String = ""
+
+    @Value("\${bk.costs.centerId:}")
+    private val costsCenterId: String = ""
+
+    @Value("\${bk.costs.excludeDeptId:}")
+    private val costsExcludeDeptId: String = ""
+
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
         logger.info("sync operational product start!")
@@ -361,6 +377,79 @@ class ProjectOperationalProductService(
             // 同步失败不阻塞项目更新流程，仅记录警告日志
             logger.warn("syncKpiProductOnUpdate|$englishName|failed|kpiCode=$kpiCode|error=${e.message}", e)
         }
+    }
+
+    /**
+     * 判断是否需要进行货币化
+     * 根据配置文件中的部门ID列表，判断传入的组织信息是否在货币化范围内
+     *
+     * 判断逻辑：
+     * 1. 首先检查是否在排除部门列表中（excludeDeptId），如果在则返回 false
+     * 2. 然后依次检查 bgId、businessLineId、deptId、centerId 是否在配置的列表中
+     * 3. 任意一个匹配则返回 true，否则返回 false
+     *
+     * @param bgId 事业群ID
+     * @param businessLineId 业务线ID
+     * @param deptId 部门ID
+     * @param centerId 中心ID
+     * @return 是否需要进行货币化
+     */
+    fun checkNeedMonetization(
+        bgId: String?,
+        businessLineId: String?,
+        deptId: String?,
+        centerId: String?
+    ): Boolean {
+        // 解析配置的排除部门ID列表
+        val excludeDeptIds = parseConfigIds(costsExcludeDeptId)
+
+        // 如果任意传入的ID在排除列表中，则不需要货币化
+        val inputIds = listOfNotNull(bgId, businessLineId, deptId, centerId)
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+        if (inputIds.any { it in excludeDeptIds }) {
+            logger.info(
+                "checkNeedMonetization|excluded|bgId=$bgId|businessLineId=$businessLineId|" +
+                    "deptId=$deptId|centerId=$centerId"
+            )
+            return false
+        }
+
+        // 解析配置的各级组织ID列表
+        val configBgIds = parseConfigIds(costsBgId)
+        val configBusinessLineIds = parseConfigIds(costsBusinessLineId)
+        val configDeptIds = parseConfigIds(costsDeptId)
+        val configCenterIds = parseConfigIds(costsCenterId)
+
+        // 检查是否匹配配置的组织ID
+        val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in configBgIds
+        val businessLineMatch = !businessLineId.isNullOrBlank() && businessLineId.trim() in configBusinessLineIds
+        val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in configDeptIds
+        val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in configCenterIds
+
+        val needMonetization = bgMatch || businessLineMatch || deptMatch || centerMatch
+
+        logger.info(
+            "checkNeedMonetization|result=$needMonetization|bgId=$bgId(match=$bgMatch)|" +
+                "businessLineId=$businessLineId(match=$businessLineMatch)|" +
+                "deptId=$deptId(match=$deptMatch)|centerId=$centerId(match=$centerMatch)"
+        )
+
+        return needMonetization
+    }
+
+    /**
+     * 解析逗号分隔的配置ID字符串为Set集合
+     *
+     * @param configValue 逗号分隔的配置字符串
+     * @return 去重后的ID集合
+     */
+    private fun parseConfigIds(configValue: String): Set<String> {
+        return configValue.split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toSet()
     }
 
     /**

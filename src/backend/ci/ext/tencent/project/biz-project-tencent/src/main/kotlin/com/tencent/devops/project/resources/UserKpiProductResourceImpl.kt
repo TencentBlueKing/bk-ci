@@ -42,4 +42,21 @@ class UserKpiProductResourceImpl @Autowired constructor(
     override fun getKpiProducts(userId: String, kpiName: String?): Result<List<CrosProductVO>> {
         return Result(projectOperationalProductService.getKpiProducts(kpiName))
     }
+
+    override fun checkNeedMonetization(
+        userId: String,
+        bgId: String?,
+        businessLineId: String?,
+        deptId: String?,
+        centerId: String?
+    ): Result<Boolean> {
+        return Result(
+            projectOperationalProductService.checkNeedMonetization(
+                bgId = bgId,
+                businessLineId = businessLineId,
+                deptId = deptId,
+                centerId = centerId
+            )
+        )
+    }
 }

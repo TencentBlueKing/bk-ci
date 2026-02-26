@@ -59,4 +59,25 @@ interface UserKpiProductResource {
         @QueryParam("kpiName")
         kpiName: String? = null
     ): Result<List<CrosProductVO>>
+
+    @GET
+    @Path("/checkNeedMonetization")
+    @Operation(summary = "判断是否需要进行货币化")
+    fun checkNeedMonetization(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "事业群ID", required = false)
+        @QueryParam("bgId")
+        bgId: String?,
+        @Parameter(description = "业务线ID", required = false)
+        @QueryParam("businessLineId")
+        businessLineId: String?,
+        @Parameter(description = "部门ID", required = false)
+        @QueryParam("deptId")
+        deptId: String?,
+        @Parameter(description = "中心ID", required = false)
+        @QueryParam("centerId")
+        centerId: String?
+    ): Result<Boolean>
 }
