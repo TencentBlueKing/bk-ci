@@ -267,7 +267,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         )
         // 发送评论通知到企业微信群
         if (commentNotifyWeworkGroupIds.isNotBlank()) {
-            val weworkGroupIds = commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
+            val weworkGroupIds = commentNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
             if (weworkGroupIds.isNotEmpty()) {
                 storeNotifyService.sendNotifyMessageToWeworkGroup(
                     userId = userId,
