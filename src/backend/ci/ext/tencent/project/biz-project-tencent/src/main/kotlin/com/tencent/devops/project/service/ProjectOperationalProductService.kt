@@ -8,6 +8,7 @@ import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.project.config.BkCostsProperties
 import com.tencent.devops.project.dao.ProjectOperationalProductDao
 import com.tencent.devops.project.pojo.CrosProductVO
 import com.tencent.devops.project.pojo.ICosProductVO
@@ -31,7 +32,8 @@ class ProjectOperationalProductService(
     val dslContext: DSLContext,
     val projectOperationalProductDao: ProjectOperationalProductDao,
     val config: CommonConfig,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val bkCostsProperties: BkCostsProperties
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOperationalProductService::class.java)
@@ -71,22 +73,6 @@ class ProjectOperationalProductService(
 
     @Value("\${cros.url:}")
     private val crosUrl = ""
-
-    // bkCosts 货币化相关配置（支持 YAML 列表格式）
-    @Value("\${bk.costs.bgId:}")
-    private val costsBgIds: List<String> = emptyList()
-
-    @Value("\${bk.costs.businessLineId:}")
-    private val costsBusinessLineIds: List<String> = emptyList()
-
-    @Value("\${bk.costs.deptId:}")
-    private val costsDeptIds: List<String> = emptyList()
-
-    @Value("\${bk.costs.centerId:}")
-    private val costsCenterIds: List<String> = emptyList()
-
-    @Value("\${bk.costs.excludeDeptId:}")
-    private val costsExcludeDeptIds: List<String> = emptyList()
 
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
@@ -405,7 +391,7 @@ class ProjectOperationalProductService(
             .map { it.trim() }
             .filter { it.isNotBlank() }
 
-        if (inputIds.any { it in costsExcludeDeptIds }) {
+        if (inputIds.any { it in bkCostsProperties.excludeDeptId }) {
             logger.info(
                 "checkNeedMonetization|excluded|bgId=$bgId|businessLineId=$businessLineId|" +
                     "deptId=$deptId|centerId=$centerId"
@@ -414,11 +400,11 @@ class ProjectOperationalProductService(
         }
 
         // 检查是否匹配配置的组织ID
-        val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in costsBgIds
+        val bgMatch = !bgId.isNullOrBlank() && bgId.trim() in bkCostsProperties.bgId
         val businessLineMatch = !businessLineId.isNullOrBlank() &&
-            businessLineId.trim() in costsBusinessLineIds
-        val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in costsDeptIds
-        val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in costsCenterIds
+            businessLineId.trim() in bkCostsProperties.businessLineId
+        val deptMatch = !deptId.isNullOrBlank() && deptId.trim() in bkCostsProperties.deptId
+        val centerMatch = !centerId.isNullOrBlank() && centerId.trim() in bkCostsProperties.centerId
 
         val needMonetization = bgMatch || businessLineMatch || deptMatch || centerMatch
 
