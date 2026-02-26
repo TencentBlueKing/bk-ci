@@ -795,7 +795,7 @@ class AtomDao : AtomBaseDao() {
     ): AtomConditionSet {
         val effectiveProjectCode = if (param.queryProjectAtomFlag) param.projectCode else null
         val includeTestAtom = !param.projectCode.isNullOrBlank()
-            && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
+                && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
 
         val defaultConditions = buildDefaultConditions(
             tAtom = tAtom,
@@ -1488,7 +1488,7 @@ class AtomDao : AtomBaseDao() {
 
     /**
      * 构建分类ID映射表
-     * 
+     *
      * @param dslContext DSL上下文
      * @param atomBaseInfoUpdateRequest 插件基本信息更新请求
      * @return 服务范围到分类ID的映射表
@@ -1500,8 +1500,8 @@ class AtomDao : AtomBaseDao() {
         return atomBaseInfoUpdateRequest.toServiceScopeConfigs()
             .mapNotNull { config ->
                 getClassifyIdByCode(dslContext, config.classifyCode, config.serviceScope)
-                    ?.let { id -> 
-                        (ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name) to id 
+                    ?.let { id ->
+                        (ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name) to id
                     }
             }
             .toMap()
@@ -1509,15 +1509,15 @@ class AtomDao : AtomBaseDao() {
 
     /**
      * 构建 SERVICE_SCOPE 查询条件（优化版本，使用 JSON_CONTAINS 替代 contains）
-     * 
+     *
      * 性能优化：
      * - 使用 JSON_CONTAINS 进行精确匹配，避免字符串包含查询的全表扫描
      * - 支持大小写兼容查询（标准格式为大写，兼容小写格式的现有数据）
-     * 
+     *
      * 格式标准：
      * - 统一使用大写格式存储，如 ["PIPELINE"]、"CREATIVE_STREAM"
      * - 查询时同时匹配大写格式（标准格式）和小写格式（兼容现有数据）
-     * 
+     *
      * @param serviceScopeField SERVICE_SCOPE 字段
      * @param serviceScope 服务范围值，支持大小写（会自动标准化为大写）
      * @return 查询条件，如果不需要过滤则返回 null
@@ -1531,7 +1531,7 @@ class AtomDao : AtomBaseDao() {
         }
         // 标准化服务范围值（统一转换为大写格式）
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope.name) ?: serviceScope.name
-        
+
         // 使用 JSON_CONTAINS 进行精确匹配（支持大小写兼容）
         // 同时匹配大写格式（标准格式）和小写格式（兼容现有小写数据）
         return DSL.or(

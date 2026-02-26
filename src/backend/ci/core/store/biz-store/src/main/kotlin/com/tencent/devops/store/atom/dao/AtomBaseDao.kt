@@ -148,7 +148,7 @@ abstract class AtomBaseDao {
 
     /**
      * 根据 classifyCode 查询 CLASSIFY_ID 的公共方法
-     * 
+     *
      * @param dslContext DSL上下文
      * @param classifyCode 分类代码
      * @param serviceScope 服务范围（可选），用于过滤分类
@@ -172,10 +172,10 @@ abstract class AtomBaseDao {
 
     /**
      * 根据服务范围构建分类ID字段表达式
-     * 
+     *
      * 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段（性能最好，有索引）
      * 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
-     * 
+     *
      * @param ta TAtom 表
      * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则默认使用 PIPELINE
      * @return 分类ID字段表达式（Field<String>）
@@ -185,7 +185,7 @@ abstract class AtomBaseDao {
         serviceScope: ServiceScopeEnum?
     ): Field<String> {
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
-        
+
         return if (normalizedScope == ServiceScopeEnum.PIPELINE.name) {
             // PIPELINE 使用 CLASSIFY_ID 字段（性能最好，有索引）
             ta.CLASSIFY_ID
@@ -204,11 +204,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建分类查询条件（支持多服务范围）
-     * 
+     *
      * 根据 serviceScope 参数动态构建分类过滤条件：
      * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
-     * 
+     *
      * @param ta TAtom 表
      * @param classifyId 分类ID
      * @param serviceScope 服务范围
@@ -242,11 +242,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建 T_ATOM 和 T_CLASSIFY 的关联条件（支持 CLASSIFY_ID_MAP）
-     * 
+     *
      * 根据 serviceScope 参数动态构建关联条件：
      * - 如果 serviceScope 是 PIPELINE，优先使用 CLASSIFY_ID 字段关联
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中提取对应的分类ID进行关联
-     * 
+     *
      * @param ta TAtom 表
      * @param tc TClassify 表
      * @param serviceScope 服务范围，如果为null则默认使用 PIPELINE

@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory
 
 /**
  * 插件服务范围工具类
- * 
- * since: 2024
  */
 object AtomServiceScopeUtil {
     
@@ -120,7 +118,7 @@ object AtomServiceScopeUtil {
     }
 
     private fun resolveJobType(scope: String, allJobTypes: Map<String, String>): JobTypeEnum {
-        val jobTypeName = allJobTypes[scope] ?: allJobTypes["PIPELINE"]
+        val jobTypeName = allJobTypes[scope] ?: allJobTypes[ServiceScopeEnum.PIPELINE.name]
         if (jobTypeName.isNullOrEmpty()) return JobTypeEnum.AGENT
         return try {
             JobTypeEnum.valueOf(jobTypeName)

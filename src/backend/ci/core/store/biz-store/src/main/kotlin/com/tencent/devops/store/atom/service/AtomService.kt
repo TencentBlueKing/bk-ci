@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.atom.dao.AtomQueryParam
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -52,41 +52,21 @@ import com.tencent.devops.store.pojo.common.version.VersionInfo
 interface AtomService {
 
     /**
-     * 获取插件列表
+     * 获取插件列表（含权限校验）
      */
     fun getPipelineAtoms(
         userId: String,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        projectCode: String,
-        category: String? = AtomCategoryEnum.TASK.name,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        queryProjectAtomFlag: Boolean = true,
-        fitOsFlag: Boolean? = true,
-        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        queryParam: AtomQueryParam,
         page: Int = 1,
         pageSize: Int = 10
     ): Result<AtomResp<AtomRespItem>?>
 
     /**
-     * 获取插件列表
+     * 获取插件列表（内部服务调用，无权限校验）
      */
     fun serviceGetPipelineAtoms(
         userId: String,
-        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE,
-        jobType: String?,
-        os: String?,
-        projectCode: String,
-        category: String? = AtomCategoryEnum.TASK.name,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        queryProjectAtomFlag: Boolean = true,
-        fitOsFlag: Boolean? = true,
-        queryFitAgentBuildLessAtomFlag: Boolean? = true,
+        queryParam: AtomQueryParam,
         page: Int?,
         pageSize: Int?
     ): Result<AtomResp<AtomRespItem>?>

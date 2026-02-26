@@ -28,6 +28,7 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -35,7 +36,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class AtomBaseInfoUpdateRequest(
     @get:Schema(title = "插件名称", required = false)
     val name: String? = null,
+    @get:Schema(title = "服务范围配置列表", required = false)
+    val serviceScopeConfigs: List<ServiceScopeConfig>? = null,
     @get:Schema(title = "所属分类代码", required = false)
+    @Deprecated("使用 serviceScopeConfigs 替代")
     val classifyCode: String? = null,
     @get:Schema(title = "插件简介", required = false)
     val summary: String? = null,
@@ -45,12 +49,27 @@ data class AtomBaseInfoUpdateRequest(
     val logoUrl: String? = null,
     @get:Schema(title = "发布者", required = false)
     val publisher: String? = null,
-    @get:Schema(title = "原子标签列表", required = false)
+    @get:Schema(title = "插件标签列表", required = false)
+    @Deprecated("使用serviceScopeConfigs替代")
     val labelIdList: ArrayList<String>? = null,
     @get:Schema(title = "项目可视范围", required = false)
     val visibilityLevel: VisibilityLevelEnum? = null,
     @get:Schema(title = "插件代码库不开源原因", required = false)
-    val privateReason: String? = null,
-    @get:Schema(title = "支持的服务范围", required = false)
-    val serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
-)
+    val privateReason: String? = null
+) {
+    /**
+     * 解析为服务范围配置列表：优先使用 serviceScopeConfigs，否则兼容 classifyCode + serviceScope 单范围
+     */
+    fun toServiceScopeConfigs(): List<ServiceScopeConfig> {
+        if (!serviceScopeConfigs.isNullOrEmpty()) {
+            return serviceScopeConfigs
+        }
+        return listOf(
+            ServiceScopeConfig(
+                serviceScope = ServiceScopeEnum.PIPELINE,
+                classifyCode = classifyCode ?: throw IllegalArgumentException("classifyCode is required"),
+                labelIdList = labelIdList
+            )
+        )
+    }
+}
