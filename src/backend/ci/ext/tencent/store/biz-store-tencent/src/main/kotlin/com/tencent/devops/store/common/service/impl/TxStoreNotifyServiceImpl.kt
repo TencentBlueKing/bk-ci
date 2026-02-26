@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -118,7 +119,7 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         val request = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
             receivers = mutableSetOf(userId),
-            notifyType = mutableSetOf("WEWORK_GROUP"),
+            notifyType = mutableSetOf(NotifyType.WEWORK_GROUP.name),
             titleParams = titleParams,
             bodyParams = mergedBodyParams
         )
