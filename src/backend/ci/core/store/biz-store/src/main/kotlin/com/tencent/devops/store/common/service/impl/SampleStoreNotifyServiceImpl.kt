@@ -52,6 +52,7 @@ class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService
     }
 
     override fun sendNotifyMessageToWeworkGroup(
+        userId: String,
         templateCode: String,
         weworkGroupIds: Set<String>,
         titleParams: Map<String, String>?,
