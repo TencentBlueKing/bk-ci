@@ -260,4 +260,69 @@ abstract class AtomBaseDao {
         val classifyIdField = buildClassifyIdField(ta, serviceScope)
         return classifyIdField.eq(tc.ID)
     }
+
+    /**
+     * 构建 JOB_TYPE 查询条件（支持多服务范围）
+     *
+     * JOB_TYPE 可能为：单字符串（老数据，表示 PIPELINE 的 job 类型）或 JSON 如 {"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}。
+     * 创作流等非 PIPELINE 下支持 CREATIVE_STREAM、CLOUD_TASK 等值，需按当前 serviceScope 从 JSON 中取对应 key 再比较。
+     *
+     * @param ta TAtom 表
+     * @param jobType 要筛选的 Job 类型名称（如 AGENT、AGENT_LESS、CREATIVE_STREAM、CLOUD_TASK）
+     * @param serviceScope 服务范围，null 视为 PIPELINE
+     * @param queryFitAgentBuildLessAtomFlag 仅 PIPELINE+AGENT 时有效：true 表示同时匹配 BUILD_LESS_RUN_FLAG=true；false 表示排除无编译；null 不附加
+     * @return 查询条件，若 jobType 为空则返回 null
+     */
+    protected fun buildJobTypeCondition(
+        ta: TAtom,
+        jobType: String?,
+        serviceScope: ServiceScopeEnum?,
+        queryFitAgentBuildLessAtomFlag: Boolean? = null
+    ): Condition? {
+        if (jobType.isNullOrBlank()) return null
+        val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
+        val isPipeline = normalizedScope == ServiceScopeEnum.PIPELINE.name
+
+        val jobTypeMatchCondition = if (isPipeline) {
+            // PIPELINE：兼容老数据（整列存 "AGENT"/"AGENT_LESS" 字符串）与 JSON 格式 $.PIPELINE
+            // 老数据下 JSON_EXTRACT(column, '$.PIPELINE') 对非 JSON 字符串返回 NULL，仅第一项 JOB_TYPE.eq(jobType) 生效
+            val jsonExtractPipeline = DSL.field(
+                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
+                String::class.java,
+                ta.JOB_TYPE,
+                DSL.inline("$.PIPELINE")
+            )
+            ta.JOB_TYPE.eq(jobType).or(jsonExtractPipeline.eq(jobType))
+        } else {
+            // 非 PIPELINE（如 CREATIVE_STREAM）：从 JOB_TYPE JSON 中取 $.CREATIVE_STREAM 等再比较
+            val jsonExtractScope = DSL.field(
+                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
+                String::class.java,
+                ta.JOB_TYPE,
+                DSL.inline("$.$normalizedScope")
+            )
+            jsonExtractScope.eq(jobType)
+        }
+
+        if (isPipeline && jobType == JobTypeEnum.AGENT.name) {
+            return when (queryFitAgentBuildLessAtomFlag) {
+                true -> jobTypeMatchCondition.or(ta.BUILD_LESS_RUN_FLAG.eq(true))
+                false -> jobTypeMatchCondition.and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull))
+                null -> jobTypeMatchCondition
+            }
+        }
+        return jobTypeMatchCondition
+    }
+
+    /**
+     * 按服务范围返回“无编译环境”对应的 JOB_TYPE 值（用于 os=all 且 fitOsFlag=false 时的筛选）。
+     * PIPELINE 为 AGENT_LESS；创作流（CREATIVE_STREAM）为 CLOUD_TASK；其他 scope 返回 null。
+     */
+    protected fun getAgentLessJobTypeForScope(serviceScope: ServiceScopeEnum?): String? {
+        return when (ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name) {
+            ServiceScopeEnum.PIPELINE.name -> JobTypeEnum.AGENT_LESS.name
+            ServiceScopeEnum.CREATIVE_STREAM.name -> JobTypeEnum.CLOUD_TASK.name
+            else -> null
+        }
+    }
 }

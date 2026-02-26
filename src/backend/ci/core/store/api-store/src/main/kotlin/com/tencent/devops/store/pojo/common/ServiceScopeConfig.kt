@@ -12,8 +12,8 @@ data class ServiceScopeConfig(
     @get:Schema(title = "所属插件分类代码", required = true)
     val classifyCode: String,
 
-    @get:Schema(title = "适用Job类型", required = true)
-    val jobType: JobTypeEnum,
+    @get:Schema(title = "适用Job类型", required = false)
+    val jobType: JobTypeEnum? = null,
 
     @get:Schema(title = "插件标签列表", required = false)
     val labelIdList: List<String>? = null

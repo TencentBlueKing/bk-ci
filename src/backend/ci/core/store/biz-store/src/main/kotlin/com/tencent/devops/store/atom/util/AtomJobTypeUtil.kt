@@ -28,6 +28,7 @@ package com.tencent.devops.store.atom.util
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
 import org.slf4j.LoggerFactory
 
@@ -67,13 +68,16 @@ object AtomJobTypeUtil {
         // 构建 jobTypeMap
         val jobTypeMap = mutableMapOf<String, String>()
         serviceScopeConfigs.forEach { config ->
-            val normalizedScope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
-            jobTypeMap[normalizedScope] = config.jobType.name
+            config.jobType?.let { jobType ->
+                val normalizedScope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
+                jobTypeMap[normalizedScope] = jobType.name
+            }
         }
         
         // 如果只有一个服务范围且是PIPELINE，返回字符串（兼容老数据）
-        if (jobTypeMap.size == 1 && jobTypeMap.containsKey("PIPELINE")) {
-            return jobTypeMap["PIPELINE"]
+        val pipelineScope = ServiceScopeEnum.PIPELINE.name
+        if (jobTypeMap.size == 1 && jobTypeMap.containsKey(pipelineScope)) {
+            return jobTypeMap[pipelineScope]
         }
         
         // 多个服务范围，返回JSON格式
@@ -88,6 +92,7 @@ object AtomJobTypeUtil {
      * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则返回默认Job类型
      * @return Job类型名称，如果未找到则返回默认值（PIPELINE）或null
      */
+    @Suppress("UNCHECKED_CAST")
     fun getJobType(
         jobTypeValue: String?,
         defaultJobType: String? = null,
@@ -104,10 +109,12 @@ object AtomJobTypeUtil {
         // 如果 JOB_TYPE 为空，使用默认Job类型（兼容老数据）
         if (jobTypeValue.isNullOrBlank()) {
             // 如果是 PIPELINE，返回默认Job类型；否则返回 null
-            return if (normalizedScope == "PIPELINE") defaultJobType else null
+            val pipelineScope = ServiceScopeEnum.PIPELINE.name
+            return if (normalizedScope == pipelineScope) defaultJobType else null
         }
         
         // 尝试解析为JSON对象（多服务范围）
+        val pipelineScope = ServiceScopeEnum.PIPELINE.name
         try {
             val jobTypeMap = JsonUtil.toOrNull(jobTypeValue, Map::class.java) as? Map<String, String>
             if (jobTypeMap != null) {
@@ -117,7 +124,7 @@ object AtomJobTypeUtil {
                     return jobType
                 }
                 // 如果未找到，且是 PIPELINE，返回默认Job类型
-                return if (normalizedScope == "PIPELINE") defaultJobType else null
+                return if (normalizedScope == pipelineScope) defaultJobType else null
             }
         } catch (e: Exception) {
             // 不是JSON对象，可能是字符串（老数据格式）
@@ -125,7 +132,7 @@ object AtomJobTypeUtil {
         }
         
         // 是字符串格式（老数据），只有PIPELINE服务范围才返回
-        if (normalizedScope == "PIPELINE") {
+        if (normalizedScope == pipelineScope) {
             return jobTypeValue
         }
         
@@ -145,10 +152,11 @@ object AtomJobTypeUtil {
         defaultJobType: String? = null
     ): Map<String, String> {
         val result = mutableMapOf<String, String>()
+        val pipelineScope = ServiceScopeEnum.PIPELINE.name
 
         // 设置默认值
         defaultJobType?.takeIf { it.isNotBlank() }?.let {
-            result["PIPELINE"] = it
+            result[pipelineScope] = it
         }
 
         return when {
@@ -168,7 +176,7 @@ object AtomJobTypeUtil {
                     putAll(parsedMap)
                 } else {
                     // 解析为空时，将原始值作为 PIPELINE
-                    putIfValueNotBlank("PIPELINE", jobTypeValue)
+                    putIfValueNotBlank(ServiceScopeEnum.PIPELINE.name, jobTypeValue)
                 }
             }
         } catch (e: Exception) {
@@ -177,17 +185,13 @@ object AtomJobTypeUtil {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun parseJobTypeJsonOrString(value: String): Map<String, String> {
-        return JsonUtil.toOrNull(value, Map::class.java)
-            ?.let { rawMap -> rawMap as? Map<String, String> }
-            ?.mapNotNull { (scope, jobType) ->
-                jobType.takeIf { it.isNotBlank() }?.let { validJobType ->
-                    val normalizedScope = ServiceScopeUtil.normalize(scope) ?: scope
-                    normalizedScope to validJobType
-                }
-            }
-            ?.toMap()
-            ?: emptyMap()
+        val rawMap = JsonUtil.toOrNull(value, Map::class.java) as? Map<String, String>
+            ?: return emptyMap()
+        return rawMap
+            .filterValues { it.isNotBlank() }
+            .mapKeys { (scope, _) -> ServiceScopeUtil.normalize(scope) ?: scope }
     }
 
     private fun MutableMap<String, String>.putIfValueNotBlank(key: String, value: String?) {

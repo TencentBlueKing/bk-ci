@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
@@ -104,6 +103,33 @@ import org.jooq.impl.DSL.countDistinct
 import org.springframework.stereotype.Repository
 import java.net.URLDecoder
 import java.time.LocalDateTime
+
+/**
+ * 插件列表查询参数（收拢 getPipelineAtoms / getPipelineAtomCount 的公共参数）
+ */
+data class AtomQueryParam(
+    val serviceScope: ServiceScopeEnum?,
+    val jobType: String?,
+    val os: String?,
+    val projectCode: String?,
+    val category: String?,
+    val classifyId: String?,
+    val recommendFlag: Boolean?,
+    val keyword: String?,
+    val fitOsFlag: Boolean?,
+    val queryFitAgentBuildLessAtomFlag: Boolean?,
+    val queryProjectAtomFlag: Boolean = true
+)
+
+/**
+ * 插件列表查询"三分支条件"（默认 / 普通 / 测试）的中间结果，供 list 和 count 共用
+ */
+private data class AtomConditionSet(
+    val defaultConditions: MutableList<Condition>,
+    val normalConditions: MutableList<Condition>,
+    val testConditions: MutableList<Condition>?,
+    val includeTestAtom: Boolean
+)
 
 @Suppress("ALL")
 @Repository
@@ -492,7 +518,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun getVersionsByAtomCode(
         dslContext: DSLContext,
         projectCode: String,
@@ -503,40 +528,30 @@ class AtomDao : AtomBaseDao() {
     ): Result<out Record>? {
         val tAtom = TAtom.T_ATOM
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        val baseStep = dslContext.select(
-            tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
-            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
-        ).from(tAtom)
-        val t = if (defaultFlag) {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                defaultFlag = true,
-                atomStatusList = atomStatusList
+        val conditions = generateGetPipelineAtomCondition(
+            tAtom = tAtom,
+            atomCode = atomCode,
+            defaultFlag = defaultFlag,
+            atomStatusList = atomStatusList
+        )
+        if (!defaultFlag) {
+            conditions.add(
+                DSL.exists(
+                    DSL.selectOne().from(tStoreProjectRel)
+                        .where(tStoreProjectRel.STORE_CODE.eq(tAtom.ATOM_CODE))
+                        .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+                        .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                )
             )
-            baseStep.where(conditions)
-        } else {
-            val conditions = generateGetPipelineAtomCondition(
-                tAtom = tAtom,
-                atomCode = atomCode,
-                defaultFlag = false,
-                atomStatusList = atomStatusList
-            )
-            conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-            conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
-                .where(conditions)
-                .groupBy(tAtom.VERSION, tAtom.ATOM_STATUS)
         }
         val firstVersion = JooqUtils.subStr(
-            str = t.field(KEY_VERSION) as Field<String>,
+            str = tAtom.VERSION,
             delim = ".",
             count = 1
         )
         val secondVersion = JooqUtils.subStr(
             str = JooqUtils.subStr(
-                str = t.field(KEY_VERSION) as Field<String>,
+                str = tAtom.VERSION,
                 delim = ".",
                 count = -2
             ),
@@ -544,21 +559,21 @@ class AtomDao : AtomBaseDao() {
             count = 1
         )
         val thirdVersion = JooqUtils.subStr(
-            str = t.field(KEY_VERSION) as Field<String>,
+            str = tAtom.VERSION,
             delim = ".",
             count = -1
         )
-        val branchTestFlagField = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
-            t.field(KEY_VERSION),
-            t.field(KEY_ATOM_STATUS),
+            tAtom.VERSION.`as`(KEY_VERSION),
+            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
             firstVersion,
             secondVersion,
-            thirdVersion,
-            branchTestFlagField
-        ).from(t)
+            thirdVersion
+        ).from(tAtom)
+            .where(conditions)
             .orderBy(
-                branchTestFlagField.desc(),
+                tAtom.BRANCH_TEST_FLAG.desc(),
                 firstVersion.plus(0).desc(),
                 secondVersion.plus(0).desc(),
                 thirdVersion.plus(0).desc()
@@ -569,485 +584,367 @@ class AtomDao : AtomBaseDao() {
 
     fun getPipelineAtoms(
         dslContext: DSLContext,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        projectCode: String?,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        queryProjectAtomFlag: Boolean,
-        fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?,
+        param: AtomQueryParam,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val ta = TAtom.T_ATOM
-        val tc = TClassify.T_CLASSIFY
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
-        val taf = TAtomFeature.T_ATOM_FEATURE
-        val tst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-        val defaultAtomCondition = queryDefaultAtomCondition(
-            ta = ta,
-            taf = taf,
-            tsst = tst,
-            serviceScope = serviceScope,
-            jobType = jobType,
-            os = os,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-        ) // 默认插件查询条件组装
-        val normalAtomConditions =
-            queryNormalAtomCondition(
-                ta = ta,
-                tspr = tspr,
-                taf = taf,
-                tsst = tst,
-                serviceScope = serviceScope,
-                jobType = jobType,
-                os = os,
-                projectCode = if (queryProjectAtomFlag) projectCode else null,
-                category = category,
-                classifyId = classifyId,
-                recommendFlag = recommendFlag,
-                keyword = keyword,
-                fitOsFlag = fitOsFlag,
-                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-            ) // 普通插件查询条件组装
-        val queryNormalAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
-        var queryInitTestAtomStep: SelectOnConditionStep<Record>? = null
-        var initTestAtomCondition: MutableList<Condition>? = null
-        if (!projectCode.isNullOrBlank() && (queryProjectAtomFlag || !keyword.isNullOrBlank())) {
-            queryInitTestAtomStep = getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
-            initTestAtomCondition =
-                queryTestAtomCondition(
-                    ta = ta,
-                    tspr = tspr,
-                    taf = taf,
-                    tsst = tst,
-                    serviceScope = serviceScope,
-                    jobType = jobType,
-                    os = os,
-                    projectCode = projectCode,
-                    category = category,
-                    classifyId = classifyId,
-                    recommendFlag = recommendFlag,
-                    keyword = keyword,
-                    fitOsFlag = fitOsFlag,
-                    queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-                ) // 开发者测试插件查询条件组装
-            // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-            defaultAtomCondition.add(
-                ta.ATOM_CODE.notIn(
-                    dslContext.select(ta.ATOM_CODE).from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .leftJoin(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
-                        .where(initTestAtomCondition)
-                )
+        val tAtom = TAtom.T_ATOM
+        val tClassify = TClassify.T_CLASSIFY
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
+        val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+        val cs = prepareAtomConditions(
+            dslContext = dslContext,
+            tAtom = tAtom,
+            tStoreProjectRel = tStoreProjectRel,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            param = param
+        )
+
+        // 三个分支按 DEFAULT_FLAG / ATOM_STATUS 天然互斥，使用 UNION ALL 避免临时表去重
+        // 项目过滤和测试关系过滤通过 EXISTS 子查询实现，不再 JOIN T_STORE_PROJECT_REL，避免行膨胀
+        val normalStep = buildAtomSelectStep(
+            dslContext = dslContext,
+            tAtom = tAtom,
+            tClassify = tClassify,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            serviceScope = param.serviceScope
+        )
+        val defaultStep = buildAtomSelectStep(
+            dslContext = dslContext,
+            tAtom = tAtom,
+            tClassify = tClassify,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            serviceScope = param.serviceScope
+        )
+        val unionQuery = normalStep.where(cs.normalConditions).unionAll(defaultStep.where(cs.defaultConditions))
+
+        if (cs.testConditions != null) {
+            val testStep = buildAtomSelectStep(
+                dslContext = dslContext,
+                tAtom = tAtom,
+                tClassify = tClassify,
+                tAtomFeature = tAtomFeature,
+                tStoreStatisticsTotal = tStoreStatisticsTotal,
+                serviceScope = param.serviceScope
             )
-            normalAtomConditions.add(
-                ta.ATOM_CODE.notIn(
-                    dslContext.select(ta.ATOM_CODE).from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .leftJoin(tst).on(ta.ATOM_CODE.eq(tst.STORE_CODE))
-                        .where(initTestAtomCondition)
-                )
-            )
-            queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-            queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
+            unionQuery.unionAll(testStep.where(cs.testConditions))
         }
-        val queryAtomStep = queryNormalAtomStep
-            .where(normalAtomConditions)
-            .union(
-                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope).where(defaultAtomCondition)
-            )
-        if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
-            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
-            queryAtomStep.union(
-                getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst, serviceScope)
-                    .join(tspr)
-                    .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                    .where(initTestAtomCondition)
-            )
-        }
-        val t = queryAtomStep.asTable("t")
+
+        val t = unionQuery.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
-        return if (null != page && null != pageSize) {
+        return if (page != null && pageSize != null) {
             baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
             baseStep.skipCheck().fetch()
         }
     }
 
-    /**
-     * 构建基础查询步骤（支持多服务范围分类）
-     *
-     * @param dslContext DSL上下文
-     * @param ta TAtom 表
-     * @param tc TClassify 表
-     * @param taf TAtomFeature 表
-     * @param tsst TStoreStatisticsTotal 表
-     * @param serviceScope 服务范围，用于动态选择分类ID
-     * @return 查询步骤
-     */
-    private fun getPipelineAtomBaseStep(
+    fun getPipelineAtomCount(dslContext: DSLContext, param: AtomQueryParam): Long {
+        val tAtom = TAtom.T_ATOM
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
+        val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
+        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
+        val cs = prepareAtomConditions(
+            dslContext = dslContext,
+            tAtom = tAtom,
+            tStoreProjectRel = tStoreProjectRel,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            param = param
+        )
+
+        // 单条 SQL：三个分支 UNION ALL 后统一 COUNT，一次网络往返
+        // 项目过滤已通过 EXISTS 嵌入条件，无需 JOIN T_STORE_PROJECT_REL
+        val defaultBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+            .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            .where(cs.defaultConditions)
+
+        val normalBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+            .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+            .where(cs.normalConditions)
+
+        val unionQuery = defaultBranch.unionAll(normalBranch)
+
+        if (cs.testConditions != null) {
+            val testBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+                .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
+                .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
+                .where(cs.testConditions)
+            unionQuery.unionAll(testBranch)
+        }
+
+        val t = unionQuery.asTable("t")
+        return dslContext.select(countDistinct(t.field(KEY_ATOM_CODE)))
+            .from(t).fetchOne(0, Long::class.java)!!
+    }
+
+    private fun buildAtomSelectStep(
         dslContext: DSLContext,
-        ta: TAtom,
-        tc: TClassify,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal,
+        tAtom: TAtom,
+        tClassify: TClassify,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
         serviceScope: ServiceScopeEnum? = null
     ): SelectOnConditionStep<Record> {
-        // 根据服务范围构建分类ID字段表达式
-        val classifyIdField = buildClassifyIdField(ta, serviceScope)
-
+        val classifyIdField = buildClassifyIdField(tAtom, serviceScope)
         return dslContext.select(
-            ta.ID.`as`(KEY_ID),
-            ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
-            ta.VERSION.`as`(VERSION),
-            ta.CLASS_TYPE.`as`(KEY_CLASS_TYPE),
-            ta.NAME.`as`(NAME),
-            ta.OS.`as`(KEY_OS),
-            ta.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
-            classifyIdField.`as`(KEY_CLASSIFY_ID),  // 使用动态分类ID字段
-            tc.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
-            tc.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
-            ta.LOGO_URL.`as`(KEY_LOGO_URL),
-            ta.ICON.`as`(KEY_ICON),
-            ta.CATEGROY.`as`(KEY_CATEGORY),
-            ta.SUMMARY.`as`(KEY_SUMMARY),
-            ta.DOCS_LINK.`as`(KEY_DOCSLINK),
-            ta.ATOM_TYPE.`as`(KEY_ATOM_TYPE),
-            ta.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
-            ta.DESCRIPTION.`as`(KEY_DESCRIPTION),
-            ta.PUBLISHER.`as`(KEY_PUBLISHER),
-            ta.CREATOR.`as`(KEY_CREATOR),
-            ta.MODIFIER.`as`(KEY_MODIFIER),
-            ta.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            ta.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
-            ta.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
-            ta.LATEST_FLAG.`as`(KEY_LATEST_FLAG),
-            ta.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
-            ta.WEIGHT.`as`(KEY_WEIGHT),
-            ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
-            ta.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
-            taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
-            tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
-            tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
-            tsst.HOT_FLAG.`as`(KEY_HOT_FLAG)
+            tAtom.ID.`as`(KEY_ID),
+            tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            tAtom.VERSION.`as`(VERSION),
+            tAtom.CLASS_TYPE.`as`(KEY_CLASS_TYPE),
+            tAtom.NAME.`as`(NAME),
+            tAtom.OS.`as`(KEY_OS),
+            tAtom.SERVICE_SCOPE.`as`(KEY_SERVICE_SCOPE),
+            classifyIdField.`as`(KEY_CLASSIFY_ID),
+            tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
+            tAtom.LOGO_URL.`as`(KEY_LOGO_URL),
+            tAtom.ICON.`as`(KEY_ICON),
+            tAtom.CATEGROY.`as`(KEY_CATEGORY),
+            tAtom.SUMMARY.`as`(KEY_SUMMARY),
+            tAtom.DOCS_LINK.`as`(KEY_DOCSLINK),
+            tAtom.ATOM_TYPE.`as`(KEY_ATOM_TYPE),
+            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            tAtom.DESCRIPTION.`as`(KEY_DESCRIPTION),
+            tAtom.PUBLISHER.`as`(KEY_PUBLISHER),
+            tAtom.CREATOR.`as`(KEY_CREATOR),
+            tAtom.MODIFIER.`as`(KEY_MODIFIER),
+            tAtom.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tAtom.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tAtom.DEFAULT_FLAG.`as`(KEY_DEFAULT_FLAG),
+            tAtom.LATEST_FLAG.`as`(KEY_LATEST_FLAG),
+            tAtom.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
+            tAtom.WEIGHT.`as`(KEY_WEIGHT),
+            tAtom.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
+            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
+            tAtomFeature.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
+            tStoreStatisticsTotal.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
+            tStoreStatisticsTotal.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
+            tStoreStatisticsTotal.HOT_FLAG.`as`(KEY_HOT_FLAG)
         )
-            .from(ta)
-            .leftJoin(tc)
-            .on(classifyIdField.eq(tc.ID))  // 使用动态分类ID字段 JOIN
-            .leftJoin(taf)
-            .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-            .leftJoin(tsst)
-            .on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
+            .from(tAtom)
+            .leftJoin(tClassify).on(classifyIdField.eq(tClassify.ID))
+            .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
+            .leftJoin(tStoreStatisticsTotal).on(tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE))
     }
 
-    fun getPipelineAtomCount(
+    /**
+     * 统一构建 getPipelineAtoms / getPipelineAtomCount 共用的三分支查询条件。
+     *
+     * 性能优化：如果需要排除测试中/审核中的插件，先执行一次轻量查询拿到 atomCode 列表（通常只有几个），
+     * 然后用字面值 NOT IN 传入默认/普通分支的条件，避免在每个 UNION ALL 分支里重复执行 NOT IN 子查询
+     */
+    private fun prepareAtomConditions(
         dslContext: DSLContext,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        projectCode: String?,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        fitOsFlag: Boolean?,
-        queryProjectAtomFlag: Boolean,
-        queryFitAgentBuildLessAtomFlag: Boolean?
-    ): Long {
-        val ta = TAtom.T_ATOM
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
-        val taf = TAtomFeature.T_ATOM_FEATURE
-        val tsst = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-        val defaultAtomCondition = queryDefaultAtomCondition(
-            ta = ta,
-            taf = taf,
-            tsst = tsst,
-            serviceScope = serviceScope,
-            jobType = jobType,
-            os = os,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-        ) // 默认插件查询条件组装
-        val normalAtomConditions = queryNormalAtomCondition(
-            ta = ta,
-            tspr = tspr,
-            taf = taf,
-            tsst = tsst,
-            serviceScope = serviceScope,
-            jobType = jobType,
-            os = os,
-            projectCode = if (queryProjectAtomFlag) projectCode else null,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-        ) // 普通插件查询条件组装
-        val queryNormalAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
-        var queryInitTestAtomStep: SelectOnConditionStep<Record1<Int>>? = null
-        var initTestAtomCondition: MutableList<Condition>? = null
-        if (!projectCode.isNullOrBlank() && (queryProjectAtomFlag || !keyword.isNullOrBlank())) {
-            queryInitTestAtomStep = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
-            initTestAtomCondition = queryTestAtomCondition(
-                ta = ta,
-                tspr = tspr,
-                taf = taf,
-                tsst = tsst,
-                serviceScope = serviceScope,
-                jobType = jobType,
-                os = os,
-                projectCode = projectCode,
-                category = category,
-                classifyId = classifyId,
-                recommendFlag = recommendFlag,
-                keyword = keyword,
-                fitOsFlag = fitOsFlag,
-                queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
-            ) // 开发者测试插件查询条件组装
-            // 默认插件和普通插件需排除初始化项目下面有处于测试中或者审核中的插件
-            defaultAtomCondition.add(
-                ta.ATOM_CODE.notIn(
-                    dslContext.select(ta.ATOM_CODE)
-                        .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
-                        .where(initTestAtomCondition)
-                )
-            )
-            normalAtomConditions.add(
-                ta.ATOM_CODE.notIn(
-                    dslContext.select(ta.ATOM_CODE)
-                        .from(ta).join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-                        .leftJoin(taf).on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-                        .leftJoin(tsst).on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
-                        .where(initTestAtomCondition)
-                )
-            )
-            queryNormalAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-            queryInitTestAtomStep.join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
-        }
-        val defaultAtomCount = getPipelineAtomCountBaseStep(dslContext, ta, taf, tsst)
-            .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
-        val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
-        val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
-            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
-            queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
-        } else {
-            0
-        }
-        return defaultAtomCount + normalAtomCount + initTestAtomCount
-    }
+        tAtom: TAtom,
+        tStoreProjectRel: TStoreProjectRel,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        param: AtomQueryParam
+    ): AtomConditionSet {
+        val effectiveProjectCode = if (param.queryProjectAtomFlag) param.projectCode else null
+        val includeTestAtom = !param.projectCode.isNullOrBlank()
+            && (param.queryProjectAtomFlag || !param.keyword.isNullOrBlank())
 
-    private fun getPipelineAtomCountBaseStep(
-        dslContext: DSLContext,
-        ta: TAtom,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal
-    ): SelectOnConditionStep<Record1<Int>> {
-        return dslContext.select(countDistinct(ta.ATOM_CODE)).from(ta)
-            .leftJoin(taf)
-            .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
-            .leftJoin(tsst)
-            .on(ta.ATOM_CODE.eq(tsst.STORE_CODE))
-    }
-
-    private fun queryDefaultAtomCondition(
-        ta: TAtom,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
-    ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(
-            serviceScope = serviceScope,
-            ta = ta,
-            taf = taf,
-            tsst = tsst,
-            jobType = jobType,
-            os = os,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+        val defaultConditions = buildDefaultConditions(
+            tAtom = tAtom,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            param = param
         )
-        conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
-        conditions.add(ta.DEFAULT_FLAG.eq(true)) // 查默认插件（所有项目都可用）
-        conditions.add(ta.LATEST_FLAG.eq(true)) // 只查最新版本的插件
-        return conditions
-    }
-
-    private fun setQueryAtomBaseCondition(
-        serviceScope: ServiceScopeEnum?,
-        ta: TAtom,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal,
-        jobType: String?,
-        os: String?,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
-    ): MutableList<Condition> {
-        val conditions = mutableListOf<Condition>()
-        // 使用 JSON_CONTAINS 优化 SERVICE_SCOPE 查询性能
-        buildServiceScopeCondition(ta.SERVICE_SCOPE, serviceScope)?.let {
-            conditions.add(it)
-        }
-        // 构建分类查询条件（支持多服务范围）
-        buildClassifyCondition(ta, classifyId, serviceScope)?.let {
-            conditions.add(it)
-        }
-        // 当筛选有构建环境的插件时也需加上那些无构建环境插件可以在有构建环境运行的插件
-        if (!jobType.isNullOrBlank()) {
-            if (jobType == JobTypeEnum.AGENT.name && queryFitAgentBuildLessAtomFlag != false) {
-                conditions.add(ta.JOB_TYPE.eq(jobType).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
-            } else {
-                conditions.add(ta.JOB_TYPE.eq(jobType))
-                if (queryFitAgentBuildLessAtomFlag == false) {
-                    conditions.add(ta.BUILD_LESS_RUN_FLAG.ne(true))
-                }
-            }
-        }
-        if (!os.isNullOrBlank() && !KEY_ALL.equals(os, true)) {
-            if (fitOsFlag == false) {
-                conditions.add(
-                    (ta.OS.notLike("%$os%")
-                        .and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull)))
-                        .and(ta.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
-                )
-            } else {
-                conditions.add(ta.OS.contains(os).or(ta.BUILD_LESS_RUN_FLAG.eq(true)))
-            }
-        } else if (KEY_ALL.equals(os, true)) {
-            if (fitOsFlag == false) {
-                conditions.add(ta.JOB_TYPE.eq(JobTypeEnum.AGENT_LESS.name))
-            }
-        }
-        if (null != category) conditions.add(ta.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        // 注意：classifyId 条件已在上面通过 buildClassifyCondition 添加，这里不再重复添加
-        if (null != recommendFlag) {
-            if (recommendFlag) {
-                conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag).or(taf.RECOMMEND_FLAG.isNull))
-            } else {
-                conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
-            }
-        }
-        if (!keyword.isNullOrEmpty()) {
-            conditions.add(ta.NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
-        }
-        conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        conditions.add(tsst.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-        return conditions
-    }
-
-    private fun queryNormalAtomCondition(
-        ta: TAtom,
-        tspr: TStoreProjectRel,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        projectCode: String?,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
-    ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(
-            serviceScope = serviceScope,
-            ta = ta,
-            taf = taf,
-            tsst = tsst,
-            jobType = jobType,
-            os = os,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+        val normalConditions = buildNormalConditions(
+            tAtom = tAtom,
+            tStoreProjectRel = tStoreProjectRel,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            param = param,
+            effectiveProjectCode = effectiveProjectCode
         )
-        conditions.add(ta.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())) // 只查已发布的
-        conditions.add(ta.DEFAULT_FLAG.eq(false)) // 查普通插件
-        conditions.add(ta.LATEST_FLAG.eq(true)) // 只查最新版本的插件
-        if (!projectCode.isNullOrBlank()) {
-            conditions.add(tspr.PROJECT_CODE.eq(projectCode))
-            conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        var testUnionConditions: MutableList<Condition>? = null
+
+        if (includeTestAtom) {
+            // 先查出测试中/审核中的 atomCode 列表（一般只有个位数），避免在主查询中嵌套 NOT IN 子查询
+            val testAtomCodes = dslContext
+                .selectDistinct(tAtom.ATOM_CODE)
+                .from(tAtom)
+                .join(tStoreProjectRel).on(
+                    tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE)
+                        .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                        .and(tStoreProjectRel.PROJECT_CODE.eq(param.projectCode!!))
+                        .and(tStoreProjectRel.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte())))
+                )
+                .where(
+                    tAtom.ATOM_STATUS.`in`(
+                        listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+                    )
+                )
+                .and(tAtom.DELETE_FLAG.eq(false))
+                .fetch(tAtom.ATOM_CODE)
+
+            if (testAtomCodes.isNotEmpty()) {
+                val exclusion = tAtom.ATOM_CODE.notIn(testAtomCodes)
+                defaultConditions.add(exclusion)
+                normalConditions.add(exclusion)
+            }
+
+            // union 第三分支：测试中/审核中且 LATEST_TEST_FLAG
+            val baseTestConditions = buildTestConditions(
+                tAtom = tAtom,
+                tStoreProjectRel = tStoreProjectRel,
+                tAtomFeature = tAtomFeature,
+                tStoreStatisticsTotal = tStoreStatisticsTotal,
+                param = param,
+                projectCode = param.projectCode
+            )
+            testUnionConditions = ArrayList(baseTestConditions)
+            testUnionConditions.add(tAtom.LATEST_TEST_FLAG.eq(true))
+        }
+
+        return AtomConditionSet(
+            defaultConditions = defaultConditions,
+            normalConditions = normalConditions,
+            testConditions = testUnionConditions,
+            includeTestAtom = includeTestAtom
+        )
+    }
+
+    private fun buildDefaultConditions(
+        tAtom: TAtom,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        param: AtomQueryParam
+    ): MutableList<Condition> {
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        conditions.add(tAtom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+        conditions.add(tAtom.DEFAULT_FLAG.eq(true))
+        conditions.add(tAtom.LATEST_FLAG.eq(true))
+        return conditions
+    }
+
+    private fun buildNormalConditions(
+        tAtom: TAtom,
+        tStoreProjectRel: TStoreProjectRel,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        param: AtomQueryParam,
+        effectiveProjectCode: String?
+    ): MutableList<Condition> {
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        conditions.add(tAtom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+        conditions.add(tAtom.DEFAULT_FLAG.eq(false))
+        conditions.add(tAtom.LATEST_FLAG.eq(true))
+        if (!effectiveProjectCode.isNullOrBlank()) {
+            conditions.add(buildProjectInstalledCondition(tAtom, tStoreProjectRel, effectiveProjectCode))
         }
         return conditions
     }
 
-    private fun queryTestAtomCondition(
-        ta: TAtom,
-        tspr: TStoreProjectRel,
-        taf: TAtomFeature,
-        tsst: TStoreStatisticsTotal,
-        serviceScope: ServiceScopeEnum?,
-        jobType: String?,
-        os: String?,
-        projectCode: String,
-        category: String?,
-        classifyId: String?,
-        recommendFlag: Boolean?,
-        keyword: String?,
-        fitOsFlag: Boolean?,
-        queryFitAgentBuildLessAtomFlag: Boolean?
+    private fun buildTestConditions(
+        tAtom: TAtom,
+        tStoreProjectRel: TStoreProjectRel,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        param: AtomQueryParam,
+        projectCode: String
     ): MutableList<Condition> {
-        val conditions = setQueryAtomBaseCondition(
-            serviceScope = serviceScope,
-            ta = ta,
-            taf = taf,
-            tsst = tsst,
-            jobType = jobType,
-            os = os,
-            category = category,
-            classifyId = classifyId,
-            recommendFlag = recommendFlag,
-            keyword = keyword,
-            fitOsFlag = fitOsFlag,
-            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        conditions.add(
+            tAtom.ATOM_STATUS.`in`(
+                listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
+            )
         )
         conditions.add(
-            ta.ATOM_STATUS.`in`(
-                listOf(
-                    AtomStatusEnum.TESTING.status.toByte(),
-                    AtomStatusEnum.AUDITING.status.toByte()
-                )
+            DSL.exists(
+                DSL.selectOne().from(tStoreProjectRel)
+                    .where(tStoreProjectRel.STORE_CODE.eq(tAtom.ATOM_CODE))
+                    .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+                    .and(tStoreProjectRel.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte())))
+                    .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             )
-        ) // 只查测试中和审核中的插件
-        conditions.add(tspr.PROJECT_CODE.eq(projectCode))
-        conditions.add(tspr.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte()))) // 调试项目
-        conditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        )
         return conditions
+    }
+
+    // ========== 公共条件 ==========
+
+    /**
+     * EXISTS 子查询：检查插件是否已被指定项目安装。
+     * 替代 JOIN T_STORE_PROJECT_REL，避免因一对多关系导致的行膨胀。
+     * 且 EXISTS 在找到第一条匹配后即短路返回。
+     */
+    private fun buildProjectInstalledCondition(
+        tAtom: TAtom,
+        tStoreProjectRel: TStoreProjectRel,
+        projectCode: String
+    ): Condition {
+        return DSL.exists(
+            DSL.selectOne().from(tStoreProjectRel)
+                .where(tStoreProjectRel.STORE_CODE.eq(tAtom.ATOM_CODE))
+                .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+                .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        )
+    }
+
+    private fun buildBaseConditions(
+        tAtom: TAtom,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        param: AtomQueryParam
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        buildServiceScopeCondition(tAtom.SERVICE_SCOPE, param.serviceScope)?.let { conditions.add(it) }
+        buildClassifyCondition(tAtom, param.classifyId, param.serviceScope)?.let { conditions.add(it) }
+        buildJobTypeCondition(
+            ta = tAtom,
+            jobType = param.jobType,
+            serviceScope = param.serviceScope,
+            queryFitAgentBuildLessAtomFlag = param.queryFitAgentBuildLessAtomFlag
+        )?.let { conditions.add(it) }
+        buildOsCondition(tAtom, param)?.let { conditions.add(it) }
+        param.category?.let { category ->
+            conditions.add(tAtom.CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
+        }
+        param.recommendFlag?.let { recommended ->
+            val condition = if (recommended) {
+                tAtomFeature.RECOMMEND_FLAG.eq(true).or(tAtomFeature.RECOMMEND_FLAG.isNull)
+            } else {
+                tAtomFeature.RECOMMEND_FLAG.eq(false)
+            }
+            conditions.add(condition)
+        }
+        if (!param.keyword.isNullOrEmpty()) {
+            conditions.add(tAtom.NAME.contains(param.keyword).or(tAtom.SUMMARY.contains(param.keyword)))
+        }
+        conditions.add(tAtom.DELETE_FLAG.eq(false))
+        conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        return conditions
+    }
+
+    private fun buildOsCondition(tAtom: TAtom, param: AtomQueryParam): Condition? {
+        val os = param.os
+        return when {
+            !os.isNullOrBlank() && !os.equals(KEY_ALL, ignoreCase = true) -> {
+                if (param.fitOsFlag == false) {
+                    tAtom.OS.notLike("%$os%")
+                        .and(tAtom.BUILD_LESS_RUN_FLAG.ne(true).or(tAtom.BUILD_LESS_RUN_FLAG.isNull))
+                        .and(tAtom.CATEGROY.eq(AtomCategoryEnum.TASK.category.toByte()))
+                } else {
+                    tAtom.OS.contains(os).or(tAtom.BUILD_LESS_RUN_FLAG.eq(true))
+                }
+            }
+            os.equals(KEY_ALL, ignoreCase = true) && param.fitOsFlag == false -> {
+                getAgentLessJobTypeForScope(param.serviceScope)?.let { agentLessType ->
+                    buildJobTypeCondition(tAtom, agentLessType, param.serviceScope, null)
+                }
+            }
+            else -> null
+        }
     }
 
     fun updateAtomFromOp(
@@ -1285,17 +1182,6 @@ class AtomDao : AtomBaseDao() {
             if (null != atomName) {
                 baseStep.set(NAME, atomName)
             }
-            val classifyCode = atomBaseInfoUpdateRequest.classifyCode
-            if (!classifyCode.isNullOrBlank()) {
-                // 使用公共方法查询分类ID
-                val serviceScope = atomBaseInfoUpdateRequest.serviceScope
-                val classifyId = getClassifyIdByCode(
-                    dslContext = dslContext,
-                    classifyCode = classifyCode,
-                    serviceScope = serviceScope
-                )
-                baseStep.set(CLASSIFY_ID, classifyId)
-            }
             val summary = atomBaseInfoUpdateRequest.summary
             if (null != summary) {
                 baseStep.set(SUMMARY, summary)
@@ -1327,6 +1213,17 @@ class AtomDao : AtomBaseDao() {
             baseStep.set(MODIFIER, userId)
                 .where(ID.`in`(atomIdList))
                 .execute()
+            // 按 serviceScopeConfigs（或兼容的 classifyCode+serviceScope）覆盖更新 CLASSIFY_ID、CLASSIFY_ID_MAP
+            val resolvedMap = buildClassifyIdMap(dslContext, atomBaseInfoUpdateRequest)
+            if (resolvedMap.isNotEmpty()) {
+                val newMapJson = JsonUtil.toJson(resolvedMap, formatted = false)
+                val pipelineClassifyId = resolvedMap[ServiceScopeEnum.PIPELINE.name]
+                val step = dslContext.update(this)
+                    .set(CLASSIFY_ID_MAP, newMapJson)
+                    .set(MODIFIER, userId)
+                pipelineClassifyId?.let { step.set(CLASSIFY_ID, it) }
+                step.where(ID.`in`(atomIdList)).execute()
+            }
         }
     }
 
@@ -1549,6 +1446,27 @@ class AtomDao : AtomBaseDao() {
             if (offset != null && limit != null) step.offset(offset).limit(limit)
             return step.fetch()
         }
+    }
+
+    /**
+     * 构建分类ID映射表
+     * 
+     * @param dslContext DSL上下文
+     * @param atomBaseInfoUpdateRequest 插件基本信息更新请求
+     * @return 服务范围到分类ID的映射表
+     */
+    private fun buildClassifyIdMap(
+        dslContext: DSLContext,
+        atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
+    ): Map<String, String> {
+        return atomBaseInfoUpdateRequest.toServiceScopeConfigs()
+            .mapNotNull { config ->
+                getClassifyIdByCode(dslContext, config.classifyCode, config.serviceScope)
+                    ?.let { id -> 
+                        (ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name) to id 
+                    }
+            }
+            .toMap()
     }
 
     /**
