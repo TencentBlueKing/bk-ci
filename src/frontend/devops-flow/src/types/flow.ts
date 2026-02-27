@@ -298,6 +298,20 @@ export interface StageControlOption {
 }
 
 /**
+ * 审核组
+ */
+export interface ReviewGroup {
+  id?: string
+  name: string
+  reviewers: string[]
+  groups?: string[]
+  operator?: string
+  suggest?: string
+  status?: 'PROCESS' | 'ABORT' | undefined
+  params?: Record<string, unknown>[]
+}
+
+/**
  * 检查配置 (checkIn/checkOut)
  */
 export interface CheckConfig {
@@ -305,6 +319,12 @@ export interface CheckConfig {
   timeout: number
   markdownContent: boolean
   notifyType: string[]
+  reviewGroups?: ReviewGroup[]
+  reviewDesc?: string
+  reviewParams?: Record<string, unknown>[]
+  notifyGroup?: string[]
+  status?: string
+  isReviewError?: boolean
 }
 
 /**

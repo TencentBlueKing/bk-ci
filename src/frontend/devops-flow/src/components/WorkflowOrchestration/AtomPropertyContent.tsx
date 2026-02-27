@@ -422,7 +422,7 @@ export default defineComponent({
                     ),
                     default: () => (
                       <Input
-                        value={props.element?.stepId || ''}
+                        modelValue={props.element?.stepId || ''}
                         placeholder={t('flow.orchestration.stepIdPlaceholder')}
                         onChange={handleStepIdChange}
                         class={styles.stepIdInput}
@@ -635,7 +635,7 @@ export default defineComponent({
                                         ),
                                         default: () => (
                                           <Input
-                                            value={additionalOptions.value.timeoutVar || '900'}
+                                            modelValue={additionalOptions.value.timeoutVar}
                                             placeholder={t('flow.orchestration.timeoutPlaceholder')}
                                             onChange={handleTimeoutChange}
                                             disabled={!props.editable}

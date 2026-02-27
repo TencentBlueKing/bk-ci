@@ -795,7 +795,31 @@
       "errors": "errors",
       "completeLog": "Complete Log",
       "logContent": "Log content",
-      "noData": "No data available"
+      "noData": "No data available",
+      "retryAllJobs": "Retry all jobs",
+      "retryFailJobs": "Retry failed jobs only",
+      "stageRetryTitle": "Stage Retry",
+      "retrySuc": "Retry triggered",
+      "skipSuc": "Skipped",
+      "stageReview": "Stage Review",
+      "approvalFlow": "Approval Flow",
+      "currentStatus": "Current Status",
+      "approve": "Approve",
+      "approveRes": "Subsequent stages will continue to execute",
+      "abort": "Reject",
+      "abortRes": "Subsequent stages will stop executing",
+      "approvalOpinion": "Approval Opinion",
+      "opinionTips": "Please enter your approval opinion",
+      "opinionRequired": "Approval opinion is required when rejecting",
+      "operateSuc": "Operation succeeded",
+      "operateFail": "Operation failed",
+      "timeOutTips": "Review timeout",
+      "approved": "Approved by {0}",
+      "waitApproval": "Waiting for {0} to approve",
+      "pendingApproval": "Pending approval from {0}",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "reviewParams": "Review Parameters"
     },
     "preview": {
       "execPreview": "Execute Preview",
@@ -1009,6 +1033,22 @@
       "renewalContactAdmin": "Obtained permissions through user group, if you need to renew, please contact the project administrator to renew the user group",
       "exitContactAdmin": "Obtained permissions through user group, if you need to exit, please contact the project administrator to exit the user group first",
       "environment": "Environment"
+    },
+    "stageReviewEdit": {
+      "checkIn": "Check-In Review",
+      "checkOut": "Check-Out Review",
+      "stageCondition": "Stage Entry Condition",
+      "autoExecute": "Auto Execute (Default)",
+      "manualReview": "Manual Review",
+      "approvalFlow": "Approval Flow",
+      "reviewerPlaceholder": "Enter username",
+      "reviewerRequired": "Approval flow cannot be empty, and each flow requires at least one reviewer",
+      "addReviewFlow": "Add Approval Flow",
+      "reviewDesc": "Review Description",
+      "reviewDescPlaceholder": "Enter review description, Markdown supported",
+      "timeout": "Timeout",
+      "hours": "hours",
+      "timeoutError": "Timeout must be between 1 and 720 hours"
     }
   }
 }

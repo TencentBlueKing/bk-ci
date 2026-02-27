@@ -1,5 +1,6 @@
 import CompleteLog from '@/components/CompleteLog'
 import { JobDetail, PluginDetail, StageDetail } from '@/components/ExecDetail'
+import StageReviewPanel from '@/components/StageReviewPanel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import {
@@ -14,7 +15,7 @@ import { isSkip } from '@/utils/flowStatus'
 import { convertMillSec, convertTime } from '@/utils/util'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
-import { Button, Checkbox, Popover, Select } from 'bkui-vue'
+import { Button, Checkbox, Dialog, Message, Popover, Radio, Select } from 'bkui-vue'
 import { computed, defineComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -54,10 +55,22 @@ export default defineComponent({
     const router = useRouter()
 
     // 从 store 获取执行详情数据（全局唯一）
-    const { executeDetail, isRunning } = useExecuteDetail()
+    const { executeDetail, isRunning, requestRetryFlow, silentRefreshExecuteDetail } =
+      useExecuteDetail()
 
     // ==================== State ====================
     const hideSkipExecTask = ref(false)
+
+    // Stage 重试状态
+    const showRetryStageDialog = ref(false)
+    const retryTaskId = ref('')
+    const skipTask = ref(false)
+    const failedContainer = ref(false)
+
+    // Stage 审核状态
+    const showStageReviewPanel = ref(false)
+    const reviewStage = ref<Stage | null>(null)
+    const reviewType = ref<'checkIn' | 'checkOut'>('checkIn')
     const isExpandAllMatrix = ref(true)
     const showLog = ref(false)
     const showErrors = ref(false)
@@ -387,21 +400,61 @@ export default defineComponent({
       }
     }
 
-    const handleStageCheck = (args: any) => {
-      // TODO: 处理Stage审核
-      console.log('Stage check:', args)
+    const handleStageCheck = (payload: any) => {
+      const { type = 'checkIn', stageIndex } = payload || {}
+      if (!executeDetail.value?.model?.stages) return
+      const stage = executeDetail.value.model.stages[stageIndex + 1]
+      if (stage) {
+        reviewStage.value = stage
+        reviewType.value = type
+        showStageReviewPanel.value = true
+      }
     }
 
-    const handleRetry = (args: any) => {
-      // TODO: 处理重试
-      console.log('Retry:', args)
+    const handleRetry = (payload: any) => {
+      const { taskId, skip = false } = payload || {}
+      retryTaskId.value = taskId
+      skipTask.value = skip
+      showRetryStageDialog.value = true
     }
 
-    const handlePipelineChange = (changedObject: any) => {
-      // TODO: 处理流水线变更
-      console.log('Pipeline change:', changedObject)
+    const retryPipeline = async (isStageRetry: boolean) => {
+      showRetryStageDialog.value = false
+      try {
+        const res = await requestRetryFlow({
+          projectId: route.params.projectId as string,
+          pipelineId: route.params.flowId as string,
+          buildId: route.params.buildNo as string,
+          taskId: retryTaskId.value,
+          skip: skipTask.value,
+          ...(isStageRetry ? { failedContainer: String(failedContainer.value) } : {}),
+        })
+        if (res?.id) {
+          const msg = skipTask.value ? t('flow.execute.skipSuc') : t('flow.execute.retrySuc')
+          Message({ theme: 'success', message: msg, limit: 1 })
+          if (res.executeCount) {
+            handleExecuteCountChange(res.executeCount)
+          }
+          await silentRefreshExecuteDetail()
+        } else {
+          Message({ theme: 'error', message: (res as any)?.message || t('flow.execute.operateFail'), limit: 1 })
+        }
+      } catch (err: any) {
+        Message({ theme: 'error', message: err?.message || t('flow.execute.operateFail'), limit: 1 })
+      } finally {
+        retryTaskId.value = ''
+        skipTask.value = false
+      }
     }
 
+    const handleStageReviewApprove = async () => {
+      await silentRefreshExecuteDetail()
+    }
+
+    const closeStageReviewPanel = () => {
+      showStageReviewPanel.value = false
+      reviewStage.value = null
+    }
     const setShowErrorPopup = () => {
       showErrors.value = true
     }
@@ -599,6 +652,41 @@ export default defineComponent({
       )
     }
 
+    // 渲染 Stage 重试弹窗
+    const renderRetryStageDialog = () => {
+      return (
+        <Dialog
+          isShow={showRetryStageDialog.value}
+          title={t('flow.execute.stageRetryTitle')}
+          width={400}
+          onClosed={() => {
+            showRetryStageDialog.value = false
+          }}
+          onConfirm={() => retryPipeline(true)}
+        >
+          <Radio.Group v-model={failedContainer.value}>
+            <Radio label={false}>{t('flow.execute.retryAllJobs')}</Radio>
+            <Radio label={true}>{t('flow.execute.retryFailJobs')}</Radio>
+          </Radio.Group>
+        </Dialog>
+      )
+    }
+
+    // 渲染 Stage 审核面板
+    const renderStageReviewPanel = () => {
+      if (!reviewStage.value) return null
+
+      return (
+        <StageReviewPanel
+          isShow={showStageReviewPanel.value}
+          stage={reviewStage.value}
+          reviewType={reviewType.value}
+          onClose={closeStageReviewPanel}
+          onApprove={handleStageReviewApprove}
+        />
+      )
+    }
+
     // 渲染 Stage 详情面板
     const renderStageDetailPanel = () => {
       if (!showStageDetail.value || !selectedStage.value || !executeDetail.value) return null
@@ -713,7 +801,6 @@ export default defineComponent({
                     onClick={handlePipelineClick}
                     onStageCheck={handleStageCheck}
                     onStageRetry={handleRetry}
-                    onChange={handlePipelineChange}
                   />
                 )}
               </div>
@@ -726,6 +813,10 @@ export default defineComponent({
           {renderJobDetailPanel()}
           {renderPluginDetailPanel()}
           {renderStageDetailPanel()}
+
+          {/* Stage 重试弹窗 & 审核面板 */}
+          {renderRetryStageDialog()}
+          {renderStageReviewPanel()}
         </div>
       )
     }

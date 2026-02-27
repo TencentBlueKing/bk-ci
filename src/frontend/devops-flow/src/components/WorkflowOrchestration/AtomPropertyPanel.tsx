@@ -110,7 +110,7 @@ export default defineComponent({
               <div class={sharedStyles.atomNameEdit}>
                 {props.editable && nameEditing.value ? (
                   <Input
-                    value={getAtomName()}
+                    modelValue={getAtomName()}
                     maxlength={30}
                     placeholder={t('flow.orchestration.atomNamePlaceholder')}
                     onBlur={handleBlur}

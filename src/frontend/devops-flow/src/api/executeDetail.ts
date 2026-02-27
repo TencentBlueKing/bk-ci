@@ -240,3 +240,39 @@ export function requestBuildParamCombination({
     `${PROCESS_API_URL_PREFIX}/user/buildParam/${projectId}/${pipelineId}/${buildId}/getCombinationFromBuild`,
   )
 }
+
+/**
+ * Stage 审核触发
+ * @param projectId 项目ID
+ * @param pipelineId 流水线ID
+ * @param buildNo 构建编号
+ * @param stageId Stage ID
+ * @param cancel 是否取消（驳回）
+ * @param reviewParams 审核参数
+ * @param id 审核组ID
+ * @param suggest 审核意见
+ */
+export function triggerStage({
+  projectId,
+  pipelineId,
+  buildNo,
+  stageId,
+  cancel,
+  reviewParams,
+  id,
+  suggest,
+}: {
+  projectId: string
+  pipelineId: string
+  buildNo: string
+  stageId: string
+  cancel: boolean
+  reviewParams?: Record<string, unknown>[]
+  id?: string
+  suggest?: string
+}): Promise<boolean> {
+  return post<boolean>(
+    `${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`,
+    { reviewParams, id, suggest },
+  )
+}
