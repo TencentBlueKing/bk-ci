@@ -2,7 +2,8 @@ import { defineComponent } from 'vue'
 
 export interface SvgIconProps {
   name: string
-  size?: number | string
+  size?: number | string,
+  onClick?: (e: MouseEvent) => void,
 }
 
 export const SvgIcon = defineComponent<SvgIconProps>({
