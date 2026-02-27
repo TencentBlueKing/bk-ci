@@ -1087,7 +1087,6 @@
   notifyTypeScope:
     - "WEWORK"
     - "WEWORK_GROUP"
-    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
