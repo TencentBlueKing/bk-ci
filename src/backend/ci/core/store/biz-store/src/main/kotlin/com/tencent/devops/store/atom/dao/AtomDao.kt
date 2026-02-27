@@ -105,7 +105,7 @@ import java.net.URLDecoder
 import java.time.LocalDateTime
 
 /**
- * 插件列表查询参数（收拢 getPipelineAtoms / getPipelineAtomCount 的公共参数）
+ * 插件列表查询参数（收拢 getPipelineAtomsAndCount 的公共参数）
  */
 data class AtomQueryParam(
     val serviceScope: ServiceScopeEnum?,
@@ -119,6 +119,14 @@ data class AtomQueryParam(
     val fitOsFlag: Boolean?,
     val queryFitAgentBuildLessAtomFlag: Boolean?,
     val queryProjectAtomFlag: Boolean = true
+)
+
+/**
+ * 插件列表 + 总数的组合查询结果，避免 list 和 count 各自独立调用 prepareAtomConditions
+ */
+data class PipelineAtomQueryResult(
+    val atoms: Result<out Record>?,
+    val totalCount: Long
 )
 
 /**
@@ -582,18 +590,22 @@ class AtomDao : AtomBaseDao() {
         return queryStep.skipCheck().fetch()
     }
 
-    fun getPipelineAtoms(
+    /**
+     * 组合查询：一次 prepareAtomConditions 同时获取分页数据和总数。
+     * 当结果行数 < pageSize 时直接推算总数，跳过 count SQL，减少一次 DB 往返。
+     */
+    fun getPipelineAtomsAndCount(
         dslContext: DSLContext,
         param: AtomQueryParam,
         page: Int?,
         pageSize: Int?
-    ): Result<out Record>? {
+    ): PipelineAtomQueryResult {
         val tAtom = TAtom.T_ATOM
         val tClassify = TClassify.T_CLASSIFY
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
         val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-        val cs = prepareAtomConditions(
+        val conditionSet = prepareAtomConditions(
             dslContext = dslContext,
             tAtom = tAtom,
             tStoreProjectRel = tStoreProjectRel,
@@ -602,8 +614,43 @@ class AtomDao : AtomBaseDao() {
             param = param
         )
 
-        // 三个分支按 DEFAULT_FLAG / ATOM_STATUS 天然互斥，使用 UNION ALL 避免临时表去重
-        // 项目过滤和测试关系过滤通过 EXISTS 子查询实现，不再 JOIN T_STORE_PROJECT_REL，避免行膨胀
+        val atoms = executeAtomListQuery(
+            dslContext = dslContext,
+            tAtom = tAtom,
+            tClassify = tClassify,
+            tAtomFeature = tAtomFeature,
+            tStoreStatisticsTotal = tStoreStatisticsTotal,
+            conditionSet = conditionSet,
+            param = param,
+            page = page,
+            pageSize = pageSize
+        )
+        val resultSize = atoms.size
+        val totalCount = if (page != null && pageSize != null && resultSize < pageSize) {
+            ((page - 1).toLong() * pageSize + resultSize)
+        } else {
+            executeAtomCountQuery(
+                dslContext = dslContext,
+                tAtom = tAtom,
+                tAtomFeature = tAtomFeature,
+                tStoreStatisticsTotal = tStoreStatisticsTotal,
+                conditionSet = conditionSet
+            )
+        }
+        return PipelineAtomQueryResult(atoms, totalCount)
+    }
+
+    private fun executeAtomListQuery(
+        dslContext: DSLContext,
+        tAtom: TAtom,
+        tClassify: TClassify,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        conditionSet: AtomConditionSet,
+        param: AtomQueryParam,
+        page: Int?,
+        pageSize: Int?
+    ): Result<out Record> {
         val normalStep = buildAtomSelectStep(
             dslContext = dslContext,
             tAtom = tAtom,
@@ -620,9 +667,10 @@ class AtomDao : AtomBaseDao() {
             tStoreStatisticsTotal = tStoreStatisticsTotal,
             serviceScope = param.serviceScope
         )
-        val unionQuery = normalStep.where(cs.normalConditions).unionAll(defaultStep.where(cs.defaultConditions))
+        val unionQuery =
+            normalStep.where(conditionSet.normalConditions).unionAll(defaultStep.where(conditionSet.defaultConditions))
 
-        if (cs.testConditions != null) {
+        if (conditionSet.testConditions != null) {
             val testStep = buildAtomSelectStep(
                 dslContext = dslContext,
                 tAtom = tAtom,
@@ -631,7 +679,7 @@ class AtomDao : AtomBaseDao() {
                 tStoreStatisticsTotal = tStoreStatisticsTotal,
                 serviceScope = param.serviceScope
             )
-            unionQuery.unionAll(testStep.where(cs.testConditions))
+            unionQuery.unionAll(testStep.where(conditionSet.testConditions))
         }
 
         val t = unionQuery.asTable("t")
@@ -643,42 +691,33 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getPipelineAtomCount(dslContext: DSLContext, param: AtomQueryParam): Long {
-        val tAtom = TAtom.T_ATOM
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
-        val tAtomFeature = TAtomFeature.T_ATOM_FEATURE
-        val tStoreStatisticsTotal = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
-        val cs = prepareAtomConditions(
-            dslContext = dslContext,
-            tAtom = tAtom,
-            tStoreProjectRel = tStoreProjectRel,
-            tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
-            param = param
-        )
-
-        // 单条 SQL：三个分支 UNION ALL 后统一 COUNT，一次网络往返
-        // 项目过滤已通过 EXISTS 嵌入条件，无需 JOIN T_STORE_PROJECT_REL
-        val tsstJoinCond = tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
+    private fun executeAtomCountQuery(
+        dslContext: DSLContext,
+        tAtom: TAtom,
+        tAtomFeature: TAtomFeature,
+        tStoreStatisticsTotal: TStoreStatisticsTotal,
+        conditionSet: AtomConditionSet
+    ): Long {
+        val joinCond = tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
             .and(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
 
         val defaultBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
-            .where(cs.defaultConditions)
+            .leftJoin(tStoreStatisticsTotal).on(joinCond)
+            .where(conditionSet.defaultConditions)
 
         val normalBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-            .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
-            .where(cs.normalConditions)
+            .leftJoin(tStoreStatisticsTotal).on(joinCond)
+            .where(conditionSet.normalConditions)
 
         val unionQuery = defaultBranch.unionAll(normalBranch)
 
-        if (cs.testConditions != null) {
+        if (conditionSet.testConditions != null) {
             val testBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
                 .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
-                .leftJoin(tStoreStatisticsTotal).on(tsstJoinCond)
-                .where(cs.testConditions)
+                .leftJoin(tStoreStatisticsTotal).on(joinCond)
+                .where(conditionSet.testConditions)
             unionQuery.unionAll(testBranch)
         }
 
@@ -741,7 +780,7 @@ class AtomDao : AtomBaseDao() {
     }
 
     /**
-     * 统一构建 getPipelineAtoms / getPipelineAtomCount 共用的三分支查询条件。
+     * 统一构建 getPipelineAtomsAndCount 内部三分支查询条件。
      *
      * 性能优化：如果需要排除测试中/审核中的插件，先执行一次轻量查询拿到 atomCode 列表（通常只有几个），
      * 然后用字面值 NOT IN 传入默认/普通分支的条件，避免在每个 UNION ALL 分支里重复执行 NOT IN 子查询

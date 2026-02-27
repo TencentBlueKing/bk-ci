@@ -61,6 +61,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomQueryParam
+import com.tencent.devops.store.atom.dao.PipelineAtomQueryResult
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
@@ -143,6 +144,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.concurrent.Callable
+import java.util.concurrent.Future
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 /**
@@ -212,6 +217,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * IO 密集型辅助查询线程池：
+     * - core=10 / max=50：低并发用核心线程，高并发弹性扩容
+     * - SynchronousQueue：不排队，优先创建新线程
+     * - CallerRunsPolicy：线程全满时由调用线程自己执行，自然退化为串行，不会比原来更差
+     */
+    private val auxiliaryExecutor = ThreadPoolExecutor(
+        10, 50, 60L, TimeUnit.SECONDS,
+        SynchronousQueue(),
+        ThreadPoolExecutor.CallerRunsPolicy()
+    )
+
     private val atomNameCache = Caffeine.newBuilder()
         .maximumSize(2000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -266,35 +283,51 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     ): Result<AtomResp<AtomRespItem>?> {
         val projectCode = queryParam.projectCode.orEmpty()
         val queryProjectAtomFlag = queryParam.queryProjectAtomFlag
-        val dataList = mutableListOf<AtomRespItem>()
-        val pipelineAtoms = atomDao.getPipelineAtoms(
+        val watch = org.springframework.util.StopWatch("serviceGetPipelineAtoms|$userId|$projectCode")
+
+        watch.start("atomsAndCount")
+        val queryResult = atomDao.getPipelineAtomsAndCount(
             dslContext = dslContext,
             param = queryParam,
             page = page,
             pageSize = pageSize
         )
+        val pipelineAtoms = queryResult.atoms
+        val totalSize = queryResult.totalCount
+        watch.stop()
+
         val atomIdSet = mutableSetOf<String>()
         val atomCodeSet = mutableSetOf<String>()
         pipelineAtoms?.forEach {
             atomIdSet.add(it[KEY_ID] as String)
             atomCodeSet.add(it[KEY_ATOM_CODE] as String)
         }
-        val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
-        val atomIndexInfosMap =
-            storeIndexManageService.getStoreIndexInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
-        val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
-        var atomPipelineCntMap: Map<String, Int>? = null
+
+        watch.start("auxiliaryParallel")
+        val atomCodeList = atomCodeSet.toList()
+        val honorFuture = auxiliaryExecutor.submit(Callable {
+            storeHonorService.getHonorInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeList)
+        })
+        val indexFuture = auxiliaryExecutor.submit(Callable {
+            storeIndexManageService.getStoreIndexInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeList)
+        })
+        val labelFuture = auxiliaryExecutor.submit(Callable {
+            atomLabelService.getLabelsByAtomIds(atomIdSet)
+        })
+
+        var pipelineCntFuture: Future<Map<String, Int>?>? = null
         var atomVisibleDataMap: Map<String, MutableList<Int>>? = null
         var memberDataMap: Map<String, MutableList<String>>? = null
         var installedAtomList: List<String>? = null
         var userDeptList: List<Int>? = null
         if (queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
-            atomPipelineCntMap = client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
-                atomCodes = atomCodeSet.joinToString(","),
-                projectCode = projectCode
-            ).data
+            pipelineCntFuture = auxiliaryExecutor.submit(Callable {
+                client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(
+                    atomCodes = atomCodeSet.joinToString(","),
+                    projectCode = projectCode
+                ).data
+            })
         } else if (!queryProjectAtomFlag && atomCodeSet.isNotEmpty()) {
-            val atomCodeList = atomCodeSet.toList()
             atomVisibleDataMap = storeCommonService.generateStoreVisibleData(atomCodeList, StoreTypeEnum.ATOM)
             memberDataMap = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
             userDeptList = storeUserService.getUserDeptList(userId)
@@ -305,6 +338,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 storeType = StoreTypeEnum.ATOM
             )?.map { it.value1() }
         }
+
+        val atomHonorInfoMap = honorFuture.get()
+        val atomIndexInfosMap = indexFuture.get()
+        val atomLabelInfoMap = labelFuture.get()
+        val atomPipelineCntMap = pipelineCntFuture?.get()
+        watch.stop()
+
+        watch.start("buildResponse")
         val respContext = AtomRespContext(
             queryProjectAtomFlag = queryProjectAtomFlag,
             userId = userId,
@@ -317,10 +358,18 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomHonorInfoMap = atomHonorInfoMap,
             atomIndexInfosMap = atomIndexInfosMap
         )
+        val dataList = mutableListOf<AtomRespItem>()
         pipelineAtoms?.forEach {
             dataList.add(buildAtomRespItem(it, respContext))
         }
-        val totalSize = atomDao.getPipelineAtomCount(dslContext = dslContext, param = queryParam)
+        watch.stop()
+
+        logger.info("serviceGetPipelineAtoms|$userId|$projectCode" +
+            "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
+            "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
+            "|totalCost=${watch.totalTimeMillis}ms" +
+            "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
+
         val effectivePage = page ?: 1
         val effectivePageSize = pageSize ?: dataList.size.coerceAtLeast(1)
         val totalPage = PageUtil.calTotalPage(effectivePageSize, totalSize)
