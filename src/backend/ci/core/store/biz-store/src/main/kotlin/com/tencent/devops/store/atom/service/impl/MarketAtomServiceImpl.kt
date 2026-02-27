@@ -85,10 +85,12 @@ import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.atom.util.AtomJobTypeUtil
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.service.ClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
@@ -165,6 +167,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
+    @Autowired
+    lateinit var classifyDao: ClassifyDao
 
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
@@ -833,18 +838,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 获取 jobType（根据传入的 serviceScope 返回对应的值）
             val jobTypeValue = record[tAtom.JOB_TYPE]
             val jobType = AtomJobTypeUtil.getJobType(jobTypeValue, null, targetServiceScope.name)
-            
             // 获取 labelList（根据传入的 serviceScope 返回对应的值）
             val labelList = atomLabelService.getLabelsByAtomId(atomId, targetServiceScope) ?: emptyList()
-            
-            // serviceScopeConfigs 始终返回所有服务范围的配置信息
-            // 需要获取 PIPELINE 服务范围的记录来构建全量配置
-            val pipelineRecord = if (targetServiceScope != ServiceScopeEnum.PIPELINE) {
-                marketAtomDao.getAtomById(dslContext, atomId, ServiceScopeEnum.PIPELINE)
-            } else {
-                record
-            }
-            val serviceScopeConfigs = buildServiceScopeConfigs(atomId, pipelineRecord ?: record, tAtom)
+            // serviceScopeConfigs 返回所有 scope 的配置
+            val serviceScopeConfigs = buildServiceScopeConfigs(atomId, record, tAtom)
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
                 ReleaseTypeEnum.getReleaseTypeObj((record[tAtomVersionLog.RELEASE_TYPE] as Byte).toInt())
             } else null
@@ -912,12 +909,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
         }
     }
-    
+
     /**
-     * 构建 ServiceScopeConfig 数组（包含所有服务范围的配置信息）
-     * 
+     * 根据已有 record（含 CLASSIFY_ID、CLASSIFY_ID_MAP）构建各 scope 的 ServiceScopeConfig。
+     * 分类代码通过 record 解析 scope→classifyId 后一次批量查询 T_CLASSIFY，避免按 scope 多次 getAtomById。
+     *
      * @param atomId 插件ID
-     * @param record 基础查询记录
+     * @param record 基础查询记录（须含 CLASSIFY_ID、CLASSIFY_ID_MAP、SERVICE_SCOPE、JOB_TYPE）
      * @param tAtom TAtom 表
      * @return ServiceScopeConfig 列表
      */
@@ -929,26 +927,55 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val serviceScopeStr = record[tAtom.SERVICE_SCOPE]
         val classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP]
         val jobTypeValue = record[tAtom.JOB_TYPE]
-        
-        // 获取所有服务范围
+        // 流水线 scope 的分类 ID：优先从 CLASSIFY_ID_MAP 解析，无则用 T_ATOM.CLASSIFY_ID（遗留字段，仅表示流水线）
+        val pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString()
         val serviceScopes = AtomServiceScopeUtil.getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
-        
-        // 使用工具类构建 ServiceScopeConfig
-        val tClassify = TClassify.T_CLASSIFY
+        if (serviceScopes.isEmpty()) return null
+        val scopeToClassifyId = buildScopeToClassifyId(
+            serviceScopes = serviceScopes,
+            classifyIdMapJson = classifyIdMapJson,
+            pipelineClassifyIdFallback = pipelineClassifyIdFallback
+        )
+        val classifyIds = scopeToClassifyId.values.distinct()
+        val classifyCodesById = classifyDao.getClassifyCodesByIds(dslContext, classifyIds)
         return AtomServiceScopeUtil.buildServiceScopeConfigs(
             serviceScopes = serviceScopes,
             jobTypeValue = jobTypeValue,
-            getClassifyCode = { serviceScopeEnum ->
-                // 获取该服务范围的分类信息（直接从 getAtomById 返回的记录中获取）
-                val scopeRecord = marketAtomDao.getAtomById(dslContext, atomId, serviceScopeEnum)
-                scopeRecord?.get(tClassify.CLASSIFY_CODE)
-            },
-            getLabelIdList = { serviceScopeEnum ->
-                // 获取该服务范围的标签
-                val scopeLabels = atomLabelService.getLabelsByAtomId(atomId, serviceScopeEnum)
-                scopeLabels?.map { it.id }
+            getClassifyCode = { scope -> scopeToClassifyId[scope.name]?.let { classifyCodesById[it] } },
+            getLabelIdList = { scope ->
+                atomLabelService.getLabelsByAtomId(atomId, scope)?.map { it.id }
             }
         )
+    }
+
+    /**
+     * 根据 CLASSIFY_ID_MAP 构建 scope → classifyId 映射。
+     * 各 scope 优先从 MAP 中取；PIPELINE 若不在 MAP 中则使用 T_ATOM.CLASSIFY_ID 列（遗留字段，仅表示流水线）。
+     */
+    private fun buildScopeToClassifyId(
+        serviceScopes: List<String>,
+        classifyIdMapJson: String?,
+        pipelineClassifyIdFallback: String?
+    ): Map<String, String> {
+        val normalizedMap = mutableMapOf<String, String>()
+        if (!classifyIdMapJson.isNullOrEmpty()) {
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val raw = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java) as? Map<String, Any>
+                raw?.forEach { (key, value) ->
+                    val scope = ServiceScopeUtil.normalize(key) ?: key
+                    val id = value.toString().takeIf { it.isNotBlank() } ?: return@forEach
+                    normalizedMap[scope] = id
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
+            }
+        }
+        return serviceScopes.mapNotNull { scope ->
+            val id = normalizedMap[scope]
+                ?: (if (scope == ServiceScopeEnum.PIPELINE.name) pipelineClassifyIdFallback else null)
+            if (id.isNullOrBlank()) null else scope to id
+        }.toMap()
     }
 
     private fun getRecentDailyStatisticList(
