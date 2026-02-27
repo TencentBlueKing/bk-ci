@@ -176,7 +176,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun setCoffeeAIToken(userId: String, token: CoffeeAIToken): String {
-        val url = "$apiUrl/openapi/coffee/token"
+        val url = "$apiUrlSZ/openapi/coffee/token"
         val body = JsonUtil.toJson(token, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
