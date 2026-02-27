@@ -28,7 +28,7 @@ class WhitelistCoffeeAIFilter constructor(
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
 
-        if (!path.contains("/api/user/ai/")) return true
+        if (!path.contains("/api/user/coffee_ai/")) return true
 
         val userId = requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.get(0) ?: run {
             requestContext.abortWith(
