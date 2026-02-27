@@ -295,7 +295,7 @@
                                         <render-trigger
                                             :trigger="trigger"
                                             :index="index"
-                                            :is-not-step-id="trigger.isNoStepId || !trigger.stepId"
+                                            :is-no-step-id="trigger.isNoStepId || !trigger.stepId"
                                             :is-disabled="trigger.isDelete"
                                             :handle-change-trigger="handleChangeTrigger"
                                         />

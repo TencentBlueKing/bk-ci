@@ -14,14 +14,14 @@
                     >
                         <bk-radio
                             :value="false"
-                            :disabled="trigger.isFollowTemplate || isNotStepId"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                             class="mr20"
                         >
                             {{ $t('template.enable') }}
                         </bk-radio>
                         <bk-radio
                             :value="true"
-                            :disabled="trigger.isFollowTemplate || isNotStepId"
+                            :disabled="trigger.isFollowTemplate || isNoStepId"
                         >
                             {{ $t('template.close') }}
                         </bk-radio>
@@ -88,7 +88,7 @@
             type: Boolean,
             default: false
         },
-        isNotStepId: {
+        isNoStepId: {
             type: Boolean,
             default: false
         }
