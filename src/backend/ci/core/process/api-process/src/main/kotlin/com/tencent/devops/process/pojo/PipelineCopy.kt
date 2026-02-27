@@ -27,13 +27,16 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-COPY创建信息")
 data class PipelineCopy(
     @get:Schema(title = "名称", required = true)
+    @field:BkField(maxLength = 128)
     val name: String,
     @get:Schema(title = "描述", required = false)
+    @field:BkField(maxLength = 255)
     val desc: String?,
     @get:Schema(title = "流水线基础设置-基本信息中的标签", required = false)
     var labels: List<String> = emptyList(),
