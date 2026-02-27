@@ -9,6 +9,7 @@ import {
   resetResourceAuthorization,
   type ResetResourceAuthParams,
 } from '@/api/permissionDelegation'
+import { RESOURCE_TYPES } from '@/components/Permission/constants'
 
 /**
  * 权限代持状态管理
@@ -64,16 +65,16 @@ export const usePermissionDelegationStore = defineStore('permissionDelegation', 
   async function handleReset() {
     const params: ResetResourceAuthParams = {
       projectCode: projectId.value,
-      resourceType: 'pipeline',
+      resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
       handoverChannel: 'OTHER',
       resourceAuthorizationHandoverList: [
         {
           projectCode: projectId.value,
-          resourceType: 'pipeline',
+          resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
           resourceName: resourceAuthData.value.resourceName,
           resourceCode: resourceAuthData.value.resourceCode,
           handoverFrom: resourceAuthData.value.handoverFrom,
-          handoverTo: authStore.userInfo,
+          handoverTo: authStore.username,
         },
       ],
     }

@@ -62,3 +62,11 @@ export const templateTypeEnum = {
   PUBLIC: 'PUBLIC',
   CUSTOMIZE: 'CUSTOMIZE',
 }
+
+export const errorTypeMap = [
+  { title: 'flow.content.systemError', icon: 'info-circle' },
+  { title: 'flow.content.userError', icon: 'user' },
+  { title: 'flow.content.thirdPartyError', icon: 'link' },
+  { title: 'flow.content.pluginError', icon: 'is-store' },
+  { title: 'flow.content.containerError', icon: 'pipeline' },
+] as const

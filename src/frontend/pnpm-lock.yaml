@@ -1063,6 +1063,9 @@ importers:
       axios:
         specifier: 1.13.2
         version: 1.13.2(debug@4.4.3)
+      bk-permission:
+        specifier: workspace:bk-permission
+        version: link:../bk-permission
       bkui-pipeline:
         specifier: workspace:bk-pipeline
         version: link:../bk-pipeline

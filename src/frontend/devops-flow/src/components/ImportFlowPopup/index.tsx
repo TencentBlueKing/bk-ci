@@ -279,7 +279,44 @@ export default defineComponent({
       }
     }
 
+    function isAcceptedFileType(file: File): boolean {
+      const name = file.name.toLowerCase()
+      return (
+        file.type === 'application/json' ||
+        name.endsWith('.json') ||
+        file.type === 'application/x-yaml' ||
+        name.endsWith('.yaml') ||
+        name.endsWith('.yml')
+      )
+    }
+
+    const MAX_FILE_SIZE = 4 * 1024 * 1024 * 1024 // 4GB
+
     function handleSelect({ file, onProgress, onSuccess, onComplete }: any) {
+      if (!isAcceptedFileType(file)) {
+        fileContent.value = null
+        isFileValid.value = false
+        Message({
+          theme: 'error',
+          message: t('flow.content.unsupportedFileType'),
+        })
+        onSuccess({ code: 1, message: t('flow.content.unsupportedFileType'), result: '' }, file)
+        onComplete(file)
+        return
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        fileContent.value = null
+        isFileValid.value = false
+        Message({
+          theme: 'error',
+          message: t('flow.content.fileSizeExceeded'),
+        })
+        onSuccess({ code: 1, message: t('flow.content.fileSizeExceeded'), result: '' }, file)
+        onComplete(file)
+        return
+      }
+
       const reader = new FileReader()
       reader.readAsText(file)
       reader.addEventListener('loadend', async (e) => {
@@ -412,6 +449,7 @@ export default defineComponent({
               <Upload
                 v-if={props.isShow}
                 accept=".json, .yaml, .yml, application/json, application/x-yaml"
+                size={4096}
                 with-credentials={true}
                 custom-request={handleSelect}
                 class={styles.upload}

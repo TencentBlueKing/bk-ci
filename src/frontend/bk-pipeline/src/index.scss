@@ -206,7 +206,7 @@ span.skip-name {
         &.icon-exclamation-triangle-shape {
             font-size: 14px;
             &.is-danger {
-                color: $dangerColor;
+                color: $dangerColor !important;
             }
         }
     }

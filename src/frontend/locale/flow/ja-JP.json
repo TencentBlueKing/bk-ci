@@ -73,6 +73,9 @@
       "importFlowLabel": "ファイルをアップロード",
       "importFlowTip": "JSON ファイルのみ対応しています",
       "invalidFlowJson": "無効な作成フロー JSON ファイル",
+      "pleaseSelectFile": "先にファイルを選択してください",
+      "unsupportedFileType": "このファイル形式はサポートされていません。JSON 形式のみ対応しています",
+      "fileSizeExceeded": "ファイルサイズが制限を超えています。最大 4GB まで対応しています",
       "import": "インポート",
       "workspace": "ワークスペース",
       "workSpaceDesc": "デフォルトは <Agent インストールディレクトリ>/workspace/{0}/",
@@ -112,11 +115,14 @@
       "save": "保存",
       "saveSuccess": "保存成功",
       "saveFailed": "保存失敗",
+      "orchestrationErrorTip": "オーケストレーションに検証エラーがあります。保存する前に修正してください。",
+      "settingsErrorTip": "基本設定に検証エラーがあります。保存する前に修正してください。",
       "projectIdRequired": "プロジェクトIDは空にできません",
       "noFlowModel": "保存可能な作成フローモデルはありません",
       "debug": "デバッグ",
       "publish": "公開",
       "edit": "編集",
+      "applyPermission": "権限申請",
       "addToTooltip": "グループに追加",
       "confirmDeleteFlow": "作成フローを削除してもよろしいですか？",
       "operationObject": "操作オブジェクト",
@@ -187,6 +193,11 @@
       "totalDuration": "合計時間",
       "executionDuration": "実行時間",
       "errorCode": "エラーコード",
+      "systemError": "システムエラー",
+      "userError": "ユーザーエラー",
+      "thirdPartyError": "サードパーティエラー",
+      "pluginError": "プラグインエラー",
+      "containerError": "ビルドマシンエラー",
       "operation": "操作",
       "rebuild": "再実行",
       "retrySuccess": "再実行がトリガーされました",
@@ -322,7 +333,8 @@
       "cloudTriggerUsers": "トリガーユーザー",
       "cloudIgnoreUsers": "無視ユーザー",
       "textareaPlaceholder": "複数のエントリをカンマで区切り",
-      "emptyState": "トリガーを選択して設定を表示してください"
+      "emptyState": "トリガーを選択して設定を表示してください",
+      "validationError": "トリガー設定に検証エラーがあります。保存する前に修正してください"
     },
     "variable": {
       "title": "変数",
@@ -537,7 +549,8 @@
       "preStageSuccess": "前のStageが成功したときに実行",
       "preStageFail": "前のStageが失敗したときに実行",
       "preStageCancel": "前のStageがキャンセルされたときに実行",
-      "stepIdPlaceholder": "Step IDを入力してください。空の場合は任意ですが、現在のジョブ内で一意である必要があります"
+      "stepIdPlaceholder": "Step IDを入力してください。空の場合は任意ですが、現在のジョブ内で一意である必要があります",
+      "fieldRequired": "このフィールドは必須です"
     },
     "dialog": {
       "createGroup": {
@@ -600,7 +613,8 @@
         "staticFlowGroup": "静的作成フローグループ",
         "dynamicMatchPlaceholder": "作成フローの名前やタグなどの属性に基づいて自動的に一致します",
         "addLabel": "新しいタグを追加",
-        "noLabels": "現在のプロジェクトには利用可能なタグがありません"
+        "noLabels": "現在のプロジェクトには利用可能なタグがありません",
+        "nameRequired": "作成フロー名は必須です"
       }
     },
     "labelGroup": {

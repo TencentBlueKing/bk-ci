@@ -11,6 +11,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useModeStore } from '@/stores/flowMode'
 import { UI_MODE } from '@/utils/flowConst'
+import { validateFlowSettings } from '@/utils/validation'
 
 /**
  * 创作流模型状态管理
@@ -44,6 +45,41 @@ export const useFlowModelStore = defineStore('flowModel', () => {
    */
   const isFlowEmpty = computed(() => {
     return !flowModel.value || flowModel.value.stages.length === 0
+  })
+
+  /**
+   * 计算属性：设置中存在校验错误的字段列表
+   */
+  const settingsErrorFields = computed(() => {
+    return validateFlowSettings(flowSetting.value)
+  })
+
+  /**
+   * 计算属性：编排模型中是否存在校验错误（isError 标记）
+   */
+  const hasOrchestrationError = computed(() => {
+    if (!flowModel.value?.stages) return false
+    return flowModel.value.stages.some((stage: any) => {
+      if (stage.isError) return true
+      return stage.containers?.some((container: any) => {
+        if (container.isError) return true
+        return container.elements?.some((element: any) => element.isError)
+      })
+    })
+  })
+
+  /**
+   * 计算属性：设置中是否存在校验错误
+   */
+  const hasSettingsError = computed(() => {
+    return settingsErrorFields.value.length > 0
+  })
+
+  /**
+   * 计算属性：编排或设置中是否存在任一校验错误
+   */
+  const hasValidationError = computed(() => {
+    return hasOrchestrationError.value || hasSettingsError.value
   })
 
   /**
@@ -140,13 +176,16 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     try {
       const modelCopy = JSON.parse(JSON.stringify(flowModel.value))
 
-      // 为每个 stage 的每个 container 添加 dispatchType 并删除 baseOS
       modelCopy.stages?.forEach((stage: any) => {
+        delete stage.isError
         stage.containers?.forEach((container: any) => {
-          // 删除 baseOS 字段
+          delete container.isError
           if (container.baseOS) {
             delete container.baseOS
           }
+          container.elements?.forEach((element: any) => {
+            delete element.isError
+          })
         })
       })
 
@@ -205,6 +244,10 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
     // 计算属性
     isFlowEmpty,
+    hasValidationError,
+    hasOrchestrationError,
+    hasSettingsError,
+    settingsErrorFields,
 
     // 方法
     loadFlowModel,

@@ -12,6 +12,7 @@ import {
   createTimeFilterOptions,
   CUSTOM_TIME_RANGE,
   MEMBER_STATUS,
+  RESOURCE_TYPES,
   TIME_DURATIONS,
   TIME_TO_DAYS,
 } from '../constants'
@@ -78,7 +79,7 @@ export default defineComponent({
      */
     resourceType: {
       type: String as PropType<ResourceType>,
-      default: 'pipeline',
+      default: RESOURCE_TYPES.CREATIVE_STREAM,
     },
     /**
      * Project code

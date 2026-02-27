@@ -88,6 +88,13 @@ export default defineComponent({
       },
     ])
 
+    // Auto-expand panels that have notifications
+    const defaultActiveIndex = computed(() =>
+      notifyList.value
+        .map((item, index) => (item.notifications.length > 0 ? index : -1))
+        .filter((i) => i >= 0),
+    )
+
     // Get notification list by type
     const getNotificationList = (type: string): Subscription[] => {
       switch (type) {
@@ -174,6 +181,7 @@ export default defineComponent({
         <NotificationList
           notifyList={notifyList.value}
           editable={true}
+          defaultActiveIndex={defaultActiveIndex.value}
           onAdd={handleAddNotification}
           onEdit={handleEditNotification}
           onDelete={handleDeleteNotification}

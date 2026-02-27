@@ -10,6 +10,7 @@ import EmptyTableStatus from '@/components/EmptyTable'
 import ExtMenu from '@/components/ExtMenu/index'
 import ImportFlowPopup from '@/components/ImportFlowPopup'
 import NewFlowPopup from '@/components/NewFlowPopup'
+import { RESOURCE_ACTION, RESOURCE_TYPES, PROJECT_RESOURCE_ACTION } from '@/components/Permission/constants'
 import SaveAsTemplatePopup from '@/components/SaveAsTemplatePopup'
 import StageSteps from '@/components/StageSteps'
 import StatusIcon from '@/components/StatusIcon'
@@ -19,10 +20,11 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useFlowListData, type Styles } from '@/hooks/useFlowListData'
 import { useTableHeight } from '@/hooks/useTableHeight'
 import { FLOW_SORT_FILED } from '@/utils/flowConst.ts'
+import { handleFlowNoPermission } from '@/utils/permission'
 import SearchSelect from '@blueking/search-select-v3'
 import { Button, Dropdown, Loading, Message, Popover, Table, Tag } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
-import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, h, nextTick, onMounted, ref, resolveDirective, watch, withDirectives } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './FlowTable.module.css'
@@ -111,6 +113,8 @@ export const FlowTable = defineComponent({
       initSearchFromQuery,
     } = useFlowListData(styles as Styles)
 
+    const permDirective = resolveDirective('perm')
+
     onMounted(async () => {
       updateQuery()
     })
@@ -171,15 +175,15 @@ export const FlowTable = defineComponent({
       )
     }
 
+    const hasViewPermission = (row: ContentTableItem) => {
+      return row?.permissions?.canView ?? true
+    }
+
     const renderFlowName = (row: ContentTableItem) => {
-      /**
-       * Handle flow name click navigation
-       * If only draft version exists, redirect to edit page instead of detail page
-       */
       const handleFlowClick = () => {
         if (row.delete) return
+        if (!hasViewPermission(row)) return
 
-        // Navigate to flow base path, router guard will fetch releaseVersion and redirect
         router.push({
           name: ROUTE_NAMES.FLOW_DETAIL,
           params: {
@@ -192,7 +196,7 @@ export const FlowTable = defineComponent({
       return (
         <>
           <span
-            class={row.delete ? 'text-disabled' : styles.nameLink}
+            class={row.delete ? 'text-disabled' : hasViewPermission(row) ? styles.nameLink : styles.noPermLink}
             v-overflow-title
             onClick={handleFlowClick}
           >
@@ -272,7 +276,7 @@ export const FlowTable = defineComponent({
     }
 
     const toLatestBuildRoute = (row: ContentTableItem) => {
-      if (row.permissions && row.permissions.canView && row.latestBuildRoute) {
+      if (hasViewPermission(row) && row.latestBuildRoute) {
         router.push(row.latestBuildRoute)
       }
     }
@@ -297,6 +301,7 @@ export const FlowTable = defineComponent({
       if (row.delete) {
         return
       }
+      const canView = hasViewPermission(row)
       return (
         <div class={styles.latestExecCell}>
           <StatusIcon status={row.latestBuildStatus} size={22} />
@@ -305,10 +310,10 @@ export const FlowTable = defineComponent({
               <>
                 <div
                   class={[styles.flowExecMsgTitle, 'text-ellipsis']}
-                  onClick={() => toLatestBuildRoute(row)}
+                  onClick={canView ? () => toLatestBuildRoute(row) : undefined}
                 >
-                  <b class={styles.flowCellLink}>#{row.latestBuildNum}</b>
-                  <b class={[styles.flowCellLink, styles.line]}>|</b>
+                  <b class={canView ? styles.flowCellLink : styles.flowCellLinkDisabled}>#{row.latestBuildNum}</b>
+                  <b class={[canView ? styles.flowCellLink : styles.flowCellLinkDisabled, styles.line]}>|</b>
                   {!latestExecIsStageProgress.value ? (
                     <span class="lastBuildMsg">{row.lastBuildMsg}</span>
                   ) : (
@@ -371,41 +376,115 @@ export const FlowTable = defineComponent({
       if (row.delete) {
         return
       }
+
+      const permissions = row.permissions
+      const canView = hasViewPermission(row)
+
+      if (!canView && !isRecycleBin.value) {
+        return (
+          <Button
+            theme="primary"
+            size="small"
+            onClick={() => applyPermission(row)}
+          >
+            {t('flow.content.applyPermission')}
+          </Button>
+        )
+      }
+
       return (
         <>
           {isRecycleBin.value ? (
-            <Button text theme="primary" onClick={() => handleRestore(row)}>
-              {t('flow.restore.restore')}
-            </Button>
+            withDirectives(
+              <Button text theme="primary" onClick={() => handleRestore(row)}>
+                {t('flow.restore.restore')}
+              </Button>,
+              permDirective
+                ? [[permDirective, {
+                  hasPermission: permissions?.canManage ?? true,
+                  disablePermissionApi: true,
+                  permissionData: {
+                    projectId: projectId.value,
+                    resourceType: RESOURCE_TYPES.PROJECT,
+                    resourceCode: projectId.value,
+                    action: PROJECT_RESOURCE_ACTION.MANAGE,
+                  },
+                }]]
+                : [],
+            )
           ) : (
             <div class={styles.actions}>
               {!(row.released || row.onlyBranchVersion) ? (
-                <Button text theme="primary" onClick={() => goEdit(row)}>
-                  {t('flow.content.edit')}
-                </Button>
+                withDirectives(
+                  <Button text theme="primary" onClick={() => goEdit(row)}>
+                    {t('flow.content.edit')}
+                  </Button>,
+                  permDirective
+                    ? [[permDirective, {
+                      hasPermission: permissions?.canEdit ?? true,
+                      disablePermissionApi: true,
+                      permissionData: {
+                        projectId: projectId.value,
+                        resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
+                        resourceCode: row.pipelineId,
+                        action: RESOURCE_ACTION.EDIT,
+                      },
+                    }]]
+                    : [],
+                )
               ) : (
-                <Button
-                  text
-                  theme="primary"
-                  disabled={row.disabled}
-                  onClick={() => handleExecute(row)}
-                  v-bk-tooltips={{
-                    content: row.tooltips,
-                    disabled: !row.disabled,
-                  }}
-                >
-                  {row.lock
-                    ? t('flow.content.disabled')
-                    : row.canManualStartup
-                      ? t('flow.content.execute')
-                      : t('flow.content.nonManual')}
-                </Button>
+                withDirectives(
+                  <Button
+                    text
+                    theme="primary"
+                    disabled={row.disabled}
+                    onClick={() => handleExecute(row)}
+                    v-bk-tooltips={{
+                      content: row.tooltips,
+                      disabled: !row.disabled,
+                    }}
+                  >
+                    {row.lock
+                      ? t('flow.content.disabled')
+                      : row.canManualStartup
+                        ? t('flow.content.execute')
+                        : t('flow.content.nonManual')}
+                  </Button>,
+                  permDirective
+                    ? [[permDirective, {
+                      hasPermission: permissions?.canExecute ?? true,
+                      disablePermissionApi: true,
+                      permissionData: {
+                        projectId: projectId.value,
+                        resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
+                        resourceCode: row.pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE,
+                      },
+                    }]]
+                    : [],
+                )
               )}
               <ExtMenu data={row} config={row.flowAction} />
             </div>
           )}
         </>
       )
+    }
+
+    const applyPermission = (row: ContentTableItem) => {
+      handleFlowNoPermission({
+        projectId: row.projectId,
+        resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
+        resourceCode: row.pipelineId,
+        action: RESOURCE_ACTION.VIEW,
+      })
+    }
+
+    const setRowCls = ({ row }: { row: ContentTableItem }) => {
+      const cls: string[] = []
+      if (row?.delete) cls.push('has-delete')
+      if (!hasViewPermission(row) && styles.noPermission) cls.push(styles.noPermission)
+      return cls.join(' ')
     }
 
     const sortConfig = (field: string) => {
@@ -510,7 +589,7 @@ export const FlowTable = defineComponent({
           label: t('flow.content.actions'),
           field: 'actions',
           fixed: 'right',
-          width: 100,
+          width: 160,
           render: ({ row }: { row: ContentTableItem }) => renderActions(row),
         },
       ] as Column[]
@@ -752,6 +831,7 @@ export const FlowTable = defineComponent({
                 border={['row', 'outer']}
                 pagination={pagination.value}
                 remote-pagination
+                rowClass={setRowCls}
                 onColumnSort={handleSort}
                 onPageValueChange={pageChange}
                 onPageLimitChange={limitChange}

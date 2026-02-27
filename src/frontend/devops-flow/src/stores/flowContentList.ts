@@ -19,6 +19,7 @@ import {
   type AddToFlowGroupParams,
 } from '@/api/flowContentList'
 import { getProjectGroups } from '@/api/flowLabelGroup'
+import { RESOURCE_ACTION, RESOURCE_TYPES } from '@/components/Permission/constants'
 import { useRoute } from 'vue-router'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { STATUS, type StageStatusInfo } from '@/types/flow'
@@ -123,41 +124,67 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
    * 获取流水线操作菜单配置
    */
   function getFlowActions(content: ContentTableItem, isDraft: boolean) {
+    const permissions = content.permissions
+    const editPermData = {
+      projectId: content.projectId,
+      resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
+      resourceCode: content.pipelineId,
+      action: RESOURCE_ACTION.EDIT,
+    }
+    const deletePermData = {
+      projectId: content.projectId,
+      resourceType: RESOURCE_TYPES.CREATIVE_STREAM,
+      resourceCode: content.pipelineId,
+      action: RESOURCE_ACTION.DELETE,
+    }
+
     const actions = [
       {
         key: 'enable',
         text: content.lock ? t('flow.content.enable') : t('flow.content.disable'),
+        hasPermission: permissions?.canEdit ?? true,
+        disablePermissionApi: true,
+        permissionData: editPermData,
         handler: (data: ContentTableItem) => {
           if (enableActionCallback) {
             enableActionCallback(data)
           } else {
-            openActionDialog(data, DialogType.ADD_TO) // fallback
+            openActionDialog(data, DialogType.ADD_TO)
           }
         },
       },
       {
         key: 'addTo',
         text: t('flow.content.addTo'),
+        hasPermission: permissions?.canEdit ?? true,
+        disablePermissionApi: true,
+        permissionData: editPermData,
         handler: (data: ContentTableItem) => openActionDialog(data, DialogType.ADD_TO),
       },
       {
         key: 'copy',
         text: t('flow.content.copyCreationFlow'),
+        hasPermission: permissions?.canEdit ?? true,
+        disablePermissionApi: true,
+        permissionData: editPermData,
         handler: (data: ContentTableItem) => openActionDialog(data, DialogType.COPY),
       },
-      {
-        key: 'saveAsTemplate',
-        text: t('flow.content.saveAsTemplate'),
-        handler: (data: ContentTableItem) => openActionDialog(data, DialogType.SAVE_AS_TEMPLATE),
-      },
+      // {
+      //   key: 'saveAsTemplate',
+      //   text: t('flow.content.saveAsTemplate'),
+      //   handler: (data: ContentTableItem) => openActionDialog(data, DialogType.SAVE_AS_TEMPLATE),
+      // },
       {
         key: 'delete',
         text: t('flow.actions.delete'),
+        hasPermission: permissions?.canDelete ?? true,
+        disablePermissionApi: true,
+        permissionData: deletePermData,
         handler: (data: ContentTableItem) => {
           if (deleteActionCallback) {
             deleteActionCallback(data)
           } else {
-            openActionDialog(data, DialogType.ADD_TO) // fallback
+            openActionDialog(data, DialogType.ADD_TO)
           }
         },
       },

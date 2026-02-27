@@ -34,6 +34,9 @@ export function useFlowModel() {
     hasUnsavedChanges,
     isFlowEmpty,
     flowSetting,
+    hasValidationError,
+    hasOrchestrationError,
+    hasSettingsError,
   } = storeToRefs(store)
 
   // 统一的位置/索引管理
@@ -561,6 +564,9 @@ export function useFlowModel() {
     hasError,
     currentFlowId,
     hasUnsavedChanges,
+    hasValidationError,
+    hasOrchestrationError,
+    hasSettingsError,
     isFlowEmpty,
     flowSetting,
     // Editing State

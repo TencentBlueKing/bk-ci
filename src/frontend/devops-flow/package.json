@@ -24,6 +24,7 @@
     "@blueking/crontab": "0.0.2-beta.7",
     "@blueking/search-select-v3": "0.0.1-beta.10",
     "axios": "1.13.2",
+    "bk-permission": "workspace:bk-permission",
     "bkui-pipeline": "workspace:bk-pipeline",
     "bkui-vue": "2.0.2-beta.92",
     "monaco-editor": "^0.52.2",

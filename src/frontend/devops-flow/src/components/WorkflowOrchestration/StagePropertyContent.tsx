@@ -239,13 +239,8 @@ export default defineComponent({
 
                         {showCustomCondition.value && (
                           <FormItem
-                            v-slots={{
-                              label: () => (
-                                <div class={sharedStyles.labelWithIcon}>
-                                  <span>{t('flow.orchestration.customConditionExp')}</span>
-                                </div>
-                              ),
-                            }}
+                            required
+                            label={t('flow.orchestration.customConditionExp')}
                           >
                             <Input
                               v-model={formData.value.customCondition}

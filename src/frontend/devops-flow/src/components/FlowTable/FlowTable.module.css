@@ -293,3 +293,20 @@
 .isCollect {
   display: block;
 }
+
+/* 无权限行背景 */
+.noPermission {
+  background-color: #fafbfd;
+}
+
+/* 无权限链接：普通文本样式 */
+.noPermLink {
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+/* 无权限时的构建链接 */
+.flowCellLinkDisabled {
+  cursor: not-allowed;
+  color: #7b7d8a;
+}

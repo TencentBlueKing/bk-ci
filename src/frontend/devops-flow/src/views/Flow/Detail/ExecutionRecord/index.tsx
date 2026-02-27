@@ -1,4 +1,4 @@
-import type { ConditionOptionItem, ExecutionRecord } from '@/api/executionRecord'
+import type { ConditionOptionItem, ErrorInfoItem, ExecutionRecord } from '@/api/executionRecord'
 import {
   getHistoryConditions,
   HistoryConditionType,
@@ -11,9 +11,10 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { ROUTE_NAMES } from '@/constants/routes'
 import { useExecutionRecordData } from '@/hooks/useExecutionRecordData'
 import { useExecutionRecordStore } from '@/stores/executionRecord'
+import { errorTypeMap } from '@/utils/flowConst'
 import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
-import { Button, DatePicker, Exception, Input, Loading, Message, Popover, Table } from 'bkui-vue'
+import { Button, DatePicker, Dialog, Exception, Input, Loading, Message, Popover, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
 import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -119,6 +120,25 @@ export default defineComponent({
       checked: [...selectedColumnKeys.value],
       showLineHeight: false,
     })
+
+    // 错误码弹窗相关
+    const showErrorDialog = ref(false)
+    const activeErrorRecord = ref<ExecutionRecord | null>(null)
+
+    const getErrorTypeInfo = (errorType?: number) => {
+      const idx = errorType ?? 0
+      return errorTypeMap[idx] ?? errorTypeMap[0]
+    }
+
+    const openErrorDialog = (record: ExecutionRecord) => {
+      activeErrorRecord.value = record
+      showErrorDialog.value = true
+    }
+
+    const closeErrorDialog = () => {
+      showErrorDialog.value = false
+      activeErrorRecord.value = null
+    }
 
     // 重新执行构建相关
     const retryingMap = ref<Record<string, boolean>>({})
@@ -232,7 +252,36 @@ export default defineComponent({
         } else if (col.field === 'remark') {
           baseColumn.render = ({ row }: any) => renderRemark(row as ExecutionRecord)
         } else if (col.field === 'errorCode') {
-          baseColumn.render = ({ row }: any) => (row as ExecutionRecord).errorCode || '--'
+          baseColumn.minWidth = 280
+          baseColumn.render = ({ row }: any) => {
+            const record = row as ExecutionRecord
+            const errorList = record.errorInfoList
+            if (!errorList || errorList.length === 0) return <span>--</span>
+            return (
+              <div class={styles.errorCodeCell}>
+                <SvgIcon
+                  name="menu-sub"
+                  size={14}
+                  class={styles.errorCodeIcon}
+                  onClick={(e: MouseEvent) => {
+                    e.stopPropagation()
+                    openErrorDialog(record)
+                  }}
+                />
+                <ul class={styles.errorCodeList}>
+                  {errorList.map((item: ErrorInfoItem, index: number) => {
+                    const typeInfo = getErrorTypeInfo(item.errorType)
+                    return (
+                      <li class={styles.errorCodeItem} key={item.taskId ?? index}>
+                        <span class={styles.errorCodeLabel} v-overflow-title>{t(typeInfo.title)}</span>
+                        <span>({item.errorCode})</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )
+          }
         }
 
         return baseColumn
@@ -743,6 +792,35 @@ export default defineComponent({
             </Loading>
           </>
         )}
+
+        <Dialog
+          isShow={showErrorDialog.value}
+          title={`#${activeErrorRecord.value?.buildNo ?? ''} - ${t('flow.content.errorCode')}`}
+          width={640}
+          onClosed={closeErrorDialog}
+        >
+          {{
+            default: () => (
+              <ul class={styles.errorInfoList}>
+                {activeErrorRecord.value?.errorInfoList.map((item: ErrorInfoItem, index: number) => {
+                  const typeInfo = getErrorTypeInfo(item.errorType)
+                  return (
+                    <li key={item.taskId ?? index} class={styles.errorInfoItem}>
+                      <SvgIcon name={typeInfo.icon} size={18} class={styles.errorInfoIcon} />
+                      <p class={styles.errorInfoText} v-overflow-title>
+                        {t(typeInfo.title)} (<b>{item.errorCode}</b>)
+                        {item.errorMsg ? `: ${item.errorMsg}` : ''}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            ),
+            footer: () => (
+              <Button onClick={closeErrorDialog}>{t('flow.common.close')}</Button>
+            ),
+          }}
+        </Dialog>
       </div>
     )
   },

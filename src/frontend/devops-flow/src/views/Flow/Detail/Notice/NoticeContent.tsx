@@ -21,7 +21,6 @@ export default defineComponent({
     // Get notification lists from flowSetting
     const successList = computed(() => props.flowSetting?.successSubscriptionList || [])
     const failList = computed(() => props.flowSetting?.failSubscriptionList || [])
-    // Note: flowSetting may not have cancelSubscriptionList and publishSubscriptionList
     const cancelList = computed(() => (props.flowSetting as any)?.cancelSubscriptionList || [])
     const publishList = computed(() => (props.flowSetting as any)?.publishSubscriptionList || [])
 
@@ -49,8 +48,15 @@ export default defineComponent({
       },
     ])
 
+    // Auto-expand panels that have notifications
+    const defaultActiveIndex = computed(() =>
+      notifyList.value
+        .map((item, index) => (item.notifications.length > 0 ? index : -1))
+        .filter((i) => i >= 0),
+    )
+
     return () => (
-      <NotificationList notifyList={notifyList.value} editable={false} defaultActiveIndex={[1]} />
+      <NotificationList notifyList={notifyList.value} editable={false} defaultActiveIndex={defaultActiveIndex.value} />
     )
   },
 })

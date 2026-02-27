@@ -182,6 +182,79 @@
   }
 }
 
+/* 错误码单元格 */
+.errorCodeCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.errorCodeList {
+  flex: 1;
+  min-width: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.errorCodeItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  line-height: 1.8;
+}
+
+.errorCodeLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.errorCodeIcon {
+  flex-shrink: 0;
+  color: var(--primary-color, #3a84ff);
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--primary-color-hover, #699df4);
+  }
+}
+
+/* 错误码弹窗 */
+.errorInfoList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.errorInfoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 0;
+  font-size: 12px;
+  word-break: break-all;
+  line-height: 20px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-color, #eaebf0);
+  }
+}
+
+.errorInfoIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-tertiary, #979ba5);
+}
+
+.errorInfoText {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
 /* Empty state */
 .emptyState {
   display: flex;

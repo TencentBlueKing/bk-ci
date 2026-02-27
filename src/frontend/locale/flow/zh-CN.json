@@ -73,6 +73,9 @@
       "importFlowLabel": "上传文件",
       "importFlowTip": "仅支持 json 类型文件",
       "invalidFlowJson": "非法的创作流JSON文件",
+      "pleaseSelectFile": "请先选择文件",
+      "unsupportedFileType": "不支持该文件类型，仅支持 JSON 格式文件",
+      "fileSizeExceeded": "文件大小超出限制，最大支持 4GB",
       "import": "导入",
       "workspace": "工作空间",
       "workSpaceDesc": "默认为<Agent安装目录>/workspace/{0}/",
@@ -112,11 +115,14 @@
       "save": "保存",
       "saveSuccess": "保存成功",
       "saveFailed": "保存失败",
+      "orchestrationErrorTip": "编排中存在校验错误，请先修正后再保存",
+      "settingsErrorTip": "基础设置中存在校验错误，请先修正后再保存",
       "projectIdRequired": "项目ID不能为空",
       "noFlowModel": "没有可保存的创作流模型",
       "debug": "调试",
       "publish": "发布",
       "edit": "编辑",
+      "applyPermission": "申请权限",
       "addToTooltip": "添加到组",
       "confirmDeleteFlow": "确认删除创作流？",
       "operationObject": "操作对象",
@@ -187,6 +193,11 @@
       "totalDuration": "总耗时",
       "executionDuration": "执行耗时",
       "errorCode": "错误码",
+      "systemError": "系统错误",
+      "userError": "用户错误",
+      "thirdPartyError": "第三方系统错误",
+      "pluginError": "插件错误",
+      "containerError": "构建机错误",
       "operation": "操作",
       "rebuild": "重新执行",
       "retrySuccess": "已触发重新执行",
@@ -321,7 +332,8 @@
       "cloudTriggerUsers": "触发用户",
       "cloudIgnoreUsers": "忽略用户",
       "textareaPlaceholder": "多个条目请使用英文逗号分隔",
-      "emptyState": "请选择一个触发器以查看配置"
+      "emptyState": "请选择一个触发器以查看配置",
+      "validationError": "触发器配置存在校验错误，请修正后再保存"
     },
     "variable": {
       "title": "变量",
@@ -548,7 +560,8 @@
       "strategyDesc": "定义矩阵策略，使用 YAML 格式，如: os: [linux, windows]",
       "includeCaseDesc": "指定要包含的组合用例",
       "excludeCaseDesc": "指定要排除的组合用例",
-      "mutexTimeoutDesc": "排队超时时间，0 表示不等待直接失败"
+      "mutexTimeoutDesc": "排队超时时间，0 表示不等待直接失败",
+      "fieldRequired": "此字段为必填项"
     },
     "dialog": {
       "createGroup": {
@@ -610,7 +623,8 @@
         "staticFlowGroup": "静态创作流组",
         "dynamicMatchPlaceholder": "将根据创作流的名称、标签等属性自动匹配",
         "addLabel": "新建标签",
-        "noLabels": "当前项目暂无标签"
+        "noLabels": "当前项目暂无标签",
+        "nameRequired": "创作流名称不能为空"
       }
     },
     "labelGroup": {
