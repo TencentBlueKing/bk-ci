@@ -1,0 +1,72 @@
+.stageReviewEditContent {
+  padding: 20px 24px;
+  font-size: 12px;
+}
+
+.reviewRadioGroup {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 16px;
+}
+
+.sectionDivider {
+  margin: 20px 0 16px !important;
+}
+
+.formSection {
+  margin-top: 16px;
+}
+
+.reviewGroupItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.reviewGroupName {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.reviewGroupUsers {
+  flex: 1;
+}
+
+.reviewGroupDelete {
+  flex-shrink: 0;
+}
+
+.addReviewGroupBtn {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.timeoutInput {
+  width: 200px;
+}
+
+.timeoutSuffix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--color-text-secondary, #63656e);
+  font-size: 12px;
+}
+
+.panelFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+}
+
+.errorTip {
+  font-size: 12px;
+  color: #ea3636;
+  line-height: 18px;
+  margin-top: 2px;
+}

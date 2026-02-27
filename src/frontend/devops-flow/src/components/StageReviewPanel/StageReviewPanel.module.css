@@ -1,0 +1,100 @@
+.stageReviewContent {
+  padding: 23px 33px;
+  font-size: 12px;
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 64px;
+}
+
+.reviewSubtitle {
+  display: inline-flex;
+  align-items: center;
+  margin: 24px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reviewSubtitle:first-child {
+  margin-top: 0;
+}
+
+.reviewDesc {
+  line-height: 20px;
+  color: var(--color-text-secondary, #63656e);
+  word-break: break-all;
+}
+
+.reviewSteps {
+  margin: 25px 0 32px;
+}
+
+.reviewResult {
+  margin-top: 8px;
+  display: flex;
+  gap: 40px;
+}
+
+.grayColor {
+  color: #979ba5;
+}
+
+.reviewClock {
+  color: #3a84ff;
+  margin-left: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: normal;
+}
+
+.errorMessage {
+  font-size: 12px;
+  color: #ea3636;
+  line-height: 18px;
+  display: block;
+  margin-top: 4px;
+}
+
+.approveFooter {
+  position: absolute;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  border-top: 1px solid #dcdee5;
+  background-color: rgb(250, 251, 253);
+  height: 54px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 8px;
+}
+
+.statusLine {
+  margin-left: 4px;
+}
+
+.reviewParamsSection {
+  margin-top: 16px;
+}
+
+.reviewParamItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.reviewParamLabel {
+  min-width: 120px;
+  color: var(--color-text-secondary, #63656e);
+}
+
+.reviewParamValue {
+  flex: 1;
+}
+
+.disabledTip {
+  color: #979ba5;
+  font-size: 12px;
+  margin-top: 16px;
+}

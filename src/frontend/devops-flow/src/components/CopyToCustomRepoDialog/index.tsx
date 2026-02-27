@@ -214,7 +214,7 @@ export default defineComponent({
           onEnter={search}
         >
           {{
-            suffix: () => <i class="bk-icon icon-search" onClick={() => search(keyPath.value)} />,
+            suffix: () => <SvgIcon name="search" size={16} onClick={() => search(keyPath.value)} style={{ cursor: 'pointer' }} />,
           }}
         </Input>
         <section class={styles.copyCustomRepoTree}>

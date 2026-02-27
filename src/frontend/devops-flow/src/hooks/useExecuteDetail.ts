@@ -53,6 +53,7 @@ export function useExecuteDetail() {
     stopExecute: store.stopExecute,
     requestRePlayFlow: store.requestRePlayFlow,
     requestRetryFlow: store.requestRetryFlow,
+    requestTriggerStage: store.requestTriggerStage,
     requestUpdateRemark: store.requestUpdateRemark,
     getStartupParams: store.getStartupParams,
     fetchVersionDetail: store.fetchVersionDetail,

@@ -1,14 +1,16 @@
 import { SvgIcon } from '@/components/SvgIcon'
+import StageReviewEditPanel from '@/components/StageReviewEditPanel'
 import AtomPropertyPanel from '@/components/WorkflowOrchestration/AtomPropertyPanel'
 import AtomSelector from '@/components/WorkflowOrchestration/AtomSelector'
 import JobPropertyPanel from '@/components/WorkflowOrchestration/JobPropertyPanel'
 import StagePropertyPanel from '@/components/WorkflowOrchestration/StagePropertyPanel'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import type { CheckConfig, Stage } from '@/types/flow'
 import { useUIStore } from '@/stores/ui'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
 import { Exception, Loading } from 'bkui-vue'
-import { defineComponent, ref, watch, onBeforeUnmount } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import sharedStyles from '../shared.module.css'
 import styles from './index.module.css'
@@ -20,6 +22,7 @@ export default defineComponent({
     const { t } = useI18n()
     const {
       loading,
+      flowModel,
       isEditingStage,
       isEditingJob,
       isEditingPlugin,
@@ -34,6 +37,7 @@ export default defineComponent({
       isEditingFinallyStage,
       hasFlowStages,
       flowModelWithoutTriggerStage,
+      updateFlowModel,
       handleAddJob,
       handleAddAtom,
       handleFlowClick,
@@ -54,6 +58,11 @@ export default defineComponent({
     const isJobPanelVisible = ref(false)
     const isAtomPanelVisible = ref(false)
     const isAtomSelectorVisible = ref(false)
+
+    // Stage review edit state
+    const isStageReviewEditVisible = ref(false)
+    const stageReviewEditStage = ref<Stage | null>(null)
+    const stageReviewEditCheckType = ref<'checkIn' | 'checkOut'>('checkIn')
 
     // ========== Computed ==========
     // (暂无 computed)
@@ -111,7 +120,6 @@ export default defineComponent({
         isAtomSelectorVisible.value,
       ],
       ([isStageOpen, isJobOpen, isAtomOpen, isAtomSelectorOpen]) => {
-        // 如果任何一个侧边栏打开，则自动收起变量面板
         if (isStageOpen || isJobOpen || isAtomOpen || isAtomSelectorOpen) {
           if (uiStore.isVariablePanelOpen) {
             uiStore.setVariablePanelOpen(false)
@@ -119,6 +127,35 @@ export default defineComponent({
         }
       },
     )
+
+    // ========== Stage Review Edit ==========
+    function handleStageCheck(payload: any) {
+      const { type = 'checkIn', stageIndex } = payload || {}
+      if (!flowModel.value?.stages) return
+      const stage = flowModel.value.stages[stageIndex + 1]
+      if (stage) {
+        stageReviewEditStage.value = stage
+        stageReviewEditCheckType.value = type
+        isStageReviewEditVisible.value = true
+      }
+    }
+
+    function handleStageReviewChange(stage: Stage, checkType: 'checkIn' | 'checkOut', config: CheckConfig) {
+
+      const stageIndex = flowModel.value?.stages?.findIndex((s) => s.id === stage.id)
+      if (stageIndex !== undefined && stageIndex >= 0 && flowModel.value?.stages[stageIndex]) {
+        flowModel.value.stages[stageIndex] = {
+          ...flowModel.value.stages[stageIndex],
+          [checkType]: config,
+        }
+        updateFlowModel(flowModel.value)
+      }
+    }
+
+    function closeStageReviewEdit() {
+      isStageReviewEditVisible.value = false
+      stageReviewEditStage.value = null
+    }
 
     // ========== Functions ==========
     function renderEmptyState() {
@@ -149,6 +186,7 @@ export default defineComponent({
             onClick={handleFlowClick}
             onAddStage={handleAddStage}
             onChange={handlePipelineChange}
+            onStageCheck={handleStageCheck}
           />
         ) : flowModelWithoutTriggerStage.value ? (
           renderEmptyState()
@@ -194,6 +232,15 @@ export default defineComponent({
           container={editingElementContainer.value ?? undefined}
           atom={editingElement.value ?? undefined}
           onSelect={handleAtomSelect}
+        />
+
+        {/* Stage review edit panel */}
+        <StageReviewEditPanel
+          isShow={isStageReviewEditVisible.value}
+          stage={stageReviewEditStage.value}
+          checkType={stageReviewEditCheckType.value}
+          onClose={closeStageReviewEdit}
+          onChange={handleStageReviewChange}
         />
       </Loading>
     )

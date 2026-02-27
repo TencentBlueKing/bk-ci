@@ -101,7 +101,7 @@
 
 /* 标签带图标 */
 .labelWithIcon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
 }

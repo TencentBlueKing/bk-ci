@@ -6,6 +6,7 @@ import {
   requestPipelineExecDetail,
   requestTerminatePipeline,
   retryFlow,
+  triggerStage as triggerStageApi,
 } from '@/api/executeDetail'
 import { fetchFlowInfo, updateRemark } from '@/api/flowInfo'
 import type { ExecuteDetailData, FlowInfo } from '@/types/flow'
@@ -189,6 +190,34 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
   }
 
   /**
+   * Stage 审核触发
+   */
+  async function requestTriggerStage({
+    stageId,
+    cancel,
+    reviewParams,
+    id,
+    suggest,
+  }: {
+    stageId: string
+    cancel: boolean
+    reviewParams?: Record<string, unknown>[]
+    id?: string
+    suggest?: string
+  }) {
+    return await triggerStageApi({
+      projectId: projectId.value,
+      pipelineId: flowId.value,
+      buildNo: buildNo.value,
+      stageId,
+      cancel,
+      reviewParams,
+      id,
+      suggest,
+    })
+  }
+
+  /**
    * 获取启动参数及当前参数组合
    * @param urlParams
    * @returns
@@ -218,6 +247,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
     stopExecute,
     requestRePlayFlow,
     requestRetryFlow,
+    requestTriggerStage,
     requestUpdateRemark,
     getStartupParams,
     fetchVersionDetail,

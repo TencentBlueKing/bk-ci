@@ -217,7 +217,7 @@ export default defineComponent({
                       />
                     </div>
                     <a
-                      href="https://docs.bkci.net/"
+                      href="https://iwiki.woa.com/pages/viewpage.action?pageId=1294900254"
                       target="_blank"
                       class={sharedStyles.docLink}
                       onClick={stopPropagation}

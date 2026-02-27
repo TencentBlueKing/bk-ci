@@ -315,8 +315,10 @@ export default defineComponent({
                   onChange={(val: string) => handleChangeValue(val, index)}
                 />
                 {!props.disabled && (
-                  <i
-                    class={`bk-icon icon-minus-circle ${styles.minusBtn}`}
+                  <SvgIcon
+                    name="minus-circle"
+                    size={16}
+                    class={styles.minusBtn}
                     onClick={() => handleRemoveParam(index)}
                   />
                 )}

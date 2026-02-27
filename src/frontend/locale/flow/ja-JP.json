@@ -782,7 +782,31 @@
       "errors": "個のエラー",
       "completeLog": "完全なログ",
       "logContent": "ログ内容",
-      "noData": "データがありません"
+      "noData": "データがありません",
+      "retryAllJobs": "すべてのジョブを再試行",
+      "retryFailJobs": "失敗したジョブのみ再試行",
+      "stageRetryTitle": "ステージの再試行",
+      "retrySuc": "再試行がトリガーされました",
+      "skipSuc": "スキップしました",
+      "stageReview": "ステージ審査",
+      "approvalFlow": "承認フロー",
+      "currentStatus": "現在のステータス",
+      "approve": "承認",
+      "approveRes": "後続のステージは引き続き実行されます",
+      "abort": "却下",
+      "abortRes": "後続のステージの実行を停止します",
+      "approvalOpinion": "承認意見",
+      "opinionTips": "承認意見を入力してください",
+      "opinionRequired": "却下時には承認意見が必須です",
+      "operateSuc": "操作成功",
+      "operateFail": "操作失敗",
+      "timeOutTips": "審査タイムアウト時間",
+      "approved": "{0}が承認済み",
+      "waitApproval": "{0}の承認待ち",
+      "pendingApproval": "{0}の承認待ち中",
+      "confirm": "確認",
+      "cancel": "キャンセル",
+      "reviewParams": "審査パラメータ"
     },
     "preview": {
       "execPreview": "実行プレビュー",
@@ -996,6 +1020,22 @@
       "renewalContactAdmin": "ユーザーグループを通じて権限を取得します。延長が必要な場合はプロジェクト管理者に連絡してください",
       "exitContactAdmin": "ユーザーグループを通じて権限を取得します。退出が必要な場合はプロジェクト管理者に連絡してください",
       "environment": "環境"
+    },
+    "stageReviewEdit": {
+      "checkIn": "入場審査",
+      "checkOut": "出場審査",
+      "stageCondition": "ステージ入場条件",
+      "autoExecute": "自動実行（デフォルト）",
+      "manualReview": "手動審査",
+      "approvalFlow": "承認フロー",
+      "reviewerPlaceholder": "ユーザー名を入力",
+      "reviewerRequired": "承認フローは空にできません。各フローには少なくとも1人の承認者が必要です",
+      "addReviewFlow": "承認フローを追加",
+      "reviewDesc": "審査説明",
+      "reviewDescPlaceholder": "審査説明を入力してください。Markdownをサポートしています",
+      "timeout": "タイムアウト",
+      "hours": "時間",
+      "timeoutError": "タイムアウトは1〜720時間の範囲で入力してください"
     }
   }
 }

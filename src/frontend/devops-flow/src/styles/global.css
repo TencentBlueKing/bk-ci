@@ -225,6 +225,15 @@ svg {
   right: 480px;
 }
 
+/* 修复自定义 label slot 时 required 星号定位偏移 */
+/* bkui-vue 的 ::after 默认 position: absolute，在 flex 布局的 label slot 内会偏移 */
+.bkci-property-panel .bk-form-item.is-required .bk-form-label::after {
+  position: static;
+  display: inline;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
 
 
 .bk-permission-disable,

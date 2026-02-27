@@ -12,6 +12,7 @@ import type { FlowModel, FlowSettings } from '../types/flow'
 export type {
   AdditionalOptions,
   CheckConfig,
+  ReviewGroup,
   Container,
   CustomVariable,
   DispatchType,

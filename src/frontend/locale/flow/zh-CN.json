@@ -792,7 +792,31 @@
       "errors": "个错误",
       "completeLog": "完整日志",
       "logContent": "日志内容",
-      "noData": "暂无数据"
+      "noData": "暂无数据",
+      "retryAllJobs": "重试所有作业",
+      "retryFailJobs": "仅重试失败作业",
+      "stageRetryTitle": "Stage 重试",
+      "retrySuc": "已触发重试",
+      "skipSuc": "已跳过",
+      "stageReview": "Stage 审核",
+      "approvalFlow": "审批流程",
+      "currentStatus": "当前状态",
+      "approve": "通过",
+      "approveRes": "将继续执行后续 Stage",
+      "abort": "驳回",
+      "abortRes": "将停止后续 Stage 的执行",
+      "approvalOpinion": "审批意见",
+      "opinionTips": "请输入审批意见",
+      "opinionRequired": "驳回时必须填写审批意见",
+      "operateSuc": "操作成功",
+      "operateFail": "操作失败",
+      "timeOutTips": "审核超时时间",
+      "approved": "{0}已审批通过",
+      "waitApproval": "等待{0}审批",
+      "pendingApproval": "等待{0}审批中",
+      "confirm": "确认",
+      "cancel": "取消",
+      "reviewParams": "审核参数"
     },
     "preview": {
       "execPreview": "执行预览",
@@ -1006,6 +1030,22 @@
       "renewalContactAdmin": "通过用户组获得权限，若需续期请联系项目管理员续期用户组",
       "exitContactAdmin": "通过用户组获得权限，若需退出先联系项目管理员退出用户组",
       "environment": "环境"
+    },
+    "stageReviewEdit": {
+      "checkIn": "准入审核",
+      "checkOut": "准出审核",
+      "stageCondition": "Stage 准入条件",
+      "autoExecute": "自动执行（默认）",
+      "manualReview": "人工审核",
+      "approvalFlow": "审批流程",
+      "reviewerPlaceholder": "输入用户名",
+      "reviewerRequired": "审批流程不能为空，且每个流程需指定审批人",
+      "addReviewFlow": "添加审批流程",
+      "reviewDesc": "审核说明",
+      "reviewDescPlaceholder": "请输入审核说明，支持 Markdown 格式",
+      "timeout": "超时时间",
+      "hours": "小时",
+      "timeoutError": "超时时间范围为 1 ~ 720 小时"
     }
   }
 }
