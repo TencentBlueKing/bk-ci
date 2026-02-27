@@ -117,6 +117,7 @@
   templateName: "Store comment message Notification template"
   notifyTypeScope:
     - "RTX"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1084,6 +1085,8 @@
   templateName: "Developer store plugin listing review notification template"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:

@@ -117,6 +117,7 @@
   templateName: "store评论消息通知模板"
   notifyTypeScope:
     - "RTX"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1067,6 +1068,8 @@
   templateName: "研发商店插件上架审核通知模版"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:

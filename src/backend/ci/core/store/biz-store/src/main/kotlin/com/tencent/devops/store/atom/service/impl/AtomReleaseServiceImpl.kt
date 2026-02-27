@@ -107,8 +107,8 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.ATOM_RELEASE_TO_BE_AUDIT_TEMPLATE
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.BK_STORE_ATOM_AUDIT_NOTIFY
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
@@ -1538,7 +1538,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             .toMutableSet()
 
         val request = SendNotifyMessageTemplateRequest(
-            templateCode = "BK_STORE_ATOM_AUDIT_NOTIFY",
+            templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
             receivers = receivers,
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.WEWORK.name)
@@ -1548,11 +1548,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             if (commentNotifyWeworkGroupIds.isNotBlank()) {
                 val weworkGroupIds =
-                    commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
+                    commentNotifyWeworkGroupIds.split(",").filter { it.isNotBlank() }.toSet()
                 if (weworkGroupIds.isNotEmpty()) {
                     storeNotifyService.sendNotifyMessageToWeworkGroup(
                         userId = userId,
-                        templateCode = ATOM_RELEASE_TO_BE_AUDIT_TEMPLATE,
+                        templateCode = BK_STORE_ATOM_AUDIT_NOTIFY,
                         weworkGroupIds = weworkGroupIds,
                         bodyParams = bodyParams
                     )
