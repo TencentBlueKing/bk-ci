@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAIToken
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentDefaltRsp
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShareRep
@@ -170,6 +171,48 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId unShare environment get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = " 取消分享云桌面接口超时, url: $url"
+            )
+        }
+    }
+
+    fun setCoffeeAIToken(userId: String, token: CoffeeAIToken): String {
+        val url = "$apiUrl/openapi/coffee/token"
+        val body = JsonUtil.toJson(token, false)
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId set coffee ai token response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "设置AI token接口异常: ${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentShareRep = jacksonObjectMapper().readValue(responseContent)
+                when (environmentRsp.code) {
+                    OK -> return environmentRsp.data.resourceId
+                    else -> throw WorkspaceDispatchException(
+                        "设置AI token接口返回异常:" +
+                            "${environmentRsp.code}-${environmentRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId set coffee ai token get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "设置AI token接口超时, url: $url"
             )
         }
     }

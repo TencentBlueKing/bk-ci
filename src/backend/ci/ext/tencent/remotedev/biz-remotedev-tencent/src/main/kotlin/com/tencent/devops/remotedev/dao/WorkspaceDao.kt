@@ -715,7 +715,8 @@ class WorkspaceDao {
                 nodeHashId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.NODE_HASH_ID) as String?,
                 resourceId = record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.RESOURCE_ID) as String?,
                 enableRecord = (record.getOrNull(TWorkspaceWindows.T_WORKSPACE_WINDOWS.ENABLE_RECORD_USER) as? String)
-                    ?.isNotBlank() ?: false
+                    ?.isNotBlank() ?: false,
+                coffeeAi = (record.getOrNull(TWorkspace.T_WORKSPACE.COFFEE_AI) as? Byte)?.let { it != 0.toByte() } ?: false
             )
         }
 
