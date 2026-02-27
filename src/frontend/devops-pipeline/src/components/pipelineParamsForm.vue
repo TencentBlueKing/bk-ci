@@ -387,7 +387,7 @@
                 return false
             },
             async validateAll () {
-                const refsList = this.sortCategory ? this.$refs.categoryRenderParam : this.$refs.renderParam
+                const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
                 for (let i = 0; i < refsList.length; i++) {
                     const ref = refsList[i]
                     const res = await ref.$validator?.validateAll?.()
