@@ -61,7 +61,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomQueryParam
-import com.tencent.devops.store.atom.dao.PipelineAtomQueryResult
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
