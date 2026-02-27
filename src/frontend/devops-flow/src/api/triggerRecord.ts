@@ -1,4 +1,4 @@
-import { get } from '@/utils/http'
+import { get, post } from '@/utils/http'
 import { PROCESS_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 import { type StatusType } from '@/types/flow'
 /**
@@ -91,6 +91,18 @@ export async function getEventTypes(): Promise<TypeItem[]> {
     const response = await get<TypeItem[]>(
       `${PROCESS_API_URL_PREFIX}/user/trigger/event/listEventType`,
     )
+    return response
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * 重放事件
+ */
+export async function reTriggerEvent(projectId: string, detailId: number) {
+  try {
+    const response = await post<TypeItem[]>(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${detailId}/replay`)
     return response
   } catch (error) {
     throw error

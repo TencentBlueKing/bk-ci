@@ -664,6 +664,7 @@
       "eventType": "事件类型",
       "trigger": "触发人",
       "loadingTips": "数据加载中，请稍候",
+      "retrigger": "重新触发",
       "today": "今天",
       "yesterday": "昨天",
       "last3days": "近3天",

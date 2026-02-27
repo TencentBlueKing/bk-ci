@@ -1,5 +1,6 @@
 import type { TriggerRecordItem } from '@/api/triggerRecord'
 import { type StatusType } from '@/types/flow'
+import { useI18n } from 'vue-i18n'
 import { statusColorMap } from '@/utils/flowStatus'
 import { formatDate } from '@/utils/util'
 import { Button } from 'bkui-vue'
@@ -15,9 +16,10 @@ export interface Styles {
 
 export function useTriggerRecordData(styles: Styles) {
   const store = useTriggerRecordStore()
+  const { t } = useI18n()
 
   // 使用 storeToRefs 确保响应式
-  const { triggerEventList, dateTimeRange, searchValue, shortcuts, filterData, searchPlaceHolder } =
+  const { triggerEventList, dateTimeRange, searchValue, shortcuts, filterData, searchPlaceHolder, reTriggerLoadingId } =
     storeToRefs(store)
 
   // 计算空状态类型
@@ -107,16 +109,18 @@ export function useTriggerRecordData(styles: Styles) {
               ),
 
               // 重新触发按钮
-              h(
+              (event.eventType !== 'TIME_TRIGGER' &&
+                h(
                 Button,
                 {
                   text: true,
                   size: 'small',
                   theme: 'primary',
-                  onClick: () => console.log('Trigger event:', event),
+                  loading: reTriggerLoadingId.value === event.detailId,
+                  onClick: () => store.triggerEvent(event),
                 },
-                '重新触发',
-              ),
+                t('flow.triggerRecord.retrigger'),
+              )),
             ],
           )
         }),

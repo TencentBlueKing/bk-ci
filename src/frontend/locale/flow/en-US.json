@@ -667,6 +667,7 @@
       "eventType": "Event Type",
       "trigger": "Triggered By",
       "loadingTips": "Data is loading, please wait",
+      "retrigger": "Retrigger",
       "today": "Today",
       "yesterday": "Yesterday",
       "last3days": "Last 3 Days",

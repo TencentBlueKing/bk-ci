@@ -654,6 +654,7 @@
       "eventType": "イベントタイプ",
       "trigger": "トリガーした人",
       "loadingTips": "データを読み込み中です。しばらくお待ちください。",
+      "retrigger": "再トリガー",
       "today": "今日",
       "yesterday": "昨日",
       "last3days": "過去3日間",
