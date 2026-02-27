@@ -46,11 +46,11 @@ class WorkspaceStartCloudClient @Autowired constructor(
     @Value("\${startCloud.appKey}")
     val appKey: String = ""
 
-    @Value("\${startCloud.apiUrl}")
-    val apiUrl: String = ""
+    @Value("\${startCloud.apiUrlSZ:}")
+    val apiUrlSZ: String = ""
 
     fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
-        val url = "$apiUrl/openapi/user/create"
+        val url = "$apiUrlSZ/openapi/user/create"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
@@ -93,7 +93,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun shareWorkspace(userId: String, environment: EnvironmentShare): String {
-        val url = "$apiUrl/openapi/computer/share"
+        val url = "$apiUrlSZ/openapi/computer/share"
         val body = JsonUtil.toJson(environment, false)
         val id = UUID.randomUUID()
         logger.info("$id|User $userId request url: $url, body: $body")
@@ -135,7 +135,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     }
 
     fun unShareWorkspace(userId: String, unShare: EnvironmentUnShare): Boolean {
-        val url = "$apiUrl/openapi/computer/unshare"
+        val url = "$apiUrlSZ/openapi/computer/unshare"
         val body = JsonUtil.toJson(unShare, false)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
@@ -175,7 +175,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
-    fun setCoffeeAIToken(userId: String, token: CoffeeAIToken): String {
+    fun setCoffeeAIToken(userId: String, token: CoffeeAIToken) {
         val url = "$apiUrlSZ/openapi/coffee/token"
         val body = JsonUtil.toJson(token, false)
         val id = UUID.randomUUID()
@@ -197,15 +197,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 if (!response.isSuccessful) {
                     throw WorkspaceDispatchException(
                         "设置AI token接口异常: ${response.code}"
-                    )
-                }
-
-                val environmentRsp: EnvironmentShareRep = jacksonObjectMapper().readValue(responseContent)
-                when (environmentRsp.code) {
-                    OK -> return environmentRsp.data.resourceId
-                    else -> throw WorkspaceDispatchException(
-                        "设置AI token接口返回异常:" +
-                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
