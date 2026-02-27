@@ -74,6 +74,9 @@
       "importFlowLabel": "Upload File",
       "importFlowTip": "Only JSON type files are supported",
       "invalidFlowJson": "Invalid creation flow JSON file",
+      "pleaseSelectFile": "Please select a file first",
+      "unsupportedFileType": "Unsupported file type. Only JSON files are accepted",
+      "fileSizeExceeded": "File size exceeds the limit. Maximum allowed is 4GB",
       "import": "Import",
       "workspace": "Workspace",
       "workSpaceDesc": "Default is <Agent Installation Directory>/workspace/{0}/",
@@ -113,11 +116,14 @@
       "save": "Save",
       "saveSuccess": "Save successful",
       "saveFailed": "Save failed",
+      "orchestrationErrorTip": "There are validation errors in the orchestration. Please fix them before saving.",
+      "settingsErrorTip": "There are validation errors in the basic settings. Please fix them before saving.",
       "projectIdRequired": "Project ID cannot be empty",
       "noFlowModel": "No creation flow model available for saving",
       "debug": "Debug",
       "publish": "Publish",
       "edit": "Edit",
+      "applyPermission": "Apply",
       "addToTooltip": "Add to Group",
       "confirmDeleteFlow": "Confirm delete creation flow?",
       "operationObject": "Operation Object",
@@ -187,6 +193,11 @@
       "totalDuration": "Total Duration",
       "executionDuration": "Execution Duration",
       "errorCode": "Error Code",
+      "systemError": "System Error",
+      "userError": "User Error",
+      "thirdPartyError": "Third Party Error",
+      "pluginError": "Plugin Error",
+      "containerError": "Agent Error",
       "operation": "Operation",
       "rebuild": "Rebuild",
       "retrySuccess": "Rebuild triggered",
@@ -322,7 +333,8 @@
       "cloudTriggerUsers": "Trigger Users",
       "cloudIgnoreUsers": "Ignore Users",
       "textareaPlaceholder": "Separate multiple entries with commas",
-      "emptyState": "Please select a trigger to view configuration"
+      "emptyState": "Please select a trigger to view configuration",
+      "validationError": "Trigger configuration has validation errors, please fix before saving"
     },
     "variable": {
       "title": "Variables",
@@ -550,7 +562,8 @@
       "strategyDesc": "Define matrix strategy in YAML format, e.g.: os: [linux, windows]",
       "includeCaseDesc": "Specify combinations to include",
       "excludeCaseDesc": "Specify combinations to exclude",
-      "mutexTimeoutDesc": "Queue timeout in minutes, 0 means fail immediately"
+      "mutexTimeoutDesc": "Queue timeout in minutes, 0 means fail immediately",
+      "fieldRequired": "This field is required"
     },
     "dialog": {
       "createGroup": {
@@ -613,7 +626,8 @@
         "staticFlowGroup": "Static Creation Flow Group",
         "dynamicMatchPlaceholder": "Will automatically match based on the creation flow's name, tags, and other attributes",
         "addLabel": "Add New Tag",
-        "noLabels": "No tags available in the current project"
+        "noLabels": "No tags available in the current project",
+        "nameRequired": "Creation flow name is required"
       }
     },
     "labelGroup": {

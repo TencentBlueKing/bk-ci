@@ -1,6 +1,6 @@
 import { ReleaseSlider } from '@/components/ReleaseSlider'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
-import { ROUTE_NAMES } from '@/constants/routes'
+import { FLOW_EDIT_TABS, ROUTE_NAMES } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
 import { useUIStore } from '@/stores/ui'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
@@ -74,7 +74,45 @@ export const EditHeader = defineComponent({
       })
     }
 
+    const navigateToErrorTab = () => {
+      if (flowModel.hasSettingsError.value) {
+        router.push({
+          name: FLOW_EDIT_TABS.BASIC_SETTINGS,
+          params: route.params,
+        })
+        return
+      }
+      if (flowModel.hasOrchestrationError.value) {
+        router.push({
+          name: FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION,
+          params: route.params,
+        })
+      }
+    }
+
+    const showValidationError = (): boolean => {
+      if (flowModel.hasSettingsError.value) {
+        Message({ theme: 'warning', message: t('flow.content.settingsErrorTip') })
+        navigateToErrorTab()
+        return true
+      }
+      if (flowModel.hasOrchestrationError.value) {
+        Message({ theme: 'warning', message: t('flow.content.orchestrationErrorTip') })
+        navigateToErrorTab()
+        return true
+      }
+      return false
+    }
+
+    const validationTooltipContent = computed(() => {
+      if (flowModel.hasSettingsError.value) return t('flow.content.settingsErrorTip')
+      if (flowModel.hasOrchestrationError.value) return t('flow.content.orchestrationErrorTip')
+      return ''
+    })
+
     const handleSave = async () => {
+      if (showValidationError()) return
+
       if (!projectId.value) {
         Message({
           theme: 'error',
@@ -133,6 +171,7 @@ export const EditHeader = defineComponent({
     }
 
     const handlePublish = () => {
+      if (showValidationError()) return
       // Check if there are unsaved changes
       if (flowModel.hasUnsavedChanges.value) {
         Message({
@@ -198,10 +237,22 @@ export const EditHeader = defineComponent({
                   onClick={handleSave}
                   loading={isSaving.value}
                   disabled={isSaving.value || !flowModel.hasUnsavedChanges.value}
+                  v-bk-tooltips={{
+                    content: validationTooltipContent.value,
+                    disabled: !flowModel.hasValidationError.value,
+                  }}
                 >
                   {t('flow.content.save')}
                 </Button>
-                <Button theme="primary" onClick={handlePublish} disabled={isSaving.value}>
+                <Button
+                  theme="primary"
+                  onClick={handlePublish}
+                  disabled={isSaving.value}
+                  v-bk-tooltips={{
+                    content: validationTooltipContent.value,
+                    disabled: !flowModel.hasValidationError.value,
+                  }}
+                >
                   {t('flow.content.publish')}
                 </Button>
               </div>

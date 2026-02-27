@@ -122,3 +122,17 @@
   color: var(--color-text-tertiary);
   line-height: 1.4;
 }
+
+.fieldError :global(.bk-input),
+.fieldError :global(.bk-input--text),
+.fieldError :global(.bk-select),
+.fieldError :global(.bk-textarea) {
+  border-color: var(--color-danger) !important;
+}
+
+.fieldErrorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  margin-top: 4px;
+  line-height: 1.4;
+}

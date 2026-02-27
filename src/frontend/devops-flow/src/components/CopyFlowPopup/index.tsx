@@ -18,6 +18,8 @@ interface FormFieldConfig {
   label: string
   maxlength?: number
   component: string
+  required?: boolean
+  rules?: Record<string, any>[]
   props?: Record<string, any>
 }
 
@@ -83,6 +85,7 @@ export default defineComponent({
     const tagGroupList = ref()
     const tagsLoading = ref(false)
     const labelSelectorRef = ref()
+    const formRef = ref()
     // 保存当前选中的标签映射，用于刷新时保留选择状态
     const currentLabelMap = ref<Record<string, string[]>>({})
 
@@ -92,6 +95,14 @@ export default defineComponent({
         label: t('flow.dialog.copyCreation.name'),
         maxlength: 128,
         component: 'Input',
+        required: true,
+        rules: [
+          {
+            required: true,
+            message: t('flow.dialog.copyCreation.nameRequired'),
+            trigger: 'blur',
+          },
+        ],
         props: {
           placeholder: t('flow.content.inputFlowName'),
         },
@@ -164,11 +175,17 @@ export default defineComponent({
 
     const onClose = () => {
       formData.value = initFormData()
-      currentLabelMap.value = {} // 清空保存的标签映射
+      currentLabelMap.value = {}
+      formRef.value?.clearValidate()
       emit('update:isShow', false)
     }
 
     const onConfirm = async () => {
+      try {
+        await formRef.value?.validate()
+      } catch {
+        return
+      }
       emit('confirm', props.data.pipelineId, formData.value)
     }
 
@@ -275,7 +292,13 @@ export default defineComponent({
       }
 
       return (
-        <Form.FormItem property={field.property} label={field.label} maxlength={field.maxlength}>
+        <Form.FormItem
+          property={field.property}
+          label={field.label}
+          maxlength={field.maxlength}
+          required={field.required}
+          rules={field.rules}
+        >
           <Input v-model={formData.value[field.property]} {...field.props}></Input>
         </Form.FormItem>
       )
@@ -294,7 +317,7 @@ export default defineComponent({
         onConfirm={onConfirm}
       >
         <Loading loading={props.loading} size="small">
-          <Form model={formData.value} form-type="vertical">
+          <Form ref={formRef} model={formData.value} form-type="vertical">
             {formFields.value.map((field) => renderFormField(field))}
           </Form>
         </Loading>

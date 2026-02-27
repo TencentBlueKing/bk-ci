@@ -1,6 +1,7 @@
 import { defineComponent, ref, type PropType, computed } from 'vue'
 import { Popover } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
+import { handleFlowNoPermission } from '@/utils/permission'
 import styles from './ExtMenu.module.css'
 import { type MenuItem } from '@/api/flowContentList'
 
@@ -26,6 +27,13 @@ export default defineComponent({
     const bodyEle = computed(() => document.getElementsByTagName('body')[0])
 
     function getTooltips(item: MenuItem) {
+      if (item.hasPermission === false) {
+        return {
+          content: '没有操作权限',
+          disabled: false,
+          allowHTML: false,
+        }
+      }
       return {
         content: item?.tooltips,
         disabled: !item?.tooltips,
@@ -35,6 +43,14 @@ export default defineComponent({
 
     function clickMenuItem(item: MenuItem) {
       if (item.disable) return
+
+      if (item.hasPermission === false) {
+        hasShow.value = false
+        if (item.permissionData) {
+          handleFlowNoPermission(item.permissionData)
+        }
+        return
+      }
 
       hasShow.value = false
       item.handler(props.data, item)
@@ -74,7 +90,7 @@ export default defineComponent({
               <ul class={styles.dotMenuList}>
                 {props.config.map((item, index) => (
                   <li
-                    class={`${styles.dotMenuItem} ${item.disable ? styles.isDisable : ''}`}
+                    class={`${styles.dotMenuItem} ${item.disable ? styles.isDisable : ''} ${item.hasPermission === false ? styles.isDisable : ''}`}
                     v-bk-tooltips={getTooltips(item)}
                     key={index}
                     onClick={(e: Event) => {

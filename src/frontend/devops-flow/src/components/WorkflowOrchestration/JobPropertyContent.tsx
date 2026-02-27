@@ -2,6 +2,7 @@ import type { Container, CustomVariable, Stage } from '@/api/flowModel'
 import KeyValueMap from '@/components/AtomForm/KeyValueMap'
 import { getJobRunConditionList } from '@/constants/flowOptionConfig'
 import { JobRunCondition } from '@/utils/flowDefaults'
+import { computeContainerIsError, validateContainer, validateJobControlOption } from '@/utils/validation'
 import { Checkbox, Collapse, Form, Input, Radio, Select, Switcher } from 'bkui-vue'
 import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -129,6 +130,16 @@ export default defineComponent({
     )
     const showDependOnName = computed(() => jobCtrl.value?.dependOnType === DependOnType.NAME)
 
+    const containerErrorFields = computed(() => {
+      if (!formData.value) return []
+      return validateContainer(formData.value)
+    })
+
+    const jobCtrlErrorFields = computed(() => {
+      if (!formData.value) return []
+      return validateJobControlOption(formData.value)
+    })
+
     // Clean up runCondition related fields - with guard to prevent recursive updates
     watch(
       () => jobCtrl.value?.runCondition,
@@ -169,6 +180,9 @@ export default defineComponent({
       formData,
       () => {
         if (formData.value) {
+          ; (formData.value as Record<string, unknown>).isError = computeContainerIsError(
+            formData.value,
+          )
           emit('change', formData.value)
         }
       },
@@ -333,7 +347,11 @@ export default defineComponent({
                     </FormItem>
 
                     {/* Job timeout */}
-                    <FormItem label={t('flow.orchestration.jobTimeout')} required>
+                    <FormItem
+                      label={t('flow.orchestration.jobTimeout')}
+                      required
+                      class={jobCtrlErrorFields.value.includes('jobTimeout') ? sharedStyles.fieldError : ''}
+                    >
                       <Input
                         v-model={ctrl.timeout}
                         type="number"
@@ -355,13 +373,9 @@ export default defineComponent({
                     {/* Custom variables */}
                     {showCustomVariables.value && (
                       <FormItem
-                        v-slots={{
-                          label: () => (
-                            <div class={sharedStyles.labelWithIcon}>
-                              <span>{t('flow.orchestration.customVar')}</span>
-                            </div>
-                          ),
-                        }}
+                        required
+                        class={jobCtrlErrorFields.value.includes('jobCustomVariables') ? sharedStyles.fieldError : ''}
+                        label={t('flow.orchestration.customVar')}
                       >
                         <KeyValueMap
                           value={ctrl.customVariables || []}
@@ -383,6 +397,7 @@ export default defineComponent({
                       <FormItem
                         label={t('flow.orchestration.customConditionExp')}
                         required
+                        class={jobCtrlErrorFields.value.includes('jobCustomCondition') ? sharedStyles.fieldError : ''}
                         v-slots={{
                           label: () => (
                             <div class={sharedStyles.labelWithIcon}>
@@ -440,7 +455,11 @@ export default defineComponent({
                 content: () =>
                   mutex.enable && (
                     <div class={sharedStyles.collapseContent}>
-                      <FormItem label={t('flow.orchestration.mutexGroupName')} required>
+                      <FormItem
+                        label={t('flow.orchestration.mutexGroupName')}
+                        required
+                        class={containerErrorFields.value.includes('mutexGroupName') ? sharedStyles.fieldError : ''}
+                      >
                         <Input
                           v-model={mutex.mutexGroupName}
                           placeholder={t('flow.orchestration.mutexGroupNamePlaceholder')}
@@ -508,7 +527,12 @@ export default defineComponent({
 
             {/* Job ID */}
             {props.showJobIdField && (
-              <FormItem label={t('flow.orchestration.jobId')} property="jobId" required>
+              <FormItem
+                label={t('flow.orchestration.jobId')}
+                property="jobId"
+                required
+                class={containerErrorFields.value.includes('jobId') ? sharedStyles.fieldError : ''}
+              >
                 <Input
                   v-model={formData.value.jobId}
                   placeholder={t('flow.orchestration.jobIdPlaceholder')}

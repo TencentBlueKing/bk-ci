@@ -5,6 +5,24 @@
   /* 基础样式 */
 }
 
+.fieldError :global(.bk-input),
+.fieldError :global(.bk-input--text),
+.fieldError :global(.bk-select),
+.fieldError :global(.bk-textarea) {
+  border-color: var(--color-danger) !important;
+}
+
+.fieldErrorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.triggerFieldError {
+  border-color: var(--color-danger) !important;
+}
+
 /* 修复 bkui-vue FormItem 组件 label 换行时必填标识错位的问题 */
 /* bkui-vue 的必填标识使用 ::after 伪元素，默认 position: absolute; top: 0 */
 /* 当 label 文本换行时，星号会固定在容器顶部导致错位 */

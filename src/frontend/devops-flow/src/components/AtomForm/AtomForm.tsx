@@ -2,6 +2,7 @@ import type { Element } from '@/api/flowModel'
 import { rely } from '@/utils/atom'
 import { Collapse, Form } from 'bkui-vue'
 import { computed, defineAsyncComponent, defineComponent, ref, type PropType } from 'vue'
+import { useI18n } from 'vue-i18n'
 import styles from './AtomForm.module.css'
 
 const { FormItem } = Form
@@ -102,9 +103,14 @@ export default defineComponent({
       type: String as PropType<DisplayModeType>,
       default: DISPLAY_MODE.ACCORDION,
     },
+    errorFields: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
   emits: ['change'],
   setup(props, { emit }) {
+    const { t } = useI18n()
     // 折叠面板的展开状态
     const expandedGroups = ref<string[]>([])
 
@@ -193,6 +199,7 @@ export default defineComponent({
 
       const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
+      const hasError = props.errorFields.includes(key)
       // remove '@type' from obj
       const { '@type': _type, ...rest } = obj
       return (
@@ -202,6 +209,7 @@ export default defineComponent({
           required={obj.required}
           property={key}
           description={obj.desc}
+          class={hasError ? styles.fieldError : ''}
         >
           <Component
             name={key}
@@ -212,6 +220,7 @@ export default defineComponent({
             atomValue={props.atomValue}
             {...rest}
           />
+          {hasError && <p class={styles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>}
         </FormItem>
       )
     }
@@ -222,11 +231,12 @@ export default defineComponent({
 
       const Component = COMPONENT_MAP[obj.component] || COMPONENT_MAP[obj.type] || VuexInput
       const value = props.atomValue[key] ?? obj.default ?? ''
+      const hasError = props.errorFields.includes(key)
       // remove '@type' from obj
       const { '@type': _type, ...rest } = obj
 
       return (
-        <div key={key} class={styles.triggerFieldRow}>
+        <div key={key} class={[styles.triggerFieldRow, hasError && styles.triggerFieldError]}>
           <div class={styles.triggerFieldLabel}>
             <span class={styles.triggerFieldLabelText}>
               {obj.label}

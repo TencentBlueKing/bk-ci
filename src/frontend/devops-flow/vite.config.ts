@@ -10,6 +10,47 @@ import { createHtmlPlugin } from 'vite-plugin-html'
 // Production public path
 const PUBLIC_PATH = 'creative-stream'
 
+// bk-permission source root (dist not built; we bundle from source)
+const BK_PERM_SRC = path.resolve(__dirname, '../bk-permission/src')
+
+/**
+ * Vite plugin: resolves `bk-permission` from source and shims
+ * CJS / Vue 2 / webpack-only modules so Vite can bundle them.
+ */
+function bkPermissionCompat() {
+  return {
+    name: 'bk-permission-compat',
+    enforce: 'pre' as const,
+
+    resolveId(source: string, importer?: string) {
+      if (source === 'bk-permission') return '\0bk-permission-entry'
+
+      if (importer?.includes('bk-permission/src/')) {
+        const resolved = path.resolve(path.dirname(importer), source)
+        if (resolved.includes('utils/vue'))    return '\0bk-perm-vue-shim'
+        if (resolved.includes('utils/locale')) return '\0bk-perm-locale-shim'
+        if (source.endsWith('.scss'))          return '\0bk-perm-empty'
+      }
+    },
+
+    load(id: string) {
+      if (id === '\0bk-permission-entry') {
+        return [
+          `export { AuthorityDirectiveV3 } from '${BK_PERM_SRC}/directive/authority-directive.js';`,
+          `export { handleNoPermissionV3 } from '${BK_PERM_SRC}/function/permission.js';`,
+        ].join('\n')
+      }
+      if (id === '\0bk-perm-vue-shim') {
+        return 'export const version = 3; export * from "vue";'
+      }
+      if (id === '\0bk-perm-locale-shim') {
+        return 'export function loadI18nMessages() {} export function t(key) { return key; } export const localeMixins = {};'
+      }
+      if (id === '\0bk-perm-empty') return ''
+    },
+  }
+}
+
 // Custom plugin to rename HTML file after build
 function renameHtmlPlugin(newFilename: string) {
   return {
@@ -31,6 +72,7 @@ export default defineConfig(({ mode }) => {
   return {
     base: mode === 'production' ? `/${PUBLIC_PATH}/` : '/',
     plugins: [
+      bkPermissionCompat(),
       vue(),
       vueJsx(),
       vueDevTools(),

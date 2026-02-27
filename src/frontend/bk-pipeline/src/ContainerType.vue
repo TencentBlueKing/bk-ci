@@ -83,8 +83,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .is-danger {
-    color: #ff5656;
+    color: #ff5656 !important;
 }
 </style>

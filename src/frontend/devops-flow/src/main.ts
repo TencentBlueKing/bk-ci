@@ -20,11 +20,12 @@ import './styles/variables.css'
 
 // 导入指令
 import { clickoutside } from 'bkui-vue/lib/directives'
+import { AuthorityDirectiveV3, handleNoPermissionV3 } from 'bk-permission'
+import * as BKUI from 'bkui-vue'
 import { RouterView } from 'vue-router'
 import { FLOW_GROUP_TYPES } from './constants/flowGroup'
 import { ROUTE_NAMES } from './constants/routes'
-import { vPerm } from './directives/perm'
-import { useUIStore } from './stores'
+import { useAuthStore, useUIStore } from './stores'
 
 // 语言映射配置
 const localeAliasMap: Record<string, string> = {
@@ -74,6 +75,9 @@ const i18n = createI18n({
 
 const app = createApp({
   setup() {
+    const authStore = useAuthStore()
+    authStore.fetchUserInfo()
+
     const uiStore = useUIStore()
 
     // 等待路由初始化完成后，从路由获取 projectId
@@ -155,6 +159,11 @@ app.component('VueDraggable', VueDraggable)
 // 注册指令
 app.directive('clickoutside', clickoutside)
 app.directive('bk-clickoutside', clickoutside)
-app.directive('perm', vPerm)
+
+// 注册 bk-permission 权限指令（点击无权限元素时弹出申请权限弹窗）
+const handleNoPermission = (permissionData: any) => {
+  handleNoPermissionV3(BKUI, permissionData, h)
+}
+app.use(AuthorityDirectiveV3(handleNoPermission))
 
 app.mount('#app')

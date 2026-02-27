@@ -1,14 +1,17 @@
+import type { AtomModal } from '@/api/atom'
 import type { Element } from '@/api/flowModel'
 import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import { SvgIcon } from '@/components/SvgIcon'
 import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
 import { createDefaultElement } from '@/utils/flowDefaults'
+import { validateAtomElement } from '@/utils/validation'
 import {
   Button,
   Checkbox,
   Form,
   Input,
   Loading,
+  Message,
   Popover,
   Select,
   Sideslider,
@@ -53,6 +56,7 @@ export default defineComponent({
     const versionList = ref<AtomVersion[]>([])
     const nameEditing = ref(false)
     const editingName = ref('')
+    const showErrors = ref(false)
 
     // ========== Element Initialization ==========
 
@@ -74,7 +78,10 @@ export default defineComponent({
     watch(
       () => props.visible,
       (visible) => {
-        if (visible) resetLocalElement()
+        if (visible) {
+          showErrors.value = false
+          resetLocalElement()
+        }
       },
     )
 
@@ -122,6 +129,15 @@ export default defineComponent({
 
     const hasAtomFormConfig = computed(() => Object.keys(atomPropsModel.value || {}).length > 0)
     const isDisabled = computed(() => isLoadingModal.value || props.readonly)
+
+    const triggerErrorFields = computed(() => {
+      if (!localElement.value || isManualTrigger.value) return []
+      return validateAtomElement(
+        localElement.value,
+        atomModal.value as AtomModal | null,
+        atomValue.value,
+      )
+    })
 
     // ========== Modal Loading ==========
 
@@ -189,14 +205,26 @@ export default defineComponent({
 
     // ========== Handlers ==========
 
-    const handleClose = () => emit('update:visible', false)
+    const handleClose = () => {
+      showErrors.value = false
+      emit('update:visible', false)
+    }
 
     const handleSave = () => {
       if (!localElement.value) {
         handleClose()
         return
       }
-      emit('save', JSON.parse(JSON.stringify(localElement.value)))
+
+      if (triggerErrorFields.value.length > 0) {
+        showErrors.value = true
+        Message({ theme: 'warning', message: t('flow.triggerPanel.validationError') })
+        return
+      }
+
+      const elementToSave = JSON.parse(JSON.stringify(localElement.value))
+      delete elementToSave.isError
+      emit('save', elementToSave)
       handleClose()
     }
 
@@ -270,6 +298,7 @@ export default defineComponent({
               element={localElement.value}
               displayMode={DISPLAY_MODE.TRIGGER}
               disabled={props.readonly}
+              errorFields={showErrors.value ? triggerErrorFields.value : []}
               onChange={updateInput}
             />
           </div>

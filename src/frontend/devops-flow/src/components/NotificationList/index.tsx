@@ -6,7 +6,7 @@
 import { SvgIcon } from '@/components/SvgIcon'
 import type { Subscription } from '@/types/flow'
 import { Button, Card, Collapse, Exception } from 'bkui-vue'
-import { computed, defineComponent, ref, type PropType } from 'vue'
+import { computed, defineComponent, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import styles from './NotificationList.module.css'
 
@@ -65,6 +65,13 @@ export default defineComponent({
   setup(props, { emit }) {
     const { t } = useI18n()
     const activeIndex = ref<number[]>(props.defaultActiveIndex)
+
+    watch(
+      () => props.defaultActiveIndex,
+      (val) => {
+        activeIndex.value = val
+      },
+    )
 
     // Collapse list data for rendering
     const collapseList = computed(() =>

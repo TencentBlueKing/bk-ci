@@ -9,6 +9,7 @@ import { getAtomFailControlList, getAtomRunConditionList } from '@/constants/flo
 import { DEFAULT_VERSION, useAtomVersion } from '@/hooks/useAtomVersion'
 import { useAtomStore } from '@/stores/atom'
 import { AtomRunCondition } from '@/utils/flowDefaults'
+import { validateAdditionalOptions, validateAtomElement } from '@/utils/validation'
 import { Button, Collapse, Form, Input, Loading, Popover, Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -205,6 +206,20 @@ export default defineComponent({
       return atomModal.value?.docsLink || ''
     })
 
+    const atomErrorFields = computed(() => {
+      if (!props.element) return []
+      return validateAtomElement(props.element, atomModal.value, atomValue.value)
+    })
+
+    const additionalOptionsErrorFields = computed(() => {
+      if (!props.element) return []
+      return validateAdditionalOptions(props.element.additionalOptions)
+    })
+
+    const hasAtomError = computed(() => {
+      return atomErrorFields.value.length > 0 || additionalOptionsErrorFields.value.length > 0
+    })
+
     // ========== Lifecycle Hooks ==========
     watch(
       atomCode,
@@ -218,6 +233,13 @@ export default defineComponent({
       },
       { immediate: true },
     )
+
+    watch(hasAtomError, (isError) => {
+      if (!props.element) return
+      if ((props.element as Record<string, unknown>).isError !== isError) {
+        emit('change', { ...props.element, isError })
+      }
+    }, { immediate: true })
 
     // ========== Functions ==========
     async function getAtomModal() {
@@ -262,13 +284,19 @@ export default defineComponent({
         element[key] = value
       }
 
+      emitElementChange(element)
+    }
+
+    function emitElementChange(element: Element) {
+      const val = isNewTemplate.value ? (element.data?.input || {}) : element
+      const errors = validateAtomElement(element, atomModal.value, val)
+      ;(element as Record<string, unknown>).isError = errors.length > 0
       emit('change', element)
     }
 
     function handleCustomEnvChange(value: CustomVariable[]) {
       if (!props.element) return
-      const element = { ...props.element, customEnv: value }
-      emit('change', element)
+      emitElementChange({ ...props.element, customEnv: value })
     }
 
     function handleAdditionalOptionsChange(key: string, value: any) {
@@ -284,15 +312,13 @@ export default defineComponent({
         newOptions.manualRetry = failControl.includes('MANUAL_RETRY')
         newOptions.failControl = failControl
       }
-      
-      const element = { ...props.element, additionalOptions: newOptions }
-      emit('change', element)
+
+      emitElementChange({ ...props.element, additionalOptions: newOptions })
     }
 
     function handleStepIdChange(value: string) {
       if (!props.element) return
-      const element = { ...props.element, stepId: value }
-      emit('change', element)
+      emitElementChange({ ...props.element, stepId: value })
     }
 
     async function handleVersionChange(version: string) {
@@ -310,7 +336,7 @@ export default defineComponent({
         }
       }
 
-      emit('change', element)
+      emitElementChange(element)
     }
 
     async function loadVersionList() {
@@ -350,6 +376,7 @@ export default defineComponent({
     }
 
     function handleRunConditionChange(val: string) {
+      if (!props.element) return
       const currentOptions = additionalOptions.value
       const newOptions = { ...currentOptions, runCondition: val } as AdditionalOptions
 
@@ -367,8 +394,7 @@ export default defineComponent({
         newOptions.customCondition = ''
       }
 
-      const element = { ...props.element, additionalOptions: newOptions }
-      emit('change', element)
+      emitElementChange({ ...props.element, additionalOptions: newOptions })
     }
 
     function handleCustomConditionChange(value: string) {
@@ -503,6 +529,7 @@ export default defineComponent({
                       element={props.element!}
                       onChange={handleConfigChange}
                       disabled={!props.editable}
+                      errorFields={atomErrorFields.value}
                     />
                   )}
 
@@ -588,7 +615,10 @@ export default defineComponent({
 
                                   {/* Plugin execution timeout */}
                                   {additionalOptions.value.enable && (
-                                    <FormItem>
+                                    <FormItem
+                                      required
+                                      class={additionalOptionsErrorFields.value.includes('timeoutVar') ? sharedStyles.fieldError : ''}
+                                    >
                                       {{
                                         label: () => (
                                           <div class={sharedStyles.labelWithIcon}>
@@ -618,15 +648,8 @@ export default defineComponent({
                                   {/* When to run this plugin */}
                                   {additionalOptions.value.enable && (
                                     <>
-                                      <FormItem>
+                                      <FormItem label={t('flow.orchestration.atomRunCondition')}>
                                         {{
-                                          label: () => (
-                                            <div class={sharedStyles.labelWithIcon}>
-                                              <span>
-                                                {t('flow.orchestration.atomRunCondition')}
-                                              </span>
-                                            </div>
-                                          ),
                                           default: () => (
                                             <Select
                                               modelValue={
@@ -651,13 +674,12 @@ export default defineComponent({
 
                                       {/* Custom variables input - shown when variable match is selected */}
                                       {showCustomVariables.value && (
-                                        <FormItem>
+                                        <FormItem
+                                          label={t('flow.orchestration.customVar')}
+                                          required
+                                          class={additionalOptionsErrorFields.value.includes('customVariables') ? sharedStyles.fieldError : ''}
+                                        >
                                           {{
-                                            label: () => (
-                                              <div class={sharedStyles.labelWithIcon}>
-                                                <span>{t('flow.orchestration.customVar')}</span>
-                                              </div>
-                                            ),
                                             default: () => (
                                               <KeyValueMap
                                                 value={customVariables.value}
@@ -680,18 +702,15 @@ export default defineComponent({
 
                                       {/* Custom condition expression input - shown when expression is selected */}
                                       {showCustomCondition.value && (
-                                        <FormItem>
+                                        <FormItem
+                                          required
+                                          label={t('flow.orchestration.customConditionExp')}
+                                          class={additionalOptionsErrorFields.value.includes('customCondition') ? sharedStyles.fieldError : ''}
+                                        >
                                           {{
-                                            label: () => (
-                                              <div class={sharedStyles.labelWithIcon}>
-                                                <span>
-                                                  {t('flow.orchestration.customConditionExp')}
-                                                </span>
-                                              </div>
-                                            ),
                                             default: () => (
                                               <Input
-                                                value={customCondition.value}
+                                                modelValue={customCondition.value}
                                                 placeholder={t(
                                                   'flow.orchestration.customConditionExpPlaceholder',
                                                 )}

@@ -90,6 +90,13 @@ export interface StageStatusStep {
   progress?: number
 }
 
+export interface ErrorInfoItem {
+  errorType?: number
+  errorCode?: number
+  errorMsg?: string
+  taskId?: string
+}
+
 /**
  * ExecutionRecord for display (converted from BuildRecord)
  */
@@ -97,8 +104,8 @@ export interface ExecutionRecord {
   id: string
   buildNo: number
   checked: boolean
-  status: string // 执行状态，用于显示颜色和图标
-  stageStatus: StageStatusStep[] // StageSteps 组件需要的格式
+  status: string
+  stageStatus: StageStatusStep[]
   workflowNode: string
   triggerAndUser: string
   triggerTime: string
@@ -108,6 +115,7 @@ export interface ExecutionRecord {
   executionDuration: string
   remark: string
   errorCode: string
+  errorInfoList: ErrorInfoItem[]
 }
 
 /**
@@ -169,15 +177,15 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
       }
     }) || []
 
-  // Get error code from errorInfoList
-  const errorCode = record.errorInfoList?.[0]?.errorCode?.toString() || ''
+  const errorInfoList: ErrorInfoItem[] = record.errorInfoList ?? []
+  const errorCode = errorInfoList[0]?.errorCode?.toString() || ''
   const triggerAndUser = `${record.trigger}/${record.userId}`
 
   return {
     id: record.id,
     buildNo: record.buildNum,
     checked: false,
-    status: record.status || 'UNKNOWN', // 保留状态字段
+    status: record.status || 'UNKNOWN',
     stageStatus,
     workflowNode: record.material?.[0]?.branchName || '--',
     triggerAndUser,
@@ -188,6 +196,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     executionDuration: convertMillSec(record.executeTime || 0),
     remark: record.remark || '',
     errorCode,
+    errorInfoList,
   }
 }
 

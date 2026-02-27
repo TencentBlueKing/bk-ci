@@ -81,6 +81,30 @@ export const RESOURCE_TYPES = {
 } as const
 
 /**
+ * Pipeline/Flow resource action values for permission checks
+ */
+export const RESOURCE_ACTION = {
+  CREATE: 'creative_stream_create',
+  EXECUTE: 'creative_stream_execute',
+  LIST: 'creative_stream_list',
+  VIEW: 'creative_stream_view',
+  EDIT: 'creative_stream_edit',
+  DOWNLOAD: 'creative_stream_download',
+  DELETE: 'creative_stream_delete',
+  MANAGE: 'creative_stream_manage',
+  ARCHIVE: 'creative_stream_archive',
+} as const
+
+/**
+ * Project resource action values
+ */
+export const PROJECT_RESOURCE_ACTION = {
+  MANAGE: 'project_manage',
+  VISIT: 'project_visit',
+  VIEW: 'project_view',
+} as const
+
+/**
  * Apply dialog types
  */
 export const APPLY_DIALOG_TYPES = {

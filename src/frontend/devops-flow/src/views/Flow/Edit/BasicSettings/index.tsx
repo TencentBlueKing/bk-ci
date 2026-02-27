@@ -1,7 +1,9 @@
 import type { FlowSettings } from '@/api/flowModel'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { useFlowModelStore } from '@/stores/flowModel'
 import { RunLockType } from '@/types/flow'
 import { Checkbox, Form, Input, Radio } from 'bkui-vue'
+import { storeToRefs } from 'pinia'
 import { defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -17,6 +19,10 @@ export default defineComponent({
     const route = useRoute()
     const flowId = route.params.flowId as string
     const { flowSetting, updateFlowSetting } = useFlowModel()
+    const store = useFlowModelStore()
+    const { settingsErrorFields } = storeToRefs(store)
+
+    const hasFieldError = (field: string) => settingsErrorFields.value.includes(field)
 
     // 表单数据
     const formData = ref<FlowSettings>({
@@ -28,8 +34,6 @@ export default defineComponent({
       concurrencyGroup: '${{ci.flow_id}}',
       concurrencyCancelInProgress: false,
       maxQueueSize: 10,
-      successSubscriptionList: [],
-      failSubscriptionList: [],
     })
 
     function initFormData(setting: FlowSettings) {
@@ -38,7 +42,7 @@ export default defineComponent({
       formData.value.runLockType = setting?.runLockType || RunLockType.MULTIPLE
       formData.value.maxConRunningQueueSize = setting?.maxConRunningQueueSize || 40
       formData.value.waitQueueTimeMinute = setting?.waitQueueTimeMinute || 20
-      formData.value.concurrencyGroup = setting?.concurrencyGroup || '${{ci.flow_id}}'
+      formData.value.concurrencyGroup = setting?.concurrencyGroup
       formData.value.concurrencyCancelInProgress = setting?.concurrencyCancelInProgress || false
     }
 
@@ -66,16 +70,23 @@ export default defineComponent({
             {/* 基础信息 */}
             <div class={styles.section}>
               <div class={styles.sectionTitle}>{t('flow.content.basicInfo')}</div>
-              <FormItem label={t('flow.content.workflowName')} required property="pipelineName">
+              <FormItem
+                label={t('flow.content.workflowName')}
+                required
+                class={hasFieldError('pipelineName') ? sharedStyles.fieldError : ''}
+              >
                 <Input
                   v-model={formData.value.pipelineName}
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}
                   onChange={handleChange}
                 />
+                {hasFieldError('pipelineName') && (
+                  <p class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>
+                )}
               </FormItem>
 
-              <FormItem label={t('flow.content.description')} property="desc">
+              <FormItem label={t('flow.content.description')}>
                 <Input
                   v-model={formData.value.desc}
                   type="textarea"
@@ -114,7 +125,6 @@ export default defineComponent({
                       <FormItem
                         label={t('flow.content.maxConcurrentExecutions')}
                         required
-                        property="maxConRunningQueueSize"
                         class={styles.subFormItem}
                       >
                         <Input
@@ -129,7 +139,6 @@ export default defineComponent({
                       <FormItem
                         label={t('flow.content.queueTimeoutTime')}
                         required
-                        property="waitQueueTimeMinute"
                         class={styles.subFormItem}
                       >
                         <div class={styles.timeoutInputWrapper}>
@@ -151,8 +160,7 @@ export default defineComponent({
                       <FormItem
                         label={t('flow.content.groupName')}
                         required
-                        property="concurrencyGroup"
-                        class={styles.subFormItem}
+                        class={[styles.subFormItem, hasFieldError('concurrencyGroup') ? sharedStyles.fieldError : '']}
                       >
                         <Input
                           v-model={formData.value.concurrencyGroup}
@@ -160,8 +168,11 @@ export default defineComponent({
                           maxlength={128}
                           onChange={handleChange}
                         />
+                        {hasFieldError('concurrencyGroup') && (
+                          <p class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.fieldRequired')}</p>
+                        )}
                       </FormItem>
-                      <FormItem property="concurrencyCancelInProgress" class={styles.subFormItem}>
+                      <FormItem class={styles.subFormItem}>
                         <Checkbox v-model={formData.value.concurrencyCancelInProgress}>
                           {t('flow.content.stopWhenNewCome')}
                         </Checkbox>
@@ -170,7 +181,6 @@ export default defineComponent({
                         <>
                           <FormItem
                             label={t('flow.content.maxQueueSize')}
-                            property="maxQueueSize"
                             class={styles.subFormItem}
                           >
                             <div class={styles.queueSizeInputWrapper}>
@@ -187,7 +197,6 @@ export default defineComponent({
                           </FormItem>
                           <FormItem
                             label={t('flow.content.maxQueueTime')}
-                            property="waitQueueTimeMinute"
                             class={styles.subFormItem}
                           >
                             <div class={styles.timeoutInputWrapper}>
