@@ -105,7 +105,7 @@ class CoffeeAIService @Autowired constructor(
         logger.info("return records workspace names: ${records.map { it.workspaceName }}")
         return records.map { record ->
             WorkspaceAiInfo(
-                workspaceId = record.workspaceId,
+                workspaceName = record.workspaceName,
                 displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName,
                 ip = record.ip,
                 envId = envIdMap[record.workspaceName]?.takeIf { it.isNotBlank() },
