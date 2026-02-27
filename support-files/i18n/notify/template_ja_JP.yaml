@@ -1076,5 +1076,10 @@
     sender: "DevOps"
     title: "開発ストアプラグイン審査リマインダー"
     body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    sender: "DevOps"
+    title: "開発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
   creator: "system"
   modifior: "system"
