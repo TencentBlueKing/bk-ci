@@ -49,7 +49,6 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -89,6 +88,7 @@ import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -800,14 +800,13 @@ class AtomDao : AtomBaseDao() {
         val defaultConditions = buildDefaultConditions(
             tAtom = tAtom,
             tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
             param = param
         )
+        defaultConditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         val normalConditions = buildNormalConditions(
             tAtom = tAtom,
             tStoreProjectRel = tStoreProjectRel,
             tAtomFeature = tAtomFeature,
-            tStoreStatisticsTotal = tStoreStatisticsTotal,
             param = param,
             effectiveProjectCode = effectiveProjectCode
         )
@@ -843,7 +842,6 @@ class AtomDao : AtomBaseDao() {
                 tAtom = tAtom,
                 tStoreProjectRel = tStoreProjectRel,
                 tAtomFeature = tAtomFeature,
-                tStoreStatisticsTotal = tStoreStatisticsTotal,
                 param = param,
                 projectCode = param.projectCode
             )
@@ -862,14 +860,12 @@ class AtomDao : AtomBaseDao() {
     private fun buildDefaultConditions(
         tAtom: TAtom,
         tAtomFeature: TAtomFeature,
-        tStoreStatisticsTotal: TStoreStatisticsTotal,
         param: AtomQueryParam
     ): MutableList<Condition> {
-        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, param)
         conditions.add(tAtom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
         conditions.add(tAtom.DEFAULT_FLAG.eq(true))
         conditions.add(tAtom.LATEST_FLAG.eq(true))
-        conditions.add(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return conditions
     }
 
@@ -877,11 +873,10 @@ class AtomDao : AtomBaseDao() {
         tAtom: TAtom,
         tStoreProjectRel: TStoreProjectRel,
         tAtomFeature: TAtomFeature,
-        tStoreStatisticsTotal: TStoreStatisticsTotal,
         param: AtomQueryParam,
         effectiveProjectCode: String?
     ): MutableList<Condition> {
-        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, param)
         conditions.add(tAtom.ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
         conditions.add(tAtom.DEFAULT_FLAG.eq(false))
         conditions.add(tAtom.LATEST_FLAG.eq(true))
@@ -895,11 +890,10 @@ class AtomDao : AtomBaseDao() {
         tAtom: TAtom,
         tStoreProjectRel: TStoreProjectRel,
         tAtomFeature: TAtomFeature,
-        tStoreStatisticsTotal: TStoreStatisticsTotal,
         param: AtomQueryParam,
         projectCode: String
     ): MutableList<Condition> {
-        val conditions = buildBaseConditions(tAtom, tAtomFeature, tStoreStatisticsTotal, param)
+        val conditions = buildBaseConditions(tAtom, tAtomFeature, param)
         conditions.add(
             tAtom.ATOM_STATUS.`in`(
                 listOf(AtomStatusEnum.TESTING.status.toByte(), AtomStatusEnum.AUDITING.status.toByte())
@@ -940,7 +934,6 @@ class AtomDao : AtomBaseDao() {
     private fun buildBaseConditions(
         tAtom: TAtom,
         tAtomFeature: TAtomFeature,
-        tStoreStatisticsTotal: TStoreStatisticsTotal,
         param: AtomQueryParam
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
