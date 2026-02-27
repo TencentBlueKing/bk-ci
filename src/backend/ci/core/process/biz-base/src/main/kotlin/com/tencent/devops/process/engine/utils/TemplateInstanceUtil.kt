@@ -529,13 +529,13 @@ object TemplateInstanceUtil {
         pipelineParams.forEach { param ->
             when (param.id) {
                 MAJORVERSION -> param.defaultValue =
-                    recommendedVersion.major ?: templateParamMap[MAJORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.major?.toString() ?: templateParamMap[MAJORVERSION]?.defaultValue ?: "0"
 
                 MINORVERSION -> param.defaultValue =
-                    recommendedVersion.minor ?: templateParamMap[MINORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.minor?.toString() ?: templateParamMap[MINORVERSION]?.defaultValue ?: "0"
 
                 FIXVERSION -> param.defaultValue =
-                    recommendedVersion.fix ?: templateParamMap[FIXVERSION]?.defaultValue ?: 0
+                    recommendedVersion.fix?.toString() ?: templateParamMap[FIXVERSION]?.defaultValue ?: "0"
             }
         }
 

@@ -722,7 +722,8 @@
     },
     "propertyUpdated": "更新",
     "toInstance": "実例化",
-    "fetchPipelinesErrorTips": "パイプラインテンプレートパラメータの取得に失敗しました。分析のためにアシスタントに問い合わせてください。"
+    "fetchPipelinesErrorTips": "パイプラインテンプレートパラメータの取得に失敗しました。分析のためにアシスタントに問い合わせてください。",
+    "noStepIdTips": "このトリガーにはStep Idが設定されていません。インスタンスで有効/無効にできません"
   },
   "newlist": {
     "exportYamlTip": "PreCI は BlueKing DevOps が開発者向けに提供する CI 前的開発活動向けソリューションで、コード提出前に早期に問題を発見し、コード品質を向上させます。IDE プラグインとコマンドラインツールが含まれます。",
