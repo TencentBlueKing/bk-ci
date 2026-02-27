@@ -1528,6 +1528,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_RESOURCE_DRAFT_VERSION` (
     `YAML_VERSION`    varchar(34)                                                    DEFAULT NULL COMMENT 'YAML的版本标记',
     `SETTING_VERSION` int(11)                                                        DEFAULT NULL COMMENT '关联的流水线设置版本号',
     `BASE_VERSION`    int(11)                                                        DEFAULT NULL COMMENT '来源的正式版本',
+    `BASE_VERSION_NAME`       varchar(64)          DEFAULT NULL COMMENT '来源的正式版本名称',
     `BASE_DRAFT_VERSION`    int(11)                                                        DEFAULT NULL COMMENT '来源的草稿版本',
     `CREATOR`         varchar(64)                                                    DEFAULT NULL COMMENT '创建者',
     `CREATE_TIME`     timestamp                                             NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
