@@ -116,6 +116,7 @@
   templateName: "storeコメントメッセージ通知テンプレート"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
   priority: 0
   source: 0
   weworkTemplate:
@@ -1085,6 +1086,8 @@
   templateName: "研発ストアプラグイン上架審査通知テンプレート"
   notifyTypeScope:
     - "WEWORK"
+    - "WEWORK_GROUP"
+    - "RTX"
   priority: 0
   source: 0
   weworkTemplate:
