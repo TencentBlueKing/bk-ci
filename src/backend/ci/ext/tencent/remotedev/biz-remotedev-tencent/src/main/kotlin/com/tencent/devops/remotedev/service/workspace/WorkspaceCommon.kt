@@ -516,7 +516,8 @@ class WorkspaceCommon @Autowired constructor(
         assigns: List<ProjectWorkspaceAssign>,
         mountType: WorkspaceMountType,
         ownerType: WorkspaceOwnerType,
-        notify: Boolean = true
+        notify: Boolean = true,
+        oldOwner: String = ""
     ) {
         // 获取workspaceName对应的cgsId
         val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
@@ -554,7 +555,7 @@ class WorkspaceCommon @Autowired constructor(
                     envId = "",
                     workspaceName = workspaceName,
                     body = mapOf(
-                        "oldOwner" to (old?.sharedUser?.takeIf { old.resourceId.isNotEmpty() } ?: ""),
+                        "oldOwner" to oldOwner,
                         "newOwner" to owner.userId
                     )
                 )
