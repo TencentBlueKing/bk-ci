@@ -20,10 +20,10 @@ class MarketEventVariablesResolver {
         fieldMappings: List<EventFieldMappingItem>,
         incomingHeaders: Map<String, String>?,
         incomingQueryParamMap: Map<String, String>?,
-        incomingBody: String
+        incomingBody: Map<String, String>?
     ): Map<String, Any> {
         val resolvedVariables = mutableMapOf<String, Any>()
-        val document = JsonPathUtil.parse(incomingBody)
+        val document = JsonPathUtil.parse(incomingBody ?: mapOf())
         fieldMappings.forEach { fieldMapping ->
             val targetField = fieldMapping.targetField
             when (fieldMapping.source) {

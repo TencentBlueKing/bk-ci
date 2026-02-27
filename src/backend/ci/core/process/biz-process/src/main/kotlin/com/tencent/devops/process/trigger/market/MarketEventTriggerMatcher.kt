@@ -37,7 +37,8 @@ class MarketEventTriggerMatcher @Autowired constructor(
         pipelineId: String,
         triggerEventBody: TriggerEventBody,
         variables: Map<String, String>,
-        element: MarketEventAtomElement
+        element: MarketEventAtomElement,
+        extStartParam: Map<String, String>
     ): WebhookAtomResponse {
         // 根据插件版本,获取事件字段映射和触发条件
         val atomCode = element.atomCode
@@ -77,7 +78,8 @@ class MarketEventTriggerMatcher @Autowired constructor(
             element = element,
             variables = variables,
             eventConfig = eventConfig,
-            eventVariables = eventVariables
+            eventVariables = eventVariables,
+            extStartParam = extStartParam
         )
         return if (matchResult.isMatch) {
             // 生成启动参数
@@ -102,12 +104,13 @@ class MarketEventTriggerMatcher @Autowired constructor(
         element: MarketEventAtomElement,
         variables: Map<String, String>,
         eventConfig: TriggerEventConfig,
-        eventVariables: Map<String, Any>
+        eventVariables: Map<String, Any>,
+        extStartParam: Map<String, String>
     ): WebhookMatchResult {
         val conditionLabels = eventConfig.conditions.groupBy { it.label }
         eventConfig.conditions.forEach { condition ->
             // 触发变量值
-            val eventValue = eventVariables[condition.targetField] ?: ""
+            val eventValue = eventVariables[condition.targetField] ?: extStartParam[condition.targetField] ?: ""
             val input = element.data[KEY_INPUT] as Map<String, Any>? ?: mapOf()
             // 目标变量值
             val inputValue = input[condition.key()]?.let {

@@ -9,7 +9,7 @@ data class GenericWebhookEventBody(
     @get:Schema(description = "请求参数")
     val queryParams: Map<String, String>? = null,
     @get:Schema(description = "请求体")
-    val body: String
+    val body: Map<String, String>? = null
 ) : TriggerEventBody {
     companion object {
         const val classType = "generic"

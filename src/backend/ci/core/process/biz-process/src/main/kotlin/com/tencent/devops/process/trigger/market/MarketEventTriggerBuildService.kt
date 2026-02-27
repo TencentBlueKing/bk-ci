@@ -83,6 +83,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         params = arrayOf(pipelineId)
                     )
+                if (pipelineInfo.locked == true) return
                 context.pipelineInfo = pipelineInfo
 
                 val resource = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, version)
@@ -104,7 +105,8 @@ class MarketEventTriggerBuildService @Autowired constructor(
                         pipelineId = pipelineId,
                         triggerEventBody = triggerEventBody,
                         variables = variables,
-                        element = element
+                        element = element,
+                        extStartParam = extStartParam ?: mapOf() // 扩展变量，记录业务侧填充的内置变量
                     )
                     when (atomResponse.matchStatus) {
                         MatchStatus.CONDITION_NOT_MATCH -> {
@@ -125,7 +127,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                                 context = context,
                                 pipelineInfo = pipelineInfo,
                                 resource = resource,
-                                startParams = atomResponse.outputVars.plus(extStartParam ?: mapOf())
+                                startParams = atomResponse.outputVars
                             )
                             return
                         }

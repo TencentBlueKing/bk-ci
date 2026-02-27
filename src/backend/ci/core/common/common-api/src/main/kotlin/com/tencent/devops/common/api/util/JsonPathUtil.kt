@@ -132,4 +132,8 @@ object JsonPathUtil {
     fun parse(json: String): DocumentContext {
         return JsonPath.parse(json)
     }
+
+    fun parse(map: Map<String, String>): DocumentContext {
+        return JsonPath.parse(map)
+    }
 }

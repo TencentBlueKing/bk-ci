@@ -22,5 +22,5 @@ data class GenericWebhookTriggerEvent(
     @get:Schema(title = "事件请求时间", required = true)
     val requestTime: Long,
     @get:Schema(title = "扩展触发启动参数", required = true)
-    val extStartParam: Map<String, Any>? = mapOf()
+    val extStartParam: Map<String, String>? = mapOf()
 ) : IEvent()

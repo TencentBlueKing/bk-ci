@@ -1,11 +1,13 @@
 package com.tencent.devops.process.trigger.market
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_ENV_AGENT_HASH_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_WORKSPACE_NAME
 import com.tencent.devops.common.api.pojo.I18Variable
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -47,9 +49,15 @@ class MarketEventRequestService constructor(
                 logger.warn("target env list is empty|$projectId|$workspaceName")
                 return
             }
+            // 云桌面信息
+            val workspaceInfo = creativeStreamService.getWorkspaceInfoByName(
+                projectId = projectId,
+                workspaceName = workspaceName,
+                userId = userId
+            )
             val eventDesc = I18Variable(
                 code = BK_REMOTE_DEV_TRIGGER_DESC,
-                params = listOf(cdsIp, userId, eventType)
+                params = listOf(workspaceInfo?.displayName ?: workspaceName, userId, eventType)
             ).toJsonStr()
             val requestId = MDC.get(TraceTag.BIZID)
             envList.forEach { env ->
@@ -72,7 +80,16 @@ class MarketEventRequestService constructor(
                             AUTH_HEADER_USER_ID to userId,
                             AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
                         ),
-                        body = event.body,
+                        body = event.body.let {
+                            if (it.isBlank()) {
+                                JsonUtil.anyToOrNull(
+                                    it,
+                                    object : TypeReference<Map<String, String>>() {}
+                                )
+                            } else {
+                                mapOf()
+                            }
+                        },
                         queryParams = mapOf()
                     )
                 )
