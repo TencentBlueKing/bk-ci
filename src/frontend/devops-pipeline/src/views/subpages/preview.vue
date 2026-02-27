@@ -601,7 +601,10 @@
                 }
             },
             handleChange (type, name, value) {
-                this[`${type}Values`][name] = value
+                this[`${type}Values`] = {
+                    ...this[`${type}Values`],
+                    [name]: value
+                }
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
                     params: {

@@ -179,7 +179,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING || param.type !== TEXTAREA) {
+                    if (param.type !== STRING && param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const isMultiple = param.type === 'MULTIPLE'
                             const val = (isMultiple && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
