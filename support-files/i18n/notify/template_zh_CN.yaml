@@ -124,6 +124,10 @@
     sender: "DevOps"
     title: "【蓝盾研发商店】评论通知"
     body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -1096,7 +1100,6 @@
     body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
   weworkGroupTemplate:
     id: "f47ac10b58cc4372a5670e02b2c3d479"
-    sender: "DevOps"
     title: "研发商店插件审核提醒"
     body: "${userId}提交了上架插件申请，请尽快审批。\n插件：${atomName} \n版本： ${version} \n去审核：${url}"
   creator: "system"

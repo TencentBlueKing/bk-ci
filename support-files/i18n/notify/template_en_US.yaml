@@ -124,6 +124,10 @@
     sender: "DevOps"
     title: "[BK-CI  Store] comment notice"
     body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "[BK-CI  Store] comment notice"
+    body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -1096,7 +1100,6 @@
     body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
   weworkGroupTemplate:
     id: "f47ac10b58cc4372a5670e02b2c3d479"
-    sender: "DevOps"
     title: "Developer store plugin review notification"
     body: "${userId} submitted an application to publish a plugin. Please review promptly.\nPlugin: ${atomName}\nVersion: ${version} \nGo for review: ${url}"
   creator: "system"

@@ -123,7 +123,11 @@
     id: "8599414eaeec4791a430594147ded587"
     sender: "DevOps"
     title: "【BlueKing CI研発ストア】コメント通知"
-    body: "${userId} が ${storeName} にコメントを投稿しました\n評価: ${score}\nコメント: ${commentContent}\n[返信する | ${url}]"
+    body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
+  weworkGroupTemplate:
+    id: "a3b7e9f2d4c1085b6e9f3a7c2d5b8e41"
+    title: "【BlueKing CI研発ストア】コメント通知"
+    body: "${userId} が ${storeName} にコメントしました\n評価: ${score}\nコメント: ${commentContent}\n[返信に行く | ${url}]"
   creator: "system"
   modifior: "system"
 - index: 6
@@ -1096,7 +1100,6 @@
     body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
   weworkGroupTemplate:
     id: "f47ac10b58cc4372a5670e02b2c3d479"
-    sender: "DevOps"
     title: "研発ストアプラグイン審査リマインダー"
     body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
   creator: "system"
