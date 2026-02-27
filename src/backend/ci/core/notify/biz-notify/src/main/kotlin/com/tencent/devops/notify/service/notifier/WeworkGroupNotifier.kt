@@ -30,25 +30,49 @@ class WeworkGroupNotifier @Autowired constructor(
         request: SendNotifyMessageTemplateRequest,
         commonNotifyMessageTemplateRecord: TCommonNotifyMessageTemplateRecord
     ) {
-        logger.info("send WEWORK_GROUP msg: $commonNotifyMessageTemplateRecord.id")
+        logger.info("send WEWORK_GROUP msg: ${commonNotifyMessageTemplateRecord.id}")
         val groups = request.bodyParams?.get(NotifyUtils.WEWORK_GROUP_KEY)?.split("[,;]".toRegex())
         if (groups.isNullOrEmpty()) {
             logger.info("wework group is empty, so return.")
             return
         }
-        val weworkTplRecord =
+        // 有RTX就从RTX表查，没有才从WEWORK_GROUP表查
+        val rtxTplRecord = if (
+            request.notifyType?.contains(NotifyType.RTX.name) != false
+        ) {
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonNotifyMessageTemplateRecord.id
-            )!!
-        val title = NotifierUtils.replaceContentParams(request.titleParams, weworkTplRecord.title)
+            )
+        } else {
+            null
+        }
+        val weworkGroupTplRecord = if (
+            rtxTplRecord == null && request.notifyType?.contains(NotifyType.WEWORK_GROUP.name) == true
+        ) {
+            notifyMessageTemplateDao.getWeworkGroupNotifyMessageTemplate(
+                dslContext = dslContext,
+                commonTemplateId = commonNotifyMessageTemplateRecord.id
+            )
+        } else {
+            null
+        }
+        if (rtxTplRecord == null && weworkGroupTplRecord == null) {
+            logger.warn("no rtx or wework group template found for ${commonNotifyMessageTemplateRecord.id}")
+            return
+        }
+        val title = NotifierUtils.replaceContentParams(
+            request.titleParams,
+            rtxTplRecord?.title ?: weworkGroupTplRecord!!.title
+        )
         // 替换内容里的动态参数
         val body = NotifierUtils.replaceContentParams(
             request.bodyParams,
             if (request.markdownContent == true) {
-                weworkTplRecord.bodyMd ?: weworkTplRecord.body
+                rtxTplRecord?.bodyMd ?: rtxTplRecord?.body
+                    ?: weworkGroupTplRecord?.body ?: ""
             } else {
-                weworkTplRecord.body
+                rtxTplRecord?.body ?: weworkGroupTplRecord!!.body
             }
         )
 

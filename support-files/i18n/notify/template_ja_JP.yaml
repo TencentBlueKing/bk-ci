@@ -1092,7 +1092,12 @@
   weworkTemplate:
     id: "5a8a2dff8cc949e9bee711d1c2e3d51a"
     sender: "DevOps"
-    title: "研発ストアプラグイン審査リマインド"
-    body: "${userId}が上架プラグイン申請を提出しました。できるだけ早く審査してください。\nプラグイン：${atomName} \nバージョン： ${version}"
+    title: "研発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
+  weworkGroupTemplate:
+    id: "f47ac10b58cc4372a5670e02b2c3d479"
+    sender: "DevOps"
+    title: "研発ストアプラグイン審査リマインダー"
+    body: "${userId}が上架プラグイン申請を提交しました。審査をお願いします。\nプラグイン：${atomName} \nバージョン： ${version}"
   creator: "system"
   modifior: "system"
