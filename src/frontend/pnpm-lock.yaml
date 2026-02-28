@@ -435,7 +435,7 @@ importers:
         version: 1.7.0(webpack-cli@6.0.1)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.103.0))
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0))(webpack@5.103.0)
+        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0(webpack-cli@6.0.1)))(webpack@5.103.0(webpack-cli@6.0.1))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1366,7 +1366,7 @@ importers:
         version: 1.4.0(@babel/core@7.28.5)(vue@2.7.16)
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0))(webpack@5.103.0)
+        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0(webpack-cli@6.0.1)))(webpack@5.103.0(webpack-cli@6.0.1))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -1701,7 +1701,7 @@ importers:
         version: 1.7.0(webpack-cli@6.0.1)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.103.0))
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0))(webpack@5.103.0)
+        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0(webpack-cli@6.0.1)))(webpack@5.103.0(webpack-cli@6.0.1))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -2559,7 +2559,7 @@ importers:
         version: 1.7.0(webpack-cli@6.0.1)(webpack-dev-server@5.2.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)(webpack-cli@6.0.1)(webpack@5.103.0))
       add-asset-html-webpack-plugin:
         specifier: ^5.0.2
-        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0))(webpack@5.103.0)
+        version: 5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0(webpack-cli@6.0.1)))(webpack@5.103.0(webpack-cli@6.0.1))
       babel-helper-vue-jsx-merge-props:
         specifier: ^2.0.3
         version: 2.0.3
@@ -23423,7 +23423,7 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0))(webpack@5.103.0):
+  add-asset-html-webpack-plugin@5.0.2(html-webpack-plugin@5.6.5(webpack@5.103.0(webpack-cli@6.0.1)))(webpack@5.103.0(webpack-cli@6.0.1)):
     dependencies:
       globby: 11.1.0
       html-webpack-plugin: 5.6.5(webpack@5.103.0(webpack-cli@6.0.1))

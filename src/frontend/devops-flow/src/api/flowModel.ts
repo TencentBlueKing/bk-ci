@@ -13,6 +13,7 @@ export type {
   AdditionalOptions,
   CheckConfig,
   ReviewGroup,
+  ReviewParam,
   Container,
   CustomVariable,
   DispatchType,

@@ -57,6 +57,7 @@ export function validateAtomElement(
   element: Element,
   atomModal: AtomModal | null,
   atomValue: Record<string, unknown>,
+  options?: { skipAdditionalOptions?: boolean },
 ): string[] {
   const atomCode = element.atomCode || element['@type']
   if (!atomCode) return ['noAtomSelected']
@@ -84,8 +85,9 @@ export function validateAtomElement(
     }
   }
 
-  // Validate additionalOptions
-  errors.push(...validateAdditionalOptions(element.additionalOptions))
+  if (!options?.skipAdditionalOptions) {
+    errors.push(...validateAdditionalOptions(element.additionalOptions))
+  }
 
   return errors
 }

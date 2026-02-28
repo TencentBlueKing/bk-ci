@@ -234,7 +234,11 @@ svg {
   vertical-align: middle;
 }
 
-
+.bkci-property-panel .bk-form-label,
+.bkci-property-panel .bk-checkbox,
+.bkci-property-panel .bk-radio-label {
+  font-size: var(--font-size-xs);
+}
 
 .bk-permission-disable,
 .bk-permission-disable:hover,

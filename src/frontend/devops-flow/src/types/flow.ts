@@ -3,7 +3,8 @@
  * Unified type definitions for flow orchestration system
  */
 
-import type { PluginOutputVariable } from '@/types/variable'
+import type { ParamOption, PluginOutputVariable } from '@/types/variable'
+import { ParamType } from '@/types/variable'
 
 // ============================================
 // Status Constants and Types
@@ -303,12 +304,27 @@ export interface StageControlOption {
 export interface ReviewGroup {
   id?: string
   name: string
+  reviewType?: 'user' | 'group'
   reviewers: string[]
   groups?: string[]
   operator?: string
   suggest?: string
   status?: 'PROCESS' | 'ABORT' | undefined
   params?: Record<string, unknown>[]
+  reviewTime?: number
+}
+
+/**
+ * 审核参数（变量类型复用 ParamType）
+ */
+export interface ReviewParam {
+  key: string
+  chineseName?: string
+  valueType: ParamType
+  value: string | string[] | boolean
+  required: boolean
+  options?: ParamOption[]
+  desc?: string
 }
 
 /**
@@ -321,7 +337,7 @@ export interface CheckConfig {
   notifyType: string[]
   reviewGroups?: ReviewGroup[]
   reviewDesc?: string
-  reviewParams?: Record<string, unknown>[]
+  reviewParams?: ReviewParam[]
   notifyGroup?: string[]
   status?: string
   isReviewError?: boolean
