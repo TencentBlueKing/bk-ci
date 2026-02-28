@@ -118,9 +118,14 @@ object AtomServiceScopeUtil {
     }
 
     private fun resolveJobTypes(scope: String, allJobTypes: Map<String, List<String>>): List<JobTypeEnum> {
-        val names = allJobTypes[scope] ?: allJobTypes[ServiceScopeEnum.PIPELINE.name] ?: return listOf(JobTypeEnum.AGENT)
+        val names =
+            allJobTypes[scope] ?: allJobTypes[ServiceScopeEnum.PIPELINE.name] ?: return listOf(JobTypeEnum.AGENT)
         val result = names.mapNotNull { name ->
-            try { JobTypeEnum.valueOf(name) } catch (_: Exception) { null }
+            try {
+                JobTypeEnum.valueOf(name)
+            } catch (_: Exception) {
+                null
+            }
         }
         return result.ifEmpty { listOf(JobTypeEnum.AGENT) }
     }

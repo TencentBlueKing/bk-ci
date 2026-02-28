@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -78,9 +79,9 @@ interface UserAtomResource {
         @Parameter(description = "支持的服务范围", required = false)
         @QueryParam("serviceScope")
         serviceScope: ServiceScopeEnum?,
-        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @Parameter(description = "job类型", required = false)
         @QueryParam("jobType")
-        jobType: String?,
+        jobType: JobTypeEnum?,
         @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,

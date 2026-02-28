@@ -121,24 +121,27 @@ object AtomJobTypeUtil {
         defaultJobType: String? = null
     ): Map<String, List<String>> {
         val result = mutableMapOf<String, MutableList<String>>()
-        defaultJobType?.takeIf { it.isNotBlank() }?.let {
-            result[PIPELINE] = mutableListOf(it)
+        if (!defaultJobType.isNullOrBlank()) {
+            result[PIPELINE] = mutableListOf(defaultJobType)
         }
         if (jobTypeValue.isNullOrBlank()) return result
 
         val parsed = parseAll(jobTypeValue)
         if (parsed.isEmpty()) {
             // 纯字符串 → 视为 PIPELINE
-            result.getOrPut(PIPELINE) { mutableListOf() }.let { list ->
-                if (jobTypeValue !in list) list.add(jobTypeValue)
-            }
+            result.getOrPut(PIPELINE) { mutableListOf() }.addIfAbsent(jobTypeValue)
         } else {
             for ((scope, types) in parsed) {
                 val list = result.getOrPut(scope) { mutableListOf() }
-                types.forEach { if (it !in list) list.add(it) }
+                types.forEach { list.addIfAbsent(it) }
             }
         }
         return result
+    }
+
+    /** 向列表中添加元素（仅当不存在时） */
+    private fun MutableList<String>.addIfAbsent(element: String) {
+        if (element !in this) add(element)
     }
 
     // ==================== 内部解析 ====================

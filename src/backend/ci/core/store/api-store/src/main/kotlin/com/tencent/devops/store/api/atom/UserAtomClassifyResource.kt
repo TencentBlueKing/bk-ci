@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DefaultValue
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -52,6 +53,7 @@ interface UserAtomClassifyResource {
     fun getAllAtomClassifies(
         @Parameter(description = "服务范围", required = false)
         @QueryParam("serviceScope")
-        serviceScope: ServiceScopeEnum? = null
+        @DefaultValue("PIPELINE")
+        serviceScope: ServiceScopeEnum? = ServiceScopeEnum.PIPELINE
     ): Result<List<Classify>>
 }
