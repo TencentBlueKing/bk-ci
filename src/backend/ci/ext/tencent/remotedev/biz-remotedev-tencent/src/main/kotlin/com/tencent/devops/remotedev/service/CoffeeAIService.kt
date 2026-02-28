@@ -32,6 +32,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAIToken
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import io.jsonwebtoken.Jwts
@@ -80,6 +81,16 @@ class CoffeeAIService @Autowired constructor(
 
         workspaceStartCloudClient.setCoffeeAIToken(userId, CoffeeAIToken(userId, token, TOKEN_EXPIRATION_MINUTES))
         logger.info("生成用户WebSocket令牌：userId={}", userId)
+        val workspaces = getAiWorkspaceList(userId)
+        workspaceStartCloudClient.setCoffeeAIWorkspace(userId, workspaces.map {
+            WorkspaceRegistration(
+                workspaceName = it.workspaceName,
+                envId = it.envId,
+                hostIp = it.ip,
+                owner = userId,
+                description = it.displayName
+            )
+        })
         return token
     }
 
@@ -107,10 +118,10 @@ class CoffeeAIService @Autowired constructor(
             WorkspaceAiInfo(
                 workspaceName = record.workspaceName,
                 displayName = record.displayName.takeIf { it != "NO_CHECK" } ?: record.workspaceName,
-                ip = record.ip,
-                envId = envIdMap[record.workspaceName]?.takeIf { it.isNotBlank() },
-                projectId = record.projectId.takeIf { it != "NO_CHECK" },
-                zoneConfigType = record.zoneId?.let { zoneTypeMap[it] }
+                ip = record.ip ?: "",
+                envId = envIdMap[record.workspaceName]?.takeIf { it.isNotBlank() } ?: "",
+                projectId = record.projectId.takeIf { it != "NO_CHECK" } ?: "",
+                zoneConfigType = record.zoneId?.let { zoneTypeMap[it] } ?: ""
             )
         }
     }

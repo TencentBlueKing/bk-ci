@@ -12,6 +12,7 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.Environm
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentShareRep
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
+import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.dispatch.kubernetes.utils.WorkspaceDispatchException
 import java.net.SocketTimeoutException
 import java.util.UUID
@@ -204,6 +205,39 @@ class WorkspaceStartCloudClient @Autowired constructor(
             logger.error("User $userId set coffee ai token get SocketTimeoutException", e)
             throw WorkspaceDispatchException(
                 errorMessage = "设置AI token接口超时, url: $url"
+            )
+        }
+    }
+
+    fun setCoffeeAIWorkspace(userId: String, workspaces: List<WorkspaceRegistration>) {
+        val url = "$apiUrlSZ/openapi/coffee/workspace_register"
+        val body = JsonUtil.toJson(workspaces, false)
+        val id = UUID.randomUUID()
+        logger.info("$id|User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("$id|User $userId set coffee workspaces response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw WorkspaceDispatchException(
+                        "设置AI workspaces 接口异常: ${response.code}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId set coffee workspaces get SocketTimeoutException", e)
+            throw WorkspaceDispatchException(
+                errorMessage = "设置AI workspaces 接口超时, url: $url"
             )
         }
     }
