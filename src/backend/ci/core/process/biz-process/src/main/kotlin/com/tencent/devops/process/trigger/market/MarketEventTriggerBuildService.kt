@@ -127,7 +127,7 @@ class MarketEventTriggerBuildService @Autowired constructor(
                                 context = context,
                                 pipelineInfo = pipelineInfo,
                                 resource = resource,
-                                startParams = atomResponse.outputVars
+                                startParams = atomResponse.outputVars.plus(extStartParam ?: mapOf())
                             )
                             return
                         }

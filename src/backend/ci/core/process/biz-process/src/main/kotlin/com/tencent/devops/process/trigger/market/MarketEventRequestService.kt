@@ -37,7 +37,7 @@ class MarketEventRequestService constructor(
     private val creativeStreamService: CreativeStreamService
 ) {
     fun handleCdsWebhookRequestEvent(event: CdsWebhookRequestEvent) {
-        logger.info("Receive CdsWebhookRequestEvent from MQ [$event]")
+        logger.info("Receive CdsWebhookRequestEvent from MQ [${JsonUtil.toJson(event, false)}]")
         with(event) {
             // 1. 获取事件源: 通过项目ID+workspaceName获取环境列表
             val envList = creativeStreamService.fetchAllNodeEnvList(
@@ -62,6 +62,26 @@ class MarketEventRequestService constructor(
             val requestId = MDC.get(TraceTag.BIZID)
             envList.forEach { env ->
                 val eventId = pipelineTriggerEventService.getEventId()
+                val eventBody = GenericWebhookEventBody(
+                    headers = mapOf(
+                        AUTH_HEADER_WORKSPACE_NAME to workspaceName,
+                        AUTH_HEADER_CDS_IP to cdsIp,
+                        AUTH_HEADER_EVENT_TYPE to eventType,
+                        AUTH_HEADER_USER_ID to userId,
+                        AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
+                    ),
+                    body = event.body.let {
+                        if (it.isNotBlank()) {
+                            JsonUtil.to(
+                                it,
+                                object : TypeReference<Map<String, String>>() {}
+                            )
+                        } else {
+                            mapOf()
+                        }
+                    },
+                    queryParams = mapOf()
+                )
                 val triggerEvent = PipelineTriggerEvent(
                     projectId = projectId,
                     eventId = eventId,
@@ -72,26 +92,7 @@ class MarketEventRequestService constructor(
                     eventDesc = eventDesc,
                     requestId = requestId,
                     createTime = LocalDateTime.now(),
-                    eventBody = GenericWebhookEventBody(
-                        headers = mapOf(
-                            AUTH_HEADER_WORKSPACE_NAME to workspaceName,
-                            AUTH_HEADER_CDS_IP to cdsIp,
-                            AUTH_HEADER_EVENT_TYPE to eventType,
-                            AUTH_HEADER_USER_ID to userId,
-                            AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
-                        ),
-                        body = event.body.let {
-                            if (it.isBlank()) {
-                                JsonUtil.anyToOrNull(
-                                    it,
-                                    object : TypeReference<Map<String, String>>() {}
-                                )
-                            } else {
-                                mapOf()
-                            }
-                        },
-                        queryParams = mapOf()
-                    )
+                    eventBody = eventBody
                 )
                 pipelineTriggerEventService.saveTriggerEvent(triggerEvent = triggerEvent)
                 // 2. 使用公共方法处理事件分发
