@@ -114,48 +114,58 @@
     </bk-form-item>
     <bk-form-item
       :label="t('项目成本归属')"
-      property="productId"
       :required="true"
     >
       <div class="cost-attribution-box">
         <div class="cost-description">{{ t('用于货币化结算场景，可在 tea.woa.com 查看业务信息。') }}</div>
-        <div class="cost-item">
-          <span class="cost-label">{{ t('运营产品') }}</span>
-          <bk-select
-            class="cost-select"
-            v-model="projectData.productId"
-            :placeholder="t('请选择所属运营产品')"
-            :scroll-height="160"
-            name="center"
-            filterable
-            enable-virtual-render
-            :list="operationalList"
-            :input-search="false"
-            :loading="deptLoading.product"
-            searchable
-            @change="handleChangeProduct"
-          />
-        </div>
-        <div class="cost-item">
-          <span class="cost-label">{{ t('KPI 代码') }}</span>
-          <bk-select
-            class="cost-select"
-            v-model="projectData.kpiCode"
-            :placeholder="t('所属的 KPI 业务代码')"
-            :scroll-height="160"
-            name="kpiCode"
-            filterable
-            enable-virtual-render
-            :list="KPIList"
-            :loading="deptLoading.kpiCode"
-            :searchPlaceholder="t('请输入/修改关键字重新搜索数据')"
-            :noDataText="t('请输入/修改关键字重新搜索数据')"
-            searchable
-            :remoteMethod="handleKpiCodeSearch"
-            @change="handleChangeKpiCode"
-            @clear="handleKpiCodeClear"
-          />
-        </div>
+        <bk-form-item
+          property="productId"
+          :rules="[{ required: true, message: t('请选择所属运营产品'), trigger: 'change' }]"
+        >
+          <template class="cost-item">
+            <span class="cost-label">{{ t('运营产品') }}</span>
+            <bk-select
+              class="cost-select"
+              v-model="projectData.productId"
+              :placeholder="t('请选择所属运营产品')"
+              :scroll-height="160"
+              name="center"
+              filterable
+              enable-virtual-render
+              :list="operationalList"
+              :input-search="false"
+              :loading="deptLoading.product"
+              searchable
+              @change="handleChangeProduct"
+            />
+          </template>
+        </bk-form-item>
+        <bk-form-item
+          property="kpiCode"
+          :rules="kpiCodeRules"
+          v-if="showKpiCode"
+        >
+          <div class="cost-item">
+            <span class="cost-label">{{ t('KPI 代码') }}</span>
+            <bk-select
+              class="cost-select"
+              v-model="projectData.kpiCode"
+              :placeholder="t('所属的 KPI 业务代码')"
+              :scroll-height="160"
+              name="kpiCode"
+              filterable
+              enable-virtual-render
+              :list="KPIList"
+              :loading="deptLoading.kpiCode"
+              :searchPlaceholder="t('请输入/修改关键字重新搜索数据')"
+              :noDataText="t('请输入/修改关键字重新搜索数据')"
+              searchable
+              :remoteMethod="handleKpiCodeSearch"
+              @change="handleChangeKpiCode"
+              @clear="handleKpiCodeClear"
+            />
+          </div>
+        </bk-form-item>
       </div>
     </bk-form-item>
   </div>
@@ -192,7 +202,7 @@ const props = defineProps({
   type: String,
   curDeptInfo: Array
 });
-const emits = defineEmits(['handleChangeForm', 'clearValidate', 'setProjectDeptProp']);
+const emits = defineEmits(['handleChangeForm', 'clearValidate', 'setProjectDeptProp', 'updateKpiCodeConfig']);
 
 const projectData = ref(props.data);
 const projectTypeList = [
@@ -234,6 +244,45 @@ const deptLoading = ref({
   product: false,
   kpiCode: false,
 });
+
+// KPI代码字段控制
+const showKpiCode = ref(false)
+// 组件初始化状态标记
+const isComponentInitialized = ref(false)
+
+// KPI代码验证规则
+const kpiCodeRules = computed(() => {
+  if (!showKpiCode.value) {
+    return [];
+  }
+  return [
+    {
+      required: true,
+      message: t('请选择KPI代码'),
+      trigger: 'change'
+    }
+  ];
+});
+
+// 设置KPI字段状态并通知父组件
+function setKpiCodeState(isRequired: boolean, shouldTriggerFormChange = true) {
+  showKpiCode.value = isRequired
+  
+  // 统一通知父组件KPI配置变化
+  emits('updateKpiCodeConfig', isRequired)
+  
+  // 如果不需要KPI字段，清空相关数据
+  if (!isRequired) {
+    projectData.value.kpiCode = ''
+    projectData.value.kpiName = ''
+    KPIList.value = [];
+  }
+  
+  // 只有在非初始化时才触发表单变更
+  if (shouldTriggerFormChange) {
+    handleChangeForm()
+  }
+}
 
 const logoFiles = computed(() => {
   const { logoAddr } = projectData.value;
@@ -313,6 +362,10 @@ const fetchDepartmentList = async (deptInfos: Dept[]) => {
 
   nextTick(() => {
     inited.value = true;
+    // 标记组件初始化完成
+    isComponentInitialized.value = true
+    // 在组织数据设置完成后检查KPI显示状态
+    checkKpiCodeVisibility(true)
   });
   deptLoading.value.dept = false;
 };
@@ -357,6 +410,11 @@ async function fetchCenterList () {
   if (deptInfos.length && deptInfos[1].type === 'bg') {
     fetchOperationalList(deptInfos[1].name);
   }
+  
+  // 延迟检查KPI代码显示状态，确保组织数据已经设置完成
+  nextTick(() => {
+    checkKpiCodeVisibility(true)
+  });
 }
 
 async function fetchOperationalList (bgName) {
@@ -400,7 +458,9 @@ async function handleChangeDept (deptPath) {
     const dept = deptMap.value.get(deptId);
     if (dept.type === 'bg') {
       fetchOperationalList(dept.name);
-      projectData.value.productId = '';
+      projectData.value.productId = ''
+      projectData.value.kpiCode = ''
+      projectData.value.kpiName = ''
     }
     setProjectDeptProp(deptMap.value.get(deptId));
   });
@@ -410,6 +470,12 @@ async function handleChangeDept (deptPath) {
       projectData.value[`${type}Id`] = '';
       projectData.value[`${type}Name`] = '';
     });
+    
+    // 清空运营产品和KPI相关数据
+    projectData.value.productId = '';
+    
+    // 检查KPI代码显示状态
+    checkKpiCodeVisibility()
     return;
   }
   const deptId = deptPath[deptPath.length - 1];
@@ -422,15 +488,22 @@ async function handleChangeDept (deptPath) {
       type: 'center',
     });
   }
+  
+  checkKpiCodeVisibility()
 };
 
 function handleChangeCenter (id: any) {
   handleChangeForm();
   const name = centerList.value.find(i => i.id === id)?.name;
   projectData.value.centerName = name ?? '';
+  
+  checkKpiCodeVisibility();
 };
 
 function handleChangeProduct (productId: any) {
+  if (productId === '') {
+    handleKpiCodeClear()
+  }
   const selectedProduct = operationalList.value.find(i => i.ProductId === productId);
   projectData.value.productName = selectedProduct?.ProductName || '';
   if (selectedProduct?.icosProductCode && selectedProduct?.icosProductName) {
@@ -465,7 +538,10 @@ function handleChangeKpiCode (kpiCode: any) {
 };
 
 function handleChangeForm() {
-  emits('handleChangeForm')
+  // 只有在组件初始化完成后才触发表单变更事件
+  if (isComponentInitialized.value) {
+    emits('handleChangeForm')
+  }
 }
 
 async function handleUploadLogo (res: any) {
@@ -515,6 +591,41 @@ async function fetchApilist(kpiName) {
   } finally {
     deptLoading.value.kpiCode = false;
   }
+}
+
+// 检查是否需要显示KPI代码字段
+async function checkKpiCodeVisibility(isInitialLoad = false) {
+  try {
+    const orgParams = getOrganizationParams()
+    
+    // 如果没有组织信息，不显示KPI字段
+    if (Object.keys(orgParams).length === 0) {
+      setKpiCodeState(false, !isInitialLoad)
+      return
+    }
+    
+    const needMonetization = await http.checkNeedMonetization(orgParams)
+    setKpiCodeState(needMonetization, !isInitialLoad)
+    
+    // 只有在非初始化时才触发表单变更事件
+    if (!isInitialLoad) {
+      handleChangeForm()
+    }
+  } catch (err: any) {
+    console.log('检查KPI代码显示状态失败:', err)
+    setKpiCodeState(false, !isInitialLoad)
+  }
+}
+
+// 获取组织信息参数
+function getOrganizationParams() {
+  const params: any = {}
+  
+  if (projectData.value.bgId) params.bgId = projectData.value.bgId
+  if (projectData.value.businessLineId) params.businessLineId = projectData.value.businessLineId
+  if (projectData.value.deptId) params.deptId = projectData.value.deptId
+  if (projectData.value.centerId) params.centerId = projectData.value.centerId
+  return params
 }
 
 </script>

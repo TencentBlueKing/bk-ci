@@ -25,6 +25,9 @@ const props = defineProps({
 
 const projectForm = ref<any>(null);
 const projectData = ref<any>(props.data);
+
+// KPI字段配置状态
+const kpiConfig = ref(false)
 const rules = {
   englishName: [
     {
@@ -43,17 +46,10 @@ const rules = {
   subjectScopes: [
     {
       validator: () => projectData.value.subjectScopes.length > 0,
-      message: t('请选择项目项目最大可授权人员范围'),
+      message: t('请选择项目最大可授权人员范围'),
       trigger: 'change',
     },
-  ],
-  productId: [
-    {
-      validator: () => !!(projectData.value.productId && projectData.value.kpiCode),
-      message: t('请选择运营产品和KPI代码'),
-      trigger: 'blur',
-    },
-  ],
+  ]
 };
 const initPipelineDialect = ref();
 const activeCollapse = ref(['baseInfo', 'permission', 'pipeline', 'artifactory']);
@@ -142,6 +138,11 @@ const handleUpdate = (panel, params) => {
   emits('handleUpdate', panel, params)
 }
 
+// 处理KPI配置更新
+const handleKpiConfigUpdate = (config: boolean) => {
+  kpiConfig.value = config
+}
+
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], (newValues, oldValues) => {
   if (newValues[0] !== oldValues[0] || JSON.stringify(newValues[1]) !== JSON.stringify(oldValues[1])) {
     projectForm.value.validate();
@@ -188,6 +189,7 @@ onMounted(async () => {
                 @handle-change-form="handleChangeForm"
                 @clearValidate="handleClearValidate"
                 @setProjectDeptProp="setProjectDeptProp"
+                @updateKpiCodeConfig="handleKpiConfigUpdate"
               />
             </div>
           </template>
@@ -203,6 +205,7 @@ onMounted(async () => {
       @change="handleChangeForm"
       @clearValidate="handleClearValidate"
       @setProjectDeptProp="setProjectDeptProp"
+      @updateKpiCodeConfig="handleKpiConfigUpdate"
       @handleCancel="$emit('handleCancel')"
       @handleUpdate="handleUpdate"
       @initProjectData="$emit('initProjectData', $event)"

@@ -451,4 +451,13 @@ export default {
   getKpiCodeList (kpiName: string) {
     return http.get(`${PROJECT_PERFIX}/user/kpiProducts/list?kpiName=${kpiName}`);
   },
+  /**
+   * 检查是否需要货币化
+   */
+  checkNeedMonetization (params: { bgId?: string; businessLineId?: string; deptId?: string; centerId?: string }) {
+    const query = new URLSearchParams({
+      ...params,
+    }).toString()
+    return http.get(`${PROJECT_PERFIX}/user/kpiProducts/checkNeedMonetization?${query}`)
+  },
 };

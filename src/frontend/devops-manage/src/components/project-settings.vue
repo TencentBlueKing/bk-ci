@@ -6,7 +6,7 @@ import { RESOURCE_ACTION, RESOURCE_TYPE} from '@/utils/permission.js';
 import { InfoBox, Popover } from 'bkui-vue';
 import { useRoute } from 'vue-router';
 const { t } = useI18n();
-const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate']);
+const emits = defineEmits(['change', 'clearValidate', 'handleCancel', 'initProjectData', 'handleUpdate', 'setProjectDeptProp', 'updateKpiCodeConfig']);
 const props = defineProps({
   data: Object,
   type: String,
@@ -76,6 +76,10 @@ function handleClearValidate () {
 };
 function setProjectDeptProp (dept) {
   emits('setProjectDeptProp', dept)
+}
+
+function handleKpiConfigUpdate (config) {
+  emits('updateKpiCodeConfig', config)
 }
 function tabBeforeChange(name){
   if (props.type === 'edit' && isChange.value) {
@@ -165,6 +169,7 @@ onMounted(() => {
                       @handle-change-form="handleChangeForm"
                       @clearValidate="handleClearValidate"
                       @setProjectDeptProp="setProjectDeptProp"
+                      @updateKpiCodeConfig="handleKpiConfigUpdate"
                       :curDeptInfo="curDeptInfo"
                     />
                   </div>
