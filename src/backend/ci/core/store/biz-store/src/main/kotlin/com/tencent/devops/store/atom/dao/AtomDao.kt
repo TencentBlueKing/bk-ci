@@ -670,7 +670,7 @@ class AtomDao : AtomBaseDao() {
         val unionQuery =
             normalStep.where(conditionSet.normalConditions).unionAll(defaultStep.where(conditionSet.defaultConditions))
 
-        if (conditionSet.testConditions != null) {
+        val unionWithTest = if (conditionSet.testConditions != null) {
             val testStep = buildAtomSelectStep(
                 dslContext = dslContext,
                 tAtom = tAtom,
@@ -680,9 +680,11 @@ class AtomDao : AtomBaseDao() {
                 serviceScope = param.serviceScope
             )
             unionQuery.unionAll(testStep.where(conditionSet.testConditions))
+        } else {
+            unionQuery
         }
 
-        val t = unionQuery.asTable("t")
+        val t = unionWithTest.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (page != null && pageSize != null) {
             baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
@@ -701,27 +703,29 @@ class AtomDao : AtomBaseDao() {
         val joinCond = tAtom.ATOM_CODE.eq(tStoreStatisticsTotal.STORE_CODE)
             .and(tStoreStatisticsTotal.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
 
-        val defaultBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+        val defaultBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
             .leftJoin(tStoreStatisticsTotal).on(joinCond)
             .where(conditionSet.defaultConditions)
 
-        val normalBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+        val normalBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
             .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
             .leftJoin(tStoreStatisticsTotal).on(joinCond)
             .where(conditionSet.normalConditions)
 
         val unionQuery = defaultBranch.unionAll(normalBranch)
 
-        if (conditionSet.testConditions != null) {
-            val testBranch = dslContext.select(tAtom.ATOM_CODE).from(tAtom)
+        val unionWithTest = if (conditionSet.testConditions != null) {
+            val testBranch = dslContext.select(tAtom.ATOM_CODE.`as`(KEY_ATOM_CODE)).from(tAtom)
                 .leftJoin(tAtomFeature).on(tAtom.ATOM_CODE.eq(tAtomFeature.ATOM_CODE))
                 .leftJoin(tStoreStatisticsTotal).on(joinCond)
                 .where(conditionSet.testConditions)
             unionQuery.unionAll(testBranch)
+        } else {
+            unionQuery
         }
 
-        val t = unionQuery.asTable("t")
+        val t = unionWithTest.asTable("t")
         return dslContext.select(countDistinct(t.field(KEY_ATOM_CODE)))
             .from(t).fetchOne(0, Long::class.java)!!
     }
