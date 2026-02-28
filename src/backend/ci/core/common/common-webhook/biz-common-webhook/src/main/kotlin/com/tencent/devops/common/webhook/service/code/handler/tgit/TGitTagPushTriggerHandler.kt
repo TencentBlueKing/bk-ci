@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
@@ -56,6 +57,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -226,6 +228,18 @@ class TGitTagPushTriggerHandler constructor(
                     params = listOf(eventTag)
                 ).toJsonStr()
             )
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                included = WebhookUtils.convert(includeTagAction).ifEmpty {
+                    listOf("empty-action")
+                },
+                triggerOn = getAction(event) ?: TGitPushOperationKind.CREAT.value,
+                filterName = "tagActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.TAG_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
+            )
             val userId = getUsername(event)
             val userFilter = UserFilter(
                 pipelineId = pipelineId,
@@ -253,8 +267,15 @@ class TGitTagPushTriggerHandler constructor(
                 ).toJsonStr(),
                 excludedFailedReason = ""
             )
-            return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
+            return listOf(
+                urlFilter, eventTypeFilter, branchFilter,
+                actionFilter, userFilter, fromBranchFilter
+            )
         }
+    }
+
+    private fun getAction(event: GitTagPushEvent): String? {
+        return event.operation_kind
     }
 
     companion object {

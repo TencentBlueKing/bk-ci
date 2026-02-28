@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import org.springframework.stereotype.Service
@@ -92,6 +93,18 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
                     listOf(
                         CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
                         CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                    )
+                )
+            }
+
+            // tag 事件默认监听创建和删除动作
+            element.eventType == CodeEventType.TAG_PUSH &&
+                    !WebhookUtils.isActionGitTriggerVersion(element.version) &&
+                    element.includePushAction == null -> {
+                params.includeTagAction = WebhookUtils.joinToString(
+                    listOf(
+                        TGitPushOperationKind.CREAT.value,
+                        TGitPushOperationKind.DELETE.value,
                     )
                 )
             }
