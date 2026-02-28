@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.environment.client.InfluxdbClient
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.pojo.AgentTelegrafData
@@ -56,7 +57,8 @@ class TencentAgentMetricService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val kafkaClient: KafkaClient,
     private val bkMonitorMetricsService: BkMonitorMetricsService,
-    private val agentPropsScope: AgentPropsScope
+    private val agentPropsScope: AgentPropsScope,
+    private val nodeDao: NodeDao
 ) : AgentMetricService(
     dslContext,
     thirdPartyAgentDao,
@@ -108,6 +110,8 @@ class TencentAgentMetricService @Autowired constructor(
         logger.debug("reportAgentMetrics|origin")
         logger.debug(data)
 
+        val agentInfos = mutableMapOf<Long, AgentTagInfo?>()
+
         val startTime = System.currentTimeMillis()
 
         // 装换json类型，不是列表格式就是单独格式
@@ -133,8 +137,9 @@ class TencentAgentMetricService @Autowired constructor(
                 tableMap[AGENT_TELEGRAF_ENV] = mutableListOf()
 
                 jsonData.metrics?.forEach { metric ->
+                    val tags = addAgentTags(metric.tags, agentInfos)
                     val new = AgentTelegrafData(
-                        dimensions = metric.tags?.map { t -> t.key to t.value.toString() }?.toMap(),
+                        dimensions = tags.map { t -> t.key to t.value.toString() }.toMap(),
                         time = metric.timestamp,
                         metrics = metric.fields
                     )
@@ -152,7 +157,10 @@ class TencentAgentMetricService @Autowired constructor(
                     jsonData.name,
                     listOf(
                         AgentTelegrafData(
-                            dimensions = jsonData.tags?.map { t -> t.key to t.value.toString() }?.toMap(),
+                            dimensions = addAgentTags(
+                                jsonData.tags,
+                                agentInfos
+                            ).map { t -> t.key to t.value.toString() }.toMap(),
                             time = jsonData.timestamp,
                             metrics = jsonData.fields
                         )
@@ -164,6 +172,39 @@ class TencentAgentMetricService @Autowired constructor(
         logger.info("reportAgentMetrics report cost ${System.currentTimeMillis() - startTime}")
 
         return true
+    }
+
+    private fun addAgentTags(
+        originTags: Map<String, Any>?,
+        agentInfos: MutableMap<Long, AgentTagInfo?>
+    ): Map<String, Any> {
+        if (originTags.isNullOrEmpty()) {
+            return emptyMap()
+        }
+        val agentId = HashUtil.decodeIdToLong(originTags["agentId"]?.toString()?.trim() ?: return originTags)
+        if (!agentInfos.containsKey(agentId)) {
+            val agentRecord = thirdPartyAgentDao.getAgent(dslContext, agentId) ?: run {
+                agentInfos[agentId] = null
+                return originTags
+            }
+            val nodeRecord = agentRecord.nodeId?.let {
+                nodeDao.get(dslContext, projectId = agentRecord.projectId, nodeId = it)
+            }
+            agentInfos[agentId] = AgentTagInfo(
+                nodeId = if (agentRecord.nodeId == null) {
+                    ""
+                } else {
+                    HashUtil.encodeLongId(agentRecord.nodeId)
+                },
+                displayName = nodeRecord?.displayName ?: ""
+            )
+        }
+        val agentInfo = agentInfos[agentId] ?: return originTags
+        val result = mutableMapOf<String, Any>()
+        result.putAll(originTags)
+        result["nodeId"] = agentInfo.nodeId
+        result["displayName"] = agentInfo.displayName
+        return result
     }
 
     private fun sendMetric(tableName: String?, data: List<AgentTelegrafData>) {
@@ -310,3 +351,8 @@ class TencentAgentMetricService @Autowired constructor(
         return !projectId.startsWith("git_")
     }
 }
+
+data class AgentTagInfo(
+    val nodeId: String,
+    val displayName: String
+)

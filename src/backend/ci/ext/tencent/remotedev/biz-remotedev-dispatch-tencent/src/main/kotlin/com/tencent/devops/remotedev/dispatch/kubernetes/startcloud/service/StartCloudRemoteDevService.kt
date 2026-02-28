@@ -180,7 +180,8 @@ class StartCloudRemoteDevService @Autowired constructor(
         userId: String,
         workspaceName: String,
         imageCosFile: String,
-        formatDataDisk: Boolean?
+        formatDataDisk: Boolean?,
+        resetDataDisk: Boolean?
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -189,7 +190,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentOperate = EnvironmentOperate(
                 uid = getEnvironmentUid(workspaceName),
                 image = imageCosFile,
-                formatDataDisk = formatDataDisk
+                formatDataDisk = formatDataDisk,
+                resetDataDisk = resetDataDisk
             )
         )
 
@@ -197,13 +199,14 @@ class StartCloudRemoteDevService @Autowired constructor(
     }
 
     override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
-        return deleteWorkspace(userId, event.workspaceName, event.appName)
+        return deleteWorkspace(userId, event.workspaceName, event.appName, event.deleteDelaySeconds)
     }
 
     private fun deleteWorkspace(
         userId: String,
         workspaceName: String,
-        appName: String?
+        appName: String?,
+        delaySeconds: Int? = null
     ): String {
         val resp = workspaceBcsClient.startOperateWorkspace(
             userId = userId,
@@ -214,7 +217,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                 appName = appName,
                 userId = userId,
                 pipelineId = workspaceRedisUtils.getStartCloudOrder(workspaceName),
-                force = true
+                force = true,
+                delaySeconds = delaySeconds
             )
         )
         return resp.taskUid

@@ -34,16 +34,23 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class TemplateVariable(
     @get:Schema(title = "元素值ID-标识符", required = true)
     val key: String,
-    @get:Schema(title = "元素值名称-显示用", required = true)
-    val value: Any,
+    @get:Schema(title = "元素值名称-显示用,当值为null时,表示跟随模版的值,否则,流水线自定义", required = true)
+    val value: Any?,
     @get:Schema(title = "是否为入参", required = true)
     var allowModifyAtStartup: Boolean? = null
 ) {
-    constructor(buildFormProperty: BuildFormProperty) : this(
+    constructor(
+        buildFormProperty: BuildFormProperty,
+        overrideTemplateValue: Boolean
+    ) : this(
         key = buildFormProperty.id,
-        value = when (buildFormProperty.type) {
-            BuildFormPropertyType.MULTIPLE -> buildFormProperty.defaultValue.toString().split(",").toList()
-            else -> buildFormProperty.defaultValue
+        value = if (overrideTemplateValue) {
+            when (buildFormProperty.type) {
+                BuildFormPropertyType.MULTIPLE -> buildFormProperty.defaultValue.toString().split(",").toList()
+                else -> buildFormProperty.defaultValue
+            }
+        } else {
+            null
         },
         allowModifyAtStartup = buildFormProperty.required
     )

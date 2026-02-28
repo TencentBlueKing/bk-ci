@@ -5,5 +5,6 @@ data class UserSignatureStatusResponse(
     val signed: Boolean,
     val schemeQrcodeUrl: String? = null,
     val qrCodeUrl: String? = null,
-    val projectInformation: String? = null
+    val projectInformation: String? = null,
+    val agreementTips: String? = null
 )

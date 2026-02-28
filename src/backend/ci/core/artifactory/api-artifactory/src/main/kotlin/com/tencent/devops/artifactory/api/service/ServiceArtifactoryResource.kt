@@ -78,6 +78,31 @@ interface ServiceArtifactoryResource {
         path: String
     ): Result<Url>
 
+    @Operation(summary = "创建内部链接")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    @Path("/{projectId}/{artifactoryType}/downloadUrl")
+    @GET
+    fun downloadUrl(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @Parameter(description = "下载用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @Parameter(description = "有效时间(s)", required = true)
+        @QueryParam("ttl")
+        ttl: Int,
+        @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
+        @QueryParam("directed")
+        directed: Boolean?
+    ): Result<Url>
+
     @Operation(summary = "检测文件是否存在")
     // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/check")
     @Path("/{projectId}/{artifactoryType}/check")

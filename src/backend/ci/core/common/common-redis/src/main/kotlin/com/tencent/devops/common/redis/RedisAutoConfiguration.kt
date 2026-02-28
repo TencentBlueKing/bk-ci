@@ -28,7 +28,8 @@
 package com.tencent.devops.common.redis
 
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import com.tencent.devops.common.redis.split.RedisSplitProperties
+import com.tencent.devops.common.redis.properties.RedisLockProperties
+import com.tencent.devops.common.redis.properties.RedisSplitProperties
 import io.lettuce.core.metrics.MicrometerCommandLatencyRecorder
 import io.lettuce.core.metrics.MicrometerOptions
 import io.lettuce.core.resource.ClientResources
@@ -57,7 +58,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(RedisAutoConfiguration::class)
 @AutoConfigureAfter(name = ["org.springframework.boot.autoconfigure.data.redis.LettuceConnectionConfiguration"])
-@EnableConfigurationProperties(RedisSplitProperties::class)
+@EnableConfigurationProperties(RedisSplitProperties::class, RedisLockProperties::class)
 class RedisAutoConfiguration {
 
     @Value("\${spring.redis.name:#{null}}")
@@ -66,18 +67,27 @@ class RedisAutoConfiguration {
     @Value("\${spring.data.redis.split.enabled:false}")
     private var splitEnabled: Boolean = false
 
+    @Value("\${spring.data.redis.lock.enabled:false}")
+    private var lockEnabled: Boolean = false
+
     @Primary
     @Bean("redisOperation")
     fun redisOperation(
         redisConnectionFactory: RedisConnectionFactory,
-        redisSplitProperties: RedisSplitProperties
+        redisSplitProperties: RedisSplitProperties,
+        redisLockProperties: RedisLockProperties
     ): RedisOperation {
         val redisTemplate = getRedisTemplate(redisConnectionFactory)
+        // 备库
         val slaveRedisConnectionFactory = slaveRedisConnectionFactory(redisConnectionFactory, redisSplitProperties)
         val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it) }
+        // 分布式锁
+        val lockRedisConnectionFactory = lockRedisConnectionFactory(redisConnectionFactory, redisLockProperties)
+        val lockRedisTemplate = lockRedisConnectionFactory?.let { getRedisTemplate(it) }
         return RedisOperation(
             masterRedisTemplate = redisTemplate,
             slaveRedisTemplate = slaveRedisTemplate,
+            lockRedisTemplate = lockRedisTemplate,
             splitMode = redisSplitProperties.mode,
             redisName = redisName
         )
@@ -86,20 +96,43 @@ class RedisAutoConfiguration {
     @Bean("redisStringHashOperation")
     fun redisStringHashOperation(
         redisConnectionFactory: RedisConnectionFactory,
-        redisSplitProperties: RedisSplitProperties
+        redisSplitProperties: RedisSplitProperties,
+        redisLockProperties: RedisLockProperties
     ): RedisOperation {
         val redisTemplate = getRedisTemplate(redisConnectionFactory, true)
+        // 备库
         val slaveRedisConnectionFactory = slaveRedisConnectionFactory(redisConnectionFactory, redisSplitProperties)
         val slaveRedisTemplate = slaveRedisConnectionFactory?.let { getRedisTemplate(it, true) }
+        // 分布式锁
+        val lockRedisConnectionFactory = lockRedisConnectionFactory(redisConnectionFactory, redisLockProperties)
+        val lockRedisTemplate = lockRedisConnectionFactory?.let { getRedisTemplate(it) }
         return RedisOperation(
             masterRedisTemplate = redisTemplate,
             slaveRedisTemplate = slaveRedisTemplate,
+            lockRedisTemplate = lockRedisTemplate,
             splitMode = redisSplitProperties.mode,
             redisName = redisName
         )
     }
 
-    fun slaveRedisConnectionFactory(
+    private fun lockRedisConnectionFactory(
+        redisConnectionFactory: RedisConnectionFactory,
+        redisLockProperties: RedisLockProperties
+    ): LettuceConnectionFactory? {
+        if (!lockEnabled) {
+            logger.info("redis lock is disabled")
+            return null
+        }
+        return createLettuceConnectionFactory(
+            redisConnectionFactory,
+            redisLockProperties.host!!,
+            redisLockProperties.port!!,
+            redisLockProperties.password!!,
+            redisLockProperties.database!!
+        )
+    }
+
+    private fun slaveRedisConnectionFactory(
         redisConnectionFactory: RedisConnectionFactory,
         redisSplitProperties: RedisSplitProperties
     ): LettuceConnectionFactory? {
@@ -107,18 +140,34 @@ class RedisAutoConfiguration {
             logger.info("redis split is disabled")
             return null
         }
-        return if (redisConnectionFactory is LettuceConnectionFactory) {
+        return createLettuceConnectionFactory(
+            redisConnectionFactory,
+            redisSplitProperties.host!!,
+            redisSplitProperties.port!!,
+            redisSplitProperties.password!!,
+            redisSplitProperties.database!!
+        )
+    }
+
+    private fun createLettuceConnectionFactory(
+        redisConnectionFactory: RedisConnectionFactory,
+        host: String,
+        port: Int,
+        password: String,
+        database: Int
+    ): LettuceConnectionFactory {
+        if (redisConnectionFactory is LettuceConnectionFactory) {
             val masterClientConfiguration = redisConnectionFactory.clientConfiguration // 复用主库的lettuce配置
 
-            val slaveConfiguration = RedisStandaloneConfiguration()
-            slaveConfiguration.hostName = redisSplitProperties.host!!
-            slaveConfiguration.port = redisSplitProperties.port!!
-            slaveConfiguration.password = RedisPassword.of(redisSplitProperties.password!!)
-            slaveConfiguration.database = redisSplitProperties.database!!
+            val configuration = RedisStandaloneConfiguration()
+            configuration.hostName = host
+            configuration.port = port
+            configuration.password = RedisPassword.of(password)
+            configuration.database = database
 
-            val lettuceConnectionFactory = LettuceConnectionFactory(slaveConfiguration, masterClientConfiguration)
+            val lettuceConnectionFactory = LettuceConnectionFactory(configuration, masterClientConfiguration)
             lettuceConnectionFactory.afterPropertiesSet()
-            lettuceConnectionFactory
+            return lettuceConnectionFactory
         } else {
             throw RuntimeException("Redis split just support lettuce")
         }

@@ -32,9 +32,6 @@ module.exports = class BundleWebpackPlugin {
             dist,
             entryFolderName
         )
-        if (!this.isDev && !fs.existsSync(this.SERVICE_ASSETS_DIR)) {
-            fs.mkdirSync(this.SERVICE_ASSETS_DIR, { recursive: true })
-        }
     }
 
     apply (compiler) {
@@ -92,7 +89,7 @@ module.exports = class BundleWebpackPlugin {
                 }
                 if (this.isDev) {
                     fs.writeFileSync(this.DEBUG_ASSETS_BUNDLE_JSON_FILE, JSON.stringify(assetsMap))
-                } 
+                }
                 
                 callback()
             }

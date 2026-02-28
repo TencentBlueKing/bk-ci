@@ -46,6 +46,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -100,18 +101,27 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
+    @Suppress("ComplexCondition")
     override fun queryProjectWorkspace(
         appCode: String?,
         apigwType: String?,
         projectId: String?,
-        ip: String?
+        ip: String?,
+        envId: String?,
+        workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>> {
-        logger.info("Get  projects workspace ,projectId:$projectId")
+        logger.info("Get  projects workspace ,projectId:$projectId, ip:$ip, envId:$envId")
+        if (projectId.isNullOrEmpty() && ip.isNullOrEmpty() && envId.isNullOrEmpty() && workspaceName.isNullOrEmpty()) {
+            // 三个参数都为空, 返回空列表
+            return Result(emptyList())
+        }
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
             ip = ip,
+            envId = envId,
             businessLineName = null,
-            ownerName = null
+            ownerName = null,
+            workspaceName = workspaceName
         )
     }
 
@@ -171,7 +181,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             ip = ip,
             businessLineName = null,
-            ownerName = null
+            ownerName = null,
+            envId = null,
+            workspaceName = null
         )
     }
 
@@ -228,7 +240,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             businessLineName = userInfo?.businessLineName,
             ownerName = taiUser,
             ip = null,
-            projectId = null
+            projectId = null,
+            envId = null,
+            workspaceName = null
         )
     }
 
@@ -496,13 +510,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun checkWorkspaceEnableAddress(
         userId: String,
         appId: Long,
-        ip: String
+        ip: String,
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData> {
-        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip")
+        logger.info("checkWorkspaceEnableAddress |$userId|$appId|$ip|$mediaGary")
         return client.get(ServiceRemoteDevResource::class).checkWorkspaceEnableAddress(
             userId = userId,
             appId = appId,
-            ip = ip
+            ip = ip,
+            mediaGary = mediaGary
         )
     }
 
@@ -649,6 +665,21 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getWorkspaceRecordTicket(userId: String, workspaceName: String, token: String): Result<String> {
         logger.info("getWorkspaceRecordTicket |$userId|$workspaceName|$token")
         return client.get(ServiceRemoteDevResource::class).getWorkspaceRecordTicket(userId, workspaceName, token)
+    }
+
+    override fun getThumbnailEncryptedTicket(
+        userId: String,
+        workspaceName: String?,
+        envId: String?,
+        expiredSeconds: Long?
+    ): Result<ThumbnailEncryptedTicketResp> {
+        logger.info("getThumbnailEncryptedTicket |$userId|$workspaceName|$envId|$expiredSeconds")
+        return client.get(ServiceRemoteDevResource::class).getThumbnailEncryptedTicket(
+            userId = userId,
+            workspaceName = workspaceName,
+            envId = envId,
+            expiredSeconds = expiredSeconds
+        )
     }
 
     override fun getTaskStatus(userId: String, taskId: String): Result<WorkspaceTaskStatus?> {

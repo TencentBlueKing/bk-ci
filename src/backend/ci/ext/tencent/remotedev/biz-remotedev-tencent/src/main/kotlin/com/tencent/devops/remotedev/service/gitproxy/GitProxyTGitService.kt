@@ -341,27 +341,27 @@ class GitProxyTGitService @Autowired constructor(
                 url = it.url ?: it.tgitId.toString(),
                 status = TGitRepoStatus.fromStr(it.status)
             )
-        }.associateBy { it.repoId }
+        }
 
-        val (gitData, svnData) = recordToCredAndProjectData(repos) ?: return result.values.toList()
-        val tokenBox = TokenBox(client, true)
-        val filterFun: (project: TGitProjectInfo, tGitIds: MutableSet<Long>?) -> Boolean =
-            filterFun@{ project, tGitIds ->
-                if (tGitIds?.contains(project.id) != true) {
-                    return@filterFun true
-                }
+//        val (gitData, svnData) = recordToCredAndProjectData(repos) ?: return result.values.toList()
+//        val tokenBox = TokenBox(client, true)
+//        val filterFun: (project: TGitProjectInfo, tGitIds: MutableSet<Long>?) -> Boolean =
+//            filterFun@{ project, tGitIds ->
+//                if (tGitIds?.contains(project.id) != true) {
+//                    return@filterFun true
+//                }
+//
+//                if (!project.httpsUrlToRepo.isNullOrBlank() || !project.httpUrlToRepo.isNullOrBlank()) {
+//                    result[project.id]?.url = project.httpsUrlToRepo ?: project.httpUrlToRepo!!
+//                }
+//                tGitIds.remove(project.id)
+//
+//                true
+//            }
+//        filterRecordWithTGitProjectsData(svnData, tokenBox, projectId, TGitProjectType.SVN, null, filterFun)
+//        filterRecordWithTGitProjectsData(gitData, tokenBox, projectId, TGitProjectType.GIT, null, filterFun)
 
-                if (!project.httpsUrlToRepo.isNullOrBlank() || !project.httpUrlToRepo.isNullOrBlank()) {
-                    result[project.id]?.url = project.httpsUrlToRepo ?: project.httpUrlToRepo!!
-                }
-                tGitIds.remove(project.id)
-
-                true
-            }
-        filterRecordWithTGitProjectsData(svnData, tokenBox, projectId, TGitProjectType.SVN, null, filterFun)
-        filterRecordWithTGitProjectsData(gitData, tokenBox, projectId, TGitProjectType.GIT, null, filterFun)
-
-        return result.values.toList()
+        return result
     }
 
     private fun credToCredAndProjectData(

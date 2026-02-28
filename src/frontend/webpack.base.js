@@ -101,7 +101,7 @@ module.exports = ({ entry, isConsole = false, publicPath, dist, port = 8080, arg
             new BundleWebpackPlugin({
                 dist: envDist,
                 isDev,
-                entryFolderName: "entry's"
+                entryFolderName: "entries"
             }),
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',

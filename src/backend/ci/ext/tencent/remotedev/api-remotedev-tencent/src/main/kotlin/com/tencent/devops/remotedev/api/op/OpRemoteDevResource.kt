@@ -157,7 +157,10 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "延迟销毁时间（秒），为空表示正常销毁，缓冲24h", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int? = null
     ): Result<Boolean>
 
     @Operation(summary = "销毁工作空间")
@@ -168,7 +171,10 @@ interface OpRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "工作空间名称列表")
-        workspaceNames: Set<String>
+        workspaceNames: Set<String>,
+        @Parameter(description = "延迟销毁时间（秒），为空表示正常销毁，缓冲24h", required = false)
+        @QueryParam("delaySeconds")
+        delaySeconds: Int? = null
     ): Result<Map<String, Boolean>>
 
     @Operation(summary = "实时获取START云桌面资源池的机器")

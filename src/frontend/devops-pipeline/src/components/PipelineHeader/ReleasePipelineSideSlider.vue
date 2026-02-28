@@ -69,6 +69,23 @@
                     v-bkloading="{ isLoading: isLoading || releasing }"
                     class="release-pipeline-pac-form"
                 >
+                    <!-- 构建号重置提醒 -->
+                    <bk-alert
+                        v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
+                        type="warning"
+                        closable
+                    >
+                        <div slot="title">
+                            <i18n path="template.resetBuildNoConfirmMessage">
+                                <strong
+                                    style="color: #FF9C01;"
+                                >
+                                    {{ resetBuildNoInstanceCount }}
+                                </strong>
+                            </i18n>
+                        </div>
+                    </bk-alert>
+                    
                     <div
                         v-if="showPacSwitcherConfig"
                         class="release-pipeline-pac-conf"
@@ -258,7 +275,7 @@
                                                                     @change="(value) => handleChangeFilePath(`.ci/${value}`, index)"
                                                                 />
                                                                 <i
-                                                                    v-if="!/\.ya?ml$/.test(item.filePath) && item.filePath"
+                                                                    v-if="!/\.ya?ml$/.test(item?.filePath) || !item?.filePath"
                                                                     class="bk-icon icon-exclamation-circle-shape tooltips-icon"
                                                                     v-bk-tooltips="$t('yamlFilePathErrorTip')"
                                                                 />
@@ -657,7 +674,7 @@
                 }
             },
             templateInstanceEnablePac () {
-                return this.instanceList.every(i => i.enabledPac) ?? false
+                return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
             showPacSwitcherConfig () {
                 return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
@@ -673,6 +690,10 @@
                     ...i,
                     filePath: this.trimCIPrefix(i?.filePath)
                 }))
+            },
+            resetBuildNoInstanceCount () {
+                // 统计勾选了"发布正式版本后立即重置为基线值"且推荐版本号是必填的实例数量
+                return this.instanceList.filter(i => i.resetBuildNo && i.buildNo?.required).length
             },
             isCommitToMaster () {
                 return this.releaseParams.targetAction === TARGET_ACTION_ENUM.COMMIT_TO_MASTER
@@ -978,11 +999,23 @@
             async releasePipeline () {
                 if (this.isTemplateInstanceMode) {
                     try {
+                        if (this.releasing) return
                         await this.$refs?.releaseForm?.validate?.()
-                        if (this.releaseParams.enablePac && !this.instanceList.every(i => /\.ya?ml$/.test(i.filePath))) return
+                        if (this.releaseParams.enablePac) {
+                            const invalidInstances = this.instanceList.filter(i => !i.filePath || !/\.ya?ml$/.test(i.filePath))
+                            if (invalidInstances.length > 0) {
+                                const names = invalidInstances.map(i => i.pipelineName).join('、')
+                                throw new Error(this.$t('template.yamlFilePathInvalidTip', [names]))
+                            }
+                        }
+                        this.releasing = true
                         this.$emit('release', this.releaseParams)
                     } catch (e) {
-                        console.error(e)
+                        if (e.state === 'error') {
+                            e.message = e.content
+                        }
+                        this.errorHandler(e)
+                        this.releasing = false
                     }
                 } else {
                     const releaseFn = this.isTemplate ? this.releaseDraftTemplate : this.releaseDraftPipeline
@@ -1219,7 +1252,29 @@
                                                 }
                                             },
                                             this.$t(!updateBuildNo ? (this.isTemplate ? 'checkTemplate' : 'checkPipeline') : 'return')
-                                        )
+                                        ),
+                                        this.isTemplate ? h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        this.$router.push({
+                                                            name: 'TemplateOverview',
+                                                            params: {
+                                                                ...this.$route.params,
+                                                                version: this.pipelineInfo?.releaseVersion,
+                                                                type: 'instanceList'
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            },
+                                            this.$t('template.toInstance')
+                                        ) : null
 
                                     ]
                                 )
@@ -1263,6 +1318,9 @@
             cancelRelease () {
                 this.$emit('input', false)
             },
+            resetReleasing () {
+                this.releasing = false
+            },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
             },
@@ -1293,7 +1351,7 @@
                 }
             },
             async refreshOatuStatus () {
-                if (this.refreshing) return
+                if (this.refreshing || !this.releaseParams.enablePac) return
                 try {
                     this.refreshing = true
                     // TODO: 刷新Oauth状态

@@ -606,6 +606,7 @@ class BkRepoService @Autowired constructor(
                 appVersion = appVersion,
                 shortUrl = shortUrl,
                 md5 = nodeInfo.md5,
+                crc64ecma = nodeInfo.crc64ecma,
                 nodeMetadata = nodeInfo.nodeMetadata
             )
         }
@@ -633,6 +634,7 @@ class BkRepoService @Autowired constructor(
                 properties = properties,
                 appVersion = appVersion,
                 md5 = nodeInfo.md5,
+                crc64ecma = nodeInfo.crc64ecma,
                 nodeMetadata = nodeInfo.nodeMetadata
             )
         }

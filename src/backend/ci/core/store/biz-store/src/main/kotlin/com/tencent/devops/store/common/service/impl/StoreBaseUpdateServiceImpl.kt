@@ -43,13 +43,14 @@ import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCategoryRelDao
 import com.tencent.devops.store.common.dao.StoreLabelRelDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreReleaseSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.STORE_BUS_NUM_LEN
@@ -79,6 +80,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     private val storeLabelRelDao: StoreLabelRelDao,
     private val storeCategoryRelDao: StoreCategoryRelDao,
     private val storeVersionLogDao: StoreVersionLogDao,
+    private val storeMemberDao: StoreMemberDao,
     private val storeCommonService: StoreCommonService
 ) : StoreBaseUpdateService {
 
@@ -116,6 +118,21 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             versionInfo = versionInfo,
             name = name
         )
+        val bkStoreContext = storeUpdateRequest.bkStoreContext
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        // 校验用户是否是该组件的开发成员
+        val flag = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )
+        if (!flag) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(storeCode)
+            )
+        }
         // 处理检查组件升级参数个性化逻辑
         getStoreSpecBusService(storeType).doCheckStoreUpdateParamSpecBus(storeUpdateRequest)
     }

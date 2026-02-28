@@ -44,7 +44,7 @@ import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.ideatom.dao.IdeAtomCategoryRelDao
 import com.tencent.devops.store.ideatom.dao.IdeAtomDao

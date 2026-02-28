@@ -39,7 +39,12 @@ class PipelineRuleServiceTest {
 
     private val dslContext: DSLContext = mockk()
     private val pipelineRuleDao: PipelineRuleDao = mockk()
-    private val redisOperation: RedisOperation = RedisOperation(mockk(), mockk(), mockk())
+    private val redisOperation: RedisOperation = RedisOperation(
+        masterRedisTemplate = mockk(),
+        slaveRedisTemplate = mockk(),
+        lockRedisTemplate = mockk(),
+        splitMode = mockk()
+    )
 
     private val pipelineRuleService = PipelineRuleService(
         dslContext = dslContext,

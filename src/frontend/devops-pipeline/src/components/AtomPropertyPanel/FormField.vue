@@ -97,6 +97,11 @@
         handleFollowTemplate: {
             type: Function,
             default: () => {}
+        },
+        // 属性更新相关
+        propertyUpdates: {
+            type: Array,
+            default: () => []
         }
     })
 
@@ -122,6 +127,13 @@
             message,
             theme,
             isShow: props.isDelete || props.isNew
+        }
+    })
+
+    const propertyUpdateConfig = computed(() => {
+        return {
+            isShow: !!props.propertyUpdates?.length,
+            updates: props.propertyUpdates || []
         }
     })
 
@@ -202,6 +214,41 @@
             >
                 {{ statusTagConfig.message }}
             </span>
+            <bk-popover
+                v-if="propertyUpdateConfig.isShow"
+                placement="top"
+                theme="light"
+            >
+                <bk-tag theme="warning">
+                    {{ $t('template.propertyUpdated') }}
+                </bk-tag>
+                <template slot="content">
+                    <div class="property-update-content">
+                        <div
+                            v-for="(update, index) in propertyUpdateConfig.updates"
+                            :key="index"
+                            class="update-item"
+                        >
+                            <div class="update-label">{{ update.label }}</div>
+                            <div class="update-value">
+                                <span
+                                    class="old-value"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ update.oldValue }}
+                                </span>
+                                <i class="bk-icon icon-arrows-right" />
+                                <span
+                                    class="new-value"
+                                    v-bk-overflow-tips
+                                >
+                                    {{ update.newValue }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </bk-popover>
         </label>
 
         <span
@@ -329,12 +376,80 @@
             color: #E71818;
             background: #FFEBEB;
         }
+        &.update {
+            color: #FF9C01;
+            background: #FFF3E1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 4px;
+            &:hover {
+                background: #FFE8C3;
+            }
+            .icon-info-circle {
+                font-size: 12px;
+            }
+        }
+    }
+    .property-update-content {
+        padding: 8px 0;
+        font-size: 12px;
+        .update-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        
+            .update-label {
+                align-items: center;
+                color: #4D4F56;
+                background: #f0f1f5;
+                border-radius: 2px;
+                display: inline-flex;
+                justify-content: space-around;
+                margin-right: 8px;
+                max-width: 100px;
+                min-width: 80px;
+                overflow: hidden;
+                padding: 4px 8px;
+                text-align: center;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .update-value {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .old-value {
+                    color: #C4C6CC;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                 }
+                .icon-arrows-right {
+                    color: #FF9C01;
+                    font-size: 14px;
+                }
+                .new-value {
+                    color: #313238;
+                    font-weight: 500;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            }
+        }
     }
     .operate-btn {
         display: flex;
         justify-content: end;
         align-items: center;
-        visibility: hidden;
+        // visibility: hidden;
         height: 32px;
         &.show {
             visibility: visible;

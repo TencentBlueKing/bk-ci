@@ -67,7 +67,7 @@
         ],
         "outputs": [
           "{workspaceRoot}/frontend/vs",
-          "{workspaceRoot}/frontend/entry's/vs.json"
+          "{workspaceRoot}/frontend/entries/vs.json"
         ]
       }
     }

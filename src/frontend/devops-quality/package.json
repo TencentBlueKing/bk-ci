@@ -70,7 +70,7 @@
         ],
         "outputs": [
           "{workspaceRoot}/frontend/quality",
-          "{workspaceRoot}/frontend/entry's/quality.json"
+          "{workspaceRoot}/frontend/entries/quality.json"
         ]
       }
     }

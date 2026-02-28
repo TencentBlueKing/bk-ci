@@ -14,6 +14,10 @@ class RemoteDevBkRepoConfig {
     fun devxBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
     @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devxmedia")
+    fun devxMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
+
+    @Bean
     @ConfigurationProperties(prefix = "bkrepo.csig")
     fun csigBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
@@ -21,9 +25,17 @@ class RemoteDevBkRepoConfig {
     @ConfigurationProperties(prefix = "bkrepo.devcloud")
     fun devcloudBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
 
+    @Bean
+    @ConfigurationProperties(prefix = "bkrepo.devcloudmedia")
+    fun devcloudMediaBkRepoRegionConfig(): BkRepoRegionConfig = BkRepoRegionConfig()
+
     @Qualifier("devxBkRepoRegionConfig")
     @Autowired
     private lateinit var devxConfig: BkRepoRegionConfig
+
+    @Qualifier("devxMediaBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devxMediaConfig: BkRepoRegionConfig
 
     @Qualifier("csigBkRepoRegionConfig")
     @Autowired
@@ -33,11 +45,28 @@ class RemoteDevBkRepoConfig {
     @Autowired
     private lateinit var devcloudConfig: BkRepoRegionConfig
 
-    fun getRegionConfig(region: BkRepoRegion): BkRepoRegionConfig {
+    @Qualifier("devcloudMediaBkRepoRegionConfig")
+    @Autowired
+    private lateinit var devcloudMediaConfig: BkRepoRegionConfig
+
+    fun getRegionConfig(region: BkRepoRegion, media: Boolean = false): BkRepoRegionConfig {
         return when (region) {
-            BkRepoRegion.DEVX -> devxConfig
+            BkRepoRegion.DEVX -> {
+                if (media) {
+                    devxMediaConfig
+                } else {
+                    devxConfig
+                }
+            }
+
             BkRepoRegion.CSIG -> csigConfig
-            BkRepoRegion.DEVCLOUD -> devcloudConfig
+            BkRepoRegion.DEVCLOUD -> {
+                if (media) {
+                    devcloudMediaConfig
+                } else {
+                    devcloudConfig
+                }
+            }
         }
     }
 }
@@ -52,5 +81,7 @@ data class BkRepoRegionConfig(
     var url: String = "",
     var headerUserAuth: String = "",
     var webUrl: String = "",
-    var dnsIp: String = ""
+    var dnsIp: String = "",
+    var proxyUrl: String = "",
+    var rsaPublicKey: String = ""
 )

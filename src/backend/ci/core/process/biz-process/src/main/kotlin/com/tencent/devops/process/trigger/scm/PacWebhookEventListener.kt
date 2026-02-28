@@ -46,6 +46,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.api.pojo.webhook.Webhook
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * PAC流水线webhook事件监听者
@@ -56,7 +57,6 @@ class PacWebhookEventListener(
     private val pipelineYamlService: PipelineYamlService,
     private val webhookTriggerManager: WebhookTriggerManager,
     private val webhookYamlDiffConverterManager: WebhookYamlDiffConverterManager,
-    private val webhookGrayService: WebhookGrayService,
     private val sampleEventDispatcher: SampleEventDispatcher,
 ) : WebHookEventListener {
 
@@ -64,10 +64,13 @@ class PacWebhookEventListener(
         private val logger = LoggerFactory.getLogger(PacWebhookEventListener::class.java)
     }
 
-    override fun onEvent(eventId: Long, repository: Repository, webhook: Webhook, replayPipelineId: String?) {
-        if (!webhookGrayService.isPacGrayRepo(repository.scmCode, repository.projectName)) {
-            return
-        }
+    override fun onEvent(
+        eventId: Long,
+        eventTime: LocalDateTime?,
+        repository: Repository,
+        webhook: Webhook,
+        replayPipelineId: String?
+    ) {
         if (repository.enablePac != true) return
         val projectId = repository.projectId!!
         val context = WebhookTriggerContext(
@@ -96,7 +99,8 @@ class PacWebhookEventListener(
             finalYamlDiffs.forEach {
                 val yamlFileEvent = PipelineYamlFileEvent(
                     repository = repository,
-                    yamlDiff = it
+                    yamlDiff = it,
+                    eventTime = eventTime
                 )
                 sampleEventDispatcher.dispatch(yamlFileEvent)
             }

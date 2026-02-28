@@ -30,6 +30,7 @@ package com.tencent.devops.process.service.pipeline.version.convert
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -39,11 +40,11 @@ import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import com.tencent.devops.common.pipeline.pojo.TemplateVariable
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.template.PipelineTemplateType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
@@ -61,6 +62,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.yaml.PipelineYamlService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -70,6 +72,7 @@ import java.time.LocalDateTime
  */
 @Service
 class PipelineTemplateInstanceReqConverter(
+    private val dslContext: DSLContext,
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
@@ -80,7 +83,9 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
-    private val pipelineInfoService: PipelineInfoService
+    private val pipelineInfoService: PipelineInfoService,
+    private val templatePipelineDao: TemplatePipelineDao,
+    private val client: Client
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
@@ -94,6 +99,12 @@ class PipelineTemplateInstanceReqConverter(
     ): PipelineVersionCreateContext {
         request as PipelineTemplateInstanceReq
         with(request) {
+            if (request.overrideTemplateField == null) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("overrideTemplateField")
+                )
+            }
             if (enablePac) {
                 if (targetAction == null) {
                     throw ErrorCodeException(
@@ -192,11 +203,12 @@ class PipelineTemplateInstanceReqConverter(
                 )
             }
 
-            // 前端会把所有的参数都传过来，这里只需要保留流水线自定义的参数,ui方式实例化,参数默认都是自定义
-            // 以下变量为流水线自身的，不跟随模板，会对模板的变量默认值，进行覆盖。
-            val templateVariables = params?.filter {
-                overrideTemplateField?.overrideParam(it.id) ?: true
-            }?.map { TemplateVariable(it) }
+            val templateTrigger = templateModel.getTriggerContainer()
+            val templateVariables = TemplateInstanceUtil.getTemplateVariables(
+                pipelineParams = params ?: emptyList(),
+                templateParams = templateTrigger.params,
+                overrideTemplateField = overrideTemplateField
+            )
 
             // 前端会把所有的触发器都传过来,这里只需要保留流水线自定义的触发器,ui方式实例化,触发器默认继承模版
             // 以下触发器配置为流水线自定义的触发器，不跟随模板，会对流水线模板的触发器配置进行覆盖
@@ -206,8 +218,9 @@ class PipelineTemplateInstanceReqConverter(
 
             // 是否覆盖推荐版本号
             val recommendedVersion = TemplateInstanceUtil.getRecommendedVersion(
-                buildNo = buildNo,
-                params = params ?: emptyList(),
+                pipelineBuildNo = buildNo,
+                pipelineParams = params ?: emptyList(),
+                templateBuildNo = templateTrigger.buildNo,
                 overrideTemplateField = overrideTemplateField
             )
 
@@ -249,9 +262,9 @@ class PipelineTemplateInstanceReqConverter(
                 templateResource = templateResource,
                 pipelineName = pipelineName,
                 defaultStageTagId = defaultStageTagId,
-                templateVariables = templateVariables,
-                overrideTemplateTriggerConfigs = overrideTemplateTriggerConfigs,
-                recommendedVersion = recommendedVersion,
+                buildNo = buildNo,
+                params = params,
+                triggerConfigs = overrideTemplateTriggerConfigs,
                 overrideTemplateField = overrideTemplateField,
                 template = pipelineModelRef.template
             )
@@ -288,15 +301,38 @@ class PipelineTemplateInstanceReqConverter(
                 pipelineDialect = pipelineDialect
             )
 
+            // 获取变更前的模板版本（事务开始前获取，确保数据准确）
+            val beforeTemplateVersion = templatePipelineDao.get(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
+            )?.version
+
             val templateInstanceBasicInfo = PipelineTemplateInstanceBasicInfo(
                 templateId = templateId,
+                baseId = baseId,
                 templateName = templateInfo.name,
                 templateVersion = templateVersion,
                 templateVersionName = templateResource.versionName,
                 templateSettingVersion = templateResource.settingVersion,
+                templateMode = templateInfo.mode,
+                templateSrcTemplateProjectId = templateResource.srcTemplateProjectId,
+                templateSrcTemplateId = templateResource.srcTemplateId,
+                templateSrcTemplateVersion = templateResource.srcTemplateVersion,
                 instanceModel = instanceModel,
                 instanceType = PipelineInstanceTypeEnum.CONSTRAINT,
-                refType = templateRefType
+                refType = templateRefType,
+                beforeTemplateVersion = beforeTemplateVersion
+            )
+
+            // 对实例化参数进行校验
+            val instanceParams = instanceModel.getTriggerContainer().params
+            TemplateInstanceUtil.assertParams(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                inputParams = params ?: emptyList(),
+                instanceParams = instanceParams
             )
 
             return PipelineVersionCreateContext(
@@ -345,7 +381,13 @@ class PipelineTemplateInstanceReqConverter(
             pipelineRepositoryService.getSetting(
                 projectId = projectId,
                 pipelineId = pipelineId
-            )?.copy(
+            )?.let {
+                TemplateInstanceUtil.instanceSetting(
+                    setting = it,
+                    templateSetting = templateSetting,
+                    overrideTemplateField = overrideTemplateField
+                )
+            }?.copy(
                 pipelineName = pipelineName
             ) ?: pipelineRepositoryService.createDefaultSetting(
                 projectId = projectId,

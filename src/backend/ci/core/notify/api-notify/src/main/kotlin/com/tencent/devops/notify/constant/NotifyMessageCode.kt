@@ -52,6 +52,13 @@ object NotifyMessageCode {
     const val ERROR_NOTIFY_INVALID_NOTIFY_TYPE = "2111004" // 通知服务：无效的通知参数类型：{0}
     const val ERROR_NOTIFY_SEND_FAIL = "2111005" // 通知服务：通知发送失败
     const val ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL = "2111006" // 通知服务：腾讯云邮件通知发送失败 返回错误码{0}
+    const val ERROR_NOTIFY_UNSUPPORTED_MEDIA_TYPE = "2111007" // 通知服务：不支持的媒体类型：{0}
+    const val ERROR_NOTIFY_WEWORK_GROUP_NOT_SUPPORTED = "2111008" // 通知服务：企业微信机器人不支持group模式发送消息
+    const val ERROR_NOTIFY_WEWORK_RECEIVERS_EMPTY = "2111009" // 通知服务：企业微信消息接收者不能为空
+    const val ERROR_NOTIFY_SEND_MEDIA_MESSAGE_FAIL = "2111010" // 通知服务：发送媒体消息失败
+    const val ERROR_NOTIFY_IMAGE_SIZE_EXCEED = "2111011" // 通知服务：图片大小超过限制，最大不能超过{0}MB
+    const val ERROR_NOTIFY_IMAGE_FORMAT_UNSUPPORTED = "2111012" // 通知服务：图片格式不支持，仅支持{0}格式
+    const val ERROR_NOTIFY_FILE_SIZE_EXCEED = "2111013" // 通知服务：文件大小超过限制，最大不能超过{0}MB
 
     const val BK_CONTROL_MESSAGE_LENGTH = "bkControlMessageLength" // ...(消息长度超{0} 已截断,请控制消息长度)
     const val BK_LINE_BREAKS_WILL_ESCAPED = "bkLineBreaksWillEscaped" // (注意: 换行会被转义为\\n)

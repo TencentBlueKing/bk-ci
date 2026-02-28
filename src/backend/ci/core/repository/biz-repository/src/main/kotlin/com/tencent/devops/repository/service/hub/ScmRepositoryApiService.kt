@@ -67,6 +67,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.ScmConfig
 import com.tencent.devops.scm.spring.properties.ScmProviderProperties
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -158,7 +159,7 @@ class ScmRepositoryApiService @Autowired constructor(
             return AuthorizeResult(status = 403, url = oauthUrl.url)
         }
         val opts = RepoListOptions(
-            repoName = search,
+            repoName = GitUtils.tryGetRepoName(search),
             page = 1,
             pageSize = 20
         )
@@ -382,8 +383,9 @@ class ScmRepositoryApiService @Autowired constructor(
         checkRunInput: CheckRunInput
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
-        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+        val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode
+        return when {
+            supportCheckRun(providerCode) -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)
@@ -397,7 +399,7 @@ class ScmRepositoryApiService @Autowired constructor(
             }
 
             // github 暂时没对接sdk，先走老接口创建
-            ScmProviderCodes.GITHUB.name -> {
+            providerCode == ScmProviderCodes.GITHUB.name -> {
                 githubService.addCheckRuns(
                     token = oauth2TokenStoreManager.get(
                         userId = repo.userName,
@@ -431,8 +433,9 @@ class ScmRepositoryApiService @Autowired constructor(
         checkRunInput: CheckRunInput
     ): CheckRun {
         val repo = getRepo(projectId, repositoryType, repoId)
-        return when (val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode) {
-            ScmProviderCodes.TGIT.name, ScmProviderCodes.GITEE.name -> {
+        val providerCode = repositoryScmConfigService.get(repo.scmCode).providerCode
+        return when {
+            supportCheckRun(providerCode) -> {
                 invokeApi(
                     projectId = projectId,
                     authRepository = AuthRepository(repo)
@@ -446,7 +449,7 @@ class ScmRepositoryApiService @Autowired constructor(
             }
 
             // github 暂时没对接sdk，先走老接口创建
-            ScmProviderCodes.GITHUB.name -> {
+            providerCode == ScmProviderCodes.GITHUB.name -> {
                 val checkRunId = checkRunInput.id!!
                 githubService.updateCheckRuns(
                     token = oauth2TokenStoreManager.get(
@@ -629,6 +632,12 @@ class ScmRepositoryApiService @Autowired constructor(
             ),
             externalId = externalId ?: ""
         )
+
+    private fun supportCheckRun(providerCode: String) = listOf(
+        ScmProviderCodes.TGIT,
+        ScmProviderCodes.GITEE,
+        ScmProviderCodes.BKCODE
+    ).any { it.name == providerCode }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmRepositoryApiService::class.java)

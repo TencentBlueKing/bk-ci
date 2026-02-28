@@ -65,7 +65,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT

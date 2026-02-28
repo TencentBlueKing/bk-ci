@@ -17,6 +17,7 @@
                     :disabled="disabled"
                     :is="obj.component"
                     :container="container"
+                    :pipeline-dialect="pipelineDialect"
                     :element="element"
                     :name="key"
                     v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: !!obj.required })"

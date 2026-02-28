@@ -6,8 +6,10 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationDTO
+import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverConditionRequest
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceAuthorizationResponse
+import com.tencent.devops.common.auth.enums.ResourceAuthorizationHandoverStatus
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
@@ -57,6 +59,19 @@ class ServiceAuthAuthorizationResourceImpl constructor(
         return Result(
             permissionAuthorizationService.batchModifyHandoverFrom(
                 resourceAuthorizationHandoverList = resourceAuthorizationHandoverList
+            )
+        )
+    }
+
+    override fun resetResourceAuthorization(
+        projectId: String,
+        condition: ResourceAuthorizationHandoverConditionRequest
+    ): Result<Map<ResourceAuthorizationHandoverStatus, List<ResourceAuthorizationHandoverDTO>>> {
+        return Result(
+            permissionAuthorizationService.resetResourceAuthorizationByResourceType(
+                operator = "system",
+                projectCode = projectId,
+                condition = condition
             )
         )
     }

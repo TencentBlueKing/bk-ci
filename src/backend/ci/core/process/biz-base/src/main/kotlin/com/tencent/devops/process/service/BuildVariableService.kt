@@ -138,7 +138,13 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+    fun batchUpdateVariable(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, Any>,
+        sensitiveKeys: Set<String>? = null
+    ) {
         commonDslContext.transaction { t ->
             val context = DSL.using(t)
             batchSetVariable(
@@ -147,7 +153,12 @@ class BuildVariableService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 variables = variables.map { va ->
-                    va.key to BuildParameters(key = va.key, value = va.value, valueType = BuildFormPropertyType.STRING)
+                    va.key to BuildParameters(
+                        key = va.key,
+                        value = va.value,
+                        valueType = BuildFormPropertyType.STRING,
+                        sensitive = sensitiveKeys?.contains(va.key)
+                    )
                 }.toMap()
             )
         }
@@ -268,7 +279,8 @@ class BuildVariableService @Autowired constructor(
                         key = key,
                         value = valueAndType.first,
                         valueType = valueAndType.second,
-                        readOnly = variables[key]?.readOnly ?: false
+                        readOnly = variables[key]?.readOnly ?: false,
+                        sensitive = variables[key]?.sensitive
                     )
                 )
             }

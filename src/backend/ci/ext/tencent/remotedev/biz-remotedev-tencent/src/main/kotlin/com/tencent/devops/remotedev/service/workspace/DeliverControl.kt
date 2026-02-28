@@ -38,8 +38,11 @@ import com.tencent.devops.common.auth.api.TencentActionId
 import com.tencent.devops.common.auth.api.TencentResourceTypeId
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -58,7 +61,8 @@ class DeliverControl @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val permissionService: PermissionService,
     private val workspaceCommon: WorkspaceCommon,
-    private val gitProxyTGitService: GitProxyTGitService
+    private val gitProxyTGitService: GitProxyTGitService,
+    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao
 ) {
 
     companion object {
@@ -126,6 +130,17 @@ class DeliverControl @Autowired constructor(
                         status = WorkspaceStatus.RUNNING
                     )
                 }
+                // 记录首次分配拥有者操作
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    action = WorkspaceAction.ASSIGN,
+                    actionMessage = String.format(
+                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.ASSIGN_OWNER),
+                        assign2Owner.userId
+                    )
+                )
             }
 
             existOwner != null && assign2Owner?.userId != existOwner.sharedUser -> {
@@ -161,6 +176,20 @@ class DeliverControl @Autowired constructor(
                         type = workspace.workspaceSystemType
                     )
                 }
+                // 记录修改拥有者操作
+                if (assign2Owner != null) {
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspaceName,
+                        operator = userId,
+                        action = WorkspaceAction.ASSIGN,
+                        actionMessage = String.format(
+                            workspaceCommon.getOpHistory(OpHistoryCopyWriting.CHANGE_OWNER),
+                            existOwner.sharedUser,
+                            assign2Owner.userId
+                        )
+                    )
+                }
             }
         }
         val em = alreadyExist.asSequence()
@@ -175,6 +204,19 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START,
                 ownerType = workspace.ownerType
             )
+            // 记录添加查看者操作
+            add.forEach { viewer ->
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    action = WorkspaceAction.ASSIGN,
+                    actionMessage = String.format(
+                        workspaceCommon.getOpHistory(OpHistoryCopyWriting.ASSIGN_VIEWER),
+                        viewer.userId
+                    )
+                )
+            }
         }
 
         val am = assigns.filter { it.type == WorkspaceShared.AssignType.VIEWER }.map { m -> m.userId }

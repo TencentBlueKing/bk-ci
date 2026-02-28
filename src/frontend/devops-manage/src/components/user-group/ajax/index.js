@@ -20,17 +20,17 @@ request.interceptors.response.use((response) => {
   if (httpStatus === 503) {
     const errMsg = {
       status: httpStatus,
-      message: window.pipelineVue?.$i18n?.t('err503') || 'service is in deployment',
+      message: 'service is in deployment',
     };
     return Promise.reject(errMsg);
-  } if (httpStatus === 403) {
-    const errorMsg = { httpStatus, code: httpStatus, message: window.pipelineVue?.$i18n?.t('err403') || 'Permission Deny' };
+} if (httpStatus === 403) {
+    const errorMsg = { httpStatus, code: httpStatus, message: 'Permission Denied' };
     return Promise.reject(errorMsg);
   } if ((typeof status !== 'undefined' && status !== 0) || (typeof result !== 'undefined' && !result)) {
     const errorMsg = { httpStatus, message, code: code || status };
     return Promise.reject(errorMsg);
   } if (httpStatus === 400) {
-    const errorMsg = { httpStatus, message: window.pipelineVue?.$i18n?.t('err400') || 'service is abnormal' };
+    const errorMsg = { httpStatus, message: 'service is abnormal' };
     return Promise.reject(errorMsg);
   }
 

@@ -203,7 +203,7 @@
         },
         {
             id: 'releasedVersionName',
-            label: t('template.lastedVersion'),
+            label: t('template.latestVersion'),
             width: 200
         },
         {

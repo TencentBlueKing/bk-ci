@@ -110,6 +110,7 @@ class PipelineYamlFileManager @Autowired constructor(
         val repoHashId = yamlFileSyncReq.repository.repoHashId!!
         try {
             val yamlDiffs = mutableListOf<PipelineYamlDiff>()
+            val eventTime = LocalDateTime.now()
             with(yamlFileSyncReq) {
                 val requestId = MDC.get(TraceTag.BIZID)
                 val eventId = pipelineTriggerEventService.getEventId()
@@ -168,7 +169,8 @@ class PipelineYamlFileManager @Autowired constructor(
                 yamlDiffs.forEach {
                     val yamlFileEvent = PipelineYamlFileEvent(
                         repository = repository,
-                        yamlDiff = it
+                        yamlDiff = it,
+                        eventTime = eventTime
                     )
                     sampleEventDispatcher.dispatch(yamlFileEvent)
                 }

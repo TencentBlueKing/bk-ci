@@ -294,7 +294,6 @@ export default {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
                     hasPermission: this.isManage,
-                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: RESOURCE_TYPE.PROJECT,
@@ -464,12 +463,13 @@ export default {
             })
         },
 
-        jumpToTemplate ({ templateId }) {
+        jumpToTemplate ({ projectId, templateId }) {
             this.$router.push({
-                name: 'templateEdit',
+                name: 'TemplateOverview',
                 params: {
+                    projectId,
                     templateId
-                }
+                },
             })
         },
         execPipeline ({ projectId, pipelineId, disabled, released, onlyBranchVersion, pipelineVersion }) {

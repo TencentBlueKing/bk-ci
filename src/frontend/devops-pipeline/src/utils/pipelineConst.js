@@ -332,3 +332,5 @@ export const STRATEGY_ENUM = {
     AUTO: 'AUTO',
     MANUAL: 'MANUAL'
 }
+
+export const MAX_FILE_SIZE_MB = 500

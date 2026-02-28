@@ -20,7 +20,7 @@ _M = {}
 -- 外部认证API调用通用函数
 function _M:call_external_auth_api(auth_type, params)
     local max_retries = 3
-    local timeout = 3000 -- 3秒超时
+    local timeout = 5000 -- 5秒超时
 
     -- 构建请求URL
     local base_url = config.external_auth.base_url

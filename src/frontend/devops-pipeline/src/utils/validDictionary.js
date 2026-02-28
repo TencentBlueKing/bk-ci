@@ -44,10 +44,12 @@ const dictionary = {
             min_value: (field, args) => {
                 return `最小不能少于${args[0]}`
             },
+            nonVarRule: (field, args) => {
+                return `该字段不需要包含$${args[0]}`
+            },
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => '字段不能为空，只支持英文小写、数字、下划线以及/',
             mutualGroup: field => '字段不能为空，只支持英文、数字或填写变量',
-            nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
             paramsIdRule: field => '变量名只能使用英文字母，数字和下划线，首字符不能以数字开头',

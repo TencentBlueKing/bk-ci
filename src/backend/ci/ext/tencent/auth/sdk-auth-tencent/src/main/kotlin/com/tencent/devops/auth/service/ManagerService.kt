@@ -69,6 +69,24 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String/*platform:userId*/, Boolean>()
 
+    // 电子签名验证控制开关本地缓存
+    private val eSignatureVerificationControlCache = CacheBuilder.newBuilder()
+        .maximumSize(1)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*key*/, Boolean>()
+
+    // 需要签名验证的项目本地缓存
+    private val projectsRequiringSignatureVerificationCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*projectId*/, Boolean>()
+
+    // 需要签名预检查的项目本地缓存
+    private val projectsRequiringSignaturePreCheckCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*projectId*/, Boolean>()
+
     @Suppress("CyclomaticComplexMethod", "NestedBlockDepth", "ComplexMethod")
     fun isManagerPermission(
         userId: String,
@@ -206,17 +224,49 @@ class ManagerService @Autowired constructor(
     }
 
     private fun needESignVerification(projectId: String): Boolean {
-        val eSignControl = try {
+        if (!isESignatureVerificationControlEnabled()) {
+            return false
+        }
+        return isProjectRequiringSignatureVerification(projectId)
+    }
+
+    private fun needESignPreCheck(projectId: String): Boolean {
+        return isProjectRequiringSignaturePreCheck(projectId)
+    }
+
+    private fun isESignatureVerificationControlEnabled(): Boolean {
+        val cachedValue = eSignatureVerificationControlCache.getIfPresent(E_SIGNATURE_VERIFICATION_CONTROL)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isEnabled = try {
             redisOperation.get(E_SIGNATURE_VERIFICATION_CONTROL)?.toBooleanStrict() == true
         } catch (ex: Exception) {
             logger.error("e Sign Control failed!")
             false
         }
-        return eSignControl && redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        eSignatureVerificationControlCache.put(E_SIGNATURE_VERIFICATION_CONTROL, isEnabled)
+        return isEnabled
     }
 
-    private fun needESignPreCheck(projectId: String): Boolean {
-        return redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, projectId)
+    private fun isProjectRequiringSignatureVerification(projectId: String): Boolean {
+        val cachedValue = projectsRequiringSignatureVerificationCache.getIfPresent(projectId)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isMember = redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_VERIFICATION, projectId)
+        projectsRequiringSignatureVerificationCache.put(projectId, isMember)
+        return isMember
+    }
+
+    private fun isProjectRequiringSignaturePreCheck(projectId: String): Boolean {
+        val cachedValue = projectsRequiringSignaturePreCheckCache.getIfPresent(projectId)
+        if (cachedValue != null) {
+            return cachedValue
+        }
+        val isMember = redisOperation.isMember(PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK, projectId)
+        projectsRequiringSignaturePreCheckCache.put(projectId, isMember)
+        return isMember
     }
 
     private fun isUserSigned(
@@ -266,8 +316,8 @@ class ManagerService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ManagerService::class.java)
-        private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
         private const val E_SIGNATURE_VERIFICATION_CONTROL = "e:signature:verification:control"
+        private const val PROJECTS_REQUIRING_SIGNATURE_VERIFICATION = "projects:signature:verification:required"
         private const val PROJECTS_REQUIRING_SIGNATURE_PRE_CHECK = "projects:signature:pre:check"
         private const val PROJECT_SIGNATURE_PLATFORM_KEY = "projects:signature:%s:platform"
         private const val USER_SIGNATURE_STATUS_CACHE_KEY = "user:signature:status:%s:cache"

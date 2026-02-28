@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordTicketType
 import com.tencent.devops.remotedev.service.WorkspaceRecordService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -71,7 +72,12 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         workspaceName: String,
         workspaceStatus: WorkspaceStatus
     ): Result<Boolean> {
-        workspaceCommon.updateStatusAndCreateHistory(workspaceName, workspaceStatus, WorkspaceAction.SYSTEM_CHANGES)
+        workspaceCommon.updateStatusAndCreateHistory(
+            workspaceName = workspaceName,
+            newStatus = workspaceStatus,
+            action = WorkspaceAction.SYSTEM_CHANGES,
+            allowUpdateDeleted = true  // OP 管理接口允许修改 DELETED 状态，主要用于捞回已删除实例。
+        )
         return Result(true)
     }
 
@@ -126,9 +132,13 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun createWorkspaceRecordTicket(userId: String, workspaceNames: Set<String>): Result<Boolean> {
+    override fun createWorkspaceRecordTicket(
+        userId: String,
+        workspaceNames: Set<String>,
+        type: String?
+    ): Result<Boolean> {
         workspaceNames.forEach {
-            workspaceRecordService.saveWorkspaceRecordTicket(it)
+            workspaceRecordService.saveWorkspaceRecordTicket(it, WorkspaceRecordTicketType.parse(type))
         }
         return Result(true)
     }
@@ -148,5 +158,21 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             )
         }
         return Result(data)
+    }
+
+    override fun updateWorkspaceRecordTicketEnable(
+        userId: String,
+        workspaceName: String,
+        type: String,
+        enable: Boolean
+    ): Result<Boolean> {
+        logger.info("updateWorkspaceRecordTicketEnable |$userId|$workspaceName|$type|$enable")
+        return Result(
+            workspaceRecordService.updateWorkspaceRecordTicketEnable(
+                workspaceName = workspaceName,
+                type = WorkspaceRecordTicketType.parse(type),
+                enable = enable
+            )
+        )
     }
 }

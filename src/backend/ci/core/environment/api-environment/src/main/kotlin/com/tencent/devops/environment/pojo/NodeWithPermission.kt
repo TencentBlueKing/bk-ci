@@ -99,5 +99,7 @@ data class NodeWithPermission(
     @get:Schema(title = "最近构建信息")
     var latestBuildDetail: AgentBuildDetail? = null,
     @get:Schema(title = "节点标签信息")
-    val tags: List<NodeTag>? = null
+    val tags: List<NodeTag>? = null,
+    @get:Schema(title = "当前环境是否启用这个 node")
+    val envEnableNode: Boolean?
 )

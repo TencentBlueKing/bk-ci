@@ -42,6 +42,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.pojo.record.CheckWorkspaceRecordData
 import com.tencent.devops.remotedev.pojo.record.FetchMetaDataParam
+import com.tencent.devops.remotedev.pojo.record.ThumbnailEncryptedTicketResp
 import com.tencent.devops.remotedev.pojo.record.UserWorkspaceRecordPermissionInfo
 import com.tencent.devops.remotedev.pojo.record.WorkspaceRecordMetadata
 import com.tencent.devops.remotedev.pojo.remotedev.CreateCvmData
@@ -113,12 +114,18 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "ip", required = false)
         @QueryParam("ip")
         ip: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
         @Parameter(description = "businessLineName", required = false)
         @QueryParam("businessLineName")
         businessLineName: String?,
         @Parameter(description = "ownerName", required = false)
         @QueryParam("ownerName")
-        ownerName: String?
+        ownerName: String?,
+        @Parameter(description = "workspaceName", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取项目下云桌面信息")
@@ -613,7 +620,10 @@ interface ServiceRemoteDevResource {
         appId: Long,
         @Parameter(description = "实例IP", required = true)
         @QueryParam("ip")
-        ip: String
+        ip: String,
+        @Parameter(description = "是否是录屏灰度", required = true)
+        @QueryParam("mediaGary")
+        mediaGary: Boolean?
     ): Result<CheckWorkspaceRecordData>
 
     @Deprecated("有了token后这个方法可能不会再使用，观察下如果不使用可以废弃")
@@ -825,6 +835,24 @@ interface ServiceRemoteDevResource {
         @QueryParam("token")
         token: String
     ): Result<String>
+
+    @Operation(summary = "获取工作空间缩略图加密密钥")
+    @GET
+    @Path("/get_thumbnail_encrypted_ticket")
+    fun getThumbnailEncryptedTicket(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名称", required = false)
+        @QueryParam("workspaceName")
+        workspaceName: String?,
+        @Parameter(description = "环境ID", required = false)
+        @QueryParam("envId")
+        envId: String?,
+        @Parameter(description = "过期秒数", required = false)
+        @QueryParam("expiredSeconds")
+        expiredSeconds: Long?
+    ): Result<ThumbnailEncryptedTicketResp>
 
     @Operation(summary = "查询任务状态")
     @GET

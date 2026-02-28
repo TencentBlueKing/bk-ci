@@ -82,6 +82,7 @@ class TXDispatchTransfer @Autowired(required = false) constructor(
             return TXPoolType.Macos.toDispatchType(
                 Pool(
                     macOS = MacOS(
+                        macOSHwSpec = job.runsOn.hwSpec,
                         systemVersion = job.runsOn.poolName?.removePrefix("macos-"),
                         xcodeVersion = job.runsOn.xcode
                     )

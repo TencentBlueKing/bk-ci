@@ -38,6 +38,8 @@ class TxAtomDao {
         with(TAtom.T_ATOM) {
             return dslContext.select(REPOSITORY_HASH_ID)
                 .from(this)
+                .where(LATEST_FLAG.eq(true))
+                .and(REPOSITORY_HASH_ID.isNotNull)
                 .groupBy(ATOM_CODE)
                 .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(pageSize).offset((page - 1) * pageSize)

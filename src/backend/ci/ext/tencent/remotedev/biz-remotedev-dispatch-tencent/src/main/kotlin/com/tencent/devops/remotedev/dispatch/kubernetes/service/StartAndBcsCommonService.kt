@@ -109,10 +109,12 @@ class StartAndBcsCommonService @Autowired constructor(
         taskStatus: TaskStatus,
         task: DispatchWorkspaceOpHisRecord
     ) {
-        when {
-            task.action == CREATE -> {
+        when (task.action) {
+            CREATE -> {
                 fixVm(task, taskStatus)
             }
+            REBUILD -> rebuildWorkspace(taskStatus, task)
+            else -> {}
         }
     }
 

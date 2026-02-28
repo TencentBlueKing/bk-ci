@@ -151,6 +151,29 @@ class TencentServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoDownloadService.innerDownloadUrlByUser(userId, projectId, artifactoryType, path))
     }
 
+
+    @AuditEntry(actionId = ActionId.PIPELINE_DOWNLOAD)
+    override fun downloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String,
+        ttl: Int,
+        directed: Boolean?
+    ): Result<Url> {
+        checkParam(projectId)
+        return Result(
+            bkRepoDownloadService.innerDownloadUrlByToken(
+                userId = userId,
+                projectId = projectId,
+                artifactoryType = artifactoryType,
+                argPath = path,
+                ttl = ttl,
+                useWeb = false
+            )
+        )
+    }
+
     override fun show(
         userId: String,
         projectId: String,

@@ -68,6 +68,23 @@ class SignaturePlatformDetailsDao {
         }
     }
 
+    fun updateInformation(
+        dslContext: DSLContext,
+        platform: String,
+        platformName: String?,
+        informationCn: String?,
+        informationEn: String?
+    ): Int {
+        return with(TSignaturePlatformDetails.T_SIGNATURE_PLATFORM_DETAILS) {
+            val updateStep = dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+            platformName?.let { updateStep.set(PLATFORM_NAME, it) }
+            informationCn?.let { updateStep.set(INFORMATION_CN, it) }
+            informationEn?.let { updateStep.set(INFORMATION_EN, it) }
+            updateStep.where(PLATFORM.eq(platform)).execute()
+        }
+    }
+
     private fun convert(record: TSignaturePlatformDetailsRecord): SignaturePlatformDetails {
         return SignaturePlatformDetails(
             platform = record.platform,

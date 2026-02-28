@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MacOS(
+    val macOSHwSpec: String? = "",
     val systemVersion: String?,
     val xcodeVersion: String?
 )

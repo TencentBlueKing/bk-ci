@@ -61,7 +61,6 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
-import com.tencent.devops.common.pipeline.pojo.ModelIdDuplicateChecker
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
@@ -194,7 +193,8 @@ class PipelineRepositoryService constructor(
 
         @Suppress("ALL")
         fun PipelineSetting.checkParam() {
-            if (maxPipelineResNum < 1) {
+            val maxResNum = maxPipelineResNum
+            if (maxResNum != null && maxResNum < 1) {
                 throw InvalidParamException(
                     message = I18nUtil.getCodeLanMessage(ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
                     params = arrayOf("maxPipelineResNum")
@@ -387,12 +387,14 @@ class PipelineRepositoryService constructor(
         )
         // 去重id
         val distinctIdSet = HashSet<String>(metaSize, 1F /* loadFactor */)
-        val jobIdDuplicateChecker = ModelIdDuplicateChecker()
 
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = ArrayList<PipelineModelTask>(metaSize)
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
+        // 跨 stage 共享的 jobId 生成器种子和已使用的 jobId 集合，确保整个 model 范围内 jobId 唯一
+        val randomSeed = AtomicInteger(1)
+        val jobIdSet = mutableSetOf<String>()
         model.stages.forEachIndexed { index, s ->
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
@@ -411,8 +413,7 @@ class PipelineRepositoryService constructor(
                     create = create,
                     distIds = distinctIdSet,
                     versionStatus = versionStatus,
-                    yamlInfo = yamlInfo,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker
+                    yamlInfo = yamlInfo
                 )
             } else {
                 initOtherContainer(
@@ -429,15 +430,10 @@ class PipelineRepositoryService constructor(
                     versionStatus = versionStatus,
                     yamlInfo = yamlInfo,
                     stageIndex = index,
-                    jobIdDuplicateChecker = jobIdDuplicateChecker
+                    randomSeed = randomSeed,
+                    jobIdSet = jobIdSet
                 )
             }
-        }
-        if (jobIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_JOB_ID_DUPLICATE,
-                params = arrayOf(jobIdDuplicateChecker.duplicateIdSet.joinToString(","))
-            )
         }
         return modelTasks
     }
@@ -454,8 +450,7 @@ class PipelineRepositoryService constructor(
         create: Boolean,
         distIds: HashSet<String>,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
-        yamlInfo: PipelineYamlVo?,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker
+        yamlInfo: PipelineYamlVo?
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -477,21 +472,14 @@ class PipelineRepositoryService constructor(
             c.containerHashId = modelContainerIdGenerator.getNextId()
         }
         distIds.add(c.containerHashId!!)
-        if (!c.jobId.isNullOrBlank()) {
-            jobIdDuplicateChecker.addId(c.jobId!!)
-        }
 
         // 清理无用的options
         c.params = PipelineUtils.cleanOptions(c.params)
 
-        val stepIdDuplicateChecker = ModelIdDuplicateChecker()
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                 e.id = modelTaskIdGenerator.getNextId()
-            }
-            if (!e.stepId.isNullOrBlank()) {
-                stepIdDuplicateChecker.addId(e.stepId!!)
             }
             distIds.add(e.id!!)
             if (versionStatus?.isReleasing() == true) {
@@ -526,12 +514,6 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
-            )
-        }
     }
 
     private fun initOtherContainer(
@@ -548,7 +530,8 @@ class PipelineRepositoryService constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         yamlInfo: PipelineYamlVo?,
         stageIndex: Int,
-        jobIdDuplicateChecker: ModelIdDuplicateChecker
+        randomSeed: AtomicInteger,
+        jobIdSet: MutableSet<String>
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -558,8 +541,6 @@ class PipelineRepositoryService constructor(
                 )
             )
         }
-        var randomSeed = 1
-        val jobIdSet = mutableSetOf<String>()
         stage.containers.forEachIndexed { containerIndex, c ->
 
             if (c is TriggerContainer) {
@@ -582,7 +563,7 @@ class PipelineRepositoryService constructor(
 
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
-            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed++, jobIdSet)
+            if (c.jobId.isNullOrBlank()) c.jobId = VMUtils.getContainerJobId(randomSeed.getAndIncrement(), jobIdSet)
             c.jobId?.let { jobIdSet.add(it) }
             try {
                 when {
@@ -613,19 +594,12 @@ class PipelineRepositoryService constructor(
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
             distIds.add(c.containerHashId!!)
-            if (!c.jobId.isNullOrBlank()) {
-                jobIdDuplicateChecker.addId(c.jobId!!)
-            }
-            val stepIdDuplicateChecker = ModelIdDuplicateChecker()
             c.elements.forEach { e ->
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
                 e.timeCost = null
                 distIds.add(e.id!!)
-                if (!e.stepId.isNullOrBlank()) {
-                    stepIdDuplicateChecker.addId(e.stepId!!)
-                }
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
                 if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -662,12 +636,6 @@ class PipelineRepositoryService constructor(
                     )
                 )
             }
-            if (stepIdDuplicateChecker.duplicateIdSet.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_STEP_ID_DUPLICATE,
-                    params = arrayOf(c.name, stepIdDuplicateChecker.duplicateIdSet.joinToString(","))
-                )
-            }
         }
     }
 
@@ -691,6 +659,18 @@ class PipelineRepositoryService constructor(
     }
 
     /**
+     * 根据 channelCode 计算 maxPipelineResNum
+     * 如果 channelCode 在特定渠道列表中，返回特定渠道的最大保留数，否则返回默认最大保留数
+     */
+    private fun calculateMaxPipelineResNum(channelCode: ChannelCode): Int {
+        return if (channelCode.name in versionConfigure.specChannels.split(",")) {
+            versionConfigure.specChannelMaxKeepNum
+        } else {
+            versionConfigure.maxKeepNum
+        }
+    }
+
+    /**
      * 初始化默认的流水线setting
      */
     fun createDefaultSetting(
@@ -700,13 +680,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): PipelineSetting {
         // 空白流水线设置初始化
-        val maxPipelineResNum = if (
-            channelCode.name in versionConfigure.specChannels.split(",")
-        ) {
-            versionConfigure.specChannelMaxKeepNum
-        } else {
-            versionConfigure.maxKeepNum
-        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
         val notifyTypes = if (channelCode == ChannelCode.BS) {
             pipelineInfoExtService.failNotifyChannel()
         } else {
@@ -1956,6 +1930,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    /**
+     * 处理 maxPipelineResNum 为空的情况
+     * 如果 maxPipelineResNum 为空，根据 channelCode 和 versionConfigure 计算默认值
+     */
+    private fun processMaxPipelineResNumIfNull(
+        setting: PipelineSetting,
+        channelCode: ChannelCode
+    ): PipelineSetting {
+        if (setting.maxPipelineResNum != null) {
+            return setting
+        }
+        val maxPipelineResNum = calculateMaxPipelineResNum(channelCode)
+        return setting.copy(maxPipelineResNum = maxPipelineResNum)
+    }
+
     private fun transactionSaveSetting(
         context: DSLContext?,
         setting: PipelineSetting,
@@ -1977,30 +1966,47 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+            // 获取 channelCode 并处理 maxPipelineResNum 为空的情况
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
                 dslContext = transactionContext,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
+                channelCode = null
+            )
+            val channelCode = pipelineInfo?.channel?.let {
+                try {
+                    ChannelCode.valueOf(it)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("Invalid channel code: $it, using default ChannelCode.BS")
+                    ChannelCode.BS
+                }
+            } ?: ChannelCode.BS
+            val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
+            if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
+                dslContext = transactionContext,
+                projectId = processedSetting.projectId,
+                pipelineId = processedSetting.pipelineId,
                 userId = userId,
-                pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc,
+                pipelineName = processedSetting.pipelineName,
+                pipelineDesc = processedSetting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
                 latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
-                if (old?.maxPipelineResNum != null) {
+                val oldMaxPipelineResNum = old?.maxPipelineResNum
+                if (oldMaxPipelineResNum != null) {
                     pipelineSettingVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
-                        projectId = setting.projectId,
-                        pipelineId = setting.pipelineId,
+                        projectId = processedSetting.projectId,
+                        pipelineId = processedSetting.pipelineId,
                         currentVersion = version,
-                        maxPipelineResNum = old.maxPipelineResNum
+                        maxPipelineResNum = oldMaxPipelineResNum
                     )
                 }
                 pipelineSettingVersionDao.saveSetting(
                     dslContext = transactionContext,
-                    setting = setting,
+                    setting = processedSetting,
                     version = version,
                     isTemplate = isTemplate,
                     id = client.get(ServiceAllocIdResource::class).generateSegmentId(
@@ -2010,7 +2016,7 @@ class PipelineRepositoryService constructor(
             }
             if (versionStatus.isReleasing()) {
                 pipelineSettingDao.saveSetting(
-                    transactionContext, setting, isTemplate
+                    transactionContext, processedSetting, isTemplate
                 )
             }
         }

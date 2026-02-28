@@ -115,7 +115,7 @@
     .template-aside{
         height: 100%;
         background: #FFFFFF;
-        padding-top: 8px;
+        padding-top: 16px;
         box-shadow: 1px 0 0 0 #EAEBF0, 1px 0 0 0 #DCDEE5;
         .item-name {
             display: flex;
@@ -155,7 +155,7 @@
         }
         .item-border {
             border-bottom: 1px solid #DCDEE5;
-            margin: 8px 24px;
+            margin: 10px 0 8px;
         }
    }
 </style>

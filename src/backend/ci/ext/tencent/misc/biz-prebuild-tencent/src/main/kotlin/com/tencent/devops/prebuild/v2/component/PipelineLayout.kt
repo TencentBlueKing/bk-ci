@@ -562,7 +562,7 @@ class PipelineLayout private constructor(
 
         if (job.runsOn.poolName.startsWith("macos", ignoreCase = true)) {
             return PoolType.Macos.toDispatchType(
-                containerPool.copy(macOS = MacOS("Catalina10.15.4", "12.2"))
+                containerPool.copy(macOS = MacOS("VMware", "Catalina10.15.4", "12.2"))
             )
         }
 

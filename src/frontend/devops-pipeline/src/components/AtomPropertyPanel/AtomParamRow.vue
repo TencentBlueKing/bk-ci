@@ -13,6 +13,7 @@
         <component
             :is="param.type"
             :container="container"
+            :pipeline-dialect="pipelineDialect"
             :element="element"
             :atom-value="fullAtomValue"
             :disabled="disabled"

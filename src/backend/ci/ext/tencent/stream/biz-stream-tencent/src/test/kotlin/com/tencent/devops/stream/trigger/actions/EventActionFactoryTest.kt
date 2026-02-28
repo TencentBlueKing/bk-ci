@@ -55,7 +55,12 @@ internal class EventActionFactoryTest {
         mockk(),
         mockk(),
         mockk(),
-        RedisOperation(mockk(), mockk(), mockk()),
+        RedisOperation(
+            masterRedisTemplate = mockk(),
+            slaveRedisTemplate = mockk(),
+            lockRedisTemplate = mockk(),
+            splitMode = mockk()
+        ),
         mockk()
     )
 

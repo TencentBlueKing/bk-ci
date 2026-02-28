@@ -32,6 +32,8 @@ data class PipelineOutput(
     var downloadUrl: String? = null,
     @get:Schema(title = "MD5", required = false)
     var md5: String? = null,
+    @get:Schema(title = "crc64ecma", required = false)
+    var crc64ecma: String? = null,
 
     @get:Schema(title = "首页地址", required = false)
     val indexFileUrl: String? = null,
@@ -57,6 +59,7 @@ data class PipelineOutput(
                     shortUrl = shortUrl,
                     downloadUrl = downloadUrl,
                     md5 = md5,
+                    crc64ecma = crc64ecma,
                     createTime = modifiedTime
                 )
             }
