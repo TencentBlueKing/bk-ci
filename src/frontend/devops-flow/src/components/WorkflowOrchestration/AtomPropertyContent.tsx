@@ -1,16 +1,15 @@
 import type { AtomModal, AtomVersion } from '@/api/atom'
 import type { AdditionalOptions, CustomVariable, Element } from '@/api/flowModel'
 import AtomCheckbox from '@/components/AtomForm/AtomCheckbox'
-import AtomCheckboxList from '@/components/AtomForm/AtomCheckboxList'
 import AtomForm, { type AtomPropsModel } from '@/components/AtomForm/AtomForm'
 import KeyValueMap from '@/components/AtomForm/KeyValueMap'
 import { SvgIcon } from '@/components/SvgIcon'
-import { getAtomFailControlList, getAtomRunConditionList } from '@/constants/flowOptionConfig'
+import { getAtomRunConditionList } from '@/constants/flowOptionConfig'
 import { DEFAULT_VERSION, useAtomVersion } from '@/hooks/useAtomVersion'
 import { useAtomStore } from '@/stores/atom'
 import { AtomRunCondition } from '@/utils/flowDefaults'
 import { validateAdditionalOptions, validateAtomElement } from '@/utils/validation'
-import { Button, Collapse, Form, Input, Loading, Popover, Select } from 'bkui-vue'
+import { Button, Checkbox, Collapse, Form, Input, Loading, Popover, Radio, Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -154,6 +153,14 @@ export default defineComponent({
       return control
     })
 
+    const showManualRetryOption = computed(() => {
+      const options = additionalOptions.value
+      return !(
+        options.manualSkip === false
+        && (options.failControl || []).includes('continueWhenFailed')
+      )
+    })
+
     // Check if custom variables input should be shown
     const showCustomVariables = computed(() => {
       const runCondition = additionalOptions.value.runCondition
@@ -290,7 +297,7 @@ export default defineComponent({
     function emitElementChange(element: Element) {
       const val = isNewTemplate.value ? (element.data?.input || {}) : element
       const errors = validateAtomElement(element, atomModal.value, val)
-      ;(element as Record<string, unknown>).isError = errors.length > 0
+        ; (element as Record<string, unknown>).isError = errors.length > 0
       emit('change', element)
     }
 
@@ -302,15 +309,37 @@ export default defineComponent({
     function handleAdditionalOptionsChange(key: string, value: any) {
       if (!props.element) return
       const currentOptions = additionalOptions.value
-      const newOptions = { ...currentOptions, [key]: value } as AdditionalOptions
 
-      // Handle failControl linkage logic
-      if (key === 'failControl') {
-        const failControl = value as string[]
-        newOptions.continueWhenFailed = failControl.includes('continueWhenFailed')
-        newOptions.retryWhenFailed = failControl.includes('retryWhenFailed')
-        newOptions.manualRetry = failControl.includes('MANUAL_RETRY')
-        newOptions.failControl = failControl
+      const currentFailControl = [
+        ...new Set(key === 'failControl' ? (value as string[]) : (currentOptions.failControl || [])),
+      ]
+
+      const includeManualRetry = currentFailControl.includes('MANUAL_RETRY')
+      const continueable = currentFailControl.includes('continueWhenFailed')
+      const isAutoSkip =
+        continueable &&
+        (currentOptions.manualSkip === false || (key === 'manualSkip' && value === false))
+      const retryable = currentFailControl.includes('retryWhenFailed')
+      const manualRetry = !isAutoSkip && includeManualRetry
+
+      const failControl = isAutoSkip
+        ? currentFailControl.filter((item) => item !== 'MANUAL_RETRY')
+        : [...currentFailControl]
+
+      const newOptions: AdditionalOptions = {
+        ...currentOptions,
+        manualRetry,
+        [key]: value,
+        continueWhenFailed: continueable,
+        retryWhenFailed: retryable,
+        failControl,
+      }
+
+      if (retryable && !currentOptions.retryWhenFailed && (!currentOptions.retryCount || currentOptions.retryCount < 1)) {
+        newOptions.retryCount = 1
+      }
+      if (!retryable && currentOptions.retryWhenFailed) {
+        newOptions.retryCount = 0
       }
 
       emitElementChange({ ...props.element, additionalOptions: newOptions })
@@ -367,8 +396,21 @@ export default defineComponent({
       handleAdditionalOptionsChange('enable', value)
     }
 
-    function handleFailControlChange(name: string, value: string[]) {
-      handleAdditionalOptionsChange('failControl', value)
+    function handleFailControlToggle(id: string, checked: boolean) {
+      const current = [...(additionalOptions.value.failControl || failControlValue.value)]
+      const newControl = checked
+        ? [...current, id]
+        : current.filter((item) => item !== id)
+      handleAdditionalOptionsChange('failControl', newControl)
+    }
+
+    function handleManualSkipChange(val: boolean) {
+      handleAdditionalOptionsChange('manualSkip', val)
+    }
+
+    function handleRetryCountChange(val: string | number) {
+      const num = Math.min(5, Math.max(1, Number(val) || 1))
+      handleAdditionalOptionsChange('retryCount', num)
     }
 
     function handleTimeoutChange(val: string) {
@@ -603,13 +645,66 @@ export default defineComponent({
                                       <div class={styles.failControlLabel}>
                                         {t('flow.orchestration.whenAtomFailed')}
                                       </div>
-                                      <AtomCheckboxList
-                                        value={failControlValue.value}
-                                        name="failControl"
-                                        list={getAtomFailControlList(t)}
-                                        handleChange={handleFailControlChange}
-                                        disabled={!props.editable}
-                                      />
+
+                                      {/* continueWhenFailed + manualSkip radio */}
+                                      <div class={styles.failControlRow}>
+                                        <Checkbox
+                                          modelValue={failControlValue.value.includes('continueWhenFailed')}
+                                          disabled={!props.editable}
+                                          onChange={(val: boolean) => handleFailControlToggle('continueWhenFailed', val)}
+                                        >
+                                          {t('flow.orchestration.continueWhenFailed')}
+                                        </Checkbox>
+                                        {failControlValue.value.includes('continueWhenFailed') && (
+                                          <Radio.Group
+                                            modelValue={additionalOptions.value.manualSkip}
+                                            disabled={!props.editable}
+                                            onChange={handleManualSkipChange}
+                                          >
+                                            <Radio label={false}>{t('flow.orchestration.autoSkip')}</Radio>
+                                            <Radio label={true}>{t('flow.orchestration.manualSkip')}</Radio>
+                                          </Radio.Group>
+                                        )}
+                                      </div>
+
+                                      {/* retryWhenFailed + retryCount input */}
+                                      <div class={styles.failControlRow}>
+                                        <Checkbox
+                                          modelValue={failControlValue.value.includes('retryWhenFailed')}
+                                          disabled={!props.editable}
+                                          onChange={(val: boolean) => handleFailControlToggle('retryWhenFailed', val)}
+                                        >
+                                          {t('flow.orchestration.automaticRetry')}
+                                        </Checkbox>
+                                        {failControlValue.value.includes('retryWhenFailed') && (
+                                          <div class={styles.retryCountInline}>
+                                            <span class={styles.retryCountLabel}>{t('flow.orchestration.retryCount')}</span>
+                                            <Input
+                                              class={styles.retryCountInput}
+                                              type="number"
+                                              modelValue={additionalOptions.value.retryCount}
+                                              placeholder="1-5"
+                                              min={1}
+                                              max={5}
+                                              disabled={!props.editable}
+                                              onChange={handleRetryCountChange}
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* MANUAL_RETRY (hidden when auto-skip mode) */}
+                                      {showManualRetryOption.value && (
+                                        <div class={styles.failControlRow}>
+                                          <Checkbox
+                                            modelValue={failControlValue.value.includes('MANUAL_RETRY')}
+                                            disabled={!props.editable}
+                                            onChange={(val: boolean) => handleFailControlToggle('MANUAL_RETRY', val)}
+                                          >
+                                            {t('flow.orchestration.manualRetry')}
+                                          </Checkbox>
+                                        </div>
+                                      )}
                                     </FormItem>
                                   )}
 

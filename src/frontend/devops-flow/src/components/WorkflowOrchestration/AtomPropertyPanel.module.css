@@ -180,6 +180,32 @@
 
 .failControlLabel {
   margin-bottom: var(--spacing-sm);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
+}
+
+.failControlRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  margin-left: 10px;
+  gap: 48px;
+  font-size: var(--font-size-xs);
+}
+
+.retryCountInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.retryCountInline .retryCountLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.retryCountInline .retryCountInput {
+  width: 80px;
 }

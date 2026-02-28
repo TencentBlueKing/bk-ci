@@ -90,20 +90,6 @@ export default defineConfig(({ mode }) => {
       }),
       !isDev && renameHtmlPlugin(`frontend#${PUBLIC_PATH}#index.html`),
     ].filter(Boolean),
-
-    // server: {
-    //   https: {
-    //     key: fs.readFileSync(path.resolve(__dirname, './local.devops.woa.com+3-key.pem')),
-    //     cert: fs.readFileSync(path.resolve(__dirname, './local.devops.woa.com+3.pem')),
-    //   },
-    //   proxy: {
-    //     '/ms': {
-    //       target: 'https://dev.devops.woa.com',
-    //       changeOrigin: true,
-    //       rewrite: (path) => path.replace(/^\/ms/, ''),
-    //     },
-    //   },
-    // },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

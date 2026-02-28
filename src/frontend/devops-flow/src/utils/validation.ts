@@ -28,6 +28,13 @@ export function validateAdditionalOptions(options?: AdditionalOptions): string[]
     errors.push('timeoutVar')
   }
 
+  if (options.retryWhenFailed) {
+    const count = options.retryCount
+    if (count == null || count < 1 || count > 5) {
+      errors.push('retryCount')
+    }
+  }
+
   const { runCondition } = options
 
   if (runCondition === AtomRunCondition.CUSTOM_CONDITION_MATCH) {

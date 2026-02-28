@@ -245,7 +245,7 @@ export default defineComponent({
         const result = await atomManager.fetchAtomList({
           classifyId: classifyId.value,
           keyword: searchKey.value,
-          jobType: props.container?.['@type'] === 'normal' ? JobType.AGENT_LESS : JobType.AGENT,
+          jobType: props.container?.['@type'] === 'normal' ? JobType.CLOUD_TASK : JobType.CREATIVE_STREAM,
           page: currentPage.value,
           pageSize: 20,
         })

@@ -118,7 +118,7 @@ export function createDefaultElement(index: number, partial?: Partial<Element>):
       continueWhenFailed: false,
       manualSkip: false,
       retryWhenFailed: false,
-      retryCount: 0,
+      retryCount: 1,
       manualRetry: false,
       timeout: 0,
       timeoutVar: '',

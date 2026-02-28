@@ -29,7 +29,7 @@ export const EditHeader = defineComponent({
     const projectId = computed(() => route.params.projectId as string)
 
     const flowModel = useFlowModel()
-    const { flowInfo } = useFlowInfo()
+    const { flowInfo, refreshFlowInfo } = useFlowInfo()
     const uiStore = useUIStore()
     const isSaving = ref(false)
     const isReleaseSliderShow = ref(false)
@@ -187,6 +187,7 @@ export const EditHeader = defineComponent({
     const handleReleased = () => {
       // Reload flow model after release
       flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
+      refreshFlowInfo()
     }
 
     // Render version tag in breadcrumb area

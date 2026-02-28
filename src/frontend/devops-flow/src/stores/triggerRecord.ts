@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { Message } from 'bkui-vue'
 import { weekAgo } from '@/utils/util'
 import {
   getTriggerRecords,
   getTriggerTypes,
   getEventTypes,
+  reTriggerEvent,
   type TriggerRecordItem,
   type TriggerRecordParams,
   type TriggerRecordListResponse,
@@ -30,6 +32,7 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
   const router = useRoute()
 
   const loading = ref(false)
+  const reTriggerLoadingId = ref<string | null>(null)
   const triggerEventList = ref<TriggerRecordItem[]>([])
   const triggerTypeList = ref<TypeItem[]>([])
   const eventTypeList = ref<TypeItem[]>([])
@@ -210,6 +213,21 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     }
   }
 
+  async function triggerEvent(event: any) {
+   try {
+      reTriggerLoadingId.value = event.detailId
+      const res = await reTriggerEvent(router.params.projectId as string, event.detailId)
+      reTriggerLoadingId.value = null
+      if (res) {
+        Message({ theme: 'success', message: t('flow.triggerRecord.retrigger') + t('flow.common.success') })
+        fetchTriggerEventList(1, 24)
+      }
+   } catch (error) {
+      console.error('触发失败:', error)
+      reTriggerLoadingId.value = null
+   }
+  }
+
   return {
     // 状态
     triggerEventList,
@@ -218,6 +236,7 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     shortcuts,
     filterData,
     searchPlaceHolder,
+    reTriggerLoadingId,
 
     // 方法
     fetchTriggerEventList,
@@ -226,5 +245,6 @@ export const useTriggerRecordStore = defineStore('triggerRecord', () => {
     handleFilterChange,
     handleClearSearch,
     handleSearchChange,
+    triggerEvent,
   }
 })
