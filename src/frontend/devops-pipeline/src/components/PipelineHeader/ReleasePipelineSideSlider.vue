@@ -527,6 +527,10 @@
             handleChangeFilePath: {
                 type: Function,
                 default: () => {}
+            },
+            draftStatus: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -562,8 +566,7 @@
                 customVersionName: '',
                 currentSidesliderContentHeight: 0,
                 maxSidesliderContentHeight: 0,
-                isFooterFixed: false,
-                draftStatus: null,
+                isFooterFixed: false
             }
         },
         computed: {
@@ -852,28 +855,7 @@
             ...mapActions('templates', [
                 'fetchTemplateReleasePreFetch'
             ]),
-            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList', 'getDraftStatus', 'getTemplateDraftStatus']),
-            async getLastDraftStatus () {
-                try {
-                    const request = this.isTemplate ? this.getTemplateDraftStatus : this.getDraftStatus
-                    const params = {
-                        projectId: this.$route.params.projectId,
-                        actionType: 'RELEASE',
-                        ...(this.pipelineInfo?.draftVersion ? {
-                            version: this.pipelineInfo?.version,
-                            baseDraftVersion: this.pipelineInfo?.draftVersion,
-                        } : {}),
-                        ...(this.isTemplate ? { templateId: this.$route.params.templateId } : { pipelineId: this.$route.params.pipelineId })
-                    }
-                    const res = await request(params)
-                    this.draftStatus = res
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message ?? error
-                    })
-                }
-            },
+            ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             errorHandler (error) {
                 const resourceType = this.isTemplate ? RESOURCE_TYPE.TEMPLATE : RESOURCE_TYPE.PIPELINE
                 this.handleError(error, {
@@ -905,9 +887,6 @@
                             ]
                             : []
                         ),
-                        ...(!this.isTemplateInstanceMode ? [
-                            this.getLastDraftStatus()
-                        ]: []),
                         this.prefetchReleaseVersion(this.prefetchParams)
                     ])
 

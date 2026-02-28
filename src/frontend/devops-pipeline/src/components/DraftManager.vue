@@ -31,7 +31,10 @@
                 >
                     <p>
                         <span class="update-info">{{ formatTime(item.updateTime) }} {{ item.updater }}</span>
-                        <span class="version-name">{{ $t('basedOn', [item.baseVersionName]) }}</span>
+                        <span
+                            class="version-name"
+                            v-if="item.draftVersion !== 1"
+                        >{{ $t('basedOn', [item.baseVersionName]) }}</span>
                     </p>
                     <span
                         v-if="index !== 0"
@@ -121,7 +124,10 @@
                         />
                     </VersionDiffEntry>
                 </div>
-                <div v-else-if="isPublishedStatus">
+                <div
+                    class="conflict-draft"
+                    v-else-if="isPublishedStatus"
+                >
                     <span class="label">{{ $t('publisher') }}: </span>
                     <span>{{ publishedInfo?.updater }} </span>
                     <span class="label"> {{ $t('publishTime') }}: </span>
@@ -135,7 +141,7 @@
                         :can-switch-version="false"
                         :show-button="false"
                         :disabled="!hasDraftPipeline"
-                        :version="11"
+                        :version="publishedInfo?.version"
                         :current-editing-data="currentEditingData"
                         :diff-mode="'PUBLISHED'"
                     >

@@ -92,6 +92,7 @@
             <release-button
                 :can-release="canRelease && !isEditing"
                 :project-id="projectId"
+                :current-editing-data="currentEditingData"
                 :id="pipelineId"
             />
         </aside>

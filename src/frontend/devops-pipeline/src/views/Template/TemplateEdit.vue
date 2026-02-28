@@ -54,6 +54,7 @@
                     <ReleaseButton
                         :can-release="canRelease && !isEditing"
                         :project-id="projectId"
+                        :current-editing-data="currentEditingData"
                         :id="templateId"
                     />
                 </aside>
@@ -156,7 +157,7 @@
                 const model = this.buildModel()
                 return {
                     model,
-                    templateSetting: this.pipelineSetting
+                    setting: this.pipelineSetting
                 }
             }
         },
