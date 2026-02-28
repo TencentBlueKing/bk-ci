@@ -1,6 +1,7 @@
 import type { AuthoringNodeItem, StartupProperty } from '@/api/preview'
 import { SvgIcon } from '@/components/SvgIcon'
 import { usePreview, type ParamType } from '@/hooks/usePreview'
+import { ParamType as VariableParamType } from '@/types/variable'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline, { type PipelineModel } from 'bkui-pipeline/vue3'
 import { Alert, Checkbox, Exception, Input, Loading, Select } from 'bkui-vue'
@@ -89,13 +90,13 @@ export default defineComponent({
             </span>
           </div>
           <div class={styles.paramInputWrapper}>
-            {param.type === 'BOOLEAN' ? (
+            {param.type === VariableParamType.BOOLEAN ? (
               <Checkbox
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'ENUM' && (param.payload?.url || param.options?.length) ? (
+            ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
                 modelValue={value as string}
@@ -103,7 +104,7 @@ export default defineComponent({
                 isInvalid={isInvalid}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'TEXTAREA' ? (
+            ) : param.type === VariableParamType.TEXTAREA ? (
               <div class={styles.textareaWrapper}>
                 <Input
                   type="textarea"
@@ -152,13 +153,13 @@ export default defineComponent({
             {param.desc && <div class={styles.paramDesc}>{param.desc}</div>}
           </div>
           <div class={[styles.paramValue, param.isChanged && styles.paramValueChanged]}>
-            {param.type === 'BOOLEAN' ? (
+            {param.type === VariableParamType.BOOLEAN ? (
               <Checkbox
                 modelValue={value === 'true' || value === true}
                 disabled={disabled || param.readOnly}
                 onChange={(val: boolean) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'ENUM' && (param.payload?.url || param.options?.length) ? (
+            ) : param.type === VariableParamType.ENUM && (param.payload?.url || param.options?.length) ? (
               <DynamicSelect
                 param={param}
                 modelValue={value as string}
@@ -166,7 +167,7 @@ export default defineComponent({
                 isInvalid={isInvalid}
                 onChange={(val: string) => handleParamChange(type, param.id, val)}
               />
-            ) : param.type === 'TEXTAREA' ? (
+            ) : param.type === VariableParamType.TEXTAREA ? (
               <Input
                 type="textarea"
                 modelValue={value as string}

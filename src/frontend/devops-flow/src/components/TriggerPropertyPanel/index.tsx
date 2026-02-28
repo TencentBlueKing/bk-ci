@@ -136,6 +136,7 @@ export default defineComponent({
         localElement.value,
         atomModal.value as AtomModal | null,
         atomValue.value,
+        { skipAdditionalOptions: true },
       )
     })
 

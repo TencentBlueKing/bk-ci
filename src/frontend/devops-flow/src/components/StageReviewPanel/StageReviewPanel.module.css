@@ -1,6 +1,6 @@
 .stageReviewContent {
   padding: 23px 33px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   position: relative;
   min-height: 100%;
   padding-bottom: 64px;
@@ -10,7 +10,7 @@
   display: inline-flex;
   align-items: center;
   margin: 24px 0 8px;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -48,11 +48,11 @@
 }
 
 .errorMessage {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #ea3636;
   line-height: 18px;
   display: block;
-  margin-top: 4px;
+  margin-top: 12px;
 }
 
 .approveFooter {
@@ -73,28 +73,162 @@
   margin-left: 4px;
 }
 
-.reviewParamsSection {
-  margin-top: 16px;
+.reviewParamsList {
+  margin-top: 8px;
 }
 
-.reviewParamItem {
+.reviewParamRow {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.reviewParamLabel {
-  min-width: 120px;
-  color: var(--color-text-secondary, #63656e);
+.reviewParamName {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
 }
 
-.reviewParamValue {
+.paramNameInput {
+  width: 180px;
+}
+
+.paramRequired {
+  display: inline-block;
+  width: 8px;
+  color: #ea3636;
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.reviewParamValueWrap {
   flex: 1;
+  min-width: 0;
+}
+
+.paramValueInput {
+  width: 100%;
+}
+
+.paramValueError :global(.bk-input),
+.paramValueError :global(.bk-select),
+.paramValueError :global(.bk-textarea) {
+  border-color: #ea3636 !important;
+}
+
+.paramDescIcon {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary, #979ba5);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
 }
 
 .disabledTip {
   color: #979ba5;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   margin-top: 16px;
+}
+
+/* ========== Show view (after review completed) ========== */
+.reviewTitle {
+  display: block;
+  font-size: 14px;
+  font-weight: bold;
+  color: #666770;
+  line-height: 20px;
+  padding-left: 8px;
+  position: relative;
+}
+
+.reviewTitle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 3px;
+  height: 16px;
+  background: #3a84ff;
+  border-radius: 1px;
+}
+
+.reviewDescBox {
+  background: #f5f7fa;
+  border-radius: 2px;
+  padding: 12px 16px;
+  line-height: 20px;
+  color: var(--color-text-secondary, #63656e);
+  word-break: break-all;
+  min-height: 50px;
+}
+
+.reviewTimeline {
+  margin-top: 16px;
+}
+
+.reviewTimeline :global(.bk-timeline-dot) {
+  padding-bottom: 0;
+}
+
+.reviewTimeline :global(.bk-timeline-content) {
+  max-width: inherit;
+}
+
+.timelineItem {
+  font-size: var(--font-size-xs);
+  line-height: 16px;
+  color: #777981;
+}
+
+.timelineItem p {
+  margin-bottom: 4px;
+}
+
+.timelineTitle {
+  margin-bottom: 7px !important;
+}
+
+.timelineName {
+  color: #313238;
+  font-weight: 600;
+}
+
+.timelineNormal {
+  display: inline-block;
+  margin-left: 12px;
+  color: #777981;
+}
+
+.timelineApprove {
+  color: #56d577;
+}
+
+.timelineAbort {
+  color: #ff7979;
+}
+
+.timelineRow {
+  color: #777981;
+}
+
+.timelineLabel {
+  display: inline-block;
+  min-width: 70px;
+  margin-right: 8px;
+}
+
+.paramsTable {
+  font-size: var(--font-size-xs);
+  margin-top: 8px;
+}
+
+.paramInfoIcon {
+  color: var(--color-text-tertiary, #979ba5);
+  margin-left: 5px;
+  cursor: help;
+  vertical-align: middle;
 }

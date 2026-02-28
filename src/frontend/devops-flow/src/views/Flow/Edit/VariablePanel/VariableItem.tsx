@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { PopConfirm, Message } from 'bkui-vue'
 import { SvgIcon } from '@/components/SvgIcon'
 import type { Param } from '@/api/flowModel'
+import { ParamType } from '@/types/variable'
 import styles from './VariableItem.module.css'
 
 export default defineComponent({
@@ -62,7 +63,7 @@ export default defineComponent({
     // Get value display
     const getValueDisplay = () => {
       const { defaultValue, type } = props.variable
-      if (type === 'BOOLEAN') {
+      if (type === ParamType.BOOLEAN) {
         return String(defaultValue)
       }
       if (Array.isArray(defaultValue)) {
