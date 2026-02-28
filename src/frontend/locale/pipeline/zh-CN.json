@@ -714,7 +714,8 @@
     },
     "propertyUpdated": "更新",
     "toInstance": "去实例化",
-    "fetchPipelinesErrorTips": "获取流水线模板参数失败，请联系助手分析"
+    "fetchPipelinesErrorTips": "获取流水线模板参数失败，请联系助手分析",
+    "noStepIdTips": "此触发器未配置 Step Id，不能在实例中启用/禁用"
   },
   "newlist": {
     "exportJsonTip": "通过导入功能，可以快速创建流水线，也可以实现跨项目、跨蓝盾平台的流水线导入。",

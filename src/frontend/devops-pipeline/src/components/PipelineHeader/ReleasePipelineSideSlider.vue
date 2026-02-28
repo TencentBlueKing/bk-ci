@@ -690,7 +690,7 @@
                 }
             },
             templateInstanceEnablePac () {
-                return this.instanceList.every(i => i.enabledPac) ?? false
+                return this.instanceList.length > 0 && this.instanceList.every(i => i.enabledPac)
             },
             showPacSwitcherConfig () {
                 return this.isTemplateInstanceMode ? !this.templateInstanceEnablePac : !this.pacEnabled
@@ -1367,7 +1367,7 @@
                 }
             },
             async refreshOatuStatus () {
-                if (this.refreshing) return
+                if (this.refreshing || !this.releaseParams.enablePac) return
                 try {
                     this.refreshing = true
                     // TODO: 刷新Oauth状态

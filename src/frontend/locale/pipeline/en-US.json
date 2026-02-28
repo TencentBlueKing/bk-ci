@@ -713,7 +713,8 @@
     },
     "propertyUpdated": "Updated",
     "toInstance": "To instantiate",
-    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis."
+    "fetchPipelinesErrorTips": "Failed to retrieve pipeline template parameters. Please contact the assistant for analysis.",
+    "noStepIdTips": "This trigger is not configured with a Step Id and cannot be enabled/disabled in the instance"
   },
   "newlist": {
     "exportJsonTip": "Through the import function, you can quickly create a pipeline, and you can also implement cross-project and cross-blue shield platform pipeline import.",

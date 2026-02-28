@@ -258,7 +258,7 @@
                             </div>
                         </section>
                     </template>
-    
+
                     <template v-if="curInstance?.triggerConfigs?.length">
                         <section class="params-content-item">
                             <header
@@ -273,9 +273,6 @@
                                 />
         
                                 {{ $t('template.triggers') }}
-                                <span class="trigger-tips">
-                                    {{ $t('template.triggersUpdateTips') }}
-                                </span>
                             </header>
                             <div
                                 v-if="activeName.has(4)"
@@ -291,12 +288,15 @@
                                     check-step-id
                                     v-bind="trigger"
                                     config-type="trigger"
+                                    :is-no-step-id="trigger.isNoStepId || !trigger.stepId"
                                     :handle-follow-template="(key) => handleFollowTemplate(key, trigger.stepId)"
                                 >
                                     <template slot="content">
                                         <render-trigger
                                             :trigger="trigger"
                                             :index="index"
+                                            :is-no-step-id="trigger.isNoStepId || !trigger.stepId"
+                                            :is-disabled="trigger.isDelete"
                                             :handle-change-trigger="handleChangeTrigger"
                                         />
                                     </template>
@@ -409,7 +409,7 @@
                         ...curTemplateDetail.value.buildNo,
                         isRequiredParam: curTemplateDetail.value.buildNo.required && curTemplateDetail.value.buildNo.asInstanceInput
                     } : undefined,
-                    triggerConfigs: curTemplateDetail.value.triggerConfigs ?? [],
+                    triggerConfigs: curTemplateDetail.value.triggerConfigs,
                     resetBuildNo: false,
                     buildNoChanged: false
                 }
@@ -732,6 +732,7 @@
         const instanceTriggerMap = createTriggerMap(instanceTriggerConfigs)
         const templateTriggerMap = createTriggerMap(templateTriggerConfigs)
 
+        // 处理有 stepId 的触发器
         const result = templateTriggerConfigs?.filter(i => !!i.stepId)?.reduce((acc, item) => {
             if (!instanceTriggerMap.has(item.stepId)) {
                 acc.push({ ...item, isNew: true })
@@ -746,6 +747,12 @@
             if (!templateTriggerMap.has(item.stepId)) {
                 result.push({ ...item, isDelete: true })
             }
+        })
+
+        // 收集没有 stepId 的触发器（展示但禁用）
+        const noStepIdTriggers = templateTriggerConfigs?.filter(i => !i.stepId) || []
+        noStepIdTriggers.forEach(item => {
+            result.push({ ...item, isNoStepId: true })
         })
 
         return result

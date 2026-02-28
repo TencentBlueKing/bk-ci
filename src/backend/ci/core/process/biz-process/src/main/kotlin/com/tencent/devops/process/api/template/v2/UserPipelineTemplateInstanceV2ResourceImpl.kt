@@ -112,7 +112,7 @@ class UserPipelineTemplateInstanceV2ResourceImpl(
         pageSize: Int
     ): Result<SQLPage<PipelineTemplateRelatedResp>> {
         return Result(
-            instanceFacadeService.list(
+            instanceFacadeService.listTemplateInstances(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
