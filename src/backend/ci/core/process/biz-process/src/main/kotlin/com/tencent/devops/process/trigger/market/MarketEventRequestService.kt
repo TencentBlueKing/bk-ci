@@ -70,16 +70,7 @@ class MarketEventRequestService constructor(
                         AUTH_HEADER_USER_ID to userId,
                         AUTH_HEADER_ENV_AGENT_HASH_ID to env.agentHashId
                     ),
-                    body = event.body.let {
-                        if (it.isNotBlank()) {
-                            JsonUtil.to(
-                                it,
-                                object : TypeReference<Map<String, String>>() {}
-                            )
-                        } else {
-                            mapOf()
-                        }
-                    },
+                    body = event.body ?: mapOf(),
                     queryParams = mapOf()
                 )
                 val triggerEvent = PipelineTriggerEvent(

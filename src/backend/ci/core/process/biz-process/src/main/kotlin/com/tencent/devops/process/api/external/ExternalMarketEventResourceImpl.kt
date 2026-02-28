@@ -20,7 +20,7 @@ class ExternalMarketEventResourceImpl @Autowired constructor(
         cdsIp: String,
         eventType: String,
         eventCode: String,
-        body: String
+        body: Map<String, String>?
     ): Result<Boolean> {
         simpleDispatcher.dispatch(
             CdsWebhookRequestEvent(

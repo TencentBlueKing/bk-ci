@@ -21,7 +21,7 @@ class ApigwMarketEventResourceV4Impl @Autowired constructor(
         cdsIp: String,
         eventType: String,
         eventCode: String,
-        body: String
+        body: Map<String, String>?
     ): Result<Boolean> {
         logger.info(
             "OPENAPI_MARKET_EVENT_V4|$userId|remote dev webhook|$projectId||$eventCode|$eventType|" +

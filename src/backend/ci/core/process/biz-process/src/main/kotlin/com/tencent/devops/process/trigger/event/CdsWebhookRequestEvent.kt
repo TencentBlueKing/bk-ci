@@ -20,5 +20,5 @@ data class CdsWebhookRequestEvent(
     @get:Schema(description = "事件类型")
     val eventType: String,
     @get:Schema(description = "请求体")
-    val body: String
+    val body: Map<String, String>? = null
 ) : IEvent()

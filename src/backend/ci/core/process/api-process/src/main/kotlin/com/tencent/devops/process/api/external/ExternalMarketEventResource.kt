@@ -47,7 +47,7 @@ interface ExternalMarketEventResource {
         @Parameter(description = "事件编码")
         @PathParam("eventCode")
         eventCode: String,
-        body: String
+        body: Map<String, String>? = null
     ): Result<Boolean>
 
     @Operation(summary = "通用webhook事件推送")
