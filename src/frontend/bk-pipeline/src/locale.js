@@ -115,8 +115,15 @@ export function t (key, ...args) {
         if (result && typeof result === "object" && k in result) {
             result = result[k]
         } else {
-            return key // 如果找不到，返回原始 key
+            return key
         }
+    }
+    if (typeof result === "string" && args.length > 0) {
+        const params = Array.isArray(args[0]) ? args[0] : args
+        result = result.replace(/\{(\d+)\}/g, (_, index) => {
+            const i = Number(index)
+            return i < params.length ? params[i] : _
+        })
     }
     return result || key
 }

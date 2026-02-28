@@ -30,5 +30,5 @@ export function useFlowInfo() {
     },
   )
 
-  return { flowInfo, flowVersionList, releasedVersionList, loading, reset }
+  return { flowInfo, flowVersionList, releasedVersionList, loading, reset, refreshFlowInfo: store.getFlowInfo }
 }

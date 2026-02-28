@@ -128,7 +128,15 @@
             :disable-finally="disableFinally"
             :edit-stage="editStage"
           ></insert-stage-menu>
+          <append-menu
+            v-if="reactiveData.isCreativeStream"
+            :stage-index="stageIndex"
+            @append-job="handleAppendJob"
+            class="parallel-add"
+            :style="`position: absolute; top: ${cruveHeight}px`"
+          />
           <div
+            v-else
             @click.stop="editStage(true)"
             class="insert-tip parallel-add"
             :style="`top: ${cruveHeight}px`"

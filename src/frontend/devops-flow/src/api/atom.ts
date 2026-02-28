@@ -3,8 +3,8 @@ import { get, post } from '@/utils/http'
 const STORE_API_URL_PREFIX = '/store/api'
 
 export enum JobType {
-  AGENT = 'AGENT',
-  AGENT_LESS = 'AGENT_LESS',
+  CREATIVE_STREAM = 'CREATIVE_STREAM',
+  CLOUD_TASK = 'CLOUD_TASK',
 }
 
 export enum JobCategory {
