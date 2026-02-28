@@ -129,6 +129,24 @@ class ClassifyDao {
         }
     }
 
+    /**
+     * 批量根据分类 ID 查询 CLASSIFY_CODE，用于一次查询替代多次 getClassify。
+     *
+     * @param ids 分类 ID 列表，空列表返回空 Map
+     * @return Map: 分类ID → CLASSIFY_CODE
+     */
+    fun getClassifyCodesByIds(dslContext: DSLContext, ids: List<String>): Map<String, String> {
+        if (ids.isEmpty()) return emptyMap()
+        val distinctIds = ids.distinct()
+        with(TClassify.T_CLASSIFY) {
+            return dslContext.select(ID, CLASSIFY_CODE)
+                .from(this)
+                .where(ID.`in`(distinctIds))
+                .fetch()
+                .associate { it[ID] to (it[CLASSIFY_CODE] ?: "") }
+        }
+    }
+
     fun getClassifyByCode(
         dslContext: DSLContext,
         classifyCode: String,

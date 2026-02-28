@@ -148,7 +148,7 @@ abstract class AtomBaseDao {
 
     /**
      * 根据 classifyCode 查询 CLASSIFY_ID 的公共方法
-     *
+     * 
      * @param dslContext DSL上下文
      * @param classifyCode 分类代码
      * @param serviceScope 服务范围（可选），用于过滤分类
@@ -172,10 +172,10 @@ abstract class AtomBaseDao {
 
     /**
      * 根据服务范围构建分类ID字段表达式
-     *
+     * 
      * 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段（性能最好，有索引）
      * 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
-     *
+     * 
      * @param ta TAtom 表
      * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则默认使用 PIPELINE
      * @return 分类ID字段表达式（Field<String>）
@@ -185,7 +185,7 @@ abstract class AtomBaseDao {
         serviceScope: ServiceScopeEnum?
     ): Field<String> {
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
-
+        
         return if (normalizedScope == ServiceScopeEnum.PIPELINE.name) {
             // PIPELINE 使用 CLASSIFY_ID 字段（性能最好，有索引）
             ta.CLASSIFY_ID
@@ -204,11 +204,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建分类查询条件（支持多服务范围）
-     *
+     * 
      * 根据 serviceScope 参数动态构建分类过滤条件：
      * - 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段查询
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中查询
-     *
+     * 
      * @param ta TAtom 表
      * @param classifyId 分类ID
      * @param serviceScope 服务范围
@@ -242,11 +242,11 @@ abstract class AtomBaseDao {
 
     /**
      * 构建 T_ATOM 和 T_CLASSIFY 的关联条件（支持 CLASSIFY_ID_MAP）
-     *
+     * 
      * 根据 serviceScope 参数动态构建关联条件：
      * - 如果 serviceScope 是 PIPELINE，优先使用 CLASSIFY_ID 字段关联
      * - 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP 中提取对应的分类ID进行关联
-     *
+     * 
      * @param ta TAtom 表
      * @param tc TClassify 表
      * @param serviceScope 服务范围，如果为null则默认使用 PIPELINE
@@ -262,10 +262,14 @@ abstract class AtomBaseDao {
     }
 
     /**
-     * 构建 JOB_TYPE 查询条件（支持多服务范围）
+     * 构建 JOB_TYPE 查询条件（支持多服务范围、一对多 jobType）。
      *
-     * JOB_TYPE 可能为：单字符串（老数据，表示 PIPELINE 的 job 类型）或 JSON 如 {"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}。
-     * 创作流等非 PIPELINE 下支持 CREATIVE_STREAM、CLOUD_TASK 等值，需按当前 serviceScope 从 JSON 中取对应 key 再比较。
+     * JOB_TYPE 字段可能为以下三种格式：
+     * 1. 纯字符串 "AGENT"（老数据，隐含 PIPELINE）
+     * 2. V1 JSON：{"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}
+     * 3. V2 JSON：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
+     *
+     * 使用 JSON_CONTAINS 统一处理 V1/V2 两种 JSON 格式（对标量和数组均有效）。
      *
      * @param ta TAtom 表
      * @param jobType 要筛选的 Job 类型名称（如 AGENT、AGENT_LESS、CREATIVE_STREAM、CLOUD_TASK）
@@ -283,28 +287,16 @@ abstract class AtomBaseDao {
         val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
         val isPipeline = normalizedScope == ServiceScopeEnum.PIPELINE.name
 
+        // JSON_CONTAINS(JOB_TYPE, '"AGENT"', '$.PIPELINE') 同时兼容 V1(标量) 和 V2(数组)
         val isJsonValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE).eq(true)
-        val jobTypeMatchCondition = if (isPipeline) {
-            // PIPELINE：兼容老数据（整列存 "AGENT"/"AGENT_LESS" 字符串）与 JSON 格式 $.PIPELINE
-            // 老数据是纯字符串，JSON_EXTRACT 会报错，必须用 JSON_VALID 先保护
-            val jsonExtractPipeline = DSL.field(
-                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
-                String::class.java,
-                ta.JOB_TYPE,
-                DSL.inline("$.$normalizedScope")
-            )
-            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonExtractPipeline.eq(jobType)))
-        } else {
-            // 非 PIPELINE（如 CREATIVE_STREAM）：兼容纯字符串（JOB_TYPE 直接存 "CREATIVE_STREAM"）
-            // 与 JSON 格式（JOB_TYPE 存 {"CREATIVE_STREAM":"CREATIVE_STREAM","PIPELINE":"AGENT"} 等）
-            val jsonExtractScope = DSL.field(
-                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
-                String::class.java,
-                ta.JOB_TYPE,
-                DSL.inline("$.$normalizedScope")
-            )
-            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonExtractScope.eq(jobType)))
-        }
+        val jsonContains = DSL.field(
+            "JSON_CONTAINS({0}, {1}, {2})",
+            Boolean::class.java,
+            ta.JOB_TYPE,
+            DSL.inline("\"$jobType\""),
+            DSL.inline("$.$normalizedScope")
+        ).eq(true)
+        val jobTypeMatchCondition = ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonContains))
 
         if (isPipeline && jobType == JobTypeEnum.AGENT.name) {
             return when (queryFitAgentBuildLessAtomFlag) {

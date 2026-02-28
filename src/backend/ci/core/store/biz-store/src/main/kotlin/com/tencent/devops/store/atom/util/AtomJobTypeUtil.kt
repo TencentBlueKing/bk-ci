@@ -30,173 +30,164 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
-import org.slf4j.LoggerFactory
 
 /**
- * 插件Job类型工具类
- * 用于处理多服务范围下的Job类型映射
- * 
- * T_ATOM 表的 JOB_TYPE 字段目前只针对流水线服务范围，
- * 现在需要支持不同服务范围对应不同的Job类型。
- * 
- * 解决方案：
- * - JOB_TYPE 字段保留（向后兼容，默认为 PIPELINE 的Job类型）
- * - 使用 serviceScopeConfigs 构建 jobTypeMap，存储在 JOB_TYPE 字段中（JSON格式）
- * - 格式：{"PIPELINE":"AGENT","CREATIVE_STREAM":"AGENT_LESS"}
- * - 如果只有一个服务范围，直接存储字符串（兼容老数据）
+ * 插件 Job 类型工具类 —— 处理 T_ATOM.JOB_TYPE 字段的读写。
+ *
+ * 存储格式演进：
+ * 1. 老数据：纯字符串，如 "AGENT"（隐含 PIPELINE 范围）
+ * 2. V1 JSON：scope → 单个 jobType，如 {"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}
+ * 3. V2 JSON：scope → jobType 列表，如 {"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
+ *
+ * 读取时三种格式均兼容；写入时统一使用 V2 格式（仅 PIPELINE + 单 jobType 退化为纯字符串以兼容老代码路径）。
  */
 object AtomJobTypeUtil {
-    
-    private val logger = LoggerFactory.getLogger(AtomJobTypeUtil::class.java)
-    
+
+    private val PIPELINE = ServiceScopeEnum.PIPELINE.name
+
+    // ==================== 写入路径 ====================
+
     /**
-     * 从 serviceScopeConfigs 构建 jobTypeMap JSON 字符串
-     * 
-     * @param serviceScopeConfigs 服务范围配置列表
-     * @param defaultJobType 默认Job类型（JOB_TYPE字段值，用于兼容老数据）
-     * @return jobTypeMap JSON 字符串，如果只有一个服务范围且是PIPELINE，返回字符串；否则返回JSON对象
+     * 从 serviceScopeConfigs 构建 JOB_TYPE 字段值。
+     *
+     * - 仅 PIPELINE + 单 jobType → 返回纯字符串（向后兼容）
+     * - 其他情况 → 返回 V2 JSON（scope → list<jobType>）
      */
     fun buildJobTypeMap(
         serviceScopeConfigs: List<ServiceScopeConfig>?,
         defaultJobType: String? = null
     ): String? {
-        if (serviceScopeConfigs.isNullOrEmpty()) {
-            // 如果没有配置，返回默认值（兼容老数据）
-            return defaultJobType
+        if (serviceScopeConfigs.isNullOrEmpty()) return defaultJobType
+
+        val jobTypeMap = mutableMapOf<String, MutableSet<String>>()
+        for (config in serviceScopeConfigs) {
+            val types = config.getEffectiveJobTypes()
+            if (types.isEmpty()) continue
+            val scope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
+            val set = jobTypeMap.getOrPut(scope) { linkedSetOf() }
+            types.forEach { set.add(it.name) }
         }
-        
-        // 构建 jobTypeMap
-        val jobTypeMap = mutableMapOf<String, String>()
-        serviceScopeConfigs.forEach { config ->
-            config.jobType?.let { jobType ->
-                val normalizedScope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
-                jobTypeMap[normalizedScope] = jobType.name
-            }
+
+        if (jobTypeMap.isEmpty()) return defaultJobType
+
+        // 向后兼容：仅 PIPELINE 且只有一个 jobType → 纯字符串
+        val pipelineTypes = jobTypeMap[PIPELINE]
+        if (jobTypeMap.size == 1 && pipelineTypes != null && pipelineTypes.size == 1) {
+            return pipelineTypes.first()
         }
-        
-        // 如果只有一个服务范围且是PIPELINE，返回字符串（兼容老数据）
-        val pipelineScope = ServiceScopeEnum.PIPELINE.name
-        if (jobTypeMap.size == 1 && jobTypeMap.containsKey(pipelineScope)) {
-            return jobTypeMap[pipelineScope]
-        }
-        
-        // 多个服务范围，返回JSON格式
-        return JsonUtil.toJson(jobTypeMap, formatted = false)
+
+        return JsonUtil.toJson(jobTypeMap.mapValues { it.value.toList() }, formatted = false)
     }
-    
+
+    // ==================== 读取路径 ====================
+
     /**
-     * 获取指定服务范围的Job类型
-     * 
-     * @param jobTypeValue JOB_TYPE字段值（可能是字符串或JSON对象）
-     * @param defaultJobType 默认Job类型（用于兼容老数据）
-     * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则返回默认Job类型
-     * @return Job类型名称，如果未找到则返回默认值（PIPELINE）或null
+     * 获取指定 scope 下的第一个 jobType（向后兼容返回单值的场景）。
      */
-    @Suppress("UNCHECKED_CAST")
     fun getJobType(
         jobTypeValue: String?,
         defaultJobType: String? = null,
         serviceScope: String? = null
     ): String? {
-        // 如果没有指定服务范围，返回默认Job类型（兼容老逻辑）
-        if (serviceScope.isNullOrBlank()) {
-            return defaultJobType ?: jobTypeValue
-        }
-        
-        // 标准化服务范围（统一转换为大写）
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope) ?: serviceScope
-        
-        // 如果 JOB_TYPE 为空，使用默认Job类型（兼容老数据）
-        if (jobTypeValue.isNullOrBlank()) {
-            // 如果是 PIPELINE，返回默认Job类型；否则返回 null
-            val pipelineScope = ServiceScopeEnum.PIPELINE.name
-            return if (normalizedScope == pipelineScope) defaultJobType else null
-        }
-        
-        // 尝试解析为JSON对象（多服务范围）
-        val pipelineScope = ServiceScopeEnum.PIPELINE.name
-        try {
-            val jobTypeMap = JsonUtil.toOrNull(jobTypeValue, Map::class.java) as? Map<String, String>
-            if (jobTypeMap != null) {
-                // 是JSON对象，从映射中获取
-                val jobType = jobTypeMap[normalizedScope]
-                if (!jobType.isNullOrBlank()) {
-                    return jobType
-                }
-                // 如果未找到，且是 PIPELINE，返回默认Job类型
-                return if (normalizedScope == pipelineScope) defaultJobType else null
-            }
-        } catch (e: Exception) {
-            // 不是JSON对象，可能是字符串（老数据格式）
-            logger.debug("JOB_TYPE is not JSON format, treating as string: $jobTypeValue")
-        }
-        
-        // 是字符串格式（老数据），只有PIPELINE服务范围才返回
-        if (normalizedScope == pipelineScope) {
-            return jobTypeValue
-        }
-        
-        // 其他服务范围，返回null
-        return null
+        return getJobTypes(jobTypeValue, defaultJobType, serviceScope).firstOrNull()
     }
-    
+
     /**
-     * 获取所有服务范围的Job类型映射
-     * 
-     * @param jobTypeValue JOB_TYPE字段值（可能是字符串或JSON对象）
-     * @param defaultJobType 默认Job类型（用于兼容老数据）
-     * @return 所有服务范围的Job类型映射，key为大写格式的服务范围，value为Job类型名称
+     * 获取指定 scope 下支持的所有 jobType。
+     */
+    private fun getJobTypes(
+        jobTypeValue: String?,
+        defaultJobType: String? = null,
+        serviceScope: String? = null
+    ): List<String> {
+        if (serviceScope.isNullOrBlank()) {
+            return listOfNotNull(defaultJobType ?: jobTypeValue)
+        }
+        val scope = ServiceScopeUtil.normalize(serviceScope) ?: serviceScope
+        if (jobTypeValue.isNullOrBlank()) {
+            return if (scope == PIPELINE) listOfNotNull(defaultJobType) else emptyList()
+        }
+        val parsed = parseForScope(jobTypeValue, scope)
+        if (parsed.isNotEmpty()) return parsed
+        // 未从 JSON 解析到 → 如果是 PIPELINE，回退到 defaultJobType
+        return if (scope == PIPELINE) listOfNotNull(defaultJobType) else emptyList()
+    }
+
+    /**
+     * 获取所有 scope → jobType 列表的映射（用于构建 ServiceScopeConfig）。
      */
     fun getAllJobTypes(
         jobTypeValue: String?,
         defaultJobType: String? = null
-    ): Map<String, String> {
-        val result = mutableMapOf<String, String>()
-        val pipelineScope = ServiceScopeEnum.PIPELINE.name
-
-        // 设置默认值
+    ): Map<String, List<String>> {
+        val result = mutableMapOf<String, MutableList<String>>()
         defaultJobType?.takeIf { it.isNotBlank() }?.let {
-            result[pipelineScope] = it
+            result[PIPELINE] = mutableListOf(it)
         }
+        if (jobTypeValue.isNullOrBlank()) return result
 
-        return when {
-            jobTypeValue.isNullOrBlank() -> result
-            else -> parseJobTypeValue(jobTypeValue, result)
-        }
-    }
-
-    private fun parseJobTypeValue(
-        jobTypeValue: String,
-        result: MutableMap<String, String>
-    ): Map<String, String> {
-        return try {
-            val parsedMap = parseJobTypeJsonOrString(jobTypeValue)
-            result.apply {
-                if (parsedMap.isNotEmpty()) {
-                    putAll(parsedMap)
-                } else {
-                    // 解析为空时，将原始值作为 PIPELINE
-                    putIfValueNotBlank(ServiceScopeEnum.PIPELINE.name, jobTypeValue)
-                }
+        val parsed = parseAll(jobTypeValue)
+        if (parsed.isEmpty()) {
+            // 纯字符串 → 视为 PIPELINE
+            result.getOrPut(PIPELINE) { mutableListOf() }.let { list ->
+                if (jobTypeValue !in list) list.add(jobTypeValue)
             }
+        } else {
+            for ((scope, types) in parsed) {
+                val list = result.getOrPut(scope) { mutableListOf() }
+                types.forEach { if (it !in list) list.add(it) }
+            }
+        }
+        return result
+    }
+
+    // ==================== 内部解析 ====================
+
+    /**
+     * 解析 JOB_TYPE 值，返回指定 scope 下的 jobType 列表。
+     * 兼容 V1 (scope→string) 和 V2 (scope→list) 两种 JSON 格式，以及纯字符串。
+     */
+    private fun parseForScope(jobTypeValue: String, scope: String): List<String> {
+        val raw: Any?
+        try {
+            raw = JsonUtil.toOrNull(jobTypeValue, Map::class.java)
         } catch (e: Exception) {
-            logger.warn("Failed to parse jobTypeValue: $jobTypeValue", e)
-            result // 解析失败，返回已有结果（可能包含默认值）
+            // 不是有效 JSON → 纯字符串格式
+            return if (scope == PIPELINE) listOf(jobTypeValue) else emptyList()
         }
+        if (raw == null) {
+            return if (scope == PIPELINE) listOf(jobTypeValue) else emptyList()
+        }
+        @Suppress("UNCHECKED_CAST")
+        val map = raw as Map<String, Any>
+        val normalizedKey = map.keys.firstOrNull { (ServiceScopeUtil.normalize(it) ?: it) == scope }
+            ?: return emptyList()
+        return toStringList(map[normalizedKey])
     }
 
+    /**
+     * 解析 JOB_TYPE 值，返回全量 scope → jobType 列表映射。
+     */
     @Suppress("UNCHECKED_CAST")
-    private fun parseJobTypeJsonOrString(value: String): Map<String, String> {
-        val rawMap = JsonUtil.toOrNull(value, Map::class.java) as? Map<String, String>
-            ?: return emptyMap()
-        return rawMap
-            .filterValues { it.isNotBlank() }
-            .mapKeys { (scope, _) -> ServiceScopeUtil.normalize(scope) ?: scope }
+    private fun parseAll(jobTypeValue: String): Map<String, List<String>> {
+        val raw: Map<String, Any>?
+        try {
+            raw = JsonUtil.toOrNull(jobTypeValue, Map::class.java) as? Map<String, Any>
+        } catch (e: Exception) {
+            return emptyMap()
+        }
+        if (raw == null) return emptyMap()
+        return raw.mapNotNull { (key, value) ->
+            val scope = ServiceScopeUtil.normalize(key) ?: key
+            val types = toStringList(value)
+            if (types.isEmpty()) null else scope to types
+        }.toMap()
     }
 
-    private fun MutableMap<String, String>.putIfValueNotBlank(key: String, value: String?) {
-        value?.takeIf { it.isNotBlank() }?.let {
-            this[key] = it
-        }
+    /** 将 V1(String) 或 V2(List) 格式的值统一转为 List<String>。 */
+    private fun toStringList(value: Any?): List<String> = when (value) {
+        is String -> if (value.isNotBlank()) listOf(value) else emptyList()
+        is List<*> -> value.mapNotNull { (it as? String)?.takeIf(String::isNotBlank) }
+        else -> emptyList()
     }
 }

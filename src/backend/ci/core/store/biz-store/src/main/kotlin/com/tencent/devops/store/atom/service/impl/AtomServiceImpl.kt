@@ -364,10 +364,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         watch.stop()
 
         logger.info("serviceGetPipelineAtoms|$userId|$projectCode" +
-                "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
-                "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
-                "|totalCost=${watch.totalTimeMillis}ms" +
-                "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
+            "|atoms=${pipelineAtoms?.size}|total=$totalSize" +
+            "|${watch.taskInfo.joinToString("|") { "${it.taskName}=${it.timeMillis}ms" }}" +
+            "|totalCost=${watch.totalTimeMillis}ms" +
+            "|poolActive=${auxiliaryExecutor.activeCount}/${auxiliaryExecutor.poolSize}")
 
         val effectivePage = page ?: 1
         val effectivePageSize = pageSize ?: dataList.size.coerceAtLeast(1)
@@ -604,7 +604,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRunInfos = codeVersions.map { reqItem ->
             val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, reqItem.atomCode)
             val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, reqItem.version)
-
+            
             when {
                 atomRunInfoJson.isNullOrBlank() -> {
                     // 缓存不存在，重新设置缓存
@@ -627,7 +627,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 }
             }
         }
-
+        
         return Result(atomRunInfos)
     }
 
@@ -721,7 +721,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         pipelineAtomRecord.classifyId // 没有 CLASSIFY_ID_MAP 时使用默认值
                     }
                 } ?: pipelineAtomRecord.classifyId
-
+                
                 val atomClassify = classifyService.getClassify(classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
                 // 获取 labelList（根据传入的 serviceScope 返回对应的值）
@@ -729,7 +729,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 // 获取 jobType（根据传入的 serviceScope 返回对应的值）
                 val jobType = AtomJobTypeUtil.getJobType(pipelineAtomRecord.jobType, null, targetServiceScope.name)
-
+                
                 // 构建 serviceScopeConfigs（返回所有服务范围的配置信息）
                 val serviceScopeConfigs = buildPipelineAtomServiceScopeConfigs(
                     atomId = pipelineAtomRecord.id,
@@ -1485,7 +1485,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
-
+    
     /**
      * 构建 PipelineAtom 的 ServiceScopeConfig 数组（包含所有服务范围的配置信息）
      *

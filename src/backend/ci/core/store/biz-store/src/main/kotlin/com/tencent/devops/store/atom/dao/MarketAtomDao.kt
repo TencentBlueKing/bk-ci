@@ -777,6 +777,7 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.ATOM_CODE,
             tAtom.NAME,
             tAtom.LOGO_URL,
+            tAtom.CLASSIFY_ID,
             tClassify.CLASSIFY_CODE,
             tClassify.CLASSIFY_NAME,
             tAtom.CATEGROY,

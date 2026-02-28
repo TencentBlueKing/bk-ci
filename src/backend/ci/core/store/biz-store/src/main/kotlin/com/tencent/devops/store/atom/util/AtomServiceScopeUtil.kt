@@ -117,31 +117,29 @@ object AtomServiceScopeUtil {
         return configs.ifEmpty { null }
     }
 
-    private fun resolveJobType(scope: String, allJobTypes: Map<String, String>): JobTypeEnum {
-        val jobTypeName = allJobTypes[scope] ?: allJobTypes[ServiceScopeEnum.PIPELINE.name]
-        if (jobTypeName.isNullOrEmpty()) return JobTypeEnum.AGENT
-        return try {
-            JobTypeEnum.valueOf(jobTypeName)
-        } catch (e: Exception) {
-            JobTypeEnum.AGENT
+    private fun resolveJobTypes(scope: String, allJobTypes: Map<String, List<String>>): List<JobTypeEnum> {
+        val names = allJobTypes[scope] ?: allJobTypes[ServiceScopeEnum.PIPELINE.name] ?: return listOf(JobTypeEnum.AGENT)
+        val result = names.mapNotNull { name ->
+            try { JobTypeEnum.valueOf(name) } catch (_: Exception) { null }
         }
+        return result.ifEmpty { listOf(JobTypeEnum.AGENT) }
     }
 
     private fun buildSingleServiceScopeConfig(
         scope: String,
-        allJobTypes: Map<String, String>,
+        allJobTypes: Map<String, List<String>>,
         getClassifyCode: (ServiceScopeEnum) -> String?,
         getLabelIdList: (ServiceScopeEnum) -> List<String>?
     ): ServiceScopeConfig? {
         return try {
             val serviceScopeEnum = ServiceScopeEnum.valueOf(scope)
             val classifyCode = getClassifyCode(serviceScopeEnum) ?: return null
-            val jobType = resolveJobType(scope, allJobTypes)
+            val jobTypes = resolveJobTypes(scope, allJobTypes)
             val labelIdList = getLabelIdList(serviceScopeEnum)
             ServiceScopeConfig(
                 serviceScope = serviceScopeEnum,
                 classifyCode = classifyCode,
-                jobType = jobType,
+                jobTypes = jobTypes,
                 labelIdList = labelIdList
             )
         } catch (e: Exception) {
