@@ -239,6 +239,11 @@
                 return !!this.sliderEditItem.varGroupName
             }
         },
+        watch: {
+            showManageVarGroupSlider (isShow) {
+                this.$emit('var-group-slider-change', isShow)
+            }
+        },
         methods: {
             flattenMultipleObjects (objects) {
                 return Object.values(objects).flat()
