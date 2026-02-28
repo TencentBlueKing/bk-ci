@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.pojo.common.version.VersionInfo
@@ -69,7 +70,7 @@ class UserAtomResourceImpl @Autowired constructor(
     override fun listAllPipelineAtoms(
         userId: String,
         serviceScope: ServiceScopeEnum?,
-        jobType: String?,
+        jobType: JobTypeEnum?,
         os: String?,
         projectCode: String,
         category: String?,
@@ -84,7 +85,7 @@ class UserAtomResourceImpl @Autowired constructor(
     ): Result<AtomResp<AtomRespItem>?> {
         val queryParam = AtomQueryParam(
             serviceScope = serviceScope,
-            jobType = jobType,
+            jobType = jobType?.name,
             os = os,
             projectCode = projectCode,
             category = category,
