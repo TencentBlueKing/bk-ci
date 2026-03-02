@@ -453,6 +453,9 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
+    const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101362" // 模板草稿版本编排[{0}]记录不存在
+    const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101363" // 模板草稿版本设置[{0}]不存在
+    const val ERROR_TEMPLATE_MIGRATING = "2101364" // 模板迁移中，不能操作
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
