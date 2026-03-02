@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.api.context.ChannelContext
+
 enum class AuthResourceType(val value: String) {
     BCS_DEV_IMAGE("dev_image"), // bcs服务开发镜像
     BCS_PROD_IMAGE("prod_image"), // bcs服务生产镜像
