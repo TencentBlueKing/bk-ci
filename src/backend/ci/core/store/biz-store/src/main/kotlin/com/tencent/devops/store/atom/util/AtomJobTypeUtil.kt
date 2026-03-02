@@ -27,7 +27,6 @@
 package com.tencent.devops.store.atom.util
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
