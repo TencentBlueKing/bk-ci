@@ -1535,6 +1535,8 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             queueIncrement = 1
         )
+        // 将渠道标识传入事件，确保MQ消费线程中能恢复ChannelContext
+        val channelCodeStr = channelCode.name
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "startBuild",
@@ -1546,8 +1548,9 @@ class PipelineRuntimeService @Autowired constructor(
                 status = startBuildStatus,
                 actionType = actionType,
                 executeCount = executeCount,
-                buildNoType = buildNoType // 该字段是需要遍历Model‘获得，不过在审核阶段为null，不影响功能逻辑。
-            ), // 监控事件
+                buildNoType = buildNoType // 该字段是需要遍历Model'获得，不过在审核阶段为null，不影响功能逻辑。
+            ).apply { this.channelCode = channelCodeStr },
+            // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
                 projectId = projectId,
@@ -1555,7 +1558,8 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 executeCount = executeCount
-            ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
+            ).apply { this.channelCode = channelCodeStr },
+            // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
                 source = "startBuild",
                 projectId = projectId,
@@ -1564,7 +1568,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.RECORD.binary
-            ), // 广播构建排队事件
+            ).apply { this.channelCode = channelCodeStr },
+            // 广播构建排队事件
             PipelineBuildQueueBroadCastEvent(
                 source = "startQueue",
                 projectId = projectId,
@@ -1573,7 +1578,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 actionType = actionType,
                 triggerType = startType.name
-            )
+            ).apply { this.channelCode = channelCodeStr }
         )
     }
 

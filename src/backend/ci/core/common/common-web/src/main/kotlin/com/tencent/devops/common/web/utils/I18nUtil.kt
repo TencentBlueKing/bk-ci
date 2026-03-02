@@ -210,6 +210,7 @@ object I18nUtil {
      * @param params 替换描述信息占位符的参数数组
      * @param defaultMessage 默认信息
      * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
+     * @param channel 可选，渠道标识（与 ChannelCode.name 一致）。为 null 时先取请求渠道再取 ChannelContext，用于异步/MQ 等场景显式传入
      * @return 描述信息
      */
     fun getCodeLanMessage(
@@ -217,7 +218,8 @@ object I18nUtil {
         language: String? = null,
         params: Array<String>? = null,
         defaultMessage: String? = null,
-        checkUrlDecoder: Boolean = false
+        checkUrlDecoder: Boolean = false,
+        channel: String? = null
     ): String {
         // 获取国际化语言信息
         val i18nLanguage = if (language.isNullOrBlank()) {
@@ -226,11 +228,14 @@ object I18nUtil {
         } else {
             language
         }
+        // 渠道：显式传入 > 请求头/属性 > MessageUtil 内使用 ChannelContext（异步/MQ 建议入口处 ChannelContext.withChannel 或此处传入 channel）
+        val effectiveChannel = channel ?: getRequestChannel()
         val i18nMessage = MessageUtil.getMessageByLocale(
             messageCode = messageCode,
             language = i18nLanguage,
             params = params,
-            defaultMessage = defaultMessage
+            defaultMessage = defaultMessage,
+            channel = effectiveChannel
         )
         return if (i18nMessage.isNotBlank() && checkUrlDecoder) {
             URLDecoder.decode(i18nMessage, "UTF-8")
@@ -251,6 +256,7 @@ object I18nUtil {
      * @param messageCode 状态码
      * @param params 替换状态码描述信息占位符的参数数组
      * @param data 数据对象
+     * @param channel 可选，渠道标识（与 ChannelCode.name 一致），异步/MQ 等无请求上下文时可传入
      * @return Result响应结果对象
      */
     fun <T> generateResponseDataObject(
@@ -258,13 +264,15 @@ object I18nUtil {
         params: Array<String>? = null,
         data: T? = null,
         language: String? = null,
-        defaultMessage: String? = null
+        defaultMessage: String? = null,
+        channel: String? = null
     ): Result<T> {
         val message = getCodeLanMessage(
             messageCode = messageCode,
             language = language,
             params = params,
-            defaultMessage = defaultMessage
+            defaultMessage = defaultMessage,
+            channel = channel
         )
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)

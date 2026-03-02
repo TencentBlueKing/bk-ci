@@ -29,7 +29,6 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "插件执行环境信息")
@@ -76,8 +75,8 @@ data class AtomEnv(
     val shaContent: String? = null,
     @get:Schema(title = "插件执行前置命令", required = false)
     val preCmd: String? = null,
-    @get:Schema(title = "Job类型", required = false)
-    val jobType: JobTypeEnum? = null,
+    @get:Schema(title = "Job类型（原始值，可能为纯字符串或 JSON）", required = false)
+    val jobType: String? = null,
     @get:Schema(title = "插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
     @get:Schema(title = "所属插件分类代码", required = false)

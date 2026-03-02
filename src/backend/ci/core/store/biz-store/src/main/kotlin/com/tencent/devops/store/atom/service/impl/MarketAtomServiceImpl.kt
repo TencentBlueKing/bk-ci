@@ -83,7 +83,6 @@ import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.service.MarketAtomEnvService
 import com.tencent.devops.store.atom.service.MarketAtomService
-import com.tencent.devops.store.atom.util.AtomJobTypeUtil
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
 import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
@@ -383,7 +382,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             code = atomCode,
                             version = it[tAtom.VERSION] as String,
                             status = AtomStatusEnum.getAtomStatus((it[tAtom.ATOM_STATUS] as Byte).toInt()),
-                            type = it[tAtom.JOB_TYPE] as String,
+                            type = StoreTypeEnum.ATOM.name,
                             rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                             classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                             category = AtomCategoryEnum.getAtomCategory((it[tAtom.CATEGROY] as Byte).toInt()),
@@ -792,9 +791,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         userId: String,
         serviceScope: ServiceScopeEnum? = null
     ): Result<AtomVersion?> {
-        // 如果传入了 serviceScope，使用该服务范围；否则默认使用 PIPELINE
-        val targetServiceScope = serviceScope ?: ServiceScopeEnum.PIPELINE
-        val record = marketAtomDao.getAtomById(dslContext, atomId, targetServiceScope)
+        val record = marketAtomDao.getAtomById(dslContext, atomId, serviceScope)
         return if (null == record) {
             Result(data = null)
         } else {
@@ -835,11 +832,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 )
             } else classifyName
             
-            // 获取 jobType（根据传入的 serviceScope 返回对应的值）
-            val jobTypeValue = record[tAtom.JOB_TYPE]
-            val jobType = AtomJobTypeUtil.getJobType(jobTypeValue, null, targetServiceScope.name)
-            // 获取 labelList（根据传入的 serviceScope 返回对应的值）
-            val labelList = atomLabelService.getLabelsByAtomId(atomId, targetServiceScope) ?: emptyList()
+            val jobType = record[tAtom.JOB_TYPE]
+            val labelList = atomLabelService.getLabelsByAtomId(atomId, serviceScope) ?: emptyList()
             // serviceScopeConfigs 返回所有 scope 的配置
             val serviceScopeConfigs = buildServiceScopeConfigs(atomId, record, tAtom)
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {

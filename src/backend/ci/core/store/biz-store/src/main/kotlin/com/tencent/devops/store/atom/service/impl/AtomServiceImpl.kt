@@ -66,7 +66,6 @@ import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.atom.util.AtomJobTypeUtil
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
@@ -665,8 +664,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         serviceScope: ServiceScopeEnum?
     ): Result<PipelineAtom?> {
         logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag,$serviceScope")
-        // 如果传入了 serviceScope，使用该服务范围；否则默认使用 PIPELINE
-        val targetServiceScope = serviceScope ?: ServiceScopeEnum.PIPELINE
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -700,35 +697,28 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             if (pipelineAtomRecord == null) {
                 null
             } else {
-                // 单个字段（classifyCode、classifyName、labelList、jobType）根据传入的 serviceScope 返回对应的值
-                // 如果没有传入 serviceScope，则使用 PIPELINE 服务范围的值
-                // 需要根据 targetServiceScope 获取对应的分类ID
-                val classifyId = if (targetServiceScope == ServiceScopeEnum.PIPELINE) {
-                    // PIPELINE 服务范围直接使用 classifyId
+                val classifyId = if (serviceScope == null || serviceScope == ServiceScopeEnum.PIPELINE) {
                     pipelineAtomRecord.classifyId
                 } else {
-                    // 其他服务范围需要从 CLASSIFY_ID_MAP 中获取
                     val classifyIdMapJson = pipelineAtomRecord.classifyIdMap
                     if (!classifyIdMapJson.isNullOrEmpty()) {
                         try {
                             val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java)
-                            classifyIdMap?.get(targetServiceScope.name) as? String
+                            classifyIdMap?.get(serviceScope.name) as? String
                         } catch (e: Exception) {
                             logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
-                            pipelineAtomRecord.classifyId // 解析失败时使用默认值
+                            pipelineAtomRecord.classifyId
                         }
                     } else {
-                        pipelineAtomRecord.classifyId // 没有 CLASSIFY_ID_MAP 时使用默认值
+                        pipelineAtomRecord.classifyId
                     }
                 } ?: pipelineAtomRecord.classifyId
                 
                 val atomClassify = classifyService.getClassify(classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
-                // 获取 labelList（根据传入的 serviceScope 返回对应的值）
-                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id, targetServiceScope)
+                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id, serviceScope)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
-                // 获取 jobType（根据传入的 serviceScope 返回对应的值）
-                val jobType = AtomJobTypeUtil.getJobType(pipelineAtomRecord.jobType, null, targetServiceScope.name)
+                val jobType = pipelineAtomRecord.jobType
                 
                 // 构建 serviceScopeConfigs（返回所有服务范围的配置信息）
                 val serviceScopeConfigs = buildPipelineAtomServiceScopeConfigs(
@@ -1017,7 +1007,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 marketAtomCommonService.updateAtomRunInfoCache(
                     atomId = id,
                     atomName = atomUpdateRequest.name,
-                    jobType = atomUpdateRequest.jobType,
                     buildLessRunFlag = atomUpdateRequest.buildLessRunFlag,
                     props = atomUpdateRequest.props,
                     serviceScope = atomUpdateRequest.serviceScope

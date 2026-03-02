@@ -481,7 +481,7 @@ class BuildEndControl @Autowired constructor(
                     actionType = ActionType.START,
                     executeCount = nextBuild.executeCount,
                     buildNoType = buildNoTypeStr?.let { BuildNoType.valueOf(it) }
-                )
+                ).apply { this.channelCode = this@startNextBuild.channelCode }
             )
         }
     }

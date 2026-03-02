@@ -388,7 +388,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             target = atomEnvInfoRecord?.target,
             shaContent = atomEnvInfoRecord?.shaContent,
             preCmd = atomEnvInfoRecord?.preCmd,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = jobType,
             atomPostInfo = atomPostInfo,
             classifyCode = classifyRecord?.classifyCode,
             classifyName = classifyRecord?.classifyName,

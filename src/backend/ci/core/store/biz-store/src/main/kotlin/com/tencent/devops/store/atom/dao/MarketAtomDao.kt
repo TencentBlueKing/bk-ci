@@ -275,7 +275,7 @@ class MarketAtomDao : AtomBaseDao() {
                     tLabel.LABEL_CODE.`in`(labelCodeList).and(
                         tLabel.TYPE.eq(storeType)
                     ).and(
-                        tLabel.SERVICE_SCOPE.eq(serviceScope?.name ?: ServiceScopeEnum.PIPELINE.name)
+                        serviceScope?.let { tLabel.SERVICE_SCOPE.eq(it.name) } ?: DSL.noCondition()
                     )
                 )
                 .fetch().map { it[tLabel.ID] as String }
@@ -598,7 +598,7 @@ class MarketAtomDao : AtomBaseDao() {
         
         // 从 serviceScopeConfigs 构建 jobTypeMap 和 SERVICE_SCOPE
         val serviceScopeConfigs: List<ServiceScopeConfig> = atomRequest.toServiceScopeConfigs()
-        val currentJobType = atomRecord.jobType  // 使用旧记录的 jobType 作为默认值
+        val currentJobType = atomRecord.jobType  // 使用旧记录的 JOB_TYPE 原始值作为默认（可为纯字符串或 JSON，保留多 scope）
         val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, currentJobType)
         val serviceScopeJson = JsonUtil.toJson(
             serviceScopeConfigs.map { it.serviceScope.name },
@@ -770,9 +770,6 @@ class MarketAtomDao : AtomBaseDao() {
         val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
         val tClassify = TClassify.T_CLASSIFY
         
-        // 当 serviceScope 为 null 时，默认使用 PIPELINE 服务范围
-        val targetServiceScope = serviceScope ?: ServiceScopeEnum.PIPELINE
-
         return dslContext.select(
             tAtom.ATOM_CODE,
             tAtom.NAME,
@@ -810,7 +807,7 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(tAtomVersionLog)
             .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
             .leftJoin(tClassify)
-            .on(buildClassifyJoinCondition(tAtom, tClassify, targetServiceScope))
+            .on(buildClassifyJoinCondition(tAtom, tClassify, serviceScope))
             .where(tAtom.ID.eq(atomId))
             .limit(1)
             .fetchOne()

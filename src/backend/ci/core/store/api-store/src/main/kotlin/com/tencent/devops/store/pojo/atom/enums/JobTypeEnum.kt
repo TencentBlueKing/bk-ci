@@ -28,8 +28,30 @@
 package com.tencent.devops.store.pojo.atom.enums
 
 enum class JobTypeEnum {
-    AGENT,  // 编译环境
-    AGENT_LESS,  // 无编译环境
-    CREATIVE_STREAM,  // 创作流环境
-    CLOUD_TASK  // 云任务环境
+    AGENT,  // 编译环境（PIPELINE）
+    AGENT_LESS,  // 无编译环境（PIPELINE）
+    CREATIVE_STREAM,  // 创作流编译环境（CREATIVE_STREAM）
+    CLOUD_TASK;  // 云任务无编译环境（CREATIVE_STREAM）
+
+    /**
+     * 是否属于「编译环境」类型（对应 VMBuildContainer / MarketBuildAtomElement）。
+     * AGENT、CREATIVE_STREAM → true；AGENT_LESS、CLOUD_TASK → false。
+     */
+    fun isBuildEnv(): Boolean = this == AGENT || this == CREATIVE_STREAM
+
+    companion object {
+        /**
+         * 从 T_ATOM.JOB_TYPE 原始值解析出所有 JobTypeEnum。
+         * 兼容三种格式：
+         * - 纯字符串："AGENT"
+         * - V1 JSON：{"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}
+         * - V2 JSON：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
+         */
+        fun parseAllFromRaw(raw: String?): List<JobTypeEnum> {
+            if (raw.isNullOrBlank()) return emptyList()
+            return runCatching { listOf(valueOf(raw)) }.getOrElse {
+                entries.filter { raw.contains("\"${it.name}\"") }
+            }
+        }
+    }
 }
