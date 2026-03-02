@@ -109,25 +109,6 @@ class ServiceAutoConfiguration {
         }
     }
 
-    /**
-     * 通过 ObservationRegistryCustomizer 注册 ObservationFilter，在 Observation 完成前
-     * 从 low/high cardinality key values 中移除 delivery_tag，从源头阻止该 tag 进入 MeterRegistry。
-     * 使用 Customizer 方式避免直接注入 ObservationRegistry 导致的循环依赖。
-     */
-    @Bean
-    fun rabbitMqDeliveryTagObservationRegistryCustomizer(): ObservationRegistryCustomizer<ObservationRegistry> {
-        return ObservationRegistryCustomizer { registry ->
-            registry.observationConfig().observationFilter { context ->
-                if (context.name.startsWith("spring.rabbit.listener")) {
-                    logger.debug("ignore rabbitmq delivery tag, name: {}", context.name)
-                    context.removeLowCardinalityKeyValue("messaging.rabbitmq.message.delivery_tag")
-                    context.removeHighCardinalityKeyValue("messaging.rabbitmq.message.delivery_tag")
-                }
-                context
-            }
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceAutoConfiguration::class.java)
     }
