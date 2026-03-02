@@ -137,6 +137,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 enablePac = enablePac,
                 repoHashId = yamlInfo?.repoHashId,
                 targetAction = targetAction,
+                baseVersion = draftResource.baseVersion,
                 targetBranch = targetBranch
             )
 

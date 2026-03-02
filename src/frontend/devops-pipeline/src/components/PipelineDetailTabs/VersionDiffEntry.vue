@@ -220,7 +220,8 @@
                         ...this.$route.params,
                         ...(isTemplate ? {templateId: this.uniqueId} : {}),
                         version,
-                        archiveFlag: this.archiveFlag
+                        archiveFlag: this.archiveFlag,
+                        source: 'COMPARE'
                     })
                     if (res?.yamlSupported) {
                         return res.yamlPreview.yaml
@@ -242,25 +243,41 @@
 
                 this.isLoadYaml = true
                 if (this.instanceCompareWithTemplate) {
-                    const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
-                        projectId: this.$route.params.projectId,
-                        templateId: this.$route.params.templateId,
-                        pipelineId: this.pipelineId,
-                        templateVersion: this.latestVersion,
-                        pipelineVersion: this.activeVersion,
-                        useTemplateSettings: this.useTemplateSettings
-                    })
-                    this.activeYaml = baseVersionYaml
-                    this.currentYaml = comparedVersionYaml
-                    this.instanceName = instanceName
-                    this.templateVersionName = templateVersionName
+                    try {
+                        const { templateVersionName, instanceName, baseVersionYaml, comparedVersionYaml } = await this.compareYamlWithTemplate({
+                            projectId: this.$route.params.projectId,
+                            templateId: this.$route.params.templateId,
+                            pipelineId: this.pipelineId,
+                            templateVersion: this.latestVersion,
+                            pipelineVersion: this.activeVersion,
+                            useTemplateSettings: this.useTemplateSettings
+                        })
+                        this.activeYaml = baseVersionYaml
+                        this.currentYaml = comparedVersionYaml
+                        this.instanceName = instanceName
+                        this.templateVersionName = templateVersionName
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
                 } else {
-                    const [activeYaml, currentYaml] = await Promise.all([
-                        this.fetchPipelineYaml(this.activeVersion),
-                        this.fetchPipelineYaml(this.currentVersion)
-                    ])
-                    this.activeYaml = activeYaml
-                    this.currentYaml = currentYaml
+                    try {
+                        const [activeYaml, currentYaml] = await Promise.all([
+                            this.fetchPipelineYaml(this.activeVersion),
+                            this.fetchPipelineYaml(this.currentVersion)
+                        ])
+                        this.activeYaml = activeYaml
+                        this.currentYaml = currentYaml
+                    } catch (error) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: error.message,
+                            zIndex: 3000
+                        })
+                    }
                 }
                 this.isLoadYaml = false
             },

@@ -251,7 +251,8 @@ class PipelineTemplateResourceDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(TEMPLATE_ID.eq(templateId))
                 .and(SRC_TEMPLATE_VERSION.eq(srcTemplateVersion))
-                .fetchOne()?.convert()
+                .orderBy(CREATED_TIME.desc())
+                .fetchAny()?.convert()
         }
     }
 

@@ -151,7 +151,6 @@ export const actions = {
     requestDelImage ({ commit }, imageCode) {
         return vue.$ajax.delete(`${prefix}/user/market/image/imageCodes/${imageCode}`)
     },
-
     /**
      * 关联镜像
      */
@@ -270,6 +269,9 @@ export const actions = {
     // 获取适用机器
     fetchAgentTypes ({ commit }) {
         return vue.$ajax.get(`${prefix}/user/market/image/agentType/list`)
+    },
+    getImageVersionInfo ({ commit }, imageCode) {
+        return vue.$ajax.get(`${prefix}/user/market/images/${imageCode}/showVersionInfo`)
     }
 }
 

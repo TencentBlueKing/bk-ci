@@ -717,4 +717,7 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 回滚自模板实例化任务，基于版本[xxx]
+    const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
 }

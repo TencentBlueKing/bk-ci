@@ -180,6 +180,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                         tags = Tags.of(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_STATUS, status.name)
                             .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_YAML, "false")
                             .and(MeasureConstant.TAG_SCM_WEBHOOK_TRIGGER_OLD, "true")
+                            .and(MeasureConstant.TAG_SCM_WEBHOOK_SCM_CODE, triggerEvent.triggerType)
                             .toList(),
                         timeConsumingMills = timeConsumingMills
                     )

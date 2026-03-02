@@ -42,5 +42,7 @@ data class WeworkNotifyMediaMessage(
     @get:Schema(title = "媒体内容类型", required = true)
     var mediaType: WeworkMediaType,
     @get:Schema(title = "媒体名称", required = true)
-    var mediaName: String
+    var mediaName: String,
+    @get:Schema(title = "媒体大小（字节）", required = false)
+    var mediaSize: Long = 0
 )

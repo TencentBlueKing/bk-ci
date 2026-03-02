@@ -73,7 +73,8 @@ object TemplateInstanceUtil {
         val triggerContainer = templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams
+            params = pipelineParams,
+            templateParams = null
         )
 
         return Model(
@@ -84,6 +85,7 @@ object TemplateInstanceUtil {
             instanceFromTemplate = true,
             staticViews = staticViews,
             templateId = templateResource.templateId,
+            srcTemplateId = templateResource.srcTemplateId,
             template = template,
             overrideTemplateField = overrideTemplateField
         )
@@ -160,7 +162,8 @@ object TemplateInstanceUtil {
         return templateTrigger.copy(
             buildNo = buildNo,
             elements = triggerElements,
-            params = pipelineParams
+            params = pipelineParams,
+            templateParams = null
         )
     }
 
@@ -297,7 +300,9 @@ object TemplateInstanceUtil {
             overrideBuildNo = overrideBuildNo
         )
 
+        val name = templateParam.name ?: templateParam.id
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = pipelineParam.required,
             asInstanceInput = null
@@ -326,8 +331,10 @@ object TemplateInstanceUtil {
             templateParam = templateParam,
             templateVariable = templateVariable
         )
+        val name = templateParam.name ?: templateParam.id
         // 用templateVariable覆盖模板的默认值
         return templateParam.copy(
+            name = name,
             defaultValue = defaultValue,
             required = templateVariable.allowModifyAtStartup ?: templateParam.required,
             asInstanceInput = null
@@ -393,12 +400,15 @@ object TemplateInstanceUtil {
         }
         return when (triggerElement) {
             is TimerTriggerElement -> {
-                triggerElement.copy(
+                val newTimeTrigger = triggerElement.copy(
                     advanceExpression = triggerConfig.cron ?: triggerElement.advanceExpression,
                     startParams = triggerConfig.variables?.let {
                         JsonUtil.toJson(it, false)
                     } ?: triggerElement.startParams
                 )
+                // 因为TimerTriggerElement是data class对象,copy时不会复制父类的属性,所以需要重新赋值
+                newTimeTrigger.additionalOptions = triggerElement.additionalOptions
+                newTimeTrigger
             }
 
             else -> triggerElement
@@ -499,7 +509,10 @@ object TemplateInstanceUtil {
         } else {
             templateBuildNo.buildNo
         }
-        return pipelineBuildNo.copy(buildNo = buildNo)
+        return pipelineBuildNo.copy(
+            buildNo = buildNo,
+            asInstanceInput = null
+        )
     }
 
     @Suppress("CyclomaticComplexMethod")
@@ -516,19 +529,20 @@ object TemplateInstanceUtil {
         pipelineParams.forEach { param ->
             when (param.id) {
                 MAJORVERSION -> param.defaultValue =
-                    recommendedVersion.major ?: templateParamMap[MAJORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.major?.toString() ?: templateParamMap[MAJORVERSION]?.defaultValue ?: "0"
 
                 MINORVERSION -> param.defaultValue =
-                    recommendedVersion.minor ?: templateParamMap[MINORVERSION]?.defaultValue ?: 0
+                    recommendedVersion.minor?.toString() ?: templateParamMap[MINORVERSION]?.defaultValue ?: "0"
 
                 FIXVERSION -> param.defaultValue =
-                    recommendedVersion.fix ?: templateParamMap[FIXVERSION]?.defaultValue ?: 0
+                    recommendedVersion.fix?.toString() ?: templateParamMap[FIXVERSION]?.defaultValue ?: "0"
             }
         }
 
         return templateBuildNo.copy(
             required = recommendedVersion.allowModifyAtStartup ?: templateBuildNo.required,
-            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo
+            buildNo = recommendedVersion.buildNo?.buildNo ?: templateBuildNo.buildNo,
+            asInstanceInput = null
         )
     }
 

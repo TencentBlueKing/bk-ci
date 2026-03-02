@@ -73,9 +73,7 @@ class PipelineTemplateVersionDeleteHandler @Autowired constructor(
     fun handle(context: PipelineTemplateVersionDeleteContext) {
         with(context) {
             logger.info(
-                "handle pipeline template version delete|" +
-                    "projectId:$projectId|templateId:$templateId|versionAction:$versionAction" +
-                    "|version:$version|branch:$branch"
+                "handle pipeline template version delete|$projectId|$templateId|$versionAction|$version|$branch"
             )
             val lock = PipelineTemplateModelLock(redisOperation = redisOperation, templateId = templateId)
             try {
