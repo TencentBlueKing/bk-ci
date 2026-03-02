@@ -27,6 +27,7 @@
 package com.tencent.devops.store.atom.util
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ServiceScopeConfig
 import com.tencent.devops.store.pojo.common.enums.ServiceScopeEnum
 import com.tencent.devops.store.util.ServiceScopeUtil
@@ -44,8 +45,6 @@ import com.tencent.devops.store.util.ServiceScopeUtil
 object AtomJobTypeUtil {
 
     private val PIPELINE = ServiceScopeEnum.PIPELINE.name
-
-    // ==================== 写入路径 ====================
 
     /**
      * 从 serviceScopeConfigs 构建 JOB_TYPE 字段值。
@@ -79,40 +78,6 @@ object AtomJobTypeUtil {
         return JsonUtil.toJson(jobTypeMap.mapValues { it.value.toList() }, formatted = false)
     }
 
-    // ==================== 读取路径 ====================
-
-    /**
-     * 获取指定 scope 下的第一个 jobType（向后兼容返回单值的场景）。
-     */
-    fun getJobType(
-        jobTypeValue: String?,
-        defaultJobType: String? = null,
-        serviceScope: String? = null
-    ): String? {
-        return getJobTypes(jobTypeValue, defaultJobType, serviceScope).firstOrNull()
-    }
-
-    /**
-     * 获取指定 scope 下支持的所有 jobType。
-     */
-    private fun getJobTypes(
-        jobTypeValue: String?,
-        defaultJobType: String? = null,
-        serviceScope: String? = null
-    ): List<String> {
-        if (serviceScope.isNullOrBlank()) {
-            return listOfNotNull(defaultJobType ?: jobTypeValue)
-        }
-        val scope = ServiceScopeUtil.normalize(serviceScope) ?: serviceScope
-        if (jobTypeValue.isNullOrBlank()) {
-            return if (scope == PIPELINE) listOfNotNull(defaultJobType) else emptyList()
-        }
-        val parsed = parseForScope(jobTypeValue, scope)
-        if (parsed.isNotEmpty()) return parsed
-        // 未从 JSON 解析到 → 如果是 PIPELINE，回退到 defaultJobType
-        return if (scope == PIPELINE) listOfNotNull(defaultJobType) else emptyList()
-    }
-
     /**
      * 获取所有 scope → jobType 列表的映射（用于构建 ServiceScopeConfig）。
      */
@@ -143,8 +108,6 @@ object AtomJobTypeUtil {
     private fun MutableList<String>.addIfAbsent(element: String) {
         if (element !in this) add(element)
     }
-
-    // ==================== 内部解析 ====================
 
     /**
      * 解析 JOB_TYPE 值，返回指定 scope 下的 jobType 列表。

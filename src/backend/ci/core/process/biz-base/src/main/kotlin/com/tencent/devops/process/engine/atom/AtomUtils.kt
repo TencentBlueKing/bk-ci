@@ -109,12 +109,15 @@ object AtomUtils {
                     taskId = task.taskId
                 )
             }
-            // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
-            val jobRunFlag = when (atomRunInfo.jobType) {
-                // 无编译环境插件： 本身就在无编译环境下运行，或者允许无编译插件在编译环境下运行
-                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomRunInfo.buildLessRunFlag == true)
-                // 编译环境插件：需要在编译环境下运行
-                JobTypeEnum.AGENT -> container is VMBuildContainer
+            // 从原始 JOB_TYPE（可能为 JSON）解析出所有 JobTypeEnum，判断插件是否有权限在该 job 环境下运行
+            val allJobTypes = JobTypeEnum.parseAllFromRaw(atomRunInfo.jobType)
+            val hasBuildEnvType = allJobTypes.any { it.isBuildEnv() }
+            val hasBuildLessType = allJobTypes.any { !it.isBuildEnv() }
+            val jobRunFlag = when {
+                allJobTypes.isEmpty() -> false
+                container is VMBuildContainer -> hasBuildEnvType ||
+                    (hasBuildLessType && atomRunInfo.buildLessRunFlag == true)
+                container is NormalContainer -> hasBuildLessType
                 else -> false
             }
             if (!jobRunFlag) {

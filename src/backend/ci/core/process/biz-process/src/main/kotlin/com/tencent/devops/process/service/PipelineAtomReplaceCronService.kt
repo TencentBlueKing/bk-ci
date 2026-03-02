@@ -691,25 +691,27 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                                 defaultMessage = message
                             )
                         }
-                        val toAtomJobType = toAtomInfo.jobType
                         val dataMap = generateAtomDataMap(toAtomInputParamMap, toAtomPropMap, element)
-                        if (toAtomJobType == JobTypeEnum.AGENT.name) {
-                            val marketBuildAtomElement = generateMarketBuildAtomElement(
-                                toAtomInfo = toAtomInfo,
-                                toAtomVersion = toAtomVersion,
-                                element = element,
-                                dataMap = dataMap
+                        val allJobTypes = JobTypeEnum.parseAllFromRaw(toAtomInfo.jobType)
+                        val isBuildEnv = allJobTypes.any { it.isBuildEnv() }
+                        if (isBuildEnv) {
+                            finalElements.add(
+                                generateMarketBuildAtomElement(
+                                    toAtomInfo = toAtomInfo,
+                                    toAtomVersion = toAtomVersion,
+                                    element = element,
+                                    dataMap = dataMap
+                                )
                             )
-                            finalElements.add(marketBuildAtomElement)
                         } else {
-                            val marketBuildLessAtomElement =
+                            finalElements.add(
                                 generateMarketBuildLessAtomElement(
                                     toAtomInfo = toAtomInfo,
                                     toAtomVersion = toAtomVersion,
                                     element = element,
                                     dataMap = dataMap
                                 )
-                            finalElements.add(marketBuildLessAtomElement)
+                            )
                         }
                     } else {
                         finalElements.add(element)

@@ -151,7 +151,7 @@ abstract class AtomBaseDao {
      * 
      * @param dslContext DSL上下文
      * @param classifyCode 分类代码
-     * @param serviceScope 服务范围（可选），用于过滤分类
+     * @param serviceScope 服务范围，为 null 时不按 scope 过滤
      * @return CLASSIFY_ID，如果未找到则返回null
      */
     protected fun getClassifyIdByCode(
@@ -166,38 +166,33 @@ abstract class AtomBaseDao {
         val query = dslContext.select(tClassify.ID)
             .from(tClassify)
             .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
-        query.and(tClassify.SERVICE_SCOPE.eq(serviceScope?.name ?: ServiceScopeEnum.PIPELINE.name))
-        return query.fetchOne(0, String::class.java)
+        if (serviceScope != null) {
+            query.and(tClassify.SERVICE_SCOPE.eq(serviceScope.name))
+        }
+        return query.limit(1).fetchOne(0, String::class.java)
     }
 
     /**
      * 根据服务范围构建分类ID字段表达式
      * 
-     * 如果 serviceScope 是 PIPELINE，使用 CLASSIFY_ID 字段（性能最好，有索引）
-     * 如果 serviceScope 是其他，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
-     * 
-     * @param ta TAtom 表
-     * @param serviceScope 服务范围，如 "PIPELINE"、"CREATIVE_STREAM"，如果为null则默认使用 PIPELINE
-     * @return 分类ID字段表达式（Field<String>）
+     * - serviceScope 为 null 或 PIPELINE 时，使用 CLASSIFY_ID 字段（性能最好，有索引）
+     * - serviceScope 为其他时，从 CLASSIFY_ID_MAP JSON 字段中提取对应的分类ID
      */
     protected fun buildClassifyIdField(
         ta: TAtom,
         serviceScope: ServiceScopeEnum?
     ): Field<String> {
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
         
-        return if (normalizedScope == ServiceScopeEnum.PIPELINE.name) {
-            // PIPELINE 使用 CLASSIFY_ID 字段（性能最好，有索引）
+        return if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
             ta.CLASSIFY_ID
         } else {
-            // 其他服务范围从 CLASSIFY_ID_MAP 中提取
-            // 使用 COALESCE 回退到 CLASSIFY_ID（兼容处理）
             DSL.field(
                 "COALESCE(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})), {2})",
                 String::class.java,
                 ta.CLASSIFY_ID_MAP,
                 DSL.inline("$.$normalizedScope"),
-                ta.CLASSIFY_ID  // 如果未找到，回退到 CLASSIFY_ID
+                ta.CLASSIFY_ID
             )
         }
     }
@@ -220,24 +215,25 @@ abstract class AtomBaseDao {
         serviceScope: ServiceScopeEnum?
     ): Condition? {
         if (classifyId.isNullOrBlank()) return null
-        val servicePipelineScopeName = ServiceScopeEnum.PIPELINE.name
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: servicePipelineScopeName
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
 
-        // 构建 JSON_EXTRACT 表达式
+        if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
+            val jsonExtractField = DSL.field(
+                "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
+                String::class.java,
+                ta.CLASSIFY_ID_MAP,
+                DSL.inline("\$.${ServiceScopeEnum.PIPELINE.name}")
+            )
+            return ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
+        }
+
         val jsonExtractField = DSL.field(
             "JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))",
             String::class.java,
             ta.CLASSIFY_ID_MAP,
             DSL.inline("$.$normalizedScope")
         )
-
-        return if (normalizedScope == servicePipelineScopeName) {
-            // PIPELINE: 使用 CLASSIFY_ID 或 CLASSIFY_ID_MAP
-            ta.CLASSIFY_ID.eq(classifyId).or(jsonExtractField.eq(classifyId))
-        } else {
-            // 非 PIPELINE：优先匹配 CLASSIFY_ID_MAP，回退到 CLASSIFY_ID（兼容未填充 MAP 的数据）
-            jsonExtractField.eq(classifyId).or(ta.CLASSIFY_ID.eq(classifyId))
-        }
+        return jsonExtractField.eq(classifyId).or(ta.CLASSIFY_ID.eq(classifyId))
     }
 
     /**
@@ -284,25 +280,33 @@ abstract class AtomBaseDao {
         queryFitAgentBuildLessAtomFlag: Boolean? = null
     ): Condition? {
         if (jobType.isNullOrBlank()) return null
-        val normalizedScope = ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name
-        val isPipeline = normalizedScope == ServiceScopeEnum.PIPELINE.name
-
-        // JSON_CONTAINS(JOB_TYPE, '"AGENT"', '$.PIPELINE') 同时兼容 V1(标量) 和 V2(数组)
         val isJsonValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE).eq(true)
-        val jsonContains = DSL.field(
-            "JSON_CONTAINS({0}, {1}, {2})",
-            Boolean::class.java,
-            ta.JOB_TYPE,
-            DSL.inline("\"$jobType\""),
-            DSL.inline("$.$normalizedScope")
-        ).eq(true)
-        val jobTypeMatchCondition = ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonContains))
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
 
-        if (isPipeline && jobType == JobTypeEnum.AGENT.name) {
+        val jobTypeMatchCondition = if (normalizedScope != null) {
+            val jsonContains = DSL.field(
+                "JSON_CONTAINS({0}, {1}, {2})",
+                Boolean::class.java,
+                ta.JOB_TYPE,
+                DSL.inline("\"$jobType\""),
+                DSL.inline("$.$normalizedScope")
+            ).eq(true)
+            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonContains))
+        } else {
+            val jsonSearch = DSL.field(
+                "JSON_SEARCH({0}, 'one', {1})",
+                String::class.java,
+                ta.JOB_TYPE,
+                DSL.inline(jobType)
+            ).isNotNull
+            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonSearch))
+        }
+
+        val isBuildEnvJobType = runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrDefault(false)
+        if (isBuildEnvJobType && queryFitAgentBuildLessAtomFlag != null) {
             return when (queryFitAgentBuildLessAtomFlag) {
                 true -> jobTypeMatchCondition.or(ta.BUILD_LESS_RUN_FLAG.eq(true))
                 false -> jobTypeMatchCondition.and(ta.BUILD_LESS_RUN_FLAG.ne(true).or(ta.BUILD_LESS_RUN_FLAG.isNull))
-                null -> jobTypeMatchCondition
             }
         }
         return jobTypeMatchCondition
@@ -313,7 +317,8 @@ abstract class AtomBaseDao {
      * PIPELINE 为 AGENT_LESS；创作流（CREATIVE_STREAM）为 CLOUD_TASK；其他 scope 返回 null。
      */
     protected fun getAgentLessJobTypeForScope(serviceScope: ServiceScopeEnum?): String? {
-        return when (ServiceScopeUtil.normalize(serviceScope?.name) ?: ServiceScopeEnum.PIPELINE.name) {
+        val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) } ?: return null
+        return when (normalizedScope) {
             ServiceScopeEnum.PIPELINE.name -> JobTypeEnum.AGENT_LESS.name
             ServiceScopeEnum.CREATIVE_STREAM.name -> JobTypeEnum.CLOUD_TASK.name
             else -> null

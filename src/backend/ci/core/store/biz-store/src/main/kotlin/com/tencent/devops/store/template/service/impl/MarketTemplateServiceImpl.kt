@@ -364,7 +364,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         srcProjectId = storeCode2ProjectCode[code],
                         version = it[tTemplate.VERSION] as String,
                         status = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt()),
-                        type = "",
+                        type = StoreTypeEnum.TEMPLATE.name,
                         rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
                         logoUrl = logoUrl?.let {

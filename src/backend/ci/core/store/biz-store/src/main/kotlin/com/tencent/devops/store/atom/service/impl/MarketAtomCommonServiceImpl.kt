@@ -81,7 +81,6 @@ import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomFailPolicyEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomRetryPolicyEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
@@ -740,7 +739,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             ATOM_POST_CONDITION to postCondition
         )
         val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
-        val jobType = atom.jobType
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
@@ -753,7 +751,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomName = atom.name,
             version = atom.version,
             initProjectCode = initProjectCode,
-            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            jobType = atom.jobType,
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
@@ -799,7 +797,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     override fun updateAtomRunInfoCache(
         atomId: String,
         atomName: String?,
-        jobType: JobTypeEnum?,
         buildLessRunFlag: Boolean?,
         latestFlag: Boolean?,
         props: String?,
@@ -813,7 +810,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (!atomRunInfoJson.isNullOrEmpty()) {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
             if (atomName != null) atomRunInfo.atomName = atomName
-            if (jobType != null) atomRunInfo.jobType = jobType
+            atomRunInfo.jobType = atomRecord.jobType
             if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             val params = getAtomSensitiveParams(props ?: atomRecord.props)

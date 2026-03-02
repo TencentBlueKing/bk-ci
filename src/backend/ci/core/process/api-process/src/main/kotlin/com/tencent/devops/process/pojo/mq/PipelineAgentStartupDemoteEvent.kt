@@ -46,7 +46,7 @@ data class PipelineAgentStartupDemoteEvent(
     val taskName: String,
     val os: String,
     val vmNames: String,
-    val channelCode: String,
+    override var channelCode: String? = null,
     val dispatchType: DispatchType,
     val containerId: String,
     val containerHashId: String?,
