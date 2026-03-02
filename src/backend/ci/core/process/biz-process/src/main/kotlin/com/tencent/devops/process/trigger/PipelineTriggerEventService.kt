@@ -29,6 +29,7 @@
 package com.tencent.devops.process.trigger
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.context.ChannelContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
@@ -531,7 +533,11 @@ class PipelineTriggerEventService @Autowired constructor(
         return if (status == PipelineTriggerStatus.SUCCEED.name) {
             when {
                 !buildId.isNullOrBlank() -> {
-                    val linkUrl = "/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+                    val linkUrl = if (ChannelContext.getChannel() == ChannelCode.CREATIVE_STREAM.name) {
+                        "/console/creative-stream/$projectId/flow/$pipelineId/execute/$buildId/execute-detail"
+                    } else {
+                        "/console/pipeline/$projectId/$pipelineId/detail/$buildId/executeDetail"
+                    }
                     MessageFormat.format(PIPELINE_BUILD_URL_PATTERN, linkUrl, buildNum)
                 }
 
