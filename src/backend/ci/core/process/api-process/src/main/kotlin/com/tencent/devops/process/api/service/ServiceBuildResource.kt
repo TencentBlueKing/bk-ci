@@ -929,7 +929,10 @@ interface ServiceBuildResource {
         startType: StartType,
         @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
-        version: Int? = null
+        version: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效, 此参数和version同时存在时, 优先使用version参数", required = false)
+        @QueryParam("branchName")
+        branchName: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "取消并发起新构建")
