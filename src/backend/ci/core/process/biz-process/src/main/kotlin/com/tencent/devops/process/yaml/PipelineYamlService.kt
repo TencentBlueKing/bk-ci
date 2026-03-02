@@ -659,12 +659,14 @@ class PipelineYamlService(
 
     fun getPipelineYamlVersionByBoldId(
         projectId: String,
-        pipelineId: String,
+        repoHashId: String,
+        filePath: String,
         blobId: String
     ) = pipelineYamlVersionDao.getPipelineYamlVersionByBoldId(
         dslContext = dslContext,
         projectId = projectId,
-        pipelineId = pipelineId,
+        repoHashId = repoHashId,
+        filePath = filePath,
         blobId = blobId
     )
 }

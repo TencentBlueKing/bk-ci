@@ -232,13 +232,15 @@ class PipelineYamlVersionDao {
     fun getPipelineYamlVersionByBoldId(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
+        repoHashId: String,
+        filePath: String,
         blobId: String
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(REPO_HASH_ID.eq(repoHashId))
+                    .and(FILE_PATH.eq(filePath))
                     .and(BLOB_ID.eq(blobId))
                     .orderBy(CREATE_TIME.desc())
                     .limit(1)

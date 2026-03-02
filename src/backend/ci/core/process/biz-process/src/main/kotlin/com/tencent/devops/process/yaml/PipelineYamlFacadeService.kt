@@ -504,7 +504,8 @@ class PipelineYamlFacadeService @Autowired constructor(
         // 根据blobId获取版本信息
         return pipelineYamlService.getPipelineYamlVersionByBoldId(
             projectId = projectId,
-            pipelineId = pipelineId,
+            filePath = yamlInfo.filePath,
+            repoHashId = yamlInfo.repoHashId,
             blobId = fileContent.blobId
         )?.version ?: throw ErrorCodeException(
             errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
