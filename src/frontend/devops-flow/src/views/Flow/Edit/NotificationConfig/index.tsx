@@ -26,8 +26,7 @@ export default defineComponent({
     // Notification data (from flowSetting)
     const successSubscriptionList = ref<Subscription[]>([])
     const failSubscriptionList = ref<Subscription[]>([])
-    const cancelSubscriptionList = ref<Subscription[]>([])
-    const publishSubscriptionList = ref<Subscription[]>([])
+
 
     // Sideslider state
     const sidesliderVisible = ref(false)
@@ -44,8 +43,6 @@ export default defineComponent({
         if (setting) {
           successSubscriptionList.value = setting.successSubscriptionList || []
           failSubscriptionList.value = setting.failSubscriptionList || []
-          cancelSubscriptionList.value = (setting as any).cancelSubscriptionList || []
-          publishSubscriptionList.value = (setting as any).publishSubscriptionList || []
         }
       },
       { immediate: true },
@@ -59,8 +56,6 @@ export default defineComponent({
         ...flowSetting.value,
         successSubscriptionList: successSubscriptionList.value,
         failSubscriptionList: failSubscriptionList.value,
-        cancelSubscriptionList: cancelSubscriptionList.value as any,
-        publishSubscriptionList: publishSubscriptionList.value as any,
       })
     }
 
@@ -75,16 +70,6 @@ export default defineComponent({
         type: 'failSubscriptionList',
         name: t('flow.content.runFailed'),
         notifications: failSubscriptionList.value,
-      },
-      {
-        type: 'cancelSubscriptionList',
-        name: t('flow.content.runCanceled'),
-        notifications: cancelSubscriptionList.value,
-      },
-      {
-        type: 'publishSubscriptionList',
-        name: t('flow.content.newVersionPublished'),
-        notifications: publishSubscriptionList.value,
       },
     ])
 
@@ -102,10 +87,6 @@ export default defineComponent({
           return successSubscriptionList.value
         case 'failSubscriptionList':
           return failSubscriptionList.value
-        case 'cancelSubscriptionList':
-          return cancelSubscriptionList.value
-        case 'publishSubscriptionList':
-          return publishSubscriptionList.value
         default:
           return []
       }

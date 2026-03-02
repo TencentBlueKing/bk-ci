@@ -113,6 +113,14 @@ export default defineComponent({
       })
     }
 
+    const handleRename = () => {
+      router.push({
+        name: ROUTE_NAMES.FLOW_EDIT_BASIC_SETTINGS,
+        params: { flowId: flowId.value, version: flowInfo.value?.version },
+        query: { focusName: '1' },
+      })
+    }
+
     const handleExecute = () => {
       router.push({
         name: ROUTE_NAMES.FLOW_PREVIEW,
@@ -185,6 +193,7 @@ export default defineComponent({
             versionList={(flowVersionList.value ?? []) as FlowVersion[]}
             onVersionChange={handleVersionChange}
             onEdit={handleEdit}
+            onRename={handleRename}
             onExecute={handleExecute}
           />
           <div class={layoutStyles.content}>
