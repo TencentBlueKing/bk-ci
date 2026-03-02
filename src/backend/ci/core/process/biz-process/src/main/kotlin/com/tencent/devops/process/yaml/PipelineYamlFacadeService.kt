@@ -501,6 +501,10 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
             params = arrayOf(yamlInfo.filePath, branchName)
         )
+        logger.info(
+            "get file content|$projectId|$pipelineId|${yamlInfo.repoHashId}|" +
+                    "${yamlInfo.filePath}|${fileContent.blobId}"
+        )
         // 根据blobId获取版本信息
         return pipelineYamlService.getPipelineYamlVersionByBoldId(
             projectId = projectId,
