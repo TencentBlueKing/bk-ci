@@ -64,6 +64,7 @@ import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.validation.PipelineTemplateMigrationValidationService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
@@ -72,6 +73,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
@@ -95,6 +97,10 @@ class PipelineTemplateMigrateService(
     val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     val pipelineTemplateMigrationValidationService: PipelineTemplateMigrationValidationService
 ) {
+
+    @Value("\${process.template.migrateProjectTag:#{null}}")
+    private val migrateProjectTag: String = ""
+
     fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO) {
         logger.info("start to migrate Templates by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -150,6 +156,7 @@ class PipelineTemplateMigrateService(
             projectId = projectId,
             status = MigrationStatus.IN_PROGRESS
         )
+        redisOperation.sadd(TEMPLATE_MIGRATE_REDIS_KEY, projectId)
 
         var result: MigrationResult? = null
         var cleanupStats: CleanupStats? = null
@@ -160,6 +167,15 @@ class PipelineTemplateMigrateService(
 
             // 4. 清理孤立数据
             cleanupStats = cleanupOrphanedTemplates(projectId, result.allTemplateIds)
+            // 5. 记录最终结果（迁移无报错 + 验证通过 = 成功）
+            recordFinalMigrationStatusWithValidation(projectId, startTime, result, cleanupStats)
+            // 6. 设置项目路由tag
+            if (migrateProjectTag.isNotBlank()) {
+                client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
+                    projectCode = projectId,
+                    tag = migrateProjectTag
+                )
+            }
         } catch (ex: Exception) {
             // 捕获迁移或清理过程中的任何意外异常，确保能记录失败状态
             logger.error(
@@ -167,8 +183,7 @@ class PipelineTemplateMigrateService(
                 projectId, ex.message, ex
             )
         } finally {
-            // 5. 记录最终结果（迁移无报错 + 验证通过 = 成功）
-            recordFinalMigrationStatusWithValidation(projectId, startTime, result, cleanupStats)
+            redisOperation.sremove(TEMPLATE_MIGRATE_REDIS_KEY, projectId)
         }
     }
 
@@ -181,7 +196,7 @@ class PipelineTemplateMigrateService(
         startTime: LocalDateTime,
         result: MigrationResult?,
         cleanupStats: CleanupStats?
-    ) {
+    ): MigrationStatus {
         val totalTime = LocalDateTime.now().timestampmilli() - startTime.timestampmilli()
 
         // 如果 result 为 null 或有失败项，直接标记为失败
@@ -207,7 +222,7 @@ class PipelineTemplateMigrateService(
                 "Migration for projectId {} finished with status: FAILED (migration error). Total time: {}ms.",
                 projectId, totalTime
             )
-            return
+            return MigrationStatus.FAILED
         }
 
         // 迁移无报错，执行验证
@@ -244,6 +259,7 @@ class PipelineTemplateMigrateService(
                 "Before: {}, After: {}",
             projectId, finalStatus, validationPassed, totalTime, beforeCount, afterCount
         )
+        return finalStatus
     }
 
     /**
@@ -953,5 +969,6 @@ class PipelineTemplateMigrateService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMigrateService::class.java)
         private val migrateProjectTemplateExecutorService = Executors.newFixedThreadPool(5)
+        private const val TEMPLATE_MIGRATE_REDIS_KEY = "pipeline:template:migrate"
     }
 }
