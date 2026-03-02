@@ -46,6 +46,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
@@ -497,8 +498,8 @@ class PipelineYamlFacadeService @Autowired constructor(
             path = yamlInfo.filePath,
             authRepository = AuthRepository(repository)
         )?.takeIf { it.blobId.isNotBlank() } ?: throw ErrorCodeException(
-            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
-            params = arrayOf(branchName)
+            errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+            params = arrayOf(yamlInfo.filePath, branchName)
         )
         // 根据blobId获取版本信息
         return pipelineYamlService.getPipelineYamlVersionByBoldId(
