@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH
 import com.tencent.devops.process.dao.yaml.PipelineYamlInfoDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseResult
@@ -65,6 +66,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import org.jooq.DSLContext
@@ -327,14 +329,7 @@ class PipelineYamlFacadeService @Autowired constructor(
     fun pushYamlFile(yamlFileReleaseReq: PipelineYamlFileReleaseReq): PipelineYamlFileReleaseResult {
         with(yamlFileReleaseReq) {
             logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$version|$versionName")
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             // TODO 代码源灰度验证,后续需删除
             if (webhookGrayService.isPacGrayRepo(repository.getScmType(), repository.getExternalId())) {
                 return releaseYamlFile(yamlFileReleaseReq = yamlFileReleaseReq)
@@ -409,14 +404,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 versionName = versionName,
                 targetBranch = targetBranch
             )
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
+            val repository = getRepository(projectId, repoHashId)
             val authRepository = AuthRepository(repository)
             val serverRepository = try {
                 client.get(ServiceScmRepositoryApiResource::class).getServerRepository(
@@ -488,6 +476,52 @@ class PipelineYamlFacadeService @Autowired constructor(
             PIPELINE_WEBHOOK_BRANCH to BuildParameters(
                 PIPELINE_WEBHOOK_BRANCH, pipelineYamlInfo.defaultBranch ?: ""
             )
+        )
+    }
+
+    /**
+     * 获取pac流水线指定分支的版本信息
+     * 通过解析分支下文件md5值获取对应的版本信息
+     */
+    fun getPipelineYamlInfo(projectId: String, pipelineId: String, branchName: String): Int? {
+        // 不是PAC流水线
+        val yamlInfo = pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        ) ?: return null
+        val repository = getRepository(projectId, yamlInfo.repoHashId)
+        // 目标分支下文件不存在
+        val fileContent = pipelineYamlFileManager.getFileContent(
+            projectId = projectId,
+            ref = branchName,
+            path = yamlInfo.filePath,
+            authRepository = AuthRepository(repository)
+        )?.takeIf { it.blobId.isNotBlank() } ?: throw ErrorCodeException(
+            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+            params = arrayOf(branchName)
+        )
+        // 根据blobId获取版本信息
+        return pipelineYamlService.getPipelineYamlVersionByBoldId(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            blobId = fileContent.blobId
+        )?.version ?: throw ErrorCodeException(
+            errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
+            params = arrayOf(branchName)
+        )
+    }
+
+    /**
+     * 获取代码库关联信息
+     */
+    fun getRepository(projectId: String, repoHashId: String): Repository {
+        return client.get(ServiceRepositoryResource::class).get(
+            projectId = projectId,
+            repositoryType = RepositoryType.ID,
+            repositoryId = repoHashId
+        ).data ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.GIT_NOT_FOUND,
+            params = arrayOf(repoHashId)
         )
     }
 }

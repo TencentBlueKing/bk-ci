@@ -420,7 +420,8 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null,
-        version: Int? = null
+        version: Int? = null,
+        branchName: String? = null
     ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
@@ -445,8 +446,17 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
+            // 优先使用version参数，如果version为空，则使用branchName
+            val targetVersion = version ?: branchName?.takeIf { it.isNotBlank() }?.let {
+                pipelineYamlFacadeService.getPipelineYamlInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    branchName = it
+                )
+            }
+
             val (readyToBuildPipelineInfo, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-                projectId, pipelineId, version
+                projectId, pipelineId, targetVersion
             )
             if (readyToBuildPipelineInfo.locked == true) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -534,7 +544,7 @@ class PipelineBuildFacadeService(
                 buildNo = buildNo,
                 startValues = values,
                 triggerReviewers = triggerReviewers,
-                signPipelineVersion = version,
+                signPipelineVersion = targetVersion,
                 debug = debug
             )
         } finally {

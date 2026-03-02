@@ -656,4 +656,15 @@ class PipelineYamlService(
             pipelineIds = pipelineIds
         )
     }
+
+    fun getPipelineYamlVersionByBoldId(
+        projectId: String,
+        pipelineId: String,
+        blobId: String
+    ) = pipelineYamlVersionDao.getPipelineYamlVersionByBoldId(
+        dslContext = dslContext,
+        projectId = projectId,
+        pipelineId = pipelineId,
+        blobId = blobId
+    )
 }
