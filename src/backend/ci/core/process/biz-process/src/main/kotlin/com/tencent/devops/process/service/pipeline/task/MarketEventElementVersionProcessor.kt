@@ -124,6 +124,13 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                 val inputMap = element.data[KEY_INPUT] as Map<String, Any>
                 if (!element.elementEnabled()) {
                     logger.warn("skip|[${element.id}] timer trigger is disabled")
+                    // 插件被禁用，移除无效定时任务
+                    pipelineTimerService.deleteTimer(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = element.id ?: "",
+                        userId = userId
+                    )
                     return
                 }
                 val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION] as String?
