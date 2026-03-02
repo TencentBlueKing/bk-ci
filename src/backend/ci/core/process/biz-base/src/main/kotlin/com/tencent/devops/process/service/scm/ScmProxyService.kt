@@ -1014,13 +1014,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         path: String,
         ref: String,
         authRepository: AuthRepository
-    ): Content {
+    ): Content? {
         return client.get(ServiceScmFileApiResource::class).getFileContent(
             projectId = projectId,
             path = path,
             ref = ref,
             authRepository = authRepository
-        ).data!!
+        ).data
     }
 
     fun listFileTree(

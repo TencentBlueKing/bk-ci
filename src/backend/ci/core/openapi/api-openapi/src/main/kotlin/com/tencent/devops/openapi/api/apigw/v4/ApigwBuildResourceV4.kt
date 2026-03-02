@@ -115,7 +115,10 @@ interface ApigwBuildResourceV4 {
         values: Map<String, String>?,
         @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @Parameter(description = "分支版本, 仅PAC流水线有效", required = false)
+        @QueryParam("branchName")
+        branchName: String? = null
     ): Result<BuildId>
 
     @Operation(summary = "停止构建", tags = ["v4_app_build_stop", "v4_user_build_stop"])

@@ -46,6 +46,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.ENABLE_PAC_E
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PAC_DEFAULT_BRANCH_FILE_DELETED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlDiff
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileReleaseReq
@@ -649,6 +650,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commit!!.commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_REF_TEMPLATE_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commit.commitId)
         )
         val resourceType = GitActionCommon.getYamlResourceType(
             filePath = filePath,
@@ -866,6 +870,9 @@ class PipelineYamlFileManager @Autowired constructor(
             path = filePath,
             ref = commit!!.commitId,
             authRepository = authRepository!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+            params = arrayOf(filePath, commit.commitId)
         )
         val deployPipelineResult = pipelineYamlResourceManager.updateYamlPipeline(
             userId = authUser,
@@ -1143,4 +1150,16 @@ class PipelineYamlFileManager @Autowired constructor(
         }
         return title
     }
+
+    fun getFileContent(
+        projectId: String,
+        ref: String,
+        path: String,
+        authRepository: AuthRepository
+    ) = pipelineYamlFileService.getFileContent(
+        projectId = projectId,
+        path = path,
+        ref = ref,
+        authRepository = authRepository
+    )
 }
