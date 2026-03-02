@@ -109,6 +109,12 @@ class FeignConfiguration @Autowired constructor(
             // 设置服务名称
             setServiceName(requestTemplate)
 
+            // 设置请求渠道信息（优先从ChannelContext获取，确保MQ线程等非HTTP场景也能传递渠道信息）
+            val channelCode = ChannelContext.getChannel()
+            if (!channelCode.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_DEVOPS_CHANNEL, channelCode)
+            }
+
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -132,10 +138,6 @@ class FeignConfiguration @Autowired constructor(
                 (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
             if (!requestChannel.isNullOrBlank()) {
                 requestTemplate.header(REQUEST_CHANNEL, requestChannel)
-            }
-            val channelCode = ChannelContext.getChannel()
-            if (!channelCode.isNullOrBlank()) {
-                requestTemplate.header(AUTH_HEADER_DEVOPS_CHANNEL, channelCode)
             }
             // 设置客户端的原始IP地址
             val requestIp = request.getHeader(REQUEST_IP)
