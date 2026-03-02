@@ -67,8 +67,11 @@
             <bk-table
                 v-bkloading="{ isLoading: listLoading.isLoading, title: listLoading.title }"
                 :max-height="400"
-                :data="fileList"
+                :data="paginatedFileList"
                 :empty-text="$t('experience.no_data')"
+                :pagination="filePagination"
+                @page-change="handleFilePageChange"
+                @page-limit-change="handleFilePageLimitChange"
             >
                 <bk-table-column
                     :label="$t('name')"
@@ -146,6 +149,11 @@
                     page: 0,
                     pageSize: 10,
                     total: 0
+                },
+                filePagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 50
                 }
             }
         },
@@ -158,10 +166,29 @@
                     CUSTOM_DIR: this.$t('experience.custom_repo'),
                     PIPELINE: this.$t('experience.pipeline_repo')
                 }
+            },
+            paginatedFileList () {
+                const start = (this.filePagination.current - 1) * this.filePagination.limit
+                return this.fileList.slice(start, start + this.filePagination.limit)
             }
         },
         watch: {
             'versionSelectConf.isShow' (val) {
+                if (!val) {
+                    this.selectInfo = {
+                        pipelineId: '',
+                        constructId: ''
+                    }
+                    this.fileList = []
+                    this.filePagination.current = 1
+                    this.filePagination.count = 0
+                    this.$store.dispatch('experience/updateCurSelectedFile', {
+                        selectFile: {}
+                    })
+                }
+            },
+            'fileList.length' (len) {
+                this.filePagination.count = len
             },
             'selectInfo.pipelineId' (val) {
                 this.selectInfo.constructId = ''
@@ -236,6 +263,13 @@
                     console.error(error)
                 }
             },
+            handleFilePageChange (page) {
+                this.filePagination.current = page
+            },
+            handleFilePageLimitChange (limit) {
+                this.filePagination.limit = limit
+                this.filePagination.current = 1
+            },
             handleFileSelect (file) {
                 this.selectedFile.file = file
             },
@@ -265,6 +299,7 @@
                         selectFile: {}
                     })
 
+                    this.filePagination.current = 1
                     this.fileList = res.records.map(item => {
                         item.properties = item.properties.map(property => {
                             if (property.key === 'buildNo') item.buildNo = `(#${property.value})`
