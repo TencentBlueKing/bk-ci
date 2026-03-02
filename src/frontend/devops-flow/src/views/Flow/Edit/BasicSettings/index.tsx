@@ -4,9 +4,9 @@ import { useFlowModelStore } from '@/stores/flowModel'
 import { RunLockType } from '@/types/flow'
 import { Checkbox, Form, Input, Radio } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
-import { defineComponent, ref, watch } from 'vue'
+import { defineComponent, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import sharedStyles from '../shared.module.css'
 import styles from './BasicSettings.module.css'
 
@@ -17,8 +17,10 @@ export default defineComponent({
   setup() {
     const { t } = useI18n()
     const route = useRoute()
+    const router = useRouter()
     const flowId = route.params.flowId as string
     const { flowSetting, updateFlowSetting } = useFlowModel()
+    const nameInputRef = ref<any>(null)
     const store = useFlowModelStore()
     const { settingsErrorFields } = storeToRefs(store)
 
@@ -56,6 +58,15 @@ export default defineComponent({
       { immediate: true },
     )
 
+    onMounted(() => {
+      if (route.query.focusName) {
+        nextTick(() => {
+          nameInputRef.value?.focus?.()
+        })
+        router.replace({ ...route, query: { ...route.query, focusName: undefined } })
+      }
+    })
+
     function handleChange() {
       updateFlowSetting({
         ...flowSetting.value,
@@ -76,6 +87,7 @@ export default defineComponent({
                 class={hasFieldError('pipelineName') ? sharedStyles.fieldError : ''}
               >
                 <Input
+                  ref={nameInputRef}
                   v-model={formData.value.pipelineName}
                   placeholder={t('flow.content.workflowNamePlaceholder')}
                   maxlength={128}

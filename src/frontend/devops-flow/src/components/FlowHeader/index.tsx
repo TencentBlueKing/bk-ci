@@ -1,5 +1,5 @@
 import type { MenuItem } from '@/api/flowContentList'
-import { deleteContent, toggleFlowFavorite } from '@/api/flowContentList'
+import { deleteContent, disableContent, toggleFlowFavorite } from '@/api/flowContentList'
 import { CommonHeader } from '@/components/CommonHeader'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -42,6 +42,9 @@ export const FlowHeader = defineComponent({
       required: true,
     },
     onEdit: {
+      type: Function as PropType<() => void>,
+    },
+    onRename: {
       type: Function as PropType<() => void>,
     },
     onExecute: {
@@ -165,6 +168,43 @@ export const FlowHeader = defineComponent({
       }
     }
 
+    const isExecuteDisabled = computed(() => {
+      return props.flowInfo?.locked || !props.flowInfo?.canManualStartup
+    })
+
+    const executeTooltip = computed(() => {
+      if (!isExecuteDisabled.value) return ''
+      return props.flowInfo?.locked
+        ? t('flow.content.pipelineLockTips')
+        : t('flow.content.pipelineManualDisable')
+    })
+
+    const handleToggleLock = () => {
+      const isLocked = props.flowInfo?.locked
+      const objectName = flowName.value || flowId.value
+      showDeleteConfirm({
+        message: () => [
+          `${isLocked ? t('flow.content.confirmEnableFlow') : t('flow.content.confirmDisableFlow')}\n${t('flow.content.operationObject')}: `,
+          h('strong', { style: 'font-weight: 700; color: var(--color-text-primary);' }, objectName),
+        ],
+        theme: 'primary',
+        confirmText: t('flow.common.confirm'),
+        onConfirm: async () => {
+          try {
+            await disableContent({
+              pipelineId: flowId.value,
+              projectId: projectId.value,
+              enable: isLocked,
+            })
+            Message({ theme: 'success', message: t('flow.common.success') })
+            flowInfoStore.getFlowInfo()
+          } catch (error: any) {
+            Message({ theme: 'error', message: error?.message || t('flow.common.failed') })
+          }
+        },
+      })
+    }
+
     // 计算收藏按钮文本
     const collectText = computed(() => {
       return props.flowInfo?.hasCollect ? t('flow.content.uncollect') : t('flow.content.favorite')
@@ -178,8 +218,12 @@ export const FlowHeader = defineComponent({
       {
         text: t('flow.actions.rename'),
         handler: () => {
-          props.onEdit?.()
+          props.onRename?.()
         },
+      },
+      {
+        text: props.flowInfo?.locked ? t('flow.content.enable') : t('flow.content.disable'),
+        handler: () => handleToggleLock(),
       },
       {
         text: t('flow.content.export'),
@@ -325,9 +369,20 @@ export const FlowHeader = defineComponent({
             actions: () => (
               <>
                 <Button onClick={props.onEdit}>{t('flow.content.edit')}</Button>
-                <Button theme="primary" onClick={props.onExecute}>
-                  {t('flow.content.execute')}
-                </Button>
+                <span
+                  v-bk-tooltips={{
+                    content: executeTooltip.value,
+                    disabled: !isExecuteDisabled.value,
+                  }}
+                >
+                  <Button
+                    theme="primary"
+                    disabled={isExecuteDisabled.value}
+                    onClick={props.onExecute}
+                  >
+                    {t('flow.content.execute')}
+                  </Button>
+                </span>
                 <ExtMenu data={props.flowInfo} config={moreActions.value} />
               </>
             ),
