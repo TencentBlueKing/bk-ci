@@ -20,6 +20,9 @@ object ActionId {
     const val PIPELINE_SHARE = "pipeline_share"
     const val PIPELINE_DOWNLOAD = "pipeline_download"
 
+    // 创作流
+    const val CREATIVE_STREAM_EXECUTE = "creative_stream_execute"
+
     // 流水线组
     const val PIPELINE_GROUP_CREATE = "pipeline_group_create"
     const val PIPELINE_GROUP_EDIT = "pipeline_group_edit"

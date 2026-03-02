@@ -78,5 +78,19 @@ enum class AuthResourceType(val value: String) {
             }
             throw IllegalArgumentException("No enum for constant $value")
         }
+
+        /**
+         * 根据Channel获取AuthResourceType
+         * @param defaultType 默认的AuthResourceType
+         * @return 根据channel确定的AuthResourceType
+         */
+        fun getAuthResourceTypeByChannel(defaultType: AuthResourceType): AuthResourceType {
+            val channel = ChannelContext.getChannel()
+            return if (channel == CREATIVE_STREAM.name && defaultType == PIPELINE_DEFAULT) {
+                CREATIVE_STREAM
+            } else {
+                defaultType
+            }
+        }
     }
 }

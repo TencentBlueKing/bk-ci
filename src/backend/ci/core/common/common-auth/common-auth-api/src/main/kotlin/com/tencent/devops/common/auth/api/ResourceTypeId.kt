@@ -17,6 +17,7 @@ object ResourceTypeId {
     const val EXPERIENCE_GROUP = "experience_group"
     const val CGS = "cgs"
     const val CGS_GROUP = "cgs_group"
+    const val CREATIVE_STREAM = "creative_stream"
 
     // 自定义
     const val SECURITY = "security"
