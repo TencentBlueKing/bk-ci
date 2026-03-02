@@ -108,10 +108,11 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
             buildUser = pipelineUserId!!
         }
 
+        // MQ消费线程中无法通过getRequestUserId()获取HTTP请求上下文的userId，使用构建变量中的buildUser
         val trigger = StartType.toReadableString(
             type = triggerType,
             channelCode = channelCode,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            language = I18nUtil.getLanguage(buildUser)
         )
 
         // TODO: 考虑是否有必要放在此处
