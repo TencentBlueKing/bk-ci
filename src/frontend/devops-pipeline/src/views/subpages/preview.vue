@@ -137,7 +137,7 @@
                         v-if="hasPipelineParams"
                         ref="paramsForm"
                         :param-values="paramsValues"
-                        :all-pipeline-param-values="allExecuteParams"
+                        :all-pipeline-param-values="allPipelineParamValues"
                         :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
@@ -423,8 +423,14 @@
                     return this.$t(`inSet${`${key.slice(0, 1).toUpperCase()}${key.slice(1)}`}ParamTips`, [item.length, item.join(', ')])
                 })
             },
-            allExecuteParams () {
-                return this.getExecuteParams(this.pipelineId)
+            allPipelineParamValues () {
+                return {
+                    ...this.paramsValues,
+                    ...this.versionParamValues,
+                    ...this.buildValues,
+                    ...this.constantValues,
+                    ...this.otherValues
+                }
             }
         },
         watch: {
