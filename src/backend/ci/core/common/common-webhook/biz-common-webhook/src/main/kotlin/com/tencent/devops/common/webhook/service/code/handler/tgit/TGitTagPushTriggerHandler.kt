@@ -109,28 +109,30 @@ class TGitTagPushTriggerHandler constructor(
     }
 
     override fun getEventDesc(event: GitTagPushEvent): String {
-        val createFrom = when {
-            event.isDeleteTag() -> {
-                // 删除标签时展示删除前的tag提交点
-                GitUtils.getShortSha(event.before)
+        val deleteTag = event.isDeleteTag()
+        val (createFrom, linkUrl) = when {
+            deleteTag -> {
+                // 删除标签时展示删除前的tag提交点, 链接为仓库首页
+                GitUtils.getShortSha(event.before) to (event.repository.homepage ?: "")
             }
             event.create_from.isNullOrBlank() || event.checkout_sha == event.create_from -> {
-                GitUtils.getShortSha(event.checkout_sha)
+                GitUtils.getShortSha(event.checkout_sha) to
+                        "${event.repository.homepage}/-/tags/${getBranchName(event)}"
             }
 
             else -> {
-                event.create_from
+                event.create_from to "${event.repository.homepage}/-/tags/${getBranchName(event)}"
             }
         }
         return I18Variable(
-            code = if (event.isDeleteTag()) {
+            code = if (deleteTag) {
                 WebhookI18nConstants.TGIT_TAG_DELETE_EVENT_DESC
             } else {
                 WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
             },
             params = listOf(
                 "$createFrom",
-                "${event.repository.homepage}/-/tags/${getBranchName(event)}",
+                linkUrl,
                 getBranchName(event),
                 getUsername(event)
             )
