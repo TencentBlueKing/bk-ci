@@ -510,11 +510,7 @@ export default defineComponent({
       if (!stages || stages.length === 0) {
         return <span>--</span>
       }
-      const stagesWithoutFirst = stages.slice(1)
-      if (stagesWithoutFirst.length === 0) {
-        return <span>--</span>
-      }
-      return <StageSteps steps={stagesWithoutFirst} buildId={buildId} />
+      return <StageSteps steps={stages} buildId={buildId} />
     }
 
     const renderRemark = (row: ExecutionRecord) => {

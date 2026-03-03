@@ -31,7 +31,7 @@ export const statusIconMap: Record<StatusType, string> = {
   [STATUS.DEPENDENT_WAITING]: 'circle-2-1', // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
   [STATUS.QUALITY_CHECK_PASS]: 'circle-2-1', // 25 质量红线检查通过
   [STATUS.QUALITY_CHECK_WAIT]: 'circle-2-1', // 26 质量红线等待把关
-  [STATUS.UNKNOWN]: 'placeholder', // 99
+  [STATUS.UNKNOWN]: 'circle', // 99
 }
 
 export const statusAlias = {

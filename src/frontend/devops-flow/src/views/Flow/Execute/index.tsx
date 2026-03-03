@@ -1,7 +1,7 @@
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import { usePolling } from '@/hooks/usePolling'
 import { Loading } from 'bkui-vue'
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import DetailHeader from './DetailHeader'
 import ExecutionStatusBar from './ExecutionStatusBar'
@@ -45,30 +45,18 @@ export default defineComponent({
 
     const showContent = computed(() => !loading.value && !!executeDetail.value)
 
-    // Track if initial data has been loaded for polling
-    const hasInitialDataLoaded = ref(false)
-
-    // Polling configuration - 5 seconds interval
     const POLLING_INTERVAL = 5000
 
-    // Setup polling with independent module design
     const { startPolling, stopPolling, isPolling } = usePolling(
       async () => {
-        // Silently refresh execute detail data (only record API, no loading)
         const result = await silentRefreshExecuteDetail()
-
-        // Check if we should stop polling based on new status
         if (result && !shouldPollForStatus(result.status)) {
-          console.log(
-            '[ExecutionDetail] Execution finished, stopping polling. Status:',
-            result.status,
-          )
           stopPolling()
         }
       },
       {
         interval: POLLING_INTERVAL,
-        immediate: false, // Don't start immediately, wait for initial data load
+        immediate: false,
         maxRetries: 3,
         retryDelay: 2000,
         onError: (error) => {
@@ -77,64 +65,50 @@ export default defineComponent({
       },
     )
 
-    // Watch loading state to detect when initial data has been loaded
-    // Start polling after first successful data fetch only if status requires it
-    watch(loading, (isLoading, wasLoading) => {
-      // Detect transition from loading to not loading (data fetch completed)
-      if (wasLoading && !isLoading && !hasInitialDataLoaded.value && executeDetail.value) {
-        hasInitialDataLoaded.value = true
-
-        // Only start polling if current status requires it
-        if (shouldPollForStatus(executeDetail.value.status)) {
+    // Auto-restart polling when status changes to a running state
+    // Handles cases like: manual review approval, stage gate passed, etc.
+    watch(
+      () => executeDetail.value?.status,
+      (newStatus) => {
+        if (shouldPollForStatus(newStatus) && !isPolling.value) {
           startPolling()
-          console.log(
-            '[ExecutionDetail] Initial data loaded, starting polling. Status:',
-            executeDetail.value.status,
-          )
-        } else {
-          console.log(
-            '[ExecutionDetail] Initial data loaded, no polling needed. Status:',
-            executeDetail.value.status,
-          )
         }
-      }
-    })
+      },
+    )
 
-    // Watch route changes to reset polling state
+    async function loadAndStartPolling() {
+      stopPolling()
+      await initExecuteDetail()
+      if (executeDetail.value && shouldPollForStatus(executeDetail.value.status)) {
+        startPolling()
+      }
+    }
+
     watch(
       () => [route.params.buildNo, route.params.flowId, route.params.projectId],
       async ([newBuildNo, newFlowId, newProjectId], [oldBuildNo, oldFlowId, oldProjectId]) => {
-        // If route parameters change, reload data and reset polling
         if (
           (newBuildNo !== oldBuildNo || newFlowId !== oldFlowId || newProjectId !== oldProjectId) &&
           oldBuildNo !== undefined
         ) {
-          // Stop current polling before loading new data
-          stopPolling()
-          hasInitialDataLoaded.value = false
-          await initExecuteDetail()
+          await loadAndStartPolling()
         }
       },
       { immediate: false },
     )
 
-    // Watch executeCount changes (manual refresh or different execution)
     watch(
       () => route.query.executeCount,
       async (newCount, oldCount) => {
-        // executeCount change means different execution, reload data
-        if (newCount !== oldCount && oldCount !== undefined) {
-          // Stop current polling before loading new data
-          stopPolling()
-          hasInitialDataLoaded.value = false
-          await initExecuteDetail()
+        if (newCount !== oldCount) {
+          await loadAndStartPolling()
         }
       },
       { immediate: false },
     )
 
     onMounted(async () => {
-      await initExecuteDetail()
+      await loadAndStartPolling()
     })
 
     return () => (

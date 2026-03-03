@@ -16,7 +16,7 @@
     content: '';
     width: 6px;
     height: 1px;
-    background-color: #a9abb9;
+    background-color: var(--color-text-placeholder);
     transform: translateY(-50%);
   }
 
@@ -53,19 +53,19 @@
 
   &.SKIP {
     &:before {
-      background-color: #c3cdd7;
+      background-color: var(--color-text-light-gray);
     }
     .stepIcon {
-      fill: #c3cdd7 !important;
+      fill: var(--color-text-light-gray) !important;
     }
   }
 
   &.PAUSE {
     &:before {
-      background-color: #3c96ff;
+      background-color: var(--color-primary);
     }
     .stepIcon {
-      fill: #3c96ff !important;
+      fill: var(--color-primary) !important;
     }
   }
 
@@ -89,15 +89,18 @@
 
   &.UNEXEC {
     &:before {
-      background-color: #c3cdd7;
+      background-color: var(--color-text-light-gray);
     }
     .stepIcon {
-      fill: #c3cdd7 !important;
+      fill: var(--color-text-light-gray) !important;
     }
   }
 }
 
 .stepIcon {
-  display: inline-block;
-  fill: #c3cdd7;
+  display: inline-flex;
+}
+
+.defaultIcon {
+  color: var(--color-text-light-gray);  
 }
