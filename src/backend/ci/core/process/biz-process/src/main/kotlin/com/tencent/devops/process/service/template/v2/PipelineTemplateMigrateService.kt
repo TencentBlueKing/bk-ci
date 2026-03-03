@@ -167,15 +167,6 @@ class PipelineTemplateMigrateService(
 
             // 4. 清理孤立数据
             cleanupStats = cleanupOrphanedTemplates(projectId, result.allTemplateIds)
-            // 5. 记录最终结果（迁移无报错 + 验证通过 = 成功）
-            recordFinalMigrationStatusWithValidation(projectId, startTime, result, cleanupStats)
-            // 6. 设置项目路由tag
-            if (migrateProjectTag.isNotBlank()) {
-                client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
-                    projectCode = projectId,
-                    tag = migrateProjectTag
-                )
-            }
         } catch (ex: Exception) {
             // 捕获迁移或清理过程中的任何意外异常，确保能记录失败状态
             logger.error(
@@ -183,6 +174,8 @@ class PipelineTemplateMigrateService(
                 projectId, ex.message, ex
             )
         } finally {
+            // 记录最终结果（迁移无报错 + 验证通过 = 成功）
+            recordFinalMigrationStatusWithValidation(projectId, startTime, result, cleanupStats)
             redisOperation.sremove(TEMPLATE_MIGRATE_REDIS_KEY, projectId)
         }
     }
@@ -196,7 +189,7 @@ class PipelineTemplateMigrateService(
         startTime: LocalDateTime,
         result: MigrationResult?,
         cleanupStats: CleanupStats?
-    ): MigrationStatus {
+    ) {
         val totalTime = LocalDateTime.now().timestampmilli() - startTime.timestampmilli()
 
         // 如果 result 为 null 或有失败项，直接标记为失败
@@ -222,7 +215,7 @@ class PipelineTemplateMigrateService(
                 "Migration for projectId {} finished with status: FAILED (migration error). Total time: {}ms.",
                 projectId, totalTime
             )
-            return MigrationStatus.FAILED
+            return
         }
 
         // 迁移无报错，执行验证
@@ -253,13 +246,19 @@ class PipelineTemplateMigrateService(
             afterTemplateCount = afterCount,
             validationDiscrepancies = validationDiscrepancies
         )
+        // 迁移成功,设置项目路由tag
+        if (finalStatus == MigrationStatus.SUCCESS && migrateProjectTag.isNotBlank()) {
+            client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
+                projectCode = projectId,
+                tag = migrateProjectTag
+            )
+        }
 
         logger.info(
             "Migration for projectId {} finished with status: {}. Validation passed: {}. Total time: {}ms. " +
                 "Before: {}, After: {}",
             projectId, finalStatus, validationPassed, totalTime, beforeCount, afterCount
         )
-        return finalStatus
     }
 
     /**
