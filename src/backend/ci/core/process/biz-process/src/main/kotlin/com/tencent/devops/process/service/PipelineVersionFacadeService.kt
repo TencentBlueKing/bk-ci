@@ -943,10 +943,19 @@ class PipelineVersionFacadeService @Autowired constructor(
                 version = version,
                 includeDraft = true
             )
+            // 这里判断是不是已发布,不能直接判断版本是不是RELEASE,因为发布可能分支版本
             if (record != null && record.status != VersionStatus.COMMITTING) {
-                val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
+                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = projectId,
                     pipelineId = pipelineId
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+                )
+                val releaseResource = pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = pipelineInfo.version
                 )
                 return PipelineDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
@@ -1061,10 +1070,19 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId
         )
         // 发布时，检查当前待发布版本的基线版本，和当前最新版本是否一致
-        return if (releaseResource != null && releaseResource.version != draftResource.version) {
+        return if (releaseResource != null && releaseResource.version != draftResource.baseVersion) {
+            val draftBaseResource = draftResource.baseVersion?.let { baseVersion ->
+                pipelineRepositoryService.getPipelineResourceVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = baseVersion
+                )
+            }
             PipelineDraftStatusResult(
                 status = PipelineDraftStatus.OUTDATED,
-                draft = PipelineVersionSimple(draftResource),
+                draft = PipelineVersionSimple(draftResource).copy(
+                    baseVersionName = draftBaseResource?.versionName
+                ),
                 release = PipelineVersionSimple(releaseResource)
             )
         } else {

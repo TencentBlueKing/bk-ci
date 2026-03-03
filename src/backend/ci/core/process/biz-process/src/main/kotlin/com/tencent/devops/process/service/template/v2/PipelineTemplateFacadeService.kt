@@ -1712,7 +1712,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
                     templateId = templateId,
                     version = templateInfo.releasedVersion
                 )
-                // 已发布,返回最新版本,为了让
+                // 如果当前版本已经发布,则返回最新的发布版本,最新的发布版本不一定是当前版本,返回最新版本让前端能够基于最新版本创建
                 return PipelineTemplateDraftStatusResult(
                     status = PipelineDraftStatus.PUBLISHED,
                     release = releaseResource?.let { PipelineTemplateVersionSimple(it) }
@@ -1826,7 +1826,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
             templateId = templateId
         )
         // 发布时，检查当前待发布版本的基线版本，和当前最新版本是否一致
-        return if (releaseResource != null && releaseResource.version != draftResource.version) {
+        return if (releaseResource != null && releaseResource.version != draftResource.baseVersion) {
             PipelineTemplateDraftStatusResult(
                 status = PipelineDraftStatus.OUTDATED,
                 draft = PipelineTemplateVersionSimple(draftResource),

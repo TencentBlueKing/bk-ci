@@ -227,7 +227,8 @@ class PipelineVersionGenerator constructor(
             baseVersionName = branchResource?.versionName ?: releaseResource.versionName,
             versionName = branchName,
             releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            releaseVersionName = releaseResource.versionName,
+            draftVersion = draftResource?.draftVersion
         )
     }
 
@@ -328,7 +329,8 @@ class PipelineVersionGenerator constructor(
                 baseVersion = latestReleaseResource.version,
                 baseVersionName = latestReleaseResource.versionName,
                 releaseVersion = version,
-                releaseVersionName = versionName
+                releaseVersionName = versionName,
+                draftVersion = draftResource?.draftVersion
             )
         }
     }
