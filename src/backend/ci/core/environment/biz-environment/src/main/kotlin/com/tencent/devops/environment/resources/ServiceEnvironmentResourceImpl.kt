@@ -267,7 +267,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         workspaceName: String,
         noCheckPerm: Boolean
     ): Result<List<EnvData>> {
-        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName))
+        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName, noCheckPerm))
     }
 
     override fun listNodesNewByName(
