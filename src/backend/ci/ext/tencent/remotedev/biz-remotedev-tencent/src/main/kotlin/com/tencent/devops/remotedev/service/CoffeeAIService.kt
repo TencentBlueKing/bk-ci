@@ -88,7 +88,9 @@ class CoffeeAIService @Autowired constructor(
                 envId = it.envId,
                 hostIp = it.ip,
                 owner = userId,
-                description = it.displayName
+                description = it.displayName,
+                projectId = it.projectId,
+                zoneConfigType = it.zoneConfigType
             )
         })
         return token

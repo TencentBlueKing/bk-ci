@@ -42,6 +42,14 @@ data class WorkspaceRegistration(
     @JsonProperty("owner")
     val owner: String,
 
+    @get:Schema(title = "项目ID", required = false)
+    @JsonProperty("projectId")
+    val projectId: String,
+
+    @get:Schema(title = "地域类型", required = false)
+    @JsonProperty("zoneConfigType")
+    val zoneConfigType: String,
+
     @get:Schema(title = "工作空间描述", required = false)
     @JsonProperty("description")
     val description: String? = null,
