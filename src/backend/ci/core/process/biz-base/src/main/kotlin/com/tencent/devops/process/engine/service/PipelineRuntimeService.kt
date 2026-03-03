@@ -59,6 +59,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildQuery
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
@@ -119,6 +120,7 @@ import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.LightBuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -2289,5 +2291,23 @@ class PipelineRuntimeService @Autowired constructor(
         CodeType.SCM_GIT.name -> CodeType.GIT.name
         CodeType.SCM_SVN.name -> CodeType.SVN.name
         else -> webhookType
+    }
+
+    fun listLightPipelineBuildHistory(
+        query: PipelineBuildQuery
+    ): List<LightBuildHistory> {
+        return pipelineBuildDao.listLightPipelineBuildInfo(
+            dslContext = dslContext,
+            query = query
+        )
+    }
+
+    fun getLightPipelineBuildHistoryCount(
+        query: PipelineBuildQuery
+    ): Int {
+        return pipelineBuildDao.lightPipelineBuildHistoryCount(
+            dslContext = dslContext,
+            query = query
+        )
     }
 }
