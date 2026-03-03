@@ -199,7 +199,7 @@
                     }
                     return cur.replace('*.', '')
                 }, '')
-            }，
+            },
             paginatedFileList () {
                 const start = (this.filePagination.current - 1) * this.filePagination.limit
                 return this.fileList.slice(start, start + this.filePagination.limit)
