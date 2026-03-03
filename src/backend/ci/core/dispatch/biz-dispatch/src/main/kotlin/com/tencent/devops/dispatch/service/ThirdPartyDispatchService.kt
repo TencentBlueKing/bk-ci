@@ -67,6 +67,7 @@ import com.tencent.devops.dispatch.service.tpaqueue.TPASingleQueueService
 import com.tencent.devops.dispatch.utils.TPACommonUtil
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import com.tencent.devops.environment.pojo.thirdpartyagent.EnvNodeAgent
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceVarResource
@@ -231,7 +232,14 @@ class ThirdPartyDispatchService @Autowired constructor(
                         agentType = AgentDispatchType.ID,
                         dockerInfo = null,
                         reusedInfo = null
-                    )
+                    ),
+                    envId = originDispatchType.envHashId?.let {
+                        if (it == AllCreateNodeEnv.hashId()) {
+                            AllCreateNodeEnv.ENV_ID
+                        } else {
+                            HashUtil.decodeIdToLong(it)
+                        }
+                    }
                 )
             }
 
@@ -243,7 +251,8 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun buildByAgentId(
         dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentIDDispatchType
+        dispatchType: ThirdPartyAgentIDDispatchType,
+        envId: Long? = null
     ) {
         dispatchMessage.event.dispatchQueueStartTimeMilliSecond = LocalDateTime.now().timestampmilli()
         val agentResult = if (dispatchType.idType()) {
@@ -284,7 +293,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = null)) {
+        if (!agentInQueue(dispatchMessage, dispatchType, agent = agentResult.data!!, envId = envId)) {
             logDebug(
                 dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(

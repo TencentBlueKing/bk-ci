@@ -8,6 +8,7 @@ import com.tencent.devops.dispatch.pojo.thirdpartyagent.JobIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.PipelineIdAndName
 import com.tencent.devops.dispatch.pojo.thirdpartyagent.TPAPipelineBuildCountResp
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.environment.pojo.AllCreateNodeEnv
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -26,7 +27,13 @@ class UserAgentResourceImpl @Autowired constructor(
         jobId: String?,
         creator: String?
     ): Result<TPAPipelineBuildCountResp> {
-        val envRId = if (envId.isNullOrBlank()) null else HashUtil.decodeIdToLong(envId)
+        val envRId = envId?.let {
+            if (it == AllCreateNodeEnv.hashId()) {
+                AllCreateNodeEnv.ENV_ID
+            } else {
+                HashUtil.decodeIdToLong(it)
+            }
+        }
         return Result(
             thirdPartyAgentService.fetchBuildPipeline(
                 projectId = projectId,

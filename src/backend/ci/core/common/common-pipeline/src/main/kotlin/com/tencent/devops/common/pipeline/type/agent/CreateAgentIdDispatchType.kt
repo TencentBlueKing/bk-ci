@@ -31,7 +31,8 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class CreateAgentIdDispatchType(
-    override var value: String
+    override var value: String,
+    var envHashId: String?
 ) : DispatchType(value) {
     override fun cleanDataBeforeSave() {
         this.value = this.value.trim()
