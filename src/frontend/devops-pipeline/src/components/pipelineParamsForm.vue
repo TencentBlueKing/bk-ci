@@ -194,7 +194,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING || param.type !== TEXTAREA) {
+                    if (param.type !== STRING && param.type !== TEXTAREA) {
                         if (isRemoteType(param)) {
                             const val = (param.type === 'MULTIPLE' && typeof this.paramValues?.[param.id] === 'string') ? this.paramValues[param.id].split(',').filter(i => i !== '') : this.paramValues?.[param.id]
                             const affected = this.getAffectedBy(param.payload.url)
@@ -394,6 +394,19 @@
                     return !isShallowEqual(prev, current)
                 }
                 return false
+            },
+            async validateAll () {
+                const refsList = this.sortCategory ? (this.$refs.categoryRenderParam ?? []) : (this.$refs.renderParam ?? [])
+                for (let i = 0; i < refsList.length; i++) {
+                    const ref = refsList[i]
+                    const res = await ref.$validator?.validateAll?.()
+                    console.log(res, 'validate res')
+                    if (!res) {
+                        return false
+                    }
+                    
+                }
+                return true
             }
         }
     }
