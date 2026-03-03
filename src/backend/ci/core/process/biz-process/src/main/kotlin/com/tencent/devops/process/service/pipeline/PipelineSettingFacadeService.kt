@@ -219,7 +219,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         version: Int = 0,
         checkPermission: Boolean = false,
         detailInfo: PipelineDetailInfo? = null,
-        archiveFlag: Boolean? = false
+        archiveFlag: Boolean? = false,
+        draftVersion: Int? = null
     ): PipelineSetting {
 
         if (checkPermission) {
@@ -239,7 +240,8 @@ class PipelineSettingFacadeService @Autowired constructor(
             detailInfo = detailInfo,
             channelCode = channelCode,
             version = version,
-            archiveFlag = archiveFlag
+            archiveFlag = archiveFlag,
+            draftVersion = draftVersion
         )
     }
 

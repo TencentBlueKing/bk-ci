@@ -99,7 +99,23 @@ class PipelineDraftSaveHandler @Autowired constructor(
                 )
                 resourceOnlyVersion
             } else {
-                val resourceOnlyVersion = PipelineResourceOnlyVersion(draftVersionResource)
+                val draftVersion = pipelineVersionGenerator.incrementDraftVersion(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = draftVersionResource.version
+                )
+                val baseResource = draftVersionResource.baseVersion?.let {
+                    pipelineRepositoryService.getPipelineVersionRecord(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        version = it
+                    )
+                }
+                val resourceOnlyVersion = PipelineResourceOnlyVersion(
+                    pipelineResource = draftVersionResource,
+                    draftVersion = draftVersion,
+                    baseVersionName = baseResource?.versionName
+                )
                 pipelineVersionPersistenceService.updateDraftVersion(
                     context = this,
                     resourceOnlyVersion = resourceOnlyVersion

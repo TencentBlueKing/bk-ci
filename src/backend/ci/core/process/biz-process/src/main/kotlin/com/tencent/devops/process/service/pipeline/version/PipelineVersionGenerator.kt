@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceOnlyVersion
@@ -75,7 +76,8 @@ class PipelineVersionGenerator constructor(
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val stageTagService: StageTagService,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) {
 
     /**
@@ -89,7 +91,8 @@ class PipelineVersionGenerator constructor(
             VersionStatus.COMMITTING -> {
                 PipelineResourceOnlyVersion(
                     version = INIT_VERSION,
-                    settingVersion = INIT_VERSION
+                    settingVersion = INIT_VERSION,
+                    draftVersion = INIT_VERSION
                 )
             }
 
@@ -153,8 +156,24 @@ class PipelineVersionGenerator constructor(
             baseVersion = releaseResource.version,
             baseVersionName = releaseResource.versionName,
             releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            releaseVersionName = releaseResource.versionName,
+            draftVersion = INIT_VERSION
         )
+    }
+
+    fun incrementDraftVersion(
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Int {
+        // 获取当前的draftVersion，如果存在则+1，否则为1
+        val latestDraftVersion = pipelineResourceDraftVersionDao.getLatest(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        return (latestDraftVersion?.draftVersion ?: 0) + 1
     }
 
     /**

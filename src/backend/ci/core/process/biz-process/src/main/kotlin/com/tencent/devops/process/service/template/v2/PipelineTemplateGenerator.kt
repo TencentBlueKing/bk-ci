@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.template.v2
 
 import com.tencent.devops.common.api.check.Preconditions
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -55,6 +56,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_LATEST_VERSION_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_TYPE_INVALID
+import com.tencent.devops.process.dao.PipelineTemplateResourceDraftVersionDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
@@ -73,6 +75,7 @@ import com.tencent.devops.process.yaml.utils.NotifyTemplateUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -87,7 +90,9 @@ class PipelineTemplateGenerator @Autowired constructor(
     private val transferService: PipelineTransferYamlService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val pipelineTemplateSettingService: PipelineTemplateSettingService,
-    private val pipelineInfoExtService: PipelineInfoExtService
+    private val pipelineInfoExtService: PipelineInfoExtService,
+    private val dslContext: DSLContext,
+    private val pipelineTemplateResourceDraftVersionDao: PipelineTemplateResourceDraftVersionDao
 ) {
 
     fun getDefaultTemplateModel(
@@ -215,8 +220,27 @@ class PipelineTemplateGenerator @Autowired constructor(
             number = latestResource.number + 1,
             settingVersion = latestResource.settingVersion + 1,
             baseVersion = latestResource.version,
-            baseVersionName = latestResource.versionName
+            baseVersionName = latestResource.versionName,
+            draftVersion = PipelineTemplateConstant.INIT_VERSION
         )
+    }
+
+    /**
+     * 自增草稿版本
+     */
+    fun incrementDraftVersion(
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Int {
+        // 获取当前的draftVersion，如果存在则+1，否则为1
+        val latestDraftVersion = pipelineTemplateResourceDraftVersionDao.getLatest(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId,
+            version = version
+        )
+        return (latestDraftVersion?.draftVersion ?: 0) + 1
     }
 
     /**

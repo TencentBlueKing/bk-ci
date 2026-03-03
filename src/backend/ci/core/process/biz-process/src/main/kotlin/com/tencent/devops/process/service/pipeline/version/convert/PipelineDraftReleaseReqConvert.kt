@@ -35,11 +35,12 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.service.PipelineInfoService
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlFileInfo
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -68,13 +69,19 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
         request: PipelineVersionCreateReq
     ): PipelineVersionCreateContext {
         request as PipelineVersionReleaseRequest
+        if (pipelineId == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("pipelineId")
+            )
+        }
+        if (version == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("version")
+            )
+        }
         with(request) {
-            if (pipelineId == null) {
-                throw IllegalArgumentException("pipelineId is null")
-            }
-            if (version == null) {
-                throw IllegalArgumentException("version is null")
-            }
             logger.info(
                 "Start to convert draft release request|$projectId|$pipelineId|" +
                     "$version|$enablePac|$targetAction|${yamlInfo?.repoHashId}|${yamlInfo?.filePath}|$targetBranch"
@@ -160,7 +167,7 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
             }
             val pipelineSettingWithoutVersion = draftSetting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
 
-            return pipelineVersionCreateContextFactory.create(
+            val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -175,6 +182,10 @@ class PipelineDraftReleaseReqConvert @Autowired constructor(
                 versionAction = PipelineVersionAction.RELEASE_DRAFT,
                 repoHashId = yamlInfo?.repoHashId,
                 description = description
+            )
+
+            return pipelineVersionCreateContextFactory.create(
+                contextParam = contextParam
             ).copy(
                 yamlFileInfo = yamlInfo?.let { PipelineYamlFileInfo(it) },
                 enablePac = enablePac,

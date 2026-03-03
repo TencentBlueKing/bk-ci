@@ -2477,6 +2477,21 @@ class PipelineRepositoryService constructor(
         )
     }
 
+    fun getPipelineVersionRecord(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        includeDraft: Boolean? = null
+    ): PipelineResourceVersion? {
+        return pipelineResourceVersionDao.getVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = includeDraft
+        )
+    }
+
     fun getTemplateVersionRecord(templateId: String, version: Long?) = templateDao.getTemplate(
         dslContext = dslContext,
         templateId = templateId,
