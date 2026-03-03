@@ -578,7 +578,93 @@
                 curEditNodeDisplayName: '',
                 isEditNodeStatus: false,
                 tableSize: localStorage.getItem('node_table_size') || 'small',
-                tableColumn: [
+                rawSelectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
+                    { id: 'displayName' },
+                    { id: 'ip' },
+                    { id: 'label' },
+                    { id: 'os' },
+                    { id: 'nodeStatus' },
+                    { id: 'usage' },
+                    { id: 'createdUser' },
+                    { id: 'lastModifyBy' },
+                    { id: 'lastModifyTime' },
+                    { id: 'latestBuildPipeline' },
+                    { id: 'latestBuildTime' }
+                ],
+                isShowSetTagSlider: false,
+                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                setTagForm: [
+                    { tagKeyId: '', tagValueId: '' }
+                ],
+                currentNodeId: null,
+                visibleLabelCountList: {},
+                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
+            }
+        },
+        computed: {
+            projectId () {
+                return this.$route.params.projectId
+            },
+            allRenderColumnMap () {
+                return this.selectedTableColumn.reduce((result, item) => {
+                    result[item.id] = true
+                    return result
+                }, {})
+            },
+            selectedTableColumn () {
+                // 如果是 CreateResType，过滤掉 usage 字段
+                if (this.isCreateResType) {
+                    return this.rawSelectedTableColumn.filter(col => col.id !== 'usage')
+                }
+                return this.rawSelectedTableColumn
+            },
+            usageMap () {
+                return {
+                    DEVCLOUD: this.$t('environment.build'),
+                    THIRDPARTY: this.$t('environment.build'),
+                    CC: this.$t('environment.deploy'),
+                    CMDB: this.$t('environment.deploy'),
+                    UNKNOWN: this.$t('environment.deploy'),
+                    OTHER: this.$t('environment.deploy')
+                }
+            },
+            tagKeyIdList () {
+                return this.nodeTagList
+            },
+            labelGroups () {
+                const res = this.nodeList.map((item, index) => {
+                    const { tags = [] } = item
+                    const visibleCount = this.visibleLabelCountList[index]
+                    
+                    if (visibleCount >= 1) {
+                        return {
+                            visibleLabels: tags.slice(0, visibleCount),
+                            hiddenLabels: tags.slice(visibleCount),
+                            showMore: tags.length - visibleCount
+                        }
+                    }
+
+                    return {
+                        visibleLabels: tags,
+                        hiddenLabels: [],
+                        showMore: tags?.length ?? 0
+                    }
+                })
+                return res
+            },
+            queryNodeHashId () {
+                return this.$route.query.nodeHashId
+            },
+            currentResType () {
+                return this.$route.params.resType
+            },
+            isCreateResType () {
+                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            tableColumn () {
+                const columns = [
                     {
                         id: 'displayName',
                         label: this.$t('environment.nodeInfo.displayName'),
@@ -625,84 +711,12 @@
                         id: 'latestBuildTime',
                         label: this.$t('environment.nodeInfo.lastRunAs')
                     }
-                ],
-                selectedTableColumn: JSON.parse(localStorage.getItem(NODE_TABLE_COLUMN_CACHE))?.columns || [
-                    { id: 'displayName' },
-                    { id: 'ip' },
-                    { id: 'label' },
-                    { id: 'os' },
-                    { id: 'nodeStatus' },
-                    { id: 'usage' },
-                    { id: 'createdUser' },
-                    { id: 'lastModifyBy' },
-                    { id: 'lastModifyTime' },
-                    { id: 'latestBuildPipeline' },
-                    { id: 'latestBuildTime' }
-                ],
-                isShowSetTagSlider: false,
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
-                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
-                setTagForm: [
-                    { tagKeyId: '', tagValueId: '' }
-                ],
-                currentNodeId: null,
-                visibleLabelCountList: {},
-                removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB']
-            }
-        },
-        computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            allRenderColumnMap () {
-                return this.selectedTableColumn.reduce((result, item) => {
-                    result[item.id] = true
-                    return result
-                }, {})
-            },
-            usageMap () {
-                return {
-                    DEVCLOUD: this.$t('environment.build'),
-                    THIRDPARTY: this.$t('environment.build'),
-                    CC: this.$t('environment.deploy'),
-                    CMDB: this.$t('environment.deploy'),
-                    UNKNOWN: this.$t('environment.deploy'),
-                    OTHER: this.$t('environment.deploy')
+                ]
+                // 如果是 CreateResType，过滤掉 usage 字段
+                if (this.isCreateResType) {
+                    return columns.filter(col => col.id !== 'usage')
                 }
-            },
-            tagKeyIdList () {
-                return this.nodeTagList
-            },
-            labelGroups () {
-                const res = this.nodeList.map((item, index) => {
-                    const { tags = [] } = item
-                    const visibleCount = this.visibleLabelCountList[index]
-                    
-                    if (visibleCount >= 1) {
-                        return {
-                            visibleLabels: tags.slice(0, visibleCount),
-                            hiddenLabels: tags.slice(visibleCount),
-                            showMore: tags.length - visibleCount
-                        }
-                    }
-
-                    return {
-                        visibleLabels: tags,
-                        hiddenLabels: [],
-                        showMore: tags?.length ?? 0
-                    }
-                })
-                return res
-            },
-            queryNodeHashId () {
-                return this.$route.query.nodeHashId
-            },
-            currentResType () {
-                return this.$route.params.resType
-            },
-            isCreateResType () {
-                return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+                return columns
             },
             showEditIcon () {
                 return !this.isEditNodeStatus && !this.isCreateResType
@@ -1020,7 +1034,7 @@
                 this.$emit('clear-filter')
             },
             handleSettingChange ({ fields, size }) {
-                this.selectedTableColumn = Object.freeze(fields)
+                this.rawSelectedTableColumn = Object.freeze(fields)
                 this.tableSize = size
                 localStorage.setItem(NODE_TABLE_COLUMN_CACHE, JSON.stringify({
                     columns: fields,
@@ -1028,7 +1042,7 @@
                 }))
             },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY'
+                return row.nodeType === 'THIRDPARTY' || this.isCreateResType
             },
             tableRowClassName ({ row }) {
                 let className = 'node-item-row'

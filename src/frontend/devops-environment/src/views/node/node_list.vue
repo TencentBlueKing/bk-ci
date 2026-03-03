@@ -510,20 +510,23 @@
                         name: this.$t('environment.nodeInfo.os'),
                         id: 'osName'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.usage'),
-                        id: 'nodeType',
-                        children: [
-                            {
-                                id: 'CMDB',
-                                name: this.$t('environment.deploy')
-                            },
-                            {
-                                id: 'THIRDPARTY',
-                                name: this.$t('environment.build')
-                            }
-                        ]
-                    },
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.usage'),
+                            id: 'nodeType',
+                            children: [
+                                {
+                                    id: 'CMDB',
+                                    name: this.$t('environment.deploy')
+                                },
+                                {
+                                    id: 'THIRDPARTY',
+                                    name: this.$t('environment.build')
+                                }
+                            ]
+                        }
+                    ] : [])
+                    ,
                     {
                         name: this.$t('environment.nodeInfo.importer'),
                         id: 'createdUser'
@@ -817,7 +820,8 @@
                 this.$router.push({
                     name: 'setNodeTag',
                     params: {
-                        projectId: this.projectId
+                        ...this.$route.params,
+                        nodeType: currentNodeType
                     }
                 })
             },
@@ -1342,7 +1346,12 @@
                 this.searchValue = []
                 this.tagSearchValue = []
                 this.currentTags = []
-                this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                // 如果是 CreateResType，保持当前 nodeType 不变
+                if (this.isCreateResType) {
+                    this.requestList()
+                } else {
+                    this.$router.push({ name: 'nodeList', params: { nodeType: ALLNODE } })
+                }
             },
 
             handleShowNodeDetail (nodeHashId) {
