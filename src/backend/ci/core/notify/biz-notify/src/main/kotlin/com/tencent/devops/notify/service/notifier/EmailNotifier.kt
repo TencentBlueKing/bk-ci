@@ -5,6 +5,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -19,7 +20,8 @@ import org.springframework.stereotype.Component
 class EmailNotifier @Autowired constructor(
     private val emailService: EmailService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     override fun type(): NotifyType = NotifyType.EMAIL
     override fun send(
@@ -36,11 +38,15 @@ class EmailNotifier @Autowired constructor(
         val body = NotifierUtils.replaceContentParams(request.bodyParams, emailTplRecord.body) {
             it.replace("\n", "<br>")
         }
+        // 根据渠道替换关键字（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」）
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val finalTitle = NotifierUtils.replaceNotifyKeywordByChannel(title, language)
+        val finalBody = NotifierUtils.replaceNotifyKeywordByChannel(body, language)
         sendEmailNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,
-            title = title,
-            body = body,
+            title = finalTitle,
+            body = finalBody,
             sender = emailTplRecord.sender,
             variables = request.titleParams?.plus(request.bodyParams ?: emptyMap()) ?: emptyMap(),
             tencentCloudTemplateId = emailTplRecord.tencentCloudTemplateId

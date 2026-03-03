@@ -3,6 +3,7 @@ package com.tencent.devops.notify.service.notifier
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Component
 class WechatNotifier @Autowired constructor(
     private val wechatService: WechatService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
@@ -33,10 +35,12 @@ class WechatNotifier @Autowired constructor(
         )!!
         // 替换内容里的动态参数
         val body = NotifierUtils.replaceContentParams(request.bodyParams, wechatTplRecord.body)
+        // 根据渠道替换关键字（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」）
+        val finalBody = NotifierUtils.replaceNotifyKeywordByChannel(body, commonConfig.devopsDefaultLocaleLanguage)
         sendWechatNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,
-            body = body,
+            body = finalBody,
             sender = wechatTplRecord.sender
         )
     }

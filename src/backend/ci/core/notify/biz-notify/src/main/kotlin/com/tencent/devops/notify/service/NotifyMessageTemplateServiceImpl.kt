@@ -695,7 +695,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )!!
                 val title = NotifierUtils.replaceContentParams(request.titleParams, emailTplRecord.title)
                 val body = NotifierUtils.replaceContentParams(request.bodyParams, emailTplRecord.body)
-                NotifyContext(title, body)
+                val language = commonConfig.devopsDefaultLocaleLanguage
+                NotifyContext(
+                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
+                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                )
             }
 
             NotifyType.RTX.name -> {
@@ -705,7 +709,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )!!
                 val title = NotifierUtils.replaceContentParams(request.titleParams, rtxTplRecord.title)
                 val body = NotifierUtils.replaceContentParams(request.bodyParams, rtxTplRecord.body)
-                NotifyContext(title, body)
+                val language = commonConfig.devopsDefaultLocaleLanguage
+                NotifyContext(
+                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
+                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                )
             }
 
             NotifyType.WECHAT.name -> {
@@ -715,7 +723,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )!!
                 val title = NotifierUtils.replaceContentParams(request.titleParams, wechatTplRecord.title)
                 val body = NotifierUtils.replaceContentParams(request.bodyParams, wechatTplRecord.body)
-                NotifyContext(title, body)
+                val language = commonConfig.devopsDefaultLocaleLanguage
+                NotifyContext(
+                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
+                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                )
             }
 
             NotifyType.VOICE.name -> {
@@ -725,7 +737,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 )!!
                 val title = NotifierUtils.replaceContentParams(request.titleParams, voiceTplRecord.taskName)
                 val body = NotifierUtils.replaceContentParams(request.bodyParams, voiceTplRecord.content)
-                NotifyContext(title, body)
+                val language = commonConfig.devopsDefaultLocaleLanguage
+                NotifyContext(
+                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
+                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                )
             }
 
             else -> null

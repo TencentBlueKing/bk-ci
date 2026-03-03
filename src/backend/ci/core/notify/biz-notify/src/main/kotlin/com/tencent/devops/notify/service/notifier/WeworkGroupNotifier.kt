@@ -2,6 +2,7 @@ package com.tencent.devops.notify.service.notifier
 
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
@@ -19,7 +20,8 @@ class WeworkGroupNotifier @Autowired constructor(
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
     private val notifyMessageTemplateDao: NotifyMessageTemplateDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig
 ) : INotifier {
     @Value("\${wework.domain}")
     private val userUseDomain: Boolean = true
@@ -52,7 +54,12 @@ class WeworkGroupNotifier @Autowired constructor(
             }
         )
 
-        val content = title + "\n\n" + body
+        // 根据渠道替换关键字（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」）
+        val language = commonConfig.devopsDefaultLocaleLanguage
+        val finalTitle = NotifierUtils.replaceNotifyKeywordByChannel(title, language)
+        val finalBody = NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+
+        val content = finalTitle + "\n\n" + finalBody
         val mentionUsers = if (request.mentionReceivers == true) {
             request.receivers.toList()
         } else {

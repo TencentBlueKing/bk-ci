@@ -57,7 +57,7 @@ object MessageUtil {
      * 渠道来源：优先使用参数 [channel]；若为 null 则使用 [ChannelContext.getChannel()]。
      * - HTTP 请求：由 Filter 设置 Context，一般无需传 [channel]。
      * - 异步线程/MQ/转发等：Context 可能为空，调用方应传入 [channel]（如 event.channelCode.name）
-     *   或在入口处使用 [ChannelContext.withChannel][com.tencent.devops.common.api.context.ChannelContext.withChannel] 包裹。
+     *   或在入口处使用 [ChannelContext.withChannel]包裹。
      *
      * @param messageCode 消息标识
      * @param language 语言信息
@@ -100,7 +100,47 @@ object MessageUtil {
     }
 
     /**
-     * 根据请求渠道替换消息中的关键字。
+     * 根据请求渠道替换普通文本消息中的关键字（公开方法）。
+     *
+     * 与 [getMessageByLocale] 中内置的关键字替换不同，本方法用于非国际化资源场景——
+     * 例如 notify 模块从 DB 模板获取的通知标题和正文。
+     * 渠道取值：优先使用 [channel]；若为 null 则从 [ChannelContext.getChannel()] 获取。
+     *
+     * @param message  待处理的文本，可能为 null 或空白
+     * @param language 语言标识（如 zh_CN），用于从国际化资源中获取关键字本地化文本
+     * @param channel  可选，渠道标识（与 ChannelCode.name 一致）；为 null 时从 ChannelContext 读取
+     * @return 替换后的文本；若渠道不匹配、消息为空或发生异常，则原样返回
+     */
+    fun replaceKeywordByChannel(
+        message: String?,
+        language: String,
+        channel: String? = null
+    ): String? {
+        val effectiveChannel = channel ?: ChannelContext.getChannel()
+        if (effectiveChannel != CHANNEL_CREATIVE_STREAM || message.isNullOrBlank()) {
+            return message
+        }
+        return try {
+            val parts = language.split("_")
+            val localeObj = if (parts.size > 1) Locale(parts[0], parts[1]) else Locale(language)
+            val resourceBundle = ResourceBundle.getBundle(DEFAULT_BASE_NAME, localeObj)
+            val pipelineKeyword = resourceBundle.getString(PIPELINE_KEYWORD_PIPELINE)
+            val creativeStreamKeyword = resourceBundle.getString(PIPELINE_KEYWORD_CREATIVE_STREAM)
+            if (pipelineKeyword.isNotBlank() && creativeStreamKeyword.isNotBlank() &&
+                message.contains(pipelineKeyword)
+            ) {
+                message.replace(pipelineKeyword, creativeStreamKeyword)
+            } else {
+                message
+            }
+        } catch (ignored: Throwable) {
+            logger.warn("Replace pipeline keyword by channel skip: message=$message", ignored)
+            message
+        }
+    }
+
+    /**
+     * 根据请求渠道替换消息中的关键字（内部方法，接收 ResourceBundle）。
      *
      * 背景：蓝盾平台存在多个接入渠道（详见 ChannelCode），其中 CREATIVE_STREAM（创作流）渠道
      * 需要将国际化消息中出现的「流水线」字样统一替换为「创作流」，以适配该渠道的产品术语。
