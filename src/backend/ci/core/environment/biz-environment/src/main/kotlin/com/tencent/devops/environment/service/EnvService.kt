@@ -1676,7 +1676,12 @@ class EnvService @Autowired constructor(
         return result
     }
 
-    fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): List<EnvData> {
+    fun fetchAllNodeEnvList(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        noCheckPerm: Boolean
+    ): List<EnvData> {
         val agent = thirdPartyAgentDao.getAgentByWorkspaceName(
             dslContext = dslContext,
             projectId = projectId,
@@ -1698,19 +1703,26 @@ class EnvService @Autowired constructor(
             logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
             return result
         }
-        val permissionEnvList = environmentPermissionService.listEnvByPermissions(
-            userId,
-            projectId,
-            setOf(AuthPermission.USE)
-        )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
-        if (permissionEnvList.isNullOrEmpty()) {
-            logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
-            return result
+        var permissionEnvList : List<Long>? = null
+        if (!noCheckPerm) {
+            permissionEnvList = environmentPermissionService.listEnvByPermissions(
+                userId,
+                projectId,
+                setOf(AuthPermission.USE)
+            )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
+            if (permissionEnvList.isNullOrEmpty()) {
+                logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
+                return result
+            }
         }
         val envIds = mutableListOf<Long>().let {
             it.addAll(envNodeList)
             it.addAll(tagEnvList)
-            it.filter { e -> permissionEnvList.contains(e) }
+            if (!noCheckPerm) {
+                it.filter { e -> permissionEnvList!!.contains(e) }
+            }else{
+                it
+            }
         }
         logger.debug("fetchAllNodeEnvList $projectId|$workspaceName can use $envIds")
         return envDao.list(
@@ -1751,7 +1763,14 @@ class EnvService @Autowired constructor(
     }
 
     fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
-        return envDao.fetchEnvTypeCount(dslContext, projectId, createEnv ?: false)
+        val isCreateMode = createEnv ?: false
+        val res = envDao.fetchEnvTypeCount(dslContext, projectId, isCreateMode)
+        val allowedTypes = if (isCreateMode) {
+            listOf(EnvType.CREATE)
+        } else {
+            EnvType.noCreateMode()
+        }.map { it.name }.toSet()
+        return res.filter { it.key in allowedTypes }
     }
 
     companion object {

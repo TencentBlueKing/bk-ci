@@ -301,7 +301,9 @@ interface ServiceEnvironmentResource {
         @PathParam("projectId")
         projectId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @QueryParam("noCheckPerm")
+        noCheckPerm: Boolean
     ): Result<List<EnvData>>
 
     @Operation(summary = "通过名字获取环境的节点列表")
