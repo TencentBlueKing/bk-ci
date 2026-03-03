@@ -225,6 +225,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -280,6 +281,8 @@ class TemplateFacadeService @Autowired constructor(
         copyTemplateReq: CopyTemplateReq
     ): String {
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
+
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -353,6 +356,7 @@ class TemplateFacadeService @Autowired constructor(
         saveAsTemplateReq: SaveAsTemplateReq
     ): String {
         logger.info("Start to saveAsTemplate, $userId | $projectId | $saveAsTemplateReq")
+        checkTemplateMigrateStatus(projectId)
 
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -419,6 +423,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
         logger.info("Start to delete the template $templateId by user $userId")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -448,6 +453,7 @@ class TemplateFacadeService @Autowired constructor(
     )
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -482,6 +488,7 @@ class TemplateFacadeService @Autowired constructor(
         versionName: String
     ): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
+        checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -533,6 +540,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Start to update the template $templateId by user $userId - ($template)")
 
         // 1. 前置校验与准备
+        checkTemplateMigrateStatus(projectId)
         if (checkPermissionFlag) {
             pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
                 userId = userId,
@@ -699,6 +707,14 @@ class TemplateFacadeService @Autowired constructor(
         )
         // 部署后，重新获取最新的版本信息
         return pipelineTemplateResourceService.getLatestReleasedResource(projectId, templateId)!!.version
+    }
+
+    private fun checkTemplateMigrateStatus(projectId: String) {
+        if (redisOperation.isMember(TEMPLATE_MIGRATE_REDIS_KEY, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
+            )
+        }
     }
 
     fun listTemplate(
@@ -2802,5 +2818,6 @@ class TemplateFacadeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateFacadeService::class.java)
         private const val TEMPLATE_BIZ_TAG_NAME = "TEMPLATE"
+        private const val TEMPLATE_MIGRATE_REDIS_KEY = "pipeline:template:migrate"
     }
 }
