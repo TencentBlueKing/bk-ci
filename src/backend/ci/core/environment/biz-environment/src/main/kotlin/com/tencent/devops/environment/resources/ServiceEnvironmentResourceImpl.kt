@@ -252,7 +252,8 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     override fun fetchAllNodeEnvList(
         userId: String,
         projectId: String,
-        workspaceName: String
+        workspaceName: String,
+        checkPermission: Boolean?
     ): Result<List<EnvData>> {
         // 临时实现，后续合入完整业务代码
         return Result(listOf())

@@ -50,7 +50,8 @@ class CreativeStreamService constructor(
             client.get(ServiceEnvironmentResource::class).fetchAllNodeEnvList(
                 projectId = projectId,
                 workspaceName = workspaceName,
-                userId = userId
+                userId = userId,
+                checkPermission = false
             ).data
         } catch (ignored: Exception) {
             logger.warn("get env list failed|$projectId|$workspaceName", ignored)

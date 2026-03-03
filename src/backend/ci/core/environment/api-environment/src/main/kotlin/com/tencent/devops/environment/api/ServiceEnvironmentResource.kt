@@ -301,6 +301,10 @@ interface ServiceEnvironmentResource {
         @PathParam("projectId")
         projectId: String,
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @Parameter(description = "是否校验权限", required = false)
+        @QueryParam("checkPermission")
+        @DefaultValue("true")
+        checkPermission: Boolean? = true
     ): Result<List<EnvData>>
 }
