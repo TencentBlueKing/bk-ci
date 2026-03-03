@@ -165,7 +165,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     record.stageStatus?.map((stage, index) => {
       const originalStatus = stage.status || 'UNKNOWN'
       const statusCls = originalStatus
-      const icon = statusIconMap[originalStatus as keyof typeof statusIconMap] || 'circle'
+      const icon = statusIconMap[originalStatus as keyof typeof statusIconMap]
 
       return {
         stageId: stage.stageId || `stage-${index}`,

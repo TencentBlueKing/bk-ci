@@ -31,7 +31,7 @@ export default defineComponent({
   emits: ['close', 'approve'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const { requestTriggerStage, silentRefreshExecuteDetail } = useExecuteDetail()
+    const { requestTriggerStage } = useExecuteDetail()
     const authStore = useAuthStore()
 
     const isCancel = ref(false)
@@ -220,9 +220,8 @@ export default defineComponent({
           reviewParams: localReviewParams.value as unknown as Record<string, unknown>[],
         })
         Message({ theme: 'success', message: t('flow.execute.operateSuc'), limit: 1 })
-        emit('approve')
         handleClose()
-        await silentRefreshExecuteDetail()
+        emit('approve')
       } catch (err: any) {
         Message({ theme: 'error', message: err?.message || t('flow.execute.operateFail'), limit: 1 })
       } finally {

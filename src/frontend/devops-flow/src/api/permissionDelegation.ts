@@ -3,6 +3,7 @@
  */
 import { get, post } from '@/utils/http'
 import { AUTH_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
+import { RESOURCE_TYPES } from '@/components/Permission/constants'
 /**
  * 资源授权数据结构
  */
@@ -70,7 +71,7 @@ export async function getResourceAuthorization({
 }): Promise<ResourceAuthData> {
   try {
     const response = await get<ResourceAuthData>(
-      `${AUTH_API_URL_PREFIX}/user/auth/authorization/${projectId}/pipeline/getResourceAuthorization`,
+      `${AUTH_API_URL_PREFIX}/user/auth/authorization/${projectId}/${RESOURCE_TYPES.CREATIVE_STREAM}/getResourceAuthorization`,
       {
         params: { resourceCode: flowId },
       },

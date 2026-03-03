@@ -232,7 +232,7 @@ export default defineComponent({
         label: t(`flow.execute.${key}`),
         value: convertMillSec(
           executeDetail.value?.model?.timeCost?.[
-            key as keyof typeof executeDetail.value.model.timeCost
+          key as keyof typeof executeDetail.value.model.timeCost
           ],
         ),
       }))
@@ -249,7 +249,7 @@ export default defineComponent({
 
     // ==================== Methods: Event Handlers ====================
     const handleExecuteCountChange = (executeCount: number) => {
-      router.push({
+      return router.push({
         name: route.name || undefined,
         params: route.params,
         query: {
@@ -433,9 +433,10 @@ export default defineComponent({
           const msg = skipTask.value ? t('flow.execute.skipSuc') : t('flow.execute.retrySuc')
           Message({ theme: 'success', message: msg, limit: 1 })
           if (res.executeCount) {
-            handleExecuteCountChange(res.executeCount)
+            await handleExecuteCountChange(res.executeCount)
+          } else {
+            await silentRefreshExecuteDetail()
           }
-          await silentRefreshExecuteDetail()
         } else {
           Message({ theme: 'error', message: (res as any)?.message || t('flow.execute.operateFail'), limit: 1 })
         }

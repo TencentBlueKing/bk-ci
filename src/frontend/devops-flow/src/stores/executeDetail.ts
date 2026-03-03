@@ -137,7 +137,7 @@ export const useExecuteDetailStore = defineStore('executeDetail', () => {
       }
       return await retryFlow(params)
     } catch (error) {
-      console.log(error)
+      throw error
     }
   }
 

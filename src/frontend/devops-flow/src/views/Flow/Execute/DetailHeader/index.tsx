@@ -24,7 +24,8 @@ export default defineComponent({
     const projectId = computed(() => route.params.projectId as string)
     const flowId = computed(() => route.params.flowId as string)
     const btnLoading = ref(false)
-    const { flowInfo, isRunning, isDebugExec, stopExecute, requestRePlayFlow, requestRetryFlow } =
+    const isDropdownShow = ref(false)
+    const { flowInfo, isRunning, isDebugExec, stopExecute, silentRefreshExecuteDetail, requestRePlayFlow, requestRetryFlow } =
       useExecuteDetail()
     const isCurPipelineLocked = computed(() => flowInfo.value?.locked)
 
@@ -42,12 +43,13 @@ export default defineComponent({
     const handleCancel = async () => {
       try {
         btnLoading.value = true
-        const res = await stopExecute(flowId.value)
+        const res = await stopExecute(route.params.buildNo as string)
         if (res) {
           Message({
             message: t('flow.execute.stopSuc'),
             theme: 'success',
           })
+          silentRefreshExecuteDetail()
         } else {
           throw Error(t('flow.execute.stopFail'))
         }
@@ -70,23 +72,22 @@ export default defineComponent({
       if (res && res.id) {
         const params: Record<string, any> = {
           ...route.params,
-          projectId,
-          pipelineId: flowId,
+          projectId: projectId.value,
+          pipelineId: flowId.value,
           buildNo: res.id,
-          type: 'executeDetail',
         }
 
         const query: Record<string, any> = {
           ...route.query,
+          executeCount: undefined,
         }
 
-        // 只有重试（reBuild）时才有 executeCount
         if (type === 'reBuild' && 'executeCount' in res) {
           query.executeCount = String(res.executeCount)
         }
 
-        router.replace({
-          name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL,
+        router.push({
+          name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_DETAIL_TAB,
           params,
           query,
         })
@@ -118,6 +119,7 @@ export default defineComponent({
 
     // 重新构建
     const handleClick = (type = 'reBuild') => {
+      isDropdownShow.value = false
       const title =
         type === 'reBuild'
           ? t('flow.execute.reBuildConfirmTips')
@@ -148,6 +150,10 @@ export default defineComponent({
             return true
           } catch (err) {
             console.log('error:', err)
+            Message({
+              message: (err as Error)?.message || err,
+              theme: 'error',
+            })
           } finally {
             btnLoading.value = false
           }
@@ -198,6 +204,8 @@ export default defineComponent({
               <>
                 {!isDebugExec.value ? (
                   <Dropdown
+                    isShow={isDropdownShow.value}
+                    onShowChange={(val: boolean) => { isDropdownShow.value = val }}
                     trigger="click"
                     disabled={btnLoading.value || isCurPipelineLocked.value}
                   >
