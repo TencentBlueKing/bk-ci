@@ -2206,49 +2206,6 @@ class PipelineBuildLightInfoJooqMapper : RecordMapper<
                     id = t[tTPipelineBuildHistory.BUILD_ID],
                     buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
-                    status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
-                    userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
-                    startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]).ifBlank { null },
-                    endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]).ifBlank { null },
-                    errorInfoList = try {
-                        if (t[tTPipelineBuildHistory.ERROR_INFO] != null) {
-                            JsonUtil.getObjectMapper()
-                                .readValue(t[tTPipelineBuildHistory.ERROR_INFO]) as List<ErrorInfo>
-                        } else null
-                    } catch (ignored: Exception) {
-                        logger.warn("PipelineBuildLightInfoJooqMapper parse error info failed", ignored)
-                        null
-                    },
-                    buildParameters = t[tTPipelineBuildHistory.BUILD_PARAMETERS]?.let { self ->
-                        JsonUtil.getObjectMapper().readValue(self) as List<LightBuildParameter>
-                    },
-                    remark = t[tTPipelineBuildHistory.REMARK],
-                    executeTime = t[tTPipelineBuildHistory.EXECUTE_TIME] ?: 0,
-                    retry = t[tTPipelineBuildHistory.EXECUTE_COUNT]?.let { it > 1 } == true
-                )
-            }
-        }
-    }
-
-class PipelineBuildLightInfoJooqMapper : RecordMapper<
-        Record15<
-            String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
-            String, String, String, String, String, String, String
-        >,
-        LightBuildHistory
-    > {
-        override fun map(
-            record: Record15<
-                String, Int, LocalDateTime, LocalDateTime, Int, String, Long, Int,
-                String, String, String, String, String, String, String
-            >?
-        ): LightBuildHistory? {
-            val tTPipelineBuildHistory = TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY
-            return record?.let { t ->
-                LightBuildHistory(
-                    id = t[tTPipelineBuildHistory.BUILD_ID],
-                    buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
-                    trigger = t[tTPipelineBuildHistory.TRIGGER],
                     status = BuildStatus.values().getOrNull(t[tTPipelineBuildHistory.STATUS])?.statusName ?: "",
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
                     startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]).ifBlank { null },
