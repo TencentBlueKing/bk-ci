@@ -281,7 +281,6 @@ class TemplateFacadeService @Autowired constructor(
         copyTemplateReq: CopyTemplateReq
     ): String {
         logger.info("Start to copy the template, $srcTemplateId | $userId | $copyTemplateReq")
-
         checkTemplateMigrateStatus(projectId)
         pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -538,9 +537,9 @@ class TemplateFacadeService @Autowired constructor(
         checkPermissionFlag: Boolean = true
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
+        checkTemplateMigrateStatus(projectId)
 
         // 1. 前置校验与准备
-        checkTemplateMigrateStatus(projectId)
         if (checkPermissionFlag) {
             pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
                 userId = userId,
@@ -596,6 +595,14 @@ class TemplateFacadeService @Autowired constructor(
         }
         logger.info("Get the update template version $version")
         return version
+    }
+
+    private fun checkTemplateMigrateStatus(projectId: String) {
+        if (redisOperation.isMember(TEMPLATE_MIGRATE_REDIS_KEY, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
+            )
+        }
     }
 
     /**
@@ -707,14 +714,6 @@ class TemplateFacadeService @Autowired constructor(
         )
         // 部署后，重新获取最新的版本信息
         return pipelineTemplateResourceService.getLatestReleasedResource(projectId, templateId)!!.version
-    }
-
-    private fun checkTemplateMigrateStatus(projectId: String) {
-        if (redisOperation.isMember(TEMPLATE_MIGRATE_REDIS_KEY, projectId)) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
-            )
-        }
     }
 
     fun listTemplate(
