@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -38,6 +39,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_IN_REVIEW_STATUS
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,6 +50,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
     private val client: Client,
     private val pipelineUrlBean: PipelineUrlBean,
     private val projectCacheService: ProjectCacheService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : PipelineEventListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
 
@@ -73,6 +76,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
                     event.completeReviewNotify()
                     return
                 }
+                // 获取流水线渠道信息，用于生成对应渠道的 URL
+                val channelCode = getChannelCode(event.projectId, event.pipelineId)
                 val reviewUrl = when (notifyTemplateEnumType) {
                     PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
                     PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
@@ -82,7 +87,8 @@ class PipelineBuildNotifyListener @Autowired constructor(
                         buildId = event.buildId,
                         stageSeq = event.stageSeq,
                         taskId = event.taskId,
-                        needShortUrl = true
+                        needShortUrl = true,
+                        channelCode = channelCode
                     )
 
                     else -> pipelineUrlBean.genBuildDetailUrl(
@@ -91,14 +97,16 @@ class PipelineBuildNotifyListener @Autowired constructor(
                         buildId = event.buildId,
                         position = event.position,
                         stageId = event.stageId,
-                        needShortUrl = true
+                        needShortUrl = true,
+                        channelCode = channelCode
                     )
                 }
                 event.sendReviewNotify(
                     templateCode = notifyTemplateEnumType.templateCode,
                     reviewUrl = reviewUrl,
                     reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(
-                        projectCode = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId
+                        projectCode = event.projectId, pipelineId = event.pipelineId,
+                        buildId = event.buildId, channelCode = channelCode
                     )
                 )
             }
@@ -158,6 +166,18 @@ class PipelineBuildNotifyListener @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         } catch (ignored: Exception) {
             logger.warn("[$buildId]|[$source]|PIPELINE_SEND_NOTIFY_FAIL| receivers: $receivers error: $ignored")
+        }
+    }
+
+    /**
+     * 获取流水线的渠道信息
+     */
+    private fun getChannelCode(projectId: String, pipelineId: String): ChannelCode? {
+        return try {
+            pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+        } catch (ignore: Exception) {
+            logger.warn("NOTIFY|GET_CHANNEL|Failed to get channelCode for $projectId/$pipelineId", ignore)
+            null
         }
     }
 

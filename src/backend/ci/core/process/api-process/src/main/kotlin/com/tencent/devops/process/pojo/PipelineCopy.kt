@@ -36,7 +36,7 @@ data class PipelineCopy(
     @field:BkField(maxLength = 128)
     val name: String,
     @get:Schema(title = "描述", required = false)
-    @field:BkField(maxLength = 255)
+    @field:BkField(maxLength = 255, required = false)
     val desc: String?,
     @get:Schema(title = "流水线基础设置-基本信息中的标签", required = false)
     var labels: List<String> = emptyList(),
