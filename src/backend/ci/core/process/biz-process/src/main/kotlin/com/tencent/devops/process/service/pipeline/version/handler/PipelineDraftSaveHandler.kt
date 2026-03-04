@@ -104,7 +104,7 @@ class PipelineDraftSaveHandler @Autowired constructor(
                     pipelineId = pipelineId,
                     version = draftVersionResource.version
                 )
-                val baseResource = draftVersionResource.baseVersion?.let {
+                val baseResource = pipelineResourceWithoutVersion.baseVersion?.let {
                     pipelineRepositoryService.getPipelineVersionRecord(
                         projectId = projectId,
                         pipelineId = pipelineId,

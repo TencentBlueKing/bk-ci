@@ -1821,7 +1821,7 @@ class PipelineTemplateFacadeService @Autowired constructor(
         templateId: String,
         draftResource: PipelineTemplateResource,
     ): PipelineTemplateDraftStatusResult {
-        val releaseResource = pipelineTemplateResourceService.getLatestVersionResource(
+        val releaseResource = pipelineTemplateResourceService.getLatestReleasedResource(
             projectId = projectId,
             templateId = templateId
         )
