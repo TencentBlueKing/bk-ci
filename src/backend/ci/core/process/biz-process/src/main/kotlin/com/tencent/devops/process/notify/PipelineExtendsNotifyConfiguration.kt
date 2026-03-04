@@ -58,7 +58,7 @@ class PipelineExtendsNotifyConfiguration {
     @EventConsumer
     fun pipelineBuildNotifyConsumer(
         @Autowired pipelineBuildNotifyListener: PipelineBuildNotifyListener
-    ) = ScsConsumerBuilder.build<PipelineBuildNotifyEvent> { pipelineBuildNotifyListener.run(it) }
+    ) = ScsConsumerBuilder.build<PipelineBuildNotifyEvent> { pipelineBuildNotifyListener.execute(it) }
 
     /**
      * 审核提醒广播监听

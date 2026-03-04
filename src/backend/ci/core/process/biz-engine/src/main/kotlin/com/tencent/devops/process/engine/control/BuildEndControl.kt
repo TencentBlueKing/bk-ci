@@ -244,7 +244,7 @@ class BuildEndControl @Autowired constructor(
         buildDurationTime(buildInfo.startTime ?: 0L)
         callBackParentPipeline(buildInfo)
 
-        // 广播结束事件
+        // 广播结束事件（将构建的渠道信息注入事件，确保下游MQ消费者能正确恢复ChannelContext）
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishBroadCastEvent(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
@@ -253,7 +253,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList = if (buildInfo.errorInfoList != null) {
                     JsonUtil.toJson(buildInfo.errorInfoList!!)
                 } else null
-            ),
+            ).apply { channelCode = buildInfo.channelCode.name },
             // build 结束
             PipelineBuildStatusBroadCastEvent(
                 source = source,
