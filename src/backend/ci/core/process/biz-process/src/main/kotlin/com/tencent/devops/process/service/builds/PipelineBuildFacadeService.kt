@@ -446,12 +446,15 @@ class PipelineBuildFacadeService(
 
         val startEpoch = System.currentTimeMillis()
         try {
+            // PAC流水线相关参数
+            val yamlParams = mutableMapOf<String, BuildParameters>()
             // 优先使用version参数，如果version为空，则使用branchName
             val targetVersion = version ?: branchName?.takeIf { it.isNotBlank() }?.let {
                 pipelineYamlFacadeService.getPipelineYamlInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    branchName = it
+                    branchName = it,
+                    yamlParams = yamlParams
                 )
             }
 
@@ -525,12 +528,7 @@ class PipelineBuildFacadeService(
                 paramProperties = triggerContainer.params, paramValues = values
             )
             // 如果是PAC流水线,需要加上代码库hashId,给checkout:self使用
-            pipelineYamlFacadeService.buildYamlManualParamMap(
-                projectId = projectId,
-                pipelineId = pipelineId
-            )?.let {
-                paramMap.putAll(it)
-            }
+            paramMap.putAll(yamlParams)
 
             return pipelineBuildService.startPipeline(
                 userId = userId,

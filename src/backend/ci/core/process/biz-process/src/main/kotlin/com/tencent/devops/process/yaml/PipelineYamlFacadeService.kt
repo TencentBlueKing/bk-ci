@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
+import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -484,12 +485,24 @@ class PipelineYamlFacadeService @Autowired constructor(
      * 获取pac流水线指定分支的版本信息
      * 通过解析分支下文件md5值获取对应的版本信息
      */
-    fun getPipelineYamlInfo(projectId: String, pipelineId: String, branchName: String): Int? {
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        yamlParams: MutableMap<String, BuildParameters>
+    ): Int? {
         // 不是PAC流水线
         val yamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             pipelineId = pipelineId
         ) ?: return null
+        // PAC 基础参数
+        yamlParams[BK_REPO_WEBHOOK_HASH_ID] = BuildParameters(
+            key = BK_REPO_WEBHOOK_HASH_ID, value = yamlInfo.repoHashId
+        )
+        yamlParams[PIPELINE_WEBHOOK_BRANCH] = BuildParameters(
+            key = PIPELINE_WEBHOOK_BRANCH, value = yamlInfo.defaultBranch ?: ""
+        )
         val repository = getRepository(projectId, yamlInfo.repoHashId)
         // 目标分支下文件不存在
         val fileContent = pipelineYamlFileManager.getFileContent(
@@ -511,7 +524,10 @@ class PipelineYamlFacadeService @Autowired constructor(
             filePath = yamlInfo.filePath,
             repoHashId = yamlInfo.repoHashId,
             blobId = fileContent.blobId
-        )?.version ?: throw ErrorCodeException(
+        )?.version?.let {
+            yamlParams[CI_BRANCH] = BuildParameters(key = CI_BRANCH, value = branchName)
+            it
+        } ?: throw ErrorCodeException(
             errorCode = ERROR_NOT_FOUND_PIPELINE_VERSION_EXISTS_BY_BRANCH,
             params = arrayOf(branchName)
         )
