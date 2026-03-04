@@ -29,12 +29,12 @@ class VoiceNotifier @Autowired constructor(
             dslContext = dslContext,
             commonTemplateId = commonNotifyMessageTemplateRecord.id
         )!!
-        val taskName = NotifierUtils.replaceContentParams(request.titleParams, voiceTplRecord.taskName)
-        val content = NotifierUtils.replaceContentParams(request.bodyParams, voiceTplRecord.content)
-        // 根据渠道替换关键字（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」）
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
-        val finalTaskName = NotifierUtils.replaceNotifyKeywordByChannel(taskName, language)
-        val finalContent = NotifierUtils.replaceNotifyKeywordByChannel(content, language)
+        val rawTaskName = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.taskName, language)
+        val rawContent = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.content, language)
+        val finalTaskName = NotifierUtils.replaceContentParams(request.titleParams, rawTaskName)
+        val finalContent = NotifierUtils.replaceContentParams(request.bodyParams, rawContent)
         logger.info("send voice msg , ${commonNotifyMessageTemplateRecord.id} , taskName:$finalTaskName , content:$finalContent")
 
         val message = VoiceNotifyMessage()

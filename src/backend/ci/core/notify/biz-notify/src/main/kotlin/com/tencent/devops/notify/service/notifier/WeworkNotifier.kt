@@ -30,13 +30,12 @@ class WeworkNotifier @Autowired constructor(
             dslContext = dslContext,
             commonTemplateId = commonNotifyMessageTemplateRecord.id
         )!!
-        // 替换内容里的动态参数
-        val title = NotifierUtils.replaceContentParams(request.titleParams, weworkTplRecord.title)
-        val body = NotifierUtils.replaceContentParams(request.bodyParams, weworkTplRecord.body)
-        // 根据渠道替换关键字（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」）
+        // 先对 DB 原始模板做渠道关键字替换（如 CREATIVE_STREAM 渠道将「流水线」替换为「创作流」），再替换占位符
         val language = commonConfig.devopsDefaultLocaleLanguage
-        val finalTitle = NotifierUtils.replaceNotifyKeywordByChannel(title, language)
-        val finalBody = NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+        val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.title, language)
+        val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(weworkTplRecord.body, language)
+        val finalTitle = NotifierUtils.replaceContentParams(request.titleParams, rawTitle)
+        val finalBody = NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
         NotifierUtils.sendWeworkNotifyMessage(
             commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
             sendNotifyMessageTemplateRequest = request,

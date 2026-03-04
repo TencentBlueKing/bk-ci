@@ -693,12 +693,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     dslContext,
                     commonNotifyMessageTemplateRecord.id
                 )!!
-                val title = NotifierUtils.replaceContentParams(request.titleParams, emailTplRecord.title)
-                val body = NotifierUtils.replaceContentParams(request.bodyParams, emailTplRecord.body)
+                // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
+                val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(emailTplRecord.title, language)
+                val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(emailTplRecord.body, language)
                 NotifyContext(
-                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
-                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                    NotifierUtils.replaceContentParams(request.titleParams, rawTitle),
+                    NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
                 )
             }
 
@@ -707,12 +708,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
-                val title = NotifierUtils.replaceContentParams(request.titleParams, rtxTplRecord.title)
-                val body = NotifierUtils.replaceContentParams(request.bodyParams, rtxTplRecord.body)
+                // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
+                val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(rtxTplRecord.title, language)
+                val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(rtxTplRecord.body, language)
                 NotifyContext(
-                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
-                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                    NotifierUtils.replaceContentParams(request.titleParams, rawTitle),
+                    NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
                 )
             }
 
@@ -721,12 +723,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
-                val title = NotifierUtils.replaceContentParams(request.titleParams, wechatTplRecord.title)
-                val body = NotifierUtils.replaceContentParams(request.bodyParams, wechatTplRecord.body)
+                // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
+                val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(wechatTplRecord.title, language)
+                val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(wechatTplRecord.body, language)
                 NotifyContext(
-                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
-                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                    NotifierUtils.replaceContentParams(request.titleParams, rawTitle),
+                    NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
                 )
             }
 
@@ -735,12 +738,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     commonTemplateId = commonNotifyMessageTemplateRecord.id
                 )!!
-                val title = NotifierUtils.replaceContentParams(request.titleParams, voiceTplRecord.taskName)
-                val body = NotifierUtils.replaceContentParams(request.bodyParams, voiceTplRecord.content)
+                // 先对 DB 原始模板做渠道关键字替换，再替换占位符
                 val language = commonConfig.devopsDefaultLocaleLanguage
+                val rawTitle = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.taskName, language)
+                val rawBody = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.content, language)
                 NotifyContext(
-                    NotifierUtils.replaceNotifyKeywordByChannel(title, language),
-                    NotifierUtils.replaceNotifyKeywordByChannel(body, language)
+                    NotifierUtils.replaceContentParams(request.titleParams, rawTitle),
+                    NotifierUtils.replaceContentParams(request.bodyParams, rawBody)
                 )
             }
 
