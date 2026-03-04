@@ -30,6 +30,7 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -160,9 +161,16 @@ class PipelineTimerBuildListener @Autowired constructor(
                     projectId = projectId,
                     userId = userId,
                     pipelineId = pipelineId,
-                    reasonDetail = PipelineTriggerFailedMsg(
-                        ignored.message ?: ""
-                    )
+                    reasonDetail = when {
+                        ignored is RemoteServiceException && ignored.errorCode != null -> {
+                            PipelineTriggerFailedErrorCode(ignored.errorCode.toString())
+                        }
+                        else -> {
+                            PipelineTriggerFailedMsg(
+                                ignored.message ?: ""
+                            )
+                        }
+                    }
                 )
             }
         }
