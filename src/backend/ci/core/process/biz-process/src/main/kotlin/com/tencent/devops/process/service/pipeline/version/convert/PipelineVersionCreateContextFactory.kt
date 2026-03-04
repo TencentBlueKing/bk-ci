@@ -27,12 +27,8 @@
 
 package com.tencent.devops.process.service.pipeline.version.convert
 
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.PipelineVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.utils.TemplateInstanceUtil
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceWithoutVersion
@@ -40,6 +36,7 @@ import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.yaml.pojo.YamlVersion
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,72 +53,18 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
 ) {
 
     fun create(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode,
-        version: Int?,
-        model: Model,
-        yaml: String?,
-        baseVersion: Int? = null,
-        description: String? = null,
-        pipelineSettingWithoutVersion: PipelineSetting,
-        versionStatus: VersionStatus,
-        versionAction: PipelineVersionAction,
-        repoHashId: String? = null,
-        branchName: String? = null
+        contextParam: PipelineVersionCreateContextParam
     ): PipelineVersionCreateContext {
-        return if (model.template != null) {
-            createFromTemplate(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode,
-                version = version,
-                model = model,
-                yaml = yaml,
-                baseVersion = baseVersion,
-                description = description,
-                pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
-                versionStatus = versionStatus,
-                versionAction = versionAction,
-                repoHashId = repoHashId,
-                branchName = branchName
-            )
-        } else {
-            createFromNonTemplate(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode,
-                version = version,
-                model = model,
-                yaml = yaml,
-                baseVersion = baseVersion,
-                description = description,
-                pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
-                versionStatus = versionStatus,
-                versionAction = versionAction,
-                branchName = branchName
-            )
+        with(contextParam) {
+            return if (model.template != null) {
+                createFromTemplate()
+            } else {
+                createFromNonTemplate()
+            }
         }
     }
 
-    private fun createFromNonTemplate(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode,
-        version: Int?,
-        model: Model,
-        yaml: String?,
-        baseVersion: Int?,
-        description: String?,
-        pipelineSettingWithoutVersion: PipelineSetting,
-        versionStatus: VersionStatus,
-        versionAction: PipelineVersionAction,
-        branchName: String? = null
-    ): PipelineVersionCreateContext {
+    private fun PipelineVersionCreateContextParam.createFromNonTemplate(): PipelineVersionCreateContext {
         val pipelineResourceWithoutVersion = PipelineResourceWithoutVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -177,26 +120,12 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineModelBasicInfo = pipelineModelBasicInfo,
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
-            branchName = branchName
+            branchName = branchName,
+            baseDraftVersion = baseDraftVersion
         )
     }
 
-    private fun createFromTemplate(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode,
-        version: Int?,
-        model: Model,
-        yaml: String?,
-        baseVersion: Int?,
-        description: String?,
-        pipelineSettingWithoutVersion: PipelineSetting,
-        versionStatus: VersionStatus,
-        versionAction: PipelineVersionAction,
-        repoHashId: String? = null,
-        branchName: String? = null
-    ): PipelineVersionCreateContext {
+    private fun PipelineVersionCreateContextParam.createFromTemplate(): PipelineVersionCreateContext {
         val pipelineBasicInfo = pipelineResourceFactory.createPipelineBasicInfo(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -272,7 +201,8 @@ class PipelineVersionCreateContextFactory @Autowired constructor(
             pipelineResourceWithoutVersion = pipelineResourceWithoutVersion,
             pipelineSettingWithoutVersion = instanceSetting,
             templateInstanceBasicInfo = templateInstanceBasicInfo,
-            branchName = branchName
+            branchName = branchName,
+            baseDraftVersion = baseDraftVersion
         )
     }
 }

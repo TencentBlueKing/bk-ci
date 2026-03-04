@@ -80,7 +80,9 @@ data class BuildInfo(
     val updateTime: Long? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    // 草稿版本号
+    val draftVersion: Int? = null
 ) {
 
     fun isFinish() = when {

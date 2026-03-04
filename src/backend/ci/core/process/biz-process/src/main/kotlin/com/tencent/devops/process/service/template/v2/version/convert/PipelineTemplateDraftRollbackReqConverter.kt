@@ -61,24 +61,46 @@ class PipelineTemplateDraftRollbackReqConverter @Autowired constructor(
         version: Long?,
         request: PipelineTemplateVersionReq
     ): PipelineTemplateVersionCreateContext {
+        request as PipelineTemplateDraftRollbackReq
         if (templateId == null) {
             throw IllegalArgumentException("templateId is null")
         }
         if (version == null) {
             throw IllegalArgumentException("version is null")
         }
+        val draftVersion = request.draftVersion
         val pipelineTemplateInfo = pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
-        val baseResource = pipelineTemplateResourceService.get(
-            projectId = projectId, templateId = templateId, version = version
-        )
-        val baseSetting = pipelineTemplateSettingService.get(
-            projectId = projectId,
-            templateId = templateId,
-            settingVersion = baseResource.settingVersion
-        )
+        val baseResource = if (draftVersion != null) {
+            pipelineTemplateResourceService.getTemplateDraftVersion(
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                draftVersion = draftVersion
+            )
+        } else {
+            pipelineTemplateResourceService.get(
+                projectId = projectId,
+                templateId = templateId,
+                version = version
+            )
+        }
+        val baseSetting = if (draftVersion != null) {
+            pipelineTemplateSettingService.getDraftVersion(
+                projectId = projectId,
+                templateId = templateId,
+                settingVersion = baseResource.settingVersion,
+                draftVersion = draftVersion
+            )
+        } else {
+            pipelineTemplateSettingService.get(
+                projectId = projectId,
+                templateId = templateId,
+                settingVersion = baseResource.settingVersion
+            )
+        }
         // 回滚草稿版本,需要把草稿版本的基准版本重置成新的
         val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(baseResource).copy(
             status = VersionStatus.COMMITTING,

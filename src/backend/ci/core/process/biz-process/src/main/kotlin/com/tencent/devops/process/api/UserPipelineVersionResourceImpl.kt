@@ -52,7 +52,10 @@ import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftStatusResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineOperationLogService
@@ -195,7 +198,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Int,
         archiveFlag: Boolean?,
-        source: PipelineGetVersionSource?
+        source: PipelineGetVersionSource?,
+        draftVersion: Int?
     ): Result<PipelineVersionWithModel> {
         val userPipelinePermissionCheckStrategy =
             UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
@@ -212,7 +216,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 version = version,
                 archiveFlag = archiveFlag,
-                source = source
+                source = source,
+                draftVersion = draftVersion
             )
         )
     }
@@ -435,7 +440,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        draftVersion: Int?
     ): Result<PipelineVersionSimple> {
         checkParam(userId, projectId)
         val permission = AuthPermission.EDIT
@@ -460,7 +466,8 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = version
+                version = version,
+                draftVersion = draftVersion
             )
         )
     }
@@ -527,6 +534,59 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
             targetBuildNo = buildNo.currentBuildNo
         )
         return Result(true)
+    }
+
+    override fun getPipelineDraftStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        actionType: PipelineDraftActionType,
+        version: Int?,
+        baseDraftVersion: Int?
+    ): Result<PipelineDraftStatusResult> {
+        checkParam(userId, projectId)
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        return Result(
+            pipelineVersionFacadeService.getPipelineDraftStatus(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                actionType = actionType,
+                version = version,
+                baseDraftVersion = baseDraftVersion
+            )
+        )
+    }
+
+    override fun listDraftVersions(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineDraftVersionSimple>> {
+        checkParam(userId, projectId)
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        return Result(
+            pipelineVersionFacadeService.listPipelineDraftVersions(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String) {

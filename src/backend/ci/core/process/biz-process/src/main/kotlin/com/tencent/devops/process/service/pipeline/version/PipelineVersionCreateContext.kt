@@ -67,6 +67,8 @@ data class PipelineVersionCreateContext(
     val pipelineSettingWithoutVersion: PipelineSetting,
     @get:Schema(title = "模版实例化信息", required = false)
     val templateInstanceBasicInfo: PipelineTemplateInstanceBasicInfo? = null,
+    @get:Schema(title = "来源的草稿版本", required = false)
+    val baseDraftVersion: Int? = null,
 
     @get:Schema(title = "重置实例推荐版本为基准值", required = false)
     val resetBuildNo: Boolean? = false,

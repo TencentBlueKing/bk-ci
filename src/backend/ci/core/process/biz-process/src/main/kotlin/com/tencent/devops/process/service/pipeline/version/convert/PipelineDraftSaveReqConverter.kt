@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.service.pipeline.PipelineModelParser
 import com.tencent.devops.process.service.pipeline.version.PipelineResourceFactory
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateRelatedService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
@@ -136,7 +137,7 @@ class PipelineDraftSaveReqConverter(
                 projectId = projectId,
                 pipelineId = newPipelineId
             )
-            val context = pipelineVersionCreateContextFactory.create(
+            val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -145,10 +146,14 @@ class PipelineDraftSaveReqConverter(
                 model = modelAndSetting.model,
                 yaml = yamlWithVersion?.yamlStr,
                 baseVersion = baseVersion,
+                baseDraftVersion = baseDraftVersion,
                 pipelineSettingWithoutVersion = pipelineSettingWithoutVersion,
                 versionStatus = VersionStatus.COMMITTING,
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 repoHashId = pipelineYamlInfo?.repoHashId
+            )
+            val context = pipelineVersionCreateContextFactory.create(
+                contextParam = contextParam
             )
             if (context.templateInstanceBasicInfo != null) {
                 val inputParams = request.modelAndSetting!!.model.getTriggerContainer().params

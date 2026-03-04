@@ -42,6 +42,7 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDraftVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -68,7 +69,8 @@ class StageBuildRecordService(
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
-    redisOperation: RedisOperation
+    redisOperation: RedisOperation,
+    pipelineResourceDraftVersionDao: PipelineResourceDraftVersionDao
 ) : BaseBuildRecordService(
     dslContext = dslContext,
     buildRecordModelDao = buildRecordModelDao,
@@ -78,7 +80,8 @@ class StageBuildRecordService(
     recordModelService = recordModelService,
     pipelineResourceDao = pipelineResourceDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResourceVersionDao = pipelineResourceVersionDao
+    pipelineResourceVersionDao = pipelineResourceVersionDao,
+    pipelineResourceDraftVersionDao = pipelineResourceDraftVersionDao
 ) {
 
     fun getRecord(

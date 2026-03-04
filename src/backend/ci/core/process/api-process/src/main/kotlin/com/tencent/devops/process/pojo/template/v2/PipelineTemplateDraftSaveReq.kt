@@ -26,5 +26,7 @@ data class PipelineTemplateDraftSaveReq(
     @get: Schema(title = "模板类型-storageType为MODEL时，必传", required = false)
     val type: PipelineTemplateType? = null,
     @get: Schema(title = "编排yaml-storageType为YAML时，必传", required = false)
-    val yaml: String? = null
+    val yaml: String? = null,
+    @get:Schema(title = "来源的草稿版本（前端保存时传递）", required = true)
+    val baseDraftVersion: Int? = null,
 ) : PipelineTemplateVersionReq

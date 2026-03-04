@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.pojo.pipeline.version.PipelineVersionCreateReq
 import com.tencent.devops.process.pojo.pipeline.version.PipelineYamlWebhookReq
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContext
+import com.tencent.devops.process.service.pipeline.version.PipelineVersionCreateContextParam
 import com.tencent.devops.process.service.pipeline.version.PipelineVersionGenerator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -111,7 +112,7 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             )
 
-            return pipelineVersionCreateContextFactory.create(
+            val contextParam = PipelineVersionCreateContextParam(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = newPipelineId,
@@ -127,6 +128,9 @@ class PipelineYamlWebhookReqConvert @Autowired constructor(
                 versionAction = versionAction,
                 repoHashId = yamlFileInfo!!.repoHashId,
                 branchName = branchName
+            )
+            return pipelineVersionCreateContextFactory.create(
+                contextParam = contextParam
             ).copy(
                 enablePac = true,
                 yamlFileInfo = yamlFileInfo,

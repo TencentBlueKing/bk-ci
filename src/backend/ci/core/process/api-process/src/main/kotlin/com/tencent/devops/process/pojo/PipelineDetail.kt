@@ -95,5 +95,7 @@ data class PipelineDetail(
     @get:Schema(title = "运行锁定", required = false)
     val locked: Boolean,
     @get:Schema(title = "构建取消权限策略", required = false)
-    var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION
+    var buildCancelPolicy: BuildCancelPolicy? = BuildCancelPolicy.EXECUTE_PERMISSION,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 )

@@ -74,5 +74,7 @@ data class PipelineTemplateResourceUpdateInfo(
     @get:Schema(title = "排序权重，草稿版本权重为100，其他状态的版本权重为0", required = false)
     val sortWeight: Int? = null,
     @get:Schema(title = "研发商店状态", required = false)
-    val storeStatus: TemplateStatusEnum? = null
+    val storeStatus: TemplateStatusEnum? = null,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
 )

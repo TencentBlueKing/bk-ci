@@ -45,8 +45,11 @@ import com.tencent.devops.process.permission.template.PipelineTemplatePermission
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.template.HighlightType
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftStatusResult
+import com.tencent.devops.process.pojo.template.PipelineTemplateDraftVersionSimple
 import com.tencent.devops.process.pojo.template.PipelineTemplateListResponse
 import com.tencent.devops.process.pojo.template.PipelineTemplateListSimpleResponse
 import com.tencent.devops.process.pojo.template.TemplatePreviewDetail
@@ -208,9 +211,10 @@ class UserPipelineTemplateV2ResourceImpl(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long
+        version: Long,
+        draftVersion: Int?
     ): Result<PipelineTemplateDetailsResponse> {
-        logger.info("get template details {}|{}|{}|{}", userId, projectId, templateId, version)
+        logger.info("get template details $userId|$projectId|$templateId|$templateId|$draftVersion")
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
             projectId = projectId,
@@ -221,7 +225,8 @@ class UserPipelineTemplateV2ResourceImpl(
             templateFacadeService.getTemplateDetails(
                 projectId = projectId,
                 templateId = templateId,
-                version = version
+                version = version,
+                draftVersion = draftVersion
             )
         )
     }
@@ -524,7 +529,8 @@ class UserPipelineTemplateV2ResourceImpl(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long
+        version: Long,
+        draftVersion: Int?
     ): Result<DeployTemplateResult> {
         permissionService.checkPipelineTemplatePermissionWithMessage(
             userId = userId,
@@ -537,7 +543,8 @@ class UserPipelineTemplateV2ResourceImpl(
                 userId = userId,
                 projectId = projectId,
                 templateId = templateId,
-                version = version
+                version = version,
+                draftVersion = draftVersion
             )
         )
     }
@@ -683,6 +690,57 @@ class UserPipelineTemplateV2ResourceImpl(
                 templateId = templateId,
                 version = version,
                 highlightType = highlightType
+            )
+        )
+    }
+
+    override fun getPipelineDraftStatus(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        actionType: PipelineDraftActionType,
+        version: Long?,
+        baseDraftVersion: Int?
+    ): Result<PipelineTemplateDraftStatusResult> {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT,
+            templateId = templateId
+        )
+        return Result(
+            templateFacadeService.getPipelineDraftStatus(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                actionType = actionType,
+                version = version,
+                baseDraftVersion = baseDraftVersion
+            )
+        )
+    }
+
+    override fun listDraftVersions(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<PipelineTemplateDraftVersionSimple>> {
+        permissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.EDIT,
+            templateId = templateId
+        )
+        return Result(
+            templateFacadeService.listTemplateDraftVersions(
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模板版本摘要")
@@ -84,5 +85,31 @@ data class PipelineTemplateVersionSimple(
     @get:Schema(title = "版本排序号", required = false)
     val number: Int = -1,
     @get:Schema(title = "是否上架研发商店", required = false)
-    val storeFlag: Boolean? = false
-)
+    val storeFlag: Boolean? = false,
+    @get:Schema(title = "草稿版本号", required = false)
+    val draftVersion: Int? = null
+) {
+    constructor(resource: PipelineTemplateResource) : this(
+        pipelineId = resource.templateId,
+        creator = resource.creator,
+        createTime = resource.createdTime ?: System.currentTimeMillis(),
+        updater = resource.updater,
+        updateTime = resource.updateTime,
+        version = resource.version.toInt(),
+        versionName = resource.versionName ?: "",
+        versionNum = resource.versionNum,
+        pipelineVersion = resource.pipelineVersion,
+        triggerVersion = resource.triggerVersion,
+        settingVersion = resource.settingVersion,
+        srcTemplateProjectId = resource.srcTemplateProjectId,
+        srcTemplateId = resource.srcTemplateId,
+        srcTemplateVersion = resource.srcTemplateVersion?.toInt(),
+        status = resource.status,
+        branchAction = resource.branchAction,
+        description = resource.description,
+        baseVersion = resource.baseVersion?.toInt(),
+        baseVersionName = resource.baseVersionName,
+        number = resource.number,
+        draftVersion = resource.draftVersion
+    )
+}

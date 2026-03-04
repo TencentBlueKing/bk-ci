@@ -94,7 +94,9 @@ data class PipelineTemplateResource(
     @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
     @get:Schema(title = "更新时间", required = false)
-    val updateTime: Long? = null
+    val updateTime: Long? = null,
+    @get:Schema(title = "该版本来源的草稿版本,草稿保存时传入", required = false)
+    val draftVersion: Int? = null
 ) {
     constructor(
         pTemplateResourceWithoutVersion: PTemplateResourceWithoutVersion,
@@ -126,6 +128,7 @@ data class PipelineTemplateResource(
         description = pTemplateResourceWithoutVersion.description,
         sortWeight = pTemplateResourceWithoutVersion.sortWeight,
         creator = pTemplateResourceWithoutVersion.creator,
-        updater = pTemplateResourceWithoutVersion.updater
+        updater = pTemplateResourceWithoutVersion.updater,
+        draftVersion = pTemplateResourceOnlyVersion.draftVersion
     )
 }

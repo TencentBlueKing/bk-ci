@@ -125,12 +125,6 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                     }
                 } ?: Triple(null, null, null)
 
-            logger.debug(
-                "PipelineTemplateDraftSaveReqConverter|baseResource={},srcTemplateProjectId={}," +
-                    "srcTemplateId={},srcTemplateVersion={},mode={}", baseResource, srcTemplateProjectId,
-                srcTemplateId, srcTemplateVersion, templateInfo.mode
-            )
-
             pipelineTemplateModelInitializer.initTemplateModel(transferResult.templateModel)
             val pTemplateResourceWithoutVersion = PTemplateResourceWithoutVersion(
                 projectId = projectId,
@@ -163,7 +157,8 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 versionAction = PipelineVersionAction.SAVE_DRAFT,
                 pipelineTemplateInfo = templateInfo,
                 pTemplateResourceWithoutVersion = pTemplateResourceWithoutVersion,
-                pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion
+                pTemplateSettingWithoutVersion = pTemplateSettingWithoutVersion,
+                baseDraftVersion = baseDraftVersion
             )
         }
     }

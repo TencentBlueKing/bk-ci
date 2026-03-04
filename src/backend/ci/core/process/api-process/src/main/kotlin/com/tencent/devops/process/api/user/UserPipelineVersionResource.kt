@@ -42,7 +42,10 @@ import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineOperationDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftStatusResult
+import com.tencent.devops.process.pojo.pipeline.PipelineDraftVersionSimple
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineDraftActionType
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -166,7 +169,10 @@ interface UserPipelineVersionResource {
         archiveFlag: Boolean? = false,
         @Parameter(description = "请求来源", required = false)
         @QueryParam("source")
-        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW
+        source: PipelineGetVersionSource? = PipelineGetVersionSource.VIEW,
+        @Parameter(description = "草稿版本", required = false)
+        @QueryParam("draftVersion")
+        draftVersion: Int?
     ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
@@ -343,7 +349,10 @@ interface UserPipelineVersionResource {
         pipelineId: String,
         @Parameter(description = "回回滚目标版本", required = true)
         @QueryParam("version")
-        version: Int
+        version: Int,
+        @Parameter(description = "草稿版本", required = false)
+        @QueryParam("draftVersion")
+        draftVersion: Int?
     ): Result<PipelineVersionSimple>
 
     @Operation(summary = "判断是否能回滚到指定的版本")
@@ -402,4 +411,52 @@ interface UserPipelineVersionResource {
         @Parameter(description = "流水线构建推荐版本号更新", required = true)
         buildNo: BuildNoUpdateReq
     ): Result<Boolean>
+
+    @Operation(summary = "获取流水线草稿状态")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/draftStatus")
+    fun getPipelineDraftStatus(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "操作类型", required = true)
+        @QueryParam("actionType")
+        actionType: PipelineDraftActionType,
+        @Parameter(description = "流水线版本,当actionType为SAVE或RELEASE,需要传入", required = false)
+        @QueryParam("version")
+        version: Int?,
+        @Parameter(description = "来源的草稿版本,当actionType为SAVE时,需要传入", required = false)
+        @QueryParam("baseDraftVersion")
+        baseDraftVersion: Int?
+    ): Result<PipelineDraftStatusResult>
+
+    @Operation(summary = "获取流水线草稿版本列表")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/draftVersions")
+    fun listDraftVersions(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线版本", required = false)
+        @QueryParam("version")
+        version: Int,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "5")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<PipelineDraftVersionSimple>>
 }
