@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineTriggerEventResource
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
@@ -48,13 +49,20 @@ class UserPipelineTriggerEventResourceImpl(
 
     override fun listTriggerType(
         userId: String,
+        channelCode: ChannelCode?,
         scmType: ScmType?
     ): Result<List<IdValue>> {
         return Result(
-            PipelineTriggerType.toMap(
-                userId = userId,
-                scmType = scmType
-            )
+            if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                PipelineTriggerType.creativeStreamTriggerTypes().map {
+                    it.convertIdValue(userId)
+                }
+            } else {
+                PipelineTriggerType.toMap(
+                    userId = userId,
+                    scmType = scmType
+                )
+            }
         )
     }
 

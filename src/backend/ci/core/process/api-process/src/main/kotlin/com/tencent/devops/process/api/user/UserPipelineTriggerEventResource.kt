@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEventVo
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonStatistics
@@ -65,6 +66,9 @@ interface UserPipelineTriggerEventResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "渠道", required = false)
+        @HeaderParam(AUTH_HEADER_CHANNEL)
+        channelCode: ChannelCode?,
         @Parameter(description = "代码库类型,为空则返回所有事件类型", required = false)
         @QueryParam("scmType")
         scmType: ScmType?

@@ -81,6 +81,15 @@ enum class PipelineTriggerType {
         return toScmType(name)
     }
 
+    fun convertIdValue(userId: String) = IdValue(
+        id = name,
+        value = I18nUtil.getCodeLanMessage(
+            messageCode = "TRIGGER_TYPE_$name",
+            defaultMessage = name,
+            language = I18nUtil.getLanguage(userId)
+        )
+    )
+
     companion object {
         // 通用触发类型
         private val commonTriggerTypes = listOf(MANUAL, TIME_TRIGGER, REMOTE)
@@ -96,16 +105,7 @@ enum class PipelineTriggerType {
                     scmType.name == it.name
                 }.plus(commonTriggerTypes)
             }
-            return triggerTypes.map {
-                IdValue(
-                    id = it.name,
-                    value = I18nUtil.getCodeLanMessage(
-                        messageCode = "TRIGGER_TYPE_${it.name}",
-                        defaultMessage = it.name,
-                        language = I18nUtil.getLanguage(userId)
-                    )
-                )
-            }
+            return triggerTypes.map { it.convertIdValue(userId) }
         }
 
         fun toScmType(triggerType: String): ScmType? {
@@ -130,5 +130,14 @@ enum class PipelineTriggerType {
         }
 
         fun parse(triggerType: String) = PipelineTriggerType.values().find { it.name == triggerType }
+
+        /**
+         * 创作流触发方式
+         */
+        fun creativeStreamTriggerTypes() = listOf(
+            MANUAL,
+            TIME_TRIGGER,
+            TRIGGER_EVENT
+        )
     }
 }
