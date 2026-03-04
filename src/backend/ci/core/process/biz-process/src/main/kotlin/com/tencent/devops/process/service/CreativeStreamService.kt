@@ -51,7 +51,7 @@ class CreativeStreamService constructor(
                 projectId = projectId,
                 workspaceName = workspaceName,
                 userId = userId,
-                checkPermission = false
+                noCheckPerm = true
             ).data
         } catch (ignored: Exception) {
             logger.warn("get env list failed|$projectId|$workspaceName", ignored)
