@@ -457,7 +457,6 @@ object ProcessMessageCode {
     const val ERROR_TEMPLATE_RESOURCE_DRAFT_VERSION_NOT_EXISTS = "2101363" // 模板草稿版本编排[{0}]记录不存在
     const val ERROR_TEMPLATE_SETTING_DRAFT_VERSION_NOT_EXISTS = "2101364" // 模板草稿版本设置[{0}]不存在
 
-
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
