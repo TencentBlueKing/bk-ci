@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -47,6 +48,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.BK_RECIPIENT_EMPTY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -57,7 +59,8 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class EmailTaskAtom @Autowired constructor(
     private val client: Client,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : IAtomTask<SendEmailNotifyElement> {
 
     override fun getParamElement(task: PipelineBuildTask): SendEmailNotifyElement {
@@ -141,7 +144,13 @@ class EmailTaskAtom @Autowired constructor(
         val projectId = task.projectId
         val pipelineId = task.pipelineId
 
-        val detailUrl = detailUrl(projectId, pipelineId, buildId)
+        // 获取流水线渠道信息，用于生成对应渠道的 URL
+        val channelCode = try {
+            pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.channelCode
+        } catch (ignore: Exception) {
+            null
+        }
+        val detailUrl = detailUrl(projectId, pipelineId, buildId, channelCode)
         val emailBody = parseVariable(param.body, runVariables)
         val message = EmailNotifyMessage().apply {
             format = EnumEmailFormat.HTML
@@ -170,8 +179,19 @@ class EmailTaskAtom @Autowired constructor(
         return AtomResponse(BuildStatus.SUCCEED)
     }
 
-    private fun detailUrl(projectId: String, pipelineId: String, buildId: String) =
-            "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    /**
+     * 根据渠道生成构建详情 URL
+     * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
+     * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
+     */
+    private fun detailUrl(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode? = null): String {
+        val host = HomeHostUtil.innerServerHost()
+        return if (channelCode == ChannelCode.CREATIVE_STREAM) {
+            "$host/console/creative-stream/$projectId/flow/$pipelineId/execute/$buildId/execute-detail"
+        } else {
+            "$host/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+        }
+    }
 
     private fun getSet(receiverStr: String): Set<String> {
         val set = mutableSetOf<String>()
