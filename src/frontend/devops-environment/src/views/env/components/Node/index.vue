@@ -12,6 +12,7 @@
                             action: ENV_RESOURCE_ACTION.EDIT
                         }
                     }"
+                    key="relatedNodes"
                     @click="handleShowAddNodesDialog"
                 >
                     {{ $t('environment.relatedNodes') }}
@@ -26,6 +27,7 @@
                             action: ENV_RESOURCE_ACTION.EDIT
                         }
                     }"
+                    key="bulkRemove"
                     @click="handleBatchRemove"
                 >
                     {{ $t('environment.bulkRemove') }}
