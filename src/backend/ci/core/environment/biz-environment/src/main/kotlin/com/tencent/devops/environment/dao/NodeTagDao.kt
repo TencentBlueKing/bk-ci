@@ -148,7 +148,7 @@ class NodeTagDao {
     }
 
     // 查询节点有哪些标签
-    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: Set<Long>): Map<Long, MutableList<NodeTag>> {
+    fun fetchNodesTags(dslContext: DSLContext, projectId: String, nodeIds: List<Long>): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(
             TNodeTags.T_NODE_TAGS.NODE_ID,
@@ -187,7 +187,7 @@ class NodeTagDao {
     fun fetchNodesInternalTags(
         dslContext: DSLContext,
         projectId: String,
-        nodeIds: Set<Long>
+        nodeIds: List<Long>
     ): Map<Long, MutableList<NodeTag>> {
         val resM = mutableMapOf<Long, MutableMap<Long, NodeTag>>()
         dslContext.select(

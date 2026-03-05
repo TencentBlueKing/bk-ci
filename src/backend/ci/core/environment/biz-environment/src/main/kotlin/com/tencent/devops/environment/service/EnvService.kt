@@ -212,10 +212,6 @@ class EnvService @Autowired constructor(
         if (existEnv.envType != EnvType.BUILD.name && envUpdateInfo.envType == EnvType.BUILD) {
             throw ErrorCodeException(errorCode = ERROR_ENV_DEPLOY_2_BUILD_DENY)
         }
-        if (envUpdateInfo.envType == EnvType.CREATE) {
-            // 看了下前段没开发修改，暂时先直接return
-            return
-        }
 
         ActionAuditContext.current()
             .addInstanceInfo(
@@ -236,7 +232,11 @@ class EnvService @Autowired constructor(
                 envId = HashUtil.decodeIdToLong(envHashId),
                 name = envUpdateInfo.name,
                 desc = envUpdateInfo.desc,
-                envType = envUpdateInfo.envType.name,
+                envType = if (existEnv.envType != EnvType.CREATE.name) {
+                    envUpdateInfo.envType.name
+                } else {
+                    existEnv.envType
+                },
                 envVars = objectMapper.writeValueAsString(envUpdateInfo.envVars)
             )
 
@@ -1657,14 +1657,23 @@ class EnvService @Autowired constructor(
             }
         }
         val envs = envDao.list(dslContext, projectId, envIds = rEnvIds)
+        val envMap = envs.associateBy { it.envId }
         envTagDao.batchEnvTagNode(
             dslContext = dslContext,
             projectId = projectId,
             envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
         ).forEach {
-            it.value.forEach { node ->
-                result.add(EnvNode(it.key, node, true))
-            }
+            // 动态环境需要根据环境类型区分
+            val envId = it.key
+            val realNodeIds = nodeDao.listByIds(
+                dslContext, projectId, it.value, nodeType = when (envMap[envId]?.envType) {
+                    EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name -> NodeType.CMDB
+                    EnvType.BUILD.name -> NodeType.THIRDPARTY
+                    EnvType.CREATE.name -> NodeType.CREATE
+                    else -> null
+                }
+            ).map { node -> EnvNode(envId, node.nodeId, true) }
+            result.addAll(realNodeIds)
         }
         envNodeDao.list(
             dslContext = dslContext,
@@ -1703,7 +1712,7 @@ class EnvService @Autowired constructor(
             logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
             return result
         }
-        var permissionEnvList : List<Long>? = null
+        var permissionEnvList: List<Long>? = null
         if (!noCheckPerm) {
             permissionEnvList = environmentPermissionService.listEnvByPermissions(
                 userId,
@@ -1720,7 +1729,7 @@ class EnvService @Autowired constructor(
             it.addAll(tagEnvList)
             if (!noCheckPerm) {
                 it.filter { e -> permissionEnvList!!.contains(e) }
-            }else{
+            } else {
                 it
             }
         }

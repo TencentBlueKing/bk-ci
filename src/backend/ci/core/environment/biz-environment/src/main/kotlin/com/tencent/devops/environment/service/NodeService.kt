@@ -458,13 +458,9 @@ class NodeService @Autowired constructor(
         } else {
             emptyMap()
         }
-        val tagMaps = if (thirdPartyAgentNodeIds.isNotEmpty()) {
-            nodeTagService.fetchNodeTags(projectId, thirdPartyAgentNodeIds.toSet())
-        } else {
-            emptyMap()
-        }
-
-        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeListResult.map { it.nodeId })
+        val nodeIds = nodeListResult.map { it.nodeId }
+        val tagMaps = nodeTagService.fetchNodeTags(projectId, nodeIds)
+        val nodeEnvs = envNodeDao.listNodeIds(dslContext, projectId, nodeIds)
         val envInfos = envDao.listServerEnvByIdsAllType(
             dslContext, nodeEnvs.map { it.envId }.toSet()
         ).associateBy { it.envId }
