@@ -1,3 +1,30 @@
+.versionSideslider {
+}
+
+.sliderHeader {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.versionRuleTips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.versionRuleContent {
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.versionRuleContent p {
+  margin: 0;
+}
+
 .versionHistory {
   padding: 24px;
   display: flex;
@@ -7,13 +34,29 @@
 }
 
 .versionHistoryHeader {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: flex-end;
 }
 
-.searchInput {
-  width: 360px;
+.searchSelect {
+  width: 500px;
+}
+
+.searchSelect :global(.bk-search-select-container .search-container) {
+  position: inherit;
+}
+
+.searchSelect :global(.bk-search-select-container) {
+  scrollbar-gutter: stable !important;
+  width: 100% !important;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.searchSelect :global(::placeholder) {
+  color: #c4c6cc;
 }
 
 .versionHistoryContent {
@@ -27,12 +70,35 @@
   gap: 6px;
 }
 
-.versionNameCell > span {
+.versionIcon {
   flex-shrink: 0;
   font-size: 14px;
   line-height: 14px;
+  display: flex;
+  align-items: center;
 }
 
-.activeVersionName .checkIcon {
-  color: var(--color-success) !important;
+.activeVersionName .versionIcon {
+  color: #2dcb56;
+}
+
+.clickableVersionName {
+  cursor: pointer;
+  color: var(--color-primary);
+}
+
+.clickableVersionName:hover {
+  text-decoration: underline;
+}
+
+.operateCell {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.emptyState {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-placeholder);
 }

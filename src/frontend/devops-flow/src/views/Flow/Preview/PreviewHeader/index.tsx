@@ -15,7 +15,7 @@ const { Option } = Select
  * Find latest version from version list (pure function)
  */
 const findLatestVersion = (versions: FlowVersion[]): FlowVersion | undefined => {
-  return versions.find((v) => v.isLatest)
+  return versions.find((v) => v.latestReleasedFlag)
 }
 
 // ============================================
@@ -128,9 +128,9 @@ export default defineComponent({
             {{
               trigger: () => (
                 <span class={styles.versionTrigger}>
-                  {renderCheckIcon(currentVersion?.isLatest)}
+                  {renderCheckIcon(currentVersion?.latestReleasedFlag)}
                   <span class={styles.versionText}>{currentVersion?.versionName}</span>
-                  {currentVersion?.isLatest && renderTag()}
+                  {currentVersion?.latestReleasedFlag && renderTag()}
                   <SvgIcon name="angle-down" class={styles.versionSelectToggleIcon} />
                 </span>
               ),
@@ -138,9 +138,14 @@ export default defineComponent({
                 releasedVersionList.value.map((version) => (
                   <Option key={version.version} value={version.version} label={version.versionName}>
                     <div class={styles.versionOption}>
-                      {renderCheckIcon(version.isLatest)}
-                      <span>{version.versionName}</span>
-                      {version.isLatest && renderTag()}
+                      <div class={styles.versionOptionName}>
+                        {renderCheckIcon(version.latestReleasedFlag)}
+                        <span>{version.versionName}</span>
+                        {version.latestReleasedFlag && renderTag()}
+                      </div>
+                      <span class={styles.versionOptionDesc}>
+                        {version.description || '--'}
+                      </span>
                     </div>
                   </Option>
                 )),

@@ -121,7 +121,7 @@ export function createDefaultElement(index: number, partial?: Partial<Element>):
       retryCount: 1,
       manualRetry: false,
       timeout: 0,
-      timeoutVar: '',
+      timeoutVar: '900',
       runCondition: AtomRunCondition.PRE_TASK_SUCCESS,
       pauseBeforeExec: false,
       subscriptionPauseUser: '',

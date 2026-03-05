@@ -192,6 +192,10 @@ export default defineComponent({
       handleChange()
     }
 
+    const isBlankTemplate = computed(
+      () => templateInfoData.value.activeTemplate?.templateType === templateTypeEnum.PUBLIC,
+    )
+
     const isModelListShow = ref(false)
     const panels = ref([
       { name: 'projectModel', label: t('flow.content.projectTemplate') },
@@ -397,49 +401,59 @@ export default defineComponent({
               },
             }}
           </Popover>
-          <div class={styles.settingAside}>
-            <div class={styles.modelSelect}>
-              <p class={styles.settingLabel}>{t('flow.content.mode')}</p>
-              <Radio.Group
-                v-model={templateInfoData.value.currentModel}
-                size="small"
-                onChange={handleChange}
-              >
-                {tplTypes.value.map((item) => (
-                  <Radio label={item.value} key={item.value}>
-                    {item.label}
-                  </Radio>
-                ))}
-              </Radio.Group>
+          {!isBlankTemplate.value && (
+            <div class={styles.settingAside}>
+              <div class={styles.modelSelect}>
+                <p class={styles.settingLabel}>{t('flow.content.mode')}</p>
+                <Radio.Group
+                  v-model={templateInfoData.value.currentModel}
+                  size="small"
+                  onChange={handleChange}
+                >
+                  {tplTypes.value.map((item) => (
+                    <Radio label={item.value} key={item.value}>
+                      {item.label}
+                    </Radio>
+                  ))}
+                </Radio.Group>
+              </div>
+              <div class={styles.cloneTemplateSet}>
+                <p class={styles.settingLabel}>{t('flow.content.cloneTemplateSettings')}</p>
+                <Checkbox.Group
+                  v-model={templateInfoData.value.cloneTemplateSet}
+                  onChange={handleChange}
+                >
+                  {settingItems.value.map((item) => (
+                    <Checkbox label={item.value} size="small" disabled={item.disabled}>
+                      {item.label}
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+              </div>
             </div>
-            <div class={styles.cloneTemplateSet}>
-              <p class={styles.settingLabel}>{t('flow.content.cloneTemplateSettings')}</p>
-              <Checkbox.Group
-                v-model={templateInfoData.value.cloneTemplateSet}
-                onChange={handleChange}
-              >
-                {settingItems.value.map((item) => (
-                  <Checkbox label={item.value} size="small" disabled={item.disabled}>
-                    {item.label}
-                  </Checkbox>
-                ))}
-              </Checkbox.Group>
-            </div>
+          )}
+        </div>
+        {isBlankTemplate.value ? (
+          <div class={styles.blankTemplatePlaceholder}>
+            <SvgIcon name="placeholder" size={64} />
+            <p class={styles.blankTemplateTitle}>{t('flow.content.blankTemplateNoOrchestration')}</p>
+            <p class={styles.blankTemplateDesc}>{t('flow.content.createToAddFirstStage')}</p>
           </div>
-        </div>
-        <div class={styles.contentConfig}>
-          <ul class={styles.configAside}>
-            {configList.value.map((item) => (
-              <li
-                onClick={() => changeConfig(item.name)}
-                class={`${styles.configItem} ${templateInfoData.value.activeMenuItem === item.name ? styles.configActive : ''}`}
-              >
-                {item.title}
-              </li>
-            ))}
-          </ul>
-          <div class={styles.configContent}>{renderDynamicComponent()}</div>
-        </div>
+        ) : (
+          <div class={styles.contentConfig}>
+            <ul class={styles.configAside}>
+              {configList.value.map((item) => (
+                <li
+                  onClick={() => changeConfig(item.name)}
+                  class={`${styles.configItem} ${templateInfoData.value.activeMenuItem === item.name ? styles.configActive : ''}`}
+                >
+                  {item.title}
+                </li>
+              ))}
+            </ul>
+            <div class={styles.configContent}>{renderDynamicComponent()}</div>
+          </div>
+        )}
       </div>
     )
   },

@@ -197,6 +197,27 @@
   background-color: var(--bg-primary);
 }
 
+.blankTemplatePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 104px);
+  color: var(--color-text-tertiary);
+}
+
+.blankTemplateTitle {
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-md);
+  color: var(--color-text-medium-black);
+}
+
+.blankTemplateDesc {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
 .btn {
   margin-left: var(--spacing-sm);
 }

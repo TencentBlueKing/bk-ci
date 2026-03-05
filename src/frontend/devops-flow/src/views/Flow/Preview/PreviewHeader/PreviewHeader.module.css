@@ -80,12 +80,24 @@
 
 .versionOption {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  line-height: 20px;
+}
+
+.versionOptionName {
+  display: flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 
-.versionOption:active {
-  background-color: var(--bg-hover-active);
+.versionOptionDesc {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tag {

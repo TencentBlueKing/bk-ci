@@ -3,6 +3,7 @@ import KeyValueMap from '@/components/AtomForm/KeyValueMap'
 import { SvgIcon } from '@/components/SvgIcon'
 import { getStageRunConditionList } from '@/constants/flowOptionConfig'
 import { StageRunCondition } from '@/utils/flowDefaults'
+import { validateStageControlOption } from '@/utils/validation'
 import { Checkbox, Collapse, Form, Input, Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -84,13 +85,50 @@ export default defineComponent({
     // Show flow control section only for non-trigger and non-finally stages
     const showFlowControl = computed(() => !isTriggerStage.value && !isFinallyStage.value)
 
+    const stageCtrlErrorFields = computed(() => {
+      if (!props.stage) return []
+      return validateStageControlOption({
+        stageControlOption: {
+          enable: formData.value.enable,
+          runCondition: formData.value.runCondition,
+          customVariables: formData.value.customVariables,
+          customCondition: formData.value.customCondition,
+        },
+      })
+    })
+
     const runConditionOptions = getStageRunConditionList(t).map((opt) => ({
       label: opt.name,
       value: opt.id,
     }))
 
     // ========== Helpers ==========
-    /** Build updated Stage object from formData */
+    function extractFormData(stage: Stage): StageFormData {
+      const ctrl = stage.stageControlOption
+      return {
+        name: stage.name || '',
+        enable: ctrl?.enable ?? true,
+        fastKill: stage.fastKill || false,
+        runCondition: ctrl?.runCondition || 'AFTER_LAST_FINISHED',
+        customVariables: ctrl?.customVariables || [],
+        customCondition: ctrl?.customCondition || '',
+      }
+    }
+
+    function isFormDataEqual(a: StageFormData, b: StageFormData): boolean {
+      return (
+        a.name === b.name &&
+        a.enable === b.enable &&
+        a.fastKill === b.fastKill &&
+        a.runCondition === b.runCondition &&
+        a.customCondition === b.customCondition &&
+        a.customVariables.length === b.customVariables.length &&
+        a.customVariables.every(
+          (v, i) => v.key === b.customVariables[i]?.key && v.value === b.customVariables[i]?.value,
+        )
+      )
+    }
+
     function buildUpdatedStage(): Stage | null {
       if (!props.stage) return null
       return {
@@ -108,20 +146,15 @@ export default defineComponent({
     }
 
     // ========== Watchers ==========
-    // Sync props.stage to formData
+    // Sync props.stage → formData (guard against no-op updates to break the cycle:
+    // props.stage → formData → emit('change') → parent update → props.stage …)
     watch(
       () => props.stage,
       (stage) => {
         if (!stage) return
-        const ctrl = stage.stageControlOption
-        formData.value = {
-          name: stage.name || '',
-          enable: ctrl?.enable ?? true,
-          fastKill: stage.fastKill || false,
-          runCondition: ctrl?.runCondition || 'AFTER_LAST_FINISHED',
-          customVariables: ctrl?.customVariables || [],
-          customCondition: ctrl?.customCondition || '',
-        }
+        const incoming = extractFormData(stage)
+        if (isFormDataEqual(incoming, formData.value)) return
+        formData.value = incoming
       },
       { immediate: true, deep: true },
     )
@@ -152,7 +185,10 @@ export default defineComponent({
       formData,
       () => {
         const updated = buildUpdatedStage()
-        if (updated) emit('change', updated)
+        if (updated) {
+          ;(updated as Record<string, unknown>).isError = stageCtrlErrorFields.value.length > 0
+          emit('change', updated)
+        }
       },
       { deep: true },
     )
@@ -214,6 +250,7 @@ export default defineComponent({
 
                         {showCustomVariables.value && (
                           <FormItem
+                            required
                             v-slots={{
                               label: () => (
                                 <div class={sharedStyles.labelWithIcon}>
@@ -240,6 +277,7 @@ export default defineComponent({
                         {showCustomCondition.value && (
                           <FormItem
                             required
+                            class={stageCtrlErrorFields.value.includes('stageCustomCondition') ? sharedStyles.fieldError : ''}
                             label={t('flow.orchestration.customConditionExp')}
                           >
                             <Input
@@ -247,6 +285,11 @@ export default defineComponent({
                               placeholder={t('flow.orchestration.customConditionExpPlaceholder')}
                               disabled={!props.editable}
                             />
+                            {stageCtrlErrorFields.value.includes('stageCustomCondition') && (
+                              <p class={sharedStyles.fieldErrorMessage}>
+                                {t('flow.orchestration.fieldRequired')}
+                              </p>
+                            )}
                           </FormItem>
                         )}
                       </div>

@@ -772,7 +772,6 @@ export default defineComponent({
                                         <FormItem
                                           label={t('flow.orchestration.customVar')}
                                           required
-                                          class={additionalOptionsErrorFields.value.includes('customVariables') ? sharedStyles.fieldError : ''}
                                         >
                                           {{
                                             default: () => (

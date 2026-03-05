@@ -136,7 +136,7 @@ export default defineComponent({
               {currentStep.value === 2 ? (
                 <Button
                   class={styles.btn}
-                  loading={projectModelLoading.value}
+                  loading={isLoading.value}
                   theme="primary"
                   onClick={handleConfirm}
                 >

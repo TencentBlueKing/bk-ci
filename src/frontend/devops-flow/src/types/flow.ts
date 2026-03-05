@@ -604,8 +604,13 @@ export interface FlowVersion {
   versionName: string // 版本名称
   creator: string // 创建者
   createTime: number // 创建时间
+  updater?: string // 更新人
+  updateTime?: number // 更新时间
   versionStatus: VersionStatus // 版本状态
-  isLatest: boolean // 是否最新版本
+  latestReleasedFlag?: boolean // 是否最新已发布版本
+  description?: string // 版本描述
+  baseVersionName?: string // 草稿的基础版本名称
+  status?: string // 版本状态（兼容旧字段）
   [key: string]: unknown
 }
 

@@ -55,3 +55,7 @@
   align-items: center;
   gap: 6px;
 }
+
+.keyError :global(.bk-input) {
+  border-color: var(--color-danger) !important;
+}

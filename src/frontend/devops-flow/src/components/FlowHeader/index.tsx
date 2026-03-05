@@ -23,7 +23,7 @@ const { Option } = Select
 export interface VersionOption {
   value: string
   label: string
-  isLatest?: boolean
+  latestReleasedFlag?: boolean
 }
 
 export const FlowHeader = defineComponent({
@@ -321,9 +321,9 @@ export const FlowHeader = defineComponent({
                 {{
                   trigger: () => (
                     <span class={styles.versionTrigger}>
-                      {renderCheckIcon(currentVersion.value?.isLatest)}
+                      {renderCheckIcon(currentVersion.value?.latestReleasedFlag)}
                       {currentVersion.value?.versionName || '--'}
-                      {currentVersion.value?.isLatest && renderTag()}
+                      {currentVersion.value?.latestReleasedFlag && renderTag()}
                       {dropdownLoading.value && visibleVersionList.value.length === 0 ? (
                         <Loading
                           loading={true}
@@ -350,9 +350,14 @@ export const FlowHeader = defineComponent({
                         label={version.versionName}
                       >
                         <div class={styles.versionOption}>
-                          {renderCheckIcon(version.isLatest)}
-                          <span>{version.versionName}</span>
-                          {version.isLatest && renderTag()}
+                          <div class={styles.versionOptionName}>
+                            {renderCheckIcon(version.latestReleasedFlag)}
+                            <span>{version.versionName}</span>
+                            {version.latestReleasedFlag && renderTag()}
+                          </div>
+                          <span class={styles.versionOptionDesc}>
+                            {version.description || '--'}
+                          </span>
                         </div>
                       </Option>
                     ))
@@ -400,6 +405,10 @@ export const FlowHeader = defineComponent({
         <VersionHistorySideSlider
           v-model:isShow={showVersionHistory.value}
           currentVersion={selectedVersion.value}
+          onSelect={(version: number) => {
+            selectedVersion.value = version
+            props.onVersionChange?.(version)
+          }}
         />
       </>
     )
