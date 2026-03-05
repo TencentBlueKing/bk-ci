@@ -212,10 +212,6 @@ class EnvService @Autowired constructor(
         if (existEnv.envType != EnvType.BUILD.name && envUpdateInfo.envType == EnvType.BUILD) {
             throw ErrorCodeException(errorCode = ERROR_ENV_DEPLOY_2_BUILD_DENY)
         }
-        if (envUpdateInfo.envType == EnvType.CREATE) {
-            // 看了下前段没开发修改，暂时先直接return
-            return
-        }
 
         ActionAuditContext.current()
             .addInstanceInfo(
@@ -236,7 +232,11 @@ class EnvService @Autowired constructor(
                 envId = HashUtil.decodeIdToLong(envHashId),
                 name = envUpdateInfo.name,
                 desc = envUpdateInfo.desc,
-                envType = envUpdateInfo.envType.name,
+                envType = if (existEnv.envType != EnvType.CREATE.name) {
+                    envUpdateInfo.envType.name
+                } else {
+                    existEnv.envType
+                },
                 envVars = objectMapper.writeValueAsString(envUpdateInfo.envVars)
             )
 
@@ -567,6 +567,33 @@ class EnvService @Autowired constructor(
         envHashId: String,
         checkPermission: Boolean
     ): EnvWithPermission {
+        // 创作流特供
+        if (envHashId == AllCreateNodeEnv.hashId()) {
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                    params = arrayOf(envHashId)
+                )
+            }
+            return EnvWithPermission(
+                envHashId = envHashId,
+                name = AllCreateNodeEnv.name(),
+                desc = AllCreateNodeEnv.name(),
+                envType = EnvType.CREATE.name, // 兼容性代码
+                envNodeType = EnvNodeType.NODE.name,
+                nodeCount = null,
+                tags = null,
+                envVars = null,
+                createdUser = "",
+                createdTime = 0,
+                updatedUser = "",
+                updatedTime = 0,
+                canEdit = false,
+                canDelete = false,
+                canUse = null,
+                projectName = client.get(ServiceProjectResource::class).get(projectId).data?.projectName
+            )
+        }
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (checkPermission && !environmentPermissionService.checkEnvPermission(
                 userId = userId,
@@ -1630,14 +1657,23 @@ class EnvService @Autowired constructor(
             }
         }
         val envs = envDao.list(dslContext, projectId, envIds = rEnvIds)
+        val envMap = envs.associateBy { it.envId }
         envTagDao.batchEnvTagNode(
             dslContext = dslContext,
             projectId = projectId,
             envIds = envs.filter { it.envNodeType == EnvNodeType.TAG.name }.map { it.envId }.toSet()
         ).forEach {
-            it.value.forEach { node ->
-                result.add(EnvNode(it.key, node, true))
-            }
+            // 动态环境需要根据环境类型区分
+            val envId = it.key
+            val realNodeIds = nodeDao.listByIds(
+                dslContext, projectId, it.value, nodeType = when (envMap[envId]?.envType) {
+                    EnvType.DEV.name, EnvType.TEST.name, EnvType.PROD.name -> NodeType.CMDB
+                    EnvType.BUILD.name -> NodeType.THIRDPARTY
+                    EnvType.CREATE.name -> NodeType.CREATE
+                    else -> null
+                }
+            ).map { node -> EnvNode(envId, node.nodeId, true) }
+            result.addAll(realNodeIds)
         }
         envNodeDao.list(
             dslContext = dslContext,
@@ -1649,7 +1685,12 @@ class EnvService @Autowired constructor(
         return result
     }
 
-    fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): List<EnvData> {
+    fun fetchAllNodeEnvList(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        noCheckPerm: Boolean
+    ): List<EnvData> {
         val agent = thirdPartyAgentDao.getAgentByWorkspaceName(
             dslContext = dslContext,
             projectId = projectId,
@@ -1671,19 +1712,26 @@ class EnvService @Autowired constructor(
             logger.info("fetchAllNodeEnvList $projectId|$workspaceName no env list")
             return result
         }
-        val permissionEnvList = environmentPermissionService.listEnvByPermissions(
-            userId,
-            projectId,
-            setOf(AuthPermission.USE)
-        )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
-        if (permissionEnvList.isNullOrEmpty()) {
-            logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
-            return result
+        var permissionEnvList: List<Long>? = null
+        if (!noCheckPerm) {
+            permissionEnvList = environmentPermissionService.listEnvByPermissions(
+                userId,
+                projectId,
+                setOf(AuthPermission.USE)
+            )[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) }
+            if (permissionEnvList.isNullOrEmpty()) {
+                logger.info("fetchAllNodeEnvList $projectId|$workspaceName no permission use env")
+                return result
+            }
         }
         val envIds = mutableListOf<Long>().let {
             it.addAll(envNodeList)
             it.addAll(tagEnvList)
-            it.filter { e -> permissionEnvList.contains(e) }
+            if (!noCheckPerm) {
+                it.filter { e -> permissionEnvList!!.contains(e) }
+            } else {
+                it
+            }
         }
         logger.debug("fetchAllNodeEnvList $projectId|$workspaceName can use $envIds")
         return envDao.list(
@@ -1724,7 +1772,14 @@ class EnvService @Autowired constructor(
     }
 
     fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
-        return envDao.fetchEnvTypeCount(dslContext, projectId, createEnv ?: false)
+        val isCreateMode = createEnv ?: false
+        val res = envDao.fetchEnvTypeCount(dslContext, projectId, isCreateMode)
+        val allowedTypes = if (isCreateMode) {
+            listOf(EnvType.CREATE)
+        } else {
+            EnvType.noCreateMode()
+        }.map { it.name }.toSet()
+        return res.filter { it.key in allowedTypes }
     }
 
     companion object {

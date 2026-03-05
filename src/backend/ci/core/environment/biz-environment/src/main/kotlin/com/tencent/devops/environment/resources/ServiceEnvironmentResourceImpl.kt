@@ -261,8 +261,13 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         }
     }
 
-    override fun fetchAllNodeEnvList(userId: String, projectId: String, workspaceName: String): Result<List<EnvData>> {
-        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName))
+    override fun fetchAllNodeEnvList(
+        userId: String,
+        projectId: String,
+        workspaceName: String,
+        noCheckPerm: Boolean
+    ): Result<List<EnvData>> {
+        return Result(envService.fetchAllNodeEnvList(userId, projectId, workspaceName, noCheckPerm))
     }
 
     override fun listNodesNewByName(

@@ -88,14 +88,14 @@ class UserNodeTagResourceImpl @Autowired constructor(
         nodeHashId: String
     ): Result<NodeTagAndEnv> {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val tags = nodeTagService.fetchNodeTags(projectId, setOf(nodeId))[nodeId] ?: emptyList()
+        val tags = nodeTagService.fetchNodeTags(projectId, listOf(nodeId))[nodeId] ?: emptyList()
         return Result(
             NodeTagAndEnv(
                 tags = tags,
                 envs = envService.fetchNodeEnvs(
                     projectId = projectId,
                     nodeId = nodeId,
-                    tagValueIds = tags.map { it.tagValues.map { t -> t.tagValueId } }.flatten()
+                    tagValueIds = tags.flatMap { it.tagValues.map { t -> t.tagValueId } }
                 )
             )
         )

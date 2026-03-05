@@ -301,7 +301,8 @@ class NodeDao {
         nodeIp: String? = null,
         displayName: String? = null,
         createdUser: String? = null,
-        nodeStatus: NodeStatus? = null
+        nodeStatus: NodeStatus? = null,
+        nodeType: NodeType? = null
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             val dsl = dslContext.selectFrom(this)
@@ -318,6 +319,9 @@ class NodeDao {
             }
             if (nodeStatus != null) {
                 dsl.and(NODE_STATUS.eq(nodeStatus.name))
+            }
+            if (nodeType != null) {
+                dsl.and(NODE_TYPE.eq(nodeType.name))
             }
             return dsl.orderBy(NODE_ID.desc())
                 .fetch()

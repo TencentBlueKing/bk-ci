@@ -440,7 +440,7 @@ class NodeTagService @Autowired constructor(
     }
 
     // 查询这个节点有的标签
-    fun fetchNodeTags(projectId: String, nodeIds: Set<Long>): Map<Long, List<NodeTag>> {
+    fun fetchNodeTags(projectId: String, nodeIds: List<Long>): Map<Long, List<NodeTag>> {
         val res = mutableMapOf<Long, MutableList<NodeTag>>().apply {
             putAll(nodeTagDao.fetchNodesTags(dslContext, projectId, nodeIds))
         }
