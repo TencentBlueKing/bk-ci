@@ -141,7 +141,7 @@ class PipelineWebhookService @Autowired constructor(
             pipelineId = pipelineId,
             pipelineName = model.name,
             failedElementNames = failedElementNames,
-            version = pipelineResourceVersion.version
+            version = version
         )
     }
 

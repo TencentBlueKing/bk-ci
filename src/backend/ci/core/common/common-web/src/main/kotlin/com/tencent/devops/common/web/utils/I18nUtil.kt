@@ -228,14 +228,13 @@ object I18nUtil {
         } else {
             language
         }
-        // 渠道：显式传入 > 请求头/属性 > MessageUtil 内使用 ChannelContext（异步/MQ 建议入口处 ChannelContext.withChannel 或此处传入 channel）
-        val effectiveChannel = channel ?: getRequestChannel()
+        // 渠道：显式传入 > MessageUtil 内使用 ChannelContext（异步/MQ 建议入口处 ChannelContext.withChannel 或此处传入 channel）
         val i18nMessage = MessageUtil.getMessageByLocale(
             messageCode = messageCode,
             language = i18nLanguage,
             params = params,
             defaultMessage = defaultMessage,
-            channel = effectiveChannel
+            channel = channel
         )
         return if (i18nMessage.isNotBlank() && checkUrlDecoder) {
             URLDecoder.decode(i18nMessage, "UTF-8")

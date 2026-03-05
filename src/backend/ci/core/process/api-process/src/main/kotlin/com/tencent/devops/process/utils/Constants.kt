@@ -244,6 +244,8 @@ const val NODE_OS = "BK_CI_NODE_OS"
 
 const val NODE_HASH_ID = "BK_CI_NODE_HASH_ID"
 
+const val NODE_ENV_HASH_ID = "BK_CI_NODE_ENV_HASH_ID"
+
 /**
  * 保存流水线编排的最大个数
  */
