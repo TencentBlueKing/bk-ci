@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.dao.WindowsResourceZoneDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dispatch.kubernetes.dao.DispatchWorkspaceDao
@@ -35,6 +37,8 @@ import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.CoffeeAI
 import com.tencent.devops.remotedev.dispatch.kubernetes.startcloud.pojo.WorkspaceRegistration
 import com.tencent.devops.remotedev.pojo.WorkspaceAiInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.CreateControl.Companion
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import java.util.Date
@@ -48,6 +52,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class CoffeeAIService @Autowired constructor(
+    private val client: Client,
     private val workspaceStartCloudClient: WorkspaceStartCloudClient,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
@@ -82,6 +87,13 @@ class CoffeeAIService @Autowired constructor(
         workspaceStartCloudClient.setCoffeeAIToken(userId, CoffeeAIToken(userId, token, TOKEN_EXPIRATION_MINUTES))
         logger.info("生成用户WebSocket令牌：userId={}", userId)
         val workspaces = getAiWorkspaceList(userId)
+
+        val organization = kotlin.runCatching {
+            client.get(ServiceTxUserResource::class).get(userId)?.data?.let {
+                "${it.bgName}/${it.businessLineName}/${it.deptName}/${it.centerName}/${it.groupName}"
+            }
+        }.onFailure { logger.warn("get user $userId info error|${it.message}") }
+            .getOrElse { null }
         workspaceStartCloudClient.setCoffeeAIWorkspace(userId, workspaces.map {
             WorkspaceRegistration(
                 workspaceName = it.workspaceName,
@@ -90,7 +102,8 @@ class CoffeeAIService @Autowired constructor(
                 owner = userId,
                 description = it.displayName,
                 projectId = it.projectId,
-                zoneConfigType = it.zoneConfigType
+                zoneConfigType = it.zoneConfigType,
+                organization = organization ?: ""
             )
         })
         return token

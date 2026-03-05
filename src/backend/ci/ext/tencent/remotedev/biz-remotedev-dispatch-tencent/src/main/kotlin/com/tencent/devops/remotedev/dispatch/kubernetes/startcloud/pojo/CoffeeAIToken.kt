@@ -56,5 +56,9 @@ data class WorkspaceRegistration(
 
     @get:Schema(title = "标签", required = false)
     @JsonProperty("tags")
-    val tags: List<String>? = null
+    val tags: List<String>? = null,
+
+    @get:Schema(title = "组织架构", required = false)
+    @JsonProperty("organization")
+    val organization: String
 )
