@@ -46,6 +46,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceSe
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -75,6 +76,9 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateMarketCreateReq
         with(request) {
+            logger.info(
+                "Start to convert market create request|$projectId|$templateId|$templateId|$version"
+            )
             val marketTemplateDetails = client.get(ServiceTemplateResource::class).getTemplateDetailByCode(
                 userId = userId,
                 templateCode = marketTemplateId
@@ -179,5 +183,9 @@ class PipelineTemplateMarketCreateReqConverter @Autowired constructor(
                 pTemplateSettingWithoutVersion = setting
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateMarketCreateReqConverter::class.java)
     }
 }
