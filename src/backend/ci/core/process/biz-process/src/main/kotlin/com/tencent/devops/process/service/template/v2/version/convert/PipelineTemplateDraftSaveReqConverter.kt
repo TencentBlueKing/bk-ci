@@ -144,8 +144,6 @@ class PipelineTemplateDraftSaveReqConverter @Autowired constructor(
                 srcTemplateProjectId = srcTemplateProjectId,
                 srcTemplateId = srcTemplateId,
                 srcTemplateVersion = srcTemplateVersion,
-                baseVersion = baseVersion,
-                baseVersionName = baseResource?.versionName,
                 creator = userId,
                 updater = userId
             )

@@ -122,7 +122,8 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private fun PipelineTemplateVersionCreateContext.createDraftVersion(): PTemplateResourceOnlyVersion {
         val resourceOnlyVersion = pipelineTemplateGenerator.generateDraftVersion(
             projectId = projectId,
-            templateId = templateId
+            templateId = templateId,
+            baseVersion = pTemplateResourceWithoutVersion.baseVersion
         )
         pipelineTemplatePersistenceService.createDraftVersion(
             context = this,

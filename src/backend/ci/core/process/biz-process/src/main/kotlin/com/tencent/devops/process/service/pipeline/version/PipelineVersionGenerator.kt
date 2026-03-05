@@ -29,9 +29,7 @@ package com.tencent.devops.process.service.pipeline.version
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
@@ -53,9 +51,8 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.utils.PipelineVersionUtils
+import com.tencent.devops.process.yaml.PipelineYamlCommonService
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
-import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
-import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
 import jakarta.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -71,11 +68,11 @@ class PipelineVersionGenerator constructor(
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
-    private val client: Client,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
     private val stageTagService: StageTagService,
     private val transferService: PipelineTransferYamlService,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineYamlCommonService: PipelineYamlCommonService
 ) {
 
     /**
@@ -491,7 +488,7 @@ class PipelineVersionGenerator constructor(
                         params = arrayOf("targetBranch")
                     )
                 }
-                val finalDefaultBranch = defaultBranch ?: getDefaultBranch(
+                val finalDefaultBranch = defaultBranch ?: pipelineYamlCommonService.getDefaultBranch(
                     projectId = projectId, repoHashId = repoHashId
                 )
                 // 如果选择的是默认分支,则应该发布正式版本
@@ -639,9 +636,11 @@ class PipelineVersionGenerator constructor(
             }
 
             CodeTargetAction.COMMIT_TO_BRANCH -> {
-                val finalDefaultBranch =
-                    defaultBranch ?: getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
-                if (defaultBranch == finalDefaultBranch) {
+                val finalDefaultBranch = defaultBranch ?: pipelineYamlCommonService.getDefaultBranch(
+                    projectId = projectId,
+                    repoHashId = repoHashId
+                )
+                if (targetBranch == finalDefaultBranch) {
                     Pair(VersionStatus.RELEASED, null)
                 } else {
                     Pair(VersionStatus.BRANCH, targetBranch)
@@ -667,7 +666,7 @@ class PipelineVersionGenerator constructor(
         )
         with(request) {
             val defaultBranch = targetAction?.takeIf { enablePac && it == CodeTargetAction.COMMIT_TO_BRANCH }?.let {
-                getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
+                pipelineYamlCommonService.getDefaultBranch(projectId = projectId, repoHashId = repoHashId)
             }
             val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
             val pipelineId2Name = pipelineRepositoryService.listPipelineNameByIds(
@@ -726,29 +725,6 @@ class PipelineVersionGenerator constructor(
 
             }
         }
-    }
-
-    private fun getDefaultBranch(
-        projectId: String,
-        repoHashId: String?
-    ): String? {
-        if (repoHashId.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("repoHashId")
-            )
-        }
-        val serverRepository = client.get(ServiceScmRepositoryApiResource::class).getServerRepositoryById(
-            projectId = projectId,
-            repositoryType = RepositoryType.ID,
-            repoHashIdOrName = repoHashId
-        ).data
-        if (serverRepository !is GitScmServerRepository) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NOT_SUPPORT_REPOSITORY_TYPE_ENABLE_PAC
-            )
-        }
-        return serverRepository.defaultBranch
     }
 
     fun yaml2model(
