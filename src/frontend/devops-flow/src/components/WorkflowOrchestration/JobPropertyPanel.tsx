@@ -89,10 +89,7 @@ export default defineComponent({
 
     // ========== Handlers ==========
     function handleContainerChange(container: Container) {
-      // Prevent recursive updates by checking if the container has actually changed
-      if (JSON.stringify(formData.value) !== JSON.stringify(container)) {
-        formData.value = container
-      }
+      formData.value = container
     }
 
     async function handleConfirm() {

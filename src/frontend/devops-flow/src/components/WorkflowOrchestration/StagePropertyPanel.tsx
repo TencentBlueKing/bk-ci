@@ -1,6 +1,7 @@
 import type { Stage } from '@/api/flowModel'
 import { SvgIcon } from '@/components/SvgIcon'
 import { useUIStore } from '@/stores/ui'
+import { validateStageControlOption } from '@/utils/validation'
 import { Button, InfoBox, Input, Sideslider } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
 import { defineComponent, type PropType, ref, watch } from 'vue'
@@ -52,16 +53,16 @@ export default defineComponent({
     }
 
     // ========== Watchers ==========
-    // Sync props.stage to local state
+    // Sync props.stage to local state only when a different stage is selected
     watch(
-      () => props.stage,
-      (stage) => {
-        if (stage) {
-          stageName.value = stage.name || ''
-          updatedStage.value = { ...stage }
+      () => props.stage?.id,
+      () => {
+        if (props.stage) {
+          stageName.value = props.stage.name || ''
+          updatedStage.value = { ...props.stage }
         }
       },
-      { immediate: true, deep: true },
+      { immediate: true },
     )
 
     // ========== Handlers ==========
@@ -84,6 +85,15 @@ export default defineComponent({
         return
       }
       if (updatedStage.value) {
+        const stageErrors = validateStageControlOption(updatedStage.value)
+        if (stageErrors.length > 0) {
+          InfoBox({
+            title: t('flow.common.failed'),
+            subTitle: t('flow.orchestration.stageControlOptionInvalid'),
+            theme: 'danger',
+          })
+          return
+        }
         emit('confirm', updatedStage.value)
         closePanel()
       }

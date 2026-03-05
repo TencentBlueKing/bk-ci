@@ -100,6 +100,34 @@ export function validateAtomElement(
 }
 
 /**
+ * Validate stageControlOption fields of a stage.
+ * Only validates when the stage is enabled.
+ */
+export function validateStageControlOption(stage: { stageControlOption?: { enable?: boolean; runCondition?: string; customVariables?: CustomVariable[]; customCondition?: string } }): string[] {
+  const ctrl = stage.stageControlOption
+  if (!ctrl || ctrl.enable === false) return []
+  const errors: string[] = []
+  const { runCondition } = ctrl
+
+  if (runCondition === 'CUSTOM_CONDITION_MATCH') {
+    if (isValueEmpty(ctrl.customCondition)) {
+      errors.push('stageCustomCondition')
+    }
+  }
+
+  if (
+    runCondition === 'CUSTOM_VARIABLE_MATCH' ||
+    runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'
+  ) {
+    if (hasEmptyCustomVariable(ctrl.customVariables || [])) {
+      errors.push('stageCustomVariables')
+    }
+  }
+
+  return errors
+}
+
+/**
  * Validate jobControlOption fields of a container.
  * Only validates when the job is enabled.
  */

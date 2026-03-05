@@ -167,15 +167,16 @@ export default defineComponent({
     )
 
     // ========== Watchers ==========
-    // Sync props.container to formData
+    // Sync props.container → formData only when a different container is selected,
+    // NOT when the same container round-trips through emit → parent → prop.
     watch(
-      () => props.container,
-      (container) => {
-        formData.value = container ? { ...container } : null
+      () => props.container?.jobId,
+      () => {
+        formData.value = props.container ? { ...props.container } : null
       },
       { immediate: true },
     )
-    // Emit change when formData changes - with debounce to prevent recursive updates
+    // Emit change when formData changes
     watch(
       formData,
       () => {
@@ -353,8 +354,7 @@ export default defineComponent({
                       class={jobCtrlErrorFields.value.includes('jobTimeout') ? sharedStyles.fieldError : ''}
                     >
                       <Input
-                        v-model={ctrl.timeout}
-                        type="number"
+                        v-model={ctrl.timeoutVar}
                         placeholder={t('flow.orchestration.jobTimeoutPlaceholder')}
                         disabled={!props.editable}
                       />
@@ -374,7 +374,6 @@ export default defineComponent({
                     {showCustomVariables.value && (
                       <FormItem
                         required
-                        class={jobCtrlErrorFields.value.includes('jobCustomVariables') ? sharedStyles.fieldError : ''}
                         label={t('flow.orchestration.customVar')}
                       >
                         <KeyValueMap

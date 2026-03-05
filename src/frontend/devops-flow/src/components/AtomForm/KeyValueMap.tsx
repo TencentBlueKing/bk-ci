@@ -100,7 +100,7 @@ export default defineComponent({
         <ul class={styles.keyValueList}>
           {list.value.map((item: KeyValueItem, index: number) => (
             <li key={index} class={styles.keyValueItem}>
-              <div class={`${styles.itemInput} ${styles.key}`}>
+              <div class={`${styles.itemInput} ${styles.key} ${!props.allowNull && !item.key?.trim() ? styles.keyError : ''}`}>
                 <Input
                   modelValue={item.key}
                   disabled={props.disabled || props.editValueOnly}
@@ -117,7 +117,7 @@ export default defineComponent({
                   onChange={(val: string) => handleValueChange(index, val)}
                 />
               </div>
-              {!props.disabled && !props.editValueOnly && (
+              {!props.disabled && !props.editValueOnly && (props.allowNull || list.value.length > 1) && (
                 <div class={styles.itemAction} onClick={() => handleRemove(index)}>
                   <SvgIcon name="minus-circle" class={styles.iconBtn} />
                 </div>

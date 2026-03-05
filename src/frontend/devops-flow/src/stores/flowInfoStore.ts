@@ -50,6 +50,8 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     page: number
     pageSize: number
     versionName?: string
+    description?: string
+    updater?: string
   }) {
     const res = await apiFlowInfo.getFlowVersionList({
       projectId: projectId.value,
@@ -57,6 +59,31 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
       ...params,
     })
     return res
+  }
+
+  async function deleteFlowVersion(version: number) {
+    await apiFlowInfo.deleteFlowVersion({
+      projectId: projectId.value,
+      flowId: flowId.value,
+      version,
+    })
+  }
+
+  async function rollbackFlowVersion(version: number) {
+    return await apiFlowInfo.rollbackFlowVersion({
+      projectId: projectId.value,
+      flowId: flowId.value,
+      version,
+    })
+  }
+
+  async function getFlowVersionDetail(version: number, source = 'COMPARE') {
+    return await apiFlowInfo.getFlowVersionDetail({
+      projectId: projectId.value,
+      flowId: flowId.value,
+      version,
+      source,
+    })
   }
 
   function reset() {
@@ -78,6 +105,9 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
     getFlowInfo,
     getFlowVersionList,
     fetchPaginatedVersionList,
+    deleteFlowVersion,
+    rollbackFlowVersion,
+    getFlowVersionDetail,
     initFlowInfo,
     reset,
   }

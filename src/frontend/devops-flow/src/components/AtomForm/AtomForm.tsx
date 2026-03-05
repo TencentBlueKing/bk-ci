@@ -215,6 +215,7 @@ export default defineComponent({
             name={key}
             value={value}
             disabled={props.disabled}
+            readOnly={props.disabled}
             placeholder={getPlaceholder(obj)}
             handleChange={handleChange}
             atomValue={props.atomValue}
