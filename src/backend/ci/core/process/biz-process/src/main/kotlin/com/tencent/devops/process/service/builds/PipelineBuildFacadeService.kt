@@ -537,7 +537,13 @@ class PipelineBuildFacadeService(
                 pipelineParamMap = paramMap,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                resource = resource,
+                resource = resource.let {
+                    if (version == null && !branchName.isNullOrBlank()) {
+                        it.copy(versionName = branchName)
+                    } else {
+                        it
+                    }
+                },
                 frequencyLimit = frequencyLimit,
                 buildNo = buildNo,
                 startValues = values,
