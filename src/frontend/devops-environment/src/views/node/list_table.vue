@@ -505,7 +505,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <bk-button
-                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isCreateResType"
                                     text
                                     v-perm="{
                                         hasPermission: props.row.canDelete,

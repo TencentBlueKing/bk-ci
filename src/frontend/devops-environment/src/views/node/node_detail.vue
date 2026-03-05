@@ -55,6 +55,7 @@
 
             <section>
                 <bk-popover
+                    v-if="!isCreateResType"
                     theme="dot-menu light"
                 >
                     <a
@@ -107,6 +108,7 @@
     import Settings from './components/Settings.vue'
     import TaskList from './components/TaskList.vue'
     import AgentOfflineRecords from './components/AgentOfflineRecords.vue'
+    import { SERVICE_RESOURCE_TYPE } from '@/store/constants'
     
     export default {
         name: 'NodeDetail',
@@ -192,6 +194,11 @@
                     label: proxy.$t('environment.offlineRecords')
                 }
             ])
+            
+            // 是否为创建资源类型模式
+            const isCreateResType = computed(() => {
+                return proxy.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            })
             
             // 获取可用的 tab 名称列表
             const availableTabs = computed(() => panels.value.map(p => p.name))
@@ -359,6 +366,7 @@
                 isSavingName,
                 nameError,
                 nameInputRef,
+                isCreateResType,
                 handleStartEditName,
                 handleCancelEdit,
                 handleSaveName
