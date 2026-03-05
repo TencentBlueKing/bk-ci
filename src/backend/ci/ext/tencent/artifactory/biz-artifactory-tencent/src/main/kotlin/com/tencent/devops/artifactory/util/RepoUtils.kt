@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.devops.artifactory.constant.REPO_NAME_CREATIVE
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -45,7 +46,7 @@ object RepoUtils {
     const val REPORT_REPO = "report"
     const val LOG_REPO = "log"
     const val IMAGE_REPO = "image"
-    const val CREATIVE_REPO = "creative"
+    private const val CREATIVE_REPO = REPO_NAME_CREATIVE
 
     fun getRepoByType(repoType: ArtifactoryType): String {
         return when (repoType) {
