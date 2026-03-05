@@ -65,6 +65,7 @@
     import BuildTask from './components/BuildTask/index.vue'
     import DeployTask from './components/DeployTask/index.vue'
     import AuthManage from './components/Auth/index.vue'
+    import SchedulingStrategy from './components/SchedulingStrategy/index.vue'
     import emptyNode from '../empty_node'
 
     export default {
@@ -76,7 +77,8 @@
             SharedSettings,
             BuildTask,
             DeployTask,
-            emptyNode
+            emptyNode,
+            SchedulingStrategy
         },
         setup () {
             const { proxy } = useInstance()
@@ -109,7 +111,8 @@
                     sharedSettings: SharedSettings,
                     buildTask: BuildTask,
                     deployTask: DeployTask,
-                    auth: AuthManage
+                    auth: AuthManage,
+                    schedulingStrategy: SchedulingStrategy
                 }
                 return comMap[tabActive.value]
             })
@@ -134,6 +137,10 @@
                 {
                     name: 'node',
                     label: proxy.$t('environment.node')
+                },
+                {
+                    name: 'schedulingStrategy',
+                    label: proxy.$t('environment.schedulingStrategy')
                 },
                 ...(currentEnv.value?.envType === ENV_TYPE_MAP.BUILD ? [
                     {
