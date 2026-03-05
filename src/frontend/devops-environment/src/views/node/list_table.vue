@@ -389,7 +389,7 @@
                                     {{ $t('environment.setTag') }}
                                 </span>
                                 <span
-                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    v-if="!['TSTACK'].includes(props.row.nodeType) && !isCreateResType"
                                     v-perm="{
                                         hasPermission: props.row.canDelete,
                                         disablePermissionApi: true,

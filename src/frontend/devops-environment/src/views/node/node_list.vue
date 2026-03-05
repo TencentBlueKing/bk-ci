@@ -611,18 +611,20 @@
                         disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'THIRDPARTY'),
                         handler: () => this.batchSetMaxConcurrency()
                     },
-                    {
-                        key: 'bulkResetImportUser',
-                        textKey: 'environment.bulkResetImportUser',
-                        tooltips: this.$t('environment.未选择部署节点，不支持重置'),
-                        disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
-                        handler: () => this.batchResetImportUser()
-                    },
-                    {
-                        key: 'idcTestMachine',
-                        textKey: 'environment.batchDeleteNode',
-                        handler: () => this.batchDeleteNode()
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            key: 'bulkResetImportUser',
+                            textKey: 'environment.bulkResetImportUser',
+                            tooltips: this.$t('environment.未选择部署节点，不支持重置'),
+                            disabled: this.selectedNodes.length && this.selectedNodes.every(i => i.nodeType !== 'CMDB'),
+                            handler: () => this.batchResetImportUser()
+                        },
+                        {
+                            key: 'idcTestMachine',
+                            textKey: 'environment.batchDeleteNode',
+                            handler: () => this.batchDeleteNode()
+                        }
+                    ] : [])
                 ]
             },
             username (){
