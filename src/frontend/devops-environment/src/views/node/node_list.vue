@@ -925,7 +925,8 @@
                 this.$router.push({
                     name: 'setNodeTag',
                     params: {
-                        projectId: this.projectId
+                        ...this.$route.params,
+                        nodeType: currentNodeType
                     }
                 })
             },

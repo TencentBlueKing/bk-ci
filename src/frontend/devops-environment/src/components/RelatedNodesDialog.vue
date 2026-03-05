@@ -77,6 +77,7 @@
                                 @click="handleNodeClick(node)"
                             >
                                 <bk-checkbox
+                                    @click.native.stop
                                     @change="handleNodeClick(node)"
                                     :value="isNodeSelected(node.nodeHashId)"
                                 />
