@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.type.agent
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 
@@ -39,7 +40,7 @@ data class CreateAgentIdDispatchType(
     }
 
     override fun replaceField(variables: Map<String, String>) {
-
+        envHashId = EnvUtils.parseEnv(envHashId, variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.CREATE_AGENT_ID.name)
