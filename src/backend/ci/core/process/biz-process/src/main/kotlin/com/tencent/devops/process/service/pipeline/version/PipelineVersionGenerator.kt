@@ -125,7 +125,8 @@ class PipelineVersionGenerator constructor(
      */
     fun generateDraftVersion(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        baseVersion: Int?
     ): PipelineResourceOnlyVersion {
         val releaseResource = pipelineResourceDao.getReleaseVersionResource(
             dslContext = dslContext,
@@ -147,13 +148,19 @@ class PipelineVersionGenerator constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val baseResource = baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         return PipelineResourceOnlyVersion(
             version = (latestResource?.version ?: releaseResource.version) + 1,
             settingVersion = latestSetting?.let { it.version + 1 } ?: 1,
-            baseVersion = releaseResource.version,
-            baseVersionName = releaseResource.versionName,
-            releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            baseVersion = baseResource?.version ?: releaseResource.version,
+            baseVersionName = baseResource?.versionName ?: releaseResource.versionName
         )
     }
 
@@ -201,14 +208,20 @@ class PipelineVersionGenerator constructor(
         } else {
             Pair(draftResource.version, draftResource.settingVersion)
         }
+        val baseResource = draftResource?.baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         return PipelineResourceOnlyVersion(
             version = version,
             settingVersion = settingVersion,
-            baseVersion = branchResource?.version ?: releaseResource.version,
-            baseVersionName = branchResource?.versionName ?: releaseResource.versionName,
-            versionName = branchName,
-            releaseVersion = releaseResource.version,
-            releaseVersionName = releaseResource.versionName
+            baseVersion = baseResource?.version ?: branchResource?.version ?: releaseResource.version,
+            baseVersionName = baseResource?.versionName ?: branchResource?.versionName ?: releaseResource.versionName,
+            versionName = branchName
         )
     }
 
@@ -259,6 +272,14 @@ class PipelineVersionGenerator constructor(
         } else {
             Pair(draftResource.version, draftResource.settingVersion)
         }
+        val baseResource = draftResource?.baseVersion?.let {
+            pipelineResourceVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        }
         // 如果没有正式版本,说明是第一次生成正式版本
         return if (latestReleaseResource == null) {
             val versionNum = INIT_VERSION
@@ -277,9 +298,7 @@ class PipelineVersionGenerator constructor(
                 versionNum = versionNum,
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
-                settingVersion = settingVersion,
-                releaseVersion = version,
-                releaseVersionName = versionName
+                settingVersion = settingVersion
             )
         } else {
             val versionNum = latestReleaseResource.versionNum?.let { it + 1 } ?: INIT_VERSION
@@ -306,10 +325,8 @@ class PipelineVersionGenerator constructor(
                 pipelineVersion = pipelineVersion,
                 triggerVersion = triggerVersion,
                 settingVersion = settingVersion,
-                baseVersion = latestReleaseResource.version,
-                baseVersionName = latestReleaseResource.versionName,
-                releaseVersion = version,
-                releaseVersionName = versionName
+                baseVersion = baseResource?.version ?: latestReleaseResource.version,
+                baseVersionName = baseResource?.versionName ?: latestReleaseResource.versionName
             )
         }
     }

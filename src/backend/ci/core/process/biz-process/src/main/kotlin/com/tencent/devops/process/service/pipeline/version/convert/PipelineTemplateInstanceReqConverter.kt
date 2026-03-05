@@ -84,8 +84,7 @@ class PipelineTemplateInstanceReqConverter(
     private val pipelineYamlService: PipelineYamlService,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineInfoService: PipelineInfoService,
-    private val templatePipelineDao: TemplatePipelineDao,
-    private val client: Client
+    private val templatePipelineDao: TemplatePipelineDao
 ) : PipelineVersionCreateReqConverter {
     override fun support(request: PipelineVersionCreateReq) = request is PipelineTemplateInstanceReq
 
