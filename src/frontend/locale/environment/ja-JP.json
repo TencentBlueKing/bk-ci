@@ -478,5 +478,32 @@
     "nodeUsage": "ノード用途",
     "buildAgent": "ビルドAgent",
     "filterNodeBy": "{0}などでフィルタリングします",
-    "enableTitle": "スタート/ストップ"
+    "enableTitle": "スタート/ストップ",
+    "schedulingStrategy": "スケジュール戦略",
+    "scheduling": {
+        "alertTips": "ジョブにノードを割り当てる際、以下のスケジュール戦略の順序に従って環境内の利用可能なノードを検索します。すべての戦略が実行されてもノードが見つからない場合は、キューで待機します。定期的に利用可能なノードを再検索し、キュータイムアウトはジョブの設定に基づきます。",
+        "addStrategy": "戦略を追加",
+        "adjustSort": "並べ替え調整",
+        "finishSort": "並べ替え完了",
+        "sortSaved": "並べ替えが保存されました",
+        "deleteConfirmTitle": "この戦略を削除しますか？",
+        "deleteConfirmTips": "削除後、この戦略条件に基づいてノードを検索しなくなります",
+        "editStrategy": "スケジュール戦略を編集",
+        "affinity": "アフィニティ",
+        "affinityDesc": "最近ビルドで使用されたノード",
+        "nodeLoad": "ノード負荷",
+        "idleNode": "アイドルノード",
+        "idleNodeDesc": "現在ビルドタスクのないノード",
+        "availableNode": "利用可能なノード",
+        "availableNodeDesc": "ビルドタスクはあるが最大並列数に達していないノード",
+        "label": "ラベル",
+        "labelTips": "ラベルテーブルは完全に入力する必要があります。標準形式で保存してください",
+        "selectLabelKey": "ラベル(key)",
+        "inputLabelValue": "値",
+        "addLabel": "ラベルを追加",
+        "labelRequired": "ラベルキーと値は空にできません",
+        "atLeastOneCondition": "少なくとも1つの条件を選択する必要があります",
+        "fetchFailed": "スケジュール戦略リストの取得に失敗しました",
+        "nodeLoadEditTips": "ノードはデフォルトで最初の項目が選択されています"
+    }
 }

@@ -466,6 +466,60 @@ const actions = {
         return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${projectId}/nodes/${agentHashId}/listAgentOfflinePeriod?page=${page}&pageSize=${pageSize}`).then(response => {
             return response
         })
+    },
+
+    /**
+     * 获取调度策略列表
+     */
+    requestSchedulingStrategyList ({ commit }, { projectId, envHashId }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 创建调度策略
+     */
+    createSchedulingStrategy ({ commit }, { projectId, envHashId, params }) {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies`, params).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 更新调度策略
+     */
+    updateSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId, params }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}`, params).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 删除调度策略
+     */
+    deleteSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId }) {
+        return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 切换调度策略启用状态
+     */
+    toggleSchedulingStrategy ({ commit }, { projectId, envHashId, strategyId, enabled }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/${strategyId}/toggle?enabled=${enabled}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 更新调度策略排序
+     */
+    updateSchedulingStrategyOrder ({ commit }, { projectId, envHashId, params }) {
+        return vue.$ajax.put(`${prefix}/user/environment/${projectId}/${envHashId}/schedulingStrategies/order`, params).then(response => {
+            return response
+        })
     }
 }
 
