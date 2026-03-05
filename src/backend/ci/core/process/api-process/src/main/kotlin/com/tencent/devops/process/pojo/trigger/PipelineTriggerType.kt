@@ -74,7 +74,7 @@ enum class PipelineTriggerType {
     REMOTE,
 
     // 远程触发
-    @Schema(title = "远程触发")
+    @Schema(title = "事件触发")
     TRIGGER_EVENT;
 
     fun toScmType(): ScmType? {
