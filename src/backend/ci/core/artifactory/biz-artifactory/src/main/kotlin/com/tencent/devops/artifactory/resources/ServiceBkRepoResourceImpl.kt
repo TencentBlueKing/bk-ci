@@ -47,4 +47,12 @@ class ServiceBkRepoResourceImpl(
     ): Result<Boolean> {
         return Result(bkRepoClient.enableProject(userId, projectId, enabled))
     }
+
+    override fun updateShareEnabled(
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        return Result(bkRepoClient.updateProjectShareEnabled(userId, projectId, enabled))
+    }
 }

@@ -325,6 +325,13 @@ class ProjectApprovalService @Autowired constructor(
                 )
             }
         }
+        // 同步共享制品开关变更到 BkRepo
+        projectExtService.syncShareArtifactIfChanged(
+            userId = applicant,
+            projectId = projectId,
+            oldProperties = projectProperties,
+            newProperties = updateProjectProperties
+        )
     }
 
     fun updateRejectOrRevoke(

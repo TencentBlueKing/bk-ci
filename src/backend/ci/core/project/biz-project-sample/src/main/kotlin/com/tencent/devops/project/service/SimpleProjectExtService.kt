@@ -49,6 +49,9 @@ class SimpleProjectExtService @Autowired constructor(
         logoAddress: String?
     ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+        // 同步共享制品开关配置到 BkRepo，默认为 true
+        val enableShareArtifact = projectCreateInfo.properties?.enableShareArtifact ?: true
+        updateShareArtifact(userId, projectCreateInfo.englishName, enableShareArtifact)
     }
 
     override fun createOldAuthProject(
