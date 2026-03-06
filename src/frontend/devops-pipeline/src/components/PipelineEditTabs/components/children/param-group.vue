@@ -51,10 +51,24 @@
                                 v-for="(param) in listMap[key]"
                                 :key="param.id"
                                 :class="['variable-item variable-item-editable', {
-                                    'variable-item-invalid': param.isInvalid
+                                    'variable-item-invalid': param.isInvalid,
+                                    'is-removed': param?.removeFlag
                                 }]"
-                                @click="handleEdit(param.id)"
+                                @click="handleEdit(param)"
                             >
+                                <div
+                                    class="removed-overlay"
+                                    v-if="param?.removeFlag"
+                                >
+                                    <p>{{ $t('publicVar.paramRemoveByGroupTips', [param?.varGroupName]) }}</p>
+                                    <bk-button
+                                        text
+                                        size="small"
+                                        @click="handleRemove(param)"
+                                    >
+                                        {{ $t('publicVar.removeParamInPipeline') }}
+                                    </bk-button>
+                                </div>
                                 <div
                                     v-if="editable"
                                     class="drag-area"
@@ -71,6 +85,17 @@
                                         <span>{{ param.id }}</span>
                                         <span>({{ param.name || param.id }})</span>
                                     </div>
+                                    <span
+                                        v-if="!!param.varGroupName"
+                                        class="variable-group-flag"
+                                        v-bk-tooltips="$t('publicVar.viewGroup')"
+                                        @click.stop="handleViewVarGroup(param.varGroupName)"
+                                    >
+                                        <Logo
+                                            name="publicVarGroup"
+                                            size="16"
+                                        />
+                                    </span>
                                     <div
                                         class="value-operate-row"
                                         style="justify-content: space-between;"
@@ -89,6 +114,7 @@
                                                 {{ param.defaultValue === '' ? '--' : (param.defaultValue ?? '--') }}
                                             </span>
                                         </div>
+                                        
                                         <div
                                             v-if="editable"
                                             class="var-operate"
@@ -138,9 +164,11 @@
 <script>
     import { bkVarWrapper, copyToClipboard } from '@/utils/util'
     import vueDraggable from 'vuedraggable'
+    import Logo from '@/components/Logo'
     export default {
         components: {
-            vueDraggable
+            vueDraggable,
+            Logo
         },
         props: {
             showHeader: {
@@ -193,6 +221,11 @@
                 isShow: this.showContent
             }
         },
+        computed: {
+            publicVarGroups () {
+                return this.$store?.state?.atom?.pipeline?.publicVarGroups || []
+            }
+        },
         watch: {
             showContent (val) {
                 this.isShow = val
@@ -219,6 +252,35 @@
                 const curElement = paramList[newIndex]
                 const preElement = oldIndex < newIndex ? paramList[newIndex - 1] : paramList[newIndex + 1]
                 this.handleSort(preElement.id, curElement.id, oldIndex > newIndex)
+            },
+
+            handleViewVarGroup (groupName) {
+                this.$emit('show-group', groupName)
+            },
+            markVariableAsRemove (publicVarGroups, param) {
+                return publicVarGroups.map(group => {
+                    if (group.groupName === param.varGroupName) {
+                        return {
+                            ...group,
+                            variables: group.variables.map(variable => {
+                                if (variable.id === param.id) {
+                                    return {
+                                        ...variable,
+                                        isRemove: true
+                                    }
+                                }
+                                return variable
+                            })
+                        }
+                    }
+                    return group
+                })
+            },
+            handleRemove (param) {
+                const updatedVarGroups = this.markVariableAsRemove(this.publicVarGroups, param)
+                console.log(updatedVarGroups, 'updatedVarGroups')
+                this.$store.dispatch('atom/updatePipelinePublicVarGroups', updatedVarGroups)
+                this.handleUpdate(param.id)
             }
         }
     }
@@ -348,6 +410,30 @@
                         display: flex;
                     }
                 }
+                &.is-removed {
+                    &:hover {
+                        .drag-area, .var-operate {
+                            display: none !important;
+                        }
+                        border-color: #DCDEE5 !important;
+                    }
+                }
+                
+                .removed-overlay {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 62px;
+                    background: rgba(255, 232, 195, .7);
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    cursor: default;
+                    z-index: 1000;
+                }
                 .drag-area {
                     display: none;
                     position: absolute;
@@ -384,6 +470,10 @@
                     .param-deleted {
                         text-decoration: line-through;
                         color: #C4C6CC !important;
+                    }
+                    .variable-group-flag {
+                        position: absolute;
+                        right: 18px;
                     }
                     .desc-param {
                         display: inline;
