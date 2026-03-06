@@ -79,6 +79,7 @@ export function pad (n) {
  *  @return {String}
  */
 export function convertMStoString (ms) {
+    if (ms < 0) return '00:00'
     const _1hour = 36e5
     const _1min = 6e4
     const _1day = 8.64e7
