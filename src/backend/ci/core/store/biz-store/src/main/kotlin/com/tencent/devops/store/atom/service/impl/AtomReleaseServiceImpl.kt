@@ -87,9 +87,9 @@ import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
@@ -107,6 +107,7 @@ import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.UpdateAtomPackageInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_RELEASE_TO_BE_AUDIT_TEMPLATE
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
@@ -134,6 +135,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
+import com.tencent.devops.store.utils.VersionUtils
 import java.time.LocalDateTime
 import java.util.Locale
 import org.jooq.DSLContext
@@ -193,6 +195,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeFileService: StoreFileService
     @Autowired
     lateinit var config: CommonConfig
+    @Autowired
+    lateinit var storeNotifyService: StoreNotifyService
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -202,6 +206,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     @Value("\${store.defaultAtomPublishReviewers:#{null}}")
     private val defaultAtomPublishReviewers: String? = null
+
+    @Value("\${store.commentNotifyWeworkGroupIds:}")
+    private var commentNotifyWeworkGroupIds: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
@@ -1539,6 +1546,18 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
         try {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+            if (commentNotifyWeworkGroupIds.isNotBlank()) {
+                val weworkGroupIds =
+                    commentNotifyWeworkGroupIds.split(";").filter { it.isNotBlank() }.toSet()
+                if (weworkGroupIds.isNotEmpty()) {
+                    storeNotifyService.sendNotifyMessageToWeworkGroup(
+                        userId = userId,
+                        templateCode = ATOM_RELEASE_TO_BE_AUDIT_TEMPLATE,
+                        weworkGroupIds = weworkGroupIds,
+                        bodyParams = bodyParams
+                    )
+                }
+            }
         } catch (ignored: Throwable) {
             logger.warn("Failed to send notify message", ignored)
         }

@@ -50,4 +50,15 @@ class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService
     override fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum) {
         // 开源版暂不支持消息服务
     }
+
+    override fun sendNotifyMessageToWeworkGroup(
+        userId: String,
+        templateCode: String,
+        weworkGroupIds: Set<String>,
+        titleParams: Map<String, String>?,
+        bodyParams: Map<String, String>?
+    ): Result<Boolean> {
+        // 开源版暂不支持消息服务
+        return Result(true)
+    }
 }
