@@ -39,7 +39,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jaypipes/ghw"
 	"github.com/pkg/errors"
 
 	languageUtil "golang.org/x/text/language"
@@ -476,34 +475,6 @@ func GetGateWay() string {
 	} else {
 		return "http://" + GAgentConfig.Gateway
 	}
-}
-
-func GetCpuAndGpuInfo() (string, string) {
-	cpu, err := ghw.CPU()
-	cpuInfoBuf := bytes.Buffer{}
-	if err != nil {
-		logs.WithError(err).Error("get cpu info error")
-	} else {
-		for _, c := range cpu.Processors {
-			cpuInfoBuf.WriteString(c.Model)
-			cpuInfoBuf.WriteString(";")
-		}
-	}
-	cpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-
-	gpuInfoBuf := bytes.Buffer{}
-	gpu, err := ghw.GPU()
-	if err != nil {
-		logs.WithError(err).Error("get gpu info error")
-	} else {
-		for _, card := range gpu.GraphicsCards {
-			gpuInfoBuf.WriteString(card.DeviceInfo.Product.Name)
-			gpuInfoBuf.WriteString(";")
-		}
-	}
-	gpuInfo := strings.TrimSuffix(cpuInfoBuf.String(), ";")
-	logs.Infof("cpu: %s, gpu: %s", cpuInfo, gpuInfo)
-	return cpuInfo, gpuInfo
 }
 
 // initCert 初始化证书
