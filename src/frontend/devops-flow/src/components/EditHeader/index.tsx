@@ -1,7 +1,8 @@
 import { ReleaseSlider } from '@/components/ReleaseSlider'
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
-import { FLOW_EDIT_TABS, ROUTE_NAMES } from '@/constants/routes'
+import { FLOW_EDIT_TABS, FLOW_IMPORT_EDIT_TABS, ROUTE_NAMES, isValidFlowImportEditTab } from '@/constants/routes'
 import { useFlowModel } from '@/hooks/useFlowModel'
+import { useFlowModelStore } from '@/stores/flowModel'
 import { useUIStore } from '@/stores/ui'
 import { VERSION_STATUS_ENUM } from '@/utils/flowConst'
 import { Button, Message, Tag } from 'bkui-vue'
@@ -29,10 +30,16 @@ export const EditHeader = defineComponent({
     const projectId = computed(() => route.params.projectId as string)
 
     const flowModel = useFlowModel()
+    const flowModelStore = useFlowModelStore()
+    const inImportEditMode = computed(() => flowModelStore.isImportMode)
     const { flowInfo, refreshFlowInfo } = useFlowInfo()
     const uiStore = useUIStore()
     const isSaving = ref(false)
     const isReleaseSliderShow = ref(false)
+
+    const editTabs = computed(() =>
+      inImportEditMode.value ? FLOW_IMPORT_EDIT_TABS : FLOW_EDIT_TABS,
+    )
 
     const workflowName = computed(() => {
       return flowModel.flowModel.value?.name || '--'
@@ -46,20 +53,25 @@ export const EditHeader = defineComponent({
       return `V${currentVersion.value}`
     })
 
-    // Version name display logic (similar to devops-pipeline EditHeader)
     const currentVersionName = computed(() => {
       if (flowInfo.value?.canDebug) {
-        // Draft version: show "Draft (based on VX)"
         return t('flow.edit.draftVersion', [
           flowInfo.value?.baseVersionName || baseVersionName.value,
         ])
       }
-      // Released version: show version name directly
       return flowInfo.value?.versionName || baseVersionName.value
     })
 
     const handleCancel = () => {
-      // 如果只有草稿版本（没有正式发布版本），跳转到列表页
+      if (inImportEditMode.value) {
+        flowModelStore.clearImportData()
+        flowModelStore.reset()
+        router.push({
+          name: ROUTE_NAMES.FLOW_LIST,
+          params: { groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+        })
+        return
+      }
       if (flowInfo.value?.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING) {
         router.push({
           name: ROUTE_NAMES.FLOW_LIST,
@@ -67,7 +79,6 @@ export const EditHeader = defineComponent({
         })
         return
       }
-      // 否则跳转到创作流详情页
       router.push({
         name: ROUTE_NAMES.FLOW_DETAIL_EXECUTION_RECORD,
         params: { ...route.params, version: flowInfo.value?.releaseVersion },
@@ -77,15 +88,15 @@ export const EditHeader = defineComponent({
     const navigateToErrorTab = () => {
       if (flowModel.hasSettingsError.value) {
         router.push({
-          name: FLOW_EDIT_TABS.BASIC_SETTINGS,
-          params: route.params,
+          name: editTabs.value.BASIC_SETTINGS,
+          params: inImportEditMode.value ? {} : route.params,
         })
         return
       }
       if (flowModel.hasOrchestrationError.value) {
         router.push({
-          name: FLOW_EDIT_TABS.WORKFLOW_ORCHESTRATION,
-          params: route.params,
+          name: editTabs.value.WORKFLOW_ORCHESTRATION,
+          params: inImportEditMode.value ? {} : route.params,
         })
       }
     }
@@ -134,7 +145,7 @@ export const EditHeader = defineComponent({
       try {
         const response = await flowModel.saveFlow({
           projectId: projectId.value,
-          pipelineId: flowId.value,
+          pipelineId: inImportEditMode.value ? undefined : flowId.value,
           storageType: 'MODEL',
         })
 
@@ -143,13 +154,34 @@ export const EditHeader = defineComponent({
           message: t('flow.content.saveSuccess'),
         })
 
-        // Update route version parameter after successful save
+        if (inImportEditMode.value) {
+          flowModelStore.clearImportData()
+          flowModelStore.isImportMode = false
+          const newFlowId = response?.pipelineId || (response as any)?.id || (response as any)?.flowId
+          if (newFlowId) {
+            router.replace({
+              name: ROUTE_NAMES.FLOW_EDIT_WORKFLOW_ORCHESTRATION,
+              params: {
+                projectId: projectId.value,
+                flowId: String(newFlowId),
+                ...(response.version ? { version: String(response.version) } : {}),
+              },
+            })
+          } else {
+            router.replace({
+              name: ROUTE_NAMES.FLOW_LIST,
+              params: { projectId: projectId.value, groupId: FLOW_GROUP_TYPES.ALL_FLOWS },
+            })
+          }
+          return
+        }
+
         if (response?.version) {
           router.replace({
             name: route.name as string,
             params: {
               ...route.params,
-              version: response.version,
+              version: String(response.version),
             },
             query: route.query,
           })
@@ -172,7 +204,6 @@ export const EditHeader = defineComponent({
 
     const handlePublish = () => {
       if (showValidationError()) return
-      // Check if there are unsaved changes
       if (flowModel.hasUnsavedChanges.value) {
         Message({
           theme: 'warning',
@@ -185,12 +216,10 @@ export const EditHeader = defineComponent({
     }
 
     const handleReleased = () => {
-      // Reload flow model after release
       flowModel.loadFlow(projectId.value, flowId.value, route.params.version as string, true)
       refreshFlowInfo()
     }
 
-    // Render version tag in breadcrumb area
     const renderVersionTag = () => (
       <span class={styles.versionTag}>
         <Tag>
@@ -209,24 +238,19 @@ export const EditHeader = defineComponent({
           onWorkflowNameClick={handleCancel}
         >
           {{
-            'workflow-selector': () => (
-              <FlowSelector
-                projectId={projectId.value}
-                currentFlowId={flowId.value}
-                currentFlowName={workflowName.value}
-                onNameClick={handleCancel}
-              />
-            ),
-            'version-selector': renderVersionTag,
-            default: () => (
-              <div class={styles.editHeader}>
-                <div class={styles.headerLeft}>
-                  <span class={styles.flowName}>
-                    {t('flow.content.edit')} - {flowId}
-                  </span>
-                </div>
-              </div>
-            ),
+            'workflow-selector': () =>
+              inImportEditMode.value ? (
+                <span class={styles.importFlowName}>{workflowName.value}</span>
+              ) : (
+                <FlowSelector
+                  projectId={projectId.value}
+                  currentFlowId={flowId.value}
+                  currentFlowName={workflowName.value}
+                  onNameClick={handleCancel}
+                />
+              ),
+            'version-selector': () =>
+              !inImportEditMode.value ? renderVersionTag() : null,
             actions: () => (
               <div class={styles.headerRight}>
                 <Button onClick={handleCancel} disabled={isSaving.value}>
@@ -245,30 +269,34 @@ export const EditHeader = defineComponent({
                 >
                   {t('flow.content.save')}
                 </Button>
-                <Button
-                  theme="primary"
-                  onClick={handlePublish}
-                  disabled={isSaving.value}
-                  v-bk-tooltips={{
-                    content: validationTooltipContent.value,
-                    disabled: !flowModel.hasValidationError.value,
-                  }}
-                >
-                  {t('flow.content.publish')}
-                </Button>
+                {!inImportEditMode.value && (
+                  <Button
+                    theme="primary"
+                    onClick={handlePublish}
+                    disabled={isSaving.value}
+                    v-bk-tooltips={{
+                      content: validationTooltipContent.value,
+                      disabled: !flowModel.hasValidationError.value,
+                    }}
+                  >
+                    {t('flow.content.publish')}
+                  </Button>
+                )}
               </div>
             ),
           }}
         </CommonHeader>
 
-        <ReleaseSlider
-          v-model:isShow={isReleaseSliderShow.value}
-          projectId={projectId.value}
-          flowId={flowId.value}
-          version={currentVersion.value}
-          baseVersionName={baseVersionName.value}
-          onReleased={handleReleased}
-        />
+        {!inImportEditMode.value && (
+          <ReleaseSlider
+            v-model:isShow={isReleaseSliderShow.value}
+            projectId={projectId.value}
+            flowId={flowId.value}
+            version={currentVersion.value}
+            baseVersionName={baseVersionName.value}
+            onReleased={handleReleased}
+          />
+        )}
       </>
     )
   },

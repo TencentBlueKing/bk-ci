@@ -732,6 +732,8 @@
       "templateVersion": "Template Version",
       "stopSuc": "Build termination request sent successfully, please wait...",
       "stopFail": "Termination failed",
+      "rebuildSuc": "Rebuild successful",
+      "rebuildFail": "Rebuild failed",
       "rePlay": "Replay Event",
       "reBuildTips1": "When rebuilding, it will execute again with the same trigger parameters, and:",
       "reBuildTips2": "- BK_CI_BUILD_ID remains unchanged",

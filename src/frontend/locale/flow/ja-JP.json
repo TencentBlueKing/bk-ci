@@ -719,6 +719,8 @@
       "templateVersion": "テンプレートバージョン",
       "stopSuc": "ビルド終了要求が正常に送信されました。しばらくお待ちください...",
       "stopFail": "終了に失敗しました",
+      "rebuildSuc": "再構築に成功しました",
+      "rebuildFail": "再構築に失敗しました",
       "rePlay": "イベントをリプレイ",
       "reBuildTips1": "再構築時、同じトリガーパラメータで再実行され、以下のようになります:",
       "reBuildTips2": "- BK_CI_BUILD_IDは変更されません",

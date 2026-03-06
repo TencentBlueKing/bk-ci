@@ -159,6 +159,15 @@ export default defineComponent({
       { immediate: true },
     )
 
+    watch(
+      () => formData.value.required,
+      (isRequired) => {
+        if (!isRequired) {
+          formData.value.valueNotEmpty = false
+        }
+      },
+    )
+
     // Handle type change
     const handleTypeChange = (value: ParamType | string) => {
       const typeValue = typeof value === 'string' ? value : value
@@ -175,7 +184,11 @@ export default defineComponent({
     const handleSave = async () => {
       try {
         await formRef.value.validate()
-        emit('save', formData.value)
+        const data = { ...formData.value }
+        if (!data.required) {
+          data.valueNotEmpty = false
+        }
+        emit('save', data)
       } catch (error) {
         console.error('Form validation failed:', error)
       }
@@ -340,15 +353,19 @@ export default defineComponent({
                       </span>
                     </Popover>
                   </div>
-                  <div class={styles.separator}></div>
-                  <div class={styles.checkboxItem}>
-                    <Checkbox
-                      v-model={formData.value.valueNotEmpty}
-                      disabled={!props.editable || !formData.value.required}
-                    >
-                      {t('flow.variable.required')}
-                    </Checkbox>
-                  </div>
+                  {formData.value.required && (
+                    <>
+                      <div class={styles.separator}></div>
+                      <div class={styles.checkboxItem}>
+                        <Checkbox
+                          v-model={formData.value.valueNotEmpty}
+                          disabled={!props.editable}
+                        >
+                          {t('flow.variable.required')}
+                        </Checkbox>
+                      </div>
+                    </>
+                  )}
                 </div>
               </FormItem>
               {/* 第二行：运行时只读 */}

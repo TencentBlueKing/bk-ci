@@ -1,4 +1,4 @@
-import { getFlowExportUrl } from '@/api/flowContentList'
+import { downloadFlowJson } from '@/api/flowContentList'
 import { Button, Dialog, Message } from 'bkui-vue'
 import { defineComponent, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -43,14 +43,7 @@ export const ExportFlowDialog = defineComponent({
     const handleExportJson = async () => {
       isExporting.value = true
       try {
-        const url = getFlowExportUrl(projectId, props.flowId)
-        // 创建一个隐藏的 a 标签来触发下载
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${props.flowName}.json`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        await downloadFlowJson(projectId, props.flowId, `${props.flowName}.json`)
         Message({ theme: 'success', message: t('flow.content.exportSuccess') })
         handleClose()
       } catch (error: any) {

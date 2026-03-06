@@ -3,7 +3,7 @@ import { SvgIcon } from '@/components/SvgIcon'
 import { useUIStore } from '@/stores/ui'
 import { Button, Form, InfoBox, Input, Sideslider } from 'bkui-vue'
 import { storeToRefs } from 'pinia'
-import { computed, defineComponent, ref, watch, type PropType } from 'vue'
+import { computed, defineComponent, nextTick, ref, watch, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
 import JobPropertyContent from './JobPropertyContent'
 import styles from './JobPropertyPanel.module.css'
@@ -44,7 +44,7 @@ export default defineComponent({
       default: false,
     },
   },
-  emits: ['update:modelValue', 'confirm'],
+  emits: ['update:modelValue', 'confirm', 'change'],
   setup(props, { emit }) {
     const { t } = useI18n()
     const { isVariablePanelOpen } = storeToRefs(useUIStore())
@@ -68,12 +68,19 @@ export default defineComponent({
       return t('flow.orchestration.addCreateJob')
     })
 
+    // Whether the initial prop→formData sync has settled
+    const initialized = ref(false)
+
     // ========== Watchers ==========
     // Sync props.editingContainer to formData
     watch(
       () => props.editingContainer,
       (container) => {
+        initialized.value = false
         formData.value = Object.assign({}, formData.value || {}, container)
+        nextTick(() => {
+          initialized.value = true
+        })
       },
       { immediate: true },
     )
@@ -90,6 +97,9 @@ export default defineComponent({
     // ========== Handlers ==========
     function handleContainerChange(container: Container) {
       formData.value = container
+      if (!props.isNew && initialized.value) {
+        emit('change', container)
+      }
     }
 
     async function handleConfirm() {

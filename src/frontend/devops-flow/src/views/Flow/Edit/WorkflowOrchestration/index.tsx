@@ -50,6 +50,7 @@ export default defineComponent({
       handleStageConfirm,
       handleStageChange,
       handleJobConfirm,
+      updateJob,
     } = useFlowModel()
     const uiStore = useUIStore()
 
@@ -216,6 +217,7 @@ export default defineComponent({
           isNew={isNewJob.value}
           isFinally={isEditingFinallyStage.value}
           onConfirm={handleJobConfirm}
+          onChange={updateJob}
         />
 
         {/* Atom property panel */}

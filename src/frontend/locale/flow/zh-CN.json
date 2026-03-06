@@ -729,6 +729,8 @@
       "templateVersion": "模版版本",
       "stopSuc": "终止构建请求发送成功，请稍后...",
       "stopFail": "终止失败",
+      "rebuildSuc": "重新构建成功",
+      "rebuildFail": "重新构建失败",
       "rePlay": "重放事件",
       "reBuildTips1": "重新构建时，将以同样的触发参数重新执行，且:",
       "reBuildTips2": "- BK_CI_BUILD_ID 不变",

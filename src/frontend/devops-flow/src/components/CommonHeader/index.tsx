@@ -1,8 +1,8 @@
 import { FLOW_GROUP_TYPES } from '@/constants/flowGroup'
 import { Loading } from 'bkui-vue'
-import { defineComponent, type PropType } from 'vue'
+import { computed, defineComponent, type PropType } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { SvgIcon } from '../SvgIcon'
 import styles from './CommonHeader.module.css'
 
@@ -28,13 +28,15 @@ export const CommonHeader = defineComponent({
   },
   setup(props, { slots }) {
     const { t } = useI18n()
+    const route = useRoute()
 
-    const flowList = {
+    const flowList = computed(() => ({
       name: 'flowList',
       params: {
+        projectId: route.params.projectId,
         groupId: FLOW_GROUP_TYPES.ALL_FLOWS,
       },
-    }
+    }))
 
     const handleWorkflowNameClick = () => {
       props.onWorkflowNameClick?.()
@@ -48,7 +50,7 @@ export const CommonHeader = defineComponent({
           <>
             <div class={styles.headerLeft}>
               {/* Logo/图标 */}
-              <RouterLink to={flowList} class={styles.logoLink}>
+              <RouterLink to={flowList.value} class={styles.logoLink}>
                 <div class={styles.logo}>
                   <img
                     src={`${import.meta.env.BASE_URL}devops-flow-logo.svg`}

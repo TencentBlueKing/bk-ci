@@ -6,7 +6,9 @@ import {
   type ReleaseResponse,
 } from '@/api/release'
 import { SvgIcon } from '@/components/SvgIcon'
+import { useFlowInfoStore } from '@/stores/flowInfoStore'
 import { Button, Dialog, Form, Input, Loading, Message, Sideslider } from 'bkui-vue'
+import { storeToRefs } from 'pinia'
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -57,6 +59,19 @@ export const ReleaseSlider = defineComponent({
     const { t } = useI18n()
     const route = useRoute()
     const router = useRouter()
+    const flowInfoStore = useFlowInfoStore()
+    const { flowInfo } = storeToRefs(flowInfoStore)
+
+    const isExecuteDisabled = computed(() => {
+      return flowInfo.value?.locked || !flowInfo.value?.canManualStartup
+    })
+
+    const executeTooltip = computed(() => {
+      if (!isExecuteDisabled.value) return ''
+      return flowInfo.value?.locked
+        ? t('flow.content.pipelineLockTips')
+        : t('flow.content.pipelineManualDisable')
+    })
 
     // State
     const isLoading = ref(false)
@@ -271,9 +286,20 @@ export const ReleaseSlider = defineComponent({
             ),
             footer: () => (
               <div class={styles.successActions}>
-                <Button theme="primary" onClick={handleGoToExecution}>
-                  {t('flow.release.goToExecute')}
-                </Button>
+                <span
+                  v-bk-tooltips={{
+                    content: executeTooltip.value,
+                    disabled: !isExecuteDisabled.value,
+                  }}
+                >
+                  <Button
+                    theme="primary"
+                    disabled={isExecuteDisabled.value}
+                    onClick={handleGoToExecution}
+                  >
+                    {t('flow.release.goToExecute')}
+                  </Button>
+                </span>
                 <Button onClick={handleGoToDetail}>{t('flow.release.viewFlow')}</Button>
               </div>
             ),
