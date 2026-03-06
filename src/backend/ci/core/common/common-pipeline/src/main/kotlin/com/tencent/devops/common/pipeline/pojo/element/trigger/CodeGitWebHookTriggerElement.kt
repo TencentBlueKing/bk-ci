@@ -106,7 +106,9 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "第三方应用鉴权token")
     val thirdSecretToken: String? = null,
     @get:Schema(title = "跳过WIP")
-    val skipWip: Boolean? = false
+    val skipWip: Boolean? = false,
+    @get:Schema(title = "tag事件action")
+    val includeTagAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
@@ -175,6 +177,7 @@ data class CodeGitWebHookTriggerElement(
 
             CodeEventType.TAG_PUSH -> {
                 listOf(
+                    vuexInput(name = "action", value = joinToString(includeTagAction)),
                     vuexInput(name = "tagName", value = tagName),
                     vuexInput(name = "excludeTagName", value = excludeTagName),
                     vuexInput(name = "fromBranches", value = fromBranches),

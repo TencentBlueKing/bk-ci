@@ -133,7 +133,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
                     repositoryType = repositoryType,
-                    repositoryName = triggerOn.repoName
+                    repositoryName = triggerOn.repoName,
+                    includeTagAction = tag.action
                 ).checkTriggerElementEnable(tag.enable).apply {
                     version = "2.*"
                 }
@@ -264,7 +265,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     tagsIgnore = git.excludeTagName?.disjoin(),
                     fromBranches = git.fromBranches?.disjoin(),
                     users = git.includeUsers,
-                    usersIgnore = git.excludeUsers
+                    usersIgnore = git.excludeUsers,
+                    action = git.includeTagAction
                 )
 
                 CodeEventType.MERGE_REQUEST -> nowExist.mr = MrRule(
@@ -439,7 +441,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             excludeUsers = tag.usersIgnore,
                             eventType = CodeEventType.TAG_PUSH,
                             repositoryType = repositoryType,
-                            repositoryName = triggerOn.repoName
+                            repositoryName = triggerOn.repoName,
+                            includeTagAction = tag.action
                         )
                     )
                 ).checkTriggerElementEnable(tag.enable).apply {
