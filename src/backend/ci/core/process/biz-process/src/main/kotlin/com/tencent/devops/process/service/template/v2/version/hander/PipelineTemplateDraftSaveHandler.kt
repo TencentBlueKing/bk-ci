@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.PTemplateResourceOnlyVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
@@ -122,8 +123,11 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private fun PipelineTemplateVersionCreateContext.createDraftVersion(): PTemplateResourceOnlyVersion {
         val resourceOnlyVersion = pipelineTemplateGenerator.generateDraftVersion(
             projectId = projectId,
-            templateId = templateId
+            templateId = templateId,
+            baseVersion = pTemplateResourceWithoutVersion.baseVersion
         )
+
+        fixSrcTemplate(resourceOnlyVersion)
         pipelineTemplatePersistenceService.createDraftVersion(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
@@ -134,12 +138,41 @@ class PipelineTemplateDraftSaveHandler @Autowired constructor(
     private fun PipelineTemplateVersionCreateContext.updateDraftVersion(
         draftResource: PipelineTemplateResource
     ): PTemplateResourceOnlyVersion {
-        val resourceOnlyVersion = PTemplateResourceOnlyVersion(draftResource)
+        val resourceOnlyVersion = if (pTemplateResourceWithoutVersion.baseVersion == null) {
+            PTemplateResourceOnlyVersion(draftResource)
+        } else {
+            PTemplateResourceOnlyVersion(draftResource).copy(
+                baseVersion = pTemplateResourceWithoutVersion.baseVersion,
+                baseVersionName = pTemplateResourceWithoutVersion.baseVersionName
+            )
+        }
+        fixSrcTemplate(resourceOnlyVersion)
         pipelineTemplatePersistenceService.updateDraftVersion(
             context = this,
             resourceOnlyVersion = resourceOnlyVersion
         )
         return resourceOnlyVersion
+    }
+
+    private fun PipelineTemplateVersionCreateContext.fixSrcTemplate(
+        resourceOnlyVersion: PTemplateResourceOnlyVersion
+    ) {
+        if (pipelineTemplateInfo.mode == TemplateType.CONSTRAINT) {
+            val baseResource = resourceOnlyVersion.baseVersion?.let {
+                pipelineTemplateResourceService.get(
+                    projectId = projectId,
+                    templateId = templateId,
+                    version = it
+                )
+            }
+            baseResource?.also {
+                pTemplateResourceWithoutVersion.apply {
+                    srcTemplateProjectId = it.srcTemplateProjectId
+                    srcTemplateId = it.srcTemplateId
+                    srcTemplateVersion = it.srcTemplateVersion
+                }
+            }
+        }
     }
 
     companion object {

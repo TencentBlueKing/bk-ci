@@ -39,6 +39,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoServic
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateSettingService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -64,6 +65,9 @@ class PipelineTemplateDraftReleaseReqConverter @Autowired constructor(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateDraftReleaseReq
         with(request) {
+            logger.info(
+                "Start to convert draft release request|$projectId|$templateId|$templateId|$version"
+            )
             if (templateId == null) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_NULL,
@@ -130,5 +134,9 @@ class PipelineTemplateDraftReleaseReqConverter @Autowired constructor(
                 branchName = targetBranch
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateDraftReleaseReqConverter::class.java)
     }
 }

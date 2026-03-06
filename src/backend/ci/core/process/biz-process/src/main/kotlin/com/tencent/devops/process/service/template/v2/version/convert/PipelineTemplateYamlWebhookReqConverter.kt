@@ -40,6 +40,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateGenerator
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateModelInitializer
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionCreateContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -64,6 +65,9 @@ class PipelineTemplateYamlWebhookReqConverter(
     ): PipelineTemplateVersionCreateContext {
         request as PipelineTemplateYamlWebhookReq
         with(request) {
+            logger.info(
+                "Start to convert yaml webhook request|$projectId|$templateId|$templateId|$version"
+            )
             val transferResult = pipelineTemplateGenerator.transfer(
                 userId = userId,
                 projectId = projectId,
@@ -156,5 +160,9 @@ class PipelineTemplateYamlWebhookReqConverter(
                 branchName = branchName
             )
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTemplateYamlWebhookReqConverter::class.java)
     }
 }
