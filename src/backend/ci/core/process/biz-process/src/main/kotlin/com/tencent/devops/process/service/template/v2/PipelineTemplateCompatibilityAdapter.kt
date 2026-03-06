@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.template.v2
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.TemplateRefType
@@ -35,6 +37,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceField
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.template.PipelineTemplatePermissionService
 import com.tencent.devops.process.pojo.PTemplateOrderByType
 import com.tencent.devops.process.pojo.PTemplateSortType
@@ -52,12 +56,13 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
-import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceReleaseInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequest
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateReleaseCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResource
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateResourceCommonCondition
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.template.TemplateCommonService
 import com.tencent.devops.process.service.template.v2.version.PipelineTemplateVersionManager
 import org.springframework.stereotype.Service
 
@@ -79,7 +84,9 @@ class PipelineTemplateCompatibilityAdapter(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplatePermissionService: PipelineTemplatePermissionService,
     private val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
-    private val pipelineGroupService: PipelineGroupService
+    private val pipelineGroupService: PipelineGroupService,
+    private val redisOperation: RedisOperation,
+    private val templateCommonService: TemplateCommonService
 ) {
 
     /**
@@ -269,22 +276,27 @@ class PipelineTemplateCompatibilityAdapter(
         projectId: String,
         template: Model
     ): String {
-        val request = PipelineTemplateCompatibilityCreateReq(
+        checkTemplateMigrateStatus(projectId)
+        val templateId = UUIDUtil.generate()
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        )
+        val setting = templateCommonService.getDefaultSetting(
+            projectId = projectId,
+            templateId = templateId,
+            templateName = template.name,
+            creator = userId
+        )
+        val request = PipelineTemplateReleaseCreateReq(
             model = template,
-            setting = PipelineSetting(
-                projectId = projectId,
-                pipelineId = "",
-                pipelineName = template.name,
-                desc = template.desc ?: "",
-                pipelineAsCodeSettings = null,
-                creator = userId,
-                updater = userId
-            ),
-            v1VersionName = "init"
+            setting = setting
         )
         val result = pipelineTemplateVersionManager.deployTemplate(
             userId = userId,
             projectId = projectId,
+            templateId = templateId,
             request = request
         )
         return result.templateId
@@ -300,11 +312,18 @@ class PipelineTemplateCompatibilityAdapter(
         versionName: String,
         template: Model
     ): Long {
+        checkTemplateMigrateStatus(projectId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            permission = AuthPermission.EDIT
+        )
         val templateInfo = pipelineTemplateInfoService.get(
             projectId = projectId,
             templateId = templateId
         )
-        val request = PipelineTemplateCompatibilityCreateReq(
+        val request = PipelineTemplateReleaseCreateReq(
             model = template,
             setting = PipelineSetting(
                 projectId = projectId,
@@ -315,7 +334,7 @@ class PipelineTemplateCompatibilityAdapter(
                 creator = userId,
                 updater = userId
             ),
-            v1VersionName = versionName,
+            versionName = versionName,
             category = templateInfo.category,
             logoUrl = templateInfo.logoUrl
         )
@@ -336,6 +355,13 @@ class PipelineTemplateCompatibilityAdapter(
         projectId: String,
         templateId: String
     ): Boolean {
+        checkTemplateMigrateStatus(projectId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            permission = AuthPermission.DELETE
+        )
         return pipelineTemplateFacadeService.deleteTemplate(
             userId = userId,
             projectId = projectId,
@@ -352,6 +378,13 @@ class PipelineTemplateCompatibilityAdapter(
         templateId: String,
         version: Long
     ): Boolean {
+        checkTemplateMigrateStatus(projectId)
+        pipelineTemplatePermissionService.checkPipelineTemplatePermissionWithMessage(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            permission = AuthPermission.DELETE
+        )
         pipelineTemplateVersionManager.deleteVersion(
             userId = userId,
             projectId = projectId,
@@ -636,4 +669,16 @@ class PipelineTemplateCompatibilityAdapter(
         val param: List<BuildFormProperty>? = null,
         val resetBuildNo: Boolean? = null
     )
+
+    private fun checkTemplateMigrateStatus(projectId: String) {
+        if (redisOperation.isMember(TEMPLATE_MIGRATE_REDIS_KEY, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_MIGRATING
+            )
+        }
+    }
+
+    companion object {
+        private const val TEMPLATE_MIGRATE_REDIS_KEY = "pipeline:template:migrate"
+    }
 }
