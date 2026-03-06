@@ -134,6 +134,19 @@ class PipelineTemplateDraftReleaseHandler @Autowired constructor(
             targetAction = targetAction,
             targetBranch = branchName
         )
+        if (versionStatus == VersionStatus.RELEASED) {
+            pipelineTemplateResourceService.getLatestResource(
+                projectId = projectId,
+                templateId = templateId,
+                status = VersionStatus.RELEASED,
+                versionName = resourceOnlyVersion.versionName
+            )?.let {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_NAME_DUPLICATION,
+                    params = arrayOf(resourceOnlyVersion.versionName!!)
+                )
+            }
+        }
         validateReleaseYamlFile(resourceOnlyVersion = resourceOnlyVersion)
         if (versionStatus == VersionStatus.RELEASED) {
             pipelineTemplatePersistenceService.releaseDraft2ReleaseVersion(

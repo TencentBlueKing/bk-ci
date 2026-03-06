@@ -98,7 +98,7 @@ class PipelineTemplateMigrateService(
     val pipelineTemplateMigrationValidationService: PipelineTemplateMigrationValidationService
 ) {
 
-    @Value("\${process.template.migrateProjectTag:#{null}}")
+    @Value("\${pipeline.template.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
     fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO) {
