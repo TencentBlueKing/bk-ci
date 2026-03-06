@@ -58,5 +58,7 @@ data class AuthResourceGroup(
     @get:Schema(title = "用户组描述", required = false)
     val description: String? = null,
     @get:Schema(title = "IAM人员模板ID", required = false)
-    val iamTemplateId: Int? = null
+    val iamTemplateId: Int? = null,
+    @get:Schema(title = "是否禁止申请", required = false)
+    val applyDisable: Boolean? = null
 )

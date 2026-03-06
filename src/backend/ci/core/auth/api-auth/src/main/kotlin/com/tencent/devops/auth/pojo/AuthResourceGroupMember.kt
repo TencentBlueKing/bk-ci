@@ -50,5 +50,7 @@ data class AuthResourceGroupMember(
     @get:Schema(title = "成员类型, 用户/组织/人员模板", required = true)
     val memberType: String,
     @get:Schema(title = "过期时间", required = true)
-    val expiredTime: LocalDateTime
+    val expiredTime: LocalDateTime,
+    @get:Schema(title = "加入时间", required = false)
+    val joinedAt: LocalDateTime? = null
 )

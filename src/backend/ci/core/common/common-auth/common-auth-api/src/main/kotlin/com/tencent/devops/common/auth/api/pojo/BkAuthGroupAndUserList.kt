@@ -29,18 +29,26 @@ package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthGroupAndUserList(
+    @get:Schema(title = "组名称")
     @JsonProperty("display_name")
     val displayName: String,
+    @get:Schema(title = "用户组Id")
     @JsonProperty("role_id")
     val roleId: Int,
     @JsonProperty("role_name")
     val roleName: String,
+    @get:Schema(title = "用户列表")
     @JsonProperty("user_id_list")
     val userIdList: List<String>,
+    @get:Schema(title = "部门列表")
     @JsonProperty("dept_info_list")
     val deptInfoList: List<RoleGroupMemberInfo>? = null,
     @JsonProperty("type")
-    val type: String = ""
+    val type: String = "",
+    @get:Schema(title = "是否禁止申请，当字段为true时，禁止申请")
+    @JsonProperty("apply_disable")
+    val applyDisable: Boolean? = null,
 )
