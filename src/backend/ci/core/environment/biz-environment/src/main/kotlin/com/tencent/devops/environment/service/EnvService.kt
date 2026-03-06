@@ -1774,12 +1774,13 @@ class EnvService @Autowired constructor(
     fun getEnvCount(projectId: String, createEnv: Boolean?): Map<String, Int> {
         val isCreateMode = createEnv ?: false
         val res = envDao.fetchEnvTypeCount(dslContext, projectId, isCreateMode)
-        val allowedTypes = if (isCreateMode) {
-            listOf(EnvType.CREATE)
-        } else {
-            EnvType.noCreateMode()
-        }.map { it.name }.toSet()
-        return res.filter { it.key in allowedTypes }
+        return res.filter {
+            if (isCreateMode) {
+                it.key in listOf(EnvType.CREATE.name)
+            } else {
+                it.key !in listOf(EnvType.CREATE.name)
+            }
+        }
     }
 
     companion object {

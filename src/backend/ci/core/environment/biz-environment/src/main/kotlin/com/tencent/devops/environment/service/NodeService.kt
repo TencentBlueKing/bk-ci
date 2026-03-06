@@ -594,7 +594,9 @@ class NodeService @Autowired constructor(
             authPermission = AuthPermission.LIST
         )
         if (nodeListResult.isEmpty()) return emptyList()
-        val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
+        val thirdPartyAgentNodeIds = nodeRecordList.filter {
+            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.CREATE.name
+        }.map { it.nodeId }
         if (thirdPartyAgentNodeIds.isEmpty()) return emptyList()
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
