@@ -1,9 +1,24 @@
 <template>
   <div class="artifactory">
     <bk-form-item
+      v-if="type !== 'show'"
+      :label="t('允许共享制品')"
+      property="enableShareArtifact"
+      :label-width="120"
+      requied
+      :description="t('开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。')"
+    >
+      <bk-switcher
+        v-model="projectData.properties.enableShareArtifact"
+        size="small"
+        theme="primary"
+        @change="handleChangeForm"
+      />
+    </bk-form-item>
+    <bk-form-item
       :label="t('元数据')"
       property="metadatas"
-      :label-width="90"
+      :label-width="120"
       :description="t('当制品标记了分组为质量的元数据时，在构建历史，构建详情界面，将展示对应的质量标签，便于用户快速了解流水线产出的制品质量。')"
     >
       <p
@@ -307,6 +322,10 @@ defineExpose({
 
 function updateMetadata() {
   emits('updateMetadata', metadataList.value)
+  handleChangeForm()
+}
+
+function handleChangeForm() {
   emits('handleChangeForm')
 }
 

@@ -400,5 +400,7 @@
     "制品库设置": "Artifact Library Settings",
     "选择项目": "Select Project",
     "同步中": "Synching",
-    "请选择组织/用户": "Please select organization/user"
+    "请选择组织/用户": "Please select organization/user",
+    "允许共享制品": "Allow sharing of artifacts",
+    "开启后，允许「共享」制品，可生成不鉴权的制品分享链接。获得链接的用户登录平台后，可通过链接下载对应制品。": "Once enabled, it allows 'sharing' of artifacts, generating non-authenticated artifact sharing links. Users who obtain the link can log in to the platform and download the corresponding artifacts through the link."
 }

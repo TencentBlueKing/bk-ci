@@ -55,11 +55,13 @@ const tabPanels = [
   {
     name: 'artifactorySettings',
     label: '制品库设置',
-    panels: [{
-      name: 'artifactory',
-      title: '制品库',
-      component: ArtifactoryContent,
-    }]
+    panels: [
+      ...projectData.value.properties ? [{
+        name: 'artifactory',
+        title: '制品库',
+        component: ArtifactoryContent,
+      }] : []
+    ]
   },
 ]
 const statusDisabledTips = {
