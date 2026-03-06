@@ -35,7 +35,7 @@ data class TemplateInstanceField(
             }
             return TemplateInstanceField(
                 paramIds = paramIds,
-                settingGroups = PipelineSettingGroupType.values().map { it }
+                settingGroups = PipelineSettingGroupType.entries.map { it }
             )
         }
     }

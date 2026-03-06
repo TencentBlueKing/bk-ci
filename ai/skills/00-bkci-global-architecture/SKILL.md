@@ -312,126 +312,249 @@ token_estimate: 45000
 └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-### 2.2 四个阶段详解
+### 2.2 四个阶段概要
 
-#### 阶段一：触发构建
+| 阶段 | 核心动作 | 深入阅读 |
+|---|---|---|
+| **触发** | 手动/定时/Webhook/OpenAPI → `PipelineBuildFacadeService.buildManualStartup()` | `process-module-architecture` |
+| **引擎调度** | Stage → Job → Task 责任链编排 | `3-engine-control.md` 第三节 |
+| **任务执行** | Agent(Go) 领取构建 → 拉起 Worker(Kotlin) → 循环 claimTask/completeTask | `agent-module-architecture` 3.2~3.3 节, `worker-module-architecture` Runner 节 |
+| **状态回传** | completeTask → `PipelineBuildContainerEvent` → 逐层收敛到 BuildEnd | `3-engine-control.md` 3.4.2 节 |
 
-| 触发类型 | 入口 | 说明 |
-|----------|------|------|
-| 手动触发 | Web/API | 用户点击"执行"按钮 |
-| 定时触发 | Cron | `TimerTriggerElement` 定时调度 |
-| 代码变更 | Webhook | Git Push/MR/Tag 事件 |
-| 远程触发 | OpenAPI | 第三方系统调用 |
-
-**核心入口**：`PipelineBuildFacadeService.buildManualStartup()`
-
-#### 阶段二：引擎调度
-
-引擎通过**责任链模式**和**事件驱动**，按 Stage → Job → Task 层级调度。
-
-**Stage 责任链**（StageControl）:
-1. `CheckInterruptStageCmd` → 检查快速失败
-2. `CheckConditionalSkipStageCmd` → 条件跳过
-3. `CheckPauseReviewStageCmd` → 暂停/审核
-4. `StartContainerStageCmd` → **下发 Container 事件**
-5. `UpdateStateForStageCmdFinally` → 更新状态
-
-**Container 责任链**（ContainerControl）:
-1. `CheckDependOnContainerCmd` → Job 依赖检查
-2. `CheckMutexContainerCmd` → 互斥组检查
-3. `StartActionTaskContainerCmd` → **启动 Task 执行**
-
-#### 阶段三：任务执行
-
-**Agent (Go)** - 构建机代理：
-```go
-for {
-    result := api.AskBuild()  // 向 Dispatch 请求任务
-    if result.HasBuild {
-        go runBuild(result.BuildInfo)  // 异步执行
-    }
-    time.Sleep(interval)
-}
-```
-
-**Worker (Kotlin)** - 任务执行器：
-```kotlin
-loop@ while (true) {
-    val buildTask = EngineService.claimTask()  // 领取任务
-    when (buildTask.status) {
-        DO -> {
-            val task = TaskFactory.create(buildTask.type)
-            task.run(buildTask, buildVariables, workspace)
-            EngineService.completeTask(result)  // 上报结果
-        }
-        WAIT -> Thread.sleep(sleepMills)
-        END -> break@loop
-    }
-}
-```
-
-#### 阶段四：状态回传
-
-```
-Task 完成 → PipelineBuildTaskService.finishTask()
-         → 发送 PipelineBuildContainerEvent
-         → Job 完成检查 → Stage 完成检查 → Pipeline 完成
-         → Notify/Metrics/WebSocket
-```
+> Task 的 5 种角色分类、引擎与 Worker 的事件驱动协作机制，详见 `3-engine-control.md` 3.4 节。
 
 ---
 
-## 三、Job 执行机制（重要）
+## 三、引擎-调度-构建机 完整交互流程
 
-### 3.1 系统 Task
+> 本节将 Process 引擎、Dispatch 调度、Agent/Worker、BuildLess 容器池的完整交互串联起来，
+> 覆盖从"用户触发构建"到"Job 完成"的全链路。
 
-**重要概念**：启动构建机本身就是一个 Task！
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│           T_PIPELINE_BUILD_TASK 表数据示例                       │
-├──────────────┬────────────────────┬──────────────────┬──────────┤
-│ TASK_ID      │ TASK_NAME          │ TASK_ATOM        │ TASK_SEQ │
-├──────────────┼────────────────────┼──────────────────┼──────────┤
-│ startVM-1    │ Prepare_Job#1      │ dispatchVMStart  │ 1  系统  │
-│ e-xxx-1      │ Bash               │ (空)             │ 2  用户  │
-│ e-xxx-2      │ 代码拉取           │ (空)             │ 3  用户  │
-│ end-1000     │ Wait_Finish_Job#1  │ (空)             │ 1000 系统│
-│ stopVM-1001  │ Clean_Job#1        │ dispatchVMStop   │ 1001 系统│
-└──────────────┴────────────────────┴──────────────────┴──────────┘
-```
-
-### 3.2 Worker 与服务端通信
-
-| 接口 | 说明 |
-|------|------|
-| `jobStarted` | Worker 启动后调用，返回 BuildVariables |
-| `claimTask` | 领取待执行 Task |
-| `completeTask` | 上报 Task 结果，触发下一个 Task 调度 |
-| `heartbeat` | 心跳保活 |
-| `jobEnd` | Job 完成，触发资源释放 |
-
-### 3.3 非阻塞事件驱动
+### 3.1 构建机环境（第三方/DevCloud/Docker）全链路时序
 
 ```
-BK-CI 事件驱动方式（✅ 采用）：
-
-Process 引擎
-    │
-    ├── 发送调度请求（PipelineAgentStartupEvent）
-    ├── 立即返回，处理其他事件（其他流水线、其他 Job）
-    │
-... 时间流逝，构建机启动中 ...
-    │
-Worker 启动后
-    ├── 调用 jobStarted API
-    ├── 服务端发送 PipelineBuildContainerEvent
-    │
-引擎收到事件
-    └── 继续执行该 Job 的后续 Task
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│  用户/   │  │ Process  │  │ RabbitMQ │  │ Dispatch │  │  Agent   │  │  Worker  │
+│  触发器  │  │  引擎    │  │          │  │  服务    │  │  (Go)    │  │ (Kotlin) │
+└────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘
+     │              │              │              │              │              │
+  ① │─ 触发构建 ──>│              │              │              │              │
+     │              │              │              │              │              │
+     │         ┌────┴────────────────────────────────────────────────────────┐  │
+     │         │ ② 引擎编排阶段                                              │  │
+     │         │ BuildStartControl → StageControl → ContainerControl        │  │
+     │         │ → StartActionTaskContainerCmd 选出 startVM-{seq} 任务       │  │
+     │         │ → TaskControl 执行 DispatchVMStartupTaskAtom               │  │
+     │         └────┬────────────────────────────────────────────────────────┘  │
+     │              │              │              │              │              │
+     │              │── ③ dispatch(PipelineAgentStartupEvent) ──>│              │
+     │              │              │              │              │              │
+     │              │              │── ④ 消费 ──>│              │              │
+     │              │              │   事件      │              │              │
+     │              │              │              │              │              │
+     │              │              │              │─ ⑤ 选择构建资源 ─>          │
+     │              │              │              │  (IP/容器/VM)│              │
+     │              │              │              │              │              │
+     │              │              │              │── ⑥ 启动 ──>│              │
+     │              │              │              │  Worker 进程 │              │
+     │              │              │              │              │──── ⑦ ────>│
+     │              │              │              │              │  拉起Worker │
+     │              │              │              │              │              │
+     │         ┌────────────────────────────────────────────────────────────────┤
+     │         │ ⑧ Worker 启动流程                                              │
+     │         │ EngineService.setStarted() → 上报启动，获取 BuildVariables     │
+     │         │ 对应服务端：EngineVMBuildService.buildVMStarted()              │
+     │         │   → 校验构建状态                                               │
+     │         │   → setStartUpVMStatus(SUCCEED) 改 startVM 任务为成功          │
+     │         │   → 发送 PipelineBuildContainerEvent 唤醒引擎                  │
+     │         │   → 启动心跳监听                                               │
+     │         │   → 返回 BuildVariables（变量、超时、环境等）                    │
+     │         └────────────────────────────────────────────────────────────────┤
+     │              │              │              │              │              │
+     │         ┌────┴────────────────────────────────────────────────────────┐  │
+     │         │ ⑨ 引擎被唤醒，编排第一个用户插件任务                          │  │
+     │         │ ContainerControl → StartActionTaskContainerCmd              │  │
+     │         │   → 选出第一个插件任务                                       │  │
+     │         │   → updateTaskStatus(QUEUE_CACHE)                          │  │
+     │         │   → TaskControl 发现 taskAtom 为空，直接 return             │  │
+     │         │   → 引擎停住，等待回调                                       │  │
+     │         └────┬────────────────────────────────────────────────────────┘  │
+     │              │              │              │              │              │
+     │              │              │              │              │         ┌────┤
+     │              │              │              │              │         │ ⑩ │
+     │              │              │              │              │         │循环│
+     │              │<─────────── claimTask（轮询）────────────────────────│领取│
+     │              │              │              │              │         │任务│
+     │              │──── 返回 BuildTask(DO) ────────────────────────────>│    │
+     │              │              │              │              │         │    │
+     │              │              │              │              │         │执行│
+     │              │              │              │              │         │插件│
+     │              │              │              │              │         │    │
+     │              │<─────────── completeTask(result) ──────────────────│    │
+     │              │              │              │              │         │    │
+     │         ┌────┴────────────────────────────────────────────────┐    │    │
+     │         │ ⑪ 引擎被唤醒                                        │    │    │
+     │         │ completeClaimBuildTask()                             │    │    │
+     │         │   → updateTaskStatus(SUCCEED/FAILED)                │    │    │
+     │         │   → dispatch(PipelineBuildContainerEvent)           │    │    │
+     │         │   → 引擎编排下一个任务 → QUEUE_CACHE → 再次停住      │    │    │
+     │         └────┬────────────────────────────────────────────────┘    │    │
+     │              │              │              │              │         │    │
+     │              │   ... 重复 ⑩⑪ 直到所有插件任务完成 ...              │    │
+     │              │              │              │              │         └────┤
+     │              │              │              │              │              │
+     │         ┌────┴────────────────────────────────────────────────────────┐  │
+     │         │ ⑫ Job 结束阶段                                              │  │
+     │         │ Worker 领到 end-{seq} 任务 → 返回 BuildTaskStatus.END       │  │
+     │         │ Worker 调用 EngineService.endBuild() → finishWorker()       │  │
+     │         │ 引擎执行 stopVM-{seq}                                       │  │
+     │         │   → DispatchVMShutdownTaskAtom                              │  │
+     │         │   → 发送 PipelineAgentShutdownEvent 给 Dispatch 回收资源     │  │
+     │         │ Job 完成 → Stage 完成检查 → 下一个 Stage 或 BuildEnd        │  │
+     │         └─────────────────────────────────────────────────────────────┘  │
+     │              │              │              │              │              │
 ```
 
-**优势**：单个引擎实例可并发处理大量构建，不阻塞。
+### 3.2 无编译环境（BuildLess）全链路时序
+
+BuildLess 与普通构建机的关键差异在于**资源准备阶段**：
+不走 Agent，改走容器池 + Redis 任务队列认领。
+
+```
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Process  │  │ RabbitMQ │  │ Dispatch │  │ BuildLess│  │  Worker  │
+│  引擎    │  │          │  │ (docker) │  │ 容器池   │  │ (容器内) │
+└────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘
+     │              │              │              │              │
+  ① │ startVM 任务执行             │              │              │
+     │ DispatchBuildLessDockerStartupTaskAtom     │              │
+     │ 返回 CALL_WAITING（注意：不是 RUNNING）     │              │
+     │              │              │              │              │
+  ② │── dispatch(PipelineBuildLessStartupEvent) ─>│              │
+     │              │              │              │              │
+     │              │── ③ 消费 ──>│              │              │
+     │              │              │              │              │
+     │              │              │─ ④ 配额检查 ─>              │
+     │              │              │   checkAndAddRunningJob      │
+     │              │              │              │              │
+     │              │              │─ ⑤ HTTP ───>│              │
+     │              │              │ start()     │              │
+     │              │              │              │              │
+     │              │              │              │─ ⑥ ────────>│
+     │              │              │    ContainerPoolExecutor     │
+     │              │              │    .execute()                │
+     │              │              │      │                       │
+     │              │              │      ├── 拒绝策略检查         │
+     │              │              │      │  (ABORT/FOLLOW/JUMP)  │
+     │              │              │      │                       │
+     │              │              │      └── LPUSH 任务入队       │
+     │              │              │         Redis ready_task     │
+     │              │              │              │              │
+     │              │              │              │  ⑦ 容器轮询   │
+     │              │              │              │<── RPOP ────│
+     │              │              │              │  claimTask  │
+     │              │              │              │              │
+     │              │              │              │── 返回 ────>│
+     │              │              │              │ BuildLessTask│
+     │              │              │              │              │
+     │              │              │              │         ┌────┤
+     │              │              │              │         │ ⑧ │
+     │<──────────── setStarted / buildVMStarted ──────────│启动│
+     │              │              │              │         │    │
+     │── 返回 BuildVariables ────────────────────────────>│    │
+     │              │              │              │         │    │
+     │<──────────── claimTask ────────────────────────────│领取│
+     │── 返回 BuildTask(DO) ─────────────────────────────>│执行│
+     │              │              │              │         │    │
+     │<──────────── completeTask ─────────────────────────│    │
+     │  唤醒引擎，编排下一个任务                            │    │
+     │              │              │              │         │    │
+     │   ... 重复领取/完成直到所有插件任务结束 ...           │    │
+     │              │              │              │         └────┤
+     │              │              │              │              │
+  ⑨ │ stopVM 任务执行              │              │              │
+     │ DispatchBuildLessDockerShutdownTaskAtom    │              │
+     │── dispatch(PipelineBuildLessShutdownEvent)─>              │
+     │              │              │              │              │
+     │              │              │─ 回收配额 ──>│              │
+     │              │              │ removeRunningJob             │
+     │              │              │              │─ 销毁容器 ──>│
+     │              │              │              │              │
+```
+
+### 3.3 两种环境的关键差异对比
+
+| 对比项 | 构建机环境 | 无编译环境（BuildLess） |
+|---|---|---|
+| **启动原子** | `DispatchVMStartupTaskAtom` | `DispatchBuildLessDockerStartupTaskAtom` |
+| **启动事件** | `PipelineAgentStartupEvent` | `PipelineBuildLessStartupEvent` |
+| **容器参数** | `VMBuildContainer` | `NormalContainer` |
+| **启动返回值** | `BuildStatus.RUNNING` | `BuildStatus.CALL_WAITING` |
+| **资源准备** | Dispatch 选 Agent/VM → Agent 拉起 Worker | Dispatch → BuildLess 容器池 → Redis 队列认领 |
+| **Worker 来源** | Agent(Go) 拉起 Worker JAR 进程 | 容器内预装 Worker，从 Redis 认领任务后启动 |
+| **任务认领** | Worker 直接 `claimTask` 轮询 Process | 容器先从 BuildLess Redis 队列 `RPOP` 认领构建，再 `claimTask` 领插件 |
+| **关闭事件** | `PipelineAgentShutdownEvent` | `PipelineBuildLessShutdownEvent` |
+| **资源回收** | Dispatch 通知 Agent 停止/销毁容器 | 容器即用即销 + `removeRunningJob` 回收配额 |
+| **启动耗时** | 5~60 秒（取决于 VM/容器类型） | < 1 秒（容器池预热） |
+
+> Task 的 5 种角色分类和 TaskControl 分流全景，详见 `3-engine-control.md` 3.4.1 节。
+> Worker 主循环（Runner.kt）的完整通信链路，详见 `worker-module-architecture` Runner 节。
+
+### 3.4 状态流转总览
+
+一个 Job 内 task 的完整状态流转：
+
+```
+                    引擎编排                Worker 领取             Worker 完成
+                       │                       │                       │
+ ┌────────┐    ┌───────┴──────┐    ┌───────────┴─────────┐    ┌───────┴───────┐
+ │ QUEUE  │───>│ QUEUE_CACHE  │───>│     RUNNING         │───>│SUCCEED/FAILED │
+ │(初始化)│    │(引擎选出待执行)│    │(Worker claimBuildTask)│   │(completeTask) │
+ └────────┘    └──────────────┘    └─────────────────────┘    └───────┬───────┘
+                                                                      │
+                                                                      ▼
+                                                          dispatch(ContainerEvent)
+                                                                      │
+                                                                      ▼
+                                                            引擎唤醒，选下一个任务
+                                                          重复上述流程直到 end-{seq}
+```
+
+**特殊状态**:
+
+| 状态 | 含义 | 触发场景 |
+|---|---|---|
+| `QUEUE` | 初始状态，任务还未被引擎选中 | 构建记录刚创建 |
+| `QUEUE_CACHE` | 引擎已选出，等待 Worker 领取 | `StartActionTaskContainerCmd` |
+| `RUNNING` | Worker 已领取，正在执行 | `claimBuildTask()` |
+| `SUCCEED` | 执行成功 | Worker `completeTask` |
+| `FAILED` | 执行失败 | Worker `completeTask` |
+| `CANCELED` | 用户取消 | 心跳返回取消信号 |
+| `UNEXEC` | 未执行（被跳过） | terminate 或条件不满足 |
+| `CALL_WAITING` | 等待外部回调 | BuildLess startVM 返回 |
+
+### 3.5 关键代码入口速查
+
+| 阶段 | 代码入口 | 模块 |
+|---|---|---|
+| 触发构建 | `PipelineBuildFacadeService.buildManualStartup()` | process/biz-process |
+| 引擎启动 | `BuildStartControl.handle()` | process/biz-engine |
+| Stage 编排 | `StageControl.handle()` → 命令链 | process/biz-engine |
+| Job 编排 | `ContainerControl.handle()` → 命令链 | process/biz-engine |
+| 选出待执行 Task | `StartActionTaskContainerCmd.findNeedToRunTask()` | process/biz-engine |
+| Task 分流 | `TaskControl.handle()` → `runByVmTask()` | process/biz-engine |
+| 构建机调度（启动） | `DispatchVMStartupTaskAtom.execute()` | process/biz-engine |
+| BuildLess 调度（启动） | `DispatchBuildLessDockerStartupTaskAtom.startUpDocker()` | process/biz-engine |
+| Dispatch 监听 | `DockerVMListener` / `ThirdPartyBuildListener` / `BuildLessListener` | dispatch |
+| BuildLess 任务入队 | `ContainerPoolExecutor.execute()` | buildless |
+| BuildLess 任务认领 | `BuildLessTaskService.claimBuildLessTask()` | buildless |
+| Worker 启动上报 | `EngineVMBuildService.buildVMStarted()` | process/biz-base |
+| Worker 领取任务 | `EngineVMBuildService.buildClaimTask()` → `claim()` | process/biz-base |
+| Worker 完成任务 | `EngineVMBuildService.buildCompleteTask()` | process/biz-base |
+| 引擎被唤醒 | `PipelineRuntimeService.completeClaimBuildTask()` | process/biz-base |
+| Worker 主循环 | `Runner.loopPickup()` | worker/worker-common |
+| Agent 领取构建 | `doAsk()` → `job.DoBuild()` | agent (Go) |
+| 构建结束 | `BuildEndControl.handle()` | process/biz-engine |
 
 ---
 
@@ -489,55 +612,7 @@ Worker 启动后
 
 ---
 
-## 六、流水线模型结构
-
-```
-Model (流水线模型)
-├── name: String
-├── stages: List<Stage>
-│   └── Stage
-│       ├── id: String (s-xxx)
-│       ├── checkIn/checkOut: StagePauseCheck
-│       └── containers: List<Container>
-│           └── Container (Job)
-│               ├── id: String (c-xxx)
-│               ├── @type: vmBuild | normal | trigger
-│               ├── dispatchType: DispatchType
-│               └── elements: List<Element>
-│                   └── Element (Task)
-│                       ├── id: String (t-xxx)
-│                       ├── @type: marketBuild | linuxScript | ...
-│                       └── data: Map
-├── triggers: List<Trigger>
-├── params: List<BuildFormProperty>
-└── setting: PipelineSetting
-```
-
----
-
-## 七、数据库核心表
-
-```
-T_PROJECT
-    │
-    ├── T_PIPELINE_INFO (流水线信息)
-    │       │
-    │       ├── T_PIPELINE_RESOURCE (编排模型)
-    │       ├── T_PIPELINE_SETTING (配置)
-    │       └── T_PIPELINE_BUILD_HISTORY (构建历史)
-    │               │
-    │               ├── T_PIPELINE_BUILD_STAGE
-    │               ├── T_PIPELINE_BUILD_CONTAINER
-    │               ├── T_PIPELINE_BUILD_TASK
-    │               └── T_PIPELINE_BUILD_VAR
-    │
-    ├── T_REPOSITORY (代码库)
-    └── T_AUTH_RESOURCE (权限资源)
-```
-
----
-
-## 八、技术栈
+## 六、技术栈
 
 | 层次 | 技术 |
 |------|------|
@@ -553,9 +628,21 @@ T_PROJECT
 
 ---
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     🎯 决策清单（放在最后 - 强化记忆）
-     ═══════════════════════════════════════════════════════════════════════════ -->
+## 七、深入阅读导航
+
+以下内容已在专属 Skill 中详细覆盖，不在本文档重复：
+
+| 主题 | 去哪里看 |
+|---|---|
+| Task 的 5 种角色分类 + TaskControl 分流 | `3-engine-control.md` 3.4.1 节 |
+| Worker 执行插件的生命周期（事件驱动） | `3-engine-control.md` 3.4.2 节 |
+| Worker 主循环 + API 通信 | `worker-module-architecture` Runner 节 |
+| Agent 领取构建 + Ask 模式 | `agent-module-architecture` 3.2~3.3 节 |
+| 流水线模型结构（Model/Stage/Container/Element） | `pipeline-model-architecture` |
+| 数据库核心表（92 张表详解） | `process-module-architecture/reference/4-dao-database.md` |
+| BuildLess 容器池管理 | `dispatch-module-architecture/reference/buildless.md` |
+
+---
 
 ## Checklist
 
