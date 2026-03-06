@@ -19,13 +19,12 @@
                 <template v-if="editingField !== field.key">
                     {{ getFieldValue(field.key) || '--' }}
                     <i
-                        v-if="field.editable"
+                        v-if="field.editable && !envHashId.startsWith('-')"
                         class="bk-icon icon-edit-line edit-icon"
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: ENV_RESOURCE_TYPE,
-                                resourceCode: envHashId,
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         }"
