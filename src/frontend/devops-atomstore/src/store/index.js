@@ -24,6 +24,7 @@ import * as IDE from './IDE'
 import * as Image from './image'
 import * as Service from './service'
 import * as template from './template'
+import * as client from './client'
 const repositoryPrefix = 'repository/api'
 
 const Vue = window.Vue
@@ -140,4 +141,4 @@ const commonModules = {
     }
 }
 
-export default mergeModules(commonModules, atom, template, IDE, Image, Service)
+export default mergeModules(commonModules, atom, template, IDE, Image, Service, client)

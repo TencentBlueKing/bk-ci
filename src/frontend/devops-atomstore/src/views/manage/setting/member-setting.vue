@@ -29,7 +29,7 @@
                 ></bk-table-column>
                 <bk-table-column
                     :label="$t('store.调试项目')"
-                    v-if="!isTemplate"
+                    v-if="!isTemplate && storeType !== 'DEVX'"
                     show-overflow-tooltip
                 >
                     <template slot-scope="props">
@@ -81,9 +81,22 @@
                 <bk-table-column
                     :label="$t('store.描述')"
                     prop="type"
-                    :formatter="desFormatter"
+                    width="550"
                     show-overflow-tooltip
-                ></bk-table-column>
+                >
+                    <template slot-scope="props">
+                        <template v-if="storeType === 'DEVX'">
+                            <bk-tag
+                                v-for="(permission, index) in getPermissionList(props.row.type)"
+                                :key="index"
+                                class="permission-tag"
+                            >
+                                {{ permission }}
+                            </bk-tag>
+                        </template>
+                        <span v-else>{{ desFormatter(props.row, null, props.row.type, null) }}</span>
+                    </template>
+                </bk-table-column>
                 <bk-table-column
                     :label="$t('store.操作')"
                     width="120"
@@ -98,7 +111,89 @@
                 </bk-table-column>
             </bk-table>
 
+            <bk-dialog
+                v-if="storeType === 'DEVX'"
+                v-model="addMemberObj.isShow"
+                :title="$t('store.新增成员')"
+                width="640"
+                :theme="'primary'"
+                :esc-close="false"
+                :mask-close="false"
+                header-position="left"
+                :before-close="closeAddMember"
+                @confirm="saveMember"
+            >
+                <bk-form
+                    :model="addMemberObj.form"
+                    class="add-member-dialog"
+                    ref="addForm"
+                    form-type="vertical"
+                    v-bkloading="{ isLoading: isLoadingMember }"
+                >
+                    <bk-form-item
+                        :label="$t('store.成员名称')"
+                        :required="true"
+                        :rules="[requireRule($t('store.成员名称'))]"
+                        property="list"
+                    >
+                        <bk-tag-input
+                            v-model="addMemberObj.form.list"
+                            :list="staffList"
+                            display-key="chinese_name"
+                            save-key="english_name"
+                            :search-key="['english_name', 'chinese_name']"
+                            :filter-callback="handleStaffSearch"
+                            :tpl="staffTpl"
+                            :tag-tpl="staffTpl"
+                            :clearable="true"
+                            :collapse-tags="true"
+                            :disabled="isLoadingStaff"
+                            :popover-props="{ boundary: 'body', fixOnBoundary: true }"
+                            @change="handleChangeForm"
+                        >
+                        </bk-tag-input>
+                    </bk-form-item>
+                    <bk-form-item
+                        :label="$t('store.成员角色')"
+                        property="type"
+                        :required="true"
+                    >
+                        <bk-radio-group
+                            v-model="addMemberObj.form.type"
+                            @change="handleChangeForm"
+                            class="radio-group"
+                        >
+                            <bk-radio
+                                :value="key"
+                                v-for="(entry, key) in memberType"
+                                :key="key"
+                            >
+                                {{ entry }}
+                            </bk-radio>
+                        </bk-radio-group>
+                        <div
+                            class="permission-box-wrapper"
+                            :class="`arrow-${addMemberObj.form.type.toLowerCase()}`"
+                        >
+                            <div class="permission-box-header">
+                                <span class="permission-label">{{ $t('store.权限列表') }}</span>
+                            </div>
+                            <div class="permission-box">
+                                <bk-tag
+                                    v-for="(permission, index) in getPermissionList(addMemberObj.form.type)"
+                                    :key="index"
+                                    class="permission-tag"
+                                >
+                                    {{ permission }}
+                                </bk-tag>
+                            </div>
+                        </div>
+                    </bk-form-item>
+                </bk-form>
+            </bk-dialog>
+
             <bk-sideslider
+                v-else
                 :is-show.sync="addMemberObj.isShow"
                 :quick-close="true"
                 :title="$t('store.新增成员')"
@@ -221,6 +316,8 @@
                 memberCount: 0,
                 memberList: [],
                 projectMemberList: [],
+                staffList: [],
+                isLoadingStaff: false,
                 permissionMap: {
                     atom: [
                         { name: this.$t('store.插件开发'), active: false, type: 'DEVELOPER' },
@@ -245,6 +342,14 @@
                     template: [
                         { name: this.$t(this.$t('store.templateSetting')), active: false, type: 'ADMIN' },
                         { name: this.$t('store.版本发布'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
+                    ],
+                    DEVX: [
+                        { name: this.$t('store.开发'), active: false, type: 'DEVELOPER' },
+                        { name: this.$t('store.版本发布'), active: false, type: 'DEVELOPER' },
+                        { name: this.$t('store.私有配置'), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
@@ -286,7 +391,7 @@
             },
 
             storeCode () {
-                return this.detail[`${this.$route.params.type}Code`] ?? ''
+                return (this.storeType === 'DEVX' ? this.detail.storeCode : this.detail[`${this.$route.params.type}Code`]) ?? ''
             },
 
             isTemplate () {
@@ -353,16 +458,97 @@
             openAddMember () {
                 window.changeFlag = false
                 this.addMemberObj.isShow = true
-                if (!this.isEnterprise) {
-                    this.isLoadingMember = true
-                    this.$store.dispatch('store/requestProjectMember', {
-                        projectCode: this.detail.projectCode
-                    }).then((res) => {
-                        this.projectMemberList = (res || []).map(x => ({ id: x, name: x }))
-                    }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
-                        this.isLoadingMember = false
-                    })
+                
+                // 云研发使用腾讯全体员工列表
+                if (this.storeType === 'DEVX') {
+                    if (this.staffList.length === 0 && !this.isLoadingStaff) {
+                        this.fetchStaffList()
+                    }
+                } else {
+                    if (!this.isEnterprise) {
+                        this.isLoadingMember = true
+                        this.$store.dispatch('store/requestProjectMember', {
+                            projectCode: this.detail.projectCode
+                        }).then((res) => {
+                            this.projectMemberList = (res || []).map(x => ({ id: x, name: x }))
+                        }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                            this.isLoadingMember = false
+                        })
+                    }
                 }
+            },
+
+            fetchStaffList () {
+                this.isLoadingStaff = true
+                const prefix = '//api.open.woa.com/component/compapi/tof3/get_all_staff_info'
+                const params = {
+                    query_type: 'simple_data',
+                    app_code: 'workbench',
+                    callback: 'callbackStaff'
+                }
+                const queryStr = new URLSearchParams(params).toString()
+                const scriptTag = document.createElement('script')
+                scriptTag.setAttribute('type', 'text/javascript')
+                scriptTag.setAttribute('src', `${prefix}?${queryStr}`)
+
+                const headTag = document.getElementsByTagName('head')[0]
+                window[params.callback] = ({ data, result }) => {
+                    if (result) {
+                        this.isLoadingStaff = false
+                        this.staffList = data || []
+                    }
+                    headTag.removeChild(scriptTag)
+                    delete window[params.callback]
+                }
+                headTag.appendChild(scriptTag)
+            },
+
+            handleStaffSearch (lowerCaseValue, _searchKeyVal, list) {
+                return list.filter((item) => {
+                    const englishName = (item.english_name || '').toLowerCase()
+                    const chineseName = item.chinese_name || ''
+                    return englishName.includes(lowerCaseValue) || chineseName.includes(lowerCaseValue)
+                })
+            },
+
+            staffTpl (node) {
+                if (!node) return ''
+                const h = this.$createElement
+                return h('div', {
+                    class: 'member-tpl',
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 10px',
+                        height: '20px'
+                    }
+                }, [
+                    h('img', {
+                        attrs: {
+                            src: `//dayu.woa.com/avatars/${node.english_name}/profile.jpg`
+                        },
+                        style: {
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            marginRight: '6px'
+                        }
+                    }),
+                    h('span', {
+                        style: {
+                            fontSize: '12px'
+                        }
+                    }, `${node.english_name}${node.chinese_name ? ` (${node.chinese_name})` : ''}`)
+                ])
+            },
+
+            resetMemberForm () {
+                this.addMemberObj.form = {
+                    list: [],
+                    memberName: '',
+                    type: 'ADMIN'
+                }
+                this.$refs.addForm?.clearError()
             },
 
             saveMember () {
@@ -376,10 +562,7 @@
                     }
                     if (this.isEnterprise) postData.member.push(this.addMemberObj.form.memberName)
                     api.requestAddMember(postData).then(() => {
-                        this.addMemberObj.form = {
-                            memberName: '',
-                            type: 'ADMIN'
-                        }
+                        this.resetMemberForm()
                         setTimeout(() => {
                             this.addMemberObj.isShow = false
                         })
@@ -393,35 +576,30 @@
             },
 
             closeAddMember () {
-                if (window.changeFlag) {
-                    this.$bkInfo({
-                        title: this.$t('确认离开当前页？'),
-                        subHeader: this.$createElement('p', {
-                            style: {
-                                color: '#63656e',
-                                fontSize: '14px',
-                                textAlign: 'center'
-                            }
-                        }, this.$t('离开将会导致未保存信息丢失')),
-                        okText: this.$t('离开'),
-                        confirmFn: () => {
-                            this.addMemberObj.form = {
-                                memberName: '',
-                                type: 'ADMIN'
-                            }
-                            setTimeout(() => {
-                                this.addMemberObj.isShow = false
-                            })
-                            return true
-                        }
-                    })
-                } else {
+                if (!window.changeFlag) {
                     this.addMemberObj.isShow = false
-                    this.addMemberObj.form = {
-                        memberName: '',
-                        type: 'ADMIN'
-                    }
+                    this.resetMemberForm()
+                    return
                 }
+
+                this.$bkInfo({
+                    title: this.$t('确认离开当前页？'),
+                    subHeader: this.$createElement('p', {
+                        style: {
+                            color: '#63656e',
+                            fontSize: '14px',
+                            textAlign: 'center'
+                        }
+                    }, this.$t('离开将会导致未保存信息丢失')),
+                    okText: this.$t('离开'),
+                    confirmFn: () => {
+                        this.resetMemberForm()
+                        setTimeout(() => {
+                            this.addMemberObj.isShow = false
+                        })
+                        return true
+                    }
+                })
             },
 
             typeFormatter (row, column, cellValue, index) {
@@ -483,6 +661,20 @@
 </script>
 
 <style lang="scss" scoped>
+    .member-tpl {
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        height: 40px;
+        
+        img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+    }
+
     .member-setting {
         background: #fff;
         padding: 3.2vh;
@@ -521,6 +713,61 @@
             ::v-deep .bk-table .bk-table-body-wrapper {
                 height: calc(100% - 43px);
             }
+        }
+        .permission-tag {
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+    }
+    .add-member-dialog {
+        padding: 0 24px;
+        .permission-box-wrapper {
+            position: relative;
+            padding: 16px;
+            margin-top: 16px;
+            background: #f5f7fa;
+            border-radius: 2px;
+
+            &::before {
+                content: "";
+                width: 0;
+                height: 0;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-bottom: 5px solid #f5f7fa;
+                position: absolute;
+                top: -5px;
+                transition: left 0.3s ease;
+            }
+
+            &.arrow-admin::before {
+                left: 45px;
+                transform: translateX(-50%);
+            }
+
+            &.arrow-developer::before {
+                left: 145px;
+                transform: translateX(-50%);
+            }
+        }
+        .permission-box-header {
+            margin-bottom: 8px;
+            .permission-label {
+                font-size: 14px;
+                color: #979ba5;
+                line-height: 20px;
+            }
+        }
+        .permission-box {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        ::v-deep .bk-form-item {
+            margin-top: 0;
+        }
+        .radio-group {
+            display: flex;
+            gap: 32px;
         }
     }
 </style>

@@ -8,7 +8,7 @@
         :quick-close="organizationConf.quickClose"
         :loading="isLoading"
         :auto-close="false"
-        @confirm="toConfirmLogo"
+        @confirm="handleConfirm"
         @cancel="handleCancel"
     >
         <main class="organization-select-content">
@@ -188,6 +188,8 @@
                 this.selectedList = this.selectedList.filter((item) => item.id !== row.id)
                 this.currentSelectNode = this.currentSelectNode.filter((item) => item.id !== row.id)
                 this.clearChecked(row.id, false)
+                // 通知父组件更新数据
+                this.emitUpdate()
             },
 
             handleDeleteAll () {
@@ -196,6 +198,16 @@
                 this.$refs.organizationTree.removeChecked()
                 this.selectedList = []
                 this.currentSelectNode = []
+                // 通知父组件更新数据
+                this.emitUpdate()
+            },
+
+            emitUpdate () {
+                const deptInfos = this.selectedList.map((item) => ({
+                    deptId: item.id,
+                    deptName: item.displayName,
+                }))
+                this.$emit('update', { deptInfos })
             },
 
             async loadNodes (node) {
@@ -234,28 +246,22 @@
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }
             },
-            toConfirmLogo () {
+            handleConfirm () {
                 if (this.isLoading) return
                 if (!this.selectedList.length) {
                     this.$bkMessage({
                         message: this.$t('store.请选择部门'),
                         theme: 'error',
                     })
-                } else {
-                    const deptInfos = []
-                    this.selectedList.forEach((item) => {
-                        deptInfos.push({
-                            deptId: item.id,
-                            deptName: item.displayName,
-                        })
-                    })
-
-                    const params = {
-                        deptInfos,
-                    }
-
-                    this.$emit('saveHandle', params)
+                    return
                 }
+                
+                const deptInfos = this.selectedList.map((item) => ({
+                    deptId: item.id,
+                    deptName: item.displayName,
+                }))
+
+                this.$emit('saveHandle', { deptInfos })
             },
             handleCancel () {
                 this.selectedList = []

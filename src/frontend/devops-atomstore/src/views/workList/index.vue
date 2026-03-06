@@ -86,6 +86,10 @@
                                 link: this.BKCI_DOCS.EXT_GUIDE_DOC
                             }
                         ]
+                    },
+                    {
+                        name: 'DEVXWork',
+                        label: this.$t('store.云研发'),
                     }
                 ]
             }
@@ -111,6 +115,9 @@
                         break
                     case 'serviceWork':
                         name = this.$t('store.微扩展')
+                        break
+                    case 'DEVXWork':
+                        name = this.$t('store.云研发')
                         break
                     default:
                         name = this.$t('store.流水线插件')

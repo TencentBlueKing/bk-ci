@@ -137,7 +137,8 @@
                     atom: () => this.$store.dispatch('store/requestVisibleList', { atomCode: this.detail.atomCode }),
                     template: () => this.$store.dispatch('store/requesttplVisibleList', { templateCode: this.detail.templateCode }),
                     image: () => this.$store.dispatch('store/requestImageVisableList', this.detail.imageCode),
-                    service: () => this.$store.dispatch('store/requestServiceVisableList', this.detail.serviceCode)
+                    service: () => this.$store.dispatch('store/requestServiceVisableList', this.detail.serviceCode),
+                    DEVX: () => this.$store.dispatch('store/getVisibilitiesList', this.detail.storeCode)
                 }
                 const type = this.$route.params.type
                 this.isLoading = true
@@ -184,6 +185,11 @@
                     case 'service':
                         params.serviceCode = this.detail.serviceCode
                         method = () => this.$store.dispatch('store/setServiceVisableDept', { params })
+                        break
+                    case 'DEVX':
+                        params.storeCode = this.detail.storeCode
+                        params.storeType = 'DEVX'
+                        method = () => this.$store.dispatch('store/addVisibilitiesList', params)
                         break
                 }
                 this.isSaveOrg = true
@@ -234,7 +240,8 @@
                     atom: () => this.$store.dispatch('store/requestDeleteVisiable', { atomCode: this.detail.atomCode, deptIds }),
                     template: () => this.$store.dispatch('store/deleteTplVisiable', { templateCode: this.detail.templateCode, deptIds }),
                     image: () => this.$store.dispatch('store/requestDeleteImageVis', { imageCode: this.detail.imageCode, deptIds }),
-                    service: () => this.$store.dispatch('store/requestDeleteServiceVis', { serviceCode: this.detail.serviceCode, deptIds })
+                    service: () => this.$store.dispatch('store/requestDeleteServiceVis', { serviceCode: this.detail.serviceCode, deptIds }),
+                    DEVX: () => this.$store.dispatch('store/deleteVisibilitiesList', { storeCode: this.detail.storeCode, deptIds })
                 }
                 const type = this.$route.params.type
                 this.deleteObj.loading = true

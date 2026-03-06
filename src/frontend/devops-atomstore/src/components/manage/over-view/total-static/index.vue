@@ -49,10 +49,10 @@
 
         methods: {
             initData () {
-                
                 const methodGenerator = {
                     atom: this.getAtomData,
-                    service: this.getServiceData
+                    service: this.getServiceData,
+                    DEVX: this.getDEVXData
                 }
 
                 if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
@@ -105,7 +105,20 @@
                         { name: 'rate', label: this.$t('store.星级'), value: res.score || '--' }
                     ]
                 })
-            }
+            },
+
+            getDEVXData () {
+                return this.$store.dispatch('store/requestAtomStatistic', {
+                    storeCode: this.detail.storeCode,
+                    storeType: 'DEVX'
+                }).then((res) => {
+                    this.statisticList = [
+                        { name: 'install-num', label: this.$t('store.装机量'), value: res.downloads },
+                        { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
+                        { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
+                    ]
+                })
+            },
         }
     }
 </script>

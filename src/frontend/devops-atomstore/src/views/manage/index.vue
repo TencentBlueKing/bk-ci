@@ -58,9 +58,9 @@
             },
             panels () {
                 return [
-                    ...([TYPE_ENUM.atom, TYPE_ENUM.service].includes(this.type) ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
+                    ...([TYPE_ENUM.atom, TYPE_ENUM.service, TYPE_ENUM.DEVX].includes(this.type) ? [{ label: this.$t('store.概览'), name: 'statisticData' }] : []),
                     ...(this.type !== TYPE_ENUM.image ? [{ label: this.$t('store.发布管理'), name: 'releaseManage' }] : []),
-                    ...(this.type === TYPE_ENUM.atom ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
+                    ...([TYPE_ENUM.atom, TYPE_ENUM.DEVX].includes(this.type) ? [{ label: this.$t('store.协作审批'), name: 'approval' }] : []),
                     ...(this.type !== TYPE_ENUM.template ? [{ label: this.$t('store.基本信息'), name: 'show' }] : []),
                     { label: this.$t('store.基本设置'), name: 'setting' }
                 ]
@@ -71,7 +71,8 @@
                     template: this.$t('store.流水线模板'),
                     image: this.$t('store.容器镜像'),
                     atom: this.$t('store.流水线插件'),
-                    service: this.$t('store.微扩展')
+                    service: this.$t('store.微扩展'),
+                    DEVX: this.$t('store.云研发')
                 }
                 return [
                     { name: this.$t('store.工作台') },
@@ -94,6 +95,7 @@
                 'requestServiceDetailByCode',
                 'setDetail',
                 'clearDetail',
+                'getComponentDetail',
                 'updateUserInfo'
             ]),
             
@@ -128,7 +130,8 @@
                     atom: this.requestAtom,
                     template: this.requestTemplateDetail,
                     image: this.requestImageDetailByCode,
-                    service: this.requestServiceDetailByCode
+                    service: this.requestServiceDetailByCode,
+                    DEVX: this.getComponentDetail
                 }
                 const res = await methodUrl[this.type](code)
                 

@@ -39,10 +39,10 @@
 
         methods: {
             initData () {
-                
                 const methodGenerator = {
                     atom: this.getAtomData,
-                    service: this.getImageData
+                    service: this.getImageData,
+                    DEVX: this.getDEVXData
                 }
 
                 if (!Object.prototype.hasOwnProperty.call(methodGenerator, this.type) || typeof methodGenerator[this.type] !== 'function') {
@@ -60,6 +60,13 @@
                 })
             },
 
+            formatVersionItem (x) {
+                return {
+                    tag: x.createTime,
+                    content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
+                }
+            },
+
             getAtomData () {
                 return this.$store.dispatch('store/requestVersionList', {
                     atomCode: this.detail.atomCode,
@@ -67,10 +74,7 @@
                     pageSize: this.limit
                 }).then((res) => {
                     const records = res.records || []
-                    this.list = [...this.list, ...records.map((x) => ({
-                        tag: x.createTime,
-                        content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
-                    }))]
+                    this.list = [...this.list, ...records.map(this.formatVersionItem)]
                     this.loadEnd = res.count <= this.list.length
                 })
             },
@@ -78,10 +82,19 @@
             getImageData () {
                 return this.$store.dispatch('store/requestVersionLog', this.detail.serviceCode).then((res) => {
                     const records = res.records || []
-                    this.list = records.map((x) => ({
-                        tag: x.createTime,
-                        content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
-                    }))
+                    this.list = records.map(this.formatVersionItem)
+                })
+            },
+
+            getDEVXData () {
+                return this.$store.dispatch('store/getRelaseVersionList', {
+                    storeCode: this.detail.storeCode,
+                    page: this.current,
+                    pageSize: this.limit
+                }).then((res) => {
+                    const records = res.records || []
+                    this.list = [...this.list, ...records.map(this.formatVersionItem)]
+                    this.loadEnd = res.count <= this.list.length
                 })
             },
             scrollLoadMore (event) {

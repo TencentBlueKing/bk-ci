@@ -24,6 +24,7 @@
     import imageVersion from '@/components/manage/release-manage/version/image.vue'
     import serviceVersion from '@/components/manage/release-manage/version/service.vue'
     import templateVersion from '@/components/manage/release-manage/version/template.vue'
+    import DEVXVersion from '@/components/manage/release-manage/version/DEVX.vue'
     import { mapActions, mapGetters } from 'vuex'
 
     export default {
@@ -31,7 +32,8 @@
             atomVersion,
             imageVersion,
             templateVersion,
-            serviceVersion
+            serviceVersion,
+            DEVXVersion
         },
 
         props:{
@@ -68,7 +70,8 @@
                 'requestVersionList',
                 'requestImageVersionList',
                 'requestTemplateReleasedList',
-                'requestServiceVersionList'
+                'requestServiceVersionList',
+                'getRelaseVersionList'
             ]),
             pageLimitChanged (currentLimit, prevLimit) {
                 if (currentLimit === this.pagination.limit) return
@@ -92,6 +95,7 @@
                         image: this.requestImageVersionList,
                         template: this.requestTemplateReleasedList,
                         service: this.requestServiceVersionList,
+                        DEVX: this.getRelaseVersionList
                     }
 
                     if (!Object.keys(apiMethodMap).includes(type) || typeof apiMethodMap[type] !== 'function') {
@@ -99,8 +103,13 @@
                         return
                     }
 
+                    // DEVX 类型使用 storeCode,其他类型使用 {type}Code
+                    const codeParam = type === 'DEVX'
+                        ? { storeCode: this.detail.storeCode }
+                        : { [`${type}Code`]: this.detail[`${type}Code`] }
+                    
                     const res = await apiMethodMap[type]({
-                        [`${type}Code`]: this.detail[`${type}Code`],
+                        ...codeParam,
                         page: this.pagination.current,
                         pageSize: this.pagination.limit
                     })

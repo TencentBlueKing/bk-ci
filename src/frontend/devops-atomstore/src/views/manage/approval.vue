@@ -182,7 +182,14 @@
         computed: {
             ...mapGetters('store', {
                 detail: 'getDetail'
-            })
+            }),
+            type () {
+                return this.$route.params.type
+            },
+            // 根据类型获取对应的 code
+            code () {
+                return this.type === 'DEVX' ? this.detail.storeCode : this.detail.atomCode
+            },
         },
 
         created () {
@@ -194,7 +201,7 @@
                 this.$refs.validateForm.validate().then((validator) => {
                     const { approveId, approveMsg, approveStatus } = this.approveRes
                     this.isApproving = true
-                    this.$store.dispatch('store/approval', { type: 'ATOM', code: this.detail.atomCode, approveId, approveMsg, approveStatus }).then((res) => {
+                    this.$store.dispatch('store/approval', { type: this.type, code: this.code, approveId, approveMsg, approveStatus }).then((res) => {
                         if (res) {
                             const currentData = this.approveList.find(item => item.approveId === this.approveRes.approveId) || {}
                             currentData.approveStatus = approveStatus
@@ -225,7 +232,7 @@
 
             requestApproveList () {
                 this.isLoading = true
-                const data = Object.assign({}, this.pagination, { type: 'ATOM', code: this.detail.atomCode })
+                const data = Object.assign({}, this.pagination, { type: this.type, code: this.code })
                 this.$store.dispatch('store/getApprovalList', data).then((res) => {
                     this.approveList = res.records || []
                     this.pagination.count = res.count

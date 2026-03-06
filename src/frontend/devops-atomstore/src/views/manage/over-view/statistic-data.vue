@@ -13,11 +13,13 @@
         </section>
 
         <section class="view-right">
-            <section class="view-code manage-section">
-                <h5 class="manage-title">{{ $t('store.代码') }}</h5>
-                <code-repo v-bind="componentData"></code-repo>
-            </section>
-            <span class="manage-gap"></span>
+            <template v-if="$route.params.type !== 'DEVX'">
+                <section class="view-code manage-section">
+                    <h5 class="manage-title">{{ $t('store.代码') }}</h5>
+                    <code-repo v-bind="componentData"></code-repo>
+                </section>
+                <span class="manage-gap"></span>
+            </template>
             <section class="view-news manage-section">
                 <h5 class="manage-title">{{ $t('store.最新动态') }}</h5>
                 <news v-bind="componentData"></news>
@@ -62,6 +64,7 @@
     .manage-over-view {
         height: 100%;
         box-shadow: none !important;
+        overflow: hidden;
         .manage-gap {
             min-height: 2.3%;
             width: 100%;

@@ -73,6 +73,15 @@
                             component: deptInfoSetting
                         }]
                         : []
+                ),
+                ...(
+                    type.value === 'DEVX'
+                        ? [{
+                            label: vm.proxy.$t('store.apiSettingManage'),
+                            name: 'api',
+                            component: apiSetting
+                        }]
+                        : []
                 )
             ]
             return {
