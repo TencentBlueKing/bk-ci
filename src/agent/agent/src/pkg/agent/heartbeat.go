@@ -91,15 +91,21 @@ func agentHeartbeat(heartbeatResponse *api.AgentHeartbeatResponse) {
 		if envs.GApiEnvVars.Size() <= 0 {
 			envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 		} else {
-			flag := false
-			envs.GApiEnvVars.RangeDo(func(k, v string) bool {
-				if heartbeatResponse.Envs[k] != v {
-					flag = true
-					return false
-				}
-				return true
-			})
-			if flag {
+			changed := false
+			// 检查数量是否变化（新增或删除了 key）
+			if envs.GApiEnvVars.Size() != len(heartbeatResponse.Envs) {
+				changed = true
+			} else {
+				// 数量相同时，检查旧值在新 map 中是否有变化
+				envs.GApiEnvVars.RangeDo(func(k, v string) bool {
+					if heartbeatResponse.Envs[k] != v {
+						changed = true
+						return false
+					}
+					return true
+				})
+			}
+			if changed {
 				envs.GApiEnvVars.SetEnvs(heartbeatResponse.Envs)
 			}
 		}
