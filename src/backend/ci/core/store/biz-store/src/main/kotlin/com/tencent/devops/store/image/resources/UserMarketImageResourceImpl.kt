@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.image.resources
 
+import ImagePageData
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -163,4 +164,11 @@ class UserMarketImageResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getPublicImageList(imageName: String, page: Int?, pageSize: Int?): Result<ImagePageData> {
+        val actualPage = page ?: 1
+        val actualPageSize = pageSize ?: 10
+        return imageService.getPublicImageList(imageName = imageName, page = actualPage, pageSize = actualPageSize)
+    }
+
 }

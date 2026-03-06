@@ -36,6 +36,8 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.archive.pojo.PackageSummary
+import com.tencent.devops.common.archive.pojo.PackageVersion
 import jakarta.servlet.http.HttpServletResponse
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.File
@@ -271,4 +273,35 @@ interface ArchiveFileService {
         repoName: String,
         filePath: String
     ): List<String>
+
+
+    fun listVersionPage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        version: String?,
+        packageKey: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): Page<PackageVersion>
+
+    fun getPackageInfo(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageKey: String
+    ): PackageSummary
+
+    /**
+     * 分页查询包列表
+     */
+    fun listPackagePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        packageName: String? = null,
+        pageNumber: Int = 0,
+        pageSize: Int = 20
+    ): List<PackageSummary>
+
 }
