@@ -31,11 +31,23 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.pojo.event.PipelineTemplateTriggerUpgradesEvent
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
@@ -44,6 +56,7 @@ import com.tencent.devops.process.service.template.v2.PipelineTemplateFacadeServ
 import com.tencent.devops.process.service.template.v2.PipelineTemplateInfoService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateMarketFacadeService
 import com.tencent.devops.process.service.template.v2.PipelineTemplateResourceService
+import com.tencent.devops.process.service.template.v2.PipelineTemplateCompatibilityAdapter
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 
 @RestResource
@@ -52,7 +65,8 @@ class ServicePipelineTemplateV2ResourceImpl(
     private val pipelineTemplateInfoService: PipelineTemplateInfoService,
     private val pipelineTemplateFacadeService: PipelineTemplateFacadeService,
     private val pipelineTemplateResourceService: PipelineTemplateResourceService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTemplateCompatibilityAdapter: PipelineTemplateCompatibilityAdapter
 ) : ServicePipelineTemplateV2Resource {
     override fun handleMarketTemplatePublished(request: MarketTemplateV2Request): Result<Boolean> {
         return Result(pipelineTemplateMarketFacadeService.handleMarketTemplatePublished(request))
@@ -198,6 +212,206 @@ class ServicePipelineTemplateV2ResourceImpl(
                 projectId = projectId,
                 templateId = templateId,
                 request = request
+            )
+        )
+    }
+
+    override fun getTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long?,
+        versionName: String?
+    ): Result<TemplateModelDetail> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.getTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version,
+                versionName = versionName
+            )
+        )
+    }
+
+    override fun listTemplate(
+        userId: String,
+        projectId: String,
+        templateType: TemplateType?,
+        storeFlag: Boolean?,
+        orderBy: PTemplateOrderByType?,
+        sort: PTemplateSortType?,
+        page: Int,
+        pageSize: Int
+    ): Result<TemplateListModel> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.listTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateType = templateType,
+                storeFlag = storeFlag,
+                orderBy = orderBy,
+                sort = sort,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun listAllTemplate(
+        userId: String,
+        projectId: String
+    ): Result<OptionalTemplateList> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.listAllTemplates(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
+
+    override fun createTemplate(
+        userId: String,
+        projectId: String,
+        template: Model
+    ): Result<String> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.createTemplate(
+                userId = userId,
+                projectId = projectId,
+                template = template
+            )
+        )
+    }
+
+    override fun updateTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        template: Model
+    ): Result<Long> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.updateTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                versionName = versionName,
+                template = template
+            )
+        )
+    }
+
+    override fun deleteTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.deleteTemplate(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId
+            )
+        )
+    }
+
+    override fun deleteTemplateVersion(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long
+    ): Result<Boolean> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.deleteVersion(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version
+            )
+        )
+    }
+
+    override fun createTemplateInstances(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceCreate>
+    ): Result<TemplateOperationRet> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.createTemplateInstances(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+            )
+        )
+    }
+
+    override fun updateTemplateInstances(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): Result<TemplateOperationRet> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.updateTemplateInstances(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+            )
+        )
+    }
+
+    override fun updateTemplateInstancesByName(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): Result<TemplateOperationRet> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.updateTemplateInstances(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                versionName = versionName,
+                useTemplateSettings = useTemplateSettings,
+                instances = instances
+            )
+        )
+    }
+
+    override fun listTemplateInstances(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchKey: String?,
+        sortType: TemplateSortTypeEnum?,
+        desc: Boolean?
+    ): Result<TemplateInstancePage> {
+        return Result(
+            pipelineTemplateCompatibilityAdapter.listTemplateInstances(
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                searchKey = searchKey,
+                sortType = sortType,
+                desc = desc
             )
         )
     }

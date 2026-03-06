@@ -31,9 +31,21 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.template.UpgradeStrategyEnum
+import com.tencent.devops.process.pojo.PTemplateOrderByType
+import com.tencent.devops.process.pojo.PTemplateSortType
 import com.tencent.devops.process.pojo.PipelineTemplateVersionSimple
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.pipeline.DeployTemplateResult
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.v2.MarketTemplateV2Request
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateDetailsResponse
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInfoResponse
@@ -43,6 +55,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
@@ -57,6 +70,7 @@ import jakarta.ws.rs.core.MediaType
 @Path("/service/templates/v2")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface ServicePipelineTemplateV2Resource {
     @Operation(summary = "研发商店上架事件处理")
     @POST
@@ -226,4 +240,236 @@ interface ServicePipelineTemplateV2Resource {
         @Parameter(description = "请求体", required = true)
         request: PipelineTemplateMarketCreateReq
     ): Result<DeployTemplateResult>
+
+    @Operation(summary = "获取模板详情")
+    @GET
+    @Path("/{projectId}/templates/{templateId}")
+    fun getTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本", required = false)
+        @QueryParam("version")
+        version: Long?,
+        @Parameter(description = "版本名称", required = false)
+        @QueryParam("versionName")
+        versionName: String?
+    ): Result<TemplateModelDetail>
+
+    @Operation(summary = "获取模板列表")
+    @GET
+    @Path("/{projectId}/templates/")
+    fun listTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板类型", required = false)
+        @QueryParam("templateType")
+        templateType: TemplateType?,
+        @Parameter(description = "是否已关联市场", required = false)
+        @QueryParam("storeFlag")
+        storeFlag: Boolean?,
+        @Parameter(description = "排序字段", required = false)
+        @QueryParam("orderBy")
+        orderBy: PTemplateOrderByType?,
+        @Parameter(description = "排序方向", required = false)
+        @QueryParam("sort")
+        sort: PTemplateSortType?,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<TemplateListModel>
+
+    @Operation(summary = "获取全部模板列表")
+    @GET
+    @Path("/{projectId}/templates/all")
+    fun listAllTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<OptionalTemplateList>
+
+    @Operation(summary = "创建模板")
+    @POST
+    @Path("/{projectId}/templates/create")
+    fun createTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板模型", required = true)
+        template: Model
+    ): Result<String>
+
+    @Operation(summary = "更新模板")
+    @PUT
+    @Path("/{projectId}/templates/{templateId}")
+    fun updateTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本名称", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @Parameter(description = "模板模型", required = true)
+        template: Model
+    ): Result<Long>
+
+    @Operation(summary = "删除模板")
+    @DELETE
+    @Path("/{projectId}/templates/{templateId}")
+    fun deleteTemplate(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "删除模板版本")
+    @DELETE
+    @Path("/{projectId}/templates/{templateId}/versions/{version}")
+    fun deleteTemplateVersion(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本", required = true)
+        @PathParam("version")
+        version: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "批量创建模板实例")
+    @POST
+    @Path("/{projectId}/templates/{templateId}/instances")
+    fun createTemplateInstances(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本", required = true)
+        @QueryParam("version")
+        version: Long,
+        @Parameter(description = "是否使用模板设置", required = true)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @Parameter(description = "实例列表", required = true)
+        instances: List<TemplateInstanceCreate>
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "批量更新模板实例-按版本号")
+    @PUT
+    @Path("/{projectId}/templates/{templateId}/instances")
+    fun updateTemplateInstances(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本", required = true)
+        @QueryParam("version")
+        version: Long,
+        @Parameter(description = "是否使用模板设置", required = true)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @Parameter(description = "实例列表", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "批量更新模板实例-按版本名")
+    @PUT
+    @Path(
+        "/{projectId}/templates/{templateId}" +
+            "/instances/byVersionName"
+    )
+    fun updateTemplateInstancesByName(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "版本名称", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @Parameter(description = "是否使用模板设置", required = true)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @Parameter(description = "实例列表", required = true)
+        instances: List<TemplateInstanceUpdate>
+    ): Result<TemplateOperationRet>
+
+    @Operation(summary = "查询模板实例列表")
+    @GET
+    @Path("/{projectId}/templates/{templateId}/instances")
+    fun listTemplateInstances(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @Parameter(description = "页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页大小", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @Parameter(description = "搜索关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?,
+        @Parameter(description = "排序类型", required = false)
+        @QueryParam("sortType")
+        sortType: TemplateSortTypeEnum?,
+        @Parameter(description = "是否降序", required = false)
+        @QueryParam("desc")
+        desc: Boolean?
+    ): Result<TemplateInstancePage>
 }

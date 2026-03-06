@@ -10,6 +10,7 @@ import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineTemplateInfo
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
+import com.tencent.devops.process.pojo.enums.TemplateSortTypeEnum
 import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelated
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedCommonCondition
@@ -17,6 +18,7 @@ import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedSimple
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateRelatedUpdateInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.SortField
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -81,6 +83,7 @@ class PipelineTemplateRelatedDao {
         }
     }
 
+    @Suppress("LongParameterList")
     fun listSimple(
         dslContext: DSLContext,
         projectId: String,
@@ -92,11 +95,20 @@ class PipelineTemplateRelatedDao {
         pipelineIds: List<String>?,
         instanceTypeEnum: PipelineInstanceTypeEnum,
         limit: Int,
-        offset: Int
+        offset: Int,
+        sortType: TemplateSortTypeEnum? = null,
+        sortDesc: Boolean = true
     ): List<PipelineTemplateRelatedSimple> {
         val templatePipelineTable = TTemplatePipeline.T_TEMPLATE_PIPELINE
         val pipelineInfoTable = TPipelineInfo.T_PIPELINE_INFO
-        val pipelineTemplateInfoTable = TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO
+        val pipelineTemplateInfoTable =
+            TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO
+        val orderField = buildOrderField(
+            sortType = sortType,
+            sortDesc = sortDesc,
+            templatePipelineTable = templatePipelineTable,
+            pipelineInfoTable = pipelineInfoTable
+        )
         return dslContext.select(
             templatePipelineTable.PROJECT_ID,
             templatePipelineTable.TEMPLATE_ID,
@@ -135,7 +147,7 @@ class PipelineTemplateRelatedDao {
                     instanceTypeEnum = instanceTypeEnum
                 )
             )
-            .orderBy(templatePipelineTable.UPDATED_TIME.desc())
+            .orderBy(orderField)
             .limit(limit)
             .offset(offset)
             .fetch().map {
@@ -158,6 +170,25 @@ class PipelineTemplateRelatedDao {
                     releasedVersion = it.value16()
                 )
             }
+    }
+
+    private fun buildOrderField(
+        sortType: TemplateSortTypeEnum?,
+        sortDesc: Boolean,
+        templatePipelineTable: TTemplatePipeline,
+        pipelineInfoTable: TPipelineInfo
+    ): SortField<*> {
+        val field = when (sortType) {
+            TemplateSortTypeEnum.PIPELINE_NAME ->
+                pipelineInfoTable.PIPELINE_NAME
+            TemplateSortTypeEnum.STATUS ->
+                templatePipelineTable.STATUS
+            TemplateSortTypeEnum.VERSION ->
+                templatePipelineTable.VERSION
+            TemplateSortTypeEnum.UPDATE_TIME, null ->
+                templatePipelineTable.UPDATED_TIME
+        }
+        return if (sortDesc) field.desc() else field.asc()
     }
 
     private fun buildCommonConditions(
@@ -259,6 +290,35 @@ class PipelineTemplateRelatedDao {
                 )
             )
             .fetchOne(0, Int::class.java)!!
+    }
+
+    /**
+     * 批量查询哪些模板存在需要升级的实例。
+     * 判断逻辑：实例的 VERSION != 模板的 RELEASED_VERSION
+     * @return 包含有待升级实例的 templateId 集合
+     */
+    fun listTemplateIdsWithInstance2Upgrade(
+        dslContext: DSLContext,
+        projectId: String,
+        templateIds: Set<String>
+    ): Set<String> {
+        if (templateIds.isEmpty()) return emptySet()
+        val tp = TTemplatePipeline.T_TEMPLATE_PIPELINE
+        val ti = TPipelineTemplateInfo.T_PIPELINE_TEMPLATE_INFO
+        return dslContext.selectDistinct(tp.TEMPLATE_ID)
+            .from(tp)
+            .join(ti).on(tp.TEMPLATE_ID.eq(ti.ID))
+            .where(tp.PROJECT_ID.eq(projectId))
+            .and(tp.TEMPLATE_ID.`in`(templateIds))
+            .and(tp.DELETED.eq(false))
+            .and(
+                tp.INSTANCE_TYPE.eq(
+                    PipelineInstanceTypeEnum.CONSTRAINT.type
+                )
+            )
+            .and(tp.VERSION.ne(ti.RELEASED_VERSION))
+            .fetch(tp.TEMPLATE_ID)
+            .toSet()
     }
 
     fun delete(
