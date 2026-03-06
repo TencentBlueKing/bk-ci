@@ -1,6 +1,5 @@
 package com.tencent.devops.process.trigger.market
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_CDS_IP
 import com.tencent.devops.common.api.auth.AUTH_HEADER_ENV_AGENT_HASH_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_EVENT_TYPE
@@ -102,7 +101,8 @@ class MarketEventRequestService constructor(
     @SuppressWarnings("NestedBlockDepth")
     fun handleTriggerEvent(
         triggerEvent: PipelineTriggerEvent,
-        pipelineId: String? = null
+        pipelineId: String? = null,
+        workspaceBaseInfo: WorkspaceBaseInfo? = null
     ) {
         // 1. 从triggerEvent中提取事件数据
         val eventBody = triggerEvent.eventBody as? GenericWebhookEventBody ?: run {
@@ -148,27 +148,11 @@ class MarketEventRequestService constructor(
             eventSource = triggerEvent.eventSource ?: "",
             eventCode = triggerEvent.eventType
         )
-
-        // 根据名称（ins-xxx）获取云桌面信息
-        var workspaceBaseInfo: WorkspaceBaseInfo? = null
-        workspaceBaseInfo = subscribers.asSequence().mapNotNull { subscriber ->
-            val pipelineOAuthUser = creativeStreamService.getPipelineOAuthUser(
-                projectId = subscriber.projectId,
-                pipelineId = subscriber.pipelineId
-            )
-            if (pipelineOAuthUser.isNullOrBlank()) {
-                null
-            } else {
-                creativeStreamService.getWorkspaceInfoByName(
-                    projectId = projectId,
-                    workspaceName = workspaceName,
-                    userId = pipelineOAuthUser
-                )
-            }
-        }.firstOrNull()
-        if (workspaceBaseInfo == null) {
-            logger.warn("cannot find workspace base info")
-        }
+        val finalWorkspaceBaseInfo = workspaceBaseInfo ?: creativeStreamService.getWorkspaceInfoByName(
+            projectId = projectId,
+            workspaceName = workspaceName,
+            userId = userId
+        )
         // 4. 分发CdsWebhookTriggerEvent
         subscribers.forEach subscriber@{ subscriber ->
             sampleEventDispatcher.dispatch(
@@ -183,7 +167,7 @@ class MarketEventRequestService constructor(
                     envHashId = triggerEvent.eventSource ?: "",
                     requestTime = System.currentTimeMillis(),
                     agentHashId = agentHashId,
-                    cdsName = workspaceBaseInfo?.displayName ?: ""
+                    cdsName = finalWorkspaceBaseInfo?.displayName ?: ""
                 )
             )
         }
