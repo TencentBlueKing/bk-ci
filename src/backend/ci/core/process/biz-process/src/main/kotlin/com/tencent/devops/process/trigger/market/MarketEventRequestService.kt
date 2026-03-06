@@ -88,7 +88,8 @@ class MarketEventRequestService constructor(
                 // 2. 使用公共方法处理事件分发
                 handleTriggerEvent(
                     triggerEvent = triggerEvent,
-                    pipelineId = null
+                    pipelineId = null,
+                    workspaceBaseInfo = workspaceInfo
                 )
             }
         }
