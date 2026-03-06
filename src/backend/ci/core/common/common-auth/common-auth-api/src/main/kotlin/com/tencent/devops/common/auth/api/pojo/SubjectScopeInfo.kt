@@ -9,7 +9,7 @@ data class SubjectScopeInfo(
     @get:Schema(title = "ID")
     val id: String?,
     @get:Schema(title = "name")
-    val name: String,
+    var name: String,
     @get:Schema(title = "类型")
     val type: String? = SubjectScopeType.USER.value,
     @JsonProperty("full_name")

@@ -83,6 +83,7 @@ import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectByConditionDTO
 import com.tencent.devops.project.pojo.ProjectCollation
@@ -117,6 +118,7 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import jakarta.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -126,7 +128,6 @@ import org.springframework.dao.DuplicateKeyException
 import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
-import jakarta.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -233,9 +234,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
-            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
-        }
+        val subjectScopes = projectCreateInfo.subjectScopes.takeUnless { it.isNullOrEmpty() }?.onEach {
+            if (it.id == ALL_MEMBERS) it.name = getAllMembersName()
+        } ?: listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
@@ -359,7 +360,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
-                    bgName = bgName
+                    bgName = bgName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName
                 )
             )
             validateProperties(properties)
@@ -433,9 +436,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
+        // 获取审批信息以读取 KPI 字段
+        val projectApprovalInfo = projectApprovalService.get(englishName)
+        // 优先从 bkCosts 获取实时的 KPI 信息
+        val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
         val projectInfo = ProjectUtils.packagingBean(
             tProjectRecord = record,
-            projectOrganizationInfo = rightProjectOrganization
+            projectOrganizationInfo = rightProjectOrganization,
+            kpiCode = realtimeKpiInfo?.first,
+            kpiName = realtimeKpiInfo?.second
         )
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         if (approvalStatus.isCreatePending() && record.creator != userId) {
@@ -456,7 +465,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
             }
         }
-        val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
+        val tipsStatus = getAndUpdateTipsStatus(
+            userId = userId,
+            projectId = englishName,
+            projectApprovalInfo = projectApprovalInfo
+        )
         return projectInfo.copy(
             tipsStatus = tipsStatus,
             productName = projectInfo.productId?.let { getProductByProductId(it)?.productName }
@@ -464,7 +477,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
-        val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
+        return getAndUpdateTipsStatus(
+            userId = userId,
+            projectId = projectId,
+            projectApprovalInfo = projectApprovalService.get(projectId)
+        )
+    }
+
+    protected fun getAndUpdateTipsStatus(
+        userId: String,
+        projectId: String,
+        projectApprovalInfo: ProjectApprovalInfo?
+    ): Int {
+        if (projectApprovalInfo == null) return ProjectTipsStatus.NOT_SHOW.status
         return with(projectApprovalInfo) {
             // 项目创建成功和编辑审批成功,只有第一次进入页面需要展示tips,后面都不需要展示
             val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.APPROVED.status &&
@@ -491,11 +516,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } else {
             null
         }
+        // 优先从 bkCosts 获取实时的 KPI 信息作为"修改前"的值
+        val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
+        val beforeKpiCode = realtimeKpiInfo?.first
+        val beforeKpiName = realtimeKpiInfo?.second
         return ProjectUtils.packagingBean(
             tProjectRecord = record,
             projectApprovalInfo = projectApprovalInfo,
             projectOrganizationInfo = rightProjectOrganization,
-            beforeProductName = beforeProductName?.productName
+            beforeProductName = beforeProductName?.productName,
+            beforeKpiCode = beforeKpiCode,
+            beforeKpiName = beforeKpiName
         )
     }
 
@@ -627,12 +658,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                 }
                 // 记录项目更新记录
+                val realtimeKpiInfo = getRealtimeKpiInfo(englishName)
                 val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
                     englishName = englishName,
                     beforeProjectName = projectInfo.projectName,
                     afterProjectName = projectUpdateInfo.projectName,
                     beforeProductId = projectInfo.productId,
                     afterProductId = projectUpdateInfo.productId,
+                    beforeKpiCode = realtimeKpiInfo?.first,
+                    afterKpiCode = projectUpdateInfo.kpiCode,
+                    beforeKpiName = realtimeKpiInfo?.second,
+                    afterKpiName = projectUpdateInfo.kpiName,
                     beforeOrganization = with(projectInfo) {
                         getOrganizationStr(bgName, businessLineName, deptName, centerName)
                     },
@@ -691,7 +727,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     productId = productId,
                     productName = productName,
                     bgId = bgId,
-                    bgName = bgName
+                    bgName = bgName,
+                    kpiCode = kpiCode,
+                    kpiName = kpiName
                 )
             )
             validateProjectOrganization(
@@ -753,10 +791,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ),
                 afterSubjectScopes = afterSubjectScopes
             )
-            // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
+            val realtimeKpiInfo = getRealtimeKpiInfo(projectInfo.englishName)
+            val realtimeKpiCode = realtimeKpiInfo?.first
             val finalNeedApproval = authNeedApproval &&
                 (isSubjectScopesChange || projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
-                    projectInfo.productId != projectUpdateInfo.productId)
+                    projectInfo.productId != projectUpdateInfo.productId ||
+                    realtimeKpiCode != projectUpdateInfo.kpiCode)
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
             } else {
@@ -1697,6 +1737,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
 
     abstract fun buildRouterTag(routerTag: String?): String?
+
+    /**
+     * 获取实时的 KPI 信息
+     * @param englishName 项目英文名
+     * @return Pair<kpiCode, kpiName>，如果获取失败返回 null
+     */
+    abstract fun getRealtimeKpiInfo(englishName: String): Pair<String?, String?>?
 
     abstract fun validateProjectRelateProduct(
         projectProductValidateDTO: ProjectProductValidateDTO
