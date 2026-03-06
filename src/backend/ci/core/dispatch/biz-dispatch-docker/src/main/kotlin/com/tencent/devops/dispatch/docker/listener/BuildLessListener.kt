@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
@@ -40,6 +41,7 @@ import com.tencent.devops.dispatch.docker.client.BuildLessEndPrepareHandler
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.client.BuildLessStartPrepareHandler
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.pojo.dto.InitMessageTrackingRequest
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -62,6 +64,17 @@ class BuildLessListener @Autowired constructor(
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupEvent) {
         try {
             logger.info("start build less($event)")
+            // 初始化消息追踪
+            BeanUtil.getDispatchMessageTracking().initMessageTracking(
+                InitMessageTrackingRequest(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    vmSeqId = event.vmSeqId.toInt(),
+                    executeCount = event.executeCount ?: 1,
+                    dispatchType = "BUILD_LESS"
+                )
+            )
 
             // 校验当前流水线job是否还在运行中
             checkPipelineRunning(event)
@@ -73,6 +86,7 @@ class BuildLessListener @Autowired constructor(
                     jobQuotaService.handleJobQuotaOverrun(
                         logPrefix = "$projectId$pipelineId$buildId$vmSeqId$executeCount",
                         buildId = buildId,
+                        vmSeqId = vmSeqId,
                         containerId = containerId,
                         containerHashId = containerHashId,
                         executeCount = executeCount,
@@ -81,11 +95,23 @@ class BuildLessListener @Autowired constructor(
                         startupEvent = event,
                         queueTimeoutMinutes = event.queueTimeoutMinutes ?: 10
                     )
+
+                    BeanUtil.getDispatchMessageTracking().trackQuotaQueue(
+                        buildId = event.buildId,
+                        vmSeqId = event.vmSeqId,
+                        executeCount = event.executeCount ?: 1
+                    )
                 }
                 return
             }
 
             buildLessStartHandler.handlerRequest(BuildLessStartHandlerContext(event))
+
+            BeanUtil.getDispatchMessageTracking().trackConsumeSuccess(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1
+            )
         } catch (discard: Throwable) {
             logger.warn("[${event.buildId}|${event.vmSeqId}] BuildLess startup failure.", discard)
 
@@ -107,6 +133,15 @@ class BuildLessListener @Autowired constructor(
                     second = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
                     third = "Fail to handle the start up message")
             }
+
+            BeanUtil.getDispatchMessageTracking().trackConsumeFailed(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount ?: 1,
+                errorCode = errorCode.toString(),
+                errorType = errorType.toString(),
+                errorMessage = errorMsg ?: ""
+            )
 
             try {
                 client.get(ServiceBuildResource::class).setVMStatus(

@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.enums.PipelineBuildStatusBroadCastEventType
@@ -308,6 +309,13 @@ class ThirdPartyAgentService @Autowired constructor(
                     buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
                     buildDockerInfo.credential?.errMsg = errMsg
                 }
+
+                // 记录资源已就绪
+                BeanUtil.getDispatchMessageTracking().trackResourceReady(
+                    buildId = build.buildId,
+                    vmSeqId = build.vmSeqId,
+                    executeCount = build.executeCount ?: 1,
+                )
 
                 return AgentResult(
                     AgentStatus.IMPORT_OK,

@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.listener
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.utils.BeanUtil
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -80,6 +81,14 @@ class ThirdPartyBuildListener @Autowired constructor(
 
     private fun doOnStartup(dispatchMessage: DispatchMessage) {
         try {
+            // 上报资源准备中
+            BeanUtil.getDispatchMessageTracking().trackResourcePreparing(
+                buildId = dispatchMessage.event.buildId,
+                vmSeqId = dispatchMessage.event.vmSeqId,
+                executeCount = dispatchMessage.event.executeCount ?: 1,
+                operator = "${this::class.java.simpleName}.startup"
+            )
+
             thirdPartyDispatchService.startUp(dispatchMessage)
         } catch (e: DispatchRetryMQException) {
             // 重试构建消息
