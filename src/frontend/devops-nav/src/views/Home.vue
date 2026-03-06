@@ -198,7 +198,7 @@
             Logo
         }
     })
-    export default class Home extends Vue {
+        export default class Home extends Vue {
         @State services
         @State news
         @State related

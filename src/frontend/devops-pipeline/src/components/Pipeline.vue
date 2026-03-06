@@ -129,7 +129,8 @@
 </template>
 
 <script>
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+    import 'bkui-pipeline/dist/bk-pipeline.css'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline/vue2'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import { isObject } from '../utils/util'
     import AtomPropertyPanel from './AtomPropertyPanel'
@@ -297,7 +298,8 @@
                 'addContainer',
                 'addStage',
                 'setPipelineEditing',
-                'toggleStageReviewPanel'
+                'toggleStageReviewPanel',
+                'setPipelineWithoutTrigger'
             ]),
             handleAddStage ({ stageIndex, isParallel, isFinally }) {
                 if (this.pipelineEditable) {
@@ -331,10 +333,30 @@
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)
             },
-            handlePipelineChange (pipeline) {
-                if (!this.editable) return
-                console.log('11111, handlePipelineChange')
-                this.setPipelineEditing(true)
+            handlePipelineChange (changedObject) {
+                const updatedPipeline = this.buildUpdatedPipeline(changedObject)
+                if (!updatedPipeline) return
+                
+                // 预览模式：只允许修改 skip 状态，通过 emit 事件让父组件处理
+                if (this.isPreview && this.canSkipElement) {
+                    this.$emit('change', updatedPipeline)
+                    return
+                }
+                
+                // 编辑模式：更新 store 中的 pipeline
+                if (this.editable) {
+                    this.setPipelineWithoutTrigger(updatedPipeline)
+                    this.setPipelineEditing(true)
+                }
+            },
+            
+            buildUpdatedPipeline (changedObject) {
+                // bk-pipeline 的 emitPipelineChange 总是传递完整的 pipeline 对象
+                // 直接使用传入的 pipeline 数据即可
+                if (changedObject?.stages && Array.isArray(changedObject.stages)) {
+                    return changedObject
+                }
+                return null
             },
             resetInsertStageState () {
                 this.setInsertStageState({

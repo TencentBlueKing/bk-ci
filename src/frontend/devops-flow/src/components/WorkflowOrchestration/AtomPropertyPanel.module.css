@@ -1,0 +1,211 @@
+/* Atom Property Panel 样式 */
+
+.atomPropertyPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  padding: var(--spacing-xl);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.atomInfo {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.selectedAtom {
+  flex: 1;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.waitingSelect {
+  flex: 1;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.fieldDesc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-xs);
+  line-height: var(--line-height-md);
+}
+
+.noConfig {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.loadError {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+/* AtomCheckbox 样式 */
+.atom-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* KeyValueMap 样式 */
+.key-value-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.key-value-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.item-input {
+  flex: 1;
+}
+
+.separator {
+  color: var(--color-text-tertiary);
+  font-weight: bold;
+}
+
+.item-action {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+  transition: color var(--transition-normal);
+
+  &:hover {
+    color: var(--color-danger);
+  }
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 标签带图标 */
+.labelWithIcon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 插件类型选择器 */
+.atomTypeSelector {
+  width: 100%;
+}
+
+.atomSelectEntry {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.atomNameInput {
+  flex: 1;
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+
+  :global(.bk-input) {
+    border-right: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+  }
+}
+
+.atomLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-xs);
+  margin-left: var(--spacing-sm);
+  white-space: nowrap;
+  transition: color var(--transition-normal);
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+.reselectBtn {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 布局调整 */
+.flexRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xxl);
+  align-items: flex-start;
+  flex-grow: 1;
+  padding-bottom: var(--spacing-xxl);
+  margin-bottom: var(--spacing-xl);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Step ID 宽度限制 */
+.stepIdInput {
+  width: 400px !important;
+}
+
+/* 覆盖 bk-form-item 的默认 margin，使紧凑布局更好看 */
+.flexItem :global(.bk-form-item) {
+  margin-bottom: 0 !important;
+}
+
+/* 自定义环境变量和流程控制选项 */
+.customEnvSection,
+.processControlSection {
+  margin-bottom: var(--spacing-lg);
+}
+
+.failControlLabel {
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.failControlRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  margin-left: 10px;
+  gap: 48px;
+  font-size: var(--font-size-xs);
+}
+
+.retryCountInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.retryCountInline .retryCountLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.retryCountInline .retryCountInput {
+  width: 80px;
+}

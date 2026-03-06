@@ -152,6 +152,7 @@
                         let desc = null
                         let sortPos = 0
                         switch (true) {
+                            //
                             case this.savedPipelineGroupMap[group.id]:
                                 desc = 'added'
                                 sortPos = 1

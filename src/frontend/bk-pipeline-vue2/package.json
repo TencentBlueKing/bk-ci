@@ -1,0 +1,22 @@
+{
+  "name": "bkui-pipeline-vue2-build",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vue 2.7.16 build wrapper for bkui-pipeline",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:watch": "vite build --watch"
+  },
+  "devDependencies": {
+    "vite": "^4.5.0",
+    "@vitejs/plugin-vue2": "2.3.3",
+    "vue": "2.7.16",
+    "@vue/compiler-sfc": "2.7.16",
+    "sass": "^1.70.0",
+    "uuid": "~8.1.0",
+    "vue-draggable-plus": "^0.6.0"
+  }
+}

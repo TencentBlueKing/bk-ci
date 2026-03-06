@@ -14,7 +14,7 @@
     import { Component } from 'vue-property-decorator'
     
     @Component
-    export default class ContentHeader extends Vue {
+        export default class ContentHeader extends Vue {
     }
 </script>
 

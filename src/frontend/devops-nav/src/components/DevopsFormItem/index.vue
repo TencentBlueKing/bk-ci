@@ -20,7 +20,7 @@
     import { Prop, Component } from 'vue-property-decorator'
     
     @Component
-    export default class DevopsFormItem extends Vue {
+        export default class DevopsFormItem extends Vue {
         @Prop()
         errorMsg: string = ''
 

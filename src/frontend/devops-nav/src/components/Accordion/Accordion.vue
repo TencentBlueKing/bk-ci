@@ -8,7 +8,7 @@
     import Vue from 'vue'
     import Component from 'vue-class-component'
     @Component
-    export default class Accordion extends Vue {
+        export default class Accordion extends Vue {
     
     }
 </script>

@@ -297,6 +297,7 @@
                         :pipeline="pipelineModel"
                         :editable="false"
                         :can-skip-element="canElementSkip"
+                        @change="handlePipelineModelChange"
                     />
                 </div>
             </section>
@@ -531,6 +532,24 @@
             },
             handleCheckTotalChange (checkedTotal) {
                 this.setPipelineSkipProp(this.pipelineModel.stages, checkedTotal)
+            },
+            handlePipelineModelChange (updatedPipeline) {
+                // 预览模式下更新 pipelineModel（用于 skip 状态变更）
+                if (updatedPipeline?.stages) {
+                    this.pipelineModel = {
+                        ...this.pipelineModel,
+                        stages: updatedPipeline.stages
+                    }
+                    // 同步更新全选状态
+                    this.syncCheckTotalState()
+                }
+            },
+            syncCheckTotalState () {
+                // 检查是否所有可执行的元素都被选中
+                const allElements = this.getAllElements(this.pipelineModel.stages)
+                const enabledElements = allElements.filter(el => el.additionalOptions?.enable !== false)
+                const allChecked = enabledElements.length > 0 && enabledElements.every(el => el.canElementSkip !== false)
+                this.checkTotal = allChecked
             },
             getParamsValue (values) {
                 const key = this.useLastParams ? 'value' : 'defaultValue'

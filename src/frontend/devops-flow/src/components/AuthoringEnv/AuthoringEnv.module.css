@@ -1,0 +1,73 @@
+/* 组件特有的样式保留在这里 */
+
+.headerText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-lg);
+}
+
+.authoringHeader {
+  height: 40px;
+  line-height: 40px;
+  background: var(--bg-secondary);
+}
+
+.authoringHeader {
+  :global(.bk-input) {
+    border: none;
+    box-shadow: none !important;
+    width: 100%;
+  }
+
+  :global(.bk-select-trigger) {
+    width: 100%;
+  }
+
+  :global(.bk-select .bk-input--text) {
+    background-color: var(--bg-secondary);
+  }
+}
+
+.authoringContent {
+  min-height: 176px;
+  width: 592px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.envItem:not(:last-child) {
+  margin-bottom: 15px;
+}
+
+.envItemTit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.setLine:hover {
+  color: var(--color-primary);
+}
+
+.nodeTag {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.noData {
+  margin-top: 58px;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+/* Loading styles and code editor wrapper moved to layout.module.css */
+
+/* Removed section navigation styles as they are no longer needed */

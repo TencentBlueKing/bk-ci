@@ -29,7 +29,7 @@
         STAGE_CHECK
     } from './constants'
     export default {
-        name: 'stage-check-icon',
+        name: 'StageCheckIcon',
         components: {
             Logo
         },

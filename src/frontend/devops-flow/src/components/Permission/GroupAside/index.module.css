@@ -1,0 +1,243 @@
+/**
+ * GroupAside Component Styles
+ * Uses CSS variables from /src/styles/variables.css
+ */
+
+.groupAside {
+  min-width: 240px;
+  width: 240px;
+  height: 100%;
+  background-color: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.groupTitle {
+  display: inline-block;
+  line-height: 50px;
+  padding-left: var(--spacing-xxl);
+  width: 100%;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+  font-weight: bold;
+}
+
+.groupList {
+  flex: 1;
+  max-height: calc(100% - 70px);
+  overflow-y: auto;
+}
+
+.groupList::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-disabled) !important;
+  border-radius: 5px !important;
+}
+
+.groupList::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-tertiary) !important;
+}
+
+.groupList::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+
+.groupItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 40px;
+  line-height: 40px;
+  font-size: var(--font-size-sm);
+  padding: 0 var(--spacing-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.groupItem:hover {
+  background-color: var(--bg-hover);
+}
+
+.groupActive {
+  color: var(--color-primary) !important;
+  background-color: var(--bg-hover-active) !important;
+}
+
+.groupActive .groupNum {
+  background-color: var(--border-color-hover);
+  color: var(--bg-primary);
+}
+
+.groupActive .groupIcon {
+  color: var(--border-color-hover);
+}
+
+.numContainer {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.numBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-right: var(--spacing-sm);
+}
+
+.groupName {
+  display: inline-block;
+  flex: 1;
+  max-width: 130px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.groupNum {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 40px;
+  height: 16px;
+  background: var(--bg-hover);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  line-height: 16px;
+  margin-right: 3px;
+  text-align: center;
+  color: var(--color-text-disabled);
+}
+
+.groupIcon {
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-disabled);
+}
+
+.activeIcon {
+  color: var(--border-color-hover);
+}
+
+.iconUser::before {
+  content: '👤';
+}
+
+.iconTemplate::before {
+  content: '📋';
+}
+
+.iconDepartment::before {
+  content: '🏢';
+}
+
+.moreIcon {
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  padding: 1px;
+  font-style: normal;
+  cursor: pointer;
+}
+
+.moreIcon:hover {
+  background-color: var(--border-color);
+  color: var(--color-primary) !important;
+}
+
+.groupMoreOption {
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.deleteBtn {
+  padding: var(--spacing-sm);
+}
+
+.lineSplit {
+  width: 80%;
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-sm) auto;
+}
+
+.addGroupBtn {
+  display: flex;
+  align-items: center;
+}
+
+.addIcon {
+  margin-right: var(--spacing-sm);
+  font-style: normal;
+  font-size: var(--font-size-md);
+}
+
+.closeBtn {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+  padding: 0 var(--spacing-md);
+}
+
+.closeDialogHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.warningIconLarge {
+  font-size: 42px;
+  color: var(--color-warning);
+  margin-bottom: var(--spacing-base);
+  font-style: normal;
+}
+
+.closeTitle {
+  margin-top: var(--spacing-sm);
+  white-space: normal !important;
+  text-align: center;
+}
+
+.closeTips {
+  padding: var(--spacing-xl);
+  background: var(--bg-secondary);
+}
+
+.closeTips p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.warningIcon {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+  position: relative;
+  top: -1px;
+  margin-right: var(--spacing-xs);
+  font-style: normal;
+}
+
+.confirmClose {
+  margin: var(--spacing-base) 0 var(--spacing-xxxl);
+  text-align: center;
+}
+
+.confirmText {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.optionBtns {
+  text-align: center;
+  margin-top: var(--spacing-xl);
+}
+
+.closeBtnDanger {
+  margin-right: var(--spacing-sm);
+}
+
+.cancelBtn {
+  width: 88px;
+}

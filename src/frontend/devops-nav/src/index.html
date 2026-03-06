@@ -147,8 +147,8 @@
 
     function matchPathProjectId() {
       try {
-        var reg = /^\/console\/\w+\/([\w\-]+)?/
-        if (location.pathname.match(/^\/console\/perm\/(\w+)?/)) {
+        var reg = /^\/console\/[\w\-]+\/([\w\-]+)?/
+        if (location.pathname.match(/^\/console\/perm\/([\w\-]+)?/)) {
           var query = location.search.slice(1)
           var queryArr = query.split('&')
           for (var i = 0; i < queryArr.length; i++) {
@@ -160,10 +160,10 @@
           }
           return ''
         } else if ([
-          /^\/console\/store\/(\w+)?/,
-          /^\/console\/permission\/(\w+)?/,
+          /^\/console\/store\/([\w\-]+)?/,
+          /^\/console\/permission\/([\w\-]+)?/,
           /^\/console\/manage\/apply/,
-          /^\/console\/platform\/(\w+)?/,
+          /^\/console\/platform\/([\w\-]+)?/,
         ].some((reg) => location.pathname.match(reg))) {
           // TODO store、permission、apply project 没有projectId
           return ''
@@ -332,7 +332,7 @@
       for (var i = 0; i < serviceList.length; i++) {
         var children = serviceList[i].children
         for (var j = 0; j < children.length; j++) {
-          var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
+          var mod = children[j].link_new.replace(/^\/?([\w\-]+)\S*/, '$1')
           var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
           var assetMod = assetsJSON[mod]
           if (children[j].inject_type === 'amd') {
@@ -395,7 +395,7 @@
     function init(projectList, allServices, userInfo) {
       var path = location.pathname.replace('/console', '')
       var headTag = document.head || document.getElementsByTagName('head')[0]
-      var pathReg = /^\/(\w+)\/?/
+      var pathReg = /^\/([\w\-]+)\/?/
       var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
       var serviceMap = serviceObject.serviceMap
       var serviceMatchResult = path.match(pathReg)

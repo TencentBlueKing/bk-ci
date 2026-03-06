@@ -91,7 +91,7 @@
             ApplyProjectDialog
         }
     })
-    export default class Index extends Vue {
+        export default class Index extends Vue {
         @State currentNotice
         @State projectList
         @State headerConfig

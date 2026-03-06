@@ -237,7 +237,7 @@
             SystemLog
         }
     })
-    export default class Header extends Vue {
+        export default class Header extends Vue {
         @State user
         @State currentPage
         @State showProjectDialog
