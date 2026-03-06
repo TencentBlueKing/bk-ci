@@ -56,6 +56,7 @@ import com.tencent.devops.process.pojo.template.TemplatePipelineStatus
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCommonCondition
+import com.tencent.devops.process.pojo.template.v2.PipelineTemplateCompatibilityCreateReq
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstanceReleaseInfo
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateInstancesRequest
 import com.tencent.devops.process.pojo.template.v2.PipelineTemplateReleaseCreateReq
@@ -323,7 +324,7 @@ class PipelineTemplateCompatibilityAdapter(
             projectId = projectId,
             templateId = templateId
         )
-        val request = PipelineTemplateReleaseCreateReq(
+        val request = PipelineTemplateCompatibilityCreateReq(
             model = template,
             setting = PipelineSetting(
                 projectId = projectId,
@@ -334,7 +335,7 @@ class PipelineTemplateCompatibilityAdapter(
                 creator = userId,
                 updater = userId
             ),
-            versionName = versionName,
+            v1VersionName = versionName,
             category = templateInfo.category,
             logoUrl = templateInfo.logoUrl
         )
