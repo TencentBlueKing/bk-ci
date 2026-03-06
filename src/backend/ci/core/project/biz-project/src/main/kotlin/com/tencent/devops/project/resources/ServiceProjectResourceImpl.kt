@@ -68,13 +68,11 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun verifyUserProjectPermission(
-        accessToken: String?,
         projectCode: String,
         userId: String
     ): Result<Boolean> {
         return Result(
             projectPermissionService.verifyUserProjectPermission(
-                accessToken = accessToken,
                 projectCode = projectCode,
                 userId = userId
             )
@@ -156,14 +154,12 @@ class ServiceProjectResourceImpl @Autowired constructor(
     @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
-        projectCreateInfo: ProjectCreateInfo,
-        accessToken: String?
+        projectCreateInfo: ProjectCreateInfo
     ): Result<Boolean> {
         // 创建项目
         projectService.create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken,
             createExtInfo = ProjectCreateExtInfo(needAuth = true, needValidate = true),
             projectChannel = ProjectChannelCode.BS
         )
@@ -195,10 +191,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun update(
         userId: String,
         projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo,
-        accessToken: String?
+        projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean> {
-        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo, accessToken))
+        return Result(projectService.update(userId, englishName = projectId, projectUpdateInfo))
     }
 
     override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
@@ -252,7 +247,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
         return Result(
             projectService.verifyUserProjectPermission(
-                accessToken = null,
                 userId = userId,
                 projectId = projectId,
                 permission = permission
