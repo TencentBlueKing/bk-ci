@@ -59,8 +59,8 @@ object AtomJobTypeUtil {
 
         val jobTypeMap = mutableMapOf<String, MutableSet<String>>()
         for (config in serviceScopeConfigs) {
-            val types = config.getEffectiveJobTypes()
-            if (types.isEmpty()) continue
+            val types = config.jobTypes
+            if (types.isNullOrEmpty()) continue
             val scope = ServiceScopeUtil.normalize(config.serviceScope.name) ?: config.serviceScope.name
             val set = jobTypeMap.getOrPut(scope) { linkedSetOf() }
             types.forEach { set.add(it.name) }
@@ -106,28 +106,6 @@ object AtomJobTypeUtil {
     /** 向列表中添加元素（仅当不存在时） */
     private fun MutableList<String>.addIfAbsent(element: String) {
         if (element !in this) add(element)
-    }
-
-    /**
-     * 解析 JOB_TYPE 值，返回指定 scope 下的 jobType 列表。
-     * 兼容 V1 (scope→string) 和 V2 (scope→list) 两种 JSON 格式，以及纯字符串。
-     */
-    private fun parseForScope(jobTypeValue: String, scope: String): List<String> {
-        val raw: Any?
-        try {
-            raw = JsonUtil.toOrNull(jobTypeValue, Map::class.java)
-        } catch (e: Exception) {
-            // 不是有效 JSON → 纯字符串格式
-            return if (scope == PIPELINE) listOf(jobTypeValue) else emptyList()
-        }
-        if (raw == null) {
-            return if (scope == PIPELINE) listOf(jobTypeValue) else emptyList()
-        }
-        @Suppress("UNCHECKED_CAST")
-        val map = raw as Map<String, Any>
-        val normalizedKey = map.keys.firstOrNull { (ServiceScopeUtil.normalize(it) ?: it) == scope }
-            ?: return emptyList()
-        return toStringList(map[normalizedKey])
     }
 
     /**
