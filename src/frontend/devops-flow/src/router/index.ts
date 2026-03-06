@@ -229,6 +229,56 @@ const router = createRouter({
           ],
         },
         {
+          path: 'import-edit',
+          component: () => import('../views/Flow'),
+          children: [
+            {
+              path: '',
+              component: () => import('../views/Flow/Edit/index'),
+              children: [
+                {
+                  path: '',
+                  redirect: { name: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION },
+                },
+                {
+                  path: 'workflow-orchestration',
+                  component: () => import('../views/Flow/Edit/WorkflowOrchestration'),
+                  name: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION,
+                  props: true,
+                },
+                {
+                  path: 'workflow-environment',
+                  component: () => import('../views/Flow/Edit/WorkflowEnvironment'),
+                  name: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ENVIRONMENT,
+                  props: true,
+                },
+                {
+                  path: 'trigger-events',
+                  component: () => import('../views/Flow/Edit/TriggerEvents'),
+                  name: ROUTE_NAMES.FLOW_IMPORT_EDIT_TRIGGER_EVENTS,
+                  props: true,
+                },
+                {
+                  path: 'notification-config',
+                  component: () => import('../views/Flow/Edit/NotificationConfig'),
+                  name: ROUTE_NAMES.FLOW_IMPORT_EDIT_NOTIFICATION_CONFIG,
+                  props: true,
+                },
+                {
+                  path: 'basic-settings',
+                  component: () => import('../views/Flow/Edit/BasicSettings'),
+                  name: ROUTE_NAMES.FLOW_IMPORT_EDIT_BASIC_SETTINGS,
+                  props: true,
+                },
+                {
+                  path: ':invalidTab',
+                  redirect: { name: ROUTE_NAMES.FLOW_IMPORT_EDIT_WORKFLOW_ORCHESTRATION },
+                },
+              ],
+            },
+          ],
+        },
+        {
           path: 'template',
           component: () => import('../views/Template'),
           name: ROUTE_NAMES.TEMPLATE,
@@ -257,7 +307,7 @@ router.beforeEach(async (to) => {
 
   const projectId = to.params.projectId as string
   const flowId = to.params.flowId as string
-
+  
   try {
     // 获取 flowInfo，拿到 releaseVersion
     const flowInfo = await fetchFlowInfo({ projectId, flowId })

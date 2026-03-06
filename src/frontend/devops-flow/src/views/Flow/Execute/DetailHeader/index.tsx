@@ -93,13 +93,13 @@ export default defineComponent({
         })
 
         Message({
-          message: t('subpage.rebuildSuc'),
+          message: t('flow.execute.rebuildSuc'),
           theme: 'success',
         })
       } else if (res?.code === 2101272) {
         btnLoading.value = false
         InfoBox({
-          title: t('history.rePlay'),
+          title: t('flow.execute.rePlay'),
           content: res?.message,
           width: 500,
           onConfirm: async () => {
@@ -113,7 +113,7 @@ export default defineComponent({
           },
         })
       } else {
-        throw Error(t('subpage.rebuildFail'))
+        throw Error(t('flow.execute.rebuildFail'))
       }
     }
 

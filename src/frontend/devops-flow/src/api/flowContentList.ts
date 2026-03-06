@@ -13,6 +13,7 @@ import {
   PROCESS_API_URL_PREFIX,
   STORE_API_URL_PREFIX,
 } from '@/utils/apiUrlPrefix'
+import { API_BASE_URL } from '@/utils/http/config'
 import { del, get, post, put } from '@/utils/http'
 
 /**
@@ -796,13 +797,28 @@ export async function renameFlow(
 }
 
 /**
- * 导出创作流 - 获取导出 URL
+ * 导出创作流 JSON，参考 devops-pipeline 的 download action 实现
  * @param projectId 项目ID
  * @param pipelineId 创作流ID
- * @returns 导出 URL
+ * @param fileName 下载文件名
  */
-export function getFlowExportUrl(projectId: string, pipelineId: string): string {
-  return `${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`
+export async function downloadFlowJson(projectId: string, pipelineId: string, fileName: string): Promise<void> {
+  const url = `${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`
+  const res = await fetch(`${API_BASE_URL}${url}`.replace(/\/\//g, '/'), { credentials: 'include' })
+  if (res.status >= 200 && res.status < 300) {
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    const blobUrl = (window.URL || window.webkitURL).createObjectURL(blob)
+    a.href = blobUrl
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(blobUrl)
+  } else {
+    const result = await res.json()
+    return Promise.reject(result)
+  }
 }
 
 /**

@@ -63,7 +63,9 @@ export function useFlowVariables(flowId: string) {
   const systemVariablesLoading = ref(false)
 
   onMounted(() => {
-    flowModelStore.loadFlowModel(projectId.value, flowId, currentVersion.value)
+    if (flowId) {
+      flowModelStore.loadFlowModel(projectId.value, flowId, currentVersion.value)
+    }
   })
 
   // Get all elements from flow model (excluding trigger stage)

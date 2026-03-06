@@ -93,6 +93,7 @@ export const useFlowInfoStore = defineStore('flowInfo', () => {
   }
 
   function initFlowInfo() {
+    if (!flowId.value) return
     getFlowInfo()
     getFlowVersionList()
   }

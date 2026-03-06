@@ -1,15 +1,3 @@
-.upload {
-  margin: var(--spacing-xs) 0;
-}
-
-.label::after {
-  content: '*';
-  color: var(--color-danger);
-  font-size: var(--spacing-md);
-  margin-left: var(--spacing-sm);
-}
-
-.desc {
-  font-size: var(--spacing-md);
-  color: var(--color-text-medium-black);
+.drop-upload {
+  padding-right: 5px !important;
 }

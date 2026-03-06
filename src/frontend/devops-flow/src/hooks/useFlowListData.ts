@@ -109,31 +109,13 @@ export function useFlowListData(styles?: Styles) {
       ]
     }
 
-    const baseSearchConfig = [
+    return [
       nameCondition,
       {
         id: 'filterByCreator',
         name: t('flow.content.creator'),
       },
-      {
-        id: 'filterByViewIds',
-        name: t('flow.content.flowGroup'),
-        multiple: true,
-        children: flowGroups.value.filter((item) => item.viewType !== -1),
-      },
     ]
-
-    // 将 labelsGroup 中的每个分组作为独立的搜索配置项
-    const labelSearchConfigs = labelsGroup.value
-      .filter((item) => Array.isArray(item.labels) && item.labels.length > 0)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        multiple: true,
-        children: item.labels,
-      }))
-
-    return [...baseSearchConfig, ...labelSearchConfigs]
   })
 
   const flatSearchParams = computed(() => {

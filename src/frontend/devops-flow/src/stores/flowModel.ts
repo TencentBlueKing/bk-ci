@@ -40,6 +40,11 @@ export const useFlowModelStore = defineStore('flowModel', () => {
   // 是否有未保存的更改
   const hasUnsavedChanges = ref(false)
 
+  // 导入模式：数据来自文件导入，尚未持久化
+  const isImportMode = ref(false)
+
+  const IMPORT_STORAGE_KEY = 'flow_import_data'
+
   /**
    * 计算属性：Flow 是否为空
    */
@@ -95,7 +100,8 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     version?: string,
     forceReload = false,
   ) {
-    // Skip if already loading
+    if (isImportMode.value) return
+
     if (loading.value) return
 
     const versionStr = version || ''
@@ -137,11 +143,13 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     flowModel.value = model
     yamlContent.value = flowModelToYaml(model)
     hasUnsavedChanges.value = true
+    if (isImportMode.value) persistImportData()
   }
 
   function updateFlowSetting(setting: FlowSettings) {
     flowSetting.value = setting
     hasUnsavedChanges.value = true
+    if (isImportMode.value) persistImportData()
   }
 
   /**
@@ -209,6 +217,68 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     }
   }
 
+  function persistImportData() {
+    try {
+      sessionStorage.setItem(IMPORT_STORAGE_KEY, JSON.stringify({
+        model: flowModel.value,
+        setting: flowSetting.value,
+        yaml: yamlContent.value,
+      }))
+    } catch (e) {
+      console.error('Failed to persist import data:', e)
+    }
+  }
+
+  function clearImportData() {
+    sessionStorage.removeItem(IMPORT_STORAGE_KEY)
+  }
+
+  /**
+   * 从 sessionStorage 恢复导入数据（用于页面刷新后恢复）
+   * @returns 是否成功恢复
+   */
+  function restoreImportedFlowModel(): boolean {
+    try {
+      const raw = sessionStorage.getItem(IMPORT_STORAGE_KEY)
+      if (!raw) return false
+      const { model, setting, yaml } = JSON.parse(raw)
+      if (!model) return false
+      flowModel.value = model
+      flowSetting.value = setting
+      yamlContent.value = yaml || ''
+      isImportMode.value = true
+      hasUnsavedChanges.value = true
+      currentFlowId.value = ''
+      currentVersion.value = ''
+      hasError.value = false
+      return true
+    } catch (e) {
+      console.error('Failed to restore import data:', e)
+      clearImportData()
+      return false
+    }
+  }
+
+  /**
+   * 设置导入的 Flow 模型数据（不通过 API 加载，直接设置到 store）
+   * 用于导入场景：文件解析后填充到编辑器，用户编辑后保存才创建创作流
+   */
+  function setImportedFlowModel(
+    model: FlowModel,
+    setting: FlowSettings,
+    yaml?: string,
+  ) {
+    flowModel.value = model
+    flowSetting.value = setting
+    yamlContent.value = yaml || ''
+    isImportMode.value = true
+    hasUnsavedChanges.value = true
+    currentFlowId.value = ''
+    currentVersion.value = ''
+    hasError.value = false
+    persistImportData()
+  }
+
   /**
    * 重置状态
    */
@@ -221,6 +291,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     currentFlowId.value = ''
     currentVersion.value = ''
     hasUnsavedChanges.value = false
+    isImportMode.value = false
   }
 
   /**
@@ -241,6 +312,7 @@ export const useFlowModelStore = defineStore('flowModel', () => {
     currentFlowId,
     currentVersion,
     hasUnsavedChanges,
+    isImportMode,
 
     // 计算属性
     isFlowEmpty,
@@ -251,6 +323,9 @@ export const useFlowModelStore = defineStore('flowModel', () => {
 
     // 方法
     loadFlowModel,
+    setImportedFlowModel,
+    restoreImportedFlowModel,
+    clearImportData,
     updateFlowModel,
     updateFlowSetting,
     updateYamlContent,

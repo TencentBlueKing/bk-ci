@@ -88,7 +88,7 @@ export interface SaveFlowModelParams {
 export interface SaveFlowModelResponse {
   version: string
   versionName: string
-  flowId: string
+  pipelineId: string
 }
 
 /**
