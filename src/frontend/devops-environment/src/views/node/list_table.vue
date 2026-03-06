@@ -488,7 +488,7 @@
                                     </bk-button>
                                 </template>
                                 <span
-                                    v-if="['THIRDPARTY'].includes(props.row.nodeType)"
+                                    v-if="['THIRDPARTY'].includes(props.row.nodeType) || isCreateResType"
                                     v-perm="{
                                         hasPermission: props.row.canEdit,
                                         disablePermissionApi: true,
@@ -769,9 +769,9 @@
                 }, {})
             },
             selectedTableColumn () {
-                // 如果是 CreateResType，过滤掉 usage 字段
+                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
                 if (this.isCreateResType) {
-                    return this.rawSelectedTableColumn.filter(col => col.id !== 'usage')
+                    return this.rawSelectedTableColumn.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
                 }
                 return this.rawSelectedTableColumn
             },
@@ -866,9 +866,9 @@
                         label: this.$t('environment.nodeInfo.lastRunAs')
                     }
                 ]
-                // 如果是 CreateResType，过滤掉 usage 字段
+                // 如果是 CreateResType，过滤掉 usage 和 latestBuildPipeline 字段
                 if (this.isCreateResType) {
-                    return columns.filter(col => col.id !== 'usage')
+                    return columns.filter(col => !['usage', 'latestBuildPipeline'].includes(col.id))
                 }
                 return columns
             },

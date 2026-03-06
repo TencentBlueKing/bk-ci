@@ -652,20 +652,22 @@
                         name: this.$t('environment.lastModifier'),
                         id: 'lastModifiedUser'
                     },
-                    {
-                        name: this.$t('environment.nodeInfo.lastRunPipeline'),
-                        id: 'latestBuildPipelineId',
-                        remoteMethod:
-                            async (search) => {
-                                const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
-                                    projectId: this.projectId
-                                })
-                                return res.records.map(item => ({
-                                    name: item.pipelineName,
-                                    id: item.pipelineId
-                                }))
-                            }
-                    }
+                    ...(!this.isCreateResType ? [
+                        {
+                            name: this.$t('environment.nodeInfo.lastRunPipeline'),
+                            id: 'latestBuildPipelineId',
+                            remoteMethod:
+                                async (search) => {
+                                    const res = await this.$store.dispatch('environment/getLatestBuildPipelineList', {
+                                        projectId: this.projectId
+                                    })
+                                    return res.records.map(item => ({
+                                        name: item.pipelineName,
+                                        id: item.pipelineId
+                                    }))
+                                }
+                        }
+                    ] : [])
                 ]
                 return data.filter(data => {
                     return !this.searchValue.find(val => val.id === data.id)

@@ -85,6 +85,7 @@
                         </span>
                     </span>
                     <bk-dropdown-menu
+                        v-if="!env.envHashId.startsWith('-')"
                         trigger="click"
                         ext-cls="env-operation-dropdown"
                         @show="handleDropdownShow(env.envHashId)"
@@ -107,6 +108,10 @@
                             </li>
                         </ul>
                     </bk-dropdown-menu>
+                    <span
+                        v-else
+                        class="env-operation-placeholder"
+                    ></span>
                 </span>
             </div>
         </div>
@@ -449,6 +454,10 @@
                 color: #3A84FF;
             }
         }
+        .env-operation-placeholder {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
         }
         .env-name {
             flex: 1;
@@ -473,8 +482,7 @@
                 background: #FFFFFF;
             }
         }
-    
-    // 环境操作下拉菜单样式
+    }
     .env-operation-dropdown {
         .bk-dropdown-list {
             li {
