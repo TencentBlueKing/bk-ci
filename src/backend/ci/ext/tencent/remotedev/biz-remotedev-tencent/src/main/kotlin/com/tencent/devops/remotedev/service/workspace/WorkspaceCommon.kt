@@ -550,7 +550,7 @@ class WorkspaceCommon @Autowired constructor(
             ).firstOrNull()
             dispatcher.dispatch(
                 CdsWebhookEvent(
-                    userId = owner.userId,
+                    userId = operator,
                     type = CdsWebhookEvent.Type.ASSIGN,
                     envId = "",
                     workspaceName = workspaceName,
