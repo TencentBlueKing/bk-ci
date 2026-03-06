@@ -37,6 +37,7 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.OpStoreComponentService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.common.utils.PublicComponentCacheManager
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
@@ -157,6 +158,8 @@ class OpStoreComponentServiceImpl @Autowired constructor(
         } else {
             redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(storeType.name), storeCode)
         }
+        // 清除公共组件集合缓存，立即生效
+        PublicComponentCacheManager.invalidateCache(storeType.name)
         if (!passFlag) {
             // 审核不通过则发消息告知用户
             storeNotifyService.sendStoreReleaseAuditNotifyMessage(storeId, AuditTypeEnum.AUDIT_REJECT)
