@@ -30,10 +30,12 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
+import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StorePackageDeployService
 import com.tencent.devops.store.common.service.StorePkgRunEnvInfoService
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.common.service.UserSensitiveConfService
+import com.tencent.devops.store.pojo.common.StorePackageInfoReq
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.env.StorePkgRunEnvInfo
@@ -48,7 +50,8 @@ class BuildStoreResourceImpl @Autowired constructor(
     private val sensitiveConfService: UserSensitiveConfService,
     private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService,
     private val storePackageDeployService: StorePackageDeployService,
-    private val storeReleaseService: StoreReleaseService
+    private val storeReleaseService: StoreReleaseService,
+    private val storeComponentManageService: StoreComponentManageService
 ) : BuildStoreResource {
 
     override fun getSensitiveConf(
@@ -109,5 +112,12 @@ class BuildStoreResourceImpl @Autowired constructor(
 
     override fun getProcessInfo(userId: String, storeId: String): Result<StoreProcessInfo> {
         return Result(storeReleaseService.getProcessInfo(userId, storeId))
+    }
+
+    override fun updateComponentVersionSize(
+        storeId: String,
+        storePackageInfoReqs: List<StorePackageInfoReq>
+    ): Result<Boolean> {
+        return Result(storeComponentManageService.updateComponentVersionSize(storeId, storePackageInfoReqs))
     }
 }

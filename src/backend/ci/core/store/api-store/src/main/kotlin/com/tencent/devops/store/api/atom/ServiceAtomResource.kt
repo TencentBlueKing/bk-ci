@@ -170,4 +170,16 @@ interface ServiceAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>
+
+    @Operation(summary = "根据插件代码和版本号精确获取插件id")
+    @GET
+    @Path("/codes/{atomCode}/versions/{version}/atomId/get")
+    fun getAtomId(
+        @Parameter(description = "插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<String?>
 }
