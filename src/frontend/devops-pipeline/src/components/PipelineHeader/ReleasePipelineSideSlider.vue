@@ -69,6 +69,18 @@
                     v-bkloading="{ isLoading: isLoading || releasing }"
                     class="release-pipeline-pac-form"
                 >
+                    <bk-alert
+                        v-if="draftStatus && draftStatus.status === 'OUTDATED'"
+                        type="warning"
+                    >
+                        <template slot="title">
+                            <i18n path="template.draftPublished">
+                                <span>{{ draftStatus?.draft?.baseVersionName }}</span>
+                                <span class="red-tip">{{ $t('Earlier') }}</span>
+                                <span>{{ draftStatus?.release?.versionName }}</span>
+                            </i18n>
+                        </template>
+                    </bk-alert>
                     <!-- 构建号重置提醒 -->
                     <bk-alert
                         v-if="isTemplateInstanceMode && !!resetBuildNoInstanceCount"
@@ -515,6 +527,10 @@
             handleChangeFilePath: {
                 type: Function,
                 default: () => {}
+            },
+            draftStatus: {
+                type: Object,
+                default: null
             }
         },
         data () {
@@ -550,7 +566,7 @@
                 customVersionName: '',
                 currentSidesliderContentHeight: 0,
                 maxSidesliderContentHeight: 0,
-                isFooterFixed: false,
+                isFooterFixed: false
             }
         },
         computed: {
@@ -1433,6 +1449,10 @@
 
 .release-pipeline-pac-form {
     overflow: auto;
+
+    .red-tip {
+        color: #ff7e73;
+    }
 
     .release-pac-pipeline-form-header {
         display: flex;
