@@ -61,11 +61,6 @@ object WebsocketPageUtils {
                     pattern = Regex("""^(.+?)/list/(.+)$"""),
                     transform = { match -> "${match.groupValues[1]}/list" },
                     condition = { !it.endsWith("/list") }
-                ),
-                // 其他：如 .../detail/xxx/execute-detail（非 creative-stream 的 execute-detail 形式）
-                NormalizationRule(
-                    pattern = Regex("""^(.+?)/detail/(.+)/execute-detail$"""),
-                    transform = { match -> "${match.groupValues[1]}/detail" }
                 )
             )
         }

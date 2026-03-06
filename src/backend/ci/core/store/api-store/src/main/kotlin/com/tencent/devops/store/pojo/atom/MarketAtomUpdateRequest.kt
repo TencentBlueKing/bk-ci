@@ -95,7 +95,7 @@ data class MarketAtomUpdateRequest(
             ServiceScopeConfig(
                 serviceScope = ServiceScopeEnum.PIPELINE,
                 classifyCode = classifyCode ?: throw IllegalArgumentException("classifyCode is required"),
-                jobType = jobType ?: JobTypeEnum.AGENT,
+                jobTypes = listOf(jobType ?: JobTypeEnum.AGENT),
                 labelIdList = labelIdList
             )
         )

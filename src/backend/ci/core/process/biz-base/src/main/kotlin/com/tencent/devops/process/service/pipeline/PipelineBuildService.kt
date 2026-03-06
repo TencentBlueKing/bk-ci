@@ -277,7 +277,17 @@ class PipelineBuildService(
                 webHookStartParam = webHookStartParam,
                 // 解析出定义的流水线变量
                 realStartParamKeys = resource.model.getTriggerContainer()
-                    .params.map { it.id },
+                    .params
+                    .map { it.id }
+                    .toMutableList()
+                    .let {
+                        // 创作流启动时[NODE_AGENT_ID、NODE_ENV_HASH_ID]为内置变量
+                        if (channelCode == ChannelCode.CREATIVE_STREAM) {
+                            it.add(NODE_AGENT_ID)
+                            it.add(NODE_ENV_HASH_ID)
+                        }
+                        it
+                    },
                 debug = debug ?: false,
                 versionName = resource.versionName,
                 yamlVersion = resource.yamlVersion

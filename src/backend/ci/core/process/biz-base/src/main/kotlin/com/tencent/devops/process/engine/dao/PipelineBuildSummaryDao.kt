@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
@@ -466,7 +467,11 @@ class PipelineBuildSummaryDao {
                     }
                 }
             }
-            baseStep.orderBy(T_PIPELINE_INFO.DELETE.asc(), sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
+            // 草稿状态（COMMITTING）的流水线优先排在最前面
+            val draftSortField = DSL.`when`(
+                T_PIPELINE_INFO.LATEST_VERSION_STATUS.eq(VersionStatus.COMMITTING.name), 0
+            ).otherwise(1).asc()
+            baseStep.orderBy(T_PIPELINE_INFO.DELETE.asc(), draftSortField, sortTypeField, T_PIPELINE_INFO.PIPELINE_ID)
         }
         return if (null != offset && null != limit && offset >= 0 && limit > 0) {
             baseStep.limit(limit).offset(offset).fetch()
