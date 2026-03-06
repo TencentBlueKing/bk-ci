@@ -48,9 +48,6 @@ const (
 	// DevopsAgentTimeoutExitTime 设置一个次数，达到超时次数 Agent 进程退出
 	DevopsAgentTimeoutExitTime = "DEVOPS_AGENT_TIMEOUT_EXIT_TIME"
 
-	// DevopsAgentEnableProcessTree 如果设为true 则在构建期间定时将进程树上报到后台日志（DEBUG级别）
-	DevopsAgentEnableProcessTree = "DEVOPS_AGENT_ENABLE_PROCESS_TREE"
-
 	// DevopsAgentEnableMCP 如果设为true 则随 agent 主进程启动 MCP Server 协程，
 	// 通过 Streamable HTTP (127.0.0.1) 暴露 agent 信息给外部 AI 工具，
 	// 端口号持久化到 .agent.properties 的 devops.mcp.server.port，

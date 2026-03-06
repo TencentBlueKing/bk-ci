@@ -26,7 +26,7 @@
  */
 
 // Package mcp 实现了 MCP (Model Context Protocol) server，使用 Streamable HTTP 传输进行通信。
-// 该 server 提供工具：查看运行中的构建任务及其进程树、获取近期错误日志。
+// 该 server 提供工具：查看运行中的构建任务、获取近期错误日志。
 //
 // MCP Server 作为 agent 主进程的一个协程运行，支持通过环境变量 DEVOPS_AGENT_ENABLE_MCP 动态启停。
 // 开启后在 127.0.0.1 上监听 Streamable HTTP，端口号持久化到 .agent.properties 的 devops.mcp.server.port。

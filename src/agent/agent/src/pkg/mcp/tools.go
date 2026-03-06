@@ -40,6 +40,7 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+
 	"github.com/ThinkInAIXYZ/go-mcp/protocol"
 	"github.com/ThinkInAIXYZ/go-mcp/server"
 )
@@ -62,7 +63,7 @@ func registerAllTools(s *server.Server) {
 	// Tool 1: list_running_builds
 	listBuildsTool := protocol.NewToolWithRawSchema(
 		"list_running_builds",
-		"获取当前 Agent 上所有正在运行的构建任务及其进程树信息，用于排查进程阻塞、资源占用等问题",
+		"获取当前 Agent 上所有正在运行的构建任务信息，用于排查进程阻塞、资源占用等问题",
 		[]byte(`{"type":"object","properties":{}}`),
 	)
 	s.RegisterTool(listBuildsTool, handleListRunningBuilds)
@@ -97,15 +98,6 @@ func handleListRunningBuilds(_ context.Context, req *protocol.CallToolRequest) (
 		sb.WriteString(fmt.Sprintf("  流水线: %s\n", info.PipelineId))
 		sb.WriteString(fmt.Sprintf("  VmSeqId: %s\n", info.VmSeqId))
 		sb.WriteString(fmt.Sprintf("  PID: %d\n", pid))
-		tree := job.GetProcessTreeText(int32(pid), 0)
-		if tree != "" {
-			sb.WriteString("  进程树:\n")
-			for _, line := range strings.Split(tree, "\n") {
-				if line != "" {
-					sb.WriteString("    " + line + "\n")
-				}
-			}
-		}
 		sb.WriteString("\n")
 	}
 

@@ -86,13 +86,6 @@ func doBuild(
 	GBuildManager.AddBuild(pid, buildInfo)
 	logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
 
-	// 如果启用了进程树监控，定时将构建进程树上报到后台日志（DEBUG级别）
-	if envs.FetchEnvAndCheck(constant.DevopsAgentEnableProcessTree, "true") {
-		treeCtx, treeCancel := context.WithCancel(context.Background())
-		go logProcessTree(treeCtx, buildInfo, pid)
-		defer treeCancel()
-	}
-
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	_ = fileutil.WriteString(errorMsgFile, i18n.Localize("BuilderProcessWasKilled", nil))
