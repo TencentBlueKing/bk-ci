@@ -61,8 +61,8 @@ class UserPreBuildResourceImpl @Autowired constructor(
     private val preBuildService: PreBuildService,
     private val preBuildV2Service: PreBuildV2Service
 ) : UserPreBuildResource {
-    override fun getUserProject(userId: String, accessToken: String): Result<UserProject> {
-        return Result(preBuildService.getOrCreateUserProject(userId, accessToken))
+    override fun getUserProject(userId: String): Result<UserProject> {
+        return Result(preBuildService.getOrCreateUserProject(userId))
     }
 
     override fun getOrCreateAgent(
@@ -143,12 +143,11 @@ class UserPreBuildResourceImpl @Autowired constructor(
 
     override fun manualShutdown(
         userId: String,
-        accessToken: String,
         preProjectId: String,
         buildId: String
     ): Result<Boolean> {
         return try {
-            Result(preBuildService.shutDown(userId, accessToken, preProjectId, buildId))
+            Result(preBuildService.shutDown(userId, preProjectId, buildId))
         } catch (e: Throwable) {
             logger.error("shutDown failed, exception: ", e)
             Result(1, "error message: ${e.message}")

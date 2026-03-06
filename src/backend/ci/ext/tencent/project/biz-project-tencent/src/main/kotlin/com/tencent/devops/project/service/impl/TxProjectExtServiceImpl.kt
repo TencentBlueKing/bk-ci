@@ -38,7 +38,6 @@ class TxProjectExtServiceImpl(
     override fun createExtProjectInfo(
         userId: String,
         authProjectId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
@@ -68,17 +67,14 @@ class TxProjectExtServiceImpl(
 
     override fun createOldAuthProject(
         userId: String,
-        accessToken: String?,
         projectCreateInfo: ProjectCreateInfo
     ): String? {
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.englishName)
         // 创建AUTH项目
-        val newAccessToken = if (accessToken.isNullOrBlank()) {
-            param["creator"] = userId
-            bkAccessTokenApi.getProjectAccessToken()
-        } else accessToken
-        val authUrl = "${authProperties.url}/projects?access_token=$newAccessToken"
-        logger.info("create project $authUrl $userId,use userAccessToken${newAccessToken == accessToken}")
+        param["creator"] = userId
+        val accessToken = bkAccessTokenApi.getProjectAccessToken()
+        val authUrl = "${authProperties.url}/projects?access_token=$accessToken"
+        logger.info("create project $authUrl $userId")
         param["bg_id"] = projectCreateInfo.bgId.toString()
         param["dept_id"] = projectCreateInfo.deptId.toString()
         param["center_id"] = projectCreateInfo.centerId.toString()
