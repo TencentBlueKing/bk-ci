@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TIMING_START_EVENT_DESC
@@ -89,6 +90,10 @@ class PipelineTimerBuildListener @Autowired constructor(
                     pipelineId = event.pipelineId,
                     taskId = event.taskId
                 ) ?: return
+            // 若存在无效的定时任务，则将其清理，并跳过后续执行
+            if (event.cleanInvalidTimerTask()) {
+                return
+            }
             with(pipelineTimer) {
                 when {
                     repoHashId.isNullOrBlank() ->
@@ -338,5 +343,56 @@ class PipelineTimerBuildListener @Autowired constructor(
             triggerEvent = triggerEventBuilder.build(),
             triggerDetail = triggerDetailBuilder.build()
         )
+    }
+
+    /**
+     * 检查触发器是否存在
+     */
+    private fun checkTriggerExist(
+        projectId: String,
+        pipelineId: String,
+        taskId: String
+    ): Boolean = pipelineRepositoryService.getModel(
+        projectId = projectId,
+        pipelineId = pipelineId
+    )?.getTriggerContainer()?.elements?.any {
+        it is TimerTriggerElement && it.id == taskId
+    } ?: false
+
+    /**
+     * 清理无效的定时任务
+     */
+    private fun PipelineTimerBuildEvent.cleanInvalidTimerTask(): Boolean {
+        return taskId?.let {
+            val triggerExist = checkTriggerExist(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = it
+            )
+            if (!triggerExist) {
+                // 存在异常定时任务，尝试删除定时任务
+                val result = pipelineTimerService.deleteTimer(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = it,
+                    userId = userId
+                )
+                val timerBranch = pipelineTimerService.deleteTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repoHashId = null,
+                    branch = null,
+                    taskId = it
+                )
+                logger.warn(
+                    "[$projectId|$pipelineId|$it]|" +
+                            "abnormal scheduled task exists, attempting to delete task($result) and " +
+                            "timerBranch($timerBranch)"
+                )
+                true
+            } else {
+                false
+            }
+        } ?: false
     }
 }
