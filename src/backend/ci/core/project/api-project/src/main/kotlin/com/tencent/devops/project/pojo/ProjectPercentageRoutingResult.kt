@@ -13,7 +13,7 @@ data class ProjectPercentageRoutingResult(
     @get:Schema(title = "项目全集总数")
     val totalProjectCount: Int,
 
-    @get:Schema(title = "本次实际目标数（哈希命中 + 白名单，已扣除黑名单）")
+    @get:Schema(title = "本次实际目标数（哈希命中，已扣除黑名单）")
     val targetCount: Int,
 
     @get:Schema(title = "已在目标 tag（幂等跳过数）")

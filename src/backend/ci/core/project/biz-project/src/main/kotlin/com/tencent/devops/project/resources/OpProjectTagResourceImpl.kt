@@ -38,18 +38,6 @@ class OpProjectTagResourceImpl @Autowired constructor(
         return Result(projectTagService.percentageRouting(request))
     }
 
-    override fun addToWhitelist(request: ProjectRoutingListRequest): Result<Long> {
-        return Result(projectTagService.addToWhitelist(request.projectCodes))
-    }
-
-    override fun removeFromWhitelist(request: ProjectRoutingListRequest): Result<Long> {
-        return Result(projectTagService.removeFromWhitelist(request.projectCodes))
-    }
-
-    override fun getWhitelist(): Result<Set<String>> {
-        return Result(projectTagService.getWhitelist())
-    }
-
     override fun addToBlacklist(request: ProjectRoutingListRequest): Result<Long> {
         return Result(projectTagService.addToBlacklist(request.projectCodes))
     }

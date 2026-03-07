@@ -405,23 +405,7 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    // ======================== 路由名单管理（白名单 / 黑名单） ========================
-
-    fun addToWhitelist(projectCodes: List<String>): Long {
-        if (projectCodes.isEmpty()) return 0L
-        redisOperation.sadd(WHITELIST_KEY, *projectCodes.toTypedArray())
-        logger.info("addToWhitelist count=${projectCodes.size}")
-        return redisOperation.getSetMembers(WHITELIST_KEY)?.size?.toLong() ?: 0L
-    }
-
-    fun removeFromWhitelist(projectCodes: List<String>): Long {
-        if (projectCodes.isEmpty()) return 0L
-        redisOperation.sremove(WHITELIST_KEY, *projectCodes.toTypedArray())
-        logger.info("removeFromWhitelist count=${projectCodes.size}")
-        return redisOperation.getSetMembers(WHITELIST_KEY)?.size?.toLong() ?: 0L
-    }
-
-    fun getWhitelist(): Set<String> = redisOperation.getSetMembers(WHITELIST_KEY) ?: emptySet()
+    // ======================== 路由名单管理（黑名单） ========================
 
     fun addToBlacklist(projectCodes: List<String>): Long {
         if (projectCodes.isEmpty()) return 0L
@@ -455,10 +439,9 @@ class ProjectTagService @Autowired constructor(
                 "dryRun=${request.dryRun}"
         )
 
-        val whitelist = getWhitelist()
         val blacklist = getBlacklist()
         logger.info(
-            "percentageRouting lists loaded|whitelistSize=${whitelist.size}|blacklistSize=${blacklist.size}"
+            "percentageRouting lists loaded|blacklistSize=${blacklist.size}"
         )
 
         val condition = ProjectConditionDTO(channelCode = request.channelCode)
@@ -479,7 +462,7 @@ class ProjectTagService @Autowired constructor(
                 val projectCode = record.englishName ?: continue
                 if (projectCode in blacklist) continue
                 val alreadyAtTarget = record.routerTag == request.targetTag
-                if (projectCode in whitelist || hashBucket(projectCode) < threshold) {
+                if (hashBucket(projectCode) < threshold) {
                     if (alreadyAtTarget) {
                         alreadyDoneCount++
                     } else {
@@ -547,7 +530,6 @@ class ProjectTagService @Autowired constructor(
         private const val HASH_BUCKET_SIZE = 100L
         private const val BATCH_SIZE = 500
         private const val PAGE_SIZE = 1000
-        const val WHITELIST_KEY = "project:routing:whitelist"
         const val BLACKLIST_KEY = "project:routing:blacklist"
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }

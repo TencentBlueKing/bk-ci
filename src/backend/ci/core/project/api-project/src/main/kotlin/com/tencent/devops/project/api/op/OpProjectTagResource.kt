@@ -64,27 +64,6 @@ interface OpProjectTagResource {
         request: ProjectPercentageRoutingRequest
     ): Result<ProjectPercentageRoutingResult>
 
-    @Operation(summary = "向全局路由白名单添加项目（强制纳入放量目标集合）")
-    @POST
-    @Path("/whitelist/add")
-    fun addToWhitelist(
-        @Parameter(description = "白名单请求入参", required = true)
-        request: ProjectRoutingListRequest
-    ): Result<Long>
-
-    @Operation(summary = "从全局路由白名单移除项目")
-    @DELETE
-    @Path("/whitelist/remove")
-    fun removeFromWhitelist(
-        @Parameter(description = "白名单请求入参", required = true)
-        request: ProjectRoutingListRequest
-    ): Result<Long>
-
-    @Operation(summary = "查询全局路由白名单")
-    @GET
-    @Path("/whitelist")
-    fun getWhitelist(): Result<Set<String>>
-
     @Operation(summary = "向全局路由黑名单添加项目（强制排除，不参与任何放量）")
     @POST
     @Path("/blacklist/add")
