@@ -22,10 +22,10 @@ data class ProjectPercentageRoutingRequest(
 
     @get:JsonProperty(value = "channelCode", required = false)
     @get:Schema(
-        title = "渠道代码，为 null 时默认查询 BS+PREBUILD 渠道项目",
+        title = "渠道代码，默认 BS",
         description = "channelCode"
     )
-    val channelCode: String? = null,
+    val channelCode: String = "BS",
 
     @get:JsonProperty(value = "dryRun", required = false)
     @get:Schema(
