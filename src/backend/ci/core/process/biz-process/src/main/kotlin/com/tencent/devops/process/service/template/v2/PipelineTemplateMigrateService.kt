@@ -50,6 +50,8 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.template.PipelineTemplateMigrationDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageRequest
+import com.tencent.devops.process.pojo.template.TemplateMigrateByPercentageResult
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.pojo.template.v2.PTemplateModelTransferResult
@@ -77,6 +79,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
+import java.util.zip.CRC32
 
 @Service
 @Suppress("LongParameterList")
@@ -122,6 +125,92 @@ class PipelineTemplateMigrateService(
         } while (projectCodes.size == limit)
     }
 
+    fun migrateTemplatesByPercentage(
+        request: TemplateMigrateByPercentageRequest
+    ): TemplateMigrateByPercentageResult {
+        require(request.targetPercent in 1..100) { "targetPercent must be between 1 and 100" }
+        logger.info(
+            "migrateTemplatesByPercentage start|" +
+                "targetPercent=${request.targetPercent}|channelCode=${request.channelCode}|" +
+                "dryRun=${request.dryRun}"
+        )
+
+        val blacklist = client.get(ServiceProjectTagResource::class).getBlacklist().data
+            ?: throw IllegalStateException("Failed to fetch routing blacklist from project service")
+        logger.info("migrateTemplatesByPercentage blacklistSize=${blacklist.size}")
+
+        val condition = ProjectConditionDTO(channelCode = request.channelCode)
+        var totalProjectCount = 0
+        var alreadyDoneCount = 0
+        val candidates = mutableListOf<String>()
+        val traceId = MDC.get(TraceTag.BIZID)
+
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        do {
+            val projectCodes = client.get(ServiceProjectResource::class).listProjectsByCondition(
+                projectConditionDTO = condition,
+                limit = limit,
+                offset = offset
+            ).data ?: break
+            totalProjectCount += projectCodes.size
+            projectCodes.forEach { project ->
+                val englishName = project.englishName
+                if (englishName in blacklist) return@forEach
+                if (hashBucket(englishName) >= request.targetPercent) return@forEach
+                val migrationRecord = pipelineTemplateMigrationDao.get(dslContext, englishName)
+                if (migrationRecord?.status == MigrationStatus.SUCCESS.name ||
+                    migrationRecord?.status == MigrationStatus.SKIPPED.name
+                ) {
+                    alreadyDoneCount++
+                    return@forEach
+                }
+                candidates.add(englishName)
+            }
+            offset += limit
+        } while (projectCodes.size == limit)
+
+        val migratedCount: Int
+        if (request.dryRun) {
+            migratedCount = candidates.size
+        } else {
+            candidates.forEach { projectId ->
+                migrateProjectTemplateExecutorService.execute {
+                    MDC.put(TraceTag.BIZID, traceId)
+                    migrateTemplates(projectId)
+                }
+            }
+            migratedCount = candidates.size
+        }
+
+        logger.info(
+            "migrateTemplatesByPercentage done|dryRun=${request.dryRun}|" +
+                "total=$totalProjectCount|target=${candidates.size + alreadyDoneCount}|" +
+                "alreadyDone=$alreadyDoneCount|migrated=$migratedCount"
+        )
+        return TemplateMigrateByPercentageResult(
+            dryRun = request.dryRun,
+            targetPercent = request.targetPercent,
+            totalProjectCount = totalProjectCount,
+            targetCount = candidates.size + alreadyDoneCount,
+            alreadyDoneCount = alreadyDoneCount,
+            migratedCount = migratedCount,
+            failedCount = 0,
+            failedProjects = emptyList()
+        )
+    }
+
+    /**
+     * 确定性哈希分桶：CRC32(projectId) % 100
+     * 结果范围 [0, 99]，与项目总数无关，同一 projectId 永远映射到相同桶。
+     * 算法与 ProjectTagService.hashBucket 保持一致。
+     */
+    private fun hashBucket(projectId: String): Int {
+        val crc = CRC32()
+        crc.update(projectId.toByteArray(Charsets.UTF_8))
+        return (crc.value % 100).toInt()
+    }
+
     fun migratePublicTemplates() {
         migrateTemplates("")
     }
@@ -146,6 +235,11 @@ class PipelineTemplateMigrateService(
         val templateCount = templateDao.countTemplate(dslContext, projectId)
         if (templateCount == 0) {
             logger.warn("The template does not exist under project {}. Skipping.", projectId)
+            pipelineTemplateMigrationDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                status = MigrationStatus.SKIPPED
+            )
             return
         }
 
