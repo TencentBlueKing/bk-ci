@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory
  * 服务范围工具类
  * 用于处理 SERVICE_SCOPE 字段的大小写兼容性问题
  * 
- * 统一使用大写格式存储，如 ["PIPELINE"]、"CREATIVE_STREAM"
+ * 统一使用大写格式存储，如 ["PIPELINE"、"CREATIVE_STREAM"]
  * 支持读取小写格式的数据，但统一转换为大写格式存储
  */
 object ServiceScopeUtil {
@@ -42,34 +42,12 @@ object ServiceScopeUtil {
     private val logger = LoggerFactory.getLogger(ServiceScopeUtil::class.java)
     
     /**
-     * 标准化服务范围JSON字符串
-     * 将小写的 ["pipeline"] 转换为大写的 ["PIPELINE"]
-     * 
-     * @param serviceScopeJson 服务范围JSON字符串，如 ["pipeline"] 或 ["PIPELINE"]
-     * @return 标准化后的JSON字符串，如 ["PIPELINE"]
-     */
-    fun normalizeServiceScopeJson(serviceScopeJson: String?): String? {
-        if (serviceScopeJson.isNullOrBlank()) return serviceScopeJson
-        
-        try {
-            val serviceScopes = JsonUtil.toOrNull(serviceScopeJson, List::class.java) as? List<String>
-                ?: return serviceScopeJson
-            
-            val normalized = normalizeList(serviceScopes)
-            return JsonUtil.toJson(normalized, formatted = false)
-        } catch (e: Exception) {
-            logger.warn("Failed to normalize serviceScope: $serviceScopeJson", e)
-            // 如果解析失败，返回原值
-            return serviceScopeJson
-        }
-    }
-    
-    /**
      * 从JSON字符串解析服务范围列表（自动标准化）
      * 
      * @param serviceScopeJson 服务范围JSON字符串
      * @return 标准化后的服务范围列表（统一大写）
      */
+    @Suppress("UNCHECKED_CAST")
     fun parseServiceScopes(serviceScopeJson: String?): List<String> {
         if (serviceScopeJson.isNullOrBlank()) return emptyList()
         
@@ -109,19 +87,6 @@ object ServiceScopeUtil {
     }
     
     /**
-     * 检查服务范围列表是否包含指定服务范围（大小写不敏感）
-     * 
-     * @param serviceScopeJson 服务范围JSON字符串
-     * @param targetScope 目标服务范围（支持大小写，如 "PIPELINE" 或 "pipeline"）
-     * @return 是否包含
-     */
-    fun containsServiceScope(serviceScopeJson: String?, targetScope: String): Boolean {
-        val scopes = parseServiceScopes(serviceScopeJson)
-        val normalizedTarget = normalize(targetScope) ?: return false
-        return scopes.contains(normalizedTarget)
-    }
-    
-    /**
      * 将服务范围列表转换为JSON字符串（统一使用大写）
      * 
      * @param serviceScopes 服务范围列表
@@ -142,16 +107,4 @@ object ServiceScopeUtil {
     fun isEmpty(serviceScopeJson: String?): Boolean {
         return parseServiceScopes(serviceScopeJson).isEmpty()
     }
-    
-    /**
-     * 获取第一个服务范围（标准化后）
-     * 
-     * @param serviceScopeJson 服务范围JSON字符串
-     * @return 第一个服务范围（大写格式），如果为空则返回null
-     */
-    fun getFirstServiceScope(serviceScopeJson: String?): String? {
-        val scopes = parseServiceScopes(serviceScopeJson)
-        return scopes.firstOrNull()
-    }
 }
-

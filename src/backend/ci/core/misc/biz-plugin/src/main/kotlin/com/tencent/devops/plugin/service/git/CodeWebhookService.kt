@@ -284,9 +284,10 @@ class CodeWebhookService @Autowired constructor(
             }
 
             if (variables[PIPELINE_START_CHANNEL] != ChannelCode.BS.name &&
-                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.GONGFENGSCAN.name &&
+                variables[PIPELINE_START_CHANNEL] != ChannelCode.CREATIVE_STREAM.name
             ) {
-                logger.warn("Process instance($buildId) is not bs or gongfengscan channel")
+                logger.warn("Process instance($buildId) is not bs, gongfengscan or creative_stream channel")
                 return
             }
 

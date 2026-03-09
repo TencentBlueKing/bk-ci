@@ -93,7 +93,8 @@ object AtomServiceScopeUtil {
      * 构建 ServiceScopeConfig 的核心逻辑
      *
      * @param serviceScopes 服务范围列表
-     * @param jobTypeValue JOB_TYPE 字段值
+     * @param jobTypeValue JOB_TYPE 字段值（PIPELINE 纯字符串）
+     * @param jobTypeMapValue JOB_TYPE_MAP 字段值（完整多 scope JSON），优先级高于 jobTypeValue
      * @param getClassifyCode 获取分类代码的函数，参数为服务范围枚举，返回分类代码
      * @param getLabelIdList 获取标签ID列表的函数，参数为服务范围枚举，返回标签ID列表
      * @return ServiceScopeConfig 列表
@@ -101,11 +102,12 @@ object AtomServiceScopeUtil {
     fun buildServiceScopeConfigs(
         serviceScopes: List<String>,
         jobTypeValue: String?,
+        jobTypeMapValue: String? = null,
         getClassifyCode: (ServiceScopeEnum) -> String?,
         getLabelIdList: (ServiceScopeEnum) -> List<String>?
     ): List<ServiceScopeConfig>? {
         if (serviceScopes.isEmpty()) return null
-        val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, null)
+        val allJobTypes = AtomJobTypeUtil.getAllJobTypes(jobTypeValue, jobTypeMapValue)
         val configs = serviceScopes.mapNotNull { scope ->
             buildSingleServiceScopeConfig(
                 scope = scope,

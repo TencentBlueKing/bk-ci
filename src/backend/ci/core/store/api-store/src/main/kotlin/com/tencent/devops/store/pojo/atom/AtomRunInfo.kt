@@ -41,8 +41,10 @@ data class AtomRunInfo(
     val atomStatus: Byte? = null,
     @get:Schema(title = "插件初始化项目代码", required = true)
     val initProjectCode: String,
-    @get:Schema(title = "Job类型（原始值，可能为纯字符串或 JSON）", required = false)
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）", required = false)
     var jobType: String?,
+    @get:Schema(title = "多服务范围Job类型映射JSON", required = false)
+    var jobTypeMap: String? = null,
     @get:Schema(title = "无构建环境插件是否可以在有构建环境运行标识", required = false)
     var buildLessRunFlag: Boolean?,
     @get:Schema(title = "输入字段类型信息数据", required = false)

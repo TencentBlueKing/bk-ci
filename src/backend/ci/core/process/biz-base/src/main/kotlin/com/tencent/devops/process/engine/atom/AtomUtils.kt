@@ -109,8 +109,7 @@ object AtomUtils {
                     taskId = task.taskId
                 )
             }
-            // 从原始 JOB_TYPE（可能为 JSON）解析出所有 JobTypeEnum，判断插件是否有权限在该 job 环境下运行
-            val allJobTypes = JobTypeEnum.parseAllFromRaw(atomRunInfo.jobType)
+            val allJobTypes = JobTypeEnum.resolveAllFromFields(atomRunInfo.jobType, atomRunInfo.jobTypeMap)
             val hasBuildEnvType = allJobTypes.any { it.isBuildEnv() }
             val hasBuildLessType = allJobTypes.any { !it.isBuildEnv() }
             val jobRunFlag = when {
@@ -275,7 +274,7 @@ object AtomUtils {
             ChannelCode.CREATIVE_STREAM -> ServiceScopeEnum.CREATIVE_STREAM.name
             else -> ServiceScopeEnum.PIPELINE.name
         }
-        require(serviceScope.contains(requiredScope)) {
+        require(serviceScope.any { it.equals(requiredScope, ignoreCase = true) }) {
             ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
                 params = arrayOf(atomName),

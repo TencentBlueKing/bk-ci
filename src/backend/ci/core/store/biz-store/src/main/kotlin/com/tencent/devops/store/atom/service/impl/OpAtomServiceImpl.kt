@@ -46,6 +46,7 @@ import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
@@ -242,7 +243,7 @@ class OpAtomServiceImpl @Autowired constructor(
             },
             icon = atomRecord.icon,
             summary = atomRecord.summary,
-            serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atomRecord.serviceScope).ifEmpty { null },
             jobType = atomRecord.jobType,
             os = JsonUtil.toOrNull(atomRecord.os, List::class.java) as List<String>?,
             classifyId = classify?.id,

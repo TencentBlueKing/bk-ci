@@ -1977,10 +1977,10 @@ class PipelineRepositoryService constructor(
                 try {
                     ChannelCode.valueOf(it)
                 } catch (e: IllegalArgumentException) {
-                    logger.warn("Invalid channel code: $it, using default ChannelCode.BS")
-                    ChannelCode.BS
+                    logger.warn("Invalid channel code: $it, using default channel code")
+                    ChannelCode.getRequestChannelCode()
                 }
-            } ?: ChannelCode.BS
+            } ?: ChannelCode.getRequestChannelCode()
             val processedSetting = processMaxPipelineResNumIfNull(setting, channelCode)
             if (!isTemplate && versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = transactionContext,

@@ -41,17 +41,26 @@ enum class JobTypeEnum {
 
     companion object {
         /**
-         * 从 T_ATOM.JOB_TYPE 原始值解析出所有 JobTypeEnum。
-         * 兼容三种格式：
-         * - 纯字符串："AGENT"
-         * - V1 JSON：{"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}
-         * - V2 JSON：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
+         * 从 T_ATOM.JOB_TYPE 纯字符串值解析出 JobTypeEnum。
+         * JOB_TYPE 字段只存纯字符串（如 "AGENT"），不会出现 JSON。
          */
-        fun parseAllFromRaw(raw: String?): List<JobTypeEnum> {
-            if (raw.isNullOrBlank()) return emptyList()
-            return runCatching { listOf(valueOf(raw)) }.getOrElse {
-                entries.filter { raw.contains("\"${it.name}\"") }
+        private fun parseFromJobType(raw: String?): JobTypeEnum? {
+            if (raw.isNullOrBlank()) return null
+            return runCatching { valueOf(raw) }.getOrNull()
+        }
+
+        /**
+         * 综合 JOB_TYPE_MAP（优先）和 JOB_TYPE 解析出跨所有服务范围的 JobTypeEnum 去重列表。
+         * JOB_TYPE_MAP 格式: {"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
+         * JOB_TYPE 只存 PIPELINE 范围的纯字符串（如 "AGENT"）。
+         */
+        fun resolveAllFromFields(jobType: String?, jobTypeMap: String?): List<JobTypeEnum> {
+            if (!jobTypeMap.isNullOrBlank()) {
+                val result = entries.filter { jobTypeMap.contains("\"${it.name}\"") }
+                if (result.isNotEmpty()) return result
             }
+            val parsed = parseFromJobType(jobType)
+            return if (parsed != null) listOf(parsed) else emptyList()
         }
     }
 }
