@@ -453,6 +453,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_LEGACY_INSTANCE_CANNOT_ENABLE_PAC = "2101343"
     // 触发事件缓存过期已清理。若需重放，请到代码库操作。
     const val ERROR_TRIGGER_EVENT_EXPIRED = "2101361"
+    const val ERROR_TEMPLATE_MIGRATING = "2101362" // 模板迁移中，不能操作
     // 模型变量引用表达式不合规：仅允许双大括号${{xxx}}，且前缀须为 variables./stages./jobs./steps.。不合规项（含位置 positionPath）：{0}
     const val ERROR_PIPELINE_MODEL_VAR_REF_INVALID = "2101376"
 
@@ -719,6 +720,9 @@ object ProcessMessageCode {
 
     // 公共模板名称
     const val BK_PUBLIC_PIPELINE_TEMPLATE_NAME = "bkPublicPipelineTemplateName"
+
+    // 回滚自模板实例化任务，基于版本[xxx]
+    const val BK_ROLLBACK_FROM_TEMPLATE_INSTANCE_BASED_ON_VERSION = "bkRollbackFromTemplateInstanceBasedOnVersion"
 
     // 创作流节点标签
     const val BK_CREATIVE_STREAM_NODE_LABEL = "bkCreativeStreamNodeLabel"
