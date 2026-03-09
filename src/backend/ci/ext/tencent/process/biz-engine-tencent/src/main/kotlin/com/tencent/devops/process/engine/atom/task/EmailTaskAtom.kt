@@ -184,7 +184,12 @@ class EmailTaskAtom @Autowired constructor(
      * 流水线渠道: /console/pipeline/{projectId}/{pipelineId}/detail/{buildId}
      * 创作流渠道: /console/creative-stream/{projectId}/flow/{pipelineId}/execute/{buildId}/execute-detail
      */
-    private fun detailUrl(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode? = null): String {
+    private fun detailUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode? = null
+    ): String {
         val host = HomeHostUtil.innerServerHost()
         return if (channelCode == ChannelCode.CREATIVE_STREAM) {
             "$host/console/creative-stream/$projectId/flow/$pipelineId/execute/$buildId/execute-detail"
