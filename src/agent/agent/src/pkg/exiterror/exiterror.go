@@ -9,8 +9,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 )
 
 type ExitErrorType struct {
@@ -29,20 +29,18 @@ const (
 	ExitTimeOutError                     = "THIRD_AGENT_EXIT_TIMEOUT_ERROR"
 )
 
-var exitError *ExitErrorType = nil
+var exitError atomic.Pointer[ExitErrorType]
 
 func AddExitError(enum ExitErrorEnum, msg string) {
 	logs.Errorf("AddExitError|%s|%s", enum, msg)
-	exitError = &ExitErrorType{
+	exitError.Store(&ExitErrorType{
 		ErrorEnum: enum,
 		Message:   msg,
-	}
+	})
 }
 
 func GetAndResetExitError() *ExitErrorType {
-	exit := exitError
-	exitError = nil
-	return exit
+	return exitError.Swap(nil)
 }
 
 func Exit(exitError *ExitErrorType) {

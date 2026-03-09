@@ -108,7 +108,8 @@ func main() {
 func logEnv() {
 	logs.Info("agent envs: ")
 	for _, v := range envs.Envs() {
-		index := strings.Index(v, "=")
-		logs.Info("    " + v[0:index] + " = " + v[index+1:])
+		if index := strings.Index(v, "="); index >= 0 {
+			logs.Info("    " + v[0:index] + " = " + v[index+1:])
+		}
 	}
 }

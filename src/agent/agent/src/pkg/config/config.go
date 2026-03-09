@@ -46,12 +46,12 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 const (
@@ -297,13 +297,13 @@ func LoadAgentConfig() error {
 	}
 
 	jdkDirPath := conf.Section("").Key(KeyJdkDirPath).String()
-	// 如果路径为空，是第一次，需要主动去拿一次
 	if jdkDirPath == "" {
 		workDir := systemutil.GetWorkDir()
 		if _, err := os.Stat(workDir + "/jdk"); err != nil && !os.IsExist(err) {
 			jdkDirPath = workDir + "/jre"
+		} else {
+			jdkDirPath = workDir + "/jdk"
 		}
-		jdkDirPath = workDir + "/jdk"
 	}
 	jdk17DirPath := conf.Section("").Key(KeyJdk17DirPath).String()
 	if jdk17DirPath == "" {
