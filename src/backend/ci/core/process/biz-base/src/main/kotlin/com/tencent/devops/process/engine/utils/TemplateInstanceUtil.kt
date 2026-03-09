@@ -704,25 +704,11 @@ object TemplateInstanceUtil {
         inputParams: List<BuildFormProperty>,
         instanceParams: List<BuildFormProperty>
     ) {
-        if (inputParams.size != instanceParams.size) {
-            logger.warn(
-                "input params size is not equal to instance params size|$projectId|$pipelineId|" +
-                        "${inputParams.size}|${instanceParams.size}"
-            )
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_COUNT_EXCEPTION
-            )
-        }
         val requiredExceptions = mutableListOf<String>()
         val constantExceptions = mutableListOf<String>()
         val defaultValueExceptions = mutableListOf<String>()
         instanceParams.forEach { instanceParam ->
-            val inputParam = inputParams.find { it.id == instanceParam.id } ?: run {
-                logger.warn("input param is not found|$projectId|$pipelineId|${instanceParam.id}")
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_INSTANCE_PARAM_PROP_EXCEPTION
-                )
-            }
+            val inputParam = inputParams.find { it.id == instanceParam.id } ?: return@forEach
             if (inputParam.required != instanceParam.required) {
                 requiredExceptions.add(instanceParam.id)
             }
