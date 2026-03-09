@@ -2341,7 +2341,7 @@ class PipelineBuildLightInfoJooqMapper : RecordMapper<
                     id = t[tTPipelineBuildHistory.BUILD_ID],
                     buildNum = t[tTPipelineBuildHistory.BUILD_NUM],
                     trigger = t[tTPipelineBuildHistory.TRIGGER],
-                    status = BuildStatus.entries[t[tTPipelineBuildHistory.STATUS]].statusName,
+                    status = BuildStatus.values().getOrNull(t[tTPipelineBuildHistory.STATUS])?.statusName ?: "",
                     userId = t[tTPipelineBuildHistory.TRIGGER_USER] ?: t[tTPipelineBuildHistory.START_USER] ?: "",
                     startTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.START_TIME]).ifBlank { null },
                     endTime = DateTimeUtil.toDateTime(t[tTPipelineBuildHistory.END_TIME]).ifBlank { null },
