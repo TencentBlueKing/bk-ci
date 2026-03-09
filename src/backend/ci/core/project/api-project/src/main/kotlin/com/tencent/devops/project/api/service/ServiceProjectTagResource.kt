@@ -74,4 +74,9 @@ interface ServiceProjectTagResource {
         @QueryParam("tag")
         tag: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/blacklist")
+    @Operation(summary = "查询全局路由黑名单")
+    fun getBlacklist(): Result<Set<String>>
 }
