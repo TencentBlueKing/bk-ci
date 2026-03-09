@@ -159,7 +159,9 @@ class PipelineTemplateMigrateService(
                 if (englishName in blacklist) return@forEach
                 if (hashBucket(englishName) >= request.targetPercent) return@forEach
                 val migrationRecord = pipelineTemplateMigrationDao.get(dslContext, englishName)
-                if (migrationRecord?.status == MigrationStatus.SUCCESS.name) {
+                if (migrationRecord?.status == MigrationStatus.SUCCESS.name ||
+                    migrationRecord?.status == MigrationStatus.SKIPPED.name
+                ) {
                     alreadyDoneCount++
                     return@forEach
                 }
@@ -233,6 +235,11 @@ class PipelineTemplateMigrateService(
         val templateCount = templateDao.countTemplate(dslContext, projectId)
         if (templateCount == 0) {
             logger.warn("The template does not exist under project {}. Skipping.", projectId)
+            pipelineTemplateMigrationDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                status = MigrationStatus.SKIPPED
+            )
             return
         }
 
