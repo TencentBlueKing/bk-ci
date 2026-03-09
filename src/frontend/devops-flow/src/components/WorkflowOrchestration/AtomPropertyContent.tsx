@@ -8,7 +8,7 @@ import { getAtomRunConditionList } from '@/constants/flowOptionConfig'
 import { DEFAULT_VERSION, useAtomVersion } from '@/hooks/useAtomVersion'
 import { useAtomStore } from '@/stores/atom'
 import { AtomRunCondition } from '@/utils/flowDefaults'
-import { validateAdditionalOptions, validateAtomElement } from '@/utils/validation'
+import { validateAdditionalOptions, validateAtomElement, validateStepId } from '@/utils/validation'
 import { Button, Checkbox, Collapse, Form, Input, Loading, Popover, Radio, Select } from 'bkui-vue'
 import { computed, defineComponent, type PropType, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -34,6 +34,8 @@ export interface AtomPropertyContentProps {
   showCustomEnvSection?: boolean
   /** Whether to show flow control section */
   showFlowControlSection?: boolean
+  /** Step IDs of sibling elements in the same Job (excluding current element) */
+  siblingStepIds?: string[]
 }
 
 export default defineComponent({
@@ -66,6 +68,10 @@ export default defineComponent({
     showFlowControlSection: {
       type: Boolean,
       default: true,
+    },
+    siblingStepIds: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
   },
   emits: ['change', 'chooseAtom'],
@@ -223,8 +229,13 @@ export default defineComponent({
       return validateAdditionalOptions(props.element.additionalOptions)
     })
 
+    const stepIdErrors = computed(() => {
+      if (!props.element) return []
+      return validateStepId(props.element.stepId, props.siblingStepIds)
+    })
+
     const hasAtomError = computed(() => {
-      return atomErrorFields.value.length > 0 || additionalOptionsErrorFields.value.length > 0
+      return atomErrorFields.value.length > 0 || additionalOptionsErrorFields.value.length > 0 || stepIdErrors.value.length > 0
     })
 
     // ========== Lifecycle Hooks ==========
@@ -450,7 +461,7 @@ export default defineComponent({
             <Form formType="vertical">
               {/* Step ID config */}
               {isAtomSelected.value && props.showStepIdField && (
-                <FormItem>
+                <FormItem class={stepIdErrors.value.length > 0 ? sharedStyles.fieldError : ''}>
                   {{
                     label: () => (
                       <div class={styles.labelWithIcon}>
@@ -463,13 +474,21 @@ export default defineComponent({
                       </div>
                     ),
                     default: () => (
-                      <Input
-                        modelValue={props.element?.stepId || ''}
-                        placeholder={t('flow.orchestration.stepIdPlaceholder')}
-                        onChange={handleStepIdChange}
-                        class={styles.stepIdInput}
-                        disabled={!props.editable}
-                      />
+                      <>
+                        <Input
+                          modelValue={props.element?.stepId || ''}
+                          placeholder={t('flow.orchestration.stepIdPlaceholder')}
+                          onChange={handleStepIdChange}
+                          class={styles.stepIdInput}
+                          disabled={!props.editable}
+                        />
+                        {stepIdErrors.value.includes('stepIdFormat') && (
+                          <div class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.stepIdFormatError')}</div>
+                        )}
+                        {stepIdErrors.value.includes('stepIdDuplicate') && (
+                          <div class={sharedStyles.fieldErrorMessage}>{t('flow.orchestration.stepIdDuplicateError')}</div>
+                        )}
+                      </>
                     ),
                   }}
                 </FormItem>

@@ -35,6 +35,15 @@ export default defineComponent({
 
     const triggerElements = computed(() => triggerContainer.value?.elements || [])
 
+    const siblingStepIds = computed(() => {
+      const elements = triggerElements.value
+      const editIdx = editingTriggerIndex.value
+      if (editIdx === null) return []
+      return elements
+        .filter((_, idx) => idx !== editIdx && !!elements[idx]?.stepId)
+        .map(el => el.stepId!)
+    })
+
     watch(isTriggerPanelVisible, (visible) => {
       if (!visible) {
         editingTriggerIndex.value = null
@@ -248,6 +257,7 @@ export default defineComponent({
         <TriggerPropertyPanel
           v-model:visible={isTriggerPanelVisible.value}
           element={panelElement.value}
+          siblingStepIds={siblingStepIds.value}
           onSave={handleTriggerSave}
         />
       </div>
