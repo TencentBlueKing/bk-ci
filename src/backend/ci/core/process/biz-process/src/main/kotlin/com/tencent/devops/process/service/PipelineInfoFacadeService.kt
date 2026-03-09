@@ -1801,7 +1801,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val pipelineExist = isPipelineExist(
                     projectId = it.projectId,
                     name = it.name,
-                    channelCode = ChannelCode.GIT,
+                    channelCode = ChannelCode.getRequestChannelCode(),
                     pipelineId = it.pipelineId
                 )
                 if (!pipelineExist) {

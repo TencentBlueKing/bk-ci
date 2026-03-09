@@ -75,7 +75,8 @@ class PipelineWebHookQueueService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId
+                buildId = buildId,
+                eventChannelCode = channelCode
             )
         }
     }
@@ -93,7 +94,8 @@ class PipelineWebHookQueueService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId
+                buildId = buildId,
+                eventChannelCode = channelCode
             )
         }
     }
@@ -102,12 +104,17 @@ class PipelineWebHookQueueService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        eventChannelCode: String? = null
     ) {
         try {
+            val channelCode = eventChannelCode
+                ?.takeIf { it.isNotBlank() }
+                ?.let { runCatching { ChannelCode.valueOf(it) }.getOrNull() }
+                ?: ChannelCode.GIT
             val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
                 userId = userId, projectId = projectId,
-                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
+                pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {

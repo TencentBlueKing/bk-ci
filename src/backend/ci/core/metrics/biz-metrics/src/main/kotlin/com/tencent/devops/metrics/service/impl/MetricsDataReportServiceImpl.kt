@@ -160,8 +160,10 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             }
         }
 
-        // 特殊渠道（BS）的项目构建数统计
-        if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name) {
+        // 特殊渠道（BS/CREATIVE_STREAM）的项目构建数统计
+        if (buildEndPipelineMetricsData.channelCode == ChannelCode.BS.name ||
+            buildEndPipelineMetricsData.channelCode == ChannelCode.CREATIVE_STREAM.name
+        ) {
             watcher.start("saveProjectBuildCount")
             projectBuildSummaryService.saveProjectBuildCount(
                 projectId = projectId,
