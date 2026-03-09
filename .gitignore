@@ -63,4 +63,8 @@ specs/
 .cursorrules
 CODEBUDDY.md
 AGENTS.md
-openspec/
+openspec/*
+!openspec/changes/
+openspec/changes/*
+!openspec/changes/archive/
+!openspec/changes/archive/**
