@@ -60,7 +60,7 @@ data class AtomVersion(
     val htmlTemplateVersion: String,
     @get:Schema(title = "插件类型")
     val atomType: String?,
-    @get:Schema(title = "适用Job类型")
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）")
     val jobType: String?,
     @get:Schema(title = "操作系统")
     val os: List<String>?,

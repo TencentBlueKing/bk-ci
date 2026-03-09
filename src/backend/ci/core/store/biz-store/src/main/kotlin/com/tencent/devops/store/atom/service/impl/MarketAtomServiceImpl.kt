@@ -898,6 +898,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     // 开启插件yml显示
                     yamlFlag = true,
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                    editFlag = marketAtomCommonService.checkEditCondition(atomCode),
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode),
                     serviceScopeConfigs = serviceScopeConfigs
                 )
             )
