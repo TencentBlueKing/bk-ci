@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.version.VersionInfo
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线-流水线插件信息")
@@ -110,6 +110,6 @@ data class PipelineAtom(
     val createTime: Long,
     @get:Schema(title = "插件最后修改时间", required = true)
     val updateTime: Long,
-    @get:Schema(title = "服务范围配置列表（返回所有服务范围的配置）", required = false)
-    val serviceScopeConfigs: List<ServiceScopeConfig>? = null
+    @get:Schema(title = "服务范围详情列表（返回所有服务范围的详情）", required = false)
+    val serviceScopeDetails: List<ServiceScopeDetail>? = null
 )

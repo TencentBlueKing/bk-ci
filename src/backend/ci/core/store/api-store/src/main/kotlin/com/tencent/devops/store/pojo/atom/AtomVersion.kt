@@ -35,7 +35,7 @@ import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.comment.StoreUserCommentInfo
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.pojo.common.ServiceScopeDetail
 import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomVersion(
@@ -126,6 +126,6 @@ data class AtomVersion(
     val honorInfos: List<HonorInfo>? = null,
     @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
-    @get:Schema(title = "服务范围配置列表（当serviceScope不传时返回所有服务范围的配置）", required = false)
-    val serviceScopeConfigs: List<ServiceScopeConfig>? = null
+    @get:Schema(title = "服务范围详情列表（当serviceScope不传时返回所有服务范围的详情）", required = false)
+    val serviceScopeDetails: List<ServiceScopeDetail>? = null
 )

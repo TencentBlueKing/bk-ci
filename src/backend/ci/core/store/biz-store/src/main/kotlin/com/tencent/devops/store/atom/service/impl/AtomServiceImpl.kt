@@ -124,7 +124,7 @@ import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
-import com.tencent.devops.store.pojo.common.ServiceScopeConfig
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.honor.HonorInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
@@ -191,10 +191,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     lateinit var classifyService: ClassifyService
 
     @Autowired
+    lateinit var classifyDao: ClassifyDao
+
+    @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
 
     @Autowired
     lateinit var atomLabelService: AtomLabelService
+
+    @Autowired
+    lateinit var atomServiceScopeUtil: AtomServiceScopeUtil
 
     @Autowired
     lateinit var atomMemberService: AtomMemberServiceImpl
@@ -721,12 +727,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 val jobType = pipelineAtomRecord.jobType
                 
-                // 构建 serviceScopeConfigs（返回所有服务范围的配置信息）
-                val serviceScopeConfigs = buildPipelineAtomServiceScopeConfigs(
+                // 构建 serviceScopeDetails（返回所有服务范围的详情信息）
+                val serviceScopeDetails = atomServiceScopeUtil.buildServiceScopeDetails(
                     atomId = pipelineAtomRecord.id,
-                    pipelineClassifyId = pipelineAtomRecord.classifyId,
                     serviceScopeStr = pipelineAtomRecord.serviceScope,
                     classifyIdMapJson = pipelineAtomRecord.classifyIdMap,
+                    pipelineClassifyIdFallback = pipelineAtomRecord.classifyId,
                     jobTypeValue = pipelineAtomRecord.jobType,
                     jobTypeMapValue = pipelineAtomRecord.jobTypeMap
                 )
@@ -785,7 +791,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(pipelineAtomRecord.visibilityLevel as Int),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
                     updateTime = pipelineAtomRecord.updateTime.timestampmilli(),
-                    serviceScopeConfigs = serviceScopeConfigs
+                    serviceScopeDetails = serviceScopeDetails
                 )
             }
         )
@@ -1476,54 +1482,5 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
-    }
-    
-    /**
-     * 构建 PipelineAtom 的 ServiceScopeConfig 数组（包含所有服务范围的配置信息）
-     *
-     * @param atomId 插件ID
-     * @param pipelineClassifyId PIPELINE 服务范围的分类ID
-     * @param serviceScopeStr SERVICE_SCOPE 字段值（JSON 数组）
-     * @param classifyIdMapJson CLASSIFY_ID_MAP 字段值（JSON 对象）
-     * @param jobTypeValue JOB_TYPE 字段值（PIPELINE 纯字符串）
-     * @param jobTypeMapValue JOB_TYPE_MAP 字段值（完整多 scope JSON）
-     * @return ServiceScopeConfig 列表
-     */
-    private fun buildPipelineAtomServiceScopeConfigs(
-        atomId: String,
-        pipelineClassifyId: String?,
-        serviceScopeStr: String?,
-        classifyIdMapJson: String?,
-        jobTypeValue: String?,
-        jobTypeMapValue: String? = null
-    ): List<ServiceScopeConfig>? {
-        val serviceScopes = AtomServiceScopeUtil.getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
-        return AtomServiceScopeUtil.buildServiceScopeConfigs(
-            serviceScopes = serviceScopes,
-            jobTypeValue = jobTypeValue,
-            jobTypeMapValue = jobTypeMapValue,
-            getClassifyCode = { serviceScopeEnum ->
-                val classifyId = if (serviceScopeEnum == ServiceScopeEnum.PIPELINE) {
-                    pipelineClassifyId
-                } else {
-                    if (!classifyIdMapJson.isNullOrEmpty()) {
-                        try {
-                            val classifyIdMap = JsonUtil.toOrNull(classifyIdMapJson, Map::class.java)
-                            classifyIdMap?.get(serviceScopeEnum.name) as? String
-                        } catch (e: Exception) {
-                            logger.warn("Failed to parse CLASSIFY_ID_MAP: $classifyIdMapJson", e)
-                            null
-                        }
-                    } else {
-                        null
-                    }
-                }
-                classifyId?.let { classifyService.getClassify(it).data?.classifyCode }
-            },
-            getLabelIdList = { serviceScopeEnum ->
-                val scopeLabels = atomLabelService.getLabelsByAtomId(atomId, serviceScopeEnum)
-                scopeLabels?.map { it.id }
-            }
-        )
     }
 }
