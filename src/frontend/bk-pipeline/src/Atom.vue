@@ -221,17 +221,17 @@
                     :disabled="isSkip"
                 />
             </span>
+
+            <!-- Insert atom after button -->
+            <span
+                v-if="reactiveData.editable && !isLastAtom"
+                class="insert-after-btn"
+                @click.stop="handleInsertAfter"
+                v-bk-tooltips="t('insertAfterAtom')"
+            >
+                <Logo name="plus-circle" size="16" />
+            </span>
         </template>
-        
-        <!-- Insert atom after button -->
-        <span
-            v-if="reactiveData.editable && !isLastAtom && !isQualityGateAtom"
-            class="insert-after-btn"
-            @click.stop="handleInsertAfter"
-            v-bk-tooltips="t('insertAfterAtom')"
-        >
-            <Logo name="plus-circle" size="16" />
-        </span>
     </li>
 </template>
 
@@ -972,16 +972,9 @@
     }
   }
   
-  &:not(.readonly):hover {
+  &:hover {
     .insert-after-btn {
       display: flex;
-    }
-  }
-  
-  // Quality gate atoms should not show insert button
-  &.quality-atom {
-    .insert-after-btn {
-      display: none !important;
     }
   }
 }
