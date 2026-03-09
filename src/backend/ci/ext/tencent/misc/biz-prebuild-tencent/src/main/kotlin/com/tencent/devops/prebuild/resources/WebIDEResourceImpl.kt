@@ -57,7 +57,13 @@ class WebIDEResourceImpl @Autowired constructor(private val webIDEService: WebID
         return Result(webIDEService.getUserProject(userId, accessToken))
     }
 
-    override fun getAgentInstallLink(userId: String, projectId: String, zoneName: String, operationSystem: String, initIp: String): Result<ThirdPartyAgentStaticInfo> {
+    override fun getAgentInstallLink(
+        userId: String,
+        projectId: String,
+        zoneName: String,
+        operationSystem: String,
+        initIp: String
+    ): Result<ThirdPartyAgentStaticInfo> {
         return Result(webIDEService.getAgentInstallLink(userId, projectId, operationSystem, zoneName, initIp))
     }
 
