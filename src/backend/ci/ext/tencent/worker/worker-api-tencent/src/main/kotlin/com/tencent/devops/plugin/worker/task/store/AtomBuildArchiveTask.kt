@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.BuildTask
@@ -49,6 +50,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.market.AtomRunConditionFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.nio.file.Paths
 
@@ -60,18 +62,54 @@ class AtomBuildArchiveTask : ITask() {
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
-        val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
+        val buildVariable = buildTask.buildVariable ?: mapOf()
+
+        LoggerService.addNormalLine(
+            "[AtomBuildArchiveTask] buildVariable: " +
+                    "atomCode=${buildVariable["atomCode"]}, " +
+                    "version=${buildVariable["version"]}, " +
+                    "packageName=${buildVariable["packageName"]}, " +
+                    "osName=${buildVariable[KEY_OS_NAME]}, " +
+                    "osArch=${buildVariable[KEY_OS_ARCH]}, " +
+                    "target=${buildVariable["target"]}"
+        )
+
+        // 使用公共方法解析任务参数（包含变量合并、steps.xxx 短格式处理、表达式替换）
+        val resolvedTaskParams = TaskUtil.resolveTaskParams(
+            buildVariables = buildVariables,
+            buildVariable = buildVariable,
+            taskParams = taskParams
+        )
+
+        LoggerService.addNormalLine(
+            "[AtomBuildArchiveTask] resolvedTaskParams: " +
+                    "atomCode=${resolvedTaskParams["atomCode"]}, " +
+                    "version=${resolvedTaskParams["version"]}, " +
+                    "packageName=${resolvedTaskParams["packageName"]}, " +
+                    "destPath=${resolvedTaskParams["destPath"]}, " +
+                    "filePath=${resolvedTaskParams["filePath"]}, " +
+                    "preCmd=${resolvedTaskParams["preCmd"]}, " +
+                    "osName=${resolvedTaskParams[KEY_OS_NAME]}, " +
+                    "osArch=${resolvedTaskParams[KEY_OS_ARCH]}, " +
+                    "target=${resolvedTaskParams["target"]}"
+        )
+
+        val destPath = resolvedTaskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
+        val filePath = resolvedTaskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val buildVariable = buildTask.buildVariable
-        val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
+        val packageName = resolvedTaskParams["packageName"] ?: throw TaskExecuteException(
+            errorMsg = "need packageName param",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+        val atomCode = buildVariable["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
@@ -81,13 +119,8 @@ class AtomBuildArchiveTask : ITask() {
             errorType = ErrorType.USER,
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
-        val packageName = buildVariable["packageName"] ?: throw TaskExecuteException(
-            errorMsg = "need packageName param",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
         val preCmd = buildVariable["preCmd"] ?: ""
-        val target = buildVariable["target"]
+        val target = resolvedTaskParams["target"]
 
         val fileSha = archiveAtom(
             atomCode = atomCode,
@@ -120,8 +153,8 @@ class AtomBuildArchiveTask : ITask() {
                 )
             }
         }
-        val osName = taskParams[KEY_OS_NAME]
-        val osArch = taskParams[KEY_OS_ARCH]
+        val osName = resolvedTaskParams[KEY_OS_NAME]
+        val osArch = resolvedTaskParams[KEY_OS_ARCH]
         val validOsNameFlag = buildVariable[KEY_VALID_OS_NAME_FLAG]?.toBoolean()
         val validOsArchFlag = buildVariable[KEY_VALID_OS_ARCH_FLAG]?.toBoolean()
         val finalOsName = if (validOsNameFlag == true) {
