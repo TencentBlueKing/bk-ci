@@ -530,7 +530,7 @@ class ProjectTagService @Autowired constructor(
         private const val HASH_BUCKET_SIZE = 100L
         private const val BATCH_SIZE = 500
         private const val PAGE_SIZE = 1000
-        const val BLACKLIST_KEY = "project:routing:blacklist"
+        const val BLACKLIST_KEY = "project:percentage:routing:blacklist"
         private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }
 }
