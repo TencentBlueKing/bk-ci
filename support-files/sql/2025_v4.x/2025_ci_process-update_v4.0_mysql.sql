@@ -138,6 +138,16 @@ BEGIN
             COMMENT '构建取消权限策略:EXECUTE_PERMISSION-执行权限用户可取消,RESTRICTED-仅触发人/拥有流水线管理权限可取消';
     END IF;
 
+    -- 为 T_PIPELINE_BUILD_VAR 表添加 SENSITIVE 字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'SENSITIVE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR
+            ADD COLUMN `SENSITIVE` bit(1) DEFAULT NULL COMMENT '是否敏感';
+    END IF;
+
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
@@ -145,6 +155,19 @@ BEGIN
                     AND COLUMN_NAME = 'VALIDATION_DISCREPANCIES') THEN
     ALTER TABLE `T_PIPELINE_TEMPLATE_MIGRATION`
         ADD COLUMN `VALIDATION_DISCREPANCIES` mediumtext COMMENT '验证差异详情(JSON)';
+    END IF;
+
+    -- 为 T_TEMPLATE_INSTANCE_ITEM 表添加流水线版本字段
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_TEMPLATE_INSTANCE_ITEM'
+                    AND COLUMN_NAME = 'BEFORE_PIPELINE_VERSION') THEN
+        ALTER TABLE `T_TEMPLATE_INSTANCE_ITEM`
+            ADD COLUMN `BEFORE_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新前流水线版本',
+            ADD COLUMN `AFTER_PIPELINE_VERSION` int(11) DEFAULT NULL COMMENT '更新后流水线版本',
+            ADD COLUMN `BEFORE_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新前模板版本',
+            ADD COLUMN `AFTER_TEMPLATE_VERSION` bigint(20) DEFAULT NULL COMMENT '更新后模板版本';
     END IF;
 COMMIT;
 

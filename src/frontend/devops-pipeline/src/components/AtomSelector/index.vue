@@ -344,6 +344,7 @@
                 this.activeAtomCode = code
             },
             handleSearch (value) {
+                if (this.fetchingAtomList) return
                 this.searchKey = value.trim()
                 this.freshRequestAtomData()
                 this.fetchAtomList()

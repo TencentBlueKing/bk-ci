@@ -64,6 +64,7 @@ import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.template.validation.PipelineTemplateMigrationValidationService
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.TemplatePublishedVersionInfo
 import com.tencent.devops.store.pojo.template.TemplateVersionInstallHistoryInfo
@@ -72,6 +73,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
@@ -95,6 +97,10 @@ class PipelineTemplateMigrateService(
     val pipelineTemplateRelatedService: PipelineTemplateRelatedService,
     val pipelineTemplateMigrationValidationService: PipelineTemplateMigrationValidationService
 ) {
+
+    @Value("\${pipeline.template.migrateProjectTag:#{null}}")
+    private val migrateProjectTag: String = ""
+
     fun migrateTemplatesByCondition(projectConditionDTO: ProjectConditionDTO) {
         logger.info("start to migrate Templates by condition|$projectConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
@@ -150,6 +156,7 @@ class PipelineTemplateMigrateService(
             projectId = projectId,
             status = MigrationStatus.IN_PROGRESS
         )
+        redisOperation.sadd(TEMPLATE_MIGRATE_REDIS_KEY, projectId)
 
         var result: MigrationResult? = null
         var cleanupStats: CleanupStats? = null
@@ -167,8 +174,9 @@ class PipelineTemplateMigrateService(
                 projectId, ex.message, ex
             )
         } finally {
-            // 5. 记录最终结果（迁移无报错 + 验证通过 = 成功）
+            // 记录最终结果（迁移无报错 + 验证通过 = 成功）
             recordFinalMigrationStatusWithValidation(projectId, startTime, result, cleanupStats)
+            redisOperation.sremove(TEMPLATE_MIGRATE_REDIS_KEY, projectId)
         }
     }
 
@@ -238,6 +246,13 @@ class PipelineTemplateMigrateService(
             afterTemplateCount = afterCount,
             validationDiscrepancies = validationDiscrepancies
         )
+        // 迁移成功,设置项目路由tag
+        if (finalStatus == MigrationStatus.SUCCESS && migrateProjectTag.isNotBlank()) {
+            client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
+                projectCode = projectId,
+                tag = migrateProjectTag
+            )
+        }
 
         logger.info(
             "Migration for projectId {} finished with status: {}. Validation passed: {}. Total time: {}ms. " +
@@ -953,5 +968,6 @@ class PipelineTemplateMigrateService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateMigrateService::class.java)
         private val migrateProjectTemplateExecutorService = Executors.newFixedThreadPool(5)
+        private const val TEMPLATE_MIGRATE_REDIS_KEY = "pipeline:template:migrate"
     }
 }
