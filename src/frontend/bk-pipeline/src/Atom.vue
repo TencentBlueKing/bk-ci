@@ -223,14 +223,13 @@
             </span>
 
             <!-- Insert atom after button -->
-            <span
+            <i
                 v-if="reactiveData.editable && !isLastAtom"
-                class="insert-after-btn"
+                class="add-plus-icon insert-after"
                 @click.stop="handleInsertAfter"
                 v-bk-tooltips="t('insertAfterAtom')"
             >
-                <Logo name="plus-circle" size="16" />
-            </span>
+            </i>
         </template>
     </li>
 </template>
@@ -948,33 +947,25 @@
   }
   
   // Insert after button
-  .insert-after-btn {
+  .add-plus-icon.insert-after {
+    @include add-plus-icon($primaryColor, $primaryColor, white, 18px, true);
+    @include add-plus-icon-hover($primaryColor, $primaryColor, white);
     display: none;
     position: absolute;
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: $primaryColor;
-    color: white;
     cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
     z-index: 10;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
     &:hover {
-      transform: translateX(-50%) scale(1.15);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateX(-50%) scale(1.1);
     }
   }
   
   &:hover {
-    .insert-after-btn {
-      display: flex;
+    .add-plus-icon.insert-after {
+      display: block;
     }
   }
 }
