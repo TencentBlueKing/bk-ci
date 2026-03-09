@@ -222,6 +222,16 @@
                 />
             </span>
         </template>
+        
+        <!-- Insert atom after button -->
+        <span
+            v-if="reactiveData.editable && !isLastAtom && !isQualityGateAtom"
+            class="insert-after-btn"
+            @click.stop="handleInsertAfter"
+            v-bk-tooltips="t('insertAfterAtom')"
+        >
+            <Logo name="plus-circle" size="16" />
+        </span>
     </li>
 </template>
 
@@ -577,6 +587,11 @@
                     elementIndex: this.atomIndex
                 })
             },
+            handleInsertAfter () {
+                this.$emit('insert-after', {
+                    elementIndex: this.atomIndex
+                })
+            },
             async atomExecute (isContinue = false) {
                 if (this.isBusy || !this.hasExecPerm) return
 
@@ -929,6 +944,44 @@
         height: 24px;
         top: -23px;
       }
+    }
+  }
+  
+  // Insert after button
+  .insert-after-btn {
+    display: none;
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: $primaryColor;
+    color: white;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      transform: translateX(-50%) scale(1.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  &:not(.readonly):hover {
+    .insert-after-btn {
+      display: flex;
+    }
+  }
+  
+  // Quality gate atoms should not show insert button
+  &.quality-atom {
+    .insert-after-btn {
+      display: none !important;
     }
   }
 }
