@@ -23,6 +23,10 @@ object ActionId {
     // 创作流
     const val CREATIVE_STREAM_EXECUTE = "creative_stream_execute"
 
+    // 创作流节点
+    const val CREATIVE_STREAM_NODE_VIEW = "creative_stream_node_view"
+    const val CREATIVE_STREAM_NODE_EDIT = "creative_stream_node_edit"
+
     // 流水线组
     const val PIPELINE_GROUP_CREATE = "pipeline_group_create"
     const val PIPELINE_GROUP_EDIT = "pipeline_group_edit"

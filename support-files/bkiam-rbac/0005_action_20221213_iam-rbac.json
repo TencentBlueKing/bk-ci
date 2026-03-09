@@ -4040,6 +4040,61 @@
         ],
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_node_view",
+        "name": "查看创作流节点",
+        "name_en": "Creative Stream Node View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "creative_stream_node_edit",
+        "name": "编辑创作流节点",
+        "name_en": "Creative Stream Node Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "creative_stream_node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "creative_stream_node_view"
+        ],
+        "version": 1
+      }
     }
   ]
 }

@@ -428,6 +428,24 @@
           }
         ]
       }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "creative_stream_node_instance",
+        "name": "创作流节点",
+        "name_en": "Creative Stream Node",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "creative_stream_node"
+          }
+        ]
+      }
     }
   ]
 }
