@@ -25,6 +25,7 @@
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         }"
