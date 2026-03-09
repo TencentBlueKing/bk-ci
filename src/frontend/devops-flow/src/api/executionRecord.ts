@@ -106,7 +106,7 @@ export interface ExecutionRecord {
   checked: boolean
   status: string
   stageStatus: StageStatusStep[]
-  workflowNode: string
+  nodeName: string
   triggerAndUser: string
   triggerTime: string
   startTime: string
@@ -187,7 +187,7 @@ function convertBuildRecordToExecutionRecord(record: BuildRecord): ExecutionReco
     checked: false,
     status: record.status || 'UNKNOWN',
     stageStatus,
-    workflowNode: record.material?.[0]?.branchName || '--',
+    nodeName: record.nodeName || '',
     triggerAndUser,
     triggerTime: convertTime(record.queueTime || 0),
     startTime: convertTime(record.startTime || 0),

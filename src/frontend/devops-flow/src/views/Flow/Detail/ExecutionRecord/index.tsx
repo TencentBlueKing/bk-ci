@@ -507,10 +507,11 @@ export default defineComponent({
 
     // 渲染函数
     const renderStageStatus = (stages: ExecutionRecord['stageStatus'], buildId: string) => {
-      if (!stages || stages.length === 0) {
+      const stageWithoutTrigger = stages.slice(1)
+      if (!stageWithoutTrigger || stageWithoutTrigger.length === 0) {
         return <span>--</span>
       }
-      return <StageSteps steps={stages} buildId={buildId} />
+      return <StageSteps steps={stageWithoutTrigger} buildId={buildId} />
     }
 
     const renderRemark = (row: ExecutionRecord) => {
