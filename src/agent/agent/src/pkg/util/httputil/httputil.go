@@ -38,6 +38,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
@@ -68,11 +69,55 @@ type HttpResult struct {
 	IgnoreDupLog bool
 }
 
-var client = &http.Client{}
+var client = newClientWithProxy()
 
 // newClient 替换客户端，重置连接池
 func newClient() {
-	client = &http.Client{}
+	client = newClientWithProxy()
+}
+
+// newClientWithProxy 创建带代理感知的 HTTP 客户端。
+// Transport.Proxy 使用闭包函数，每次请求时实时从 envs.FetchEnv 读取
+// HTTP_PROXY / HTTPS_PROXY，支持后台下发环境变量动态切换代理。
+func newClientWithProxy() *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = proxyFromAgentEnv
+	return &http.Client{Transport: transport}
+}
+
+// proxyFromAgentEnv 根据请求 scheme 从 agent 环境变量中读取代理配置。
+// 优先读取后台下发的环境变量（通过 envs.FetchEnv），读不到则 fallback 到
+// 标准库 http.ProxyFromEnvironment（读取 os 环境变量）。
+func proxyFromAgentEnv(req *http.Request) (*url.URL, error) {
+	var proxyURL string
+
+	if req.URL.Scheme == "https" {
+		if v, ok := envs.FetchEnv("HTTPS_PROXY"); ok && v != "" {
+			proxyURL = v
+		}
+	}
+	if proxyURL == "" {
+		if v, ok := envs.FetchEnv("HTTP_PROXY"); ok && v != "" {
+			proxyURL = v
+		}
+	}
+
+	if proxyURL == "" {
+		return http.ProxyFromEnvironment(req)
+	}
+
+	if !strings.Contains(proxyURL, "://") {
+		proxyURL = "http://" + proxyURL
+	}
+
+	parsed, err := url.Parse(proxyURL)
+	if err != nil {
+		logs.Errorf("invalid proxy url %s: %s, fallback to ProxyFromEnvironment", proxyURL, err)
+		return http.ProxyFromEnvironment(req)
+	}
+
+	logs.Infof("using proxy %s for %s", parsed.Redacted(), req.URL.Host)
+	return parsed, nil
 }
 
 func NewHttpClient() *HttpClient {

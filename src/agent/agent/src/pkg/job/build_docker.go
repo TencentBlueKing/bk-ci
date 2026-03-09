@@ -296,9 +296,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		netConfig = nil
 	}
 
-	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); !ok {
-		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
-	} else if strings.TrimSpace(v) != "" {
+	if v, ok := envs.FetchEnv(constant.DevopsAgentDockerCapAdd); ok && strings.TrimSpace(v) != "" {
 		hostConfig.CapAdd = append(hostConfig.CapAdd, v)
 	}
 

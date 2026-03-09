@@ -34,14 +34,14 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
 	"github.com/pkg/errors"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/upgrade/download"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 // DockerFileMd5 缓存，用来计算md5
@@ -103,6 +103,7 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		return
 	}
 	defer func() {
+		job.BuildTotalManager.Upgrading.Store(false)
 		job.BuildTotalManager.Lock.Unlock()
 	}()
 	if job.CheckRunningJob() {
@@ -114,6 +115,8 @@ func AgentUpgrade(upgradeItem *api.UpgradeItem, hasBuild bool) {
 		)
 		return
 	}
+
+	job.BuildTotalManager.Upgrading.Store(true)
 
 	// 下载升级文件
 	logs.Infof("agentUpgrade|download upgrade files start %+v", upItems)

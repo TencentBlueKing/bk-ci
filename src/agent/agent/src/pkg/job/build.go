@@ -35,6 +35,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/third_components"
@@ -43,18 +44,21 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/httputil"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/utils/fileutil"
 )
 
 type BuildTotalManagerType struct {
 	// Lock 多协程修改时的执行锁，这个锁主要用来判断当前是否还有任务，所以添加了任务就可以解锁了
 	Lock sync.Mutex
+	// Upgrading 标识升级流程是否正在进行中，升级持锁期间置 true，
+	// 供 Ask 轮询阶段判断是否跳过构建任务请求，防止升级重启时阻塞的构建任务丢失
+	Upgrading atomic.Bool
 }
 
 var BuildTotalManager *BuildTotalManagerType
@@ -116,7 +120,7 @@ func DoBuild(buildInfo *api.ThirdPartyBuildInfo) {
 type buildSlotType int
 
 const (
-	buildTypeNone   buildSlotType = iota
+	buildTypeNone buildSlotType = iota
 	buildTypeDocker
 	buildTypeNormal
 )

@@ -82,6 +82,9 @@ func genAskEnable() api.AskEnable {
 }
 
 func checkBuildType() api.BuildJobType {
+	if job.BuildTotalManager.Upgrading.Load() {
+		return api.NoneBuildType
+	}
 	dockerCanRun, normalCanRun := job.CheckParallelTaskCount()
 	if !dockerCanRun && !normalCanRun {
 		return api.NoneBuildType
@@ -96,12 +99,14 @@ func checkBuildType() api.BuildJobType {
 }
 
 func checkUpgrade() bool {
-	// debug模式下关闭升级，方便调试问题
 	if config.IsDebug {
 		logs.Debug("debug no upgrade")
 		return false
 	}
 	if job.CheckRunningJob() {
+		return false
+	}
+	if job.BuildTotalManager.Upgrading.Load() {
 		return false
 	}
 	return true

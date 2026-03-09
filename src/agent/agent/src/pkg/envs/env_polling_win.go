@@ -78,55 +78,6 @@ func regCloseKey(hKey uintptr) {
 	regCloseKey.Call(hKey)
 }
 
-// // regQueryValueEx 读取注册表值
-// func regQueryValueEx(hKey uintptr, valueName string) (string, error) {
-// 	advapi32 := syscall.NewLazyDLL("advapi32.dll")
-// 	regQueryValueEx := advapi32.NewProc("RegQueryValueExW")
-
-// 	valueNamePtr, err := syscall.UTF16PtrFromString(valueName)
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	var dataType uint32
-// 	var dataSize uint32
-
-// 	// 先查询需要的缓冲区大小
-// 	ret, _, _ := regQueryValueEx.Call(
-// 		hKey,
-// 		uintptr(unsafe.Pointer(valueNamePtr)),
-// 		0,
-// 		uintptr(unsafe.Pointer(&dataType)),
-// 		0,
-// 		uintptr(unsafe.Pointer(&dataSize)),
-// 	)
-
-// 	if ret != 0 && ret != 234 { // 234 = ERROR_MORE_DATA
-// 		return "", nil
-// 	}
-
-// 	if dataSize == 0 {
-// 		return "", nil
-// 	}
-
-// 	// 分配缓冲区并读取数据
-// 	data := make([]uint16, dataSize/2+1)
-// 	ret, _, _ = regQueryValueEx.Call(
-// 		hKey,
-// 		uintptr(unsafe.Pointer(valueNamePtr)),
-// 		0,
-// 		uintptr(unsafe.Pointer(&dataType)),
-// 		uintptr(unsafe.Pointer(&data[0])),
-// 		uintptr(unsafe.Pointer(&dataSize)),
-// 	)
-
-// 	if ret != 0 {
-// 		return "", fmt.Errorf("RegQueryValueEx failed: %d", ret)
-// 	}
-
-// 	return syscall.UTF16ToString(data), nil
-// }
-
 // regEnumValue 枚举注册表值
 func regEnumValue(hKey uintptr, index uint32) (name string, value string, err error) {
 	advapi32 := syscall.NewLazyDLL("advapi32.dll")
@@ -232,85 +183,39 @@ func getAllEnvFromRegistry() envSnapshot {
 
 	// 再处理用户的
 	for name, value := range snapshot.User {
-		// 检查是否是PATH变量(不区分大小写)
-		upperName := strings.ToUpper(name)
-		if upperName == "PATH" {
-			// PATH特殊处理: 用户PATH + 系统PATH
-			systemPath := snapshot.System[name]
-			if systemPath == "" {
-				// 没有系统PATH,只用用户PATH
-				snapshot.Merged[name] = envValue{
-					Value:  value,
-					Source: User,
+		if strings.ToUpper(name) == "PATH" {
+			// PATH特殊处理: 不区分大小写查找系统PATH并合并
+			systemPath, systemPathKey := "", ""
+			for sysKey, sysVal := range snapshot.System {
+				if strings.ToUpper(sysKey) == "PATH" {
+					systemPath = sysVal
+					systemPathKey = sysKey
+					break
 				}
+			}
+
+			if systemPath == "" {
+				snapshot.Merged[name] = envValue{Value: value, Source: User}
 			} else {
-				// 合并: 用户PATH + ";" + 系统PATH
 				mergedPath := value
-				if !strings.HasSuffix(mergedPath, ";") && systemPath != "" {
+				if !strings.HasSuffix(mergedPath, ";") {
 					mergedPath += ";"
 				}
 				mergedPath += systemPath
 
-				snapshot.Merged[name] = envValue{
-					Value:  mergedPath,
-					Source: Merge,
+				// 删除系统阶段可能以不同大小写存入的PATH条目
+				if systemPathKey != name {
+					delete(snapshot.Merged, systemPathKey)
 				}
+				snapshot.Merged[name] = envValue{Value: mergedPath, Source: Merge}
 			}
 		} else {
-			// 其他变量: 用户覆盖系统
-			snapshot.Merged[name] = envValue{
-				Value:  value,
-				Source: User,
-			}
+			snapshot.Merged[name] = envValue{Value: value, Source: User}
 		}
 	}
 
 	return snapshot
 }
-
-// // getEnvFromRegistry 从注册表读取指定环境变量(按Windows规则)
-// func getEnvFromRegistry(name string) (value string, source envValueSourceType) {
-// 	upperName := strings.ToUpper(name)
-
-// 	// 读取用户环境变量
-// 	userVal := ""
-// 	hKey, err := regOpenKeyEx(HKEY_CURRENT_USER, "Environment", 0, KEY_READ)
-// 	if err == nil {
-// 		defer regCloseKey(hKey)
-// 		if val, err := regQueryValueEx(hKey, name); err == nil {
-// 			userVal = val
-// 		}
-// 	}
-
-// 	// 读取系统环境变量
-// 	systemVal := ""
-// 	hKey, err = regOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", 0, KEY_READ)
-// 	if err == nil {
-// 		defer regCloseKey(hKey)
-// 		if val, err := regQueryValueEx(hKey, name); err == nil {
-// 			systemVal = val
-// 		}
-// 	}
-
-// 	// 合并规则
-// 	if upperName == "PATH" {
-// 		if userVal != "" && systemVal != "" {
-// 			return userVal + ";" + systemVal, Merge
-// 		} else if userVal != "" {
-// 			return userVal, User
-// 		} else if systemVal != "" {
-// 			return systemVal, System
-// 		}
-// 	} else {
-// 		if userVal != "" {
-// 			return userVal, User
-// 		} else if systemVal != "" {
-// 			return systemVal, System
-// 		}
-// 	}
-
-// 	return "", ""
-// }
 
 type EnvChangeOperationType string
 
@@ -343,14 +248,13 @@ func NewEnvPollingWatcher(interval time.Duration) *EnvPollingWatcher {
 	}
 }
 
-func (w *EnvPollingWatcher) Start() error {
+func (w *EnvPollingWatcher) Start() {
 	w.snapshotLock.Lock()
 	w.lastSnapshot = getAllEnvFromRegistry()
 	mergedCount := len(w.lastSnapshot.Merged)
 	w.snapshotLock.Unlock()
 	logs.Infof("env polling init envs %d", mergedCount)
-	w.poll()
-	return nil
+	go w.poll()
 }
 
 func (w *EnvPollingWatcher) poll() {
@@ -427,12 +331,7 @@ var watcher *EnvPollingWatcher = nil
 
 func InitEnvPolling() {
 	watcher = NewEnvPollingWatcher(3 * time.Second)
-	if err := watcher.Start(); err != nil {
-		logs.WithError(err).Error("start env polling error")
-		return
-	}
-	defer watcher.Stop()
-	logs.Info("env polling stop")
+	watcher.Start()
 }
 
 func FetchEnvFromPolling() map[string]string {
