@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -89,6 +90,8 @@ class ParamFacadeService @Autowired constructor(
                 filterParams.add(addSubPipelineProperties(userId, projectId, pipelineId, it))
             } else if (it.type == BuildFormPropertyType.REPO_REF) {
                 filterParams.add(addRepoRefs(projectId, it))
+            } else if (it.type == BuildFormPropertyType.CUSTOM_PARAM) {
+                filterParams.add(addCustomParam(projectId, it))
             } else {
                 filterParams.add(it)
             }
@@ -346,7 +349,8 @@ class ParamFacadeService @Autowired constructor(
             displayCondition = property.displayCondition,
             asInstanceInput = property.asInstanceInput,
             sensitive = property.sensitive,
-            constant = property.constant
+            constant = property.constant,
+            children = property.children
         )
     }
 
@@ -430,6 +434,28 @@ class ParamFacadeService @Autowired constructor(
             it.cascadeProps = RepoRefCascadeParam().getProps(
                 projectId = projectId,
                 prop = formProperty
+            )
+            it
+        }
+    }
+
+    /**
+     * 自定义参数处理
+     */
+    private fun addCustomParam(
+        projectId: String,
+        formProperty: BuildFormProperty
+    ): BuildFormProperty {
+        return copyFormProperty(
+            property = formProperty,
+            options = listOf()
+        ).let {
+            // 目前自定义参数仅处理一层参数列表，暂不考虑递归情况
+            it.defaultValue = JsonUtil.toJson(
+                it.children?.associate {
+                    it.id to it.defaultValue.toString()
+                } ?: "",
+                false
             )
             it
         }

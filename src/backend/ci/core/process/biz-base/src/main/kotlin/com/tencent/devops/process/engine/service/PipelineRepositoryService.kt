@@ -72,6 +72,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.YamlWithVersion
 import com.tencent.devops.common.pipeline.utils.CascadePropertyUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import com.tencent.devops.common.pipeline.utils.PipelineParamUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
@@ -2488,21 +2489,8 @@ class PipelineRepositoryService constructor(
      */
     fun getTriggerParams(triggerContainer: TriggerContainer): Map<String, String> {
         val startParams = mutableMapOf<String, String>()
-        triggerContainer.params.forEach { param ->
-            val paramKey = param.id
-            val paramDefaultValue = param.defaultValue
-            val paramType = param.type
-            if (CascadePropertyUtils.supportCascadeParam(paramType)) {
-                CascadePropertyUtils.parseDefaultValue(
-                    key = paramKey,
-                    defaultValue = paramDefaultValue,
-                    type = paramType
-                ).forEach {
-                    startParams["$paramKey.${it.key}"] = it.value
-                }
-            } else {
-                startParams[paramKey] = paramDefaultValue.toString()
-            }
+        triggerContainer.params.forEach {
+            startParams.putAll(PipelineParamUtils.parseDefaultValue(it))
         }
         // 填充前缀
         return PipelineVarUtil.fillVariableMap(startParams)
