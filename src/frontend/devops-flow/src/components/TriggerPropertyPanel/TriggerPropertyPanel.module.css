@@ -198,15 +198,13 @@
   margin-bottom: var(--spacing-xs);
 }
 
-.fieldRow {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-lg);
-  background-color: var(--bg-secondary);
-  gap: var(--spacing-md);
+.stepIdError :global(.bk-input) {
+  border-color: var(--color-danger) !important;
 }
 
-.fieldRow.disabled {
-  opacity: 0.6;
-  pointer-events: none;
+.fieldErrorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  margin-top: 4px;
+  line-height: 1.4;
 }

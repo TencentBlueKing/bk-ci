@@ -555,6 +555,8 @@
       "preStageFail": "Run when previous Stage fails",
       "preStageCancel": "Run when previous Stage is canceled",
       "stepIdPlaceholder": "Please enter Step ID, optional, must be unique within the current Job if not empty",
+      "stepIdFormatError": "Must begin with a letter or underscore, and only contain letters, numbers, and underscores",
+      "stepIdDuplicateError": "Step ID is duplicated within the current Job",
       "jobNamePlaceholder": "Please enter Job name",
       "dependOn": "Depend on Previous Job",
       "dependOnDesc": "This Job will start after all dependent Jobs succeed",

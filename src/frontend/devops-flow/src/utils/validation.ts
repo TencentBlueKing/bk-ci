@@ -55,6 +55,30 @@ export function validateAdditionalOptions(options?: AdditionalOptions): string[]
   return errors
 }
 
+const STEP_ID_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+/**
+ * Validate a stepId for format and uniqueness within the same Job.
+ * Returns a list of error keys (empty = valid).
+ * @param stepId - The stepId to validate
+ * @param siblingStepIds - stepIds of other elements in the same container (excluding current)
+ */
+export function validateStepId(stepId: string | undefined, siblingStepIds: string[]): string[] {
+  if (!stepId) return []
+
+  const errors: string[] = []
+
+  if (!STEP_ID_PATTERN.test(stepId)) {
+    errors.push('stepIdFormat')
+  }
+
+  if (siblingStepIds.includes(stepId)) {
+    errors.push('stepIdDuplicate')
+  }
+
+  return errors
+}
+
 /**
  * Validate an atom element's required fields against its atom modal definition,
  * including additionalOptions validation.
