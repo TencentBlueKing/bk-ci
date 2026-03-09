@@ -35,7 +35,8 @@ class VoiceNotifier @Autowired constructor(
         val rawContent = NotifierUtils.replaceNotifyKeywordByChannel(voiceTplRecord.content, language)
         val finalTaskName = NotifierUtils.replaceContentParams(request.titleParams, rawTaskName)
         val finalContent = NotifierUtils.replaceContentParams(request.bodyParams, rawContent)
-        logger.info("send voice msg , ${commonNotifyMessageTemplateRecord.id} , taskName:$finalTaskName , content:$finalContent")
+        logger.info("send voice msg , ${commonNotifyMessageTemplateRecord.id} , taskName:$finalTaskName , " +
+                "content:$finalContent")
 
         val message = VoiceNotifyMessage()
         message.receivers = request.receivers
