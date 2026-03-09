@@ -81,7 +81,7 @@ data class Model(
     val resources: Resources? = null,
     @get:Schema(title = "实例化模版信息", required = true)
     var template: TemplateInstanceDescriptor? = null,
-    @get:Schema(title = "流水线覆盖模版的字段", required = false)
+    @get:Schema(title = "实例化流水线自定义的参数、触发器和设置", required = false)
     var overrideTemplateField: TemplateInstanceField? = null
 ) : ITemplateModel {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
