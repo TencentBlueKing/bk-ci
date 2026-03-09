@@ -469,25 +469,23 @@ class MarketAtomDao : AtomBaseDao() {
         props: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ) {
-        // 获取当前记录，用于保留现有的 CLASSIFY_ID_MAP
         val currentRecord = getAtomRecordById(dslContext, id)
-        
-        // 从 serviceScopeConfigs 构建 jobTypeMap
+
         val serviceScopeConfigs: List<ServiceScopeConfig> = marketAtomUpdateRequest.toServiceScopeConfigs()
-        val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
-        
-        // 构建 CLASSIFY_ID_MAP（支持多服务范围）
+        val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
+
         val classifyIdMap = buildClassifyIdMap(
             dslContext = dslContext,
-            classifyCode = marketAtomUpdateRequest.classifyCode,
             serviceScopeConfigs = serviceScopeConfigs,
             currentClassifyIdMap = currentRecord?.classifyIdMap
         )
-        
-        // 获取 PIPELINE 服务范围的分类ID（用于 CLASSIFY_ID 字段）
+
+        val pipelineClassifyCode = serviceScopeConfigs
+            .firstOrNull { it.serviceScope == ServiceScopeEnum.PIPELINE }?.classifyCode
+            ?: marketAtomUpdateRequest.classifyCode
         val classifyId = getClassifyIdByCode(
             dslContext = dslContext,
-            classifyCode = marketAtomUpdateRequest.classifyCode,
+            classifyCode = pipelineClassifyCode,
             serviceScope = ServiceScopeEnum.PIPELINE
         ) ?: classifyIdMap?.get(ServiceScopeEnum.PIPELINE.name)
         
@@ -518,9 +516,12 @@ class MarketAtomDao : AtomBaseDao() {
                 baseStep.set(CLASSIFY_ID_MAP, JsonUtil.toJson(it, formatted = false))
             }
             
-            // 更新 jobType（支持多服务范围）
-            jobTypeValue?.let {
+            // 更新 JOB_TYPE（PIPELINE 纯字符串）和 JOB_TYPE_MAP（完整多 scope JSON）
+            jobTypeResult.pipelineJobType?.let {
                 baseStep.set(JOB_TYPE, it)
+            }
+            jobTypeResult.jobTypeMapJson?.let {
+                baseStep.set(JOB_TYPE_MAP, it)
             }
             // 更新 SERVICE_SCOPE（服务范围列表 JSON）
             val serviceScopeJson = JsonUtil.toJson(
@@ -533,25 +534,17 @@ class MarketAtomDao : AtomBaseDao() {
     }
     
     /**
-     * 构建 CLASSIFY_ID_MAP
-     * 
-     * @param dslContext DSL上下文
-     * @param classifyCode 分类代码
-     * @param serviceScopeConfigs 服务范围配置列表
-     * @param currentClassifyIdMap 当前记录的 CLASSIFY_ID_MAP JSON 字符串
-     * @return 分类ID映射 Map<String, String>，key 为服务范围名称，value 为分类ID
+     * 构建 CLASSIFY_ID_MAP：从 serviceScopeConfigs 中每个 config 的 classifyCode 查询分类ID。
      */
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
-        classifyCode: String?,
         serviceScopeConfigs: List<ServiceScopeConfig>?,
         currentClassifyIdMap: String?
     ): Map<String, String>? {
-        if (classifyCode.isNullOrEmpty() || serviceScopeConfigs.isNullOrEmpty()) {
+        if (serviceScopeConfigs.isNullOrEmpty()) {
             return null
         }
-        
-        // 解析现有的 CLASSIFY_ID_MAP（如果存在），保留其他服务范围的分类ID
+
         val existingMap = try {
             if (!currentClassifyIdMap.isNullOrEmpty()) {
                 JsonUtil.toMap(currentClassifyIdMap) as? Map<String, String>
@@ -561,21 +554,19 @@ class MarketAtomDao : AtomBaseDao() {
         } catch (e: Exception) {
             null
         } ?: mutableMapOf()
-        
-        // 为每个服务范围查询对应的分类ID
+
         val classifyIdMap = existingMap.toMutableMap()
         for (config in serviceScopeConfigs) {
-            val serviceScope = config.serviceScope
             val classifyId = getClassifyIdByCode(
                 dslContext = dslContext,
-                classifyCode = classifyCode,
-                serviceScope = serviceScope
+                classifyCode = config.classifyCode,
+                serviceScope = config.serviceScope
             )
             classifyId?.let {
-                classifyIdMap[serviceScope.name] = it
+                classifyIdMap[config.serviceScope.name] = it
             }
         }
-        
+
         return classifyIdMap.ifEmpty { null }
     }
 
@@ -589,22 +580,33 @@ class MarketAtomDao : AtomBaseDao() {
         atomRecord: TAtomRecord,
         atomRequest: MarketAtomUpdateRequest
     ) {
-        // 使用公共方法查询分类ID
+        val serviceScopeConfigs: List<ServiceScopeConfig> = atomRequest.toServiceScopeConfigs()
+
+        val pipelineClassifyCode = serviceScopeConfigs
+            .firstOrNull { it.serviceScope == ServiceScopeEnum.PIPELINE }?.classifyCode
+            ?: atomRequest.classifyCode
         val classifyId = getClassifyIdByCode(
             dslContext = dslContext,
-            classifyCode = atomRequest.classifyCode,
+            classifyCode = pipelineClassifyCode,
             serviceScope = ServiceScopeEnum.PIPELINE
-        )
-        
-        // 从 serviceScopeConfigs 构建 jobTypeMap 和 SERVICE_SCOPE
-        val serviceScopeConfigs: List<ServiceScopeConfig> = atomRequest.toServiceScopeConfigs()
-        val currentJobType = atomRecord.jobType  // 使用旧记录的 JOB_TYPE 原始值作为默认（可为纯字符串或 JSON，保留多 scope）
-        val jobTypeValue = AtomJobTypeUtil.buildJobTypeMap(serviceScopeConfigs, currentJobType)
+        ) ?: atomRecord.classifyId
+
+        val currentJobType = atomRecord.jobType
+        val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, currentJobType)
+        val currentJobTypeMap = atomRecord.jobTypeMap
         val serviceScopeJson = JsonUtil.toJson(
             serviceScopeConfigs.map { it.serviceScope.name },
             formatted = false
         )
-        
+
+        val classifyIdMap = buildClassifyIdMap(
+            dslContext = dslContext,
+            serviceScopeConfigs = serviceScopeConfigs,
+            currentClassifyIdMap = atomRecord.classifyIdMap
+        )
+        val classifyIdMapJson = classifyIdMap?.let { JsonUtil.toJson(it, formatted = false) }
+            ?: atomRecord.classifyIdMap
+
         with(TAtom.T_ATOM) {
             dslContext.insertInto(
                 this,
@@ -613,8 +615,10 @@ class MarketAtomDao : AtomBaseDao() {
                 ATOM_CODE,
                 SERVICE_SCOPE,
                 JOB_TYPE,
+                JOB_TYPE_MAP,
                 OS,
                 CLASSIFY_ID,
+                CLASSIFY_ID_MAP,
                 DOCS_LINK,
                 ATOM_TYPE,
                 ATOM_STATUS,
@@ -647,10 +651,11 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.name,
                     atomRecord.atomCode,
                     serviceScopeJson,
-                    // 使用构建的 jobTypeMap（支持多服务范围）
-                    jobTypeValue ?: currentJobType,
+                    jobTypeResult.pipelineJobType ?: currentJobType,
+                    jobTypeResult.jobTypeMapJson ?: currentJobTypeMap,
                     JsonUtil.toJson(atomRequest.os, formatted = false),
                     classifyId,
+                    classifyIdMapJson,
                     atomRecord.docsLink,
                     atomRecord.atomType,
                     atomStatus.status.toByte(),
@@ -801,7 +806,8 @@ class MarketAtomDao : AtomBaseDao() {
             tAtom.VISIBILITY_LEVEL,
             tAtom.PRIVATE_REASON,
             tAtom.SERVICE_SCOPE,
-            tAtom.CLASSIFY_ID_MAP
+            tAtom.CLASSIFY_ID_MAP,
+            tAtom.JOB_TYPE_MAP
         )
             .from(tAtom)
             .leftJoin(tAtomVersionLog)

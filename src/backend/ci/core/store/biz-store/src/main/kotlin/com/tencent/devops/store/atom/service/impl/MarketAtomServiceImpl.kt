@@ -909,7 +909,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 分类代码通过 record 解析 scope→classifyId 后一次批量查询 T_CLASSIFY，避免按 scope 多次 getAtomById。
      *
      * @param atomId 插件ID
-     * @param record 基础查询记录（须含 CLASSIFY_ID、CLASSIFY_ID_MAP、SERVICE_SCOPE、JOB_TYPE）
+     * @param record 基础查询记录（须含 CLASSIFY_ID、CLASSIFY_ID_MAP、SERVICE_SCOPE、JOB_TYPE、JOB_TYPE_MAP）
      * @param tAtom TAtom 表
      * @return ServiceScopeConfig 列表
      */
@@ -921,7 +921,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val serviceScopeStr = record[tAtom.SERVICE_SCOPE]
         val classifyIdMapJson = record[tAtom.CLASSIFY_ID_MAP]
         val jobTypeValue = record[tAtom.JOB_TYPE]
-        // 流水线 scope 的分类 ID：优先从 CLASSIFY_ID_MAP 解析，无则用 T_ATOM.CLASSIFY_ID（遗留字段，仅表示流水线）
+        val jobTypeMapValue = record[tAtom.JOB_TYPE_MAP]
         val pipelineClassifyIdFallback = record[tAtom.CLASSIFY_ID]?.toString()
         val serviceScopes = AtomServiceScopeUtil.getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
         if (serviceScopes.isEmpty()) return null
@@ -935,6 +935,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return AtomServiceScopeUtil.buildServiceScopeConfigs(
             serviceScopes = serviceScopes,
             jobTypeValue = jobTypeValue,
+            jobTypeMapValue = jobTypeMapValue,
             getClassifyCode = { scope -> scopeToClassifyId[scope.name]?.let { classifyCodesById[it] } },
             getLabelIdList = { scope ->
                 atomLabelService.getLabelsByAtomId(atomId, scope)?.map { it.id }

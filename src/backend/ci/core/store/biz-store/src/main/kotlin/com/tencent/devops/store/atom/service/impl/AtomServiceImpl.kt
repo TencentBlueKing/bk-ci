@@ -67,6 +67,7 @@ import com.tencent.devops.store.atom.service.AtomLabelService
 import com.tencent.devops.store.atom.service.AtomService
 import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.atom.util.AtomServiceScopeUtil
+import com.tencent.devops.store.util.ServiceScopeUtil
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
@@ -726,7 +727,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     pipelineClassifyId = pipelineAtomRecord.classifyId,
                     serviceScopeStr = pipelineAtomRecord.serviceScope,
                     classifyIdMapJson = pipelineAtomRecord.classifyIdMap,
-                    jobTypeValue = pipelineAtomRecord.jobType
+                    jobTypeValue = pipelineAtomRecord.jobType,
+                    jobTypeMapValue = pipelineAtomRecord.jobTypeMap
                 )
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
@@ -739,9 +741,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     },
                     icon = pipelineAtomRecord.icon,
                     summary = pipelineAtomRecord.summary,
-                    serviceScope =
-                    JsonUtil.toOrNull(pipelineAtomRecord.serviceScope, List::class.java) as List<String>?,
+                    serviceScope = ServiceScopeUtil.parseServiceScopes(pipelineAtomRecord.serviceScope)
+                        .ifEmpty { null },
                     jobType = jobType,
+                    jobTypeMap = pipelineAtomRecord.jobTypeMap,
                     os = JsonUtil.toOrNull(pipelineAtomRecord.os, List::class.java) as List<String>?,
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
@@ -1482,7 +1485,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * @param pipelineClassifyId PIPELINE 服务范围的分类ID
      * @param serviceScopeStr SERVICE_SCOPE 字段值（JSON 数组）
      * @param classifyIdMapJson CLASSIFY_ID_MAP 字段值（JSON 对象）
-     * @param jobTypeValue JOB_TYPE 字段值
+     * @param jobTypeValue JOB_TYPE 字段值（PIPELINE 纯字符串）
+     * @param jobTypeMapValue JOB_TYPE_MAP 字段值（完整多 scope JSON）
      * @return ServiceScopeConfig 列表
      */
     private fun buildPipelineAtomServiceScopeConfigs(
@@ -1490,14 +1494,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         pipelineClassifyId: String?,
         serviceScopeStr: String?,
         classifyIdMapJson: String?,
-        jobTypeValue: String?
+        jobTypeValue: String?,
+        jobTypeMapValue: String? = null
     ): List<ServiceScopeConfig>? {
-        // 获取所有服务范围
         val serviceScopes = AtomServiceScopeUtil.getAllServiceScopes(serviceScopeStr, classifyIdMapJson)
-        // 使用工具类构建 ServiceScopeConfig
         return AtomServiceScopeUtil.buildServiceScopeConfigs(
             serviceScopes = serviceScopes,
             jobTypeValue = jobTypeValue,
+            jobTypeMapValue = jobTypeMapValue,
             getClassifyCode = { serviceScopeEnum ->
                 val classifyId = if (serviceScopeEnum == ServiceScopeEnum.PIPELINE) {
                     pipelineClassifyId

@@ -59,6 +59,8 @@ data class PipelineAtom(
     val serviceScope: List<String>?,
     @get:Schema(title = "适用Job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
     val jobType: String?,
+    @get:Schema(title = "多服务范围Job类型映射JSON", required = false)
+    val jobTypeMap: String? = null,
     @get:Schema(title = "支持的操作系统", required = false)
     val os: List<String>?,
     @get:Schema(title = "所属插件分类Id", required = false)

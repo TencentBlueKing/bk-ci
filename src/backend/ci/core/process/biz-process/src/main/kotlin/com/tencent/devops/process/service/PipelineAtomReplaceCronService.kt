@@ -307,7 +307,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         } while (pipelineInfoRecords?.size == DEFAULT_PAGE_SIZE)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun handlePipelineAtomReplace(
         projectId: String?,
         pipelineIdSet: Set<String>?,
@@ -502,7 +501,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun replacePipelineAtomByItem(
         atomReplaceItem: TPipelineAtomReplaceItemRecord,
         toAtomInfo: PipelineAtom,
@@ -570,7 +568,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun replacePipelineModelAtom(
         pipelineModelObj: Record,
         pipelineInfoMap: Map<String, TPipelineInfoRecord>,
@@ -692,7 +689,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             )
                         }
                         val dataMap = generateAtomDataMap(toAtomInputParamMap, toAtomPropMap, element)
-                        val allJobTypes = JobTypeEnum.parseAllFromRaw(toAtomInfo.jobType)
+                        val allJobTypes = JobTypeEnum.resolveAllFromFields(toAtomInfo.jobType, toAtomInfo.jobTypeMap)
                         val isBuildEnv = allJobTypes.any { it.isBuildEnv() }
                         if (isBuildEnv) {
                             finalElements.add(
@@ -789,7 +786,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun generateFromAtomNameSpace(element: Element): String? {
         return when (element) {
             is MarketBuildAtomElement -> {

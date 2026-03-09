@@ -258,14 +258,11 @@ abstract class AtomBaseDao {
     }
 
     /**
-     * 构建 JOB_TYPE 查询条件（支持多服务范围、一对多 jobType）。
+     * 构建 JOB_TYPE / JOB_TYPE_MAP 查询条件（双字段策略，兼容多环境滚动发布）。
      *
-     * JOB_TYPE 字段可能为以下三种格式：
-     * 1. 纯字符串 "AGENT"（老数据，隐含 PIPELINE）
-     * 2. V1 JSON：{"PIPELINE":"AGENT","CREATIVE_STREAM":"CREATIVE_STREAM"}
-     * 3. V2 JSON：{"PIPELINE":["AGENT"],"CREATIVE_STREAM":["CREATIVE_STREAM","CLOUD_TASK"]}
-     *
-     * 使用 JSON_CONTAINS 统一处理 V1/V2 两种 JSON 格式（对标量和数组均有效）。
+     * JOB_TYPE 字段只存纯字符串（PIPELINE 范围），不会出现 JSON。
+     * - PIPELINE scope（或 scope 为 null）：直接匹配 JOB_TYPE 纯字符串，或从 JOB_TYPE_MAP 中匹配
+     * - 非 PIPELINE scope：仅从 JOB_TYPE_MAP（JSON）中匹配
      *
      * @param ta TAtom 表
      * @param jobType 要筛选的 Job 类型名称（如 AGENT、AGENT_LESS、CREATIVE_STREAM、CLOUD_TASK）
@@ -280,26 +277,30 @@ abstract class AtomBaseDao {
         queryFitAgentBuildLessAtomFlag: Boolean? = null
     ): Condition? {
         if (jobType.isNullOrBlank()) return null
-        val isJsonValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE).eq(true)
         val normalizedScope = serviceScope?.let { ServiceScopeUtil.normalize(it.name) }
 
-        val jobTypeMatchCondition = if (normalizedScope != null) {
-            val jsonContains = DSL.field(
+        val jobTypeMatchCondition = if (normalizedScope == null || normalizedScope == ServiceScopeEnum.PIPELINE.name) {
+            // PIPELINE scope: JOB_TYPE 是纯字符串，直接等值匹配；或从 JOB_TYPE_MAP 匹配
+            val mapJsonContains = DSL.field(
                 "JSON_CONTAINS({0}, {1}, {2})",
                 Boolean::class.java,
-                ta.JOB_TYPE,
+                ta.JOB_TYPE_MAP,
+                DSL.inline("\"$jobType\""),
+                DSL.inline("\$.${ServiceScopeEnum.PIPELINE.name}")
+            ).eq(true)
+            val isMapValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE_MAP).eq(true)
+            ta.JOB_TYPE.eq(jobType).or(isMapValid.and(mapJsonContains))
+        } else {
+            // 非 PIPELINE scope: 仅从 JOB_TYPE_MAP 中按 scope 查找（JOB_TYPE 只存 PIPELINE 纯字符串，无需回退）
+            val isMapValid = DSL.field("JSON_VALID({0})", Boolean::class.java, ta.JOB_TYPE_MAP).eq(true)
+            val mapJsonContains = DSL.field(
+                "JSON_CONTAINS({0}, {1}, {2})",
+                Boolean::class.java,
+                ta.JOB_TYPE_MAP,
                 DSL.inline("\"$jobType\""),
                 DSL.inline("$.$normalizedScope")
             ).eq(true)
-            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonContains))
-        } else {
-            val jsonSearch = DSL.field(
-                "JSON_SEARCH({0}, 'one', {1})",
-                String::class.java,
-                ta.JOB_TYPE,
-                DSL.inline(jobType)
-            ).isNotNull
-            ta.JOB_TYPE.eq(jobType).or(isJsonValid.and(jsonSearch))
+            isMapValid.and(mapJsonContains)
         }
 
         val isBuildEnvJobType = runCatching { JobTypeEnum.valueOf(jobType).isBuildEnv() }.getOrDefault(false)

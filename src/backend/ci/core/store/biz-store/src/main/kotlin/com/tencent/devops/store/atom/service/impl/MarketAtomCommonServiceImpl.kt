@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.atom.service.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.ARTIFACT
@@ -66,7 +65,6 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT
@@ -108,13 +106,15 @@ import com.tencent.devops.store.pojo.common.KEY_TYPE
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.util.ServiceScopeUtil
+import com.tencent.devops.store.utils.VersionUtils
 import jakarta.ws.rs.core.Response
-import kotlin.reflect.KClass
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import kotlin.reflect.KClass
 
 @Suppress("ALL")
 @Service
@@ -752,14 +752,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             version = atom.version,
             initProjectCode = initProjectCode,
             jobType = atom.jobType,
+            jobTypeMap = atom.jobTypeMap,
             buildLessRunFlag = atom.buildLessRunFlag,
             inputTypeInfos = generateInputTypeInfos(atom.props),
             atomStatus = atom.atomStatus,
             sensitiveParams = params?.joinToString(","),
             canPauseBeforeRun = getAtomCanPauseBeforeRun(atom.props),
-            serviceScope = atom.serviceScope?.takeIf { it.isNotBlank() }?.let { serviceScopeJson ->
-                JsonUtil.toOrNull(serviceScopeJson, object : TypeReference<List<String>?>() {})
-            }
+            serviceScope = ServiceScopeUtil.parseServiceScopes(atom.serviceScope).ifEmpty { null }
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -811,12 +810,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
             if (atomName != null) atomRunInfo.atomName = atomName
             atomRunInfo.jobType = atomRecord.jobType
+            atomRunInfo.jobTypeMap = atomRecord.jobTypeMap
             if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
             if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             val params = getAtomSensitiveParams(props ?: atomRecord.props)
             atomRunInfo.sensitiveParams = params?.joinToString(",")
             atomRunInfo.canPauseBeforeRun = getAtomCanPauseBeforeRun(atomRecord.props)
-            atomRunInfo.serviceScope = serviceScope
+            atomRunInfo.serviceScope = serviceScope?.let { ServiceScopeUtil.normalizeList(it) }?.ifEmpty { null }
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,

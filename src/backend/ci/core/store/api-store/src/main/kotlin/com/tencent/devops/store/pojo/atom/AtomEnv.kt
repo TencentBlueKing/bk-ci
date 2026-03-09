@@ -75,8 +75,10 @@ data class AtomEnv(
     val shaContent: String? = null,
     @get:Schema(title = "插件执行前置命令", required = false)
     val preCmd: String? = null,
-    @get:Schema(title = "Job类型（原始值，可能为纯字符串或 JSON）", required = false)
+    @get:Schema(title = "Job类型（PIPELINE 范围的纯字符串，如 AGENT）", required = false)
     val jobType: String? = null,
+    @get:Schema(title = "多服务范围Job类型映射JSON", required = false)
+    val jobTypeMap: String? = null,
     @get:Schema(title = "插件post信息", required = false)
     val atomPostInfo: AtomPostInfo? = null,
     @get:Schema(title = "所属插件分类代码", required = false)
