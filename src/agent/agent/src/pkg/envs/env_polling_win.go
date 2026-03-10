@@ -44,6 +44,7 @@ const (
 	HKEY_CURRENT_USER  = 0x80000001
 	HKEY_LOCAL_MACHINE = 0x80000002
 	KEY_READ           = 0x20019
+	REG_EXPAND_SZ      = 2
 )
 
 // regOpenKeyEx 打开注册表键
@@ -109,7 +110,41 @@ func regEnumValue(hKey uintptr, index uint32) (name string, value string, err er
 	name = syscall.UTF16ToString(nameBuffer)
 	value = syscall.UTF16ToString(dataBuffer)
 
+	if dataType == REG_EXPAND_SZ {
+		value = expandEnvironmentStrings(value)
+	}
+
 	return name, value, nil
+}
+
+// expandEnvironmentStrings 调用 Windows ExpandEnvironmentStringsW
+// 展开字符串中的 %VAR% 引用（如 %USERPROFILE%、%SystemRoot% 等）。
+func expandEnvironmentStrings(s string) string {
+	kernel32 := syscall.NewLazyDLL("kernel32.dll")
+	proc := kernel32.NewProc("ExpandEnvironmentStringsW")
+
+	src, err := syscall.UTF16PtrFromString(s)
+	if err != nil {
+		return s
+	}
+
+	n, _, _ := proc.Call(
+		uintptr(unsafe.Pointer(src)),
+		0,
+		0,
+	)
+	if n == 0 {
+		return s
+	}
+
+	buf := make([]uint16, n)
+	proc.Call(
+		uintptr(unsafe.Pointer(src)),
+		uintptr(unsafe.Pointer(&buf[0])),
+		uintptr(n),
+	)
+
+	return syscall.UTF16ToString(buf)
 }
 
 type envValueSourceType string
