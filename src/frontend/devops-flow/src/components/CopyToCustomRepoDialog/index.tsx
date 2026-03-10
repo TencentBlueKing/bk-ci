@@ -19,8 +19,9 @@ export default defineComponent({
   setup(props, { emit, expose }) {
     const { t } = useI18n()
     const route = useRoute()
+    const currentTab = computed(() => route.params.type as string)
     const { requestCustomFolder, requestCopyArtifactories } = useOutputs(
-      route.params.type as string,
+      currentTab,
     )
 
     const isCopyDialogShow = ref(false)

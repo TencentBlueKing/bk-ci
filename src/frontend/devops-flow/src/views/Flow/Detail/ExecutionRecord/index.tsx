@@ -16,7 +16,8 @@ import { statusColorMap } from '@/utils/flowStatus'
 import SearchSelect from '@blueking/search-select-v3'
 import { Button, DatePicker, Dialog, Exception, Input, Loading, Message, Popover, Table } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { websocketRegister } from '@/utils/websocketRegister'
+import { computed, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './ExecutionRecord.module.css'
@@ -82,6 +83,11 @@ export default defineComponent({
       updateQueryParams,
       refresh,
     } = useExecutionRecordData()
+
+    // ---- WebSocket real-time updates ----
+    const WS_ID = 'executionRecord'
+    websocketRegister.installWsMessage(() => refresh(), 'IFRAMEprocess', WS_ID)
+    onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
 
     // ==================== Computed Properties ====================
     const projectId = computed(() => route.params.projectId as string)
