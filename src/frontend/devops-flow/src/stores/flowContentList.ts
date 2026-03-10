@@ -554,14 +554,24 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
   /**
    * Update pipeline statuses in-place from a WebSocket push.
    * The payload is a map of { [pipelineId]: statusFields }.
+   * Raw fields are merged first, then derived display fields are recalculated.
    */
   function updatePipelineStatusFromWs(data: Record<string, Partial<ContentTableItem>>) {
     if (!data || typeof data !== 'object') return
     Object.keys(data).forEach((pipelineId) => {
-      const item = flowTableList.value.find((f) => f.pipelineId === pipelineId)
-      if (item) {
-        Object.assign(item, data[pipelineId])
-      }
+      const existing = flowTableList.value.find((f) => f.pipelineId === pipelineId)
+      if (!existing) return
+
+      const wsItem = data[pipelineId] as ContentTableItem
+      Object.assign(existing, {
+        ...wsItem,
+        latestBuildStartDate: wsItem.latestBuildStartTime
+          ? convertTime(wsItem.latestBuildStartTime)
+          : existing.latestBuildStartDate,
+        duration: calcDuration(wsItem),
+        progress: calcProgress(wsItem),
+        latestBuildStageStatus: getLatestBuildStageStatus(wsItem),
+      })
     })
   }
 
