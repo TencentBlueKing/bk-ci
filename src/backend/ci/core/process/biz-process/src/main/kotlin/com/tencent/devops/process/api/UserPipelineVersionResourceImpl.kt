@@ -529,6 +529,34 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun getBranch(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branch: String,
+        archiveFlag: Boolean?,
+        source: PipelineGetVersionSource?
+    ): Result<PipelineVersionWithModel> {
+        val userPipelinePermissionCheckStrategy =
+            UserPipelinePermissionCheckStrategyFactory.createUserPipelinePermissionCheckStrategy(archiveFlag)
+        UserPipelinePermissionCheckContext(userPipelinePermissionCheckStrategy).checkUserPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )
+        return Result(
+            pipelineVersionFacadeService.getByBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branch = branch,
+                archiveFlag = archiveFlag,
+                source = source
+            )
+        )
+    }
+
     private fun checkParam(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

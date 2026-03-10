@@ -230,7 +230,8 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        version: Int? = null
+        version: Int? = null,
+        branch: String? = null
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
@@ -249,8 +250,16 @@ class PipelineBuildFacadeService(
                 )
             )
         }
+        val targetVersion = version ?: branch?.takeIf { it.isNotBlank() }?.let {
+            pipelineYamlFacadeService.getPipelineYamlInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                branchName = branch,
+                yamlParams = mutableMapOf()
+            )
+        }
         val (pipeline, resource, debug) = pipelineRepositoryService.getBuildTriggerInfo(
-            projectId, pipelineId, version
+            projectId, pipelineId, targetVersion
         )
         if (pipeline.locked == true) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_LOCK)
@@ -3197,6 +3206,18 @@ class PipelineBuildFacadeService(
             }
         }
     }
+
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        yamlParams: MutableMap<String, BuildParameters>
+    ) = pipelineYamlFacadeService.getPipelineYamlInfo(
+        projectId = projectId,
+        pipelineId = pipelineId,
+        branchName = branchName,
+        yamlParams = yamlParams
+    )
 
     private fun getBuildManualParams(
         projectId: String,

@@ -46,6 +46,7 @@ import com.tencent.devops.repository.pojo.RepoCondition
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
+import com.tencent.devops.repository.pojo.git.GitBranchInfo
 import com.tencent.devops.repository.service.hub.ScmFileApiService
 import com.tencent.devops.repository.service.hub.ScmRefApiService
 import com.tencent.devops.repository.service.hub.ScmRepositoryApiService
@@ -379,5 +380,60 @@ class RepositoryPacService @Autowired constructor(
                 )
             )
         }
+    }
+
+    fun branches(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
+    ): List<GitBranchInfo> {
+        val authRepository = authRepository(projectId, repositoryHashId)
+        val serverRepository = repositoryApiService.findRepository(
+            projectId = projectId,
+            authRepository = authRepository
+        ) as GitScmServerRepository
+        val branches = refApiService.listBranches(
+            projectId = projectId,
+            authRepository = authRepository,
+            page = page,
+            pageSize = pageSize,
+            search = search
+        ).map {
+            GitBranchInfo(
+                name = it.name,
+                commitId = it.sha
+            )
+        }.toMutableList()
+        val defaultBranch = serverRepository.defaultBranch!!
+        // 默认分支放第一个
+        if (!branches.any { it.name == serverRepository.defaultBranch }) {
+            branches.add(
+                0, GitBranchInfo(
+                    name = defaultBranch,
+                    commitId = "",
+                    default = true
+                )
+            )
+        } else {
+            branches.sortByDescending { it.name == defaultBranch }
+        }
+        return branches
+    }
+
+    private fun authRepository(
+        projectId: String,
+        repositoryHashId: String
+    ): AuthRepository {
+        val repository = repositoryService.serviceGet(
+            projectId = projectId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(
+                repositoryId = repositoryHashId,
+                repositoryType = RepositoryType.ID
+            )
+        )
+        return AuthRepository(repository)
     }
 }
