@@ -5,6 +5,7 @@ import { Popover, Button, Dialog, Message } from 'bkui-vue'
 import { SvgIcon } from '../SvgIcon'
 import { useOutputs } from '@/hooks/useOutputs'
 import { type ArtifactoryType } from '@/api/outputs'
+import { ARTIFACTORY_TYPE } from '@/utils/flowConst'
 import { head } from '@/utils/http'
 import styles from './ArtifactDownloadButton.module.css'
 
@@ -129,7 +130,7 @@ export default defineComponent({
     }
 
     return () =>
-      props.artifactoryType !== 'IMAGE' ? (
+      props.artifactoryType !== ARTIFACTORY_TYPE.IMAGE ? (
         <>
           <Popover disabled={!btnDisabled.value || isLoading.value}>
             {{

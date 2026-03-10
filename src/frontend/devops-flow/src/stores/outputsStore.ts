@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { Message } from 'bkui-vue'
-import { extForFile, repoTypeMap } from '@/utils/flowConst'
+import { extForFile, repoTypeMap, ARTIFACTORY_TYPE, ARTIFACT_TYPES } from '@/utils/flowConst'
 import { convertFileSize, convertTime } from '@/utils/util'
 import { useExecuteDetail } from '@/hooks/useExecuteDetail'
 import {
@@ -112,8 +112,8 @@ export const useOutputsStore = defineStore('outputs', () => {
       })
       const { records } = outputsResponse
       outputs.value = records.map((item) => {
-        const isReportOutput = item.artifactoryType === 'REPORT'
-        const isImageOutput = item.artifactoryType === 'IMAGE'
+        const isReportOutput = item.artifactoryType === ARTIFACTORY_TYPE.REPORT
+        const isImageOutput = item.artifactoryType === ARTIFACTORY_TYPE.IMAGE
         const icon = isReportOutput ? 'order' : item.folder ? 'folder' : extForFile(item.name)
         const id = isReportOutput
           ? item.createTime + (item.indexFileUrl ? item.indexFileUrl : '')
@@ -145,7 +145,7 @@ export const useOutputsStore = defineStore('outputs', () => {
    * 是否为制品
    */
   function isArtifact(artifactoryType: string) {
-    return ['PIPELINE', 'CUSTOM_DIR', 'IMAGE'].includes(artifactoryType)
+    return (ARTIFACT_TYPES as readonly string[]).includes(artifactoryType)
   }
 
   function getFolderSize(payload: Output) {

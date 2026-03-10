@@ -18,18 +18,31 @@ export const VERSION_STATUS_ENUM = {
   RELEASED: 'RELEASED',
 }
 
-export const repoTypeMap = {
-  CUSTOM_DIR: 'flow.execute.customRepo',
-  PIPELINE: 'flow.execute.flowRepo',
-  IMAGE: 'flow.execute.imageRepo',
-  REPORT: 'flow.execute.reportRepo',
+export const ARTIFACTORY_TYPE = {
+  CUSTOM_DIR: 'CUSTOM_DIR',
+  IMAGE: 'IMAGE',
+  REPORT: 'REPORT',
+  CREATIVE: 'CREATIVE',
+} as const
+
+export const ARTIFACT_TYPES = [
+  ARTIFACTORY_TYPE.CUSTOM_DIR,
+  ARTIFACTORY_TYPE.IMAGE,
+  ARTIFACTORY_TYPE.CREATIVE,
+] as const
+
+export const repoTypeMap: Record<string, string> = {
+  [ARTIFACTORY_TYPE.CUSTOM_DIR]: 'flow.execute.customRepo',
+  [ARTIFACTORY_TYPE.IMAGE]: 'flow.execute.imageRepo',
+  [ARTIFACTORY_TYPE.REPORT]: 'flow.execute.reportRepo',
+  [ARTIFACTORY_TYPE.CREATIVE]: 'flow.execute.creativeRepo',
 }
 
-export const repoTypeNameMap = {
-  CUSTOM_DIR: 'custom',
-  PIPELINE: 'pipeline',
-  IMAGE: 'image',
-  REPORT: 'report',
+export const repoTypeNameMap: Record<string, string> = {
+  [ARTIFACTORY_TYPE.CUSTOM_DIR]: 'custom',
+  [ARTIFACTORY_TYPE.IMAGE]: 'image',
+  [ARTIFACTORY_TYPE.REPORT]: 'report',
+  [ARTIFACTORY_TYPE.CREATIVE]: 'creative',
 }
 
 export const fileExtIconMap: Record<string, string[]> = {
