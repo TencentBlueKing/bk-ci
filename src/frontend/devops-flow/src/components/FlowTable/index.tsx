@@ -118,15 +118,13 @@ export const FlowTable = defineComponent({
     const permDirective = resolveDirective('perm')
     const contentStore = useFlowHomeContentStore()
 
-    // ---- WebSocket real-time status updates ----
+    // ---- WebSocket real-time status updates from parent (devops-nav) ----
     const WS_ID = 'flowList'
     websocketRegister.installWsMessage(
       (data) => contentStore.updatePipelineStatusFromWs(data),
-      'IFRAMEprocess',
       WS_ID,
     )
     onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
-    // ---- End WebSocket ----
 
     onMounted(async () => {
       updateQuery()

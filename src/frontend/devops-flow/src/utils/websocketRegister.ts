@@ -1,76 +1,67 @@
 /**
  * WebSocket message register / dispatcher for devops-flow.
  *
- * Follows the devops-stream websocket-register pattern:
- *   • Multiple callbacks keyed by a unique `id` string.
- *   • Each callback filters by `wsKey` (= webSocketType + module)
- *     AND checks that the current page path includes the pushed `page`.
- *   • Pages call installWsMessage / unInstallWsMessage in setup / onUnmounted.
+ * devops-flow runs inside the devops-nav iframe. The parent (devops-nav)
+ * manages the SockJS/STOMP connection, performs page matching, and forwards
+ * IFRAME-type messages to the iframe via window.postMessage.
  *
- * Usage in a page component:
- *   import { websocketRegister } from '@/utils/websocketRegister'
+ * Therefore this module only needs to:
+ *   1. Listen for `message` events on the iframe window.
+ *   2. Filter for `webSocketType === 'IFRAME'`.
+ *   3. Parse the `message` JSON payload and dispatch to registered callbacks.
+ *   4. Handle `WEBSOCKET_RECONNECT` events from the parent.
  *
- *   // in setup()
- *   websocketRegister.installWsMessage(
- *     (data) => { ... },   // callback that receives the parsed message
- *     'IFRAMEprocess',     // wsKey = webSocketType + module
- *     'myPageId',          // unique id for this registration
- *   )
- *
- *   onUnmounted(() => websocketRegister.unInstallWsMessage('myPageId'))
+ * Reference: devops-pipeline/src/utils/webSocketMessage.js
  */
-
-function getPageKey(pathname: string) {
-  return pathname.split('/').slice(1).join('/')
-}
 
 type MessageCallback = (data: any) => void
 
-interface WsMessageEvent {
-  webSocketType?: string
-  module?: string
-  page?: string
-  message?: string
+const callBacks: Record<string, MessageCallback> = {}
+const reconnectCallBacks: Record<string, () => void> = {}
+
+function onMessage(event: MessageEvent) {
+  const type = event.data?.webSocketType
+  if (type !== 'IFRAME' || !event.data?.message) return
+
+  try {
+    const message = JSON.parse(event.data.message)
+    if (message === 'WEBSOCKET_RECONNECT') {
+      Object.values(reconnectCallBacks).forEach((cb) => cb())
+    } else {
+      Object.values(callBacks).forEach((cb) => cb(message))
+    }
+  } catch (e) {
+    console.error('[websocketRegister] Failed to parse message:', e)
+  }
 }
 
-const callBacks: Record<string, (event: MessageEvent) => void> = {}
+window.addEventListener('message', onMessage)
 
-function execCallBacks(event: MessageEvent) {
-  Object.values(callBacks).forEach((cb) => cb(event))
+/**
+ * Register a callback that receives parsed WebSocket push data.
+ *
+ * @param callback  Invoked with the parsed `message` payload on each push.
+ * @param id        Unique key so the registration can be removed later.
+ */
+function installWsMessage(callback: MessageCallback, id: string) {
+  callBacks[id] = callback
 }
 
 /**
- * Register a message callback for a specific wsKey and page.
- *
- * @param callback  Receives the parsed `message` payload.
- * @param wsKey     webSocketType + module, e.g. 'IFRAMEprocess'.
- * @param id        Unique identifier so the callback can be removed later.
+ * Register a callback for WebSocket reconnect events.
+ * Typically used to trigger a full data refresh after reconnect.
  */
-function installWsMessage(callback: MessageCallback, wsKey: string, id: string) {
-  callBacks[id] = (event: MessageEvent) => {
-    const data = (event.data ?? {}) as WsMessageEvent
-    const { webSocketType, module: mod, page, message } = data
-    const eventKey = (webSocketType ?? '') + (mod ?? '')
-    const currentPage = getPageKey(location.pathname)
-
-    if (eventKey === wsKey && page && currentPage.includes(page)) {
-      try {
-        const parsed = JSON.parse(message ?? '{}')
-        callback(parsed)
-      } catch (e) {
-        console.error('[websocketRegister] Failed to parse message:', e)
-      }
-    }
-  }
+function registerOnReconnect(callback: () => void, id: string) {
+  reconnectCallBacks[id] = callback
 }
 
 function unInstallWsMessage(id: string) {
   delete callBacks[id]
+  delete reconnectCallBacks[id]
 }
-
-window.addEventListener('message', execCallBacks)
 
 export const websocketRegister = {
   installWsMessage,
+  registerOnReconnect,
   unInstallWsMessage,
 }

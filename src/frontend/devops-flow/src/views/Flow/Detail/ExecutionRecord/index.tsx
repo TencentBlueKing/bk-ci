@@ -86,7 +86,8 @@ export default defineComponent({
 
     // ---- WebSocket real-time updates ----
     const WS_ID = 'executionRecord'
-    websocketRegister.installWsMessage(() => refresh(), 'IFRAMEprocess', WS_ID)
+    websocketRegister.installWsMessage(() => refresh(), WS_ID)
+    websocketRegister.registerOnReconnect(() => refresh(), WS_ID)
     onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
 
     // ==================== Computed Properties ====================

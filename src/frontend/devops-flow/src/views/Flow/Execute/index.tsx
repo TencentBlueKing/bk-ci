@@ -20,12 +20,12 @@ export default defineComponent({
 
     const showContent = computed(() => !loading.value && !!executeDetail.value)
 
-    // ---- WebSocket real-time updates ----
+    // ---- WebSocket real-time updates from parent (devops-nav) ----
     websocketRegister.installWsMessage(
       (data) => executeDetailStore.updateFromWebSocket(data),
-      'IFRAMEprocess',
       WS_ID,
     )
+    websocketRegister.registerOnReconnect(() => initExecuteDetail(), WS_ID)
 
     onUnmounted(() => {
       websocketRegister.unInstallWsMessage(WS_ID)
