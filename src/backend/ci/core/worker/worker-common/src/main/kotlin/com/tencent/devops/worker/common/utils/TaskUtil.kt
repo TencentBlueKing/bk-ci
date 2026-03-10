@@ -117,7 +117,10 @@ object TaskUtil {
             contextMap.filter { (key, _) ->
                 key.startsWith(prefix) && key.contains(".outputs.")
             }.forEach { (key, value) ->
-                contextMap[key.removePrefix(prefix)] = value
+                val shortKey = key.removePrefix(prefix)
+                if (!contextMap.containsKey(shortKey)) {
+                    contextMap[shortKey] = value
+                }
             }
         }
 
