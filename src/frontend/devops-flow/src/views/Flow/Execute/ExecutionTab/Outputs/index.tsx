@@ -52,7 +52,7 @@ export default defineComponent({
       fullScreenViewReport,
       updateSearchKey,
       initializeArtifactValue,
-    } = useOutputs(currentTab.value)
+    } = useOutputs(currentTab)
 
     // 表格列配置
     const columns = [
@@ -122,11 +122,12 @@ export default defineComponent({
     )
 
     // 生命周期
-    onMounted(async () => {
-      await getArtifactDate()
+    onMounted(() => {
+      const tasks: Promise<void>[] = [getArtifactDate()]
       if (!route.query.metadataKey) {
-        init()
+        tasks.push(init())
       }
+      Promise.all(tasks)
     })
 
     return () => (
