@@ -42,6 +42,11 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
             EnvUtils.parseEnv(options?.privileged.toString(), variables).toBoolean()
         }
         options?.network = options?.network?.map { n -> EnvUtils.parseEnv(n, variables) }
+        options?.user = if (options?.user == null) {
+            null
+        } else {
+            EnvUtils.parseEnv(options?.user, variables)
+        }
     }
     if (!imagePullPolicy.isNullOrBlank()) {
         imagePullPolicy = EnvUtils.parseEnv(imagePullPolicy, variables)
@@ -67,7 +72,8 @@ data class DockerOptions(
     var mounts: List<String>?,
     var gpus: String?,
     var privileged: Boolean?,
-    var network: List<String>?
+    var network: List<String>?,
+    var user: String?,
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
