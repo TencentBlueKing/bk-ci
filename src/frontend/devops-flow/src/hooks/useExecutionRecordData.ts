@@ -116,6 +116,14 @@ export function useExecutionRecordData(debug = false) {
     store.loadExecutionRecords()
   }
 
+  /**
+   * Silently refresh data without triggering loading UI.
+   * Used for WebSocket-driven updates.
+   */
+  const silentRefresh = () => {
+    store.silentLoadExecutionRecords()
+  }
+
   return {
     // Data
     records,
@@ -129,5 +137,6 @@ export function useExecutionRecordData(debug = false) {
     handleSelect,
     updateQueryParams,
     refresh,
+    silentRefresh,
   }
 }

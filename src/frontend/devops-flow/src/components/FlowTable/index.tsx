@@ -121,9 +121,16 @@ export const FlowTable = defineComponent({
     // ---- WebSocket real-time status updates from parent (devops-nav) ----
     const WS_ID = 'flowList'
     websocketRegister.installWsMessage(
-      (data) => contentStore.updatePipelineStatusFromWs(data),
+      (data) => {
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          contentStore.updatePipelineStatusFromWs(data)
+        } else {
+          loadContentDataWithGroupId(props.groupId)
+        }
+      },
       WS_ID,
     )
+    websocketRegister.registerOnReconnect(() => loadContentDataWithGroupId(props.groupId), WS_ID)
     onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
 
     onMounted(async () => {
@@ -135,9 +142,10 @@ export const FlowTable = defineComponent({
       () => props.groupId,
       async (newGroupId, oldGroupId) => {
         if (newGroupId) {
-          // 切换分组时清空搜索条件
+          // 切换分组时清空搜索条件并重置页码
           if (oldGroupId && newGroupId !== oldGroupId) {
             searchValue.value = []
+            pagination.value.current = 1
             updateQuery(true)
           }
 

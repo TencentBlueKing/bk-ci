@@ -23,11 +23,14 @@ function onMessage(event: MessageEvent) {
   const type = event.data?.webSocketType
   if (type !== 'IFRAME' || !event.data?.message) return
 
+  console.log('[websocketRegister] Received IFRAME message', event.data)
+
   try {
     const message = JSON.parse(event.data.message)
     if (message === 'WEBSOCKET_RECONNECT') {
       Object.values(reconnectCallBacks).forEach((cb) => cb())
     } else {
+      console.log('[websocketRegister] Dispatching to', Object.keys(callBacks).length, 'callbacks, data:', message)
       Object.values(callBacks).forEach((cb) => cb(message))
     }
   } catch (e) {

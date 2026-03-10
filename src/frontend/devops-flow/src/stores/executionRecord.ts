@@ -61,24 +61,40 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
 
     loading.value = true
     try {
-      const params: ExecutionRecordQueryParams = {
-        ...queryParams.value,
-        page: page || pagination.value.current,
-        pageSize: pagination.value.limit,
-      }
-      console.log('params', params)
-      const response = await getExecutionRecords(params)
-      records.value = response.list
-      pagination.value.count = response.count
-      pagination.value.current = response.page
-      pagination.value.limit = response.limit
-      pagination.value.totalPages = response.totalPages
+      await fetchAndApplyRecords(page)
     } catch (error) {
       console.error('Failed to load execution records:', error)
       records.value = []
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Silently reload execution records without triggering loading state.
+   * Used by WebSocket push to avoid UI flicker.
+   */
+  async function silentLoadExecutionRecords(page?: number) {
+    if (!queryParams.value.projectId || !queryParams.value.pipelineId) return
+    try {
+      await fetchAndApplyRecords(page)
+    } catch (error) {
+      console.error('Failed to silently load execution records:', error)
+    }
+  }
+
+  async function fetchAndApplyRecords(page?: number) {
+    const params: ExecutionRecordQueryParams = {
+      ...queryParams.value,
+      page: page || pagination.value.current,
+      pageSize: pagination.value.limit,
+    }
+    const response = await getExecutionRecords(params)
+    records.value = response.list
+    pagination.value.count = response.count
+    pagination.value.current = response.page
+    pagination.value.limit = response.limit
+    pagination.value.totalPages = response.totalPages
   }
 
   /**
@@ -145,6 +161,7 @@ export const useExecutionRecordStore = defineStore('executionRecord', () => {
 
     // Methods
     loadExecutionRecords,
+    silentLoadExecutionRecords,
     setQueryParams,
     setPagination,
     toggleSelectAll,

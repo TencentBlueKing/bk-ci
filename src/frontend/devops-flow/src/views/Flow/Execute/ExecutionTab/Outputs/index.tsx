@@ -1,7 +1,6 @@
 import ArtifactDownloadButton from '@/components/ArtifactDownloadButton'
 import CopyToCustomRepoDialog from '@/components/CopyToCustomRepoDialog'
 import EmptyPage from '@/components/EmptyPage'
-import ExtMenu from '@/components/ExtMenu'
 import IframeReport from '@/components/IframeReport'
 import { SvgIcon } from '@/components/SvgIcon'
 import ThirdPartyReport from '@/components/ThirdPartyReport'
@@ -14,7 +13,7 @@ import { useRoute } from 'vue-router'
 import styles from './Outputs.module.css'
 
 export default defineComponent({
-   
+
   name: 'Outputs',
   setup() {
     const { t } = useI18n()
@@ -244,12 +243,12 @@ export default defineComponent({
                             {btn.text}
                           </Button>
                         ))}
-                        {!activeOutputDetail.value.folder && (
+                        {/* {!activeOutputDetail.value.folder && (
                           <ExtMenu
                             data={activeOutputDetail.value}
                             config={artifactMoreActions.value}
                           />
-                        )}
+                        )} */}
                       </p>
                     </div>
 
