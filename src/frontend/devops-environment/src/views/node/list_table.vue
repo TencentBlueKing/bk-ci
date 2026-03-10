@@ -43,9 +43,9 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.VIEW
+                                        action: currentResourceAction.VIEW
                                     }
                                 } : {}"
                                 class="node-name"
@@ -114,9 +114,9 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.VIEW
+                                        action: currentResourceAction.VIEW
                                     }
                                 } : {}"
                                 class="node-name"
@@ -136,9 +136,9 @@
                                     disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceType: currentResourceType,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.EDIT
+                                        action: currentResourceAction.EDIT
                                     }
                                 }"
                             >
@@ -413,9 +413,9 @@
                                                 disablePermissionApi: true,
                                                 permissionData: {
                                                     projectId: projectId,
-                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceType: currentResourceType,
                                                     resourceCode: props.row.nodeHashId,
-                                                    action: NODE_RESOURCE_ACTION.EDIT
+                                                    action: currentResourceAction.EDIT
                                                 }
                                             }"
                                             :disabled="props.row.allOperator.split(';').indexOf(userInfo.username) === -1"
@@ -432,9 +432,9 @@
                                             disablePermissionApi: true,
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: props.row.nodeHashId,
-                                                action: NODE_RESOURCE_ACTION.EDIT
+                                                action: currentResourceAction.EDIT
                                             }
                                         }"
                                         :disable="props.row.nodeStatus === 'RUNNING'"
@@ -452,9 +452,9 @@
                                             disablePermissionApi: true,
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: props.row.nodeHashId,
-                                                action: NODE_RESOURCE_ACTION.EDIT
+                                                action: currentResourceAction.EDIT
                                             }
                                         }"
                                         :disable="props.row.nodeStatus === 'RUNNING'"
@@ -475,9 +475,9 @@
                                             disablePermissionApi: true,
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: props.row.nodeHashId,
-                                                action: NODE_RESOURCE_ACTION.EDIT
+                                                action: currentResourceAction.EDIT
                                             }
                                         }"
                                         text
@@ -494,9 +494,9 @@
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: currentResourceAction.DELETE
                                         }
                                     }"
                                     class="node-handle delete-node-text"
@@ -512,9 +512,9 @@
                                         disablePermissionApi: true,
                                         permissionData: {
                                             projectId: projectId,
-                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceType: currentResourceType,
                                             resourceCode: props.row.nodeHashId,
-                                            action: NODE_RESOURCE_ACTION.DELETE
+                                            action: currentResourceAction.DELETE
                                         }
                                     }"
                                     :disable="props.row.nodeStatus === 'RUNNING'"
@@ -666,7 +666,12 @@
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import EmptyTableStatus from '@/components/empty-table-status'
     import StatusIcon from '@/components/status-icon.vue'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
     import { mapActions } from 'vuex'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
@@ -717,8 +722,6 @@
         },
         data () {
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeDisplayName: '',
@@ -874,6 +877,12 @@
             },
             showEditIcon () {
                 return !this.isEditNodeStatus && !this.isCreateResType
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -949,9 +958,9 @@
                             e,
                             {
                                 projectId: this.projectId,
-                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceType: this.currentResourceType,
                                 resourceCode: node.nodeHashId,
-                                action: NODE_RESOURCE_ACTION.EDIT
+                                action: this.currentResourceAction.EDIT
                             }
                         )
                     } finally {
@@ -1069,9 +1078,9 @@
                                 e,
                                 {
                                     projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: this.currentResourceType,
                                     resourceCode: row.nodeHashId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
+                                    action: this.currentResourceAction.DELETE
                                 }
                             )
                         } finally {
@@ -1181,9 +1190,9 @@
             handleApplyPermission (node) {
                 this.handleNoPermission({
                     projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceType: this.currentResourceType,
                     resourceCode: node.nodeHashId,
-                    action: NODE_RESOURCE_ACTION.USE
+                    action: this.currentResourceAction.USE
                 })
             },
             clearFilter () {

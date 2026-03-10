@@ -37,9 +37,9 @@
                                             v-perm="{
                                                 permissionData: {
                                                     projectId: projectId,
-                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceType: currentResourceType,
                                                     resourceCode: projectId,
-                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                    action: currentResourceAction.CREATE
                                                 }
                                             }"
                                             @click="toImportNode('construct')"
@@ -54,9 +54,9 @@
                                             v-perm="{
                                                 permissionData: {
                                                     projectId: projectId,
-                                                    resourceType: NODE_RESOURCE_TYPE,
+                                                    resourceType: currentResourceType,
                                                     resourceCode: projectId,
-                                                    action: NODE_RESOURCE_ACTION.CREATE
+                                                    action: currentResourceAction.CREATE
                                                 }
                                             }"
                                             theme="primary"
@@ -101,9 +101,9 @@
                                         v-perm="{
                                             permissionData: {
                                                 projectId: projectId,
-                                                resourceType: NODE_RESOURCE_TYPE,
+                                                resourceType: currentResourceType,
                                                 resourceCode: projectId,
-                                                action: NODE_RESOURCE_ACTION.CREATE
+                                                action: currentResourceAction.CREATE
                                             }
                                         }"
                                         @click="item.handler"
@@ -383,7 +383,12 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage.js'
     import SearchSelect from '@blueking/search-select'
@@ -450,8 +455,6 @@
             const urlParams = this.queryParams
             
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 curEditNodeItem: '',
@@ -769,6 +772,12 @@
             },
             isCreateResType () {
                 return this.$route.params.resType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -1204,9 +1213,9 @@
             goToApplyPerm () {
                 this.handleNoPermission({
                     projectId: this.projectId,
-                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceType: this.currentResourceType,
                     resourceCode: this.projectId,
-                    action: NODE_RESOURCE_ACTION.CREATE
+                    action: this.currentResourceAction.CREATE
                 })
             },
             changePageCurrent () {
