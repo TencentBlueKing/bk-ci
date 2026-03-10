@@ -290,8 +290,14 @@
                 }
             },
             async diffCurrentVersion (version, old) {
-                if (version !== old) {
+                if (version === this.currentVersion) return
+                if (this.instanceCompareWithTemplate) {
                     this.initDiff(version)
+                } else {
+                    this.currentVersion = version
+                    this.isLoadYaml = true
+                    this.currentYaml = await this.fetchPipelineYaml(this.currentVersion)
+                    this.isLoadYaml = false
                 }
             }
         }
