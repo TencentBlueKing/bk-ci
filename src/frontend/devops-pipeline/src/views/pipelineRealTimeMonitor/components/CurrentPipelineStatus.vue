@@ -21,7 +21,7 @@
 <script>
     import { defineComponent, ref, onMounted, watch } from 'vue'
     import CapacityCard from './CapacityCard.vue'
-    import { runningPipelines, waitingPipelines, waitingJob, auditPipelines } from './constant'
+    import { runningPipelines, waitingPipelines, waitingJob, auditPipelines, extractValue } from './constant'
     import useInstance from '@/hook/useInstance'
     export default defineComponent({
         name: 'CurrentPipelineStatus',
@@ -49,25 +49,6 @@
                 { id: 'auditPipelines', label: 'auditingPipelines', value: null, showLogo: true, logoName: 'audit-line' }
             ])
 
-            /**
-             * 提取数据的辅助函数
-             */
-            const extractValue = (result) => {
-                if (!result?.data?.series || result.data.series.length === 0) {
-                    return '--'
-                }
-                const datapoint = result.data.series[0]?.datapoints?.[0][0]
-                if (datapoint === undefined || datapoint === null) {
-                    return '--'
-                }
-            
-                const numValue = Number(datapoint)
-                if (!Number.isInteger(numValue) && !isNaN(numValue)) {
-                    return numValue.toFixed(2)
-                }
-            
-                return datapoint
-            }
 
             /**
              * 获取当前流水线状态数据

@@ -22,7 +22,7 @@
     import { defineComponent, ref, onMounted, watch } from 'vue'
     import MetricsGrid from './MetricsGrid.vue'
     import CapacityCard from './CapacityCard.vue'
-    import { sourceCpu, sourceMemory, sourceDisk } from './constant'
+    import { sourceCpu, sourceMemory, sourceDisk, extractValue } from './constant'
     import useInstance from '@/hook/useInstance'
     export default defineComponent({
         name: 'ResourceUsage',
@@ -46,25 +46,6 @@
                 { id: 'sourceDisk', label: 'diskUsageOver80', value: null, showLogo: true, logoName: 'source-disk-use' }
             ])
 
-            /**
-             * 提取数据的辅助函数
-             */
-            const extractValue = (result) => {
-                if (!result?.data?.series || result.data.series.length === 0) {
-                    return '--'
-                }
-                const datapoint = result.data.series[0]?.datapoints?.[0][0]
-                if (datapoint === undefined || datapoint === null) {
-                    return '--'
-                }
-            
-                const numValue = Number(datapoint)
-                if (!Number.isInteger(numValue) && !isNaN(numValue)) {
-                    return numValue.toFixed(2)
-                }
-            
-                return datapoint
-            }
 
             /**
              * 获取当前资源使用数据

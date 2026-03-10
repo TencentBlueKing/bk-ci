@@ -33,7 +33,8 @@
         avgUploadSpeed,
         avgDownloadSpeed,
         uploadArtifacts,
-        downloadArtifacts
+        downloadArtifacts,
+        extractValue
     } from './constant'
 
     export default defineComponent({
@@ -61,25 +62,6 @@
                 { id: 'downloadArtifacts', label: 'downloadArtifacts', value: null, unit: 'B', showIcon: true, iconName: 'icon-download', iconSize: '12px' }
             ])
 
-            /**
-             * 提取数据的辅助函数
-             */
-            const extractValue = (result) => {
-                if (!result?.data?.series || result.data.series.length === 0) {
-                    return '--'
-                }
-                const datapoint = result.data.series[0]?.datapoints?.[0][0]
-                if (datapoint === undefined || datapoint === null) {
-                    return '--'
-                }
-            
-                const numValue = Number(datapoint)
-                if (!Number.isInteger(numValue) && !isNaN(numValue)) {
-                    return numValue.toFixed(2)
-                }
-            
-                return datapoint
-            }
 
             /**
              * 智能字节单位转换函数 - 自动选择最合适的单位，保留两位小数

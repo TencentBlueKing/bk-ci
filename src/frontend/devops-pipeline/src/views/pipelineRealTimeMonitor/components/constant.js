@@ -154,6 +154,24 @@ export const buildNodesUrl =(projectId,status)=>{
     return `${jumpUrlPostBuildResource}/${projectId}/pipeline/node/THIRDPARTY?nodeStatus=${status}`
 }
 
+export const freeLoadNum ='count((max by (agentIp, nodeId) ({{table_agent}}:heartbeat:busyTaskSize{projectId=\"{{projectId}}\"} offset 4m) / max by (agentIp, nodeId) ({{table_agent}}:heartbeat:parallelTaskCount{projectId=\"{{projectId}}\"} offset 4m)) == 0) or vector(0)'
+
+export const freeLoadNumUrl =(projectId, from, to)=>{
+    return `spaceUid=bkci__${projectId}&dashName=BKCI-构建资源趋势&viewPanel=30&from=${from}&to=${to}`
+}
+
+export const lowLoadNum ='count((max by (agentIp, nodeId) ({{table_agent}}:heartbeat:busyTaskSize{projectId=\"{{projectId}}\"} offset 4m) / max by (agentIp, nodeId) ({{table_agent}}:heartbeat:parallelTaskCount{projectId=\"{{projectId}}\"} offset 4m)) <= 0.5) or vector(0)'
+
+export const lowLoadNumUrl =(projectId, from, to)=>{
+    return `spaceUid=bkci__${projectId}&dashName=BKCI-构建资源趋势&viewPanel=31&from=${from}&to=${to}`
+}
+
+export const fullLoadNum ='count((max by (agentIp, nodeId) ({{table_agent}}:heartbeat:busyTaskSize{projectId=\"{{projectId}}\"} offset 4m) / max by (agentIp, nodeId) ({{table_agent}}:heartbeat:parallelTaskCount{projectId=\"{{projectId}}\"} offset 4m)) >= 1) or vector(0)'
+
+export const fullLoadNumUrl =(projectId, from, to)=>{
+    return `spaceUid=bkci__${projectId}&dashName=BKCI-构建资源趋势&viewPanel=32&from=${from}&to=${to}`
+}
+
 export const urlMap = {
 
     runningPipelines: runningPipelinesUrl,
@@ -194,6 +212,34 @@ export const urlMap = {
 
     goMonitorBoard: goMonitorBoard,
 
+    idleNodes: freeLoadNumUrl,
+
+    lowConcurrencyNodes: lowLoadNumUrl,
+
+    fullConcurrencyNodes: fullLoadNumUrl,
+
+}
+
+/**
+ * 提取 Metrics 返回数据的辅助函数
+ * @param {Object} result - Metrics 接口返回的结果
+ * @returns {string|number} 提取的值，无数据时返回 '--'
+ */
+export const extractValue = (result) => {
+    if (!result?.data?.series || result.data.series.length === 0) {
+        return '--'
+    }
+    const datapoint = result.data.series[0]?.datapoints?.[0][0]
+    if (datapoint === undefined || datapoint === null) {
+        return '--'
+    }
+
+    const numValue = Number(datapoint)
+    if (!Number.isInteger(numValue) && !isNaN(numValue)) {
+        return numValue.toFixed(2)
+    }
+
+    return datapoint
 }
 
 export const warnTypeMap = {

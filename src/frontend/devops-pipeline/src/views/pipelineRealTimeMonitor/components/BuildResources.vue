@@ -11,16 +11,23 @@
 </template>
 
 <script>
-    import { defineComponent, ref, onMounted } from 'vue'
+    import { defineComponent, ref, onMounted, watch } from 'vue'
     import ProgressBar from './ProgressBar.vue'
     import useInstance from '@/hook/useInstance'
+    import { freeLoadNum, lowLoadNum, fullLoadNum, extractValue } from './constant'
     export default defineComponent({
         name: 'BuildResources',
         components: {
             ProgressBar
         },
+        props: {
+            timeRange: {
+                type: Array,
+                required: true
+            }
+        },
         emits: ['item-click'],
-        setup (_, { emit }) {
+        setup (props, { emit }) {
             const loading = ref(false)
             const { proxy } = useInstance()
             // 节点进度条数据
@@ -28,35 +35,35 @@
             // 可用节点 = 空闲节点 + 满并发运行节点 + 并发低于 50% 节点 + 其他并发节点
             const nodeProgressData = ref([
                 {
-                    value: 0,
+                    value: null,
                     label: 'availableNodes',
                     type: 'can-use'
                 },
                 {
-                    value: 0,
+                    value: null,
                     label: 'offlineNodes',
                     type: 'offline'
                 },
                 {
-                    value: '--',
+                    value: null,
                     label: 'idleNodes',
                     type: 'free-load'
                 },
                 {
-                    value: '--',
+                    value:null,
                     label: 'lowConcurrencyNodes',
                     type: 'low-load'
                 },
                 {
-                    value: '--',
+                    value: null,
                     label: 'fullConcurrencyNodes',
                     type: 'full-load'
                 },
-                {
-                    value: 1,
-                    label: 'otherNodes',
-                    type: 'other-load'
-                }
+                // {
+                //     value: 1,
+                //     label: 'otherNodes',
+                //     type: 'other-load'
+                // }
             ])
 
             // 节点状态常量
@@ -129,13 +136,59 @@
                 }
             }
 
+            const fetchDataAvailableNodes = async () => {
+                if (!props.timeRange || props.timeRange.length < 2) return
+            
+                loading.value = true
+                const promqlConfigs = [
+                    { id: 'idleNodes', promql: freeLoadNum },
+                    { id: 'lowConcurrencyNodes', promql: lowLoadNum },
+                    { id: 'fullConcurrencyNodes', promql: fullLoadNum }
+                ]
+                try {
+                    const [startTime, endTime] = props.timeRange
+
+                    const results = await Promise.all(
+                        promqlConfigs.map(config =>
+                            proxy.$store.dispatch('pipelines/getMetrics', {
+                                promql: config.promql, // 这些是静态promql
+                                start_time: startTime,
+                                end_time: endTime
+                            })
+                        )
+                    )
+                    // 根据返回结果解析赋值给对应 label 的 value
+                    nodeProgressData.value = nodeProgressData.value.map(item => {
+                        const configIndex = promqlConfigs.findIndex(config => config.id === item.label)
+                        if (configIndex !== -1) {
+                            return { ...item, value: extractValue(results[configIndex]) }
+                        }
+                        return item
+                    })
+                } catch (error) {
+                    console.error('获取当前可用节点的类型数据失败:', error)
+                    // 失败时重置为0
+                    nodeProgressData.value = nodeProgressData.value.map(item => {
+                        if (promqlConfigs.some(config => config.id === item.label)) {
+                            return { ...item, value: 0 }
+                        }
+                        return item
+                    })
+                } finally {
+                    loading.value = false
+                }
+
+            }
             const handleClickJump = (label) => {
-                console.log('click',label)
                 emit('item-click', label)
             }
 
+            // 监听时间范围变化
+            watch(() => props.timeRange, fetchDataAvailableNodes, { deep: true })
+
             onMounted(() => {
                 fetchData()
+                fetchDataAvailableNodes()
             })
 
             return {

@@ -263,7 +263,6 @@
                 () => [props.data, props.centerText, props.centerSubText],
                 () => {
                     if (chartInstance) {
-                        console.log(props.data,'props.data')
                         
                         // 清除之前的选中状态
                         if (selectedIndex.value >= 0) {

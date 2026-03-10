@@ -32,7 +32,10 @@
 
         <!-- 当前构建资源 & 当前资源使用 -->
         <div class="dual-section">
-            <BuildResources @item-click="handleClickJump" />
+            <BuildResources
+                @item-click="handleClickJump"
+                :time-range="timeRange"
+            />
             <ResourceUsage
                 :time-range="timeRange"
                 @item-click="handleClickJump"

@@ -22,7 +22,7 @@
 <script>
     import { defineComponent, ref, onMounted, watch } from 'vue'
     import CapacityCard from './CapacityCard.vue'
-    import { failuresNum, cancelNum, successNum, successRate } from './constant'
+    import { failuresNum, cancelNum, successNum, successRate, extractValue } from './constant'
     import useInstance from '@/hook/useInstance'
     export default defineComponent({
         name: 'ExecutionStatistics',
@@ -46,25 +46,20 @@
                 { id: 'successRate', label: 'successRate', value: null, unit: '%' }
             ])
 
+
             /**
-             * 提取数据的辅助函数
+             * 提取执行统计数据（含 successRate 百分比转换）
              */
-            const extractValue = (result, id = null) => {
-                if (!result?.data?.series || result.data.series.length === 0) {
-                    return '--'
-                }
-                const datapoint = result.data.series[0]?.datapoints?.[0][0]
-                if (datapoint === undefined || datapoint === null) {
-                    return '--'
-                }
-            
-                let numValue = Number(datapoint)
-                
+            const extractStatValue = (result, id = null) => {
+                const value = extractValue(result)
+                if (value === '--') return '--'
+
+                let numValue = Number(value)
                 // 如果是 successRate，需要乘以100转换为百分比
                 if (id === 'successRate') {
                     numValue = numValue * 100
                 }
-                
+
                 if (!Number.isInteger(numValue) && !isNaN(numValue)) {
                     return numValue.toFixed(2)
                 }
@@ -103,7 +98,7 @@
                     executionStatisticsList.value = executionStatisticsList.value.map(item => {
                         const configIndex = promqlConfigs.findIndex(config => config.id === item.id)
                         if (configIndex !== -1) {
-                            return { ...item, value: extractValue(results[configIndex], item.id) }
+                            return { ...item, value: extractStatValue(results[configIndex], item.id) }
                         }
                         return item
                     })

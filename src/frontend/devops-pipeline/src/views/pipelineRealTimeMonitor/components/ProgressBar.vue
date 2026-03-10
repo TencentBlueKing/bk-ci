@@ -67,7 +67,6 @@
                 
                 const data = [canUse, offline].filter(Boolean)
                 const total = data.reduce((sum, item) => sum + item.value, 0)
-                
                 return data.map(item => ({
                     ...item,
                     percentage: total > 0 ? (item.value / total * 100) : 0
@@ -91,7 +90,6 @@
                 
                 const data = [freeLoad, lowLoad, fullLoad ,otherLoad,].filter(Boolean)
                 const total = data.reduce((sum, item) => sum + item.value, 0)
-                
                 return data.map(item => ({
                     ...item,
                     percentage: total > 0 ? (item.value / total * 100) : 0
@@ -99,7 +97,6 @@
             })
 
             const handleClick = (label) => {
-                console.log('click',label)
                 emit('item-click', label)
             }
 
