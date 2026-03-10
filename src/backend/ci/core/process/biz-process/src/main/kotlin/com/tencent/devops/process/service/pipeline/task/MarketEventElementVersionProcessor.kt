@@ -133,14 +133,16 @@ class MarketEventElementVersionProcessor @Autowired constructor(
                     )
                     return
                 }
-                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION] as String?
-                if (advanceExpression.isNullOrEmpty()) {
+                val advanceExpression = inputMap[KEY_ADVANCE_EXPRESSION]?.let {
+                    JsonUtil.anyTo(it, object : TypeReference<List<String>>() {})
+                } ?: listOf()
+                if (advanceExpression.isEmpty()) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                     )
                 }
                 val expressions = pipelineTimerTriggerTaskService.convertAdvanceExpression(
-                    advanceExpression = listOf(advanceExpression),
+                    advanceExpression = advanceExpression,
                     params = variables
                 )
                 val startParam = (inputMap[KEY_START_PARAMS] as String?)?.let {
