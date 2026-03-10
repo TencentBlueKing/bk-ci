@@ -62,37 +62,12 @@ class AtomBuildArchiveTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val buildVariable = buildTask.buildVariable ?: mapOf()
-
-        LoggerService.addNormalLine(
-            "[AtomBuildArchiveTask] buildVariable: " +
-                    "atomCode=${buildVariable["atomCode"]}, " +
-                    "version=${buildVariable["version"]}, " +
-                    "packageName=${buildVariable["packageName"]}, " +
-                    "osName=${buildVariable[KEY_OS_NAME]}, " +
-                    "osArch=${buildVariable[KEY_OS_ARCH]}, " +
-                    "target=${buildVariable["target"]}"
-        )
-
         // 使用公共方法解析任务参数（包含变量合并、steps.xxx 短格式处理、表达式替换）
         val resolvedTaskParams = TaskUtil.resolveTaskParams(
             buildVariables = buildVariables,
             buildVariable = buildVariable,
             taskParams = taskParams
         )
-
-        LoggerService.addNormalLine(
-            "[AtomBuildArchiveTask] resolvedTaskParams: " +
-                    "atomCode=${resolvedTaskParams["atomCode"]}, " +
-                    "version=${resolvedTaskParams["version"]}, " +
-                    "packageName=${resolvedTaskParams["packageName"]}, " +
-                    "destPath=${resolvedTaskParams["destPath"]}, " +
-                    "filePath=${resolvedTaskParams["filePath"]}, " +
-                    "preCmd=${resolvedTaskParams["preCmd"]}, " +
-                    "osName=${resolvedTaskParams[KEY_OS_NAME]}, " +
-                    "osArch=${resolvedTaskParams[KEY_OS_ARCH]}, " +
-                    "target=${resolvedTaskParams["target"]}"
-        )
-
         val destPath = resolvedTaskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
             errorType = ErrorType.USER,
