@@ -41,15 +41,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/envs"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
-
 	"github.com/pkg/errors"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/common/logs"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"golang.org/x/net/http/httpproxy"
 )
 
 type HttpClient struct {
@@ -88,36 +86,43 @@ func newClientWithProxy() *http.Client {
 // proxyFromAgentEnv 根据请求 scheme 从 agent 环境变量中读取代理配置。
 // 优先读取后台下发的环境变量（通过 envs.FetchEnv），读不到则 fallback 到
 // 标准库 http.ProxyFromEnvironment（读取 os 环境变量）。
+// 同时支持 NO_PROXY 排除规则。
 func proxyFromAgentEnv(req *http.Request) (*url.URL, error) {
-	var proxyURL string
+	httpProxy := fetchProxyEnv("HTTP_PROXY")
+	httpsProxy := fetchProxyEnv("HTTPS_PROXY")
+	noProxy := fetchProxyEnv("NO_PROXY")
 
-	if req.URL.Scheme == "https" {
-		if v, ok := envs.FetchEnv("HTTPS_PROXY"); ok && v != "" {
-			proxyURL = v
-		}
-	}
-	if proxyURL == "" {
-		if v, ok := envs.FetchEnv("HTTP_PROXY"); ok && v != "" {
-			proxyURL = v
-		}
-	}
-
-	if proxyURL == "" {
+	if httpProxy == "" && httpsProxy == "" {
 		return http.ProxyFromEnvironment(req)
 	}
 
-	if !strings.Contains(proxyURL, "://") {
-		proxyURL = "http://" + proxyURL
+	cfg := httpproxy.Config{
+		HTTPProxy:  httpProxy,
+		HTTPSProxy: httpsProxy,
+		NoProxy:    noProxy,
 	}
 
-	parsed, err := url.Parse(proxyURL)
+	proxyURL, err := cfg.ProxyFunc()(req.URL)
 	if err != nil {
-		logs.Errorf("invalid proxy url %s: %s, fallback to ProxyFromEnvironment", proxyURL, err)
+		logs.Errorf("resolve proxy for %s error: %s, fallback to ProxyFromEnvironment", req.URL.Host, err)
 		return http.ProxyFromEnvironment(req)
 	}
 
-	logs.Infof("using proxy %s for %s", parsed.Redacted(), req.URL.Host)
-	return parsed, nil
+	if proxyURL != nil {
+		logs.Infof("using proxy %s for %s", proxyURL.Redacted(), req.URL.Host)
+	}
+	return proxyURL, nil
+}
+
+// fetchProxyEnv 读取代理相关环境变量，同时检查大写和小写形式（与 Go 标准库行为一致）。
+func fetchProxyEnv(key string) string {
+	if v, ok := envs.FetchEnv(key); ok && v != "" {
+		return v
+	}
+	if v, ok := envs.FetchEnv(strings.ToLower(key)); ok && v != "" {
+		return v
+	}
+	return ""
 }
 
 func NewHttpClient() *HttpClient {
