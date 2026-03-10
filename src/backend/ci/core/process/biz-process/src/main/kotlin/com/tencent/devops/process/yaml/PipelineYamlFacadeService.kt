@@ -68,6 +68,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmRepositoryApiResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_SCM_API_FILE_NOT_FOUND
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.AuthRepository
 import com.tencent.devops.scm.api.pojo.repository.git.GitScmServerRepository
@@ -505,12 +506,27 @@ class PipelineYamlFacadeService @Autowired constructor(
         )
         val repository = getRepository(projectId, yamlInfo.repoHashId)
         // 目标分支下文件不存在
-        val fileContent = pipelineYamlFileManager.getFileContent(
-            projectId = projectId,
-            ref = branchName,
-            path = yamlInfo.filePath,
-            authRepository = AuthRepository(repository)
-        )?.takeIf { it.blobId.isNotBlank() } ?: throw ErrorCodeException(
+        val fileContent = try {
+            pipelineYamlFileManager.getFileContent(
+                projectId = projectId,
+                ref = branchName,
+                path = yamlInfo.filePath,
+                authRepository = AuthRepository(repository)
+            )?.takeIf { it.blobId.isNotBlank() }
+        } catch (ignored: ErrorCodeException) {
+            if (ignored.errorCode == ERROR_SCM_API_FILE_NOT_FOUND) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
+                    params = arrayOf(yamlInfo.filePath, branchName)
+                )
+            } else {
+                logger.warn(
+                    "fail to get file content|$projectId|" +
+                            "${yamlInfo.repoHashId}|$branchName|${yamlInfo.filePath}", ignored
+                )
+                null
+            }
+        } ?: throw ErrorCodeException(
             errorCode = ERROR_PIPELINE_REF_YAML_FILE_NOT_FOUND,
             params = arrayOf(yamlInfo.filePath, branchName)
         )
