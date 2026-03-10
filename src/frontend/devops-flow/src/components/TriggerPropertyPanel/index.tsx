@@ -4,7 +4,7 @@ import AtomForm, { DISPLAY_MODE, type AtomPropsModel } from '@/components/AtomFo
 import { SvgIcon } from '@/components/SvgIcon'
 import { getAtomDefaultValue, getAtomOutputObj } from '@/utils/atom'
 import { createDefaultElement } from '@/utils/flowDefaults'
-import { validateAtomElement } from '@/utils/validation'
+import { validateAtomElement, validateStepId } from '@/utils/validation'
 import {
   Button,
   Checkbox,
@@ -39,6 +39,10 @@ export default defineComponent({
     readonly: {
       type: Boolean,
       default: false,
+    },
+    siblingStepIds: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
   },
   emits: ['update:visible', 'save'],
@@ -140,6 +144,11 @@ export default defineComponent({
       )
     })
 
+    const stepIdErrors = computed(() => {
+      if (!localElement.value) return []
+      return validateStepId(localElement.value.stepId, props.siblingStepIds)
+    })
+
     // ========== Modal Loading ==========
 
     const applyModalDefaults = (modal: TriggerModal) => {
@@ -217,7 +226,7 @@ export default defineComponent({
         return
       }
 
-      if (triggerErrorFields.value.length > 0) {
+      if (triggerErrorFields.value.length > 0 || stepIdErrors.value.length > 0) {
         showErrors.value = true
         Message({ theme: 'warning', message: t('flow.triggerPanel.validationError') })
         return
@@ -317,7 +326,7 @@ export default defineComponent({
         <div class={styles.panelBody}>
           <div class={styles.fieldGroup}>
             <div class={[styles.stepIdAndVersionRow, isDisabled.value && styles.disabled]}>
-              <div class={styles.stepIdColumn}>
+              <div class={[styles.stepIdColumn, stepIdErrors.value.length > 0 && styles.stepIdError]}>
                 <div class={styles.labelWithIcon}>
                   <span>{t('flow.orchestration.stepId')}</span>
                   <Popover content={t('flow.orchestration.stepIdDesc')} placement="top">
@@ -335,6 +344,12 @@ export default defineComponent({
                   }}
                   class={styles.stepIdInput}
                 />
+                {stepIdErrors.value.includes('stepIdFormat') && (
+                  <div class={styles.fieldErrorMessage}>{t('flow.orchestration.stepIdFormatError')}</div>
+                )}
+                {stepIdErrors.value.includes('stepIdDuplicate') && (
+                  <div class={styles.fieldErrorMessage}>{t('flow.orchestration.stepIdDuplicateError')}</div>
+                )}
               </div>
               <div class={styles.versionColumn}>
                 <span class={styles.versionLabel}>{t('flow.content.version')}</span>

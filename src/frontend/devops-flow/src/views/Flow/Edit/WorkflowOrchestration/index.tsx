@@ -10,7 +10,7 @@ import { useUIStore } from '@/stores/ui'
 import 'bkui-pipeline/dist/bk-pipeline.css'
 import BkPipeline from 'bkui-pipeline/vue3'
 import { Exception, Loading } from 'bkui-vue'
-import { defineComponent, ref, watch } from 'vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import sharedStyles from '../shared.module.css'
 import styles from './index.module.css'
@@ -53,6 +53,16 @@ export default defineComponent({
       updateJob,
     } = useFlowModel()
     const uiStore = useUIStore()
+
+    // ========== Computed ==========
+    const siblingStepIds = computed(() => {
+      const container = editingElementContainer.value
+      const currentEl = editingElement.value
+      if (!container?.elements || !currentEl) return []
+      return container.elements
+        .filter(el => el.id !== currentEl.id && !!el.stepId)
+        .map(el => el.stepId!)
+    })
 
     // ========== Refs ==========
     const isStagePanelVisible = ref(false)
@@ -224,6 +234,7 @@ export default defineComponent({
         <AtomPropertyPanel
           v-model:visible={isAtomPanelVisible.value}
           currentElement={editingElement.value!}
+          siblingStepIds={siblingStepIds.value}
           onChooseAtom={handleChooseAtom}
           onUpdateAtom={updateAtom}
         />

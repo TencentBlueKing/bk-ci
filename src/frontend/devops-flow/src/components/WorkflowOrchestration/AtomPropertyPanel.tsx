@@ -23,6 +23,10 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    siblingStepIds: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
   emits: ['update:visible', 'chooseAtom', 'updateAtom'],
   setup(props, { emit }) {
@@ -144,6 +148,7 @@ export default defineComponent({
               showVersionSelector={true}
               showCustomEnvSection={true}
               showFlowControlSection={true}
+              siblingStepIds={props.siblingStepIds}
               onChange={handleElementChange}
               onChooseAtom={handleChooseAtom}
             />
