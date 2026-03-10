@@ -59,128 +59,47 @@
                 >
                     <label class="bk-label category-label"> {{ $t('store.范畴') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-radio-group
-                            v-model="atomForm.category"
-                            class="radio-group"
-                        >
-                            <bk-radio
-                                :value="entry.value"
-                                v-for="(entry, key) in categoryList"
-                                :key="key"
-                                @click.native="formErrors.categoryError = false"
+                        <div class="category-content">
+                            <bk-checkbox-group
+                                v-model="categoryValue"
+                                ext-cls="category-checkbox-group"
                             >
-                                {{ entry.label }}
-                            </bk-radio>
-                        </bk-radio-group>
+                                <bk-checkbox :value="'PIPELINE'">{{ $t('store.CI流水线') }}</bk-checkbox>
+                                <category-config
+                                    v-if="categoryValue.includes('PIPELINE')"
+                                    ref="pipelineCategoryConfig"
+                                    scope-type="pipeline"
+                                    :category-data="pipelineCategory"
+                                    :errors="{
+                                        sortError: formErrors.pipelineSortError,
+                                        jobError: formErrors.pipelineJobError,
+                                        envError: formErrors.pipelineEnvError
+                                    }"
+                                    @classify-change="changeClassify"
+                                    @job-type-change="changePipelineJobType"
+                                    @os-change="changeOs"
+                                ></category-config>
+                                <bk-checkbox :value="'CREATIVE_STREAM'">{{ $t('store.CP创作流') }}</bk-checkbox>
+                                <category-config
+                                    v-if="categoryValue.includes('CREATIVE_STREAM')"
+                                    ref="creativeCategoryConfig"
+                                    scope-type="creative"
+                                    :category-data="creativeCategory"
+                                    :errors="{
+                                        sortError: formErrors.creativeSortError,
+                                        jobError: formErrors.creativeJobError
+                                    }"
+                                    @classify-change="changeClassify"
+                                    @job-type-change="changeCreativeJobType"
+                                ></category-config>
+                            </bk-checkbox-group>
+                        </div>
                         <div
                             v-if="formErrors.categoryError"
                             class="error-tips"
                         >
                             {{ $t('store.字段有误，请重新选择') }}
                         </div>
-                    </div>
-                </div>
-                <div
-                    class="bk-form-item  is-required"
-                    ref="sortError"
-                >
-                    <label class="bk-label"> {{ $t('store.分类') }} </label>
-                    <div class="bk-form-content atom-item-content atom-classify-content">
-                        <bk-select
-                            v-model="atomForm.classifyCode"
-                            @selected="changeClassify"
-                            style="width: 40%;"
-                            searchable
-                            :clearable="false"
-                        >
-                            <bk-option
-                                v-for="(option, index) in sortList"
-                                :key="index"
-                                :id="option.classifyCode"
-                                :name="option.classifyName"
-                            >
-                            </bk-option>
-                        </bk-select>
-                        <div
-                            v-if="formErrors.sortError"
-                            class="error-tips"
-                        >
-                            {{ $t('store.分类不能为空') }}
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="bk-form-item is-required"
-                    ref="jobError"
-                >
-                    <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-radio-group
-                            v-model="atomForm.jobType"
-                            class="radio-group"
-                        >
-                            <span
-                                v-for="(entry, key) in jobTypeList"
-                                :key="key"
-                            >
-                                <bk-radio
-                                    v-show="entry.isShow"
-                                    :value="entry.value"
-                                    @click.native="changeJobType"
-                                >{{ entry.label }}</bk-radio>
-                            </span>
-                        </bk-radio-group>
-                        <div
-                            v-if="formErrors.jobError"
-                            class="error-tips"
-                        >
-                            {{ $t('store.字段有误，请重新选择') }}
-                        </div>
-                    </div>
-                </div>
-                <bk-checkbox-group
-                    v-model="atomForm.os"
-                    v-if="atomForm.jobType === 'AGENT'"
-                    class="bk-form-content atom-os"
-                    ref="envError"
-                >
-                    <bk-checkbox
-                        :value="entry.value"
-                        v-for="(entry, key) in envList"
-                        :key="key"
-                        @click.native="changeOs(entry.value)"
-                    >
-                        <p class="os-checkbox-label">
-                            <i :class="{ 'devops-icon': true, [`icon-${entry.icon}`]: true }"></i>
-                            <span class="bk-checkbox-text">{{ entry.label }}</span>
-                        </p>
-                    </bk-checkbox>
-                </bk-checkbox-group>
-                <div
-                    v-if="formErrors.envError"
-                    class="error-tips env-error"
-                >
-                    {{ $t('store.字段有误，请重新选择') }}
-                </div>
-                <div class="bk-form-item">
-                    <label class="bk-label"> {{ $t('store.功能标签') }} </label>
-                    <div class="bk-form-content template-item-content">
-                        <bk-select
-                            :placeholder="$t('store.请选择功能标签')"
-                            v-model="atomForm.labelIdList"
-                            @selected="changeClassify"
-                            show-select-all
-                            searchable
-                            multiple
-                        >
-                            <bk-option
-                                v-for="(option, index) in labelList"
-                                :key="index"
-                                :id="option.id"
-                                :name="option.labelName"
-                            >
-                            </bk-option>
-                        </bk-select>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
@@ -441,12 +360,14 @@
     import api from '@/api'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import selectLogo from '@/components/common/selectLogo'
+    import categoryConfig from '@/components/category-config.vue'
     import { toolbars } from '@/utils/editor-options'
     
     export default {
         components: {
             selectLogo,
-            breadCrumbs
+            breadCrumbs,
+            categoryConfig
         },
         data () {
             return {
@@ -459,19 +380,6 @@
                 showContent: false,
                 isUploading: false,
                 initOs: [],
-                categoryList: [
-                    { label: this.$t('store.流水线插件'), value: 'TASK' }
-                    // { label: '流水线触发器', value: 'TRIGGER' }
-                ],
-                jobTypeList: [
-                    { label: this.$t('store.编译环境'), value: 'AGENT', isShow: true },
-                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS', isShow: true }
-                ],
-                envList: [
-                    { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
-                    { label: 'Windows', value: 'WINDOWS', icon: 'windows' },
-                    { label: 'macOS', value: 'MACOS', icon: 'macos' }
-                ],
                 publishShelf: [
                     { label: this.$t('store.新上架'), value: 'NEW' }
                 ],
@@ -501,23 +409,29 @@
                     { label: this.$t('store.是'), value: 'SPECIAL', title: this.$t('store.需自行开发插件输入页面,详见插件开发指引') },
                     { label: this.$t('store.否'), value: 'NORMAL', title: this.$t('store.仅需按照规范定义好输入字段，系统将自动渲染页面') }
                 ],
-                sortList: [],
-                labelList: [],
                 img_file: {},
                 loading: {
                     isLoading: false,
                     title: ''
                 },
+                categoryValue: ['PIPELINE'],
+                pipelineCategory: {
+                    classifyCode: '',
+                    classifyName: '',
+                    jobTypes: ['AGENT'],
+                    os: [],
+                    labelIdList: []
+                },
+                creativeCategory: {
+                    classifyCode: '',
+                    classifyName: '',
+                    jobTypes: ['CREATIVE_STREAM'],
+                    labelIdList: [],
+                },
                 atomForm: {
                     name: '',
                     atomCode: '',
                     logoUrl: '',
-                    category: 'TASK',
-                    classifyCode: '',
-                    classifyName: '',
-                    jobType: 'AGENT',
-                    os: [],
-                    labelIdList: [],
                     summary: '',
                     description: `#### ${this.$t('store.插件功能')}\n\n#### ${this.$t('store.适用场景')}\n\n#### ${this.$t('store["使用限制和受限解决方案[可选]"]')}\n\n#### ${this.$t('store.常见的失败原因和解决方案')}`,
                     publisher: '',
@@ -529,11 +443,13 @@
                 },
                 formErrors: {
                     categoryError: false,
-                    jobError: false,
+                    pipelineJobError: false,
+                    pipelineSortError: false,
+                    pipelineEnvError: false,
+                    creativeJobError: false,
+                    creativeSortError: false,
                     openSourceError: false,
                     logoUrlError: false,
-                    sortError: false,
-                    envError: false,
                     releaseTypeError: false
                 },
                 versionMap: {},
@@ -571,10 +487,18 @@
             }
         },
         watch: {
-            'atomForm.jobType' (val) {
+            categoryValue (val) {
+                // 当范畴选择发生变化时，清除范畴错误提示
+                if (val && val.length > 0) {
+                    this.formErrors.categoryError = false
+                }
+            },
+
+            'pipelineCategory.jobTypes' (val) {
                 if (this.$route.name === 'upgradeAtom' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
-                    const isEqualType = val === this.initJobType
-                    const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
+                    const currentJobType = val && val.length > 0 ? val[0] : 'AGENT'
+                    const isEqualType = currentJobType === this.initJobType
+                    const isEqualOs = this.initOs.every(item => this.pipelineCategory.os.indexOf(item) > -1)
                     if (this.initJobType === 'AGENT') {
                         this.atomForm.releaseType = isEqualType && isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
                     } else {
@@ -583,9 +507,9 @@
                 }
             },
 
-            'atomForm.os' (val) {
+            'pipelineCategory.os' (val) {
                 if (this.$route.name === 'upgradeAtom' && this.initJobType === 'AGENT' && this.atomForm.releaseType !== 'CANCEL_RE_RELEASE') {
-                    const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
+                    const isEqualOs = this.initOs.every(item => val.indexOf(item) > -1)
                     this.atomForm.releaseType = isEqualOs ? this.initReleaseType : 'INCOMPATIBILITY_UPGRADE'
                 }
             },
@@ -597,11 +521,8 @@
         },
         async created () {
             this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
-            await this.fetchContainerList()
-            await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
             await this.fetchPublishersList(this.atomForm.atomCode)
-            this.requestAtomClassify()
         },
         methods: {
             branchBlur (value) {
@@ -632,12 +553,6 @@
                     })
                 }
             },
-            fetchContainerList () {
-                this.$store.dispatch('store/getContainerList').then(res => {
-                    this.containerList = res
-                    this.jobTypeList[1].isShow = !!this.containerList.find(i => i.type === 'normal')
-                })
-            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',
@@ -664,20 +579,6 @@
                     }
                 }).catch(() => [])
             },
-            async requestAtomlabels () {
-                try {
-                    const res = await this.$store.dispatch('store/requestAtomLables')
-                    this.labelList = res || []
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
             async requestAtomDetail (atomId) {
                 this.loading.isLoading = true
 
@@ -687,13 +588,48 @@
                     })
                     const { showVersionList } = await api.requestAtomVersionDetail(res.atomCode)
                     if (res) {
-                        Object.assign(this.atomForm, res, {})
-                        this.atomForm.jobType = !this.atomForm.jobType ? 'AGENT' : this.atomForm.jobType
-                        this.initJobType = this.atomForm.jobType
-                        this.atomForm.labelIdList = (this.atomForm.labelList || []).map(item => {
-                            return item.id
-                        })
-                        this.initOs = JSON.parse(JSON.stringify(this.atomForm.os))
+                        // 只复制基本信息到 atomForm，不包含 serviceScopeDetails
+                        const { serviceScopeDetails, ...basicInfo } = res
+                        Object.assign(this.atomForm, basicInfo, {})
+                        
+                        // 初始化 categoryValue 和范畴配置
+                        if (serviceScopeDetails && serviceScopeDetails.length > 0) {
+                            // 设置选中的范畴
+                            this.categoryValue = serviceScopeDetails.map(config => config.serviceScope)
+                            
+                            // 回显 PIPELINE 配置
+                            const pipelineConfig = serviceScopeDetails.find(item => item.serviceScope === 'PIPELINE')
+                            if (pipelineConfig) {
+                                this.pipelineCategory = {
+                                    classifyCode: pipelineConfig.classifyCode || '',
+                                    classifyName: pipelineConfig.classifyName || '',
+                                    // 兼容旧的 jobType 字段
+                                    jobTypes: pipelineConfig.jobTypes || (pipelineConfig.jobType ? [pipelineConfig.jobType] : ['AGENT']),
+                                    os: res.os || [],
+                                    labelIdList: pipelineConfig.labelIdList || []
+                                }
+                                // 保存初始值用于升级类型判断
+                                this.initJobType = this.pipelineCategory.jobTypes[0] || 'AGENT'
+                                this.initOs = pipelineConfig.os ? JSON.parse(JSON.stringify(pipelineConfig.os)) : []
+                            }
+                            
+                            // 回显 CREATIVE_STREAM 配置
+                            const creativeConfig = serviceScopeDetails.find(item => item.serviceScope === 'CREATIVE_STREAM')
+                            if (creativeConfig) {
+                                this.creativeCategory = {
+                                    classifyCode: creativeConfig.classifyCode || '',
+                                    classifyName: creativeConfig.classifyName || '',
+                                    jobTypes: creativeConfig.jobTypes || ['CREATIVE_STREAM'],
+                                    labelIdList: creativeConfig.labelIdList || []
+                                }
+                            }
+                        } else {
+                            // 没有 serviceScopeConfigs，使用默认值
+                            this.categoryValue = ['PIPELINE']
+                            this.initJobType = 'AGENT'
+                            this.initOs = []
+                        }
+                        
                         // init version
                         showVersionList.forEach((versionInfo) => {
                             this.versionMap[versionInfo.releaseType] = versionInfo.version
@@ -741,16 +677,22 @@
                 }
             },
             changeClassify () {
-                this.formErrors.sortError = false
+                this.formErrors.pipelineSortError = false
+                this.formErrors.creativeSortError = false
             },
             changeOs (data) {
-                this.formErrors.envError = false
+                this.formErrors.pipelineEnvError = false
             },
 
-            changeJobType () {
-                this.formErrors.envError = false
-                this.formErrors.jobError = false
-                this.atomForm.os = []
+            changePipelineJobType () {
+                this.formErrors.pipelineEnvError = false
+                this.formErrors.pipelineJobError = false
+                // 清空操作系统选择
+                this.pipelineCategory.os = []
+            },
+
+            changeCreativeJobType () {
+                this.formErrors.creativeJobError = false
             },
             autoFocus () {
                 this.$nextTick(() => {
@@ -806,28 +748,48 @@
                     errorCount++
                 }
 
-                if (this.categoryList.findIndex(x => x.value === this.atomForm.category) < 0) {
+                // 验证范畴选择
+                if (!this.categoryValue || this.categoryValue.length === 0) {
                     this.formErrors.categoryError = true
                     ref = ref || 'categoryError'
                     errorCount++
                 }
 
-                if (!this.atomForm.classifyCode) {
-                    this.formErrors.sortError = true
-                    ref = ref || 'sortError'
-                    errorCount++
+                // 如果选择了 PIPELINE，验证其配置
+                if (this.categoryValue.includes('PIPELINE')) {
+                    if (!this.pipelineCategory.classifyCode) {
+                        this.formErrors.pipelineSortError = true
+                        ref = ref || 'pipelineCategoryConfig'
+                        errorCount++
+                    }
+
+                    if (!this.pipelineCategory.jobTypes || this.pipelineCategory.jobTypes.length === 0) {
+                        this.formErrors.pipelineJobError = true
+                        ref = ref || 'pipelineCategoryConfig'
+                        errorCount++
+                    }
+
+                    // 如果选择了 AGENT，必须选择操作系统
+                    if (this.pipelineCategory.jobTypes[0] === 'AGENT' && (!this.pipelineCategory.os || this.pipelineCategory.os.length === 0)) {
+                        this.formErrors.pipelineEnvError = true
+                        ref = ref || 'pipelineCategoryConfig'
+                        errorCount++
+                    }
                 }
 
-                if (this.jobTypeList.findIndex(x => x.value === this.atomForm.jobType) < 0) {
-                    this.formErrors.jobError = true
-                    ref = ref || 'jobError'
-                    errorCount++
-                }
+                // 如果选择了 CREATIVE_STREAM，验证其配置
+                if (this.categoryValue.includes('CREATIVE_STREAM')) {
+                    if (!this.creativeCategory.classifyCode) {
+                        this.formErrors.creativeSortError = true
+                        ref = ref || 'creativeCategoryConfig'
+                        errorCount++
+                    }
 
-                if (this.atomForm.jobType === 'AGENT' && !this.atomForm.os.length) {
-                    this.formErrors.envError = true
-                    ref = ref || 'envError'
-                    errorCount++
+                    if (!this.creativeCategory.jobTypes || this.creativeCategory.jobTypes.length === 0) {
+                        this.formErrors.creativeJobError = true
+                        ref = ref || 'creativeCategoryConfig'
+                        errorCount++
+                    }
                 }
 
                 if (!this.atomForm.releaseType) {
@@ -838,7 +800,11 @@
 
                 if (errorCount > 0) {
                     const errorEle = this.$refs[ref]
-                    if (errorEle) errorEle.$el.scrollIntoView()
+                    if (errorEle) {
+                        // 判断是否是 Vue 组件实例（有 $el 属性）还是普通 DOM 元素
+                        const targetElement = errorEle.$el || errorEle
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }
                     return false
                 }
 
@@ -847,10 +813,21 @@
 
             checkJobType () {
                 let message = ''
-                const isEqualOs = this.initOs.every(item => this.atomForm.os.indexOf(item) > -1)
-                if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.atomForm.jobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
+                // 如果没有选择 PIPELINE，不需要检查
+                if (!this.categoryValue.includes('PIPELINE')) {
+                    return message
+                }
+                
+                // 从 pipelineCategory 获取当前的 jobType
+                const currentJobType = this.pipelineCategory.jobTypes && this.pipelineCategory.jobTypes.length > 0
+                    ? this.pipelineCategory.jobTypes[0]
+                    : 'AGENT'
+                
+                const isEqualOs = this.initOs.every(item => this.pipelineCategory.os.indexOf(item) > -1)
+                
+                if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && currentJobType !== this.initJobType && this.$route.name === 'upgradeAtom') {
                     message = this.$t('store.适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
-                } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && this.atomForm.jobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
+                } else if (this.atomForm.releaseType !== 'INCOMPATIBILITY_UPGRADE' && this.$route.name === 'upgradeAtom' && currentJobType === 'AGENT' && this.initJobType === 'AGENT' && !isEqualOs) {
                     message = this.$t('store.操作系统发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。')
                 }
                 return message
@@ -870,16 +847,29 @@
             submit (fieldCheckConfirmFlag) {
                 this.validate().then(() => {
                     this.loading.isLoading = true
+                    
+                    // 构建 serviceScopeConfigs 数组
+                    const scopeConfigMap = {
+                        PIPELINE: this.pipelineCategory,
+                        CREATIVE_STREAM: this.creativeCategory
+                    }
+                    
+                    const serviceScopeConfigs = this.categoryValue
+                        .filter(scope => scopeConfigMap[scope])
+                        .map(scope => ({
+                            serviceScope: scope,
+                            classifyCode: scopeConfigMap[scope].classifyCode,
+                            jobTypes: scopeConfigMap[scope].jobTypes || [],
+                            labelIdList: (scopeConfigMap[scope].labelIdList || []).filter(id => id && id !== 'null' && id !== ' ')
+                        }))
+                    
                     const params = {
                         atomCode: this.atomForm.atomCode,
                         name: this.atomForm.name,
-                        category: this.atomForm.category,
-                        classifyCode: this.atomForm.classifyCode,
+                        category: 'TASK',
                         version: this.curVersion,
                         releaseType: this.atomForm.releaseType,
-                        jobType: this.atomForm.jobType,
-                        os: this.atomForm.jobType === 'AGENT' ? this.atomForm.os : [],
-                        labelIdList: this.atomForm.labelIdList.filter(i => i !== 'null' && i !== ' ' && i),
+                        os: this.pipelineCategory.os || [],
                         publisher: this.atomForm.publisher,
                         versionContent: this.atomForm.versionContent,
                         logoUrl: this.atomForm.logoUrl || undefined,
@@ -889,7 +879,8 @@
                         visibilityLevel: this.atomForm.visibilityLevel,
                         frontendType: this.atomForm.frontendType,
                         fieldCheckConfirmFlag,
-                        branch: this.atomForm.branch
+                        branch: this.atomForm.branch,
+                        serviceScopeConfigs: serviceScopeConfigs.length > 0 ? serviceScopeConfigs : undefined
                     }
 
                     return this.$store.dispatch('store/editAtom', {
@@ -1176,5 +1167,26 @@
     }
     .input-width-full {
         width: 100%;
+    }
+    .category-content {
+        ::v-deep .bk-form-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .atom-item-content {
+            ::v-deep .bk-form-control {
+                display: flex;
+                flex-direction: row;
+            }
+        }
+        ::v-deep .bk-form-control.atom-os {
+            display: flex;
+            flex-direction: row;
+        }
+
+        ::v-deep .bk-select {
+            background-color: #fff;
+        }
     }
 </style>

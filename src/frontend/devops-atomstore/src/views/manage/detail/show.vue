@@ -43,6 +43,7 @@
 
 <style lang="scss" scoped>
     .manage-detail {
+        height: 100%;
         background: #fff;
         .manage-detail-header {
             position: absolute;
@@ -59,6 +60,7 @@
         }
         .detail-main {
             height: 100%;
+            overflow: auto;
         }
         .detail-show {
             padding: 3.2vh;

@@ -26,6 +26,7 @@
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
                 v-if="!isLoading"
+                :max-height="521"
                 :pagination="pagination"
                 @page-change="pageChange"
                 @page-limit-change="pageLimitChange"
