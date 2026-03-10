@@ -68,6 +68,10 @@ func parseApiDockerOptions(o api.DockerOptions) []string {
 		}
 	}
 
+	if o.User != "" {
+		args = append(args, "--user", strings.TrimSpace(o.User))
+	}
+
 	return args
 }
 
