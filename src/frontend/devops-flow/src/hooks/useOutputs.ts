@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, type ComputedRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -21,7 +21,7 @@ interface FilterItem {
 /**
  * Outputs 页面业务逻辑 Hook
  */
-export function useOutputs(currentTab: string) {
+export function useOutputs(currentTab: ComputedRef<string>) {
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
@@ -81,7 +81,7 @@ export function useOutputs(currentTab: string) {
         : []
 
     let visibleList: Output[] = []
-    switch (currentTab) {
+    switch (currentTab.value) {
       case 'artifacts':
         visibleList = artifacts.value
         break
