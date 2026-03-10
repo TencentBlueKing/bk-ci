@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useOutputsStore } from '@/stores/outputsStore'
 import { convertFileSize } from '@/utils/util'
-import { repoTypeNameMap } from '@/utils/flowConst'
+import { repoTypeNameMap, ARTIFACTORY_TYPE } from '@/utils/flowConst'
 import type { Output } from '@/api/outputs'
 
 /**
@@ -55,7 +55,7 @@ export function useOutputs(currentTab: string) {
   // 报告列表（不含第三方报告）
   const reports = computed(() =>
     outputs.value.filter(
-      (item) => item.artifactoryType === 'REPORT' && !isThirdReport(item.reportType),
+      (item) => item.artifactoryType === ARTIFACTORY_TYPE.REPORT && !isThirdReport(item.reportType),
     ),
   )
 

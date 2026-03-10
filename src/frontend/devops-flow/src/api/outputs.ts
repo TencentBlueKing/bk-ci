@@ -8,7 +8,7 @@ import { ARTIFACTORY_API_URL_PREFIX } from '@/utils/apiUrlPrefix'
 /**
  * 制品/报告类型
  */
-export type ArtifactoryType = 'PIPELINE' | 'CUSTOM_DIR' | 'IMAGE' | 'REPORT'
+export type ArtifactoryType = 'CUSTOM_DIR' | 'IMAGE' | 'REPORT' | 'CREATIVE'
 
 /**
  * 制品输出项
