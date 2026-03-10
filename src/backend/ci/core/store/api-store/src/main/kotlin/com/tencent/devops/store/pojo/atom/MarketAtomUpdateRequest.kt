@@ -45,7 +45,7 @@ data class MarketAtomUpdateRequest(
     @get:Schema(title = "服务范围配置列表", required = false)
     val serviceScopeConfigs: List<ServiceScopeConfig>? = null,
     @get:Schema(title = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
-    val category: AtomCategoryEnum,
+    val category: AtomCategoryEnum = AtomCategoryEnum.TASK,
     @get:Schema(title = "所属插件分类代码", required = false)
     @Deprecated("使用serviceScopeConfigs替代")
     val classifyCode: String? = null,

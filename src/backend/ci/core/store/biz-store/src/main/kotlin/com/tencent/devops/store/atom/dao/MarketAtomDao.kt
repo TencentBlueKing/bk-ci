@@ -118,7 +118,6 @@ class MarketAtomDao : AtomBaseDao() {
         dslContext: DSLContext
     ): Pair<TAtom, MutableList<Condition>> {
         val ta = TAtom.T_ATOM
-        val storeType = StoreTypeEnum.ATOM.type.toByte()
         val conditions = setAtomVisibleCondition(ta)
         conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (!keyword.isNullOrEmpty()) {
@@ -469,15 +468,12 @@ class MarketAtomDao : AtomBaseDao() {
         props: String,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ) {
-        val currentRecord = getAtomRecordById(dslContext, id)
-
         val serviceScopeConfigs: List<ServiceScopeConfig> = marketAtomUpdateRequest.toServiceScopeConfigs()
         val jobTypeResult = AtomJobTypeUtil.buildJobTypeFields(serviceScopeConfigs, marketAtomUpdateRequest.jobType?.name)
 
         val classifyIdMap = buildClassifyIdMap(
             dslContext = dslContext,
-            serviceScopeConfigs = serviceScopeConfigs,
-            currentClassifyIdMap = currentRecord?.classifyIdMap
+            serviceScopeConfigs = serviceScopeConfigs
         )
 
         val pipelineClassifyCode = serviceScopeConfigs
@@ -534,28 +530,18 @@ class MarketAtomDao : AtomBaseDao() {
     }
     
     /**
-     * 构建 CLASSIFY_ID_MAP：从 serviceScopeConfigs 中每个 config 的 classifyCode 查询分类ID。
+     * 构建 CLASSIFY_ID_MAP：以用户传入的 serviceScopeConfigs 为准，从零构建新的 map。
+     * 插件升级时，CLASSIFY_ID_MAP 的值应完全以用户传入的服务范围配置为准，
+     * 不再保留旧 map 中多余的 scope 条目。
      */
     private fun buildClassifyIdMap(
         dslContext: DSLContext,
-        serviceScopeConfigs: List<ServiceScopeConfig>?,
-        currentClassifyIdMap: String?
+        serviceScopeConfigs: List<ServiceScopeConfig>?
     ): Map<String, String>? {
         if (serviceScopeConfigs.isNullOrEmpty()) {
             return null
         }
-
-        val existingMap = try {
-            if (!currentClassifyIdMap.isNullOrEmpty()) {
-                JsonUtil.toMap(currentClassifyIdMap) as? Map<String, String>
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        } ?: mutableMapOf()
-
-        val classifyIdMap = existingMap.toMutableMap()
+        val classifyIdMap = mutableMapOf<String, String>()
         for (config in serviceScopeConfigs) {
             val classifyId = getClassifyIdByCode(
                 dslContext = dslContext,
@@ -566,7 +552,6 @@ class MarketAtomDao : AtomBaseDao() {
                 classifyIdMap[config.serviceScope.name] = it
             }
         }
-
         return classifyIdMap.ifEmpty { null }
     }
 
@@ -601,8 +586,7 @@ class MarketAtomDao : AtomBaseDao() {
 
         val classifyIdMap = buildClassifyIdMap(
             dslContext = dslContext,
-            serviceScopeConfigs = serviceScopeConfigs,
-            currentClassifyIdMap = atomRecord.classifyIdMap
+            serviceScopeConfigs = serviceScopeConfigs
         )
         val classifyIdMapJson = classifyIdMap?.let { JsonUtil.toJson(it, formatted = false) }
             ?: atomRecord.classifyIdMap
