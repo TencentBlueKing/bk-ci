@@ -197,11 +197,11 @@ func getAllEnvFromRegistry() envSnapshot {
 			if systemPath == "" {
 				snapshot.Merged[name] = envValue{Value: value, Source: User}
 			} else {
-				mergedPath := value
+				mergedPath := systemPath
 				if !strings.HasSuffix(mergedPath, ";") {
 					mergedPath += ";"
 				}
-				mergedPath += systemPath
+				mergedPath += value
 
 				// 删除系统阶段可能以不同大小写存入的PATH条目
 				if systemPathKey != name {
