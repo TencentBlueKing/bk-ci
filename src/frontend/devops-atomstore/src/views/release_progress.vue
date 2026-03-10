@@ -176,18 +176,18 @@
                                                         v-if="isEnterprise"
                                                     >
                                                         <span class="scope-label">{{ $t('store.操作系统：') }}</span>
-                                                        <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && scopeConfig.os">
+                                                        <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && versionDetail.os">
                                                             <i
                                                                 class="devops-icon icon-linux-view"
-                                                                v-if="scopeConfig.os.indexOf('LINUX') !== -1"
+                                                                v-if="versionDetail.os.indexOf('LINUX') !== -1"
                                                             ></i>
                                                             <i
                                                                 class="devops-icon icon-windows"
-                                                                v-if="scopeConfig.os.indexOf('WINDOWS') !== -1"
+                                                                v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
                                                             ></i>
                                                             <i
                                                                 class="devops-icon icon-macos"
-                                                                v-if="scopeConfig.os.indexOf('MACOS') !== -1"
+                                                                v-if="versionDetail.os.indexOf('MACOS') !== -1"
                                                             ></i>
                                                         </span>
                                                     </div>
@@ -198,18 +198,18 @@
                                                         <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
                                                         <span>
                                                             {{ getJobTypeNames(scopeConfig.jobTypes) }}
-                                                            <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && scopeConfig.os">（
+                                                            <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && versionDetail.os">（
                                                                 <i
                                                                     class="devops-icon icon-linux-view"
-                                                                    v-if="scopeConfig.os.indexOf('LINUX') !== -1"
+                                                                    v-if="versionDetail.os.indexOf('LINUX') !== -1"
                                                                 ></i>
                                                                 <i
                                                                     class="devops-icon icon-windows"
-                                                                    v-if="scopeConfig.os.indexOf('WINDOWS') !== -1"
+                                                                    v-if="versionDetail.os.indexOf('WINDOWS') !== -1"
                                                                 ></i>
                                                                 <i
                                                                     class="devops-icon icon-macos"
-                                                                    v-if="scopeConfig.os.indexOf('MACOS') !== -1"
+                                                                    v-if="versionDetail.os.indexOf('MACOS') !== -1"
                                                                 ></i>）
                                                             </span>
                                                         </span>
@@ -723,6 +723,7 @@
                 const formData = new FormData()
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.versionDetail.os.join('","')}"]`)
+                console.log("🚀 ~ this.versionDetail:", this.versionDetail)
 
                 const xhr = new XMLHttpRequest()
                 fileObj.xhr = xhr // 保存，用于中断请求
