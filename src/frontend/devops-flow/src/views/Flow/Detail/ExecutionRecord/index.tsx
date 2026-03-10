@@ -82,11 +82,12 @@ export default defineComponent({
       handleLimitChange,
       updateQueryParams,
       refresh,
+      silentRefresh,
     } = useExecutionRecordData()
 
     // ---- WebSocket real-time updates ----
     const WS_ID = 'executionRecord'
-    websocketRegister.installWsMessage(() => refresh(), WS_ID)
+    websocketRegister.installWsMessage(() => silentRefresh(), WS_ID)
     websocketRegister.registerOnReconnect(() => refresh(), WS_ID)
     onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
 

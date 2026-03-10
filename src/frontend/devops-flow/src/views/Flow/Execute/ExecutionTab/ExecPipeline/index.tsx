@@ -418,6 +418,13 @@ export default defineComponent({
       showRetryStageDialog.value = true
     }
 
+    const handleContinue = async (payload: any) => {
+      const { taskId, skip = false } = payload || {}
+      retryTaskId.value = taskId
+      skipTask.value = skip
+      await retryPipeline(false)
+    }
+
     const retryPipeline = async (isStageRetry: boolean) => {
       showRetryStageDialog.value = false
       try {
@@ -802,6 +809,7 @@ export default defineComponent({
                     onClick={handlePipelineClick}
                     onStageCheck={handleStageCheck}
                     onStageRetry={handleRetry}
+                    onAtomContinue={handleContinue}
                   />
                 )}
               </div>
