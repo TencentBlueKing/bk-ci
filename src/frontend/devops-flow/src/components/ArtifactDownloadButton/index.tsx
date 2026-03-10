@@ -38,8 +38,9 @@ export default defineComponent({
     const isLoading = ref(false)
     const timer = ref()
     const curResolve = ref()
+    const currentTab = computed(() => route.params.type as string)
 
-    const { getFolderSize, requestDownloadUrl } = useOutputs(route.params.type as string)
+    const { getFolderSize, requestDownloadUrl } = useOutputs(currentTab)
 
     const disabled = computed(() => {
       // 目录超10Gb 禁用状态

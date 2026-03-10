@@ -42,7 +42,7 @@ export const repoTypeNameMap: Record<string, string> = {
   [ARTIFACTORY_TYPE.CUSTOM_DIR]: 'custom',
   [ARTIFACTORY_TYPE.IMAGE]: 'image',
   [ARTIFACTORY_TYPE.REPORT]: 'report',
-  [ARTIFACTORY_TYPE.CREATIVE]: 'creative',
+  [ARTIFACTORY_TYPE.CREATIVE]: 'creative_stream_repo',
 }
 
 export const fileExtIconMap: Record<string, string[]> = {
