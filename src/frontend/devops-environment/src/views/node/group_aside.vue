@@ -244,7 +244,12 @@
 </template>
   
 <script>
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
+    import {
+        NODE_RESOURCE_ACTION,
+        NODE_RESOURCE_TYPE,
+        CREATIVE_STREAM_NODE_RESOURCE_ACTION,
+        CREATIVE_NODE_RESOURCE_TYPE
+    } from '@/utils/permission'
     import { mapActions, mapState } from 'vuex'
     import { ENV_ACTIVE_NODE_TYPE, ALLNODE, SERVICE_RESOURCE_TYPE } from '@/store/constants'
 
@@ -252,8 +257,6 @@
         name: 'NodeGroupTree',
         data () {
             return {
-                NODE_RESOURCE_TYPE,
-                NODE_RESOURCE_ACTION,
                 ENV_ACTIVE_NODE_TYPE,
                 ALLNODE,
                 SERVICE_RESOURCE_TYPE,
@@ -320,6 +323,12 @@
             },
             isCreateResType () {
                 return this.currentResType === SERVICE_RESOURCE_TYPE.CREATE
+            },
+            currentResourceType () {
+                return this.isCreateResType ? CREATIVE_NODE_RESOURCE_TYPE : NODE_RESOURCE_TYPE
+            },
+            currentResourceAction () {
+                return this.isCreateResType ? CREATIVE_STREAM_NODE_RESOURCE_ACTION : NODE_RESOURCE_ACTION
             }
         },
         watch: {
@@ -501,9 +510,9 @@
                                 e,
                                 {
                                     projectId: this.projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceType: this.currentResourceType,
                                     resourceCode: this.projectId,
-                                    action: NODE_RESOURCE_ACTION.DELETE
+                                    action: this.currentResourceAction.DELETE
                                 }
                             )
                         }
