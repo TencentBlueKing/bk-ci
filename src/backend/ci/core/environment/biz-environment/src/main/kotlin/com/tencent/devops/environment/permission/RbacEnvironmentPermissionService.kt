@@ -167,27 +167,33 @@ class RbacEnvironmentPermissionService(
         )
     }
 
-    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
+    override fun listNodeByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Set<Long> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenCheckService.getSystemToken()!!,
             userId = userId,
-            action = buildNodeAction(permission),
+            action = buildNodeAction(permission, resourceType),
             projectCode = projectId,
-            resourceType = nodeResourceType
+            resourceType = resourceType.value
         ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
     }
 
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
-        permissions: Set<AuthPermission>
+        permissions: Set<AuthPermission>,
+        resourceType: AuthResourceType
     ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken()!!,
             userId = userId,
             projectCode = projectId,
-            resourceType = nodeResourceType,
-            action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
+            resourceType = resourceType.value,
+            action = RbacAuthUtils.buildActionList(permissions, resourceType)
         ).data ?: emptyMap()
     }
 
@@ -195,10 +201,15 @@ class RbacEnvironmentPermissionService(
         userId: String,
         projectId: String,
         nodeRecordList: List<TNodeRecord>,
-        authPermission: AuthPermission
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType
     ): List<TNodeRecord> {
-        val hasRbacPermissionNodeIds = listNodeByPermission(userId, projectId, authPermission)
-        val hasRbacPermissionNode = nodeRecordList.filter { hasRbacPermissionNodeIds.contains(it.nodeId) }
+        val hasRbacPermissionNodeIds = listNodeByPermission(
+            userId, projectId, authPermission, resourceType
+        )
+        val hasRbacPermissionNode = nodeRecordList.filter {
+            hasRbacPermissionNodeIds.contains(it.nodeId)
+        }
         return hasRbacPermissionNode.ifEmpty { emptyList() }
     }
 
@@ -206,81 +217,108 @@ class RbacEnvironmentPermissionService(
         userId: String,
         projectId: String,
         nodeId: Long,
-        permission: AuthPermission
+        permission: AuthPermission,
+        resourceType: AuthResourceType
     ): Boolean {
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
-            resourceType = nodeResourceType,
-            action = buildNodeAction(permission),
+            resourceType = resourceType.value,
+            action = buildNodeAction(permission, resourceType),
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-                token = tokenCheckService.getSystemToken()!!,
-                userId = userId,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(nodeId),
-                resourceType = nodeResourceType,
-                relationResourceType = null,
-                action = buildNodeAction(permission)
-            ).data ?: false
+            client.get(ServicePermissionAuthResource::class)
+                .validateUserResourcePermissionByRelation(
+                    token = tokenCheckService.getSystemToken()!!,
+                    userId = userId,
+                    projectCode = projectId,
+                    resourceCode = HashUtil.encodeLongId(nodeId),
+                    resourceType = resourceType.value,
+                    relationResourceType = null,
+                    action = buildNodeAction(permission, resourceType)
+                ).data ?: false
         }
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Boolean {
         val cacheKey = AuthCacheKeyUtil.getCacheKey(
             userId = userId,
             resourceType = AuthResourceType.PROJECT.value,
-            action = buildNodeAction(permission),
+            action = buildNodeAction(permission, resourceType),
             projectCode = projectId,
             resourceCode = projectId
         )
         return AuthCacheUtil.cachePermission(cacheKey) {
-            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-                token = tokenCheckService.getSystemToken()!!,
-                userId = userId,
-                projectCode = projectId,
-                resourceCode = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                relationResourceType = null,
-                action = buildNodeAction(permission)
-            ).data ?: false
+            client.get(ServicePermissionAuthResource::class)
+                .validateUserResourcePermissionByRelation(
+                    token = tokenCheckService.getSystemToken()!!,
+                    userId = userId,
+                    projectCode = projectId,
+                    resourceCode = projectId,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    relationResourceType = null,
+                    action = buildNodeAction(permission, resourceType)
+                ).data ?: false
         }
     }
 
-    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun createNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+    override fun updateNode(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        nodeName: String,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
-    override fun deleteNode(projectId: String, nodeId: Long) {
+    override fun deleteNode(
+        projectId: String,
+        nodeId: Long,
+        resourceType: AuthResourceType
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
             token = tokenCheckService.getSystemToken()!!,
             projectCode = projectId,
-            resourceType = nodeResourceType,
+            resourceType = resourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
     }
 
-    private fun buildNodeAction(authPermission: AuthPermission): String {
-        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENV_NODE)
+    private fun buildNodeAction(
+        authPermission: AuthPermission,
+        resourceType: AuthResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+    ): String {
+        return RbacAuthUtils.buildAction(authPermission, resourceType)
     }
 
     private fun buildEnvAction(authPermission: AuthPermission): String {
