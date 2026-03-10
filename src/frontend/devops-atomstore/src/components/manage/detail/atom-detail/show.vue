@@ -37,6 +37,20 @@
                                     <span class="scope-label">{{ $t('store.适用Job类型：') }}</span>
                                     <span>
                                         {{ getJobTypeNames(scopeConfig.jobTypes) }}
+                                        <span v-if="scopeConfig.jobTypes && scopeConfig.jobTypes.includes('AGENT') && detail.os">（
+                                            <i
+                                                class="devops-icon icon-linux-view"
+                                                v-if="detail.os.indexOf('LINUX') !== -1"
+                                            ></i>
+                                            <i
+                                                class="devops-icon icon-windows"
+                                                v-if="detail.os.indexOf('WINDOWS') !== -1"
+                                            ></i>
+                                            <i
+                                                class="devops-icon icon-macos"
+                                                v-if="detail.os.indexOf('MACOS') !== -1"
+                                            ></i>）
+                                        </span>
                                     </span>
                                 </div>
                                 <div class="scope-info-item">
