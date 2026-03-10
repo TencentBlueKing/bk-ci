@@ -90,6 +90,7 @@ type DockerOptions struct {
 	Mounts     []string `json:"mounts"`
 	Privileged bool     `json:"privileged"`
 	Network    []string `json:"network"`
+	User       string   `json:"user"`
 }
 
 type ThirdPartyBuildWithStatus struct {
