@@ -24,7 +24,9 @@ import { handleFlowNoPermission } from '@/utils/permission'
 import SearchSelect from '@blueking/search-select-v3'
 import { Button, Dropdown, Loading, Message, Popover, Table, Tag } from 'bkui-vue'
 import type { Column } from 'bkui-vue/lib/table/props'
-import { computed, defineComponent, h, nextTick, onMounted, ref, resolveDirective, watch, withDirectives } from 'vue'
+import { websocketRegister } from '@/utils/websocketRegister'
+import { useFlowHomeContentStore } from '@/stores/flowContentList'
+import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, ref, resolveDirective, watch, withDirectives } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import styles from './FlowTable.module.css'
@@ -114,6 +116,17 @@ export const FlowTable = defineComponent({
     } = useFlowListData(styles as Styles)
 
     const permDirective = resolveDirective('perm')
+    const contentStore = useFlowHomeContentStore()
+
+    // ---- WebSocket real-time status updates ----
+    const WS_ID = 'flowList'
+    websocketRegister.installWsMessage(
+      (data) => contentStore.updatePipelineStatusFromWs(data),
+      'IFRAMEprocess',
+      WS_ID,
+    )
+    onUnmounted(() => websocketRegister.unInstallWsMessage(WS_ID))
+    // ---- End WebSocket ----
 
     onMounted(async () => {
       updateQuery()

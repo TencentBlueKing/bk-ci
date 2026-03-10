@@ -551,6 +551,20 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     }
   }
 
+  /**
+   * Update pipeline statuses in-place from a WebSocket push.
+   * The payload is a map of { [pipelineId]: statusFields }.
+   */
+  function updatePipelineStatusFromWs(data: Record<string, Partial<ContentTableItem>>) {
+    if (!data || typeof data !== 'object') return
+    Object.keys(data).forEach((pipelineId) => {
+      const item = flowTableList.value.find((f) => f.pipelineId === pipelineId)
+      if (item) {
+        Object.assign(item, data[pipelineId])
+      }
+    })
+  }
+
   return {
     // State
     flowTableList,
@@ -576,5 +590,6 @@ export const useFlowHomeContentStore = defineStore('flowContentList', () => {
     getMatchDynamicData,
     getProjectTagList,
     updateCollect,
+    updatePipelineStatusFromWs,
   }
 })
